@@ -1,0 +1,31 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "K6exl2ouL7d8cR2i378EzZOdRVI=",
+			"path": "github.com/howeyc/gopass",
+			"revision": "bf9dde6d0d2c004a008c27aaee91170c786f6db8",
+			"revisionTime": "2017-01-09T16:22:49Z"
+		},
+		{
+			"checksumSHA1": "O55NPQ22D28UOLch2++jY3tCAvk=",
+			"path": "gopkg.in/ini.v1",
+			"revision": "5cf292cae48347c2490ac1a58fe36735fb78df7e",
+			"revisionTime": "2018-08-18T11:46:59Z"
+		},
+		{
+			"checksumSHA1": "mNoa+C776zQDaRPqefLQ4G/b2zU=",
+			"path": "software.sslmate.com/src/go-pkcs12",
+			"revision": "2291e8f0f237e77e89ce233be7653ecca8cf391a",
+			"revisionTime": "2018-01-14T23:14:03Z"
+		},
+		{
+			"checksumSHA1": "PtAoCole9mFFYXHelBDXMIYgyZo=",
+			"path": "software.sslmate.com/src/go-pkcs12/internal/rc2",
+			"revision": "2291e8f0f237e77e89ce233be7653ecca8cf391a",
+			"revisionTime": "2018-01-14T23:14:03Z"
+		}
+	],
+	"rootPath": "github.com/Venafi/vcert"
+}

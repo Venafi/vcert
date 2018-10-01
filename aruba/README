@@ -1,0 +1,30 @@
+
+
+=== RubyMine Setup ===
+
+    1. building the app every scenario run
+
+	Run -> Edit Configurations... 
+	
+	Templates -> Cucumber
+
+	Add Before launch: External tool
+	
+		Program: /usr/local/go/bin/go
+		Arguments: build -o bin/vcert ../cmd/vcert
+		Working directory: $GOPATH/src/github.com/Venafi/vcert/aruba
+	
+	OK -> OK -> Apply -> OK
+
+
+    2. setting up local variables so that real-run scenarios knocks to real endpoints from IDE:
+
+	$ vi aruba/features/step_definitions/0.endpoints.rb
+
+		ENV['VCERT_TPP_URL']      = "https://tpp.venafi.example.com:5008/vedsdk"
+		ENV['VCERT_TPP_USER']     = "user"
+		ENV['VCERT_TPP_PASSWORD'] = "xxx"
+		ENV['VCERT_TPP_ZONE']     = 'some\zone'
+		ENV['VCERT_CLOUD_URL']    = "https://api.venafi.example.com/v1"
+		ENV['VCERT_CLOUD_APIKEY']    = "xxxxxxxx-b256-4c43-a4d4-15372ce2d548"
+		ENV['VCERT_CLOUD_ZONE']   = "Default"
