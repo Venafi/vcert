@@ -94,11 +94,13 @@ The completed test run will report on the number of test "scenarios" and "steps"
 
 ## Contributing to VCert
 
-1. Fork it (<https://github.com/yourname/yourproject/fork>)
-2. Create your feature branch (`git checkout -b Venafi/vcert`)
-3. Commit your changes (`git commit -am 'Added some cool functionality'`)
-4. Push to the branch (`git push origin Venafi/vcert`)
-5. Create a new Pull Request
+1. Fork it to your account (https://github.com/Venafi/vcert/fork)
+2. Clone your fork (`git clone git@github.com:youracct/vcert.git`)
+3. Create a feature branch (`git checkout -b your-branch-name`)
+4. Implement and test your changes
+5. Commit your changes (`git commit -am 'Added some cool functionality'`)
+6. Push to the branch (`git push origin your-branch-name`)
+7. Create a new Pull Request (https://github.com/youracct/vcert/pull/new/working-branch)
 
 ## Release History
 
