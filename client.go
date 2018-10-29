@@ -41,7 +41,7 @@ func NewClient(cfg *Config) (endpoint.Connector, error) {
 	case endpoint.ConnectorTypeCloud:
 		connector = cloud.NewConnector(cfg.LogVerbose, connectionTrustBundle)
 	case endpoint.ConnectorTypeTPP:
-		connector = tpp.NewConnector(cfg.LogVerbose, connectionTrustBundle)
+		connector = tpp.NewConnector(cfg.LogVerbose, connectionTrustBundle, cfg.Renegotiate)
 	case endpoint.ConnectorTypeFake:
 		connector = fake.NewConnector(cfg.LogVerbose, connectionTrustBundle)
 	default:

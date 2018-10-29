@@ -33,16 +33,17 @@ import (
 
 // Connector contains the base data needed to communicate with a TPP Server
 type Connector struct {
-	baseURL string
-	apiKey  string
-	verbose bool
-	trust   *x509.CertPool
-	zone    string
+	baseURL     string
+	apiKey      string
+	verbose     bool
+	trust       *x509.CertPool
+	zone        string
+	renegotiate string
 }
 
 // NewConnector creates a new TPP Connector object used to communicate with TPP
-func NewConnector(verbose bool, trust *x509.CertPool) *Connector {
-	c := Connector{trust: trust, verbose: verbose}
+func NewConnector(verbose bool, trust *x509.CertPool, renegotiate string) *Connector {
+	c := Connector{trust: trust, verbose: verbose, renegotiate: renegotiate}
 	return &c
 }
 

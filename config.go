@@ -32,6 +32,7 @@ type Config struct {
 	Zone            string
 	Credentials     *endpoint.Authentication
 	ConnectionTrust string // *x509.CertPool
+	Renegotiate     string
 	LogVerbose      bool
 	ConfigFile      string
 	ConfigSection   string

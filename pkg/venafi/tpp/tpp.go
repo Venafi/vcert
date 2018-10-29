@@ -239,12 +239,22 @@ func (c *Connector) getURL(resource urlResource) (string, error) {
 }
 
 func (c *Connector) getHTTPClient() *http.Client {
-	if c.trust != nil {
-		tr := &http.Transport{TLSClientConfig: &tls.Config{RootCAs: c.trust}}
-		return &http.Client{Transport: tr}
+	tlsConf := &tls.Config{}
+	switch c.renegotiate {
+	case "always":
+		tlsConf.Renegotiation = tls.RenegotiateFreelyAsClient
+	case "once":
+		tlsConf.Renegotiation = tls.RenegotiateOnceAsClient
+	default:
+		tlsConf.Renegotiation = tls.RenegotiateNever
 	}
 
-	return http.DefaultClient
+	if c.trust != nil {
+		tlsConf.RootCAs = c.trust
+	}
+
+	tr := &http.Transport{TLSClientConfig: tlsConf}
+	return &http.Client{Transport: tr}
 }
 
 //GenerateRequest creates a new certificate request, based on the zone/policy configuration and the user data
