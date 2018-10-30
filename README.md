@@ -48,6 +48,20 @@ go test -v ./example -run TestRequestCertificate
 
 For command line examples, please see the [Knowledge Base at support.venafi.com](https://support.venafi.com/hc/en-us/articles/217991528-Introducing-VCert-API-Abstraction-for-DevOpsSec).
 
+## Prerequisites for using with Trust Protection Platform
+
+1. A user account that has been granted WebSDK Access
+2. A folder (zone) where the user has been granted the following permissions: View, Read, Write, Create, Revoke (for the revoke action), and Private Key Read (for the pickup action when CSR is service generated)
+3. Policy applied to the folder which specifies:
+    1. CA Template that Trust Protection Platform will use to enroll certificate requests submitted by VCert
+    2. Subject DN values for Organizational Unit (OU), Organization (O), City (L), State (ST) and Country (C)
+    3. Management Type not locked or locked to 'Enrollment'
+    4. Certificate Signing Request (CSR) Generation not locked or locked to 'Service Generated CSR'
+    5. Generate Key/CSR on Application not locked or locked to 'No'
+    6. (Recommended) Disable Automatic Renewal set to 'Yes'
+    7. (Recommended) Key Bit Strength set to 2048 or higher
+    8. (Recommended) Domain Whitelisting policy appropriately assigned
+
 ## Testing with Trust Protection Platform and Cloud
 
 Unit tests:
