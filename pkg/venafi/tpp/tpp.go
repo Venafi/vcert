@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
+	"log"
 	"net/http"
 	"regexp"
 	"strings"
@@ -243,8 +244,10 @@ func (c *Connector) getHTTPClient() *http.Client {
 	switch c.renegotiate {
 	case "always":
 		tlsConf.Renegotiation = tls.RenegotiateFreelyAsClient
+		log.Printf("Using renegotiation option %s", tlsConf.Renegotiation)
 	case "once":
 		tlsConf.Renegotiation = tls.RenegotiateOnceAsClient
+		log.Printf("Using renegotiation option %s", tlsConf.Renegotiation)
 	default:
 		tlsConf.Renegotiation = tls.RenegotiateNever
 	}
