@@ -196,6 +196,7 @@ func (c *Connector) RequestCertificate(req *certificate.Request, zone string) (r
 	if err != nil {
 		return "", err
 	}
+
 	b, _ := json.Marshal(certificateRequest{ZoneID: z.ID, CSR: string(req.CSR)})
 	reader := bytes.NewReader(b)
 	request, err := http.NewRequest("POST", url, reader)
@@ -452,7 +453,7 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 	}
 
 	req := certificateRequest{
-		ZoneID: zoneId,
+		ZoneID:                       zoneId,
 		ExistingManagedCertificateId: managedCertificateId,
 	}
 	if renewReq.CertificateRequest != nil && 0 < len(renewReq.CertificateRequest.CSR) {
@@ -564,11 +565,9 @@ func (c *Connector) getPoliciesByID(ids []string) (*certificatePolicy, error) {
 			policy.SubjectLRegexes = p.SubjectLRegexes
 			policy.SubjectCRegexes = p.SubjectCRegexes
 			policy.SANRegexes = p.SANRegexes
-			break
 		case certificatePolicyTypeUse:
 			policy.KeyTypes = p.KeyTypes
 			policy.KeyReuse = p.KeyReuse
-			break
 		}
 	}
 	return policy, nil
