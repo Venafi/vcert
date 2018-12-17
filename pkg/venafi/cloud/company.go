@@ -17,7 +17,6 @@
 package cloud
 
 import (
-	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
 	"time"
 )
@@ -55,14 +54,10 @@ func (z *zone) GetZoneConfiguration(ud *userDetails, policy *certificatePolicy) 
 
 	if policy != nil {
 		if policy.KeyTypes != nil {
-			var certKeyType certificate.KeyType
 			for _, kt := range policy.KeyTypes {
-				certKeyType.Set(string(kt.KeyType))
 				keyConfiguration := endpoint.AllowedKeyConfiguration{}
-				keyConfiguration.KeyType = certKeyType
-				for _, size := range kt.KeyLengths {
-					keyConfiguration.KeySizes = append(keyConfiguration.KeySizes, size)
-				}
+				keyConfiguration.KeyType.Set(string(kt.KeyType))
+				keyConfiguration.KeySizes = kt.KeyLengths[:]
 				zoneConfig.AllowedKeyConfigurations = append(zoneConfig.AllowedKeyConfigurations, keyConfiguration)
 			}
 		}
