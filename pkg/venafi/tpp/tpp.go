@@ -201,29 +201,24 @@ func retrieveChainOptionFromString(order string) retrieveChainOption {
 	}
 }
 
-// SetBaseURL sets the base URL used to cummuncate with TPP
+var baseUrlRegex = regexp.MustCompile("^https://[a-z\\d]+[-a-z\\d.]+[a-z\\d][:\\d]*/vedsdk/$")
+
+// SetBaseURL sets the base URL used to communicate with TPP
 func (c *Connector) SetBaseURL(url string) error {
 	modified := strings.ToLower(url)
-	reg := regexp.MustCompile("^http(|s)://")
-	if reg.FindStringIndex(modified) == nil {
+	if strings.HasPrefix(modified, "http://") {
+		modified = "https://" + modified[7:]
+	} else if !strings.HasPrefix(modified, "https://") {
 		modified = "https://" + modified
-	} else {
-		modified = reg.ReplaceAllString(modified, "https://")
 	}
-	reg = regexp.MustCompile("^https://.+?/")
-	if reg.FindStringIndex(modified) == nil {
+	if !strings.HasSuffix(modified, "/") {
 		modified = modified + "/"
 	}
 
-	reg = regexp.MustCompile("/vedsdk(|/)$")
-	if reg.FindStringIndex(modified) == nil {
+	if !strings.HasSuffix(modified, "vedsdk/") {
 		modified += "vedsdk/"
-	} else {
-		modified = reg.ReplaceAllString(modified, "/vedsdk/")
 	}
-
-	reg = regexp.MustCompile("^https://[a-z\\d]+[-a-z\\d.]+[a-z\\d][:\\d]*/vedsdk/$")
-	if loc := reg.FindStringIndex(modified); loc == nil {
+	if loc := baseUrlRegex.FindStringIndex(modified); loc == nil {
 		return fmt.Errorf("The specified TPP URL is invalid. %s\nExpected TPP URL format 'https://tpp.company.com/vedsdk/'", url)
 	}
 
