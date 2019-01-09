@@ -453,7 +453,7 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 	}
 
 	req := certificateRequest{
-		ZoneID:                       zoneId,
+		ZoneID: zoneId,
 		ExistingManagedCertificateId: managedCertificateId,
 	}
 	if renewReq.CertificateRequest != nil && 0 < len(renewReq.CertificateRequest.CSR) {
