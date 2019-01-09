@@ -18,9 +18,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/Venafi/vcert"
 	"os"
 	"strings"
+
+	"github.com/Venafi/vcert"
 )
 
 func setupEnrollCommandFlags() {
@@ -62,6 +63,9 @@ func setupEnrollCommandFlags() {
 	enrollFlags.BoolVar(&enrollParams.insecure, "insecure", false, "")
 	enrollFlags.StringVar(&enrollParams.config, "config", "", "")
 	enrollFlags.StringVar(&enrollParams.profile, "profile", "", "")
+	enrollFlags.StringVar(&enrollParams.clientCert, "client-cert", "", "")
+	enrollFlags.StringVar(&enrollParams.clientKey, "client-key", "", "")
+	enrollFlags.StringVar(&enrollParams.caCert, "ca-cert", "", "")
 	enrollFlags.Usage = func() {
 		fmt.Printf("%s\n", vcert.GetFormattedVersionString())
 		showEnrollmentUsage()
@@ -124,6 +128,12 @@ func showEnrollmentUsage() {
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a file name and a location where the resulting certificate file should be written. Example: /tmp/newcert.pem"))
 	fmt.Println("  -chain-file")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a path and file name where the resulting chain file should be written, if no chain file is specified the chain will be stored in the same file as the certificate. Example: /tmp/chain.pem"))
+	fmt.Println("  -ca-cert")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("CA certificate for mutual TLS"))
+	fmt.Println("  -client-cert")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Client TLS certicate"))
+	fmt.Println("  -client-key")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Client TLS private key"))
 	fmt.Println("  -format")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the output format. PEM is the default format. Options include: pem | json | pkcs12. If PKCS#12 format is specified, then all objects should be written using -file option."))
 	fmt.Println("  -key-file")

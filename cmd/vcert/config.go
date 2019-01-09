@@ -18,20 +18,20 @@ package main
 
 import (
 	"fmt"
-	"github.com/Venafi/vcert"
-	"github.com/Venafi/vcert/pkg/endpoint"
 	"io/ioutil"
 	"math/rand"
 	"time"
+
+	"github.com/Venafi/vcert"
+	"github.com/Venafi/vcert/pkg/endpoint"
 )
 
 func buildConfig(cf *commandFlags) (*vcert.Config, error) {
-
 	cfg := &vcert.Config{}
 	cfg.LogVerbose = cf.verbose
 
 	if cf.config != "" {
-		// loading from file
+		// Loading configuration from file
 		cfg.ConfigFile = cf.config
 		cfg.ConfigSection = cf.profile
 		err := cfg.LoadFromFile()
@@ -39,14 +39,14 @@ func buildConfig(cf *commandFlags) (*vcert.Config, error) {
 			return nil, err
 		}
 	} else {
-		// or filling from cli flags
+		// Loading configuration from CLI flags
 		var connectorType endpoint.ConnectorType
-		var baseUrl string
+		var baseURL string
 		var auth = &endpoint.Authentication{}
 		if cf.testMode {
 			connectorType = endpoint.ConnectorTypeFake
 			if cf.testModeDelay > 0 {
-				logger.Println("Running in -test-mode with emulating endpoint delay")
+				logger.Println("Running in -test-mode with emulating endpoint delay.")
 				var delay = rand.Intn(cf.testModeDelay)
 				for i := 0; i < delay; i++ {
 					time.Sleep(1 * time.Second)
@@ -54,7 +54,7 @@ func buildConfig(cf *commandFlags) (*vcert.Config, error) {
 			}
 		} else if cf.tppURL != "" {
 			connectorType = endpoint.ConnectorTypeTPP
-			baseUrl = cf.tppURL
+			baseURL = cf.tppURL
 			if cf.tppPassword == "" {
 				logger.Panicf("A password is required to communicate with TPP")
 			}
@@ -62,30 +62,31 @@ func buildConfig(cf *commandFlags) (*vcert.Config, error) {
 			auth.Password = cf.tppPassword
 		} else {
 			connectorType = endpoint.ConnectorTypeCloud
-			baseUrl = cf.cloudURL
+			baseURL = cf.cloudURL
 			auth.APIKey = cf.apiKey
 		}
 		cfg.ConnectorType = connectorType
 		cfg.Credentials = auth
-		cfg.BaseUrl = baseUrl
+		cfg.BaseUrl = baseURL
 	}
 
-	// trust bundle may be overridden by cli flag
+	// trust bundle may be overridden by CLI flag
 	if cf.trustBundle != "" {
+		logger.Println("Detected trust bundle flag at CLI.")
 		if cfg.ConnectionTrust != "" {
-			logf("overriding trust-bundle based on commandline flag")
+			logf("Overriding trust bundle based on command line flag.")
 		}
 		data, err := ioutil.ReadFile(cf.trustBundle)
 		if err != nil {
-			logger.Panicf("failed to read trust bundle: %s", err)
+			logger.Panicf("Failed to read trust bundle: %s", err)
 		}
 		cfg.ConnectionTrust = string(data)
 	}
 
-	// zone may be overridden by cli flag
+	// zone may be overridden by CLI flag
 	if cf.zone != "" {
 		if cfg.Zone != "" {
-			logf("overriding Zone value based on commandline flag")
+			logf("Overriding zone based on command line flag.")
 		}
 		cfg.Zone = cf.zone
 	}

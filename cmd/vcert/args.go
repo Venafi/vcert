@@ -19,10 +19,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/Venafi/vcert/pkg/certificate"
 	"io/ioutil"
 	"os"
 	"strings"
+
+	"github.com/Venafi/vcert/pkg/certificate"
 )
 
 type command int
@@ -102,6 +103,9 @@ type commandFlags struct {
 	insecure           bool
 	config             string
 	profile            string
+	clientCert         string
+	clientKey          string
+	caCert             string
 }
 
 func createFromCommandFlags(co command) *commandFlags {

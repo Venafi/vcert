@@ -24,16 +24,17 @@ import (
 	"encoding/pem"
 	"flag"
 	"fmt"
-	"github.com/Venafi/vcert"
-	"github.com/Venafi/vcert/cmd/vcert/output"
-	"github.com/Venafi/vcert/pkg/certificate"
-	"github.com/Venafi/vcert/pkg/endpoint"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/Venafi/vcert"
+	"github.com/Venafi/vcert/cmd/vcert/output"
+	"github.com/Venafi/vcert/pkg/certificate"
+	"github.com/Venafi/vcert/pkg/endpoint"
 )
 
 var (
@@ -61,7 +62,7 @@ func main() {
 			// so we use logger.Panic() and do recover() here to hide stacktrace
 			// exit() is a function to decide what to do
 
-			exit(1)  // it's os.Exit() by default, but can be overridden,
+			exit(1)  // it's os.Exit() by default, but can be overridden
 			panic(r) // so that panic() bubbling continues (it's needed when we call main() from cli_test.go)
 
 		}
@@ -73,6 +74,65 @@ func main() {
 		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	}
 
+	if cf.clientCert != "" && cf.clientKey != "" && cf.caCert != "" {
+		// https://medium.com/@sirsean/mutually-authenticated-tls-from-a-go-client-92a117e605a1
+		// http://www.bite-code.com/2015/06/25/tls-mutual-auth-in-golang/
+		// https://github.com/golang/go/issues/10181
+		// https://medium.com/@prateeknischal25/using-encrypted-private-keys-with-golang-server-379919955854
+
+		// Load client certificate and key
+		certIn, err := ioutil.ReadFile(cf.clientCert)
+		if err != nil {
+			logger.Panicf("Error reading client-side certificate: %s", err)
+		}
+		keyIn, err := ioutil.ReadFile(cf.clientKey)
+		if err != nil {
+			logger.Panicf("Error reading client-side private key: %s", err)
+		}
+
+		// Decrypt private key as necessary and parse key pair
+		var cert tls.Certificate
+		decodedKey, _ := pem.Decode(keyIn)
+		if x509.IsEncryptedPEMBlock(decodedKey) {
+			decryptedKey, err := x509.DecryptPEMBlock(decodedKey, []byte("changeit"))
+			if err != nil {
+				logger.Panicf("Error decrypting private key: %s", err)
+			}
+
+			decryptedKey = pem.EncodeToMemory(&pem.Block{
+				Type:  "RSA PRIVATE KEY",
+				Bytes: decryptedKey,
+			})
+
+			cert, err = tls.X509KeyPair(certIn, decryptedKey)
+			if err != nil {
+				logger.Panicf("Error loading key pair after decryption: %s", err)
+			}
+		} else if !x509.IsEncryptedPEMBlock(decodedKey) {
+			cert, err = tls.X509KeyPair(certIn, keyIn)
+			if err != nil {
+				logger.Panicf("Failed to parse client certificate and key: %s", err)
+			}
+		}
+
+		// Load CA certificate
+		caCert, err := ioutil.ReadFile(cf.caCert)
+		if err != nil {
+			logger.Panicf("Failed to load CA certificate: %s", err)
+		}
+
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(caCert)
+
+		// Setup HTTPS client
+		tlsConfig := &tls.Config{
+			Certificates: []tls.Certificate{cert},
+			RootCAs:      caCertPool,
+		}
+		tlsConfig.BuildNameToCertificate()
+		http.DefaultTransport.(*http.Transport).TLSClientConfig = tlsConfig
+	}
+
 	readPasswordsFromInputFlags(co, cf)
 
 	if co == commandGenCSR {
@@ -82,14 +142,14 @@ func main() {
 
 	cfg, err := buildConfig(cf)
 	if err != nil {
-		logger.Panicf("failed to build vcert config: %s", err)
+		logger.Panicf("Failed to build vcert config: %s", err)
 	}
 
 	if cf.zone == "" && cfg.Zone != "" {
 		cf.zone = cfg.Zone
 	}
 
-	connector, err := vcert.NewClient(cfg) // the rest requires endpoint connection
+	connector, err := vcert.NewClient(cfg) // Everything else requires an endpoint connection
 	if err != nil {
 		logf("Unable to connect to %s: %s", cfg.ConnectorType, err)
 	} else {
