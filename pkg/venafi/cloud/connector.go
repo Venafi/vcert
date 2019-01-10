@@ -21,13 +21,14 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"github.com/Venafi/vcert/pkg/certificate"
-	"github.com/Venafi/vcert/pkg/endpoint"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/Venafi/vcert/pkg/certificate"
+	"github.com/Venafi/vcert/pkg/endpoint"
 )
 
 const apiURL = "api.venafi.cloud/v1/"
@@ -47,7 +48,7 @@ const (
 	urlResourceCertificateRetrieve                = urlResourceCertificateRequests + "/%s/certificate"
 	urlResourceCertificateSearch                  = "certificatesearch"
 	urlResourceManagedCertificates                = "managedcertificates"
-	urlResourceManagedCertificateById             = urlResourceManagedCertificates + "/%s"
+	urlResourceManagedCertificateByID             = urlResourceManagedCertificates + "/%s"
 )
 
 type condorChainOption string
@@ -82,7 +83,7 @@ func (c *Connector) GetType() endpoint.ConnectorType {
 	return endpoint.ConnectorTypeCloud
 }
 
-//Ping attempts to connect to the Venafi Cloud API and returns an errror if it cannot
+// Ping attempts to connect to the Venafi Cloud API and returns an errror if it cannot
 func (c *Connector) Ping() (err error) {
 	url := c.getURL(urlResourcePing)
 
@@ -96,7 +97,7 @@ func (c *Connector) Ping() (err error) {
 	return err
 }
 
-//Authenticate authenticates the user with Venafi Cloud using the provided API Key
+// Authenticate authenticates the user with Venafi Cloud using the provided API Key
 func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 	if auth == nil {
 		return fmt.Errorf("failed to authenticate: missing credentials")
@@ -132,7 +133,7 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 	return nil
 }
 
-//Register registers a new user with Venafi Cloud
+// Register registers a new user with Venafi Cloud
 func (c *Connector) Register(email string) (err error) {
 	b, err := json.Marshal(userAccount{Username: email, UserAccountType: "API"})
 
@@ -150,7 +151,7 @@ func (c *Connector) Register(email string) (err error) {
 		return err
 	}
 
-	//the user has already been registered and there is nothing to parse
+	// User has already been registered and there is nothing to parse
 	if resp.StatusCode == http.StatusAccepted {
 		return nil
 	}
@@ -166,7 +167,7 @@ func (c *Connector) Register(email string) (err error) {
 	return nil
 }
 
-//ReadZoneConfiguration reads the Zone information needed for generating and requesting a certificate from Venafi Cloud
+// ReadZoneConfiguration reads the Zone information needed for generating and requesting a certificate from Venafi Cloud
 func (c *Connector) ReadZoneConfiguration(zone string) (config *endpoint.ZoneConfiguration, err error) {
 	z, err := c.getZoneByTag(zone)
 	if err != nil {
@@ -177,9 +178,8 @@ func (c *Connector) ReadZoneConfiguration(zone string) (config *endpoint.ZoneCon
 	return config, nil
 }
 
-//RequestCertificate submits the CSR to the Venafi Cloud API for processing
+// RequestCertificate submits the CSR to the Venafi Cloud API for processing
 func (c *Connector) RequestCertificate(req *certificate.Request, zone string) (requestID string, err error) {
-
 	if zone == "" {
 		zone = c.zone
 	}
@@ -274,7 +274,7 @@ func (c *Connector) getCertificateStatus(requestID string) (*certificateStatus, 
 	}
 }
 
-//RetrieveCertificate retrieves the certificate for the specified ID
+// RetrieveCertificate retrieves the certificate for the specified ID
 func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates *certificate.PEMCollection, err error) {
 
 	if req.FetchPrivateKey {
@@ -653,7 +653,7 @@ type managedCertificate struct {
 
 func (c *Connector) getManagedCertificate(managedCertId string) (*managedCertificate, error) {
 	var err error
-	url := c.getURL(urlResourceManagedCertificateById)
+	url := c.getURL(urlResourceManagedCertificateByID)
 	url = fmt.Sprintf(url, managedCertId)
 	if c.user == nil || c.user.Company == nil {
 		err = fmt.Errorf("Must be autheticated")

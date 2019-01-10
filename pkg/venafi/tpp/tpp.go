@@ -23,11 +23,12 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/pkg/certificate"
-	"github.com/Venafi/vcert/pkg/endpoint"
 	"net/http"
 	"regexp"
 	"strings"
+
+	"github.com/Venafi/vcert/pkg/certificate"
+	"github.com/Venafi/vcert/pkg/endpoint"
 )
 
 const defaultKeySize = 2048
@@ -201,7 +202,7 @@ func retrieveChainOptionFromString(order string) retrieveChainOption {
 	}
 }
 
-// SetBaseURL sets the base URL used to cummuncate with TPP
+// SetBaseURL sets the base URL used to communicate with TPP
 func (c *Connector) SetBaseURL(url string) error {
 	modified := strings.ToLower(url)
 	reg := regexp.MustCompile("^http(|s)://")
@@ -247,7 +248,7 @@ func (c *Connector) getHTTPClient() *http.Client {
 	return http.DefaultClient
 }
 
-//GenerateRequest creates a new certificate request, based on the zone/policy configuration and the user data
+// GenerateRequest creates a new certificate request, based on the zone/policy configuration and the user data
 func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *certificate.Request) (err error) {
 	if config == nil {
 		config, err = c.ReadZoneConfiguration(c.zone)

@@ -66,6 +66,7 @@ type commandFlags struct {
 	apiKey             string
 	cloudURL           string
 	zone               string
+	caDN               string
 	csrOption          string
 	keyType            certificate.KeyType
 	keySize            int
@@ -98,7 +99,7 @@ type commandFlags struct {
 	testModeDelay      int
 	revocationReason   string
 	revocationNoRetire bool
-	pickupIdFile       string
+	pickupIDFile       string
 	timeout            int
 	insecure           bool
 	config             string

@@ -18,9 +18,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/Venafi/vcert"
 	"os"
 	"strings"
+
+	"github.com/Venafi/vcert"
 )
 
 func setupRenewCommandFlags() {
@@ -57,7 +58,7 @@ func setupRenewCommandFlags() {
 	renewFlags.IntVar(&renewParams.testModeDelay, "test-mode-delay", 15, "")
 	renewFlags.StringVar(&renewParams.csrOption, "csr", "", "")
 	renewFlags.StringVar(&renewParams.keyPassword, "key-password", "", "")
-	renewFlags.StringVar(&renewParams.pickupIdFile, "pickup-id-file", "", "")
+	renewFlags.StringVar(&renewParams.pickupIDFile, "pickup-id-file", "", "")
 	renewFlags.IntVar(&renewParams.timeout, "timeout", 180, "")
 	renewFlags.BoolVar(&renewParams.insecure, "insecure", false, "")
 	renewFlags.StringVar(&renewParams.distinguishedName, "id", "", "")

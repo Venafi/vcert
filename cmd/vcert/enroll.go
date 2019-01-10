@@ -32,6 +32,7 @@ func setupEnrollCommandFlags() {
 	enrollFlags.StringVar(&enrollParams.tppPassword, "tpp-password", "", "")
 	enrollFlags.StringVar(&enrollParams.trustBundle, "trust-bundle", "", "")
 	enrollFlags.StringVar(&enrollParams.zone, "z", "", "")
+	enrollFlags.StringVar(&enrollParams.caDN, "ca-dn", "", "")
 	enrollFlags.Var(&enrollParams.keyCurve, "key-curve", "")
 	enrollFlags.Var(&enrollParams.keyType, "key-type", "")
 	enrollFlags.IntVar(&enrollParams.keySize, "key-size", 2048, "")
@@ -58,7 +59,7 @@ func setupEnrollCommandFlags() {
 	enrollFlags.IntVar(&enrollParams.testModeDelay, "test-mode-delay", 15, "")
 	enrollFlags.StringVar(&enrollParams.csrOption, "csr", "", "")
 	enrollFlags.StringVar(&enrollParams.keyPassword, "key-password", "", "")
-	enrollFlags.StringVar(&enrollParams.pickupIdFile, "pickup-id-file", "", "")
+	enrollFlags.StringVar(&enrollParams.pickupIDFile, "pickup-id-file", "", "")
 	enrollFlags.IntVar(&enrollParams.timeout, "timeout", 180, "")
 	enrollFlags.BoolVar(&enrollParams.insecure, "insecure", false, "")
 	enrollFlags.StringVar(&enrollParams.config, "config", "", "")
@@ -88,6 +89,8 @@ func showEnrollmentUsage() {
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a DNS Subject Alternative Name. To specify more than one, use spaces, like this:  -san-dns test.abc.xyz -san-dns test1.abc.xyz etc."))
 	fmt.Println("  -z")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Specify the zone used to determine enrollment configuration. In Trust Protection Platform this is equivelant to the policy path where the certificate object will be stored. "+UtilityShortName+" prepends \\VED\\Policy\\, so you only need to specify policy folders within the root Policy folder. Example: -z Corp\\Engineering"))
+	fmt.Println("  -ca-dn")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Specify the Certificate Authority DN"))
 
 	fmt.Printf("\nRequired for Venafi Cloud:\n")
 	fmt.Println("  -k")
@@ -183,8 +186,8 @@ func showEnrollmentUsage() {
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the ECDSA key curve. Options include: p521 | p384 | p256 (default p521)."))
 }
 
+// validateEnrollmentFlags valdiates the combination of command flags specified in an enrollment request
 func validateEnrollmentFlags() error {
-
 	if enrollParams.config != "" {
 		if enrollParams.apiKey != "" ||
 			enrollParams.cloudURL != "" ||
@@ -217,9 +220,11 @@ func validateEnrollmentFlags() error {
 	if (enrollParams.file != "") && (enrollParams.certFile != "" || enrollParams.chainFile != "" || enrollParams.keyFile != "") {
 		return fmt.Errorf("The '-file' cannot be used used with any other -*-file flags. Either all data goes into one file or individual files must be specified using the appropriate flags")
 	}
+
 	if enrollParams.chainOption == "ignore" && enrollParams.chainFile != "" {
 		return fmt.Errorf("The `-chain ignore` option cannot be used with -chain-file option")
 	}
+
 	if !enrollParams.testMode && enrollParams.config == "" {
 		if enrollParams.tppURL == "" {
 			// should be SaaS service
@@ -239,6 +244,9 @@ func validateEnrollmentFlags() error {
 			}
 			if enrollParams.zone == "" {
 				return fmt.Errorf("A zone is required for requesting a certificate from Trust Protection Platform")
+			}
+			if enrollParams.caDN == "" {
+				return fmt.Errorf("A CA DN is required for requesting a certificate from Trust Protection Platform")
 			}
 		}
 	}

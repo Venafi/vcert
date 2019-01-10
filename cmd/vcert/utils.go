@@ -34,7 +34,11 @@ import (
 	"github.com/Venafi/vcert/pkg/endpoint"
 )
 
+// fillCertificateRequest populates the certificate request payload with values from command flags
 func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certificate.Request {
+	if cf.caDN != "" {
+		req.CADN = cf.caDN
+	}
 	if cf.friendlyName != "" {
 		req.FriendlyName = cf.friendlyName
 	}
@@ -100,7 +104,6 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 }
 
 func generateRenewalRequest(cf *commandFlags, certReq *certificate.Request) *certificate.RenewalRequest {
-
 	req := &certificate.RenewalRequest{}
 
 	req.Thumbprint = cf.thumbprint
@@ -194,8 +197,8 @@ func retrieveCertificate(connector endpoint.Connector, req *certificate.Request,
 	}
 }
 
-// TODO: this one utilizes req.Timeout feature that is added to connector.RetrieveCertificate()
-// TODO: ..however, it cannot do logging in CLI context right now -- logger.Printf("Issuance of certificate is pending...")
+/* TODO: This one utilizes req.Timeout feature that is added to connector.RetrieveCertificate(), but
+it cannot do logging in CLI context right now -- logger.Printf("Issuance of certificate is pending ...") */
 func retrieveCertificateNew(connector endpoint.Connector, req *certificate.Request, timeout time.Duration) (certificates *certificate.PEMCollection, err error) {
 	req.Timeout = timeout
 	certificates, err = connector.RetrieveCertificate(req)

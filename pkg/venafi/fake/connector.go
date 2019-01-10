@@ -23,11 +23,12 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/pkg/certificate"
-	"github.com/Venafi/vcert/pkg/endpoint"
 	"math/big"
 	"strings"
 	"time"
+
+	"github.com/Venafi/vcert/pkg/certificate"
+	"github.com/Venafi/vcert/pkg/endpoint"
 )
 
 type Connector struct {
@@ -72,7 +73,6 @@ func validateRequest(req *certificate.Request) error {
 }
 
 func (c *Connector) RequestCertificate(req *certificate.Request, zone string) (requestID string, err error) {
-
 	err = validateRequest(req)
 	if err != nil {
 		return "", fmt.Errorf("certificate request validation fail: %s", err)

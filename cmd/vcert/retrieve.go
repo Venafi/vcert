@@ -18,8 +18,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/Venafi/vcert"
 	"os"
+
+	"github.com/Venafi/vcert"
 )
 
 func setupRetrieveCommandFlags() {
@@ -43,7 +44,7 @@ func setupRetrieveCommandFlags() {
 	pickupFlags.StringVar(&pickParams.zone, "z", "", "")
 	pickupFlags.IntVar(&pickParams.timeout, "timeout", 0, "")
 	pickupFlags.BoolVar(&pickParams.insecure, "insecure", false, "")
-	pickupFlags.StringVar(&pickParams.pickupIdFile, "pickup-id-file", "", "")
+	pickupFlags.StringVar(&pickParams.pickupIDFile, "pickup-id-file", "", "")
 	pickupFlags.StringVar(&pickParams.keyFile, "key-file", "", "")
 	pickupFlags.StringVar(&pickParams.config, "config", "", "")
 	pickupFlags.StringVar(&pickParams.profile, "profile", "", "")
@@ -167,10 +168,10 @@ func validatePickupFlags() error {
 	if pickParams.tppURL == "" && pickParams.apiKey == "" && !pickParams.testMode && pickParams.config == "" {
 		return fmt.Errorf("Missing required data for certificate pickup. Please check the help to see available command arguments")
 	}
-	if pickParams.pickupID == "" && pickParams.pickupIdFile == "" {
+	if pickParams.pickupID == "" && pickParams.pickupIDFile == "" {
 		return fmt.Errorf("A Pickup ID is required to pickup a certificate provided by -pickup-id OR -pickup-id-file options")
 	}
-	if pickParams.pickupID != "" && pickParams.pickupIdFile != "" {
+	if pickParams.pickupID != "" && pickParams.pickupIDFile != "" {
 		return fmt.Errorf("Both -pickup-id and -pickup-id-file options cannot be specified at the same time")
 	}
 	if (pickParams.file != "" && pickParams.certFile != "") || (pickParams.file != "" && pickParams.chainFile != "") {

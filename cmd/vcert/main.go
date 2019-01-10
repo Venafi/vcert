@@ -70,8 +70,10 @@ func main() {
 
 	co, cf, _ := parseArgs()
 
+	var tlsConfig tls.Config
+
 	if cf.insecure {
-		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		tlsConfig.InsecureSkipVerify = true
 	}
 
 	if cf.clientCert != "" && cf.clientKey != "" && cf.caCert != "" {
@@ -125,13 +127,13 @@ func main() {
 		caCertPool.AppendCertsFromPEM(caCert)
 
 		// Setup HTTPS client
-		tlsConfig := &tls.Config{
-			Certificates: []tls.Certificate{cert},
-			RootCAs:      caCertPool,
-		}
+		tlsConfig.Certificates = []tls.Certificate{cert}
+		tlsConfig.Renegotiation = tls.RenegotiateFreelyAsClient
+		tlsConfig.RootCAs = caCertPool
 		tlsConfig.BuildNameToCertificate()
-		http.DefaultTransport.(*http.Transport).TLSClientConfig = tlsConfig
 	}
+
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tlsConfig
 
 	readPasswordsFromInputFlags(co, cf)
 
@@ -228,7 +230,7 @@ func main() {
 				cf.keyFile,
 				cf.certFile,
 				cf.chainFile,
-				cf.pickupIdFile,
+				cf.pickupIDFile,
 				cf.keyPassword,
 			},
 		}
@@ -241,8 +243,8 @@ func main() {
 	}
 
 	if co == commandPickup {
-		if cf.pickupIdFile != "" {
-			bytes, err := ioutil.ReadFile(cf.pickupIdFile)
+		if cf.pickupIDFile != "" {
+			bytes, err := ioutil.ReadFile(cf.pickupIDFile)
 			if err != nil {
 				logger.Panicf("Failed to read Pickup ID value: %s", err)
 			}
@@ -275,7 +277,7 @@ func main() {
 				cf.keyFile,
 				cf.certFile,
 				cf.chainFile,
-				cf.pickupIdFile,
+				cf.pickupIDFile,
 				cf.keyPassword,
 			},
 		}
@@ -320,7 +322,7 @@ func main() {
 		case "local" == cf.csrOption || "" == cf.csrOption:
 			// restore certificate request from old certificate
 			req = certificate.NewRequest(oldCert)
-			// override values with from command line flags
+			// override values with those from command line flags
 			req = fillCertificateRequest(req, cf)
 
 		case "service" == cf.csrOption:
@@ -406,7 +408,7 @@ func main() {
 				cf.keyFile,
 				cf.certFile,
 				cf.chainFile,
-				cf.pickupIdFile,
+				cf.pickupIDFile,
 				cf.keyPassword,
 			},
 		}

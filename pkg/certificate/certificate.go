@@ -30,7 +30,7 @@ import (
 	"time"
 )
 
-//EllipticCurve represents the types of supported elliptic curves
+// EllipticCurve represents the types of supported elliptic curves
 type EllipticCurve int
 
 func (ec *EllipticCurve) String() string {
@@ -48,7 +48,7 @@ func (ec *EllipticCurve) String() string {
 	}
 }
 
-//Set the elliptic cuve value via a string
+// Set EllipticCurve value via a string
 func (ec *EllipticCurve) Set(value string) error {
 	switch strings.ToLower(value) {
 	case "p521":
@@ -77,7 +77,7 @@ const (
 	EllipticCurveP384
 )
 
-//KeyType represents the types of supported keys
+// KeyType represents the types of supported keys
 type KeyType int
 
 func (kt *KeyType) String() string {
@@ -91,7 +91,7 @@ func (kt *KeyType) String() string {
 	}
 }
 
-//Set the key type via a string
+// Set the key type via a string
 func (kt *KeyType) Set(value string) error {
 	switch strings.ToLower(value) {
 	case "rsa":
@@ -120,8 +120,9 @@ const (
 	UserProvidedCSR
 )
 
-//Request contains data needed to generate a certificate request
+// Request contains data needed to generate a certificate request
 type Request struct {
+	CADN               string
 	Subject            pkix.Name
 	DNSNames           []string
 	EmailAddresses     []string
@@ -140,10 +141,10 @@ type Request struct {
 	ChainOption        ChainOption
 	KeyPassword        string
 	FetchPrivateKey    bool
-	Thumbprint         string /* this one is here because *Request is used in RetrieveCertificate(),
-	   it should be refactored so that RetrieveCertificate() uses
-	   some abstract search object, instead of *Request{PickupID} */
-	Timeout time.Duration
+	/*	Thumbprint is here because *Request is used in RetrieveCertificate().
+		Code should be refactored so that RetrieveCertificate() uses some abstract search object, instead of *Request{PickupID} */
+	Thumbprint string
+	Timeout    time.Duration
 }
 
 type RevocationRequest struct {
@@ -210,7 +211,7 @@ func PublicKey(priv interface{}) interface{} {
 	return publicKey(priv)
 }
 
-//GetPrivateKeyPEMBock gets the private key as a PEM data block
+// GetPrivateKeyPEMBock gets the private key as a PEM data block
 func GetPrivateKeyPEMBock(key interface{}) (*pem.Block, error) {
 	switch k := key.(type) {
 	case *rsa.PrivateKey:
@@ -226,7 +227,7 @@ func GetPrivateKeyPEMBock(key interface{}) (*pem.Block, error) {
 	}
 }
 
-//GetEncryptedPrivateKeyPEMBock gets the private key as an encrypted PEM data block
+// GetEncryptedPrivateKeyPEMBock gets the private key as an encrypted PEM data block
 func GetEncryptedPrivateKeyPEMBock(key interface{}, password []byte) (*pem.Block, error) {
 	switch k := key.(type) {
 	case *rsa.PrivateKey:
@@ -242,17 +243,17 @@ func GetEncryptedPrivateKeyPEMBock(key interface{}, password []byte) (*pem.Block
 	}
 }
 
-//GetCertificatePEMBlock gets the certificate as a PEM data block
+// GetCertificatePEMBlock gets the certificate as a PEM data block
 func GetCertificatePEMBlock(cert []byte) *pem.Block {
 	return &pem.Block{Type: "CERTIFICATE", Bytes: cert}
 }
 
-//GetCertificateRequestPEMBlock gets the certificate request as a PEM data block
+// GetCertificateRequestPEMBlock gets the certificate request as a PEM data block
 func GetCertificateRequestPEMBlock(request []byte) *pem.Block {
 	return &pem.Block{Type: "CERTIFICATE REQUEST", Bytes: request}
 }
 
-//GenerateECDSAPrivateKey generates a new ecdsa private key using the curve specified
+// GenerateECDSAPrivateKey generates a new ecdsa private key using the curve specified
 func GenerateECDSAPrivateKey(curve EllipticCurve) (*ecdsa.PrivateKey, error) {
 	var priv *ecdsa.PrivateKey
 	var c elliptic.Curve
@@ -277,7 +278,7 @@ func GenerateECDSAPrivateKey(curve EllipticCurve) (*ecdsa.PrivateKey, error) {
 	return priv, nil
 }
 
-//GenerateRSAPrivateKey generates a new rsa private key using the size specified
+// GenerateRSAPrivateKey generates a new rsa private key using the size specified
 func GenerateRSAPrivateKey(size int) (*rsa.PrivateKey, error) {
 	priv, err := rsa.GenerateKey(rand.Reader, size)
 	if err != nil {
@@ -289,8 +290,8 @@ func GenerateRSAPrivateKey(size int) (*rsa.PrivateKey, error) {
 
 func NewRequest(cert *x509.Certificate) *Request {
 	req := &Request{}
-	// 1st fill with *cert content
 
+	// First populate with *cert content
 	req.Subject = cert.Subject
 	req.DNSNames = cert.DNSNames
 	req.EmailAddresses = cert.EmailAddresses
@@ -304,7 +305,7 @@ func NewRequest(cert *x509.Certificate) *Request {
 	case *ecdsa.PublicKey:
 		req.KeyType = KeyTypeECDSA
 		req.KeyLength = pub.Curve.Params().BitSize
-		// TODO: req.KeyCurve = pub.Curve.Params().Name...
+		// TODO: req.KeyCurve = pub.Curve.Params().Name ...
 	default: // case *dsa.PublicKey:
 		// vcert only works with RSA & ECDSA
 	}

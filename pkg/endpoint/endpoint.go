@@ -19,10 +19,11 @@ package endpoint
 import (
 	"crypto/x509"
 	"fmt"
-	"github.com/Venafi/vcert/pkg/certificate"
 	"regexp"
 	"sort"
 	"strings"
+
+	"github.com/Venafi/vcert/pkg/certificate"
 )
 
 // ConnectorType represents the available connectors

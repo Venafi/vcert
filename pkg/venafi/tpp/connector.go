@@ -21,14 +21,15 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"github.com/Venafi/vcert/pkg/certificate"
-	"github.com/Venafi/vcert/pkg/endpoint"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Venafi/vcert/pkg/certificate"
+	"github.com/Venafi/vcert/pkg/endpoint"
 )
 
 // Connector contains the base data needed to communicate with a TPP Server
@@ -75,7 +76,7 @@ func (c *Connector) Ping() (err error) {
 	return err
 }
 
-//Register does nothing for TPP
+// Register does nothing for TPP
 func (c *Connector) Register(email string) (err error) {
 	return nil
 }
@@ -173,7 +174,6 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 
 // RequestCertificate submits the CSR to TPP returning the DN of the requested Certificate
 func (c *Connector) RequestCertificate(req *certificate.Request, zone string) (requestID string, err error) {
-
 	if zone == "" {
 		zone = c.zone
 	}
