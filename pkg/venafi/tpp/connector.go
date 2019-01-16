@@ -144,6 +144,7 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 	case certificate.LocalGeneratedCSR, certificate.UserProvidedCSR:
 		tppReq = certificateRequest{
 			PolicyDN:                getPolicyDN(zone),
+			CADN:                    req.CADN,
 			PKCS10:                  string(req.CSR),
 			ObjectName:              req.FriendlyName,
 			DisableAutomaticRenewal: true}
@@ -151,6 +152,7 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 	case certificate.ServiceGeneratedCSR:
 		tppReq = certificateRequest{
 			PolicyDN:                getPolicyDN(zone),
+			CADN:                    req.CADN,
 			ObjectName:              req.FriendlyName,
 			Subject:                 req.Subject.CommonName, // TODO: there is some problem because Subject is not only CN
 			SubjectAltNames:         wrapAltNames(req),

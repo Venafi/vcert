@@ -216,7 +216,7 @@ func isComponentValid(regexes []string, component []string) bool {
 	return true
 }
 
-// UpdateCertificateRequest updates a certificate request based on the zone configurataion retrieved from the remote endpoint
+// UpdateCertificateRequest updates a certificate request based on the zone configuration retrieved from the remote endpoint
 func (z *ZoneConfiguration) UpdateCertificateRequest(request *certificate.Request) {
 	if (request.Subject.Organization == nil || len(request.Subject.Organization) == 0) && z.Organization != "" {
 		request.Subject.Organization = []string{z.Organization}

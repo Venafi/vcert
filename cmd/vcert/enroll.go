@@ -245,9 +245,6 @@ func validateEnrollmentFlags() error {
 			if enrollParams.zone == "" {
 				return fmt.Errorf("A zone is required for requesting a certificate from Trust Protection Platform")
 			}
-			if enrollParams.caDN == "" {
-				return fmt.Errorf("A CA DN is required for requesting a certificate from Trust Protection Platform")
-			}
 		}
 	}
 

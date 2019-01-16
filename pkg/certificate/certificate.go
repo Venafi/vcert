@@ -178,7 +178,7 @@ type ImportResponse struct {
 	PrivateKeyVaultId  int    `json:",omitempty"`
 }
 
-//GenerateRequest generates a certificate request
+// GenerateRequest generates a certificate request
 func GenerateRequest(request *Request, privateKey interface{}) error {
 	certificateRequest := x509.CertificateRequest{}
 	certificateRequest.Subject = request.Subject
