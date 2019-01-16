@@ -65,7 +65,7 @@ func (c *Connector) searchCertificates(req *SearchRequest) (*CertificateSearchRe
 	request.Header.Add("cache-control", "no-cache")
 	request.Header.Add("accept", "application/json")
 
-	resp, err := http.DefaultClient.Do(request)
+	resp, err := c.getHTTPClient().Do(request)
 	if err != nil {
 		return nil, err
 	}
