@@ -258,6 +258,7 @@ func (c *Connector) request(method string, resource urlResource, data interface{
 
 	res, err := c.getHTTPClient().Do(r)
 	statusCode = res.StatusCode
+	statusText = res.Status
 	if err != nil {
 		return
 	}
