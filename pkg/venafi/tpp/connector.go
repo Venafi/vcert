@@ -27,7 +27,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -56,23 +55,14 @@ func (c *Connector) GetType() endpoint.ConnectorType {
 
 //Ping attempts to connect to the TPP Server WebSDK API and returns an errror if it cannot
 func (c *Connector) Ping() (err error) {
-	url, err := c.getURL("")
+	statusCode, status, _, err := c.request("GET", "", nil)
 	if err != nil {
-		return err
+		return
 	}
-	req, _ := http.NewRequest("GET", url, nil)
-	req.Header.Add("content-type", "application/json")
-	req.Header.Add("cache-control", "no-cache")
-
-	res, err := c.getHTTPClient().Do(req)
-	if err != nil {
-		return err
-	} else if res.StatusCode != http.StatusOK {
-		defer res.Body.Close()
-		body, _ := ioutil.ReadAll(res.Body)
-		err = fmt.Errorf("%s", string(body))
+	if statusCode != http.StatusOK {
+		err = fmt.Errorf(status)
 	}
-	return err
+	return
 }
 
 //Register does nothing for TPP
@@ -85,33 +75,17 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 	if auth == nil {
 		return fmt.Errorf("failed to authenticate: missing credentials")
 	}
-	url, err := c.getURL(urlResourceAuthorize)
+	statusCode, status, body, err := c.request("POST", urlResourceAuthorize, authorizeResquest{Username: auth.User, Password: auth.Password})
 	if err != nil {
-		return err
+		return
 	}
 
-	b, _ := json.Marshal(authorizeResquest{Username: auth.User, Password: auth.Password})
-	payload := bytes.NewReader(b)
-	req, _ := http.NewRequest("POST", url, payload)
-	req.Header.Add("content-type", "application/json")
-	req.Header.Add("cache-control", "no-cache")
-
-	res, err := c.getHTTPClient().Do(req)
-	if err == nil {
-		defer res.Body.Close()
-		body, _ := ioutil.ReadAll(res.Body)
-
-		key, err := parseAuthorizeResult(res.StatusCode, res.Status, body)
-		if err != nil {
-			if c.verbose {
-				log.Printf("JSON sent for %s\n%s", urlResourceAuthorize, strings.Replace(fmt.Sprintf("%s", b), auth.Password, "********", -1))
-			}
-			return err
-		}
-		c.apiKey = key
-		return nil
+	key, err := parseAuthorizeResult(statusCode, status, body)
+	if err != nil {
+		return
 	}
-	return err
+	c.apiKey = key
+	return
 }
 
 func wrapAltNames(req *certificate.Request) (items []sanItem) {
@@ -127,6 +101,7 @@ func wrapAltNames(req *certificate.Request) (items []sanItem) {
 	return items
 }
 
+//todo:remove unused
 func wrapKeyType(kt certificate.KeyType) string {
 	switch kt {
 	case certificate.KeyTypeRSA:
@@ -266,32 +241,12 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 }
 
 func (c *Connector) retrieveCertificateOnce(certReq certificateRetrieveRequest) (*certificateRetrieveResponse, error) {
-	url, err := c.getURL(urlResourceCertificateRetrieve)
+	statusCode, status, body, err := c.request("POST", urlResourceCertificateRetrieve, certReq)
 	if err != nil {
 		return nil, err
 	}
-
-	b, _ := json.Marshal(certReq)
-
-	payload := bytes.NewReader(b)
-	r, _ := http.NewRequest("POST", url, payload)
-	r.Header.Add("x-venafi-api-key", c.apiKey)
-	r.Header.Add("content-type", "application/json")
-	r.Header.Add("cache-control", "no-cache")
-
-	res, err := c.getHTTPClient().Do(r)
-
+	retrieveResponse, err := parseRetrieveResult(statusCode, status, body)
 	if err != nil {
-		return nil, err
-	}
-
-	defer res.Body.Close()
-	body, _ := ioutil.ReadAll(res.Body)
-	retrieveResponse, err := parseRetrieveResult(res.StatusCode, res.Status, body)
-	if err != nil {
-		if c.verbose {
-			log.Printf("JSON sent for %s\n%s", urlResourceCertificateRetrieve, b)
-		}
 		return nil, err
 	}
 	return &retrieveResponse, nil
@@ -319,38 +274,18 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 		return "", fmt.Errorf("failed to create renewal request: CertificateDN or Thumbprint required")
 	}
 
-	url, err := c.getURL(urlResourceCertificateRenew)
-	if err != nil {
-		return "", err
-	}
-
 	var r = certificateRenewRequest{}
 	r.CertificateDN = renewReq.CertificateDN
 	if renewReq.CertificateRequest != nil && len(renewReq.CertificateRequest.CSR) > 0 {
 		r.PKCS10 = string(renewReq.CertificateRequest.CSR)
 	}
-
-	b, _ := json.Marshal(r)
-	payload := bytes.NewReader(b)
-	req, _ := http.NewRequest("POST", url, payload)
-	req.Header.Add("x-venafi-api-key", c.apiKey)
-	req.Header.Add("content-type", "application/json")
-	req.Header.Add("cache-control", "no-cache")
-
-	res, err := c.getHTTPClient().Do(req)
-
+	statusCode, status, body, err := c.request("POST", urlResourceCertificateRenew, r)
 	if err != nil {
 		return "", err
 	}
 
-	defer res.Body.Close()
-	body, _ := ioutil.ReadAll(res.Body)
-	response, err := parseRenewResult(res.StatusCode, res.Status, body)
+	response, err := parseRenewResult(statusCode, status, body)
 	if err != nil {
-		if c.verbose {
-			log.Printf("JSON sent for %s\n%s", url, b)
-			log.Printf("Response: %s", string(body))
-		}
 		return "", err
 	}
 	if !response.Success {
@@ -414,90 +349,74 @@ func (c *Connector) ReadZoneConfiguration(zone string) (config *endpoint.ZoneCon
 	policyDN := getPolicyDN(zone)
 	keyType := certificate.KeyTypeRSA
 
-	url, err := c.getURL(urlResourceFindPolicy)
-	if err != nil {
-		return nil, err
-	}
 	attributes := []string{tppAttributeOrg, tppAttributeOrgUnit, tppAttributeCountry, tppAttributeState, tppAttributeLocality, tppAttributeKeyAlgorithm, tppAttributeKeySize, tppAttributeEllipticCurve, tppAttributeRequestHash, tppAttributeManagementType, tppAttributeManualCSR}
 	for _, attrib := range attributes {
-		b, _ := json.Marshal(policyRequest{ObjectDN: policyDN, Class: "X509 Certificate", AttributeName: attrib})
-		payload := bytes.NewReader(b)
-		req, _ := http.NewRequest("POST", url, payload)
-		req.Header.Add("x-venafi-api-key", c.apiKey)
-		req.Header.Add("content-type", "application/json")
-		req.Header.Add("cache-control", "no-cache")
-
-		res, err := c.getHTTPClient().Do(req)
-
-		if err == nil {
-			defer res.Body.Close()
-			body, _ := ioutil.ReadAll(res.Body)
-
-			tppData, err := parseConfigResult(res.StatusCode, res.Status, body)
-			if tppData.Error == "" && (err != nil || tppData.Values == nil || len(tppData.Values) == 0) {
-				continue
-			} else if tppData.Error != "" && tppData.Result == 400 { //object does not exist
-				return nil, fmt.Errorf(tppData.Error)
-			}
-
-			switch attrib {
-			case tppAttributeOrg:
-				zoneConfig.Organization = tppData.Values[0]
-				zoneConfig.OrganizationLocked = tppData.Locked
-			case tppAttributeOrgUnit:
-				zoneConfig.OrganizationalUnit = tppData.Values
-			case tppAttributeCountry:
-				zoneConfig.Country = tppData.Values[0]
-				zoneConfig.CountryLocked = tppData.Locked
-			case tppAttributeState:
-				zoneConfig.Province = tppData.Values[0]
-				zoneConfig.ProvinceLocked = tppData.Locked
-			case tppAttributeLocality:
-				zoneConfig.Locality = tppData.Values[0]
-				zoneConfig.LocalityLocked = tppData.Locked
-			case tppAttributeKeyAlgorithm:
-				err = keyType.Set(tppData.Values[0])
-				if err == nil {
-					zoneConfig.AllowedKeyConfigurations = []endpoint.AllowedKeyConfiguration{endpoint.AllowedKeyConfiguration{KeyType: keyType}}
-				}
-			case tppAttributeKeySize:
-				temp, err := strconv.Atoi(tppData.Values[0])
-				if err == nil {
-					zoneConfig.AllowedKeyConfigurations = []endpoint.AllowedKeyConfiguration{endpoint.AllowedKeyConfiguration{KeyType: keyType, KeySizes: []int{temp}}}
-					zoneConfig.KeySizeLocked = tppData.Locked
-				}
-			case tppAttributeEllipticCurve:
-				curve := certificate.EllipticCurveP256
-				err = curve.Set(tppData.Values[0])
-				if err == nil {
-					zoneConfig.AllowedKeyConfigurations = []endpoint.AllowedKeyConfiguration{endpoint.AllowedKeyConfiguration{KeyType: certificate.KeyTypeECDSA, KeyCurves: []certificate.EllipticCurve{curve}}}
-					zoneConfig.KeySizeLocked = tppData.Locked
-				}
-			case tppAttributeRequestHash:
-				alg, err := strconv.Atoi(tppData.Values[0])
-				if err == nil {
-					switch alg {
-					case pkcs10HashAlgorithmSha1:
-						zoneConfig.HashAlgorithm = x509.SHA1WithRSA
-					case pkcs10HashAlgorithmSha384:
-						zoneConfig.HashAlgorithm = x509.SHA384WithRSA
-					case pkcs10HashAlgorithmSha512:
-						zoneConfig.HashAlgorithm = x509.SHA512WithRSA
-					default:
-						zoneConfig.HashAlgorithm = x509.SHA256WithRSA
-					}
-				}
-			case tppAttributeManagementType, tppAttributeManualCSR:
-				if tppData.Locked {
-					zoneConfig.CustomAttributeValues[attrib] = tppData.Values[0]
-				}
-			}
-		} else {
-			if c.verbose {
-				log.Printf("JSON sent for %s\n%s", urlResourceFindPolicy, b)
-			}
+		pr := policyRequest{ObjectDN: policyDN, Class: "X509 Certificate", AttributeName: attrib}
+		statusCode, status, body, err := c.request("POST", urlResourceFindPolicy, pr)
+		if err != nil {
 			return nil, err
 		}
+
+		tppData, err := parseConfigResult(statusCode, status, body)
+		if tppData.Error == "" && (err != nil || tppData.Values == nil || len(tppData.Values) == 0) {
+			continue
+		} else if tppData.Error != "" && tppData.Result == 400 { //object does not exist
+			return nil, fmt.Errorf(tppData.Error)
+		}
+
+		switch attrib {
+		case tppAttributeOrg:
+			zoneConfig.Organization = tppData.Values[0]
+			zoneConfig.OrganizationLocked = tppData.Locked
+		case tppAttributeOrgUnit:
+			zoneConfig.OrganizationalUnit = tppData.Values
+		case tppAttributeCountry:
+			zoneConfig.Country = tppData.Values[0]
+			zoneConfig.CountryLocked = tppData.Locked
+		case tppAttributeState:
+			zoneConfig.Province = tppData.Values[0]
+			zoneConfig.ProvinceLocked = tppData.Locked
+		case tppAttributeLocality:
+			zoneConfig.Locality = tppData.Values[0]
+			zoneConfig.LocalityLocked = tppData.Locked
+		case tppAttributeKeyAlgorithm:
+			err = keyType.Set(tppData.Values[0])
+			if err == nil {
+				zoneConfig.AllowedKeyConfigurations = []endpoint.AllowedKeyConfiguration{endpoint.AllowedKeyConfiguration{KeyType: keyType}}
+			}
+		case tppAttributeKeySize:
+			temp, err := strconv.Atoi(tppData.Values[0])
+			if err == nil {
+				zoneConfig.AllowedKeyConfigurations = []endpoint.AllowedKeyConfiguration{endpoint.AllowedKeyConfiguration{KeyType: keyType, KeySizes: []int{temp}}}
+				zoneConfig.KeySizeLocked = tppData.Locked
+			}
+		case tppAttributeEllipticCurve:
+			curve := certificate.EllipticCurveP256
+			err = curve.Set(tppData.Values[0])
+			if err == nil {
+				zoneConfig.AllowedKeyConfigurations = []endpoint.AllowedKeyConfiguration{endpoint.AllowedKeyConfiguration{KeyType: certificate.KeyTypeECDSA, KeyCurves: []certificate.EllipticCurve{curve}}}
+				zoneConfig.KeySizeLocked = tppData.Locked
+			}
+		case tppAttributeRequestHash:
+			alg, err := strconv.Atoi(tppData.Values[0])
+			if err == nil {
+				switch alg {
+				case pkcs10HashAlgorithmSha1:
+					zoneConfig.HashAlgorithm = x509.SHA1WithRSA
+				case pkcs10HashAlgorithmSha384:
+					zoneConfig.HashAlgorithm = x509.SHA384WithRSA
+				case pkcs10HashAlgorithmSha512:
+					zoneConfig.HashAlgorithm = x509.SHA512WithRSA
+				default:
+					zoneConfig.HashAlgorithm = x509.SHA256WithRSA
+				}
+			}
+		case tppAttributeManagementType, tppAttributeManualCSR:
+			if tppData.Locked {
+				zoneConfig.CustomAttributeValues[attrib] = tppData.Values[0]
+			}
+		}
+
 	}
 
 	return zoneConfig, nil
