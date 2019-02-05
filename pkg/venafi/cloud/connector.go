@@ -452,10 +452,7 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 		return "", fmt.Errorf("Must be autheticated to request a certificate")
 	}
 
-	req := certificateRequest{
-		ZoneID: zoneId,
-		ExistingManagedCertificateId: managedCertificateId,
-	}
+	req := certificateRequest{ZoneID: zoneId, ExistingManagedCertificateId: managedCertificateId}
 	if renewReq.CertificateRequest != nil && 0 < len(renewReq.CertificateRequest.CSR) {
 		req.CSR = string(renewReq.CertificateRequest.CSR)
 		req.ReuseCSR = false
