@@ -192,8 +192,12 @@ func (c *Connector) request(method string, url string, data interface{}, authNot
 	if c.apiKey != "" {
 		r.Header.Add("tppl-api-key", c.apiKey)
 	}
-	r.Header.Add("Accept", "application/json")
-	r.Header.Add("content-type", "application/json")
+	if method == "POST" {
+		r.Header.Add("Accept", "application/json")
+		r.Header.Add("content-type", "application/json")
+	} else {
+		r.Header.Add("Accept", "*/*")
+	}
 	r.Header.Add("cache-control", "no-cache")
 
 	res, err := http.DefaultClient.Do(r)

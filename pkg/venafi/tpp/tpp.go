@@ -273,7 +273,7 @@ func (c *Connector) request(method string, resource urlResource, data interface{
 	if trace {
 		log.Println("#################")
 		if method == "POST" {
-			log.Printf("JSON sent for %s\n%s\n", resource, string(b))
+			log.Printf("JSON sent for %s\n%s\n", url, string(b))
 		} else {
 			log.Printf("%s request sent to %s\n", method, url)
 		}

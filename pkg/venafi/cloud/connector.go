@@ -17,14 +17,11 @@
 package cloud
 
 import (
-	"bytes"
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
-	"io/ioutil"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -269,32 +266,16 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 	default:
 		url = fmt.Sprintf(url, condorChainOptionRootLast)
 	}
-	b := []byte{}
-	reader := bytes.NewReader(b)
-	request, err := http.NewRequest("GET", url, reader)
+	statusCode, status, body, err := c.request("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
-	request.Header.Add("tppl-api-key", c.apiKey)
-	request.Header.Add("Accept", "text/plain")
-	resp, err := http.DefaultClient.Do(request)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode == http.StatusOK {
+	if statusCode == http.StatusOK {
 		return newPEMCollectionFromResponse(body, req.ChainOption)
-	} else if resp.StatusCode == http.StatusConflict { // Http Status Code 409 means the certificate has not been signed by the ca yet.
+	} else if statusCode == http.StatusConflict { // Http Status Code 409 means the certificate has not been signed by the ca yet.
 		return nil, endpoint.ErrCertificatePending{CertificateID: req.PickupID}
 	} else {
-		if c.verbose {
-			log.Printf("JSON sent for %s\n%s", url, b)
-		}
-		return nil, fmt.Errorf("Failed to retrieve certificate. StatusCode: %d -- Status: %s -- Server Data: %s", resp.StatusCode, resp.Status, body)
+		return nil, fmt.Errorf("Failed to retrieve certificate. StatusCode: %d -- Status: %s -- Server Data: %s", statusCode, status, body) //todo:remove body from err
 	}
 }
 
@@ -422,28 +403,9 @@ func (c *Connector) getPoliciesByID(ids []string) (*certificatePolicy, error) {
 	}
 	for _, id := range ids {
 		url = fmt.Sprintf(url, id)
-		b := []byte{}
-		reader := bytes.NewReader(b)
-		request, err := http.NewRequest("GET", url, reader)
+		statusCode, status, body, err := c.request("GET", url, nil)
+		p, err := parseCertificatePolicyResult(statusCode, status, body)
 		if err != nil {
-			return nil, err
-		}
-		request.Header.Add("tppl-api-key", c.apiKey)
-		resp, err := http.DefaultClient.Do(request)
-		if err != nil {
-			return nil, err
-		}
-		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return nil, err
-		}
-		p, err := parseCertificatePolicyResult(resp.StatusCode, resp.Status, body)
-		if err != nil {
-			if c.verbose {
-				log.Printf("JSON sent for %s\n%s", url, b)
-			}
-
 			return nil, err
 		}
 		switch p.CertificatePolicyType {
@@ -517,33 +479,12 @@ func (c *Connector) getManagedCertificate(managedCertId string) (*managedCertifi
 	var err error
 	url := c.getURL(urlResourceManagedCertificateById)
 	url = fmt.Sprintf(url, managedCertId)
-	if c.user == nil || c.user.Company == nil {
-		err = fmt.Errorf("Must be autheticated")
-		return nil, err
-	}
-
-	request, err := http.NewRequest("GET", url, nil)
+	statusCode, _, body, err := c.request("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
-	request.Header.Add("tppl-api-key", c.apiKey)
-	request.Header.Add("accept", "application/json")
 
-	resp, err := http.DefaultClient.Do(request)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	if c.verbose {
-		fmt.Printf("REQ: %s\n", url)
-		fmt.Printf("RES: %s\n", body)
-	}
-
-	switch resp.StatusCode {
+	switch statusCode {
 	case http.StatusOK:
 		var res = &managedCertificate{}
 		err = json.Unmarshal(body, res)
@@ -555,14 +496,14 @@ func (c *Connector) getManagedCertificate(managedCertId string) (*managedCertifi
 		if body != nil {
 			respErrors, err := parseResponseErrors(body)
 			if err == nil {
-				respError := fmt.Sprintf("Unexpected status code on Venafi Cloud certificate search. Status: %d\n", resp.StatusCode)
+				respError := fmt.Sprintf("Unexpected status code on Venafi Cloud certificate search. Status: %d\n", statusCode)
 				for _, e := range respErrors {
 					respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
 				}
 				return nil, fmt.Errorf(respError)
 			}
 		}
-		return nil, fmt.Errorf("Unexpected status code on Venafi Cloud certificate search. Status: %d", resp.StatusCode)
+		return nil, fmt.Errorf("Unexpected status code on Venafi Cloud certificate search. Status: %d", statusCode)
 	}
 
 }

@@ -17,14 +17,11 @@
 package tpp
 
 import (
-	"bytes"
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
-	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -276,11 +273,6 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 
 // RevokeCertificate attempts to revoke the certificate
 func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (err error) {
-	url, err := c.getURL(urlResourceCertificateRevoke)
-	if err != nil {
-		return err
-	}
-
 	reason, ok := RevocationReasonsMap[revReq.Reason]
 	if !ok {
 		return fmt.Errorf("could not parse revocation reason `%s`", revReq.Reason)
@@ -293,28 +285,10 @@ func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (er
 		revReq.Comments,
 		revReq.Disable,
 	}
-
-	b, _ := json.Marshal(r)
-	payload := bytes.NewReader(b)
-	req, _ := http.NewRequest("POST", url, payload)
-	req.Header.Add("x-venafi-api-key", c.apiKey)
-	req.Header.Add("content-type", "application/json")
-	req.Header.Add("cache-control", "no-cache")
-
-	res, err := c.getHTTPClient().Do(req)
-
+	statusCode, status, body, err := c.request("POST", urlResourceCertificateRevoke, r)
+	revokeResponse, err := parseRevokeResult(statusCode, status, body)
 	if err != nil {
-		return err
-	}
-
-	defer res.Body.Close()
-	body, _ := ioutil.ReadAll(res.Body)
-	revokeResponse, err := parseRevokeResult(res.StatusCode, res.Status, body)
-	if err != nil {
-		if c.verbose {
-			log.Printf("JSON sent for %s\n%s", urlResourceCertificateRevoke, b)
-		}
-		return err
+		return
 	}
 	if !revokeResponse.Success {
 		return fmt.Errorf("Revocation error: %s", revokeResponse.Error)
