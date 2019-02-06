@@ -257,8 +257,10 @@ func (c *Connector) request(method string, resource urlResource, data interface{
 	r.Header.Add("cache-control", "no-cache")
 
 	res, err := c.getHTTPClient().Do(r)
-	statusCode = res.StatusCode
-	statusText = res.Status
+	if res != nil {
+		statusCode = res.StatusCode
+		statusText = res.Status
+	}
 	if err != nil {
 		return
 	}
