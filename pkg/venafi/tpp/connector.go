@@ -157,33 +157,13 @@ func (c *Connector) RequestCertificate(req *certificate.Request, zone string) (r
 	if err != nil {
 		return "", err
 	}
-
-	b, _ := json.Marshal(tppCertificateRequest)
-
-	url, err := c.getURL(urlResourceCertificateRequest)
+	statusCode, status, body, err := c.request("POST", urlResourceCertificateRequest, tppCertificateRequest)
 	if err != nil {
 		return "", err
 	}
-	payload := bytes.NewReader(b)
-	request, _ := http.NewRequest("POST", url, payload)
-	request.Header.Add("x-venafi-api-key", c.apiKey)
-	request.Header.Add("content-type", "application/json")
-	request.Header.Add("cache-control", "no-cache")
-
-	res, err := c.getHTTPClient().Do(request)
-
+	requestID, err = parseRequestResult(statusCode, status, body)
 	if err != nil {
-		return "", err
-	}
-
-	defer res.Body.Close()
-	body, _ := ioutil.ReadAll(res.Body)
-	requestID, err = parseRequestResult(res.StatusCode, res.Status, body)
-	if err != nil {
-		if c.verbose {
-			log.Printf("JSON sent for %s\n%s", urlResourceCertificateRequest, b)
-		}
-		return "", fmt.Errorf("%s: %s", err, string(body))
+		return "", fmt.Errorf("%s: %s", err, string(body)) //todo: remove body from error
 	}
 	req.PickupID = requestID
 	return requestID, nil
@@ -423,31 +403,16 @@ func (c *Connector) ReadZoneConfiguration(zone string) (config *endpoint.ZoneCon
 }
 
 func (c *Connector) ImportCertificate(r *certificate.ImportRequest) (*certificate.ImportResponse, error) {
-	url, err := c.getURL(urlResourceCertificateImport)
-	if err != nil {
-		return nil, err
-	}
 
 	if r.PolicyDN == "" {
 		r.PolicyDN = getPolicyDN(c.zone)
 	}
 
-	b, _ := json.Marshal(r)
-	payload := bytes.NewReader(b)
-	req, _ := http.NewRequest("POST", url, payload)
-	req.Header.Add("x-venafi-api-key", c.apiKey)
-	req.Header.Add("content-type", "application/json")
-	req.Header.Add("cache-control", "no-cache")
-
-	res, err := c.getHTTPClient().Do(req)
+	statusCode, _, body, err := c.request("POST", urlResourceCertificateImport, r)
 	if err != nil {
 		return nil, err
 	}
-
-	defer res.Body.Close()
-	body, _ := ioutil.ReadAll(res.Body)
-
-	switch res.StatusCode {
+	switch statusCode {
 	case http.StatusOK:
 
 		var response = &certificate.ImportResponse{}
@@ -465,6 +430,6 @@ func (c *Connector) ImportCertificate(r *certificate.ImportRequest) (*certificat
 		}
 		return nil, fmt.Errorf("%s", errorResponse.Error)
 	default:
-		return nil, fmt.Errorf("unexpected response status %d: %s", res.StatusCode, string(b))
+		return nil, fmt.Errorf("unexpected response status %d: %s", statusCode, string(body))
 	}
 }
