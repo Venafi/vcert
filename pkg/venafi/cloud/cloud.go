@@ -173,10 +173,12 @@ func (c *Connector) getURL(resource urlResource) string {
 	return fmt.Sprintf("%s%s", c.baseURL, resource)
 }
 
-func (c *Connector) request(method string, url string, data interface{}) (statusCode int, statusText string, body []byte, err error) {
+func (c *Connector) request(method string, url string, data interface{}, authNotRequired ...bool) (statusCode int, statusText string, body []byte, err error) {
 	if c.user == nil || c.user.Company == nil {
-		err = fmt.Errorf("Must be autheticated to retieve certificate")
-		return
+		if !(len(authNotRequired) == 1 && authNotRequired[0]) {
+			err = fmt.Errorf("Must be autheticated to retieve certificate")
+			return
+		}
 	}
 
 	var payload io.Reader

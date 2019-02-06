@@ -103,8 +103,7 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 	}
 	c.apiKey = auth.APIKey
 	url := c.getURL(urlResourceUserAccounts)
-	statusCode, status, body, err := c.request("GET", url, nil)
-
+	statusCode, status, body, err := c.request("GET", url, nil, true)
 	ud, err := parseUserDetailsResult(http.StatusOK, statusCode, status, body)
 	if err != nil {
 		return
