@@ -212,7 +212,7 @@ func (c *Connector) request(method string, url string, data interface{}, authNot
 	defer res.Body.Close()
 	body, err = ioutil.ReadAll(res.Body)
 	// Do not enable trace in production
-	trace := true // IMPORTANT: sensitive information can be diclosured
+	trace := false // IMPORTANT: sensitive information can be diclosured
 	// I hope you know what are you doing
 	if trace {
 		log.Println("#################")
