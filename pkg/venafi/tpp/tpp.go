@@ -17,6 +17,7 @@
 package tpp
 
 import (
+	"bytes"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
@@ -25,6 +26,9 @@ import (
 	"fmt"
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
+	"io"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"regexp"
 	"strings"
@@ -231,6 +235,53 @@ func (c *Connector) getURL(resource urlResource) (string, error) {
 		return "", fmt.Errorf("The Host URL has not been set")
 	}
 	return fmt.Sprintf("%s%s", c.baseURL, resource), nil
+}
+
+func (c *Connector) request(method string, resource urlResource, data interface{}) (statusCode int, statusText string, body []byte, err error) {
+	url, err := c.getURL(resource)
+	if err != nil {
+		return
+	}
+	var payload io.Reader
+	var b []byte
+	if method == "POST" {
+		b, _ = json.Marshal(data)
+		payload = bytes.NewReader(b)
+	}
+
+	r, _ := http.NewRequest(method, url, payload)
+	if c.apiKey != "" {
+		r.Header.Add("x-venafi-api-key", c.apiKey)
+	}
+	r.Header.Add("content-type", "application/json")
+	r.Header.Add("cache-control", "no-cache")
+
+	res, err := c.getHTTPClient().Do(r)
+	if res != nil {
+		statusCode = res.StatusCode
+		statusText = res.Status
+	}
+	if err != nil {
+		return
+	}
+
+	defer res.Body.Close()
+	body, err = ioutil.ReadAll(res.Body)
+	// Do not enable trace in production
+	trace := false // IMPORTANT: sensitive information can be diclosured
+	// I hope you know what are you doing
+	if trace {
+		log.Println("#################")
+		if method == "POST" {
+			log.Printf("JSON sent for %s\n%s\n", url, string(b))
+		} else {
+			log.Printf("%s request sent to %s\n", method, url)
+		}
+		log.Printf("Response:\n%s\n", string(body))
+	} else if c.verbose {
+		log.Printf("Got %s status for %s %s\n", statusText, method, url)
+	}
+	return
 }
 
 func (c *Connector) getHTTPClient() *http.Client {

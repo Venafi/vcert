@@ -17,11 +17,15 @@
 package cloud
 
 import (
+	"bytes"
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
+	"io"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"regexp"
 	"strings"
@@ -167,6 +171,61 @@ func (c *Connector) SetBaseURL(url string) error {
 
 func (c *Connector) getURL(resource urlResource) string {
 	return fmt.Sprintf("%s%s", c.baseURL, resource)
+}
+
+func (c *Connector) request(method string, url string, data interface{}, authNotRequired ...bool) (statusCode int, statusText string, body []byte, err error) {
+	if c.user == nil || c.user.Company == nil {
+		if !(len(authNotRequired) == 1 && authNotRequired[0]) {
+			err = fmt.Errorf("Must be autheticated to retieve certificate")
+			return
+		}
+	}
+
+	var payload io.Reader
+	var b []byte
+	if method == "POST" {
+		b, _ = json.Marshal(data)
+		payload = bytes.NewReader(b)
+	}
+
+	r, _ := http.NewRequest(method, url, payload)
+	if c.apiKey != "" {
+		r.Header.Add("tppl-api-key", c.apiKey)
+	}
+	if method == "POST" {
+		r.Header.Add("Accept", "application/json")
+		r.Header.Add("content-type", "application/json")
+	} else {
+		r.Header.Add("Accept", "*/*")
+	}
+	r.Header.Add("cache-control", "no-cache")
+
+	res, err := http.DefaultClient.Do(r)
+	if res != nil {
+		statusCode = res.StatusCode
+		statusText = res.Status
+	}
+	if err != nil {
+		return
+	}
+
+	defer res.Body.Close()
+	body, err = ioutil.ReadAll(res.Body)
+	// Do not enable trace in production
+	trace := false // IMPORTANT: sensitive information can be diclosured
+	// I hope you know what are you doing
+	if trace {
+		log.Println("#################")
+		if method == "POST" {
+			log.Printf("JSON sent for %s\n%s\n", url, string(b))
+		} else {
+			log.Printf("%s request sent to %s\n", method, url)
+		}
+		log.Printf("Response:\n%s\n", string(body))
+	} else if c.verbose {
+		log.Printf("Got %s status for %s %s\n", statusText, method, url)
+	}
+	return
 }
 
 func parseUserDetailsResult(expectedStatusCode int, httpStatusCode int, httpStatus string, body []byte) (*userDetails, error) {
