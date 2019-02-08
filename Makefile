@@ -46,12 +46,13 @@ cloud_test: get
 		-cloud-zone    "${VCERT_CLOUD_ZONE}"
 
 ifdef BUILD_NUMBER
-VERSION=`git describe --abbrev=0 --tags`.$(BUILD_NUMBER)
+VERSION=`git describe --abbrev=0 --tags`+$(BUILD_NUMBER)
 else
 VERSION=`git describe --abbrev=0 --tags`
 endif
 
 collect_artifacts:
+	rm -rf artifcats
 	mkdir -p artifcats
 	VERSION=`git describe --abbrev=0 --tags`
 	mv bin/linux/vcert artifcats/vcert-$(VERSION)_linux
