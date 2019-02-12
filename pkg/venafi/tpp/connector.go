@@ -23,7 +23,6 @@ import (
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
 	"net/http"
-	"strconv"
 	"time"
 )
 
@@ -296,83 +295,178 @@ func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (er
 	return
 }
 
+type _strValue struct {
+	Locked bool
+	Value  string
+}
+
+type serverPolicy struct {
+	CertificateAuthority _strValue
+	CsrGeneration        _strValue
+	KeyGeneration        _strValue
+	KeyPair              struct {
+		KeyAlgorithm _strValue
+		KeySize      struct {
+			Locked bool
+			Value  int
+		}
+		KeyCurve struct { //todo: check field name
+			Locked bool
+			Value  string //todo: check field name and type
+		}
+	}
+	ManagementType _strValue
+
+	PrivateKeyReuseAllowed  bool
+	SubjAltNameDnsAllowed   bool
+	SubjAltNameEmailAllowed bool
+	SubjAltNameIpAllowed    bool
+	SubjAltNameUpnAllowed   bool
+	SubjAltNameUriAllowed   bool
+	Subject                 struct {
+		City               _strValue
+		Country            _strValue
+		Organization       _strValue
+		OrganizationalUnit struct {
+			Locked bool
+			Values []string
+		}
+
+		State _strValue
+	}
+	UniqueSubjectEnforced bool
+	WhitelistedDomains    []string
+	WildcardsAllowed      bool
+}
+
+func (sp serverPolicy) toPolicy() (p endpoint.Policy) {
+	const allAllowedRegex = ".*"
+	if len(sp.WhitelistedDomains) == 0 {
+		p.SubjectCNRegexes = []string{allAllowedRegex}
+	} else {
+		p.SubjectCNRegexes = sp.WhitelistedDomains
+	}
+	if sp.Subject.OrganizationalUnit.Locked {
+		p.SubjectOURegexes = sp.Subject.OrganizationalUnit.Values
+	} else {
+		p.SubjectOURegexes = []string{allAllowedRegex}
+	}
+	if sp.Subject.Organization.Locked {
+		p.SubjectORegexes = []string{sp.Subject.Organization.Value}
+	} else {
+		p.SubjectORegexes = []string{allAllowedRegex}
+	}
+	if sp.Subject.City.Locked {
+		p.SubjectLRegexes = []string{sp.Subject.City.Value}
+	} else {
+		p.SubjectLRegexes = []string{allAllowedRegex}
+	}
+	if sp.Subject.State.Locked {
+		p.SubjectSTRegexes = []string{sp.Subject.State.Value}
+	} else {
+		p.SubjectSTRegexes = []string{allAllowedRegex}
+	}
+	if sp.Subject.Country.Locked {
+		p.SubjectCRegexes = []string{sp.Subject.Country.Value}
+	} else {
+		p.SubjectCRegexes = []string{allAllowedRegex}
+	}
+	if sp.SubjAltNameDnsAllowed {
+		p.DnsSanRegExs = make([]string, len(sp.WhitelistedDomains))
+		for i, d := range sp.WhitelistedDomains {
+			p.DnsSanRegExs[i] = ".*." + d //todo: ask ryan about regexs
+		}
+	} else {
+		p.DnsSanRegExs = []string{}
+	}
+	if sp.SubjAltNameIpAllowed {
+		p.IpSanRegExs = []string{allAllowedRegex}
+	} else {
+		p.IpSanRegExs = []string{}
+	}
+	if sp.SubjAltNameEmailAllowed {
+		p.EmailSanRegExs = []string{allAllowedRegex}
+	} else {
+		p.EmailSanRegExs = []string{}
+	}
+	if sp.SubjAltNameUriAllowed {
+		p.UriSanRegExs = []string{allAllowedRegex}
+	} else {
+		p.UriSanRegExs = []string{}
+	}
+	if sp.SubjAltNameUpnAllowed {
+		p.UpnSanRegExs = []string{allAllowedRegex}
+	} else {
+		p.UpnSanRegExs = []string{}
+	}
+	if sp.KeyPair.KeyAlgorithm.Locked {
+		var keyType certificate.KeyType
+		if err := keyType.Set(sp.KeyPair.KeyAlgorithm.Value); err != nil {
+			panic(err)
+		}
+		key := endpoint.AllowedKeyConfiguration{KeyType: keyType}
+		if keyType == certificate.KeyTypeRSA {
+			if sp.KeyPair.KeySize.Locked {
+				for _, i := range []int{512, 1024, 2048, 4096, 8192} {
+					if i > sp.KeyPair.KeySize.Value {
+						key.KeySizes = append(key.KeySizes, i)
+					}
+				}
+			} else {
+				key.KeySizes = []int{512, 1024, 2048, 4096, 8192}
+			}
+		} else {
+			//todo: check curves
+			var curve certificate.EllipticCurve
+			if sp.KeyPair.KeyCurve.Locked {
+				if err := curve.Set(sp.KeyPair.KeyCurve.Value); err != nil {
+					panic(err)
+				}
+				key.KeyCurves = append(key.KeyCurves, curve)
+			} else {
+				key.KeyCurves = []certificate.EllipticCurve{
+					certificate.EllipticCurveP521,
+					certificate.EllipticCurveP224,
+					certificate.EllipticCurveP256,
+					certificate.EllipticCurveP384,
+				}
+			}
+
+		}
+	}
+	p.AllowWildcards = sp.WildcardsAllowed
+	p.AllowKeyReuse = sp.PrivateKeyReuseAllowed
+	return
+}
+
+func (c *Connector) getPolicyConfiguration(zone string) (policy *endpoint.Policy, err error) {
+	rq := struct{ PolicyDN string }{getPolicyDN(zone)}
+	statusCode, status, body, err := c.request("POST", urlResourceCertificatePolicy, rq)
+	if err != nil {
+		return
+	}
+	var r struct {
+		Policy serverPolicy
+	}
+	if statusCode == http.StatusOK {
+		err = json.Unmarshal(body, &r.Policy)
+		p := r.Policy.toPolicy()
+		policy = &p
+	} else {
+		return nil, fmt.Errorf("Invalid status: %s", status)
+	}
+	return
+}
+
 //ReadZoneConfiguration reads the policy data from TPP to get locked and pre-configured values for certificate requests
 func (c *Connector) ReadZoneConfiguration(zone string) (config *endpoint.ZoneConfiguration, err error) {
 	zoneConfig := endpoint.NewZoneConfiguration()
 	zoneConfig.HashAlgorithm = x509.SHA256WithRSA
-	policyDN := getPolicyDN(zone)
-	keyType := certificate.KeyTypeRSA
-
-	attributes := []string{tppAttributeOrg, tppAttributeOrgUnit, tppAttributeCountry, tppAttributeState, tppAttributeLocality, tppAttributeKeyAlgorithm, tppAttributeKeySize, tppAttributeEllipticCurve, tppAttributeRequestHash, tppAttributeManagementType, tppAttributeManualCSR}
-	for _, attrib := range attributes {
-		pr := policyRequest{ObjectDN: policyDN, Class: "X509 Certificate", AttributeName: attrib}
-		statusCode, status, body, err := c.request("POST", urlResourceFindPolicy, pr)
-		if err != nil {
-			return nil, err
-		}
-
-		tppData, err := parseConfigResult(statusCode, status, body)
-		if tppData.Error == "" && (err != nil || tppData.Values == nil || len(tppData.Values) == 0) {
-			continue
-		} else if tppData.Error != "" && tppData.Result == 400 { //object does not exist
-			return nil, fmt.Errorf(tppData.Error)
-		}
-
-		switch attrib {
-		case tppAttributeOrg:
-			zoneConfig.Organization = tppData.Values[0]
-			zoneConfig.OrganizationLocked = tppData.Locked
-		case tppAttributeOrgUnit:
-			zoneConfig.OrganizationalUnit = tppData.Values
-		case tppAttributeCountry:
-			zoneConfig.Country = tppData.Values[0]
-			zoneConfig.CountryLocked = tppData.Locked
-		case tppAttributeState:
-			zoneConfig.Province = tppData.Values[0]
-			zoneConfig.ProvinceLocked = tppData.Locked
-		case tppAttributeLocality:
-			zoneConfig.Locality = tppData.Values[0]
-			zoneConfig.LocalityLocked = tppData.Locked
-		case tppAttributeKeyAlgorithm:
-			err = keyType.Set(tppData.Values[0])
-			if err == nil {
-				zoneConfig.AllowedKeyConfigurations = []endpoint.AllowedKeyConfiguration{endpoint.AllowedKeyConfiguration{KeyType: keyType}}
-			}
-		case tppAttributeKeySize:
-			temp, err := strconv.Atoi(tppData.Values[0])
-			if err == nil {
-				zoneConfig.AllowedKeyConfigurations = []endpoint.AllowedKeyConfiguration{endpoint.AllowedKeyConfiguration{KeyType: keyType, KeySizes: []int{temp}}}
-				zoneConfig.KeySizeLocked = tppData.Locked
-			}
-		case tppAttributeEllipticCurve:
-			curve := certificate.EllipticCurveP256
-			err = curve.Set(tppData.Values[0])
-			if err == nil {
-				zoneConfig.AllowedKeyConfigurations = []endpoint.AllowedKeyConfiguration{endpoint.AllowedKeyConfiguration{KeyType: certificate.KeyTypeECDSA, KeyCurves: []certificate.EllipticCurve{curve}}}
-				zoneConfig.KeySizeLocked = tppData.Locked
-			}
-		case tppAttributeRequestHash:
-			alg, err := strconv.Atoi(tppData.Values[0])
-			if err == nil {
-				switch alg {
-				case pkcs10HashAlgorithmSha1:
-					zoneConfig.HashAlgorithm = x509.SHA1WithRSA
-				case pkcs10HashAlgorithmSha384:
-					zoneConfig.HashAlgorithm = x509.SHA384WithRSA
-				case pkcs10HashAlgorithmSha512:
-					zoneConfig.HashAlgorithm = x509.SHA512WithRSA
-				default:
-					zoneConfig.HashAlgorithm = x509.SHA256WithRSA
-				}
-			}
-		case tppAttributeManagementType, tppAttributeManualCSR:
-			if tppData.Locked {
-				zoneConfig.CustomAttributeValues[attrib] = tppData.Values[0]
-			}
-		}
-
+	policy, err := c.getPolicyConfiguration(zone)
+	if err != nil {
+		return
 	}
-
+	zoneConfig.Policy = *policy
 	return zoneConfig, nil
 }
 

@@ -99,6 +99,23 @@ func (err ErrCertificatePending) Error() string {
 	return fmt.Sprintf("Issuance is pending. You may try retrieving the certificate later using Pickup ID: %s\n\tStatus: %s", err.CertificateID, err.Status)
 }
 
+type Policy struct {
+	SubjectCNRegexes         []string
+	SubjectORegexes          []string
+	SubjectOURegexes         []string
+	SubjectSTRegexes         []string
+	SubjectLRegexes          []string
+	SubjectCRegexes          []string
+	AllowedKeyConfigurations []AllowedKeyConfiguration
+	DnsSanRegExs             []string
+	IpSanRegExs              []string
+	EmailSanRegExs           []string
+	UriSanRegExs             []string
+	UpnSanRegExs             []string
+	AllowWildcards           bool
+	AllowKeyReuse            bool
+}
+
 // ZoneConfiguration provides a common structure for certificate request data provided by the remote endpoint
 type ZoneConfiguration struct {
 	Organization       string
@@ -110,17 +127,8 @@ type ZoneConfiguration struct {
 	ProvinceLocked     bool
 	Locality           string
 	LocalityLocked     bool
-
-	SubjectCNRegexes []string
-	SubjectORegexes  []string
-	SubjectOURegexes []string
-	SubjectSTRegexes []string
-	SubjectLRegexes  []string
-	SubjectCRegexes  []string
-	SANRegexes       []string
-
-	AllowedKeyConfigurations []AllowedKeyConfiguration
-	KeySizeLocked            bool
+	Policy
+	KeySizeLocked bool
 
 	HashAlgorithm x509.SignatureAlgorithm
 
@@ -162,9 +170,10 @@ func (z *ZoneConfiguration) ValidateCertificateRequest(request *certificate.Requ
 	if !isComponentValid(z.SubjectCRegexes, request.Subject.Country) {
 		return fmt.Errorf("The requested Country does not match any of the allowed Country regular expressions")
 	}
-	if !isComponentValid(z.SANRegexes, request.DNSNames) {
+	if !isComponentValid(z.DnsSanRegExs, request.DNSNames) {
 		return fmt.Errorf("The requested Subject Alternative Name does not match any of the allowed Country regular expressions")
 	}
+	//todo: add ip, email and over cheking
 
 	if z.AllowedKeyConfigurations != nil && len(z.AllowedKeyConfigurations) > 0 {
 		match := false
@@ -194,25 +203,25 @@ func (z *ZoneConfiguration) ValidateCertificateRequest(request *certificate.Requ
 }
 
 func isComponentValid(regexes []string, component []string) bool {
-	if regexes != nil && len(regexes) > 0 && component != nil {
-		regexOk := false
-		for _, subReg := range regexes {
-			matchedAny := false
-			reg := regexp.MustCompile(subReg)
-			for _, c := range component {
-				if reg.FindStringIndex(c) != nil {
-					matchedAny = true
-					break
-				}
-			}
-			if matchedAny {
-				regexOk = true
+	if len(regexes) == 0 || len(component) == 0 {
+		return true
+	}
+	regexOk := false
+	for _, subReg := range regexes {
+		matchedAny := false
+		reg := regexp.MustCompile(subReg) //todo: error for invalid regexes
+		for _, c := range component {
+			if reg.FindStringIndex(c) != nil {
+				matchedAny = true
 				break
 			}
 		}
-		return regexOk
+		if matchedAny {
+			regexOk = true
+			break
+		}
 	}
-	return true
+	return regexOk
 }
 
 // UpdateCertificateRequest updates a certificate request based on the zone configurataion retrieved from the remote endpoint

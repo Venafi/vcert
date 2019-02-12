@@ -35,7 +35,7 @@ var ctx *test.Context
 
 func init() {
 	ctx = test.GetContext()
-	ctx = test.GetEnvContext()
+	//ctx = test.GetEnvContext()
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	if ctx.TPPurl == "" {
