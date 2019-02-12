@@ -80,7 +80,7 @@ func TestUpdateRequestSubject(t *testing.T) {
 		t.Fatalf("2 getRequestKeySize did not return the expected value of %d -- Actual value %d", 2048, ks)
 	}
 
-	z.AllowedKeyConfigurations = []AllowedKeyConfiguration{AllowedKeyConfiguration{KeyType: certificate.KeyTypeRSA, KeySizes: []int{2048, 4096}}}
+	z.AllowedKeyConfigurations = []AllowedKeyConfiguration{{KeyType: certificate.KeyTypeRSA, KeySizes: []int{2048, 4096}}}
 	z.KeySizeLocked = false
 	req.KeyType = certificate.KeyTypeRSA
 	req.KeyLength = 2048
@@ -149,7 +149,7 @@ func TestGoodValiateRequest(t *testing.T) {
 	z.SubjectLRegexes = []string{"(SLC|Salt Lake City)"}
 	z.SubjectSTRegexes = []string{"(UT|Utah)"}
 	z.SubjectCRegexes = []string{"US"}
-	z.SANRegexes = []string{".*.vfidev.com"}
+	z.DnsSanRegExs = []string{".*.vfidev.com"}
 
 	err := z.ValidateCertificateRequest(req)
 	if err != nil {
@@ -240,7 +240,7 @@ func TestBadSANValiateRequest(t *testing.T) {
 	req.DNSNames = []string{"vcert.test.venafi.com", "vcert.test1.venafi.com"}
 
 	z := getBaseZoneConfiguration()
-	z.SANRegexes = []string{".*.vfidev.com"}
+	z.DnsSanRegExs = []string{".*.vfidev.com"}
 
 	err := z.ValidateCertificateRequest(req)
 	if err == nil {
@@ -253,7 +253,7 @@ func TestBadKeyTypeValiateRequest(t *testing.T) {
 	req.KeyType = certificate.KeyTypeECDSA
 
 	z := getBaseZoneConfiguration()
-	z.AllowedKeyConfigurations = []AllowedKeyConfiguration{AllowedKeyConfiguration{KeyType: certificate.KeyTypeRSA, KeySizes: []int{2048, 4096}}}
+	z.AllowedKeyConfigurations = []AllowedKeyConfiguration{{KeyType: certificate.KeyTypeRSA, KeySizes: []int{2048, 4096}}}
 
 	err := z.ValidateCertificateRequest(req)
 	if err == nil {
@@ -267,7 +267,7 @@ func TestBadKeySizeValiateRequest(t *testing.T) {
 	req.KeyLength = 8192
 
 	z := getBaseZoneConfiguration()
-	z.AllowedKeyConfigurations = []AllowedKeyConfiguration{AllowedKeyConfiguration{KeyType: certificate.KeyTypeRSA, KeySizes: []int{2048, 4096}}}
+	z.AllowedKeyConfigurations = []AllowedKeyConfiguration{{KeyType: certificate.KeyTypeRSA, KeySizes: []int{2048, 4096}}}
 
 	err := z.ValidateCertificateRequest(req)
 	if err == nil {
@@ -286,7 +286,7 @@ func getBaseZoneConfiguration() *ZoneConfiguration {
 	z.ProvinceLocked = true
 	z.Locality = "SLC"
 	z.LocalityLocked = true
-	z.AllowedKeyConfigurations = []AllowedKeyConfiguration{AllowedKeyConfiguration{KeyType: certificate.KeyTypeRSA, KeySizes: []int{2048, 4096}}}
+	z.AllowedKeyConfigurations = []AllowedKeyConfiguration{{KeyType: certificate.KeyTypeRSA, KeySizes: []int{2048, 4096}}}
 	z.KeySizeLocked = true
 	z.HashAlgorithm = x509.SHA512WithRSA
 	return &z
