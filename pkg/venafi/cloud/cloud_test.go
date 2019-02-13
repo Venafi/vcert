@@ -165,7 +165,7 @@ func TestGenerateRequest(t *testing.T) {
 	}
 	zoneConfig := z.getZoneConfiguration(nil, nil)
 
-	//zoneConfig.UpdateCertificateRequest(&req)
+	zoneConfig.UpdateCertificateRequest(&req)
 
 	conn := Connector{}
 	err = conn.GenerateRequest(zoneConfig, &req)
@@ -185,7 +185,7 @@ func TestGenerateRequest(t *testing.T) {
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
-	//zoneConfig.UpdateCertificateRequest(&req)
+	zoneConfig.UpdateCertificateRequest(&req)
 	err = conn.GenerateRequest(zoneConfig, &req)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
