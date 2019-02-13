@@ -162,6 +162,7 @@ func TestRequestCertificate(t *testing.T) {
 	req.Subject.Province = []string{"Nevada"}
 	req.Subject.Country = []string{"US"}
 	req.FriendlyName = cn
+	config.UpdateCertificateRequest(req)
 	err = tpp.GenerateRequest(config, req)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
@@ -178,10 +179,10 @@ func TestRequestCertificateServiceGenerated(t *testing.T) {
 	tpp := getTestConnector()
 	tpp.SetBaseURL(ctx.TPPurl)
 	tpp.Authenticate(&endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword})
-	config, err := tpp.ReadZoneConfiguration(getPolicyDN(ctx.TPPZone))
-	if err != nil {
-		t.Fatal("failed to read zone configuration")
-	}
+	//config, err := tpp.ReadZoneConfiguration(getPolicyDN(ctx.TPPZone))
+	//if err != nil {
+	//	t.Fatal("failed to read zone configuration")
+	//}
 
 	cn := test.RandCN()
 	req := &certificate.Request{}
@@ -199,7 +200,7 @@ func TestRequestCertificateServiceGenerated(t *testing.T) {
 	req.FetchPrivateKey = true
 	req.KeyPassword = "newPassw0rd!"
 
-	config.UpdateCertificateRequest(req)
+	//config.UpdateCertificateRequest(req)
 
 	pickupId, err := tpp.RequestCertificate(req, getPolicyDN(ctx.TPPZone))
 	if err != nil {
@@ -253,6 +254,7 @@ func TestRetrieveNonIssuedCertificate(t *testing.T) {
 	req.Subject.Province = []string{"Nevada"}
 	req.Subject.Country = []string{"US"}
 	req.FriendlyName = fmt.Sprintf("vcert integration test - %d", time.Now().Unix())
+	config.UpdateCertificateRequest(req)
 	err = tpp.GenerateRequest(config, req)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
@@ -300,6 +302,7 @@ func TestRevokeCertificate(t *testing.T) {
 	req.Subject.Province = []string{"Nevada"}
 	req.Subject.Country = []string{"US"}
 	// req.FriendlyName = fmt.Sprintf("vcert integration test - %d", time.Now().Unix())
+	config.UpdateCertificateRequest(req)
 	err = tpp.GenerateRequest(config, req)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
@@ -388,6 +391,7 @@ func TestRevokeAndDisableCertificate(t *testing.T) {
 	req.Subject.Province = []string{"Nevada"}
 	req.Subject.Country = []string{"US"}
 	// req.FriendlyName = fmt.Sprintf("vcert integration test - %d", time.Now().Unix())
+	config.UpdateCertificateRequest(req)
 	err = tpp.GenerateRequest(config, req)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)

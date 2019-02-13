@@ -112,7 +112,7 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 		if err != nil {
 			return err
 		}
-		config.UpdateCertificateRequest(req)
+		//config.UpdateCertificateRequest(req)
 		switch req.KeyType {
 		case certificate.KeyTypeECDSA:
 			pk, err = certificate.GenerateECDSAPrivateKey(req.KeyCurve)

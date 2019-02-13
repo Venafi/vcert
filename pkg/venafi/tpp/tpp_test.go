@@ -319,7 +319,7 @@ func TestGenerateRequestWithLockedMgmtType(t *testing.T) {
 	req.Subject.Locality = []string{"Las Vegas"}
 	req.Subject.Province = []string{"Nevada"}
 	req.Subject.Country = []string{"US"}
-	zoneConfig.UpdateCertificateRequest(&req)
+	//zoneConfig.UpdateCertificateRequest(&req)
 	err := tpp.GenerateRequest(zoneConfig, &req)
 	if err == nil {
 		t.Fatalf("Error expected, request should not be generated with mgmt type set to Monitoring")
@@ -337,7 +337,7 @@ func TestGenerateRequestWithNoUserProvidedCSRAllowed(t *testing.T) {
 	req.Subject.Locality = []string{"Las Vegas"}
 	req.Subject.Province = []string{"Nevada"}
 	req.Subject.Country = []string{"US"}
-	zoneConfig.UpdateCertificateRequest(&req)
+	//zoneConfig.UpdateCertificateRequest(&req)
 	err := tpp.GenerateRequest(zoneConfig, &req)
 	if err == nil {
 		t.Fatalf("Error expected, request should not be generated with Manual CSR set to 0")
@@ -356,7 +356,6 @@ func TestGenerateRequestWithLockedKeyConfiguration(t *testing.T) {
 	req.Subject.Province = []string{"Nevada"}
 	req.Subject.Country = []string{"US"}
 	req.KeyType = certificate.KeyTypeRSA
-	zoneConfig.UpdateCertificateRequest(&req)
 	err := tpp.GenerateRequest(zoneConfig, &req)
 	if err == nil {
 		t.Fatalf("Error expected, request should not be generated with key type set to RSA")

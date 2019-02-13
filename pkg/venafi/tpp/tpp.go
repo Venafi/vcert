@@ -308,7 +308,7 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 		return fmt.Errorf("Unable to request certificate from TPP, current TPP configuration would not allow the request to be processed")
 	}
 
-	config.UpdateCertificateRequest(req)
+	//config.UpdateCertificateRequest(req)
 
 	switch req.CsrOrigin {
 	case certificate.LocalGeneratedCSR:

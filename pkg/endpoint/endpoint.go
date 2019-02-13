@@ -224,6 +224,11 @@ func isComponentValid(regexes []string, component []string) bool {
 	return regexOk
 }
 
+func (z *ZoneConfiguration) CheckCertificateRequest(request *certificate.Request) error {
+	//todo: Implement
+	return nil
+}
+
 // UpdateCertificateRequest updates a certificate request based on the zone configurataion retrieved from the remote endpoint
 func (z *ZoneConfiguration) UpdateCertificateRequest(request *certificate.Request) {
 	if (request.Subject.Organization == nil || len(request.Subject.Organization) == 0) && z.Organization != "" {
