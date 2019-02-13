@@ -68,6 +68,7 @@ type Connector interface {
 	RevokeCertificate(req *certificate.RevocationRequest) error
 	RenewCertificate(req *certificate.RenewalRequest) (requestID string, err error)
 	ImportCertificate(req *certificate.ImportRequest) (*certificate.ImportResponse, error)
+	ReadPolicyConfiguration(zone string) (policy *Policy, err error)
 }
 
 // Authentication provides a data construct for authentication data
@@ -128,7 +129,6 @@ type ZoneConfiguration struct {
 	Locality           string
 	LocalityLocked     bool
 	Policy
-	KeySizeLocked bool
 
 	HashAlgorithm x509.SignatureAlgorithm
 
@@ -264,27 +264,20 @@ func (z *ZoneConfiguration) UpdateCertificateRequest(request *certificate.Reques
 		request.SignatureAlgorithm = x509.SHA256WithRSA
 	}
 
-	if z.KeySizeLocked {
-		for _, keyConf := range z.AllowedKeyConfigurations {
-			if keyConf.KeyType == request.KeyType {
-				sort.Sort(sort.Reverse(sort.IntSlice(keyConf.KeySizes)))
-				request.KeyLength = keyConf.KeySizes[0]
-			}
-		}
-	} else if z.AllowedKeyConfigurations != nil {
+	if len(z.AllowedKeyConfigurations) != 0 {
 		foundMatch := false
 		for _, keyConf := range z.AllowedKeyConfigurations {
 			if keyConf.KeyType == request.KeyType {
 				foundMatch = true
 				switch request.KeyType {
 				case certificate.KeyTypeECDSA:
-					if z.AllowedKeyConfigurations[0].KeyCurves != nil {
-						request.KeyCurve = z.AllowedKeyConfigurations[0].KeyCurves[0]
+					if len(keyConf.KeyCurves) != 0 {
+						request.KeyCurve = keyConf.KeyCurves[0]
 					} else {
-						request.KeyCurve = certificate.EllipticCurveP256
+						request.KeyCurve = certificate.EllipticCurveDefault
 					}
 				case certificate.KeyTypeRSA:
-					if keyConf.KeySizes != nil {
+					if len(keyConf.KeySizes) != 0 {
 						sizeOK := false
 						for _, size := range keyConf.KeySizes {
 							if size == request.KeyLength {
@@ -302,18 +295,19 @@ func (z *ZoneConfiguration) UpdateCertificateRequest(request *certificate.Reques
 			}
 		}
 		if !foundMatch {
-			request.KeyType = z.AllowedKeyConfigurations[0].KeyType
+			configuration := z.AllowedKeyConfigurations[0]
+			request.KeyType = configuration.KeyType
 			switch request.KeyType {
 			case certificate.KeyTypeECDSA:
-				if z.AllowedKeyConfigurations[0].KeyCurves != nil {
-					request.KeyCurve = z.AllowedKeyConfigurations[0].KeyCurves[0]
+				if len(configuration.KeyCurves) != 0 {
+					request.KeyCurve = configuration.KeyCurves[0]
 				} else {
-					request.KeyCurve = certificate.EllipticCurveP256
+					request.KeyCurve = certificate.EllipticCurveDefault
 				}
 			case certificate.KeyTypeRSA:
-				if z.AllowedKeyConfigurations[0].KeySizes != nil {
-					sort.Sort(sort.Reverse(sort.IntSlice(z.AllowedKeyConfigurations[0].KeySizes)))
-					request.KeyLength = z.AllowedKeyConfigurations[0].KeySizes[0]
+				if len(configuration.KeySizes) != 0 {
+					sort.Sort(sort.Reverse(sort.IntSlice(configuration.KeySizes)))
+					request.KeyLength = configuration.KeySizes[0]
 				} else {
 					request.KeyLength = 2048
 				}

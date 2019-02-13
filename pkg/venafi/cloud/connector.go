@@ -127,6 +127,15 @@ func (c *Connector) Register(email string) (err error) {
 	return nil
 }
 
+func (c *Connector) ReadPolicyConfiguration(zone string) (policy *endpoint.Policy, err error) {
+	config, err := c.ReadZoneConfiguration(zone)
+	if err != nil {
+		return nil, err
+	}
+	policy = &config.Policy
+	return
+}
+
 //ReadZoneConfiguration reads the Zone information needed for generating and requesting a certificate from Venafi Cloud
 func (c *Connector) ReadZoneConfiguration(zone string) (config *endpoint.ZoneConfiguration, err error) {
 	z, err := c.getZoneByTag(zone)
@@ -134,7 +143,7 @@ func (c *Connector) ReadZoneConfiguration(zone string) (config *endpoint.ZoneCon
 		return nil, err
 	}
 	p, err := c.getPoliciesByID([]string{z.DefaultCertificateIdentityPolicy, z.DefaultCertificateUsePolicy})
-	config = z.GetZoneConfiguration(c.user, p)
+	config = z.getZoneConfiguration(c.user, p)
 	return config, nil
 }
 

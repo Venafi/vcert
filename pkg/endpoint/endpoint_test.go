@@ -72,7 +72,6 @@ func TestUpdateRequestSubject(t *testing.T) {
 	}
 
 	z.AllowedKeyConfigurations = nil
-	z.KeySizeLocked = false
 	req.KeyLength = 0
 	z.UpdateCertificateRequest(&req)
 	ks = req.KeyLength
@@ -81,7 +80,6 @@ func TestUpdateRequestSubject(t *testing.T) {
 	}
 
 	z.AllowedKeyConfigurations = []AllowedKeyConfiguration{{KeyType: certificate.KeyTypeRSA, KeySizes: []int{2048, 4096}}}
-	z.KeySizeLocked = false
 	req.KeyType = certificate.KeyTypeRSA
 	req.KeyLength = 2048
 	z.UpdateCertificateRequest(&req)
@@ -287,7 +285,6 @@ func getBaseZoneConfiguration() *ZoneConfiguration {
 	z.Locality = "SLC"
 	z.LocalityLocked = true
 	z.AllowedKeyConfigurations = []AllowedKeyConfiguration{{KeyType: certificate.KeyTypeRSA, KeySizes: []int{2048, 4096}}}
-	z.KeySizeLocked = true
 	z.HashAlgorithm = x509.SHA512WithRSA
 	return &z
 }

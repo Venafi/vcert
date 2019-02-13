@@ -145,7 +145,7 @@ func TestUpdateRequest(t *testing.T) {
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
-	zoneConfig := z.GetZoneConfiguration(nil, nil)
+	zoneConfig := z.getZoneConfiguration(nil, nil)
 
 	zoneConfig.UpdateCertificateRequest(&req)
 }
@@ -163,7 +163,7 @@ func TestGenerateRequest(t *testing.T) {
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
-	zoneConfig := z.GetZoneConfiguration(nil, nil)
+	zoneConfig := z.getZoneConfiguration(nil, nil)
 
 	zoneConfig.UpdateCertificateRequest(&req)
 

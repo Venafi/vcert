@@ -16,7 +16,11 @@
 
 package cloud
 
-import "time"
+import (
+	"github.com/Venafi/vcert/pkg/endpoint"
+	"strings"
+	"time"
+)
 
 type certificatePolicy struct {
 	CertificatePolicyType certificatePolicyType `json:"certificatePolicyType,omitempty"`
@@ -51,6 +55,39 @@ const (
 )
 
 type keyType string
+
+func (cp certificatePolicy) toPolicy() (p endpoint.Policy) {
+	p.SubjectCNRegexes = cp.SubjectCNRegexes
+	p.SubjectOURegexes = cp.SubjectOURegexes
+	p.SubjectCRegexes = cp.SubjectCRegexes
+	p.SubjectSTRegexes = cp.SubjectSTRegexes
+	p.SubjectLRegexes = cp.SubjectLRegexes
+	p.SubjectORegexes = cp.SubjectORegexes
+	p.DnsSanRegExs = cp.SANRegexes
+	p.AllowKeyReuse = cp.KeyReuse
+	allowWildCards := false
+	for _, s := range p.SubjectCNRegexes {
+		if strings.HasPrefix(s, ".*") {
+			allowWildCards = true
+		}
+	}
+	if allowWildCards {
+		for _, s := range p.DnsSanRegExs {
+			if strings.HasPrefix(s, ".*") {
+				p.AllowWildcards = true
+			}
+		}
+	}
+	for _, kt := range cp.KeyTypes {
+		keyConfiguration := endpoint.AllowedKeyConfiguration{}
+		if err := keyConfiguration.KeyType.Set(string(kt.KeyType)); err != nil {
+			panic(err)
+		}
+		keyConfiguration.KeySizes = kt.KeyLengths[:]
+		p.AllowedKeyConfigurations = append(p.AllowedKeyConfigurations, keyConfiguration)
+	}
+	return
+}
 
 const (
 	keyTypeRSA        keyType = "RSA"

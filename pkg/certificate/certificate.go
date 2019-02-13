@@ -60,7 +60,7 @@ func (ec *EllipticCurve) Set(value string) error {
 	case "p224":
 		*ec = EllipticCurveP224
 	default:
-		*ec = EllipticCurveP521
+		*ec = EllipticCurveDefault
 	}
 
 	return nil
@@ -75,6 +75,7 @@ const (
 	EllipticCurveP256
 	//EllipticCurveP384 represents the P384 curve
 	EllipticCurveP384
+	EllipticCurveDefault = EllipticCurveP521
 )
 
 //KeyType represents the types of supported keys
