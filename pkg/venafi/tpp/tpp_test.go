@@ -220,7 +220,6 @@ func getBaseZoneConfiguration() *endpoint.ZoneConfiguration {
 	z.Locality = "SLC"
 	z.LocalityLocked = true
 	z.AllowedKeyConfigurations = []endpoint.AllowedKeyConfiguration{endpoint.AllowedKeyConfiguration{KeyType: certificate.KeyTypeRSA, KeySizes: []int{4096}}}
-	z.KeySizeLocked = true
 	z.HashAlgorithm = x509.SHA512WithRSA
 	return z
 }
