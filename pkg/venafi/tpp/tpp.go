@@ -522,41 +522,48 @@ type serverPolicy struct {
 }
 
 func (sp serverPolicy) toPolicy() (p endpoint.Policy) {
+	escapeArray := func(l []string) []string {
+		escaped := make([]string, len(l))
+		for i, r := range l {
+			escaped[i] = regexp.QuoteMeta(r)
+		}
+		return escaped
+	}
 	const allAllowedRegex = ".*"
 	if len(sp.WhitelistedDomains) == 0 {
 		p.SubjectCNRegexes = []string{allAllowedRegex}
 	} else {
-		p.SubjectCNRegexes = sp.WhitelistedDomains
+		p.SubjectCNRegexes = escapeArray(sp.WhitelistedDomains)
 	}
 	if sp.Subject.OrganizationalUnit.Locked {
-		p.SubjectOURegexes = sp.Subject.OrganizationalUnit.Values
+		p.SubjectOURegexes = escapeArray(sp.Subject.OrganizationalUnit.Values)
 	} else {
 		p.SubjectOURegexes = []string{allAllowedRegex}
 	}
 	if sp.Subject.Organization.Locked {
-		p.SubjectORegexes = []string{sp.Subject.Organization.Value}
+		p.SubjectORegexes = []string{regexp.QuoteMeta(sp.Subject.Organization.Value)}
 	} else {
 		p.SubjectORegexes = []string{allAllowedRegex}
 	}
 	if sp.Subject.City.Locked {
-		p.SubjectLRegexes = []string{sp.Subject.City.Value}
+		p.SubjectLRegexes = []string{regexp.QuoteMeta(sp.Subject.City.Value)}
 	} else {
 		p.SubjectLRegexes = []string{allAllowedRegex}
 	}
 	if sp.Subject.State.Locked {
-		p.SubjectSTRegexes = []string{sp.Subject.State.Value}
+		p.SubjectSTRegexes = []string{regexp.QuoteMeta(sp.Subject.State.Value)}
 	} else {
 		p.SubjectSTRegexes = []string{allAllowedRegex}
 	}
 	if sp.Subject.Country.Locked {
-		p.SubjectCRegexes = []string{sp.Subject.Country.Value}
+		p.SubjectCRegexes = []string{regexp.QuoteMeta(sp.Subject.Country.Value)}
 	} else {
 		p.SubjectCRegexes = []string{allAllowedRegex}
 	}
 	if sp.SubjAltNameDnsAllowed {
 		p.DnsSanRegExs = make([]string, len(sp.WhitelistedDomains))
 		for i, d := range sp.WhitelistedDomains {
-			p.DnsSanRegExs[i] = ".*." + d //todo: ask ryan about regexs
+			p.DnsSanRegExs[i] = ".*" + regexp.QuoteMeta("."+d)
 		}
 	} else {
 		p.DnsSanRegExs = []string{}

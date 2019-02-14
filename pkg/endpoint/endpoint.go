@@ -20,6 +20,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"github.com/Venafi/vcert/pkg/certificate"
+	"log"
 	"regexp"
 	"sort"
 	"strings"
@@ -209,7 +210,11 @@ func isComponentValid(regexes []string, component []string) bool {
 	regexOk := false
 	for _, subReg := range regexes {
 		matchedAny := false
-		reg := regexp.MustCompile(subReg) //todo: error for invalid regexes
+		reg, err := regexp.Compile(subReg)
+		if err != nil {
+			log.Printf("Bad regexp: %s", subReg)
+			return false
+		}
 		for _, c := range component {
 			if reg.FindStringIndex(c) != nil {
 				matchedAny = true
