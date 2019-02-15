@@ -37,7 +37,7 @@ const (
 	urlResourceZones                              = "zones"
 	urlResourceZoneByTag                          = urlResourceZones + "/tag/%s"
 	urlResourceCertificatePolicies                = "certificatepolicies"
-	urlResourcePoliciesByID                       = urlResourceCertificatePolicies + "%s"
+	urlResourcePoliciesByID                       = urlResourceCertificatePolicies + "/%s"
 	urlResourcePoliciesForZoneByID                = urlResourceCertificatePolicies + "?zoneId=%s"
 	urlResourceCertificateRequests                = "certificaterequests"
 	urlResourceCertificateStatus                  = urlResourceCertificateRequests + "/%s"
@@ -143,6 +143,9 @@ func (c *Connector) ReadZoneConfiguration(zone string) (config *endpoint.ZoneCon
 		return nil, err
 	}
 	p, err := c.getPoliciesByID([]string{z.DefaultCertificateIdentityPolicy, z.DefaultCertificateUsePolicy})
+	if err != nil {
+		return
+	}
 	config = z.getZoneConfiguration(c.user, p)
 	return config, nil
 }
@@ -406,11 +409,11 @@ func (c *Connector) getZoneByTag(tag string) (*zone, error) {
 
 func (c *Connector) getPoliciesByID(ids []string) (*certificatePolicy, error) {
 	policy := new(certificatePolicy)
-	url := c.getURL(urlResourcePoliciesByID)
 	if c.user == nil {
 		return nil, fmt.Errorf("Must be autheticated to read the zone configuration")
 	}
 	for _, id := range ids {
+		url := c.getURL(urlResourcePoliciesByID)
 		url = fmt.Sprintf(url, id)
 		statusCode, status, body, err := c.request("GET", url, nil)
 		p, err := parseCertificatePolicyResult(statusCode, status, body)
