@@ -596,13 +596,13 @@ func (sp serverPolicy) toPolicy() (p endpoint.Policy) {
 		key := endpoint.AllowedKeyConfiguration{KeyType: keyType}
 		if keyType == certificate.KeyTypeRSA {
 			if sp.KeyPair.KeySize.Locked {
-				for _, i := range []int{512, 1024, 2048, 4096, 8192} {
+				for _, i := range certificate.AllSupportedKeySizes() {
 					if i > sp.KeyPair.KeySize.Value {
 						key.KeySizes = append(key.KeySizes, i)
 					}
 				}
 			} else {
-				key.KeySizes = []int{512, 1024, 2048, 4096, 8192}
+				key.KeySizes = certificate.AllSupportedKeySizes()
 			}
 		} else {
 			//todo: check curves
@@ -613,15 +613,18 @@ func (sp serverPolicy) toPolicy() (p endpoint.Policy) {
 				}
 				key.KeyCurves = append(key.KeyCurves, curve)
 			} else {
-				key.KeyCurves = []certificate.EllipticCurve{
-					certificate.EllipticCurveP521,
-					certificate.EllipticCurveP224,
-					certificate.EllipticCurveP256,
-					certificate.EllipticCurveP384,
-				}
+				key.KeyCurves = certificate.AllSupportedCurves()
 			}
 
 		}
+		p.AllowedKeyConfigurations = append(p.AllowedKeyConfigurations, key)
+	} else {
+		p.AllowedKeyConfigurations = append(p.AllowedKeyConfigurations, endpoint.AllowedKeyConfiguration{
+			KeyType: certificate.KeyTypeRSA, KeySizes: certificate.AllSupportedKeySizes(),
+		})
+		p.AllowedKeyConfigurations = append(p.AllowedKeyConfigurations, endpoint.AllowedKeyConfiguration{
+			KeyType: certificate.KeyTypeECDSA, KeyCurves: certificate.AllSupportedCurves(),
+		})
 	}
 	p.AllowWildcards = sp.WildcardsAllowed
 	p.AllowKeyReuse = sp.PrivateKeyReuseAllowed
