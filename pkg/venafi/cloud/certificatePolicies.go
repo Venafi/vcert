@@ -36,7 +36,7 @@ type certificatePolicy struct {
 	SubjectOURegexes      []string              `json:"subjectOURegexes,omitempty"`
 	SubjectSTRegexes      []string              `json:"subjectSTRegexes,omitempty"`
 	SubjectLRegexes       []string              `json:"subjectLRegexes,omitempty"`
-	SubjectCRegexes       []string              `json:"subjectCRegexes,omitempty"`
+	SubjectCRegexes       []string              `json:"subjectCValues,omitempty"`
 	SANRegexes            []string              `json:"sanRegexes,omitempty"`
 	KeyTypes              []allowedKeyType      `json:"keyTypes,omitempty"`
 	KeyReuse              bool                  `json:"keyReuse,omitempty"`

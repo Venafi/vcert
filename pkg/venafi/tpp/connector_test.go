@@ -27,6 +27,7 @@ import (
 	"github.com/Venafi/vcert/test"
 	"net/http"
 	"os"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -615,6 +616,48 @@ func TestImportCertificate(t *testing.T) {
 	pp(importResp)
 }
 
+func TestReadPolicyConfiguration(t *testing.T) {
+	//todo: add more zones tests
+	tpp := getTestConnector()
+	err := tpp.SetBaseURL(ctx.TPPurl)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+	shouldBePolice := endpoint.Policy{
+		[]string{".*"},
+		[]string{".*"},
+		[]string{".*"},
+		[]string{".*"},
+		[]string{".*"},
+		[]string{".*"},
+		[]endpoint.AllowedKeyConfiguration{
+			{certificate.KeyTypeRSA, certificate.AllSupportedKeySizes(), nil},
+			{certificate.KeyTypeECDSA, nil, certificate.AllSupportedCurves()},
+		},
+		[]string{},
+		[]string{},
+		[]string{},
+		[]string{},
+		[]string{},
+		false,
+		false,
+	}
+	policy, err := tpp.ReadPolicyConfiguration(ctx.TPPZone)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(*policy, shouldBePolice) {
+		t.Fatal("policy is not as expected")
+	}
+}
 func pp(a interface{}) {
 	b, err := json.MarshalIndent(a, "", "    ")
 	if err != nil {

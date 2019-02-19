@@ -26,6 +26,7 @@ import (
 	"github.com/Venafi/vcert/pkg/endpoint"
 	"github.com/Venafi/vcert/test"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -353,4 +354,39 @@ func TestRenewCertificate(t *testing.T) {
 	}
 	t.Logf("requested renewal for %s, will pickup by %s", pickupID, reqId1)
 
+}
+
+func TestReadPolicyConfiguration(t *testing.T) {
+	//todo: add more zones
+	conn := getTestConnector()
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	policy, err := conn.ReadPolicyConfiguration(ctx.CloudZone)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	shouldBePolice := endpoint.Policy{
+		[]string{".*.example.com", ".*.example.org", ".*.example.net", ".*.invalid", ".*.local", ".*.localhost", ".*.test"},
+		[]string{".*"},
+		[]string{".*"},
+		[]string{".*"},
+		[]string{".*"},
+		[]string{".*"},
+		[]endpoint.AllowedKeyConfiguration{
+			{certificate.KeyTypeRSA, []int{2048}, nil},
+		},
+		[]string{".*"},
+		nil,
+		nil,
+		nil,
+		nil,
+		true,
+		true,
+	}
+
+	if !reflect.DeepEqual(*policy, shouldBePolice) {
+		t.Fatal("policy is not as expected")
+	}
 }
