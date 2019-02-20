@@ -561,9 +561,13 @@ func (sp serverPolicy) toPolicy() (p endpoint.Policy) {
 		p.SubjectCRegexes = []string{allAllowedRegex}
 	}
 	if sp.SubjAltNameDnsAllowed {
-		p.DnsSanRegExs = make([]string, len(sp.WhitelistedDomains))
-		for i, d := range sp.WhitelistedDomains {
-			p.DnsSanRegExs[i] = ".*" + regexp.QuoteMeta("."+d)
+		if len(sp.WhitelistedDomains) == 0 {
+			p.DnsSanRegExs = []string{allAllowedRegex}
+		} else {
+			p.DnsSanRegExs = make([]string, len(sp.WhitelistedDomains))
+			for i, d := range sp.WhitelistedDomains {
+				p.DnsSanRegExs[i] = ".*" + regexp.QuoteMeta("."+d)
+			}
 		}
 	} else {
 		p.DnsSanRegExs = []string{}
