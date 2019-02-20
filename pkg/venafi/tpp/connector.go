@@ -305,7 +305,7 @@ func (c *Connector) ReadPolicyConfiguration(zone string) (policy *endpoint.Polic
 		Policy serverPolicy
 	}
 	if statusCode == http.StatusOK {
-		err = json.Unmarshal(body, &r.Policy)
+		err = json.Unmarshal(body, &r)
 		p := r.Policy.toPolicy()
 		policy = &p
 	} else {

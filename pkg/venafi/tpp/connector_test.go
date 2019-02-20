@@ -641,19 +641,18 @@ func TestReadPolicyConfiguration(t *testing.T) {
 			{certificate.KeyTypeRSA, certificate.AllSupportedKeySizes(), nil},
 			{certificate.KeyTypeECDSA, nil, certificate.AllSupportedCurves()},
 		},
-		[]string{},
-		[]string{},
-		[]string{},
-		[]string{},
-		[]string{},
-		false,
-		false,
+		[]string{".*"},
+		[]string{".*"},
+		[]string{".*"},
+		[]string{".*"},
+		[]string{".*"},
+		true,
+		true,
 	}
 	policy, err := tpp.ReadPolicyConfiguration(ctx.TPPZone)
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	if !reflect.DeepEqual(*policy, shouldBePolice) {
 		t.Fatal("policy is not as expected")
 	}
