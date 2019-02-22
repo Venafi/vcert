@@ -269,7 +269,7 @@ func (c *Connector) request(method string, resource urlResource, data interface{
 	defer res.Body.Close()
 	body, err = ioutil.ReadAll(res.Body)
 	// Do not enable trace in production
-	trace := false // IMPORTANT: sensitive information can be diclosured
+	trace := true // IMPORTANT: sensitive information can be diclosured
 	// I hope you know what are you doing
 	if trace {
 		log.Println("#################")
@@ -492,9 +492,9 @@ type serverPolicy struct {
 			Locked bool
 			Value  int
 		}
-		KeyCurve struct { //todo: check field name
+		EllipticCurve struct {
 			Locked bool
-			Value  string //todo: check field name and type
+			Value  string
 		}
 	}
 	ManagementType _strValue
@@ -609,10 +609,9 @@ func (sp serverPolicy) toPolicy() (p endpoint.Policy) {
 				key.KeySizes = certificate.AllSupportedKeySizes()
 			}
 		} else {
-			//todo: check curves
 			var curve certificate.EllipticCurve
-			if sp.KeyPair.KeyCurve.Locked {
-				if err := curve.Set(sp.KeyPair.KeyCurve.Value); err != nil {
+			if sp.KeyPair.EllipticCurve.Locked {
+				if err := curve.Set(sp.KeyPair.EllipticCurve.Value); err != nil {
 					panic(err)
 				}
 				key.KeyCurves = append(key.KeyCurves, curve)

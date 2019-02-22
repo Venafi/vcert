@@ -630,31 +630,85 @@ func TestReadPolicyConfiguration(t *testing.T) {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
 	}
-	shouldBePolice := endpoint.Policy{
-		[]string{".*"},
-		[]string{".*"},
-		[]string{".*"},
-		[]string{".*"},
-		[]string{".*"},
-		[]string{".*"},
-		[]endpoint.AllowedKeyConfiguration{
-			{certificate.KeyTypeRSA, certificate.AllSupportedKeySizes(), nil},
-			{certificate.KeyTypeECDSA, nil, certificate.AllSupportedCurves()},
+	cases := []struct {
+		zone   string
+		policy endpoint.Policy
+	}{
+		{
+			"devops\\vcert",
+			endpoint.Policy{
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				[]endpoint.AllowedKeyConfiguration{
+					{certificate.KeyTypeRSA, certificate.AllSupportedKeySizes(), nil},
+					{certificate.KeyTypeECDSA, nil, certificate.AllSupportedCurves()},
+				},
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				true,
+				true,
+			},
 		},
-		[]string{".*"},
-		[]string{".*"},
-		[]string{".*"},
-		[]string{".*"},
-		[]string{".*"},
-		true,
-		true,
+		{
+			"devops\\restricted_domain",
+			endpoint.Policy{
+				[]string{"vfidev\\.com", "vfidev\\.net", "vfide\\.org"},
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				[]endpoint.AllowedKeyConfiguration{
+					{certificate.KeyTypeRSA, certificate.AllSupportedKeySizes(), nil},
+					{certificate.KeyTypeECDSA, nil, certificate.AllSupportedCurves()},
+				},
+
+				[]string{".*\\.vfidev\\.com", ".*\\.vfidev\\.net", ".*\\.vfide\\.org"},
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				true,
+				true,
+			},
+		},
+		{
+			"devops\\only_ecc_p521",
+			endpoint.Policy{
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				[]endpoint.AllowedKeyConfiguration{
+					{certificate.KeyTypeECDSA, nil, []certificate.EllipticCurve{certificate.EllipticCurveP521}},
+				},
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				true,
+				true,
+			},
+		},
 	}
-	policy, err := tpp.ReadPolicyConfiguration(ctx.TPPZone)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !reflect.DeepEqual(*policy, shouldBePolice) {
-		t.Fatal("policy is not as expected")
+	for _, c := range cases {
+		policy, err := tpp.ReadPolicyConfiguration(c.zone)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(*policy, c.policy) {
+			t.Fatal("policy is not as expected")
+		}
 	}
 }
 func pp(a interface{}) {
