@@ -243,5 +243,24 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 }
 
 func (c *Connector) ReadPolicyConfiguration(zone string) (policy *endpoint.Policy, err error) {
-	return nil, fmt.Errorf("getting policy is not supported in -test-mode")
+	policy = &endpoint.Policy{
+		[]string{".*"},
+		[]string{".*"},
+		[]string{".*"},
+		[]string{".*"},
+		[]string{".*"},
+		[]string{".*"},
+		[]endpoint.AllowedKeyConfiguration{
+			{certificate.KeyTypeRSA, certificate.AllSupportedKeySizes(), nil},
+			{certificate.KeyTypeECDSA, nil, certificate.AllSupportedCurves()},
+		},
+		[]string{".*"},
+		[]string{".*"},
+		[]string{".*"},
+		[]string{".*"},
+		[]string{".*"},
+		true,
+		true,
+	}
+	return
 }
