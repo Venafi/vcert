@@ -566,7 +566,12 @@ func (sp serverPolicy) toPolicy() (p endpoint.Policy) {
 		} else {
 			p.DnsSanRegExs = make([]string, len(sp.WhitelistedDomains))
 			for i, d := range sp.WhitelistedDomains {
-				p.DnsSanRegExs[i] = ".*" + regexp.QuoteMeta("."+d)
+				if sp.WildcardsAllowed {
+					p.DnsSanRegExs[i] = ".*" + regexp.QuoteMeta("."+d)
+				} else {
+					p.DnsSanRegExs[i] = regexp.QuoteMeta(d)
+				}
+
 			}
 		}
 	} else {
