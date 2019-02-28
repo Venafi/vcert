@@ -96,7 +96,7 @@ func (kt *KeyType) Set(value string) error {
 	switch strings.ToLower(value) {
 	case "rsa":
 		*kt = KeyTypeRSA
-	case "ecdsa":
+	case "ecdsa", "ec":
 		*kt = KeyTypeECDSA
 	default:
 		*kt = KeyTypeECDSA
