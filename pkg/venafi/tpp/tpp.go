@@ -606,7 +606,7 @@ func (sp serverPolicy) toPolicy() (p endpoint.Policy) {
 		if keyType == certificate.KeyTypeRSA {
 			if sp.KeyPair.KeySize.Locked {
 				for _, i := range certificate.AllSupportedKeySizes() {
-					if i > sp.KeyPair.KeySize.Value {
+					if i >= sp.KeyPair.KeySize.Value {
 						key.KeySizes = append(key.KeySizes, i)
 					}
 				}
