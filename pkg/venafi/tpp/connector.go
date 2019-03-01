@@ -317,12 +317,22 @@ func (c *Connector) ReadPolicyConfiguration(zone string) (policy *endpoint.Polic
 //ReadZoneConfiguration reads the policy data from TPP to get locked and pre-configured values for certificate requests
 func (c *Connector) ReadZoneConfiguration(zone string) (config *endpoint.ZoneConfiguration, err error) {
 	zoneConfig := endpoint.NewZoneConfiguration()
-	zoneConfig.HashAlgorithm = x509.SHA256WithRSA
-	policy, err := c.ReadPolicyConfiguration(zone)
+	zoneConfig.HashAlgorithm = x509.SHA256WithRSA //todo: check this can have problem with ECDSA key
+	rq := struct{ PolicyDN string }{getPolicyDN(zone)}
+	statusCode, status, body, err := c.request("POST", urlResourceCertificatePolicy, rq)
 	if err != nil {
 		return
 	}
-	zoneConfig.Policy = *policy
+	var r struct {
+		Policy serverPolicy
+	}
+	if statusCode != http.StatusOK {
+		return nil, fmt.Errorf("Invalid status: %s", status)
+	}
+	err = json.Unmarshal(body, &r)
+	p := r.Policy.toPolicy()
+	r.Policy.toZoneConfig(zoneConfig)
+	zoneConfig.Policy = p
 	return zoneConfig, nil
 }
 

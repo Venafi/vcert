@@ -521,6 +521,14 @@ type serverPolicy struct {
 	WildcardsAllowed      bool
 }
 
+func (sp serverPolicy) toZoneConfig(zc *endpoint.ZoneConfiguration) {
+	zc.Country = sp.Subject.Country.Value
+	zc.Organization = sp.Subject.Organization.Value
+	zc.OrganizationalUnit = sp.Subject.OrganizationalUnit.Values
+	zc.Province = sp.Subject.State.Value
+	zc.Locality = sp.Subject.City.Value
+}
+
 func (sp serverPolicy) toPolicy() (p endpoint.Policy) {
 	escapeArray := func(l []string) []string {
 		escaped := make([]string, len(l))

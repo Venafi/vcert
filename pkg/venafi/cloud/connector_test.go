@@ -374,9 +374,7 @@ func TestReadPolicyConfiguration(t *testing.T) {
 		[]string{".*"},
 		[]string{".*"},
 		[]string{".*"},
-		[]endpoint.AllowedKeyConfiguration{
-			{certificate.KeyTypeRSA, []int{2048}, nil},
-		},
+		[]endpoint.AllowedKeyConfiguration{{certificate.KeyTypeRSA, []int{2048, 4096}, nil}},
 		[]string{".*"},
 		nil,
 		nil,
@@ -387,6 +385,6 @@ func TestReadPolicyConfiguration(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(*policy, shouldBePolice) {
-		t.Fatal("policy is not as expected")
+		t.Fatalf("policy for zone %s is not as expected \nget:    %+v \nexpect: %+v", ctx.CloudZone, *policy, shouldBePolice)
 	}
 }

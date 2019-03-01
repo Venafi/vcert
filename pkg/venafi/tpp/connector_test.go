@@ -659,17 +659,13 @@ func TestReadPolicyConfiguration(t *testing.T) {
 		{
 			"devops\\restricted_domain",
 			endpoint.Policy{
-				[]string{"vfidev\\.com", "vfidev\\.net", "vfide\\.org"},
-				[]string{".*"},
-				[]string{".*"},
-				[]string{".*"},
-				[]string{".*"},
-				[]string{".*"},
-				[]endpoint.AllowedKeyConfiguration{
-					{certificate.KeyTypeRSA, certificate.AllSupportedKeySizes(), nil},
-					{certificate.KeyTypeECDSA, nil, certificate.AllSupportedCurves()},
-				},
-
+				[]string{`vfidev\.com`, `vfidev\.net`, `vfide\.org`},
+				[]string{`Venafi Inc\.`},
+				[]string{"Integration"},
+				[]string{"Utah"},
+				[]string{"Salt Lake"},
+				[]string{"US"},
+				[]endpoint.AllowedKeyConfiguration{{certificate.KeyTypeRSA, []int{2048, 4096, 8192}, nil}},
 				[]string{".*\\.vfidev\\.com", ".*\\.vfidev\\.net", ".*\\.vfide\\.org"},
 				[]string{".*"},
 				[]string{".*"},
@@ -707,7 +703,7 @@ func TestReadPolicyConfiguration(t *testing.T) {
 			t.Fatal(err)
 		}
 		if !reflect.DeepEqual(*policy, c.policy) {
-			t.Fatal("policy is not as expected")
+			t.Fatalf("policy for zone %s is not as expected \nget:    %+v \nexpect: %+v", c.zone, *policy, c.policy)
 		}
 	}
 }

@@ -43,7 +43,7 @@ func TestUpdateRequestSubject(t *testing.T) {
 
 	z.UpdateCertificateRequest(&req)
 
-	if strings.EqualFold(req.Subject.Organization[0], z.Organization) {
+	if !strings.EqualFold(req.Subject.Organization[0], z.Organization) {
 		t.Fatalf("Updated request did not contain the expected Organization: '%s' -- Actual Organization: '%s'", z.Organization, req.Subject.Organization[0])
 	}
 	if !strings.EqualFold(req.Subject.Country[0], z.Country) {
@@ -276,14 +276,10 @@ func TestBadKeySizeValiateRequest(t *testing.T) {
 func getBaseZoneConfiguration() *ZoneConfiguration {
 	z := ZoneConfiguration{}
 	z.Organization = "Venafi, Inc."
-	z.OrganizationLocked = false
 	z.OrganizationalUnit = []string{"Engineering", "Automated Tests"}
 	z.Country = "US"
-	z.CountryLocked = false
 	z.Province = "Utah"
-	z.ProvinceLocked = true
 	z.Locality = "SLC"
-	z.LocalityLocked = true
 	z.AllowedKeyConfigurations = []AllowedKeyConfiguration{{KeyType: certificate.KeyTypeRSA, KeySizes: []int{2048, 4096}}}
 	z.HashAlgorithm = x509.SHA512WithRSA
 	return &z

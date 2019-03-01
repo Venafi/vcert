@@ -121,14 +121,10 @@ type Policy struct {
 // ZoneConfiguration provides a common structure for certificate request data provided by the remote endpoint
 type ZoneConfiguration struct {
 	Organization       string
-	OrganizationLocked bool
 	OrganizationalUnit []string
 	Country            string
-	CountryLocked      bool
 	Province           string
-	ProvinceLocked     bool
 	Locality           string
-	LocalityLocked     bool
 	Policy
 
 	HashAlgorithm x509.SignatureAlgorithm
@@ -234,7 +230,7 @@ func (z *ZoneConfiguration) UpdateCertificateRequest(request *certificate.Reques
 	if (request.Subject.Organization == nil || len(request.Subject.Organization) == 0) && z.Organization != "" {
 		request.Subject.Organization = []string{z.Organization}
 	} else {
-		if z.OrganizationLocked && !strings.EqualFold(request.Subject.Organization[0], z.Organization) {
+		if !strings.EqualFold(request.Subject.Organization[0], z.Organization) {
 			request.Subject.Organization = []string{z.Organization}
 		}
 	}
@@ -245,25 +241,25 @@ func (z *ZoneConfiguration) UpdateCertificateRequest(request *certificate.Reques
 	if (request.Subject.Country == nil || len(request.Subject.Country) == 0) && z.Country != "" {
 		request.Subject.Country = []string{z.Country}
 	} else {
-		if z.CountryLocked && !strings.EqualFold(request.Subject.Country[0], z.Country) {
+		if !strings.EqualFold(request.Subject.Country[0], z.Country) {
 			request.Subject.Country = []string{z.Country}
 		}
 	}
 	if (request.Subject.Province == nil || len(request.Subject.Province) == 0) && z.Province != "" {
 		request.Subject.Province = []string{z.Province}
 	} else {
-		if z.ProvinceLocked && !strings.EqualFold(request.Subject.Province[0], z.Province) {
+		if !strings.EqualFold(request.Subject.Province[0], z.Province) {
 			request.Subject.Province = []string{z.Province}
 		}
 	}
 	if (request.Subject.Locality == nil || len(request.Subject.Locality) == 0) && z.Locality != "" {
 		request.Subject.Locality = []string{z.Locality}
 	} else {
-		if z.LocalityLocked && !strings.EqualFold(request.Subject.Locality[0], z.Locality) {
+		if !strings.EqualFold(request.Subject.Locality[0], z.Locality) {
 			request.Subject.Locality = []string{z.Locality}
 		}
 	}
-	if z.HashAlgorithm != 0 {
+	if z.HashAlgorithm != x509.UnknownSignatureAlgorithm {
 		request.SignatureAlgorithm = z.HashAlgorithm
 	} else {
 		request.SignatureAlgorithm = x509.SHA256WithRSA

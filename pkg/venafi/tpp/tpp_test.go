@@ -211,14 +211,10 @@ func TestParseCertificateRetrieveData(t *testing.T) {
 func getBaseZoneConfiguration() *endpoint.ZoneConfiguration {
 	z := endpoint.NewZoneConfiguration()
 	z.Organization = "Venafi"
-	z.OrganizationLocked = false
 	z.OrganizationalUnit = []string{"Engineering", "Automated Tests"}
 	z.Country = "US"
-	z.CountryLocked = false
 	z.Province = "Utah"
-	z.ProvinceLocked = true
 	z.Locality = "SLC"
-	z.LocalityLocked = true
 	z.AllowedKeyConfigurations = []endpoint.AllowedKeyConfiguration{endpoint.AllowedKeyConfiguration{KeyType: certificate.KeyTypeRSA, KeySizes: []int{4096}}}
 	z.HashAlgorithm = x509.SHA512WithRSA
 	return z
