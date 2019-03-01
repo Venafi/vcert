@@ -55,6 +55,7 @@ func (z *zone) getZoneConfiguration(ud *userDetails, policy *certificatePolicy) 
 		return
 	}
 	zoneConfig.Policy = policy.toPolicy()
+	policy.toZoneConfig(zoneConfig)
 	return
 }
 

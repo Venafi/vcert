@@ -18,6 +18,7 @@ package cloud
 
 import (
 	"github.com/Venafi/vcert/pkg/endpoint"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -71,13 +72,14 @@ func (cp certificatePolicy) toPolicy() (p endpoint.Policy) {
 			allowWildCards = true
 		}
 	}
-	if allowWildCards {
+	if !allowWildCards {
 		for _, s := range p.DnsSanRegExs {
 			if strings.HasPrefix(s, ".*") {
-				p.AllowWildcards = true
+				allowWildCards = true
 			}
 		}
 	}
+	p.AllowWildcards = allowWildCards
 	for _, kt := range cp.KeyTypes {
 		keyConfiguration := endpoint.AllowedKeyConfiguration{}
 		if err := keyConfiguration.KeyType.Set(string(kt.KeyType)); err != nil {
@@ -87,6 +89,33 @@ func (cp certificatePolicy) toPolicy() (p endpoint.Policy) {
 		p.AllowedKeyConfigurations = append(p.AllowedKeyConfigurations, keyConfiguration)
 	}
 	return
+}
+
+func isNotRegexp(s string) bool {
+	matched, err := regexp.MatchString(`[a-zA-Z0-9 ]+`, s)
+	if !matched || err != nil {
+		return false
+	}
+	return true
+}
+func (cp certificatePolicy) toZoneConfig(zc *endpoint.ZoneConfiguration) {
+	if len(cp.SubjectCRegexes) > 0 && isNotRegexp(cp.SubjectCRegexes[0]) {
+		zc.Country = cp.SubjectCRegexes[0]
+	}
+	if len(cp.SubjectORegexes) > 0 && isNotRegexp(cp.SubjectORegexes[0]) {
+		zc.Organization = cp.SubjectORegexes[0]
+	}
+	if len(cp.SubjectSTRegexes) > 0 && isNotRegexp(cp.SubjectSTRegexes[0]) {
+		zc.Province = cp.SubjectSTRegexes[0]
+	}
+	if len(cp.SubjectLRegexes) > 0 && isNotRegexp(cp.SubjectLRegexes[0]) {
+		zc.Locality = cp.SubjectLRegexes[0]
+	}
+	for _, ou := range cp.SubjectOURegexes {
+		if isNotRegexp(ou) {
+			zc.OrganizationalUnit = append(zc.OrganizationalUnit, ou)
+		}
+	}
 }
 
 const (
