@@ -72,14 +72,37 @@ func TestReadZoneConfiguration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-	_, err = conn.ReadZoneConfiguration(ctx.CloudZone)
-	if err != nil {
-		t.Fatalf("%s", err)
-	}
-	_, err = conn.ReadZoneConfiguration("blob")
+	_, err = conn.ReadZoneConfiguration("notexistedzone")
 	if err == nil {
 		t.Fatalf("Unknown zone should have resulted in an error")
 	}
+	testCases := []struct {
+		zone       string
+		zoneConfig endpoint.ZoneConfiguration
+	}{
+		{ctx.CloudZone, endpoint.ZoneConfiguration{
+			CustomAttributeValues: make(map[string]string),
+		}},
+		{os.Getenv("CLOUDZONE_RESTRICTED"), endpoint.ZoneConfiguration{
+			Organization:          "Venafi Dev",
+			OrganizationalUnit:    []string{"Integrations"},
+			Country:               "US",
+			Province:              "Utah",
+			Locality:              "Salt Lake",
+			CustomAttributeValues: make(map[string]string),
+		}},
+	}
+	for _, c := range testCases {
+		zoneConfig, err := conn.ReadZoneConfiguration(c.zone)
+		zoneConfig.Policy = endpoint.Policy{}
+		if err != nil {
+			t.Fatalf("%s", err)
+		}
+		if !reflect.DeepEqual(*zoneConfig, c.zoneConfig) {
+			t.Fatalf("zone config for zone %s is not as expected \nget:    %+v \nexpect: %+v", c.zone, *zoneConfig, c.zoneConfig)
+		}
+	}
+
 }
 
 func TestRequestCertificate(t *testing.T) {
@@ -367,7 +390,7 @@ func TestReadPolicyConfiguration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-	shouldBePolice := endpoint.Policy{
+	expectedPolice := endpoint.Policy{
 		[]string{".*.example.com", ".*.example.org", ".*.example.net", ".*.invalid", ".*.local", ".*.localhost", ".*.test"},
 		[]string{".*"},
 		[]string{".*"},
@@ -384,7 +407,7 @@ func TestReadPolicyConfiguration(t *testing.T) {
 		true,
 	}
 
-	if !reflect.DeepEqual(*policy, shouldBePolice) {
-		t.Fatalf("policy for zone %s is not as expected \nget:    %+v \nexpect: %+v", ctx.CloudZone, *policy, shouldBePolice)
+	if !reflect.DeepEqual(*policy, expectedPolice) {
+		t.Fatalf("policy for zone %s is not as expected \nget:    %+v \nexpect: %+v", ctx.CloudZone, *policy, expectedPolice)
 	}
 }

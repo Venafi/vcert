@@ -111,9 +111,42 @@ func TestReadConfigData(t *testing.T) {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
 	}
-	_, err = tpp.ReadZoneConfiguration(getPolicyDN(ctx.TPPZone))
-	if err != nil {
-		t.Fatalf("err is not nil, err: %s", err)
+	testCases := []struct {
+		zone       string
+		zoneConfig endpoint.ZoneConfiguration
+	}{
+		{getPolicyDN(ctx.TPPZone), endpoint.ZoneConfiguration{
+			Organization:          "Venafi Inc.",
+			OrganizationalUnit:    []string{"Integrations"},
+			Country:               "US",
+			Province:              "Utah",
+			Locality:              "Salt Lake",
+			HashAlgorithm:         x509.SHA256WithRSA,
+			CustomAttributeValues: make(map[string]string),
+		}},
+		{getPolicyDN(os.Getenv("TPPZONE_RESTRICTED")), endpoint.ZoneConfiguration{
+			Organization:          "Venafi Inc.",
+			OrganizationalUnit:    []string{"Integration"},
+			Country:               "US",
+			Province:              "Utah",
+			Locality:              "Salt Lake",
+			HashAlgorithm:         x509.SHA256WithRSA,
+			CustomAttributeValues: make(map[string]string),
+		}},
+	}
+	for _, c := range testCases {
+		zoneConfig, err := tpp.ReadZoneConfiguration(c.zone)
+		zoneConfig.Policy = endpoint.Policy{}
+		if err != nil {
+			t.Fatalf("%s", err)
+		}
+		if !reflect.DeepEqual(*zoneConfig, c.zoneConfig) {
+			t.Fatalf("zone config for zone %s is not as expected \nget:    %+v \nexpect: %+v", c.zone, *zoneConfig, c.zoneConfig)
+		}
+	}
+	_, err = tpp.ReadZoneConfiguration(getPolicyDN("notexistedzone"))
+	if err == nil {
+		t.Fatalf("err should be not nil for not existed zone")
 	}
 }
 
