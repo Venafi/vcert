@@ -94,10 +94,10 @@ func TestReadZoneConfiguration(t *testing.T) {
 	}
 	for _, c := range testCases {
 		zoneConfig, err := conn.ReadZoneConfiguration(c.zone)
-		zoneConfig.Policy = endpoint.Policy{}
 		if err != nil {
 			t.Fatalf("%s", err)
 		}
+		zoneConfig.Policy = endpoint.Policy{}
 		if !reflect.DeepEqual(*zoneConfig, c.zoneConfig) {
 			t.Fatalf("zone config for zone %s is not as expected \nget:    %+v \nexpect: %+v", c.zone, *zoneConfig, c.zoneConfig)
 		}

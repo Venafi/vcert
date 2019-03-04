@@ -227,37 +227,32 @@ func isComponentValid(regexes []string, component []string) bool {
 
 // UpdateCertificateRequest updates a certificate request based on the zone configurataion retrieved from the remote endpoint
 func (z *ZoneConfiguration) UpdateCertificateRequest(request *certificate.Request) {
-	if (request.Subject.Organization == nil || len(request.Subject.Organization) == 0) && z.Organization != "" {
+	if len(request.Subject.Organization) == 0 && z.Organization != "" {
 		request.Subject.Organization = []string{z.Organization}
-	} else {
-		if !strings.EqualFold(request.Subject.Organization[0], z.Organization) {
-			request.Subject.Organization = []string{z.Organization}
-		}
+	} else if len(request.Subject.Organization) > 0 && !strings.EqualFold(request.Subject.Organization[0], z.Organization) {
+		request.Subject.Organization = []string{z.Organization}
+
 	}
-	if (request.Subject.OrganizationalUnit == nil || len(request.Subject.OrganizationalUnit) == 0) && z.OrganizationalUnit != nil {
+	if len(request.Subject.OrganizationalUnit) == 0 && z.OrganizationalUnit != nil {
 		request.Subject.OrganizationalUnit = z.OrganizationalUnit
 	}
 
-	if (request.Subject.Country == nil || len(request.Subject.Country) == 0) && z.Country != "" {
+	if len(request.Subject.Country) == 0 && z.Country != "" {
 		request.Subject.Country = []string{z.Country}
-	} else {
-		if !strings.EqualFold(request.Subject.Country[0], z.Country) {
-			request.Subject.Country = []string{z.Country}
-		}
+	} else if len(request.Subject.Country) > 0 && !strings.EqualFold(request.Subject.Country[0], z.Country) {
+		request.Subject.Country = []string{z.Country}
+
 	}
-	if (request.Subject.Province == nil || len(request.Subject.Province) == 0) && z.Province != "" {
+	if len(request.Subject.Province) == 0 && z.Province != "" {
 		request.Subject.Province = []string{z.Province}
-	} else {
-		if !strings.EqualFold(request.Subject.Province[0], z.Province) {
-			request.Subject.Province = []string{z.Province}
-		}
+	} else if len(request.Subject.Province) > 0 && !strings.EqualFold(request.Subject.Province[0], z.Province) {
+		request.Subject.Province = []string{z.Province}
 	}
-	if (request.Subject.Locality == nil || len(request.Subject.Locality) == 0) && z.Locality != "" {
+	if len(request.Subject.Locality) == 0 && z.Locality != "" {
 		request.Subject.Locality = []string{z.Locality}
-	} else {
-		if !strings.EqualFold(request.Subject.Locality[0], z.Locality) {
-			request.Subject.Locality = []string{z.Locality}
-		}
+	} else if len(request.Subject.Locality) > 0 && !strings.EqualFold(request.Subject.Locality[0], z.Locality) {
+		request.Subject.Locality = []string{z.Locality}
+
 	}
 	if z.HashAlgorithm != x509.UnknownSignatureAlgorithm {
 		request.SignatureAlgorithm = z.HashAlgorithm
