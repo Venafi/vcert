@@ -690,7 +690,7 @@ func TestReadPolicyConfiguration(t *testing.T) {
 			},
 		},
 		{
-			"devops\\restricted_domain",
+			os.Getenv("TPPZONE_RESTRICTED"),
 			endpoint.Policy{
 				[]string{`vfidev\.com`, `vfidev\.net`, `vfide\.org`},
 				[]string{`Venafi Inc\.`},
