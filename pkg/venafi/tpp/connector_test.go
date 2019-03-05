@@ -27,6 +27,7 @@ import (
 	"github.com/Venafi/vcert/test"
 	"net/http"
 	"os"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -35,7 +36,7 @@ var ctx *test.Context
 
 func init() {
 	ctx = test.GetContext()
-	ctx = test.GetEnvContext()
+	//ctx = test.GetEnvContext()
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	if ctx.TPPurl == "" {
@@ -110,9 +111,42 @@ func TestReadConfigData(t *testing.T) {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
 	}
-	_, err = tpp.ReadZoneConfiguration(getPolicyDN(ctx.TPPZone))
-	if err != nil {
-		t.Fatalf("err is not nil, err: %s", err)
+	testCases := []struct {
+		zone       string
+		zoneConfig endpoint.ZoneConfiguration
+	}{
+		{getPolicyDN(ctx.TPPZone), endpoint.ZoneConfiguration{
+			Organization:          "Venafi Inc.",
+			OrganizationalUnit:    []string{"Integrations"},
+			Country:               "US",
+			Province:              "Utah",
+			Locality:              "Salt Lake",
+			HashAlgorithm:         x509.SHA256WithRSA,
+			CustomAttributeValues: make(map[string]string),
+		}},
+		{getPolicyDN(os.Getenv("TPPZONE_RESTRICTED")), endpoint.ZoneConfiguration{
+			Organization:          "Venafi Inc.",
+			OrganizationalUnit:    []string{"Integration"},
+			Country:               "US",
+			Province:              "Utah",
+			Locality:              "Salt Lake",
+			HashAlgorithm:         x509.SHA256WithRSA,
+			CustomAttributeValues: make(map[string]string),
+		}},
+	}
+	for _, c := range testCases {
+		zoneConfig, err := tpp.ReadZoneConfiguration(c.zone)
+		zoneConfig.Policy = endpoint.Policy{}
+		if err != nil {
+			t.Fatalf("%s", err)
+		}
+		if !reflect.DeepEqual(*zoneConfig, c.zoneConfig) {
+			t.Fatalf("zone config for zone %s is not as expected \nget:    %+v \nexpect: %+v", c.zone, *zoneConfig, c.zoneConfig)
+		}
+	}
+	_, err = tpp.ReadZoneConfiguration(getPolicyDN("notexistedzone"))
+	if err == nil {
+		t.Fatalf("err should be not nil for not existed zone")
 	}
 }
 
@@ -615,6 +649,97 @@ func TestImportCertificate(t *testing.T) {
 	pp(importResp)
 }
 
+func TestReadPolicyConfiguration(t *testing.T) {
+	//todo: add more zones tests
+	tpp := getTestConnector()
+	err := tpp.SetBaseURL(ctx.TPPurl)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+	cases := []struct {
+		zone   string
+		policy endpoint.Policy
+	}{
+		{
+			"devops\\vcert",
+			endpoint.Policy{
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				[]endpoint.AllowedKeyConfiguration{
+					{certificate.KeyTypeRSA, certificate.AllSupportedKeySizes(), nil},
+					{certificate.KeyTypeECDSA, nil, certificate.AllSupportedCurves()},
+				},
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				true,
+				true,
+			},
+		},
+		{
+			os.Getenv("TPPZONE_RESTRICTED"),
+			endpoint.Policy{
+				[]string{`vfidev\.com`, `vfidev\.net`, `vfide\.org`},
+				[]string{`Venafi Inc\.`},
+				[]string{"Integration"},
+				[]string{"Utah"},
+				[]string{"Salt Lake"},
+				[]string{"US"},
+				[]endpoint.AllowedKeyConfiguration{{certificate.KeyTypeRSA, []int{2048, 4096, 8192}, nil}},
+				[]string{".*\\.vfidev\\.com", ".*\\.vfidev\\.net", ".*\\.vfide\\.org"},
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				true,
+				true,
+			},
+		},
+		{
+			"devops\\only_ecc_p521",
+			endpoint.Policy{
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				[]endpoint.AllowedKeyConfiguration{
+					{certificate.KeyTypeECDSA, nil, []certificate.EllipticCurve{certificate.EllipticCurveP521}},
+				},
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				[]string{".*"},
+				true,
+				true,
+			},
+		},
+	}
+	for _, c := range cases {
+		policy, err := tpp.ReadPolicyConfiguration(c.zone)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(*policy, c.policy) {
+			t.Fatalf("policy for zone %s is not as expected \nget:    %+v \nexpect: %+v", c.zone, *policy, c.policy)
+		}
+	}
+}
 func pp(a interface{}) {
 	b, err := json.MarshalIndent(a, "", "    ")
 	if err != nil {

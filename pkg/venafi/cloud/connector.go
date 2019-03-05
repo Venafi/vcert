@@ -37,7 +37,7 @@ const (
 	urlResourceZones                              = "zones"
 	urlResourceZoneByTag                          = urlResourceZones + "/tag/%s"
 	urlResourceCertificatePolicies                = "certificatepolicies"
-	urlResourcePoliciesByID                       = urlResourceCertificatePolicies + "%s"
+	urlResourcePoliciesByID                       = urlResourceCertificatePolicies + "/%s"
 	urlResourcePoliciesForZoneByID                = urlResourceCertificatePolicies + "?zoneId=%s"
 	urlResourceCertificateRequests                = "certificaterequests"
 	urlResourceCertificateStatus                  = urlResourceCertificateRequests + "/%s"
@@ -127,6 +127,15 @@ func (c *Connector) Register(email string) (err error) {
 	return nil
 }
 
+func (c *Connector) ReadPolicyConfiguration(zone string) (policy *endpoint.Policy, err error) {
+	config, err := c.ReadZoneConfiguration(zone)
+	if err != nil {
+		return nil, err
+	}
+	policy = &config.Policy
+	return
+}
+
 //ReadZoneConfiguration reads the Zone information needed for generating and requesting a certificate from Venafi Cloud
 func (c *Connector) ReadZoneConfiguration(zone string) (config *endpoint.ZoneConfiguration, err error) {
 	z, err := c.getZoneByTag(zone)
@@ -134,7 +143,10 @@ func (c *Connector) ReadZoneConfiguration(zone string) (config *endpoint.ZoneCon
 		return nil, err
 	}
 	p, err := c.getPoliciesByID([]string{z.DefaultCertificateIdentityPolicy, z.DefaultCertificateUsePolicy})
-	config = z.GetZoneConfiguration(c.user, p)
+	if err != nil {
+		return
+	}
+	config = z.getZoneConfiguration(c.user, p)
 	return config, nil
 }
 
@@ -397,11 +409,11 @@ func (c *Connector) getZoneByTag(tag string) (*zone, error) {
 
 func (c *Connector) getPoliciesByID(ids []string) (*certificatePolicy, error) {
 	policy := new(certificatePolicy)
-	url := c.getURL(urlResourcePoliciesByID)
 	if c.user == nil {
 		return nil, fmt.Errorf("Must be autheticated to read the zone configuration")
 	}
 	for _, id := range ids {
+		url := c.getURL(urlResourcePoliciesByID)
 		url = fmt.Sprintf(url, id)
 		statusCode, status, body, err := c.request("GET", url, nil)
 		p, err := parseCertificatePolicyResult(statusCode, status, body)

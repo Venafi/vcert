@@ -156,6 +156,7 @@ const (
 	urlResourceCertificateRenew                = "certificates/renew"
 	urlResourceCertificateSearch               = "certificates/"
 	urlResourceCertificateImport               = "certificates/import"
+	urlResourceCertificatePolicy               = "certificates/checkpolicy"
 )
 
 const (
@@ -474,4 +475,174 @@ func newPEMCollectionFromResponse(base64Response string, chainOrder certificate.
 		return certificate.PEMCollectionFromBytes(certBytes, chainOrder)
 	}
 	return nil, nil
+}
+
+type _strValue struct {
+	Locked bool
+	Value  string
+}
+
+type serverPolicy struct {
+	CertificateAuthority _strValue
+	CsrGeneration        _strValue
+	KeyGeneration        _strValue
+	KeyPair              struct {
+		KeyAlgorithm _strValue
+		KeySize      struct {
+			Locked bool
+			Value  int
+		}
+		EllipticCurve struct {
+			Locked bool
+			Value  string
+		}
+	}
+	ManagementType _strValue
+
+	PrivateKeyReuseAllowed  bool
+	SubjAltNameDnsAllowed   bool
+	SubjAltNameEmailAllowed bool
+	SubjAltNameIpAllowed    bool
+	SubjAltNameUpnAllowed   bool
+	SubjAltNameUriAllowed   bool
+	Subject                 struct {
+		City               _strValue
+		Country            _strValue
+		Organization       _strValue
+		OrganizationalUnit struct {
+			Locked bool
+			Values []string
+		}
+
+		State _strValue
+	}
+	UniqueSubjectEnforced bool
+	WhitelistedDomains    []string
+	WildcardsAllowed      bool
+}
+
+func (sp serverPolicy) toZoneConfig(zc *endpoint.ZoneConfiguration) {
+	zc.Country = sp.Subject.Country.Value
+	zc.Organization = sp.Subject.Organization.Value
+	zc.OrganizationalUnit = sp.Subject.OrganizationalUnit.Values
+	zc.Province = sp.Subject.State.Value
+	zc.Locality = sp.Subject.City.Value
+}
+
+func (sp serverPolicy) toPolicy() (p endpoint.Policy) {
+	escapeArray := func(l []string) []string {
+		escaped := make([]string, len(l))
+		for i, r := range l {
+			escaped[i] = regexp.QuoteMeta(r)
+		}
+		return escaped
+	}
+	const allAllowedRegex = ".*"
+	if len(sp.WhitelistedDomains) == 0 {
+		p.SubjectCNRegexes = []string{allAllowedRegex}
+	} else {
+		p.SubjectCNRegexes = escapeArray(sp.WhitelistedDomains)
+	}
+	if sp.Subject.OrganizationalUnit.Locked {
+		p.SubjectOURegexes = escapeArray(sp.Subject.OrganizationalUnit.Values)
+	} else {
+		p.SubjectOURegexes = []string{allAllowedRegex}
+	}
+	if sp.Subject.Organization.Locked {
+		p.SubjectORegexes = []string{regexp.QuoteMeta(sp.Subject.Organization.Value)}
+	} else {
+		p.SubjectORegexes = []string{allAllowedRegex}
+	}
+	if sp.Subject.City.Locked {
+		p.SubjectLRegexes = []string{regexp.QuoteMeta(sp.Subject.City.Value)}
+	} else {
+		p.SubjectLRegexes = []string{allAllowedRegex}
+	}
+	if sp.Subject.State.Locked {
+		p.SubjectSTRegexes = []string{regexp.QuoteMeta(sp.Subject.State.Value)}
+	} else {
+		p.SubjectSTRegexes = []string{allAllowedRegex}
+	}
+	if sp.Subject.Country.Locked {
+		p.SubjectCRegexes = []string{regexp.QuoteMeta(sp.Subject.Country.Value)}
+	} else {
+		p.SubjectCRegexes = []string{allAllowedRegex}
+	}
+	if sp.SubjAltNameDnsAllowed {
+		if len(sp.WhitelistedDomains) == 0 {
+			p.DnsSanRegExs = []string{allAllowedRegex}
+		} else {
+			p.DnsSanRegExs = make([]string, len(sp.WhitelistedDomains))
+			for i, d := range sp.WhitelistedDomains {
+				if sp.WildcardsAllowed {
+					p.DnsSanRegExs[i] = ".*" + regexp.QuoteMeta("."+d)
+				} else {
+					p.DnsSanRegExs[i] = regexp.QuoteMeta(d)
+				}
+
+			}
+		}
+	} else {
+		p.DnsSanRegExs = []string{}
+	}
+	if sp.SubjAltNameIpAllowed {
+		p.IpSanRegExs = []string{allAllowedRegex}
+	} else {
+		p.IpSanRegExs = []string{}
+	}
+	if sp.SubjAltNameEmailAllowed {
+		p.EmailSanRegExs = []string{allAllowedRegex}
+	} else {
+		p.EmailSanRegExs = []string{}
+	}
+	if sp.SubjAltNameUriAllowed {
+		p.UriSanRegExs = []string{allAllowedRegex}
+	} else {
+		p.UriSanRegExs = []string{}
+	}
+	if sp.SubjAltNameUpnAllowed {
+		p.UpnSanRegExs = []string{allAllowedRegex}
+	} else {
+		p.UpnSanRegExs = []string{}
+	}
+	if sp.KeyPair.KeyAlgorithm.Locked {
+		var keyType certificate.KeyType
+		if err := keyType.Set(sp.KeyPair.KeyAlgorithm.Value); err != nil {
+			panic(err)
+		}
+		key := endpoint.AllowedKeyConfiguration{KeyType: keyType}
+		if keyType == certificate.KeyTypeRSA {
+			if sp.KeyPair.KeySize.Locked {
+				for _, i := range certificate.AllSupportedKeySizes() {
+					if i >= sp.KeyPair.KeySize.Value {
+						key.KeySizes = append(key.KeySizes, i)
+					}
+				}
+			} else {
+				key.KeySizes = certificate.AllSupportedKeySizes()
+			}
+		} else {
+			var curve certificate.EllipticCurve
+			if sp.KeyPair.EllipticCurve.Locked {
+				if err := curve.Set(sp.KeyPair.EllipticCurve.Value); err != nil {
+					panic(err)
+				}
+				key.KeyCurves = append(key.KeyCurves, curve)
+			} else {
+				key.KeyCurves = certificate.AllSupportedCurves()
+			}
+
+		}
+		p.AllowedKeyConfigurations = append(p.AllowedKeyConfigurations, key)
+	} else {
+		p.AllowedKeyConfigurations = append(p.AllowedKeyConfigurations, endpoint.AllowedKeyConfiguration{
+			KeyType: certificate.KeyTypeRSA, KeySizes: certificate.AllSupportedKeySizes(),
+		})
+		p.AllowedKeyConfigurations = append(p.AllowedKeyConfigurations, endpoint.AllowedKeyConfiguration{
+			KeyType: certificate.KeyTypeECDSA, KeyCurves: certificate.AllSupportedCurves(),
+		})
+	}
+	p.AllowWildcards = sp.WildcardsAllowed
+	p.AllowKeyReuse = sp.PrivateKeyReuseAllowed
+	return
 }

@@ -188,7 +188,10 @@ func (c *Connector) request(method string, url string, data interface{}, authNot
 		payload = bytes.NewReader(b)
 	}
 
-	r, _ := http.NewRequest(method, url, payload)
+	r, err := http.NewRequest(method, url, payload)
+	if err != nil {
+		return
+	}
 	if c.apiKey != "" {
 		r.Header.Add("tppl-api-key", c.apiKey)
 	}

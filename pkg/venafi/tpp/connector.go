@@ -23,7 +23,6 @@ import (
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
 	"net/http"
-	"strconv"
 	"time"
 )
 
@@ -296,83 +295,44 @@ func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (er
 	return
 }
 
+func (c *Connector) ReadPolicyConfiguration(zone string) (policy *endpoint.Policy, err error) {
+	rq := struct{ PolicyDN string }{getPolicyDN(zone)}
+	statusCode, status, body, err := c.request("POST", urlResourceCertificatePolicy, rq)
+	if err != nil {
+		return
+	}
+	var r struct {
+		Policy serverPolicy
+	}
+	if statusCode == http.StatusOK {
+		err = json.Unmarshal(body, &r)
+		p := r.Policy.toPolicy()
+		policy = &p
+	} else {
+		return nil, fmt.Errorf("Invalid status: %s", status)
+	}
+	return
+}
+
 //ReadZoneConfiguration reads the policy data from TPP to get locked and pre-configured values for certificate requests
 func (c *Connector) ReadZoneConfiguration(zone string) (config *endpoint.ZoneConfiguration, err error) {
 	zoneConfig := endpoint.NewZoneConfiguration()
-	zoneConfig.HashAlgorithm = x509.SHA256WithRSA
-	policyDN := getPolicyDN(zone)
-	keyType := certificate.KeyTypeRSA
-
-	attributes := []string{tppAttributeOrg, tppAttributeOrgUnit, tppAttributeCountry, tppAttributeState, tppAttributeLocality, tppAttributeKeyAlgorithm, tppAttributeKeySize, tppAttributeEllipticCurve, tppAttributeRequestHash, tppAttributeManagementType, tppAttributeManualCSR}
-	for _, attrib := range attributes {
-		pr := policyRequest{ObjectDN: policyDN, Class: "X509 Certificate", AttributeName: attrib}
-		statusCode, status, body, err := c.request("POST", urlResourceFindPolicy, pr)
-		if err != nil {
-			return nil, err
-		}
-
-		tppData, err := parseConfigResult(statusCode, status, body)
-		if tppData.Error == "" && (err != nil || tppData.Values == nil || len(tppData.Values) == 0) {
-			continue
-		} else if tppData.Error != "" && tppData.Result == 400 { //object does not exist
-			return nil, fmt.Errorf(tppData.Error)
-		}
-
-		switch attrib {
-		case tppAttributeOrg:
-			zoneConfig.Organization = tppData.Values[0]
-			zoneConfig.OrganizationLocked = tppData.Locked
-		case tppAttributeOrgUnit:
-			zoneConfig.OrganizationalUnit = tppData.Values
-		case tppAttributeCountry:
-			zoneConfig.Country = tppData.Values[0]
-			zoneConfig.CountryLocked = tppData.Locked
-		case tppAttributeState:
-			zoneConfig.Province = tppData.Values[0]
-			zoneConfig.ProvinceLocked = tppData.Locked
-		case tppAttributeLocality:
-			zoneConfig.Locality = tppData.Values[0]
-			zoneConfig.LocalityLocked = tppData.Locked
-		case tppAttributeKeyAlgorithm:
-			err = keyType.Set(tppData.Values[0])
-			if err == nil {
-				zoneConfig.AllowedKeyConfigurations = []endpoint.AllowedKeyConfiguration{endpoint.AllowedKeyConfiguration{KeyType: keyType}}
-			}
-		case tppAttributeKeySize:
-			temp, err := strconv.Atoi(tppData.Values[0])
-			if err == nil {
-				zoneConfig.AllowedKeyConfigurations = []endpoint.AllowedKeyConfiguration{endpoint.AllowedKeyConfiguration{KeyType: keyType, KeySizes: []int{temp}}}
-				zoneConfig.KeySizeLocked = tppData.Locked
-			}
-		case tppAttributeEllipticCurve:
-			curve := certificate.EllipticCurveP256
-			err = curve.Set(tppData.Values[0])
-			if err == nil {
-				zoneConfig.AllowedKeyConfigurations = []endpoint.AllowedKeyConfiguration{endpoint.AllowedKeyConfiguration{KeyType: certificate.KeyTypeECDSA, KeyCurves: []certificate.EllipticCurve{curve}}}
-				zoneConfig.KeySizeLocked = tppData.Locked
-			}
-		case tppAttributeRequestHash:
-			alg, err := strconv.Atoi(tppData.Values[0])
-			if err == nil {
-				switch alg {
-				case pkcs10HashAlgorithmSha1:
-					zoneConfig.HashAlgorithm = x509.SHA1WithRSA
-				case pkcs10HashAlgorithmSha384:
-					zoneConfig.HashAlgorithm = x509.SHA384WithRSA
-				case pkcs10HashAlgorithmSha512:
-					zoneConfig.HashAlgorithm = x509.SHA512WithRSA
-				default:
-					zoneConfig.HashAlgorithm = x509.SHA256WithRSA
-				}
-			}
-		case tppAttributeManagementType, tppAttributeManualCSR:
-			if tppData.Locked {
-				zoneConfig.CustomAttributeValues[attrib] = tppData.Values[0]
-			}
-		}
-
+	zoneConfig.HashAlgorithm = x509.SHA256WithRSA //todo: check this can have problem with ECDSA key
+	rq := struct{ PolicyDN string }{getPolicyDN(zone)}
+	statusCode, status, body, err := c.request("POST", urlResourceCertificatePolicy, rq)
+	if err != nil {
+		return
 	}
-
+	var r struct {
+		Policy serverPolicy
+	}
+	if statusCode != http.StatusOK {
+		return nil, fmt.Errorf("Invalid status: %s", status)
+	}
+	err = json.Unmarshal(body, &r)
+	p := r.Policy.toPolicy()
+	r.Policy.toZoneConfig(zoneConfig)
+	zoneConfig.Policy = p
 	return zoneConfig, nil
 }
 

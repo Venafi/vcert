@@ -111,6 +111,7 @@ func main() {
 		var pcc = &certificate.PEMCollection{}
 
 		zoneConfig, err := connector.ReadZoneConfiguration(cf.zone)
+
 		if err != nil {
 			logger.Panicf("%s", err)
 		}

@@ -241,3 +241,26 @@ func (c *Connector) RenewCertificate(revReq *certificate.RenewalRequest) (reques
 func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certificate.ImportResponse, error) {
 	return nil, fmt.Errorf("import is not supported in -test-mode")
 }
+
+func (c *Connector) ReadPolicyConfiguration(zone string) (policy *endpoint.Policy, err error) {
+	policy = &endpoint.Policy{
+		[]string{".*"},
+		[]string{".*"},
+		[]string{".*"},
+		[]string{".*"},
+		[]string{".*"},
+		[]string{".*"},
+		[]endpoint.AllowedKeyConfiguration{
+			{certificate.KeyTypeRSA, certificate.AllSupportedKeySizes(), nil},
+			{certificate.KeyTypeECDSA, nil, certificate.AllSupportedCurves()},
+		},
+		[]string{".*"},
+		[]string{".*"},
+		[]string{".*"},
+		[]string{".*"},
+		[]string{".*"},
+		true,
+		true,
+	}
+	return
+}
