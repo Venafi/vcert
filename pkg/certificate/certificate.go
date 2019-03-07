@@ -106,11 +106,8 @@ func (kt *KeyType) Set(value string) error {
 		*kt = KeyTypeRSA
 	case "ecdsa", "ec":
 		*kt = KeyTypeECDSA
-	default:
-		*kt = KeyTypeECDSA
 	}
-
-	return nil
+	return fmt.Errorf("unknow key type: %s", value) //todo: check all calls
 }
 
 const (
