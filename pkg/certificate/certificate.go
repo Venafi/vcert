@@ -105,7 +105,7 @@ func (kt *KeyType) Set(value string) error {
 	case "rsa":
 		*kt = KeyTypeRSA
 		return nil
-	case "ecdsa", "ec":
+	case "ecdsa", "ec", "ecc":
 		*kt = KeyTypeECDSA
 		return nil
 	}
