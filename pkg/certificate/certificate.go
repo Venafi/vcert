@@ -104,8 +104,10 @@ func (kt *KeyType) Set(value string) error {
 	switch strings.ToLower(value) {
 	case "rsa":
 		*kt = KeyTypeRSA
+		return nil
 	case "ecdsa", "ec":
 		*kt = KeyTypeECDSA
+		return nil
 	}
 	return fmt.Errorf("unknow key type: %s", value) //todo: check all calls
 }
