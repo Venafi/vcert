@@ -111,39 +111,31 @@ func validateGenerateFlags() error {
 }
 
 func generateCsrForCommandGenCsr(cf *commandFlags, privateKeyPass []byte) (privateKey []byte, csr []byte, err error) {
-	var generatedKey interface{}
-	switch cf.keyType {
-	case certificate.KeyTypeRSA:
-		generatedKey, err = certificate.GenerateRSAPrivateKey(cf.keySize)
-		break
-	case certificate.KeyTypeECDSA:
-		generatedKey, err = certificate.GenerateECDSAPrivateKey(cf.keyCurve)
-		break
-	default:
-		err = fmt.Errorf("Unknown key type: %s", string(cf.keyType))
-		return
-	}
+	certReq := &certificate.Request{}
+	certReq.KeyType = cf.keyType
+	certReq.KeyLength = cf.keySize
+	certReq.KeyCurve = cf.keyCurve
+	err = certReq.GeneratePrivateKey()
 	if err != nil {
 		return
 	}
 
 	var pBlock *pem.Block
-	if privateKeyPass == nil || len(privateKeyPass) == 0 {
-		pBlock, err = certificate.GetPrivateKeyPEMBock(generatedKey)
+	if len(privateKeyPass) == 0 {
+		pBlock, err = certificate.GetPrivateKeyPEMBock(certReq.PrivateKey)
 		if err != nil {
 			return
 		}
 		privateKey = pem.EncodeToMemory(pBlock)
 	} else {
-		pBlock, err = certificate.GetEncryptedPrivateKeyPEMBock(generatedKey, privateKeyPass)
+		pBlock, err = certificate.GetEncryptedPrivateKeyPEMBock(certReq.PrivateKey, privateKeyPass)
 		if err != nil {
 			return
 		}
 		privateKey = pem.EncodeToMemory(pBlock)
 	}
-	certReq := &certificate.Request{}
 	certReq = fillCertificateRequest(certReq, cf)
-	err = certificate.GenerateRequest(certReq, generatedKey)
+	err = certReq.GeneratePrivateKey()
 	if err != nil {
 		return
 	}

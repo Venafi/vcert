@@ -17,6 +17,7 @@
 package certificate
 
 import (
+	"crypto"
 	"crypto/rand"
 	"crypto/x509"
 	"math/big"
@@ -52,7 +53,7 @@ func getCertificateRequestForTest() *Request {
 	return &req
 }
 
-func generateTestCertificate() (*x509.Certificate, interface{}, error) {
+func generateTestCertificate() (*x509.Certificate, crypto.Signer, error) {
 	req := getCertificateRequestForTest()
 
 	priv, err := GenerateECDSAPrivateKey(EllipticCurveP384)
@@ -73,7 +74,7 @@ func generateTestCertificate() (*x509.Certificate, interface{}, error) {
 	return cert, priv, nil
 }
 
-func generateSelfSigned(request *Request, ku x509.KeyUsage, eku []x509.ExtKeyUsage, privateKey interface{}) ([]byte, error) {
+func generateSelfSigned(request *Request, ku x509.KeyUsage, eku []x509.ExtKeyUsage, privateKey crypto.Signer) ([]byte, error) {
 	notBefore := time.Now()
 	limit := new(big.Int).Lsh(big.NewInt(1), 128)
 	serial, _ := rand.Int(rand.Reader, limit)
@@ -286,7 +287,7 @@ func TestKeyTypeSetByString(t *testing.T) {
 }
 
 func TestGetPrivateKeyPEMBock(t *testing.T) {
-	var priv interface{}
+	var priv crypto.Signer
 	priv, err := GenerateRSAPrivateKey(512)
 	if err != nil {
 		t.Fatalf("Error generating RSA Private Key\nError: %s", err)
@@ -318,7 +319,7 @@ func TestGetPrivateKeyPEMBock(t *testing.T) {
 }
 
 func TestGetEncryptedPrivateKeyPEMBock(t *testing.T) {
-	var priv interface{}
+	var priv crypto.Signer
 	priv, err := GenerateRSAPrivateKey(512)
 	if err != nil {
 		t.Fatalf("Error generating RSA Private Key\nError: %s", err)
@@ -380,7 +381,7 @@ func TestGetCertificatePEMBlock(t *testing.T) {
 
 func TestGetCertificateRequestPEMBlock(t *testing.T) {
 	certRequest := getCertificateRequestForTest()
-	var priv interface{}
+	var priv crypto.Signer
 	priv, err := GenerateRSAPrivateKey(512)
 	if err != nil {
 		t.Fatalf("Error generating RSA Private Key\nError: %s", err)

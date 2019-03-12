@@ -17,6 +17,7 @@
 package fake
 
 import (
+	"crypto"
 	"crypto/rand"
 	"crypto/x509"
 	"encoding/base64"
@@ -159,7 +160,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (pcc *certific
 	}
 
 	var csrPEMbytes []byte
-	var pk interface{}
+	var pk crypto.Signer
 
 	if fakeRequest.CSR != "" {
 		csrPEMbytes, err = base64.StdEncoding.DecodeString(fakeRequest.CSR)
@@ -167,21 +168,14 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (pcc *certific
 	} else {
 		req := fakeRequest.Req
 
-		switch req.KeyType {
-		case certificate.KeyTypeECDSA:
-			req.PrivateKey, err = certificate.GenerateECDSAPrivateKey(req.KeyCurve)
-		case certificate.KeyTypeRSA:
-			req.PrivateKey, err = certificate.GenerateRSAPrivateKey(req.KeyLength)
-		default:
-			return nil, fmt.Errorf("Unable to generate certificate request, key type %s is not supported", req.KeyType.String())
-		}
+		err = req.GeneratePrivateKey()
 		if err != nil {
 			return
 		}
 
 		req.DNSNames = append(req.DNSNames, "fake-service-generated."+req.Subject.CommonName)
 
-		err = certificate.GenerateRequest(req, req.PrivateKey)
+		err = req.GenerateCSR()
 		if err != nil {
 			return
 		}

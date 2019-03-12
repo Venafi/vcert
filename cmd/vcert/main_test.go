@@ -18,6 +18,7 @@ package main
 
 import (
 	"bufio"
+	"crypto"
 	"crypto/ecdsa"
 	"crypto/rand"
 	"crypto/rsa"
@@ -109,7 +110,7 @@ func generateTestCertificateWithChain() ([]*x509.Certificate, *x509.Certificate,
 	return caCerts, cert, priv, nil
 }
 
-func generateSelfSigned(request *certificate.Request, ku x509.KeyUsage, eku []x509.ExtKeyUsage, privateKey interface{}) ([]byte, error) {
+func generateSelfSigned(request *certificate.Request, ku x509.KeyUsage, eku []x509.ExtKeyUsage, privateKey crypto.Signer) ([]byte, error) {
 	notBefore := time.Now()
 	limit := new(big.Int).Lsh(big.NewInt(1), 128)
 	serial, _ := rand.Int(rand.Reader, limit)

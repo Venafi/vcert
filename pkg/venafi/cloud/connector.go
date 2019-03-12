@@ -138,6 +138,9 @@ func (c *Connector) ReadPolicyConfiguration(zone string) (policy *endpoint.Polic
 
 //ReadZoneConfiguration reads the Zone information needed for generating and requesting a certificate from Venafi Cloud
 func (c *Connector) ReadZoneConfiguration(zone string) (config *endpoint.ZoneConfiguration, err error) {
+	if zone == "" {
+		return nil, fmt.Errorf("empty zone name")
+	}
 	z, err := c.getZoneByTag(zone)
 	if err != nil {
 		return nil, err
