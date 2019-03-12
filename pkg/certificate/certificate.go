@@ -98,7 +98,7 @@ func (kt *KeyType) String() string {
 	case KeyTypeECDSA:
 		return "ECDSA"
 	default:
-		return fmt.Sprintf("unkown key type: %d", int(*kt))
+		return ""
 	}
 }
 
