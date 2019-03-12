@@ -296,6 +296,9 @@ func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (er
 }
 
 func (c *Connector) ReadPolicyConfiguration(zone string) (policy *endpoint.Policy, err error) {
+	if zone == "" {
+		return nil, fmt.Errorf("empty zone")
+	}
 	rq := struct{ PolicyDN string }{getPolicyDN(zone)}
 	statusCode, status, body, err := c.request("POST", urlResourceCertificatePolicy, rq)
 	if err != nil {
@@ -316,6 +319,9 @@ func (c *Connector) ReadPolicyConfiguration(zone string) (policy *endpoint.Polic
 
 //ReadZoneConfiguration reads the policy data from TPP to get locked and pre-configured values for certificate requests
 func (c *Connector) ReadZoneConfiguration(zone string) (config *endpoint.ZoneConfiguration, err error) {
+	if zone == "" {
+		return nil, fmt.Errorf("empty zone")
+	}
 	zoneConfig := endpoint.NewZoneConfiguration()
 	zoneConfig.HashAlgorithm = x509.SHA256WithRSA //todo: check this can have problem with ECDSA key
 	rq := struct{ PolicyDN string }{getPolicyDN(zone)}
