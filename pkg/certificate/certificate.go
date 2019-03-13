@@ -192,19 +192,10 @@ type ImportResponse struct {
 // todo: remove usage from all libraries
 //deprecated
 func GenerateRequest(request *Request, privateKey crypto.Signer) error {
-	certificateRequest := x509.CertificateRequest{}
-	certificateRequest.Subject = request.Subject
-	certificateRequest.DNSNames = request.DNSNames
-	certificateRequest.EmailAddresses = request.EmailAddresses
-	certificateRequest.IPAddresses = request.IPAddresses
-	certificateRequest.Attributes = request.Attributes
-
-	csr, err := x509.CreateCertificateRequest(rand.Reader, &certificateRequest, privateKey)
-	if err != nil {
-		csr = nil
-	}
-	request.CSR = csr
-
+	pk := request.PrivateKey
+	request.PrivateKey = privateKey
+	err := request.GenerateCSR()
+	request.PrivateKey = pk
 	return err
 }
 
