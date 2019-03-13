@@ -135,6 +135,10 @@ func generateCsrForCommandGenCsr(cf *commandFlags, privateKeyPass []byte) (priva
 		privateKey = pem.EncodeToMemory(pBlock)
 	}
 	certReq = fillCertificateRequest(certReq, cf)
+	err = certReq.GenerateCSR()
+	if err != nil {
+		return
+	}
 	err = certReq.GeneratePrivateKey()
 	if err != nil {
 		return
