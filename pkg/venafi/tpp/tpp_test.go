@@ -211,16 +211,11 @@ func TestParseCertificateRetrieveData(t *testing.T) {
 func getBaseZoneConfiguration() *endpoint.ZoneConfiguration {
 	z := endpoint.NewZoneConfiguration()
 	z.Organization = "Venafi"
-	z.OrganizationLocked = false
 	z.OrganizationalUnit = []string{"Engineering", "Automated Tests"}
 	z.Country = "US"
-	z.CountryLocked = false
 	z.Province = "Utah"
-	z.ProvinceLocked = true
 	z.Locality = "SLC"
-	z.LocalityLocked = true
 	z.AllowedKeyConfigurations = []endpoint.AllowedKeyConfiguration{endpoint.AllowedKeyConfiguration{KeyType: certificate.KeyTypeRSA, KeySizes: []int{4096}}}
-	z.KeySizeLocked = true
 	z.HashAlgorithm = x509.SHA512WithRSA
 	return z
 }
@@ -348,7 +343,7 @@ func TestGenerateRequestWithNoUserProvidedCSRAllowed(t *testing.T) {
 func TestGenerateRequestWithLockedKeyConfiguration(t *testing.T) {
 	tpp := Connector{}
 	zoneConfig := getBaseZoneConfiguration()
-	zoneConfig.AllowedKeyConfigurations = []endpoint.AllowedKeyConfiguration{endpoint.AllowedKeyConfiguration{KeyType: certificate.KeyTypeECDSA, KeyCurves: []certificate.EllipticCurve{certificate.EllipticCurveP384}}}
+	zoneConfig.AllowedKeyConfigurations = []endpoint.AllowedKeyConfiguration{{KeyType: certificate.KeyTypeECDSA, KeyCurves: []certificate.EllipticCurve{certificate.EllipticCurveP384}}}
 	req := certificate.Request{}
 	req.Subject.CommonName = "vcert.test.vfidev.com"
 	req.Subject.Organization = []string{"Venafi, Inc."}
@@ -359,8 +354,8 @@ func TestGenerateRequestWithLockedKeyConfiguration(t *testing.T) {
 	req.KeyType = certificate.KeyTypeRSA
 	zoneConfig.UpdateCertificateRequest(&req)
 	err := tpp.GenerateRequest(zoneConfig, &req)
-	if err == nil {
-		t.Fatalf("Error expected, request should not be generated with key type set to RSA")
+	if err != nil {
+		t.Fatalf("Error expected, request should be update with key type goten from zone")
 	}
 }
 

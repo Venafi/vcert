@@ -60,7 +60,7 @@ func (ec *EllipticCurve) Set(value string) error {
 	case "p224":
 		*ec = EllipticCurveP224
 	default:
-		*ec = EllipticCurveP521
+		*ec = EllipticCurveDefault
 	}
 
 	return nil
@@ -75,7 +75,15 @@ const (
 	EllipticCurveP256
 	// EllipticCurveP384 represents the P384 curve
 	EllipticCurveP384
+	EllipticCurveDefault = EllipticCurveP521
 )
+
+func AllSupportedCurves() []EllipticCurve {
+	return []EllipticCurve{EllipticCurveP521, EllipticCurveP224, EllipticCurveP256, EllipticCurveP384}
+}
+func AllSupportedKeySizes() []int {
+	return []int{512, 1024, 2048, 4096, 8192}
+}
 
 // KeyType represents the types of supported keys
 type KeyType int
@@ -96,13 +104,12 @@ func (kt *KeyType) Set(value string) error {
 	switch strings.ToLower(value) {
 	case "rsa":
 		*kt = KeyTypeRSA
-	case "ecdsa":
+		return nil
+	case "ecdsa", "ec", "ecc":
 		*kt = KeyTypeECDSA
-	default:
-		*kt = KeyTypeECDSA
+		return nil
 	}
-
-	return nil
+	return fmt.Errorf("unknow key type: %s", value) //todo: check all calls
 }
 
 const (

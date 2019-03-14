@@ -49,18 +49,13 @@ type certificatePolicyID struct {
 	CertificateUse      []string `json:"CERTIFICATE_USE,omitempty"`
 }
 
-func (z *zone) GetZoneConfiguration(ud *userDetails, policy *certificatePolicy) (zoneConfig *endpoint.ZoneConfiguration) {
-	zoneConfig = &endpoint.ZoneConfiguration{}
-	if policy == nil || policy.KeyTypes == nil {
+func (z *zone) getZoneConfiguration(ud *userDetails, policy *certificatePolicy) (zoneConfig *endpoint.ZoneConfiguration) {
+	zoneConfig = endpoint.NewZoneConfiguration()
+	if policy == nil {
 		return
 	}
-
-	for _, kt := range policy.KeyTypes {
-		keyConfiguration := endpoint.AllowedKeyConfiguration{}
-		keyConfiguration.KeyType.Set(string(kt.KeyType))
-		keyConfiguration.KeySizes = kt.KeyLengths[:]
-		zoneConfig.AllowedKeyConfigurations = append(zoneConfig.AllowedKeyConfigurations, keyConfiguration)
-	}
+	zoneConfig.Policy = policy.toPolicy()
+	policy.toZoneConfig(zoneConfig)
 	return
 }
 

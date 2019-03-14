@@ -26,6 +26,7 @@ import (
 	"github.com/Venafi/vcert/pkg/endpoint"
 	"github.com/Venafi/vcert/test"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -71,14 +72,37 @@ func TestReadZoneConfiguration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-	_, err = conn.ReadZoneConfiguration(ctx.CloudZone)
-	if err != nil {
-		t.Fatalf("%s", err)
-	}
-	_, err = conn.ReadZoneConfiguration("blob")
+	_, err = conn.ReadZoneConfiguration("notexistedzone")
 	if err == nil {
 		t.Fatalf("Unknown zone should have resulted in an error")
 	}
+	testCases := []struct {
+		zone       string
+		zoneConfig endpoint.ZoneConfiguration
+	}{
+		{ctx.CloudZone, endpoint.ZoneConfiguration{
+			CustomAttributeValues: make(map[string]string),
+		}},
+		{os.Getenv("CLOUDZONE_RESTRICTED"), endpoint.ZoneConfiguration{
+			Organization:          "Venafi Dev",
+			OrganizationalUnit:    []string{"Integrations"},
+			Country:               "US",
+			Province:              "Utah",
+			Locality:              "Salt Lake",
+			CustomAttributeValues: make(map[string]string),
+		}},
+	}
+	for _, c := range testCases {
+		zoneConfig, err := conn.ReadZoneConfiguration(c.zone)
+		if err != nil {
+			t.Fatalf("%s", err)
+		}
+		zoneConfig.Policy = endpoint.Policy{}
+		if !reflect.DeepEqual(*zoneConfig, c.zoneConfig) {
+			t.Fatalf("zone config for zone %s is not as expected \nget:    %+v \nexpect: %+v", c.zone, *zoneConfig, c.zoneConfig)
+		}
+	}
+
 }
 
 func TestRequestCertificate(t *testing.T) {
@@ -353,4 +377,37 @@ func TestRenewCertificate(t *testing.T) {
 	}
 	t.Logf("requested renewal for %s, will pickup by %s", pickupID, reqId1)
 
+}
+
+func TestReadPolicyConfiguration(t *testing.T) {
+	//todo: add more zones
+	conn := getTestConnector()
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	policy, err := conn.ReadPolicyConfiguration(ctx.CloudZone)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	expectedPolice := endpoint.Policy{
+		[]string{".*.example.com", ".*.example.org", ".*.example.net", ".*.invalid", ".*.local", ".*.localhost", ".*.test"},
+		[]string{".*"},
+		[]string{".*"},
+		[]string{".*"},
+		[]string{".*"},
+		[]string{".*"},
+		[]endpoint.AllowedKeyConfiguration{{certificate.KeyTypeRSA, []int{2048, 4096}, nil}},
+		[]string{".*"},
+		nil,
+		nil,
+		nil,
+		nil,
+		true,
+		true,
+	}
+
+	if !reflect.DeepEqual(*policy, expectedPolice) {
+		t.Fatalf("policy for zone %s is not as expected \nget:    %+v \nexpect: %+v", ctx.CloudZone, *policy, expectedPolice)
+	}
 }
