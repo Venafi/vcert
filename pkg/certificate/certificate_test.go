@@ -19,10 +19,13 @@ package certificate
 import (
 	"crypto"
 	"crypto/rand"
+	"crypto/rsa"
 	"crypto/x509"
+	"encoding/pem"
 	"math/big"
 	"net"
 	"os"
+	"strings"
 	"testing"
 	"time"
 )
@@ -402,4 +405,135 @@ func TestPublicKey(t *testing.T) {
 	if pub == nil {
 		t.Fatal("should return public key")
 	}
+}
+
+const (
+	checkCertificatePrivateKeyRSAvalid = `
+-----BEGIN PRIVATE KEY-----
+MIICeAIBADANBgkqhkiG9w0BAQEFAASCAmIwggJeAgEAAoGBAKiD4hrY58XqeYEB
+yIg14R6R2Ia/53cBSkNhzRn7Q9wDIzA8qJUkGNu8Oz0nE2V3LhDXsNM7B+IgO1LB
+YRBgegCKHpQVsYlnNUmETbJSILEsbEZZLCaMBXC/xONKpJi9E3qyNr6vNvYxd12O
+l9RN3tTl6NJG5gS8BAf8Z6X7r6bdAgMBAAECgYEAjpLGgiByOCkhk9yGZXfwd4S9
+xYQnubAFvOzKMuk7iLG+29j2aPiZb4/aLusYpggnmWhj2tNe4BqVFnc2QDzf+qTO
+fEmDm1mBnc0V+k0Rt99Wq9KPVMAm2EJBFrUGK7VGQ3H4B02kS+ywz6z25mebCzBT
+JlA7m3jaUdGJQEEPXgECQQDcVwlQrTPOxkG6UX3wfqtSgby0nVPH1N7h+aIVRbZY
+wfdXFsJEIv9ePly0S8MFLpxBNczR4Dqpm6ViEGkUEM+tAkEAw8mt5TAw9//38x0n
+ZyeYhGrM0qOMHHLw5XhnaJPiJ4NyU96aspr+Ppv4Z550f+Z3dIGSKnDinQly1jL1
+f21Z8QJBAKrR7y7UmG2d1icUNobULQ3x9tIvhlxN891NIxNK0GtPNOoXgtRALapq
+voQomDDUSd9kTj4HkHMdb8Hu5wffYKECQA5NBfGusnT68m6Em6MyRjat4mYkYhCV
+6LiqMct2udcvB8POh7gyEA4csGlJLrNE70bITBfjhPn5fbTdpgb3wtECQQC4dQBg
+335myMx7IDWT/I6R7i0Rx+WY7XZ84PkTwTd0q78yIhRS/42rgwEBMkkxlSg5X2sb
+Xjw3nEoRoeTEToar
+-----END PRIVATE KEY-----
+`
+	checkCertificatePrivateKeyRSAinvalid = `
+-----BEGIN PRIVATE KEY-----
+MIICdQIBADANBgkqhkiG9w0BAQEFAASCAl8wggJbAgEAAoGBAKOZvVaHHImhKD+r
+RZXJYV8busd0g0uWBGMeK+VltyG8H/h/neyPmHoEh62P/3FG3UP7oOAAGfz3/yCW
+hf7fHmNz1d6/HyCdQvD4kz/e9E6ty+k1iM5X6pGS97xPsObgHfyOgLn1/YdKvq81
+yG+O/mtfqQEI2izYUAbhUtq3qbctAgMBAAECgYAumTzH56YmQYQAVp10Y67bcz+J
+TlOTdQB85vwj1AwMjNQiaN8noWMR5jZrJmfg8QlXMtYI156PYmgF9Tnndc/mmVlg
+ow9mqEWjXZoBLCP++EkAbQ8dwmuGJB9WzIWFvj6bnKUOJAqQpsXv/wOqcrO7RZb0
+h2Wt/08tpuMZSYnUtQJBANIOKhCxJGjRbPgiczPFauuPi/kqSl1tLFbJfK0XBOvg
+Dezwz4YZpkhj1ttM6JB8QcDHEOMZ3XJMu+m8TqAB4cMCQQDHYmL7FzFg8QGeeeUe
+a4EVFSxmN45y2qSq2KyN0eaeuuV+fHjiLFyi+rZ+gA9xnyQFWcwTH+tFvcbi5aI7
+WgRPAkAC2XBWo6CDz3tz7juz0xS9N0hFy/4QQF/emYMYcfx+Gp71vNqDzitERh5v
+AR8Sfq0BqXGgMwSe/U17QTOr1fqzAkAFiwixbl2jElA3NbBW/ioiieooFVdSfh2h
+2lBByRoeQ5fpwlAiCZWxukKkla7YO9Jmi66OwY5q6/HBkRzHhaMlAkAEeP1wnnnQ
+F3iRLaRPmLtKf8sO1onEkSaQAq5p8/RFvNNwwqMh1t9wu9UYIefICoFsK0wAza9j
+4qQY8qM+To1X
+-----END PRIVATE KEY-----
+`
+	checkCertificateCSRRSA = `
+-----BEGIN CERTIFICATE REQUEST-----
+MIIBrDCCARUCAQAwbDELMAkGA1UEBhMCVVMxDTALBgNVBAgMBFV0YWgxEjAQBgNV
+BAcMCVNhbHQgTGFrZTEPMA0GA1UECgwGVmVuYWZpMQ8wDQYDVQQLDAZEZXZPcHMx
+GDAWBgNVBAMMD3Rlc3QudmVuZGV2LmNvbTCBnzANBgkqhkiG9w0BAQEFAAOBjQAw
+gYkCgYEAqIPiGtjnxep5gQHIiDXhHpHYhr/ndwFKQ2HNGftD3AMjMDyolSQY27w7
+PScTZXcuENew0zsH4iA7UsFhEGB6AIoelBWxiWc1SYRNslIgsSxsRlksJowFcL/E
+40qkmL0TerI2vq829jF3XY6X1E3e1OXo0kbmBLwEB/xnpfuvpt0CAwEAAaAAMA0G
+CSqGSIb3DQEBCwUAA4GBAGsKm5fJ8Zm/j9XMPXhPYmOdiDj+9QlcFq7uRRqwpxo7
+C507RR5Pj2zBRZRLJcc/bNTQFqnW92kIcvJ+YvrQl/GkEMKM2wds/RyMXRHtOJvZ
+YQt6JtkAeQOMECJ7RRHrZiG+m2by2YAB2krthK2gJGSr80xWzZWzrgdwdTe2sxUG
+-----END CERTIFICATE REQUEST-----
+`
+	chechCertificateRSACert = `
+-----BEGIN CERTIFICATE-----
+MIICyjCCAbICCQDtS0qAZisbTTANBgkqhkiG9w0BAQsFADBmMQswCQYDVQQGEwJV
+UzENMAsGA1UECAwEVXRhaDESMBAGA1UEBwwJU2FsdCBMYWtlMQ8wDQYDVQQKDAZW
+ZW5hZmkxDzANBgNVBAsMBkRldk9wczESMBAGA1UEAwwJVmVuYWZpIENBMB4XDTE5
+MDMxNDE1MjAzMloXDTE5MDQxMzE1MjAzMlowbDELMAkGA1UEBhMCVVMxDTALBgNV
+BAgMBFV0YWgxEjAQBgNVBAcMCVNhbHQgTGFrZTEPMA0GA1UECgwGVmVuYWZpMQ8w
+DQYDVQQLDAZEZXZPcHMxGDAWBgNVBAMMD3Rlc3QudmVuZGV2LmNvbTCBnzANBgkq
+hkiG9w0BAQEFAAOBjQAwgYkCgYEAqIPiGtjnxep5gQHIiDXhHpHYhr/ndwFKQ2HN
+GftD3AMjMDyolSQY27w7PScTZXcuENew0zsH4iA7UsFhEGB6AIoelBWxiWc1SYRN
+slIgsSxsRlksJowFcL/E40qkmL0TerI2vq829jF3XY6X1E3e1OXo0kbmBLwEB/xn
+pfuvpt0CAwEAATANBgkqhkiG9w0BAQsFAAOCAQEAMsuZogw+GE3ACQpULxxC3GFP
++3N91g79V5PBP9flBuMuNoC5sQdEFaRBYA7VAUc/0kwT9hbQsm6GO/PnuhDljkqB
+2toPXTW5Okg93r0ZlTKrNWamsj3b5JQOB/dvjBx2c4VDzaD7lO0WMPaNbc0DV1Mm
+5UGslmj7iZIMRmyV4Cvdq/1u3/GjjO8q7qglltYtCP79xAw78dCbhtbdFzCixJ+g
+wNesasf48fL5jiH4gCwpzNij0ryhR0zglz+TsHRGVMef2CNFOw0PfkinQoaDI/Y+
+e/0CZ8Cg2oudlSulDRWzFJBwiCapeRfwkLkhO/pjd0ILvBk8DFzjwCFTpi2SpQ==
+-----END CERTIFICATE-----
+`
+	chechCertificateRSACert2 = `
+-----BEGIN CERTIFICATE-----
+MIICyjCCAbICCQDtS0qAZisbTjANBgkqhkiG9w0BAQsFADBmMQswCQYDVQQGEwJV
+UzENMAsGA1UECAwEVXRhaDESMBAGA1UEBwwJU2FsdCBMYWtlMQ8wDQYDVQQKDAZW
+ZW5hZmkxDzANBgNVBAsMBkRldk9wczESMBAGA1UEAwwJVmVuYWZpIENBMB4XDTE5
+MDMxNDE4MDMwMVoXDTE5MDQxMzE4MDMwMVowbDELMAkGA1UEBhMCVVMxDTALBgNV
+BAgMBFV0YWgxEjAQBgNVBAcMCVNhbHQgTGFrZTEPMA0GA1UECgwGVmVuYWZpMQ8w
+DQYDVQQLDAZEZXZPcHMxGDAWBgNVBAMMD3Rlc3QudmVuZGV2LmNvbTCBnzANBgkq
+hkiG9w0BAQEFAAOBjQAwgYkCgYEAo5m9VocciaEoP6tFlclhXxu6x3SDS5YEYx4r
+5WW3Ibwf+H+d7I+YegSHrY//cUbdQ/ug4AAZ/Pf/IJaF/t8eY3PV3r8fIJ1C8PiT
+P970Tq3L6TWIzlfqkZL3vE+w5uAd/I6AufX9h0q+rzXIb47+a1+pAQjaLNhQBuFS
+2repty0CAwEAATANBgkqhkiG9w0BAQsFAAOCAQEAfb5V/rcEEsZ68rRaEerkvPCk
+EiBMepUAzGrUFQyENiA2qoRuqKnOjhyzZ4uFiXFamiqCK0kjzUVraAYjzhGkH6AU
+AxUKXh5fa9tkt0XsZCS1aTjuDYAPO2Ug62OejUoZtRjy+nGUM7dYku9syzhmQ+hK
+AHu1RG+ZOtT13j3SAH0nkjEADzzsZhZWj/m5HtGQUY9ehAQhbTqn/M+aeGPxOdPt
+Ys0kiIJWXXW4JpJLfwKE9VFERQdHVum0+j8dUfOfyo0clJLPcesBFQ4RRkituxnG
+vDm5x5eZ/dsjYa8CcADBe/2KJBnldZW02o1/OqJ67m2Q1Y74hRTV5MGybpYx/w==
+-----END CERTIFICATE-----
+`
+)
+
+func TestRequest_CheckCertificate(t *testing.T) {
+	rsaPrivKeyInvalid := pemRSADecode(checkCertificatePrivateKeyRSAinvalid)
+	rsaPrivKeyValid := pemRSADecode(checkCertificatePrivateKeyRSAvalid)
+
+	cases := []struct {
+		request      Request
+		cert         string
+		valid        bool
+		errorMessage string
+	}{
+		{Request{KeyType: KeyTypeRSA, PrivateKey: rsaPrivKeyValid}, chechCertificateRSACert, true, ""},
+		{Request{KeyType: KeyTypeECDSA, PrivateKey: rsaPrivKeyValid}, chechCertificateRSACert, false, "key type"},
+		{Request{KeyType: KeyTypeRSA, PrivateKey: rsaPrivKeyInvalid}, chechCertificateRSACert, false, "key modules"},
+		{Request{CSR: []byte(checkCertificateCSRRSA)}, chechCertificateRSACert, true, ""},
+		{Request{CSR: []byte(checkCertificateCSRRSA)}, chechCertificateRSACert2, false, "key modules"},
+	}
+	for _, c := range cases {
+		err := c.request.CheckCertificate(c.cert)
+		if c.valid && err != nil {
+			t.Fatalf("cert should be valid but checker found error: %s", err)
+		}
+		if !c.valid && err == nil {
+			t.Fatalf("certificate should failed but check returns that its valid")
+		}
+		if !c.valid && !strings.Contains(err.Error(), c.errorMessage) {
+			t.Fatalf("unexpected error '%s' (should conatins %s)", err.Error(), c.errorMessage)
+		}
+
+	}
+}
+
+func pemRSADecode(priv string) *rsa.PrivateKey {
+	privPem, _ := pem.Decode([]byte(priv))
+
+	parsedKey, err := x509.ParsePKCS8PrivateKey(privPem.Bytes)
+	if err != nil {
+		panic(err)
+	}
+	return parsedKey.(*rsa.PrivateKey)
 }
