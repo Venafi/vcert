@@ -74,7 +74,7 @@ type certificateRetrieveResponse struct {
 
 type RevocationReason int
 
-// this maps *certificate.RevocationRequest.Reason to TPP-specific webSDK codes
+// RevocationReasonsMap maps *certificate.RevocationRequest.Reason to TPP-specific webSDK codes
 var RevocationReasonsMap = map[string]RevocationReason{
 	"":                       0, // NoReason
 	"none":                   0, //

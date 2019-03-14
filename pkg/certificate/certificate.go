@@ -67,13 +67,13 @@ func (ec *EllipticCurve) Set(value string) error {
 }
 
 const (
-	//EllipticCurveP521 represents the P521 curve
+	// EllipticCurveP521 represents the P521 curve
 	EllipticCurveP521 EllipticCurve = iota
-	//EllipticCurveP224 represents the P224 curve
+	// EllipticCurveP224 represents the P224 curve
 	EllipticCurveP224
-	//EllipticCurveP256 represents the P256 curve
+	// EllipticCurveP256 represents the P256 curve
 	EllipticCurveP256
-	//EllipticCurveP384 represents the P384 curve
+	// EllipticCurveP384 represents the P384 curve
 	EllipticCurveP384
 )
 
@@ -106,16 +106,16 @@ func (kt *KeyType) Set(value string) error {
 }
 
 const (
-	//KeyTypeRSA represents a key type of RSA
+	// KeyTypeRSA represents a key type of RSA
 	KeyTypeRSA KeyType = iota
-	//KeyTypeECDSA represents a key type of ECDSA
+	// KeyTypeECDSA represents a key type of ECDSA
 	KeyTypeECDSA
 )
 
 type CSrOriginOption int
 
 const (
-	LocalGeneratedCSR CSrOriginOption = iota // local generation is default.
+	LocalGeneratedCSR CSrOriginOption = iota // local generation is default
 	ServiceGeneratedCSR
 	UserProvidedCSR
 )
