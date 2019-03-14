@@ -286,7 +286,12 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 		return nil, err
 	}
 	if statusCode == http.StatusOK {
-		return newPEMCollectionFromResponse(body, req.ChainOption)
+		certificates, err = newPEMCollectionFromResponse(body, req.ChainOption)
+		if err != nil {
+			return
+		}
+		err = req.CheckCertificate(certificates.Certificate)
+		return
 	} else if statusCode == http.StatusConflict { // Http Status Code 409 means the certificate has not been signed by the ca yet.
 		return nil, endpoint.ErrCertificatePending{CertificateID: req.PickupID}
 	} else {
@@ -375,7 +380,7 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 	}
 
 	req := certificateRequest{ZoneID: zoneId, ExistingManagedCertificateId: managedCertificateId}
-	if renewReq.CertificateRequest != nil && 0 < len(renewReq.CertificateRequest.CSR) {
+	if renewReq.CertificateRequest != nil && len(renewReq.CertificateRequest.CSR) != 0 {
 		req.CSR = string(renewReq.CertificateRequest.CSR)
 		req.ReuseCSR = false
 	} else {

@@ -179,7 +179,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (pcc *certific
 		if err != nil {
 			return
 		}
-		csrPEMbytes = pem.EncodeToMemory(certificate.GetCertificateRequestPEMBlock(req.CSR))
+		csrPEMbytes = req.CSR
 		pk = req.PrivateKey
 	}
 
@@ -210,11 +210,11 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (pcc *certific
 		certBytes = append(cert_pem, []byte(caCertPEM)...)
 	}
 	pcc, err = certificate.PEMCollectionFromBytes(certBytes, req.ChainOption)
-
 	// no key password -- no key
 	if pk != nil && req.KeyPassword != "" {
 		pcc.AddPrivateKey(pk, []byte(req.KeyPassword))
 	}
+	err = req.CheckCertificate(pcc.Certificate)
 	return
 }
 

@@ -102,6 +102,16 @@ func (kt *KeyType) String() string {
 	}
 }
 
+func (kt *KeyType) X509Type() x509.PublicKeyAlgorithm {
+	switch *kt {
+	case KeyTypeRSA:
+		return x509.RSA
+	case KeyTypeECDSA:
+		return x509.ECDSA
+	}
+	return x509.UnknownPublicKeyAlgorithm
+}
+
 //Set the key type via a string
 func (kt *KeyType) Set(value string) error {
 	switch strings.ToLower(value) {
@@ -131,6 +141,7 @@ const (
 )
 
 //Request contains data needed to generate a certificate request
+// CSR
 type Request struct {
 	Subject            pkix.Name
 	DNSNames           []string
@@ -138,7 +149,7 @@ type Request struct {
 	IPAddresses        []net.IP
 	Attributes         []pkix.AttributeTypeAndValueSET
 	SignatureAlgorithm x509.SignatureAlgorithm
-	PublicKeyAlgorithm x509.PublicKeyAlgorithm
+	PublicKeyAlgorithm x509.PublicKeyAlgorithm //deprecated
 	FriendlyName       string
 	KeyType            KeyType
 	KeyLength          int
@@ -212,7 +223,7 @@ func (request *Request) GenerateCSR() error {
 		csr = nil
 	}
 	request.CSR = csr
-
+	request.CSR = pem.EncodeToMemory(GetCertificateRequestPEMBlock(csr))
 	return err
 }
 
@@ -233,6 +244,75 @@ func (request *Request) GeneratePrivateKey() error {
 		return fmt.Errorf("Unable to generate certificate request, key type %s is not supported", request.KeyType.String())
 	}
 	return err
+}
+
+func (request *Request) CheckCertificate(certPEM string) error {
+	pemBlock, _ := pem.Decode([]byte(certPEM))
+	if pemBlock == nil {
+		return fmt.Errorf("invalid pem format certificate %s", certPEM)
+	}
+	if pemBlock.Type != "CERTIFICATE" {
+		return fmt.Errorf("invalid pem type %s (expect CERTIFICATE)", pemBlock.Type)
+	}
+	cert, err := x509.ParseCertificate(pemBlock.Bytes)
+	if err != nil {
+		return err
+	}
+	if request.PrivateKey != nil {
+		if request.KeyType.X509Type() != cert.PublicKeyAlgorithm {
+			return fmt.Errorf("unmatched key type: %s, %s", request.KeyType.X509Type(), cert.PublicKeyAlgorithm)
+		}
+		switch cert.PublicKeyAlgorithm {
+		case x509.RSA:
+			certPubKey := cert.PublicKey.(*rsa.PublicKey)
+			reqPubkey, ok := request.PrivateKey.Public().(*rsa.PublicKey)
+			if !ok {
+				return fmt.Errorf("request KeyType not matched with real PrivateKey type")
+			}
+
+			if certPubKey.N.Cmp(reqPubkey.N) != 0 {
+				return fmt.Errorf("unmatched key modules")
+			}
+		case x509.ECDSA:
+			certPubkey := cert.PublicKey.(*ecdsa.PublicKey)
+			reqPubkey, ok := request.PrivateKey.Public().(*ecdsa.PublicKey)
+			if !ok {
+				return fmt.Errorf("request KeyType not matched with real PrivateKey type")
+			}
+			if certPubkey.X.Cmp(reqPubkey.X) != 0 {
+				return fmt.Errorf("unmatched X for eliptic keys")
+			}
+		default:
+			return fmt.Errorf("unknown key algorythm %d", cert.PublicKeyAlgorithm)
+		}
+	} else if len(request.CSR) != 0 {
+		pemBlock, _ := pem.Decode(request.CSR)
+		if pemBlock == nil {
+			return fmt.Errorf("bad csr: %s", string(request.CSR))
+		}
+		csr, err := x509.ParseCertificateRequest(pemBlock.Bytes)
+		if err != nil {
+			return err
+		}
+		if cert.PublicKeyAlgorithm != csr.PublicKeyAlgorithm {
+			return fmt.Errorf("unmatched key type: %s, %s", cert.PublicKeyAlgorithm, csr.PublicKeyAlgorithm)
+		}
+		switch csr.PublicKeyAlgorithm {
+		case x509.RSA:
+			certPubKey := cert.PublicKey.(*rsa.PublicKey)
+			reqPubKey := csr.PublicKey.(*rsa.PublicKey)
+			if certPubKey.N.Cmp(reqPubKey.N) != 0 {
+				return fmt.Errorf("unmatched key modules")
+			}
+		case x509.ECDSA:
+			certPubKey := cert.PublicKey.(*ecdsa.PublicKey)
+			reqPubKey := csr.PublicKey.(*ecdsa.PublicKey)
+			if certPubKey.X.Cmp(reqPubKey.X) != 0 {
+				return fmt.Errorf("unmatched X for eliptic keys")
+			}
+		}
+	}
+	return nil
 }
 
 func publicKey(priv crypto.Signer) crypto.PublicKey {

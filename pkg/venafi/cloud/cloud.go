@@ -19,7 +19,6 @@ package cloud
 import (
 	"bytes"
 	"encoding/json"
-	"encoding/pem"
 	"fmt"
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
@@ -116,14 +115,9 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 			return err
 		}
 		err = req.GenerateCSR()
-		if err != nil {
-			return err
-		}
-		req.CSR = pem.EncodeToMemory(certificate.GetCertificateRequestPEMBlock(req.CSR))
-		return nil
-
+		return
 	case certificate.UserProvidedCSR:
-		if req.CSR == nil || len(req.CSR) == 0 {
+		if len(req.CSR) == 0 {
 			return fmt.Errorf("CSR was supposed to be provided by user, but it's empty")
 		}
 		return nil

@@ -17,7 +17,6 @@
 package fake
 
 import (
-	"encoding/pem"
 	"fmt"
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
@@ -40,7 +39,6 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 		if err != nil {
 			return err
 		}
-		req.CSR = pem.EncodeToMemory(certificate.GetCertificateRequestPEMBlock(req.CSR))
 
 	case certificate.UserProvidedCSR:
 		if req.CSR == nil {
