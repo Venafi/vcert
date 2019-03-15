@@ -136,23 +136,23 @@ func TestGenerateECDSAPrivateKey(t *testing.T) {
 
 func TestGenerateCertificateRequestWithRSAKey(t *testing.T) {
 	req := getCertificateRequestForTest()
-
-	priv, err := GenerateRSAPrivateKey(512)
+	var err error
+	req.PrivateKey, err = GenerateRSAPrivateKey(512)
 	if err != nil {
 		t.Fatalf("Error generating RSA Private Key\nError: %s", err)
 	}
 
-	err = GenerateRequest(req, priv)
+	err = req.GenerateCSR()
 	if err != nil {
 		t.Fatalf("Error generating Certificate Request\nError: %s", err)
 	}
 
-	pem := GetCertificateRequestPEMBlock(req.CSR)
-	if pem == nil {
-		t.Fatalf("Failed to encode CSR as PEM")
+	pemBlock, _ := pem.Decode(req.CSR)
+	if pemBlock == nil {
+		t.Fatalf("Failed to decode CSR as PEM")
 	}
 
-	parsedReq, err := x509.ParseCertificateRequest(req.CSR)
+	parsedReq, err := x509.ParseCertificateRequest(pemBlock.Bytes)
 	if err != nil {
 		t.Fatalf("Error parsing generated Certificate Request\nError: %s", err)
 	}
@@ -165,23 +165,23 @@ func TestGenerateCertificateRequestWithRSAKey(t *testing.T) {
 
 func TestGenerateCertificateRequestWithECDSAKey(t *testing.T) {
 	req := getCertificateRequestForTest()
-
-	priv, err := GenerateECDSAPrivateKey(EllipticCurveP521)
+	var err error
+	req.PrivateKey, err = GenerateECDSAPrivateKey(EllipticCurveP521)
 	if err != nil {
 		t.Fatalf("Error generating RSA Private Key\nError: %s", err)
 	}
 
-	err = GenerateRequest(req, priv)
+	err = req.GenerateCSR()
 	if err != nil {
 		t.Fatalf("Error generating Certificate Request\nError: %s", err)
 	}
 
-	pem := GetCertificateRequestPEMBlock(req.CSR)
-	if pem == nil {
-		t.Fatalf("Failed to encode CSR as PEM")
+	pemBlock, _ := pem.Decode(req.CSR)
+	if pemBlock == nil {
+		t.Fatalf("Failed to decode CSR as PEM")
 	}
 
-	parsedReq, err := x509.ParseCertificateRequest(req.CSR)
+	parsedReq, err := x509.ParseCertificateRequest(pemBlock.Bytes)
 	if err != nil {
 		t.Fatalf("Error parsing generated Certificate Request\nError: %s", err)
 	}

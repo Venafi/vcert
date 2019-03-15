@@ -141,7 +141,7 @@ const (
 )
 
 //Request contains data needed to generate a certificate request
-// CSR
+// CSR is pem encoded Certificate Signed Request
 type Request struct {
 	Subject            pkix.Name
 	DNSNames           []string
@@ -154,7 +154,7 @@ type Request struct {
 	KeyType            KeyType
 	KeyLength          int
 	KeyCurve           EllipticCurve
-	CSR                []byte
+	CSR                []byte //should be pem encoded CSR
 	PrivateKey         crypto.Signer
 	CsrOrigin          CSrOriginOption
 	PickupID           string
