@@ -18,7 +18,9 @@ package cloud
 
 import (
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
@@ -521,5 +523,56 @@ func (c *Connector) getManagedCertificate(managedCertId string) (*managedCertifi
 }
 
 func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certificate.ImportResponse, error) {
-	return nil, fmt.Errorf("import is not supported")
+	pBlock, _ := pem.Decode([]byte(req.CertificateData))
+	if pBlock == nil {
+		return nil, fmt.Errorf("can`t parse certificate")
+	}
+
+	base64.StdEncoding.EncodeToString(pBlock.Bytes)
+	fingerprint := certThumprint(pBlock.Bytes)
+	e := importRequestEndpoint{
+		OCSP: 1,
+		Certificates: []importRequestEndpointCert{
+			{
+				Certificate: base64.StdEncoding.EncodeToString(pBlock.Bytes),
+				Fingerprint: fingerprint,
+			},
+		},
+		Protocols: []importRequestEndpointProtocol{
+			{
+				Certificates: []string{fingerprint},
+			},
+		},
+	}
+	request := importRequest{
+		ZoneName:  req.PolicyDN,
+		Endpoints: []importRequestEndpoint{e},
+	}
+
+	url := c.getURL("discovery")
+	statusCode, status, body, err := c.request("POST", url, request)
+	var r struct {
+		CreatedCertificates int
+		CreatedInstances    int
+		UpdatedCertificates int
+		UpdatedInstances    int
+	}
+	err = json.Unmarshal(body, &r)
+	if statusCode != http.StatusCreated {
+		return nil, fmt.Errorf("bad server status responce %d %s", statusCode, status)
+	} else if err != nil {
+		return nil, fmt.Errorf("can`t unmarshal json response %s", err)
+	} else if !(r.CreatedCertificates == 1 || r.UpdatedCertificates == 1) {
+		return nil, fmt.Errorf("certificate not imported on unknown reason")
+	}
+	foundCert, err := c.searchCertificatesByFingerprint(fingerprint)
+	if err != nil {
+		return nil, err
+	}
+	if len(foundCert.Certificates) != 1 {
+		return nil, fmt.Errorf("certificated have imported by have not found on platform after that")
+	}
+	cert := foundCert.Certificates[0]
+	resp := &certificate.ImportResponse{CertificateDN: cert.SubjectCN[0]} //todo: clarify mapping values
+	return resp, nil
 }
