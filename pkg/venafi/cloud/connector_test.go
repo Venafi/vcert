@@ -391,14 +391,14 @@ func TestReadPolicyConfiguration(t *testing.T) {
 		t.Fatalf("%s", err)
 	}
 	expectedPolice := endpoint.Policy{
-		[]string{".*.example.com", ".*.example.org", ".*.example.net", ".*.invalid", ".*.local", ".*.localhost", ".*.test"},
-		[]string{".*"},
-		[]string{".*"},
-		[]string{".*"},
-		[]string{".*"},
-		[]string{".*"},
+		[]string{"^.*.example.com$", "^.*.example.org$", "^.*.example.net$", "^.*.invalid$", "^.*.local$", "^.*.localhost$", "^.*.test$"},
+		[]string{"^.*$"},
+		[]string{"^.*$"},
+		[]string{"^.*$"},
+		[]string{"^.*$"},
+		[]string{"^.*$"},
 		[]endpoint.AllowedKeyConfiguration{{certificate.KeyTypeRSA, []int{2048, 4096}, nil}},
-		[]string{".*"},
+		[]string{"^.*$"},
 		nil,
 		nil,
 		nil,
