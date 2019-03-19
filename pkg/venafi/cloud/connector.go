@@ -47,6 +47,7 @@ const (
 	urlResourceCertificateSearch                  = "certificatesearch"
 	urlResourceManagedCertificates                = "managedcertificates"
 	urlResourceManagedCertificateById             = urlResourceManagedCertificates + "/%s"
+	urlResourceDiscovery                          = "discovery"
 )
 
 type condorChainOption string
@@ -549,8 +550,11 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 		Endpoints: []importRequestEndpoint{e},
 	}
 
-	url := c.getURL("discovery")
+	url := c.getURL(urlResourceDiscovery)
 	statusCode, status, body, err := c.request("POST", url, request)
+	if err != nil {
+		return nil, err
+	}
 	var r struct {
 		CreatedCertificates int
 		CreatedInstances    int
