@@ -85,7 +85,7 @@ func TestReadZoneConfiguration(t *testing.T) {
 		}},
 		{os.Getenv("CLOUDZONE_RESTRICTED"), endpoint.ZoneConfiguration{
 			Organization:          "Venafi Dev",
-			OrganizationalUnit:    []string{"Integrations Integration"},
+			OrganizationalUnit:    []string{"Integrations", "Integration"},
 			Country:               "US",
 			Province:              "Utah",
 			Locality:              "Salt Lake",
