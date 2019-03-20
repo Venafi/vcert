@@ -567,16 +567,16 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 	} else if err != nil {
 		return nil, fmt.Errorf("can`t unmarshal json response %s", err)
 	} else if !(r.CreatedCertificates == 1 || r.UpdatedCertificates == 1) {
-		return nil, fmt.Errorf("certificate not imported on unknown reason")
+		return nil, fmt.Errorf("certificate was not imported on unknown reason")
 	}
 	foundCert, err := c.searchCertificatesByFingerprint(fingerprint)
 	if err != nil {
 		return nil, err
 	}
 	if len(foundCert.Certificates) != 1 {
-		return nil, fmt.Errorf("certificated have imported by have not found on platform after that")
+		return nil, fmt.Errorf("certificate has been imported but could not be found on platform after that")
 	}
 	cert := foundCert.Certificates[0]
-	resp := &certificate.ImportResponse{CertificateDN: cert.SubjectCN[0]} //todo: clarify mapping values
+	resp := &certificate.ImportResponse{CertificateDN: cert.SubjectCN[0]}
 	return resp, nil
 }
