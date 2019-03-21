@@ -24,6 +24,8 @@ elif which parallel; then
 else
     echo Sequential...
     for F in `find features/ -type f -name '*.feature'`; do
+    hostname;
+    docker images;
         $RUN_COMMAND $F
     done
 fi

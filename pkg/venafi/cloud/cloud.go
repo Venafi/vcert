@@ -20,7 +20,6 @@ import (
 	"bytes"
 	"crypto/sha1"
 	"encoding/json"
-	"encoding/pem"
 	"fmt"
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
@@ -139,7 +138,6 @@ type importRequest struct {
 func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *certificate.Request) (err error) {
 	switch req.CsrOrigin {
 	case certificate.LocalGeneratedCSR:
-		var pk interface{}
 		if config == nil {
 			config, err = c.ReadZoneConfiguration(c.zone)
 			if err != nil {
@@ -151,27 +149,13 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 			return err
 		}
 		config.UpdateCertificateRequest(req)
-		switch req.KeyType {
-		case certificate.KeyTypeECDSA:
-			pk, err = certificate.GenerateECDSAPrivateKey(req.KeyCurve)
-		case certificate.KeyTypeRSA:
-			pk, err = certificate.GenerateRSAPrivateKey(req.KeyLength)
-		default:
-			return fmt.Errorf("Unable to generate certificate request, key type %s is not supported", req.KeyType.String())
-		}
-		if err != nil {
+		if err := req.GeneratePrivateKey(); err != nil {
 			return err
 		}
-		req.PrivateKey = pk
-		err = certificate.GenerateRequest(req, pk)
-		if err != nil {
-			return err
-		}
-		req.CSR = pem.EncodeToMemory(certificate.GetCertificateRequestPEMBlock(req.CSR))
-		return nil
-
+		err = req.GenerateCSR()
+		return
 	case certificate.UserProvidedCSR:
-		if req.CSR == nil || len(req.CSR) == 0 {
+		if len(req.CSR) == 0 {
 			return fmt.Errorf("CSR was supposed to be provided by user, but it's empty")
 		}
 		return nil

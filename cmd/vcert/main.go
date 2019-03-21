@@ -23,7 +23,6 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"flag"
-	"fmt"
 	"github.com/Venafi/vcert"
 	"github.com/Venafi/vcert/cmd/vcert/output"
 	"github.com/Venafi/vcert/pkg/certificate"
@@ -422,12 +421,4 @@ func doRegister(connector endpoint.Connector, cf *commandFlags) {
 		logger.Panicf("Failed to register: %s", err)
 	}
 	logf("Registration complete, please check your email for further instructions.")
-}
-
-func p(a interface{}) {
-	b, err := json.MarshalIndent(a, "", "    ")
-	if err != nil {
-		fmt.Println("error:", err)
-	}
-	fmt.Println(string(b))
 }

@@ -141,6 +141,9 @@ func (c *Connector) ReadPolicyConfiguration(zone string) (policy *endpoint.Polic
 
 //ReadZoneConfiguration reads the Zone information needed for generating and requesting a certificate from Venafi Cloud
 func (c *Connector) ReadZoneConfiguration(zone string) (config *endpoint.ZoneConfiguration, err error) {
+	if zone == "" {
+		return nil, fmt.Errorf("empty zone name")
+	}
 	z, err := c.getZoneByTag(zone)
 	if err != nil {
 		return nil, err
@@ -286,7 +289,12 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 		return nil, err
 	}
 	if statusCode == http.StatusOK {
-		return newPEMCollectionFromResponse(body, req.ChainOption)
+		certificates, err = newPEMCollectionFromResponse(body, req.ChainOption)
+		if err != nil {
+			return
+		}
+		err = req.CheckCertificate(certificates.Certificate)
+		return
 	} else if statusCode == http.StatusConflict { // Http Status Code 409 means the certificate has not been signed by the ca yet.
 		return nil, endpoint.ErrCertificatePending{CertificateID: req.PickupID}
 	} else {
@@ -375,7 +383,7 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 	}
 
 	req := certificateRequest{ZoneID: zoneId, ExistingManagedCertificateId: managedCertificateId}
-	if renewReq.CertificateRequest != nil && 0 < len(renewReq.CertificateRequest.CSR) {
+	if renewReq.CertificateRequest != nil && len(renewReq.CertificateRequest.CSR) != 0 {
 		req.CSR = string(renewReq.CertificateRequest.CSR)
 		req.ReuseCSR = false
 	} else {

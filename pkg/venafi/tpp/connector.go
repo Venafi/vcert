@@ -199,12 +199,18 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 
 	startTime := time.Now()
 	for {
-		retrieveResponse, err := c.retrieveCertificateOnce(certReq)
+		var retrieveResponse *certificateRetrieveResponse
+		retrieveResponse, err = c.retrieveCertificateOnce(certReq)
 		if err != nil {
 			return nil, fmt.Errorf("unable to retrieve: %s", err)
 		}
 		if retrieveResponse.CertificateData != "" {
-			return newPEMCollectionFromResponse(retrieveResponse.CertificateData, req.ChainOption)
+			certificates, err = newPEMCollectionFromResponse(retrieveResponse.CertificateData, req.ChainOption)
+			if err != nil {
+				return
+			}
+			err = req.CheckCertificate(certificates.Certificate)
+			return
 		}
 		if req.Timeout == 0 {
 			return nil, endpoint.ErrCertificatePending{CertificateID: req.PickupID, Status: retrieveResponse.Status}
@@ -252,7 +258,7 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 
 	var r = certificateRenewRequest{}
 	r.CertificateDN = renewReq.CertificateDN
-	if renewReq.CertificateRequest != nil && len(renewReq.CertificateRequest.CSR) > 0 {
+	if renewReq.CertificateRequest != nil && len(renewReq.CertificateRequest.CSR) != 0 {
 		r.PKCS10 = string(renewReq.CertificateRequest.CSR)
 	}
 	statusCode, status, body, err := c.request("POST", urlResourceCertificateRenew, r)
