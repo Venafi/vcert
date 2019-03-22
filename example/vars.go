@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"github.com/Venafi/vcert"
 	"github.com/Venafi/vcert/pkg/endpoint"
+	"io/ioutil"
 	"log"
 	"os"
 )
@@ -49,13 +50,7 @@ func init() {
 	}
 	trustBundleFilePath := os.Getenv("VCERT_TRUST_BUNDLE_PATH")
 	if trustBundleFilePath != "" {
-		f, err := os.Open(trustBundleFilePath)
-		if err != nil {
-			panic(err)
-		}
-		defer f.Close()
-		var buf []byte
-		_, err = f.Read(buf)
+		buf, err := ioutil.ReadFile(trustBundleFilePath)
 		if err != nil {
 			panic(err)
 		}
