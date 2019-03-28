@@ -17,7 +17,6 @@
 package main
 
 import (
-	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
@@ -27,14 +26,11 @@ import (
 	t "log"
 	"math/big"
 	"net"
-	"net/http"
 	"os"
 	"time"
 )
 
 func main() {
-
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	if len(os.Args) != 2 || os.Args[1] == "" {
 		t.Fatalf("Usage: ./$0 common.name.venafi.example.com")

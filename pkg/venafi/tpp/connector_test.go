@@ -17,6 +17,7 @@
 package tpp
 
 import (
+	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
@@ -692,14 +693,14 @@ func TestReadPolicyConfiguration(t *testing.T) {
 		{
 			os.Getenv("TPPZONE_RESTRICTED"),
 			endpoint.Policy{
-				[]string{`.*\.vfidev\.com`, `.*\.vfidev\.net`, `.*\.vfide\.org`},
-				[]string{`Venafi Inc\.`},
-				[]string{"Integration"},
-				[]string{"Utah"},
-				[]string{"Salt Lake"},
-				[]string{"US"},
+				[]string{`^.*\.vfidev\.com$`, `^.*\.vfidev\.net$`, `^.*\.vfide\.org$`},
+				[]string{`^Venafi Inc\.$`},
+				[]string{"^Integration$"},
+				[]string{"^Utah$"},
+				[]string{"^Salt Lake$"},
+				[]string{"^US$"},
 				[]endpoint.AllowedKeyConfiguration{{certificate.KeyTypeRSA, []int{2048, 4096, 8192}, nil}},
-				[]string{".*\\.vfidev\\.com", ".*\\.vfidev\\.net", ".*\\.vfide\\.org"},
+				[]string{"^.*\\.vfidev\\.com$", "^.*\\.vfidev\\.net$", "^.*\\.vfide\\.org$"},
 				[]string{".*"},
 				[]string{".*"},
 				[]string{".*"},
@@ -746,4 +747,61 @@ func pp(a interface{}) {
 		fmt.Println("error:", err)
 	}
 	fmt.Println(string(b))
+}
+
+func Test_EnrollDoesntChange(t *testing.T) {
+	tpp := getTestConnector()
+	err := tpp.SetBaseURL(ctx.TPPurl)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+	config, err := tpp.ReadZoneConfiguration(getPolicyDN(ctx.TPPZone))
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	cn := test.RandCN()
+	req := &certificate.Request{}
+	req.Subject.CommonName = cn
+	req.Subject.Organization = []string{"Venafi, Inc."}
+	req.Subject.OrganizationalUnit = []string{"Automated Tests"}
+	req.Subject.Locality = []string{"Las Vegas"}
+	req.Subject.Province = []string{"Nevada"}
+	req.Subject.Country = []string{"US"}
+
+	req.PrivateKey = pemRSADecode([]byte(pk))
+
+	req.FriendlyName = cn
+	err = tpp.GenerateRequest(config, req)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	t.Logf("getPolicyDN(ctx.TPPZone) = %s", getPolicyDN(ctx.TPPZone))
+	_, err = tpp.RequestCertificate(req, getPolicyDN(ctx.TPPZone))
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+	privKey, ok := req.PrivateKey.(*rsa.PrivateKey)
+	fmt.Println(privKey.D.Bytes())
+	if !ok || privKey.D.Cmp(pemRSADecode([]byte(pk)).D) != 0 {
+		t.Fatal("key before and key after requesting don`t match")
+	}
+}
+
+func pemRSADecode(priv []byte) *rsa.PrivateKey {
+	privPem, _ := pem.Decode(priv)
+
+	parsedKey, err := x509.ParsePKCS1PrivateKey(privPem.Bytes)
+	if err != nil {
+		panic(err)
+	}
+	return parsedKey
 }

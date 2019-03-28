@@ -18,7 +18,9 @@ package cloud
 
 import (
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"net/http"
 	"strings"
@@ -33,19 +35,22 @@ const apiURL = "api.venafi.cloud/v1/"
 type urlResource string
 
 const (
-	urlResourceUserAccounts           urlResource = "useraccounts"
-	urlResourcePing                               = "ping"
-	urlResourceZones                              = "zones"
-	urlResourceZoneByTag                          = urlResourceZones + "/tag/%s"
-	urlResourceCertificatePolicies                = "certificatepolicies"
-	urlResourcePoliciesByID                       = urlResourceCertificatePolicies + "/%s"
-	urlResourcePoliciesForZoneByID                = urlResourceCertificatePolicies + "?zoneId=%s"
-	urlResourceCertificateRequests                = "certificaterequests"
-	urlResourceCertificateStatus                  = urlResourceCertificateRequests + "/%s"
-	urlResourceCertificateRetrieve                = urlResourceCertificateRequests + "/%s/certificate"
-	urlResourceCertificateSearch                  = "certificatesearch"
-	urlResourceManagedCertificates                = "managedcertificates"
-	urlResourceManagedCertificateByID             = urlResourceManagedCertificates + "/%s"
+	urlResourceUserAccounts              urlResource = "useraccounts"
+	urlResourcePing                                  = "ping"
+	urlResourceZones                                 = "zones"
+	urlResourceZoneByTag                             = urlResourceZones + "/tag/%s"
+	urlResourceCertificatePolicies                   = "certificatepolicies"
+	urlResourcePoliciesByID                          = urlResourceCertificatePolicies + "/%s"
+	urlResourcePoliciesForZoneByID                   = urlResourceCertificatePolicies + "?zoneId=%s"
+	urlResourceCertificateRequests                   = "certificaterequests"
+	urlResourceCertificateStatus                     = urlResourceCertificateRequests + "/%s"
+	urlResourceCertificateRetrieveViaCSR             = urlResourceCertificateRequests + "/%s/certificate"
+	urlResourceCertificateRetrieve                   = "certificates/%s"
+	urlResourceCertificateRetrievePem                = urlResourceCertificateRetrieve + "/encoded"
+	urlResourceCertificateSearch                     = "certificatesearch"
+	urlResourceManagedCertificates                   = "managedcertificates"
+	urlResourceManagedCertificateByID                = urlResourceManagedCertificates + "/%s"
+	urlResourceDiscovery                             = "discovery"
 )
 
 type condorChainOption string
@@ -139,6 +144,9 @@ func (c *Connector) ReadPolicyConfiguration(zone string) (policy *endpoint.Polic
 
 // ReadZoneConfiguration reads the Zone information needed for generating and requesting a certificate from Venafi Cloud
 func (c *Connector) ReadZoneConfiguration(zone string) (config *endpoint.ZoneConfiguration, err error) {
+	if zone == "" {
+		return nil, fmt.Errorf("empty zone name")
+	}
 	z, err := c.getZoneByTag(zone)
 	if err != nil {
 		return nil, err
@@ -216,7 +224,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 	if req.FetchPrivateKey {
 		return nil, fmt.Errorf("Failed to retrieve private key from Venafi Cloud service: not supported")
 	}
-
+	var certID string
 	if req.PickupID == "" && req.Thumbprint != "" {
 		// search cert by Thumbprint and fill pickupID
 		var certificateRequestId string
@@ -235,7 +243,11 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 			if certificateRequestId != "" && certificateRequestId != c.CertificateRequestId {
 				isOnlyOneCertificateRequestId = false
 			}
-			certificateRequestId = c.CertificateRequestId
+			if c.CertificateRequestId != "" {
+				certificateRequestId = c.CertificateRequestId
+			} else {
+				certID = c.Id
+			}
 		}
 		if !isOnlyOneCertificateRequestId {
 			return nil, fmt.Errorf("More than one CertificateRequestId was found with the same Fingerprint: %s", reqIds)
@@ -246,6 +258,9 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 
 	startTime := time.Now()
 	for {
+		if req.PickupID == "" {
+			break
+		}
 		status, err := c.getCertificateStatus(req.PickupID)
 		if err != nil {
 			return nil, fmt.Errorf("unable to retrieve: %s", err)
@@ -265,29 +280,48 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 		// fmt.Printf("pending... %s\n", status.Status)
 		time.Sleep(2 * time.Second)
 	}
-
-	url := c.getURL(urlResourceCertificateRetrieve)
 	if c.user == nil || c.user.Company == nil {
 		return nil, fmt.Errorf("Must be autheticated to retieve certificate")
 	}
-	url = fmt.Sprintf(url, req.PickupID)
-	url += "?chainOrder=%s&format=PEM"
-	switch req.ChainOption {
-	case certificate.ChainOptionRootFirst:
-		url = fmt.Sprintf(url, condorChainOptionRootFirst)
-	default:
-		url = fmt.Sprintf(url, condorChainOptionRootLast)
-	}
-	statusCode, status, body, err := c.request("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	if statusCode == http.StatusOK {
-		return newPEMCollectionFromResponse(body, req.ChainOption)
-	} else if statusCode == http.StatusConflict { // Http Status Code 409 means the certificate has not been signed by the ca yet.
-		return nil, endpoint.ErrCertificatePending{CertificateID: req.PickupID}
+	if req.PickupID != "" {
+		url := c.getURL(urlResourceCertificateRetrieveViaCSR)
+		url = fmt.Sprintf(url, req.PickupID)
+		url += "?chainOrder=%s&format=PEM"
+		switch req.ChainOption {
+		case certificate.ChainOptionRootFirst:
+			url = fmt.Sprintf(url, condorChainOptionRootFirst)
+		default:
+			url = fmt.Sprintf(url, condorChainOptionRootLast)
+		}
+		statusCode, status, body, err := c.request("GET", url, nil)
+		if err != nil {
+			return nil, err
+		}
+		if statusCode == http.StatusOK {
+			certificates, err = newPEMCollectionFromResponse(body, req.ChainOption)
+			if err != nil {
+				return nil, err
+			}
+			err = req.CheckCertificate(certificates.Certificate)
+			return certificates, err
+		} else if statusCode == http.StatusConflict { // Http Status Code 409 means the certificate has not been signed by the ca yet.
+			return nil, endpoint.ErrCertificatePending{CertificateID: req.PickupID}
+		} else {
+			return nil, fmt.Errorf("Failed to retrieve certificate. StatusCode: %d -- Status: %s -- Server Data: %s", statusCode, status, body) //todo:remove body from err
+		}
 	} else {
-		return nil, fmt.Errorf("Failed to retrieve certificate. StatusCode: %d -- Status: %s -- Server Data: %s", statusCode, status, body) //todo:remove body from err
+		url := c.getURL(urlResourceCertificateRetrievePem)
+		url = fmt.Sprintf(url, certID)
+		statusCode, status, body, err := c.request("GET", url, nil)
+		if err != nil {
+			return nil, err
+		}
+		if statusCode != http.StatusOK {
+			return nil, fmt.Errorf("Failed to retrieve certificate. StatusCode: %d -- Status: %s -- Server Data: %s", statusCode, status, body)
+		}
+
+		certificates, err = newPEMCollectionFromResponse(body, certificate.ChainOptionIgnore)
+		return certificates, nil
 	}
 }
 
@@ -372,7 +406,7 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 	}
 
 	req := certificateRequest{ZoneID: zoneId, ExistingManagedCertificateId: managedCertificateId}
-	if renewReq.CertificateRequest != nil && 0 < len(renewReq.CertificateRequest.CSR) {
+	if renewReq.CertificateRequest != nil && len(renewReq.CertificateRequest.CSR) != 0 {
 		req.CSR = string(renewReq.CertificateRequest.CSR)
 		req.ReuseCSR = false
 	} else {
@@ -521,5 +555,62 @@ func (c *Connector) getManagedCertificate(managedCertId string) (*managedCertifi
 }
 
 func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certificate.ImportResponse, error) {
-	return nil, fmt.Errorf("import is not supported")
+	pBlock, _ := pem.Decode([]byte(req.CertificateData))
+	if pBlock == nil {
+		return nil, fmt.Errorf("can`t parse certificate")
+	}
+	zone := req.PolicyDN
+	if zone == "" {
+		zone = c.zone
+	}
+	base64.StdEncoding.EncodeToString(pBlock.Bytes)
+	fingerprint := certThumprint(pBlock.Bytes)
+	e := importRequestEndpoint{
+		OCSP: 1,
+		Certificates: []importRequestEndpointCert{
+			{
+				Certificate: base64.StdEncoding.EncodeToString(pBlock.Bytes),
+				Fingerprint: fingerprint,
+			},
+		},
+		Protocols: []importRequestEndpointProtocol{
+			{
+				Certificates: []string{fingerprint},
+			},
+		},
+	}
+	request := importRequest{
+		ZoneName:  zone,
+		Endpoints: []importRequestEndpoint{e},
+	}
+
+	url := c.getURL(urlResourceDiscovery)
+	statusCode, status, body, err := c.request("POST", url, request)
+	if err != nil {
+		return nil, err
+	}
+	var r struct {
+		CreatedCertificates int
+		CreatedInstances    int
+		UpdatedCertificates int
+		UpdatedInstances    int
+	}
+	err = json.Unmarshal(body, &r)
+	if statusCode != http.StatusCreated {
+		return nil, fmt.Errorf("bad server status responce %d %s", statusCode, status)
+	} else if err != nil {
+		return nil, fmt.Errorf("can`t unmarshal json response %s", err)
+	} else if !(r.CreatedCertificates == 1 || r.UpdatedCertificates == 1) {
+		return nil, fmt.Errorf("certificate was not imported on unknown reason")
+	}
+	foundCert, err := c.searchCertificatesByFingerprint(fingerprint)
+	if err != nil {
+		return nil, err
+	}
+	if len(foundCert.Certificates) != 1 {
+		return nil, fmt.Errorf("certificate has been imported but could not be found on platform after that")
+	}
+	cert := foundCert.Certificates[0]
+	resp := &certificate.ImportResponse{CertificateDN: cert.SubjectCN[0]}
+	return resp, nil
 }

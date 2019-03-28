@@ -18,11 +18,9 @@ package cloud
 
 import (
 	"bytes"
+	"crypto/sha1"
 	"encoding/json"
-	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/pkg/certificate"
-	"github.com/Venafi/vcert/pkg/endpoint"
 	"io"
 	"io/ioutil"
 	"log"
@@ -30,6 +28,9 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/Venafi/vcert/pkg/certificate"
+	"github.com/Venafi/vcert/pkg/endpoint"
 )
 
 type apiKey struct {
@@ -97,11 +98,47 @@ type CertificateStatusErrorInformation struct {
 	Args    []string `json:"args,omitempty"`
 }
 
+type importRequestEndpointCert struct {
+	Certificate string `json:"certificate"`
+	Fingerprint string `json:"fingerprint"`
+}
+
+type importRequestEndpointProtocol struct {
+	Certificates []string      `json:"certificates"`
+	Ciphers      []interface{} `json:"ciphers"` //todo: check type
+	Protocol     string        `json:"protocol"`
+}
+
+type importRequestEndpoint struct {
+	Alpn                bool                            `json:"alpn"`
+	Certificates        []importRequestEndpointCert     `json:"certificates"`
+	ClientRenegotiation bool                            `json:"clientRenegotiation"`
+	Drown               bool                            `json:"drown"`
+	Heartbleed          bool                            `json:"heartbleed"`
+	Host                string                          `json:"host"`
+	HSTS                bool                            `json:"hsts"`
+	IP                  string                          `json:"ip"`
+	LogJam              int                             `json:"logJam"`
+	Npn                 bool                            `json:"npn"`
+	OCSP                int                             `json:"ocsp"` //default 1
+	Poodle              bool                            `json:"poodle"`
+	PoodleTls           bool                            `json:"poodleTls"`
+	Port                int                             `json:"port"`
+	Protocols           []importRequestEndpointProtocol `json:"protocols"`
+	SecureRenegotiation bool                            `json:"secureRenegotiation"`
+	Sloth               bool                            `json:"sloth"`
+}
+
+type importRequest struct {
+	ZoneName  string                  `json:"zoneName"`
+	NetworkID string                  `json:"networkId"`
+	Endpoints []importRequestEndpoint `json:"endpoints"`
+}
+
 //GenerateRequest generates a CertificateRequest based on the zone configuration, and returns the request along with the private key.
 func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *certificate.Request) (err error) {
 	switch req.CsrOrigin {
 	case certificate.LocalGeneratedCSR:
-		var pk interface{}
 		if config == nil {
 			config, err = c.ReadZoneConfiguration(c.zone)
 			if err != nil {
@@ -113,27 +150,13 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 			return err
 		}
 		config.UpdateCertificateRequest(req)
-		switch req.KeyType {
-		case certificate.KeyTypeECDSA:
-			pk, err = certificate.GenerateECDSAPrivateKey(req.KeyCurve)
-		case certificate.KeyTypeRSA:
-			pk, err = certificate.GenerateRSAPrivateKey(req.KeyLength)
-		default:
-			return fmt.Errorf("Unable to generate certificate request, key type %s is not supported", req.KeyType.String())
-		}
-		if err != nil {
+		if err := req.GeneratePrivateKey(); err != nil {
 			return err
 		}
-		req.PrivateKey = pk
-		err = certificate.GenerateRequest(req, pk)
-		if err != nil {
-			return err
-		}
-		req.CSR = pem.EncodeToMemory(certificate.GetCertificateRequestPEMBlock(req.CSR))
-		return nil
-
+		err = req.GenerateCSR()
+		return
 	case certificate.UserProvidedCSR:
-		if req.CSR == nil || len(req.CSR) == 0 {
+		if len(req.CSR) == 0 {
 			return fmt.Errorf("CSR was supposed to be provided by user, but it's empty")
 		}
 		return nil
@@ -411,4 +434,11 @@ func parseCertificateRequestData(b []byte) (*certificateRequestResponse, error) 
 
 func newPEMCollectionFromResponse(data []byte, chainOrder certificate.ChainOption) (*certificate.PEMCollection, error) {
 	return certificate.PEMCollectionFromBytes(data, chainOrder)
+}
+
+func certThumprint(asn1 []byte) string {
+	h := sha1.New()
+	h.Write(asn1)
+	s := h.Sum(nil)
+	return strings.ToUpper(fmt.Sprintf("%x", s))
 }
