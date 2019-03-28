@@ -66,7 +66,9 @@ func setupEnrollCommandFlags() {
 	enrollFlags.StringVar(&enrollParams.profile, "profile", "", "")
 	enrollFlags.StringVar(&enrollParams.clientCert, "client-cert", "", "")
 	enrollFlags.StringVar(&enrollParams.clientKey, "client-key", "", "")
+	enrollFlags.StringVar(&enrollParams.clientKeyPW, "client-key-pw", "", "")
 	enrollFlags.StringVar(&enrollParams.caCert, "ca-cert", "", "")
+
 	enrollFlags.Usage = func() {
 		fmt.Printf("%s\n", vcert.GetFormattedVersionString())
 		showEnrollmentUsage()
@@ -75,22 +77,19 @@ func setupEnrollCommandFlags() {
 
 func showEnrollmentUsage() {
 	fmt.Printf("Enrollment Usage:\n")
-	fmt.Printf("  %s enroll <Required><Required Venafi Cloud> OR < Required Trust Protection Platform><Options>\n", os.Args[0])
+	fmt.Printf("  %s enroll <Required Venafi Cloud Config> OR <Required Trust Protection Platform Config> <Options>\n", os.Args[0])
 	fmt.Printf("  %s enroll -k <api key> -cn <common name> -z <zone>\n", os.Args[0])
 	fmt.Printf("  %s enroll -k <api key> -cn <common name> -z <zone> -key-type rsa -key-size 4096 -san-dns <alt common name> -san-dns <alt common name2>\n", os.Args[0])
 	fmt.Printf("  %s enroll -tpp-url <https://tpp.example.com> -tpp-user <username> -tpp-password <password> -cn <common name> -z <zone>\n", os.Args[0])
 	fmt.Printf("  %s enroll -tpp-url <https://tpp.example.com> -tpp-user <username> -tpp-password <password> -cn <common name> -z <zone> -key-size 4096 -san-dns <alt common name> -san-dns <alt common name2>\n", os.Args[0])
 	fmt.Printf("  %s enroll -tpp-url <https://tpp.example.com> -tpp-user <username> -tpp-password <password> -cn <common name> -z <zone> -key-type ecdsa -key-curve p384 -san-dns <alt common name> -san-dns <alt common name2>\n", os.Args[0])
+	fmt.Printf("  %s enroll -tpp-url <https://tpp.example.com> -tpp-user <username> -tpp-password <password> -cn <common name> -z <zone> -client-cert <path to client cert> -client-key <path to client key> -client-key-pw <password for client key> -ca-cert <path to CA chain>\n", os.Args[0])
 
-	fmt.Printf("\nRequired: for both Venafi Cloud and Trust Protection Platform\n")
+	fmt.Printf("\nRequired for both Venafi Cloud and Trust Protection Platform:\n")
 	fmt.Println("  -cn")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the common name (CN)."))
-	fmt.Println("  -san-dns")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a DNS Subject Alternative Name. To specify more than one, use spaces, like this:  -san-dns test.abc.xyz -san-dns test1.abc.xyz etc."))
 	fmt.Println("  -z")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Specify the zone used to determine enrollment configuration. In Trust Protection Platform this is equivelant to the policy path where the certificate object will be stored. "+UtilityShortName+" prepends \\VED\\Policy\\, so you only need to specify policy folders within the root Policy folder. Example: -z Corp\\Engineering"))
-	fmt.Println("  -ca-dn")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Specify the Certificate Authority DN"))
 
 	fmt.Printf("\nRequired for Venafi Cloud:\n")
 	fmt.Println("  -k")
@@ -111,6 +110,8 @@ func showEnrollmentUsage() {
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to include the certificate chain in the output, and to specify where to place it in the file. By default, it is placed last. Options include: ignore | root-first | root-last"))
 	fmt.Println("  -cn")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the common name (CN). This is required for Enrollment."))
+	fmt.Println("  -ca-dn")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Specify the Certificate Authority DN, if one is not specified by zone/policy."))
 
 	fmt.Println("  -config")
 	fmt.Printf("\t%s\n", ("Use to specify INI configuration file containing connection details\n" +
@@ -119,7 +120,7 @@ func showEnrollmentUsage() {
 		"\t\tTPP & Cloud: trust_bundle, test_mode"))
 
 	fmt.Println("  -file")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a file name and a location where the resulting file should be written. If this option is used the key, certificate, and chain will be written to the same file. Example: /tmp/newcert.pem"))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a file name and a location where the resulting file should be written. If this option is used the key, certificate, and chain will be written to the same file. Do not use with -csr local. Example: /tmp/newcert.pem"))
 
 	fmt.Println("  -csr")
 	fmt.Printf("\t%s\n", ("Use to specify the CSR and private key location. Options include: local | service | file.\n" +
@@ -132,15 +133,17 @@ func showEnrollmentUsage() {
 	fmt.Println("  -chain-file")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a path and file name where the resulting chain file should be written, if no chain file is specified the chain will be stored in the same file as the certificate. Example: /tmp/chain.pem"))
 	fmt.Println("  -ca-cert")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("CA certificate for mutual TLS"))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a CA certificate chain for mutual TLS. Must be used in combination with -client-cert, -client-key, and -client-key-pw options."))
 	fmt.Println("  -client-cert")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Client TLS certicate"))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a client TLS certicate. Must be used in combination with -ca-cert, -client-key, and -client-key-pw options."))
 	fmt.Println("  -client-key")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Client TLS private key"))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a client TLS private key. Must be used in combination with -ca-cert, -client-cert, and -client-key-pw options."))
+	fmt.Println("  -client-key-pw")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a client TLS private key password. Must be used in combination with -ca-cert, -client-cert, and -client-key options."))
 	fmt.Println("  -format")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the output format. PEM is the default format. Options include: pem | json | pkcs12. If PKCS#12 format is specified, then all objects should be written using -file option."))
 	fmt.Println("  -key-file")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a file name and a location where the resulting private key file should be written. Example: /tmp/newkey.pem"))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a file name and a location where the resulting private key file should be written. Do not use in combination with -csr file. Example: /tmp/newkey.pem"))
 	fmt.Println("  -key-password")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a password for encrypting the private key. "+
 		"For a non-encrypted private key, omit this option and instead specify -no-prompt. "+
@@ -156,8 +159,7 @@ func showEnrollmentUsage() {
 	fmt.Println("  -profile")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify effective section in ini-configuration file specified by -config option"))
 	fmt.Println("  -san-dns")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a DNS Subject Alternative Name. "+
-		"This option can be repeated to specify more than one value, like this: -san-dns test.abc.xyz -san-dns test1.abc.xyz etc."))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a DNS Subject Alternative Name. To specify more than one, use spaces like this: -san-dns test.abc.xyz -san-dns test1.abc.xyz etc."))
 	fmt.Println("  -san-email")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify an Email Subject Alternative Name. "+
 		"This option can be repeated to specify more than one value, like this: -san-email abc@abc.xyz -san-email def@abc.xyz etc."))
@@ -177,13 +179,13 @@ func showEnrollmentUsage() {
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Time to wait for certificate to be processed at the service side. In seconds (default 180)."))
 	fmt.Println("  -h")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to show the help text."))
-	fmt.Println()
 
-	fmt.Printf("\nOptions for Trust Protection Platform:\n")
+	fmt.Printf("\nAdditional Options for Trust Protection Platform:\n")
 	fmt.Println("  -key-type")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a key type. Options include: rsa (default) | ecdsa."))
 	fmt.Println("  -key-curve value")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the ECDSA key curve. Options include: p521 | p384 | p256 (default p521)."))
+	fmt.Println()
 }
 
 // validateEnrollmentFlags valdiates the combination of command flags specified in an enrollment request
@@ -195,7 +197,7 @@ func validateEnrollmentFlags() error {
 			enrollParams.tppUser != "" ||
 			enrollParams.tppPassword != "" ||
 			enrollParams.testMode == true {
-			return fmt.Errorf("connection details cannot be specified with flags when -config is used")
+			return fmt.Errorf("Connection details cannot be specified with flags when -config is used")
 		}
 	} else {
 		if enrollParams.profile != "" {
@@ -206,10 +208,9 @@ func validateEnrollmentFlags() error {
 	if enrollParams.tppURL == "" && enrollParams.apiKey == "" && !enrollParams.testMode && enrollParams.config == "" {
 		return fmt.Errorf("Missing required data for enrollment. Please check the help to see available command arguments")
 	}
-
 	if strings.Index(enrollParams.csrOption, "file:") == 0 {
 		if enrollParams.commonName != "" {
-			return fmt.Errorf("The '-cn' cannot be used in -csr file: provided mode")
+			return fmt.Errorf("The '-cn' option cannot be used in -csr file: provided mode")
 		}
 	} else {
 		if enrollParams.commonName == "" {
@@ -218,21 +219,20 @@ func validateEnrollmentFlags() error {
 	}
 
 	if (enrollParams.file != "") && (enrollParams.certFile != "" || enrollParams.chainFile != "" || enrollParams.keyFile != "") {
-		return fmt.Errorf("The '-file' cannot be used used with any other -*-file flags. Either all data goes into one file or individual files must be specified using the appropriate flags")
+		return fmt.Errorf("The '-file' option cannot be used used with any other -*-file flags. Either all data goes into one file or individual files must be specified using the appropriate flags")
 	}
-
 	if enrollParams.chainOption == "ignore" && enrollParams.chainFile != "" {
 		return fmt.Errorf("The `-chain ignore` option cannot be used with -chain-file option")
 	}
 
 	if !enrollParams.testMode && enrollParams.config == "" {
 		if enrollParams.tppURL == "" {
-			// should be SaaS service
+			// should be SaaS endpoint
 			if enrollParams.apiKey == "" {
-				return fmt.Errorf("An APIKey is required for enrollment")
+				return fmt.Errorf("An API key is required for enrollment with Venafi Cloud")
 			}
 			if enrollParams.zone == "" {
-				return fmt.Errorf("A zone is required for requesting a certificate from SaaS")
+				return fmt.Errorf("A zone is required for requesting a certificate from Venafi Cloud")
 			}
 		} else {
 			// should be TPP service
@@ -245,10 +245,38 @@ func validateEnrollmentFlags() error {
 			if enrollParams.zone == "" {
 				return fmt.Errorf("A zone is required for requesting a certificate from Trust Protection Platform")
 			}
+
+			// mutual TLS with TPP service
+			if enrollParams.caCert != "" {
+				if enrollParams.clientCert == "" || enrollParams.clientKey == "" || enrollParams.clientKeyPW == "" {
+					return fmt.Errorf("-ca-cert, -client-cert, -client-key, and -client-key-pw must all be specified for mutual TLS connections with Trust Protection Platform")
+				}
+			}
+			if enrollParams.clientCert != "" {
+				if enrollParams.caCert == "" || enrollParams.clientKey == "" || enrollParams.clientKeyPW == "" {
+					return fmt.Errorf("-ca-cert, -client-cert, -client-key, and -client-key-pw must all be specified for mutual TLS connections with Trust Protection Platform")
+				}
+			}
+			if enrollParams.clientKey != "" {
+				if enrollParams.caCert == "" || enrollParams.clientCert == "" || enrollParams.clientKeyPW == "" {
+					return fmt.Errorf("-ca-cert, -client-cert, -client-key, and -client-key-pw must all be specified for mutual TLS connections with Trust Protection Platform")
+				}
+			}
+			if enrollParams.clientKeyPW != "" {
+				if enrollParams.caCert == "" || enrollParams.clientCert == "" || enrollParams.clientKey == "" {
+					return fmt.Errorf("-ca-cert, -client-cert, -client-key, and -client-key-pw must all be specified for mutual TLS connections with Trust Protection Platform")
+				}
+			}
 		}
 	}
 
-	if enrollParams.csrOption == "service" && (!enrollParams.noPickup) { // key password is required here
+	if enrollParams.csrOption == "file" && enrollParams.keyFile != "" { // Do not specify -key-file with -csr file as VCert cannot access the private key
+		return fmt.Errorf("-key-file cannot be used with -csr file as VCert cannot access the private key")
+	}
+	if enrollParams.csrOption == "local" && enrollParams.file != "" { // Local CSR not compatible with -file option
+		return fmt.Errorf("-file cannot be used with -csr local")
+	}
+	if enrollParams.csrOption == "service" && (!enrollParams.noPickup) { // Key password is required here
 		if enrollParams.noPrompt && len(enrollParams.keyPassword) == 0 {
 			return fmt.Errorf("-key-password cannot be empty in -csr service mode unless -no-pickup specified")
 		}

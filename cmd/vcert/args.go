@@ -106,6 +106,7 @@ type commandFlags struct {
 	profile            string
 	clientCert         string
 	clientKey          string
+	clientKeyPW        string
 	caCert             string
 }
 
@@ -150,7 +151,6 @@ func validateFlags(c command) error {
 }
 
 func parseArgs() (co command, cf *commandFlags, err error) {
-
 	if len(os.Args) <= 1 {
 		showvcertUsage()
 		exit(0)

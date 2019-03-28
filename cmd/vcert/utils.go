@@ -120,7 +120,7 @@ func readThumbprintFromFile(fname string) (string, error) {
 		return "", err
 	}
 
-	// check if it's thumbprint in the file
+	// check if there's a thumbprint in the file
 	s := strings.TrimSpace(string(bytes))
 	s = strings.Replace(s, ":", "", -1)
 	s = strings.ToUpper(s)
@@ -129,7 +129,7 @@ func readThumbprintFromFile(fname string) (string, error) {
 		return s, nil
 	}
 
-	// check if there is PEM certificate in the file
+	// check if there's a PEM certificate in the file
 	var block *pem.Block
 	var rest []byte
 	for {
@@ -150,9 +150,9 @@ func readThumbprintFromFile(fname string) (string, error) {
 		}
 		fp := sha1.Sum(cert.Raw)
 		return strings.ToUpper(hex.EncodeToString(fp[:])), nil
-	} else {
-		return "", fmt.Errorf("failed to parse file %s", fname)
 	}
+
+	return "", fmt.Errorf("failed to parse file %s", fname)
 }
 
 func readCSRfromFile(fileName string) ([]byte, error) {

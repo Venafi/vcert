@@ -55,7 +55,6 @@ func init() {
 }
 
 func main() {
-
 	defer func() {
 		if r := recover(); r != nil {
 			// logger.Fatalf() does immediately os.Exit(1)
@@ -69,19 +68,13 @@ func main() {
 	}()
 
 	co, cf, _ := parseArgs()
-
 	var tlsConfig tls.Config
 
 	if cf.insecure {
 		tlsConfig.InsecureSkipVerify = true
 	}
 
-	if cf.clientCert != "" && cf.clientKey != "" && cf.caCert != "" {
-		// https://medium.com/@sirsean/mutually-authenticated-tls-from-a-go-client-92a117e605a1
-		// http://www.bite-code.com/2015/06/25/tls-mutual-auth-in-golang/
-		// https://github.com/golang/go/issues/10181
-		// https://medium.com/@prateeknischal25/using-encrypted-private-keys-with-golang-server-379919955854
-
+	if cf.clientCert != "" && cf.clientKey != "" && cf.caCert != "" && cf.clientKeyPW != "" {
 		// Load client certificate and key
 		certIn, err := ioutil.ReadFile(cf.clientCert)
 		if err != nil {
@@ -96,7 +89,7 @@ func main() {
 		var cert tls.Certificate
 		decodedKey, _ := pem.Decode(keyIn)
 		if x509.IsEncryptedPEMBlock(decodedKey) {
-			decryptedKey, err := x509.DecryptPEMBlock(decodedKey, []byte("changeit"))
+			decryptedKey, err := x509.DecryptPEMBlock(decodedKey, []byte(cf.clientKeyPW))
 			if err != nil {
 				logger.Panicf("Error decrypting private key: %s", err)
 			}

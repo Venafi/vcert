@@ -48,6 +48,10 @@ func setupRetrieveCommandFlags() {
 	pickupFlags.StringVar(&pickParams.keyFile, "key-file", "", "")
 	pickupFlags.StringVar(&pickParams.config, "config", "", "")
 	pickupFlags.StringVar(&pickParams.profile, "profile", "", "")
+	pickupFlags.StringVar(&pickParams.clientCert, "client-cert", "", "")
+	pickupFlags.StringVar(&pickParams.clientKey, "client-key", "", "")
+	pickupFlags.StringVar(&pickParams.clientKeyPW, "client-key-pw", "", "")
+	pickupFlags.StringVar(&pickParams.caCert, "ca-cert", "", "")
 
 	pickupFlags.Usage = func() {
 		fmt.Printf("%s\n", vcert.GetFormattedVersionString())
@@ -57,9 +61,13 @@ func setupRetrieveCommandFlags() {
 
 func showPickupUsage() {
 	fmt.Printf("Pickup Usage:\n")
-	fmt.Printf("  %s pickup <Required Venafi Cloud> OR <Required Trust Protection Platform><Options>\n", os.Args[0])
+	fmt.Printf("  %s pickup <Required Venafi Cloud Config> OR <Required Trust Protection Platform Config> <Options>\n", os.Args[0])
 	fmt.Printf("  %s pickup -k <api key> -pickup-id <request id> OR -pickup-id-file <file with Pickup ID value>\n", os.Args[0])
 	fmt.Printf("  %s pickup -tpp-url <https://tpp.example.com> -tpp-user <username> -tpp-password <password> -pickup-id <request id>\n", os.Args[0])
+
+	fmt.Printf("\nRequired for Venafi Cloud:\n")
+	fmt.Println("  -k")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Your API Key"))
 
 	fmt.Printf("\nRequired for Trust Protection Platform:\n")
 	fmt.Println("  -pickup-id")
@@ -67,12 +75,6 @@ func showPickupUsage() {
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Example: -pickup-id 3260ece0-0da4-11e7-9be2-891dab33d0eb"))
 	fmt.Println("  -pickup-id-file")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify file name from where Pickup ID will be read. Either one of -pickup-id and -pickup-id-file options is required."))
-
-	fmt.Printf("\nRequired Venafi Cloud Options:\n")
-	fmt.Println("  -k")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Your API Key"))
-
-	fmt.Printf("\nRequired Trust Protection Platform Options:\n")
 	fmt.Println("  -tpp-password")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the password required to authenticate with Trust Protection Platform."))
 	fmt.Println("  -tpp-url")
@@ -81,15 +83,20 @@ func showPickupUsage() {
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the username required to authenticate with Trust Protection Platform."))
 
 	fmt.Printf("\nOptions:\n")
-
 	fmt.Println("  -cert-file")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a file name and a location where the resulting certificate file should be written. Example: /tmp/newcert.pem"))
-
 	fmt.Println("  -chain")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to include the certificate chain in the output, and to specify where to place it in the file. By default, it is placed last. Options include: ignore | root-first | root-last"))
-
 	fmt.Println("  -chain-file")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a file name and a location where the resulting chain file should be written, if no chain file is specified the chain will be stored in the same file as the certificate. Example: /tmp/chain.pem"))
+	fmt.Println("  -ca-cert")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a CA certificate chain for mutual TLS. Must be used in combination with -client-cert, -client-key, and -client-key-pw options."))
+	fmt.Println("  -client-cert")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a client TLS certicate. Must be used in combination with -ca-cert, -client-key, and -client-key-pw options."))
+	fmt.Println("  -client-key")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a client TLS private key. Must be used in combination with -ca-cert, -client-cert, and -client-key-pw options."))
+	fmt.Println("  -client-key-pw")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a client TLS private key password. Must be used in combination with -ca-cert, -client-cert, and -client-key options."))
 
 	fmt.Println("  -config")
 	fmt.Printf("\t%s\n", ("Use to specify INI configuration file containing connection details\n" +
@@ -99,43 +106,32 @@ func showPickupUsage() {
 
 	fmt.Println("  -file")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a file name and a location where the resulting file should be written. If this option is used both the certificate and the chain will be written to the same file. Example: /tmp/newcert.pem"))
-
 	fmt.Println("  -format")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the output format. PEM is the default format. Options include: pem | json | pkcs12. If PKCS#12 format is specified, then all objects should be written using -file option."))
-
 	fmt.Println("  -key-file")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a file name and a location where the resulting private key file should be written. Example: /tmp/newkey.pem"))
-
 	fmt.Println("  -key-password")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a password for encrypting the private key. For a non-encrypted private key, specify -no-prompt without specifying this option. You can specify the password using one of three methods: at the command line, when prompted, or by using a password file. Example: -key-password file:/Temp/mypasswrds.txt"))
-
 	fmt.Println("  -no-prompt")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to exclude the authentication prompt. If you enable the prompt and you enter incorrect information, an error is displayed. This is useful with scripting."))
-
 	fmt.Println("  -profile")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify effective section in ini-configuration file specified by -config option"))
-
 	fmt.Println("  -test-mode")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to test enrollment without a connection to a real endpoint. Options include: true | false (default false uses a real connection for enrollment)."))
 	fmt.Println("  -test-mode-delay")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the maximum, random seconds for a test-mode connection delay (default 15)."))
-
 	fmt.Println("  -timeout")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Time to wait for certificate to be processed at the service side (default is 0 for `pickup` meaning just one retrieve attempt)."))
-
 	fmt.Println("  -trust-bundle")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a file with PEM formatted certificates to be used as trust anchors when communicating with the remote server."))
-
 	fmt.Println("  -verbose")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to increase the level of logging detail, which is helpful when troubleshooting issues."))
-
 	fmt.Println("  -h")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to show the help text."))
 	fmt.Println()
 }
 
 func validatePickupFlags() error {
-
 	if pickParams.config != "" {
 		if pickParams.apiKey != "" ||
 			pickParams.cloudURL != "" ||
@@ -152,14 +148,36 @@ func validatePickupFlags() error {
 		if !pickParams.testMode {
 			if pickParams.tppURL == "" {
 				if pickParams.apiKey == "" {
-					return fmt.Errorf("An APIKey is required to pickup a certificate")
+					return fmt.Errorf("An API key is required to pickup a certificate from Venafi Cloud")
 				}
 			} else {
 				if pickParams.tppUser == "" {
-					return fmt.Errorf("A username is required for communicating with TPP")
+					return fmt.Errorf("A username is required for communicating with Trust Protection Platform")
 				}
 				if pickParams.noPrompt && pickParams.tppPassword == "" {
-					return fmt.Errorf("A password is required for communicating with TPP")
+					return fmt.Errorf("A password is required for communicating with Trust Protection Platform")
+				}
+
+				// mutual TLS with TPP service
+				if enrollParams.caCert != "" {
+					if enrollParams.clientCert == "" || enrollParams.clientKey == "" || enrollParams.clientKeyPW == "" {
+						return fmt.Errorf("-ca-cert, -client-cert, -client-key, and -client-key-pw must all be specified for mutual TLS connections with Trust Protection Platform")
+					}
+				}
+				if enrollParams.clientCert != "" {
+					if enrollParams.caCert == "" || enrollParams.clientKey == "" || enrollParams.clientKeyPW == "" {
+						return fmt.Errorf("-ca-cert, -client-cert, -client-key, and -client-key-pw must all be specified for mutual TLS connections with Trust Protection Platform")
+					}
+				}
+				if enrollParams.clientKey != "" {
+					if enrollParams.caCert == "" || enrollParams.clientCert == "" || enrollParams.clientKeyPW == "" {
+						return fmt.Errorf("-ca-cert, -client-cert, -client-key, and -client-key-pw must all be specified for mutual TLS connections with Trust Protection Platform")
+					}
+				}
+				if enrollParams.clientKeyPW != "" {
+					if enrollParams.caCert == "" || enrollParams.clientCert == "" || enrollParams.clientKey == "" {
+						return fmt.Errorf("-ca-cert, -client-cert, -client-key, and -client-key-pw must all be specified for mutual TLS connections with Trust Protection Platform")
+					}
 				}
 			}
 		}
@@ -185,5 +203,6 @@ func validatePickupFlags() error {
 			return fmt.Errorf("The '-file' cannot be used used with any other -*-file flags. Either all data goes into one file or individual files must be specified using the appropriate flags")
 		}
 	}
+
 	return nil
 }
