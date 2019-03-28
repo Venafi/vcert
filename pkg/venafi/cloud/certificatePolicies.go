@@ -28,7 +28,7 @@ type certificatePolicy struct {
 	ID                    string                `json:"id,omitempty"`
 	CompanyID             string                `json:"companyId,omitempty"`
 	Name                  string                `json:"name,omitempty"`
-	SystemGenerated       bool                  `json:"systemGeneratedate,omitempty"`
+	SystemGenerated       bool                  `json:"systemGenerated,omitempty"`
 	CreationDateString    string                `json:"creationDate,omitempty"`
 	CreationDate          time.Time             `json:"-"`
 	CertificateProviderID string                `json:"certificateProviderId,omitempty"`
