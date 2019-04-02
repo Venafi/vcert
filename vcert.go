@@ -20,8 +20,8 @@ import (
 	"fmt"
 )
 
-//ProjectName contains the friendly name of the vcert utiltity
-const ProjectName string = "Venafi Certificate Utility"
+//projectName contains the friendly name of the vcert utiltity
+const projectName string = "Venafi Certificate Utility"
 
 var (
 	versionString         string
@@ -33,7 +33,7 @@ func GetFormattedVersionString() string {
 	if versionBuildTimeStamp != "" {
 		versionBuildTimeStamp = fmt.Sprintf("\tBuild Timestamp: %s\n", versionBuildTimeStamp)
 	}
-	return fmt.Sprintf("%s\n\tVersion: %s\n%s", ProjectName, GetVersionString(), versionBuildTimeStamp)
+	return fmt.Sprintf("%s\n\tVersion: %s\n%s", projectName, GetVersionString(), versionBuildTimeStamp)
 }
 
 //GetVersionString gets a simple version string
