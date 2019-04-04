@@ -120,7 +120,7 @@ func showEnrollmentUsage() {
 		"\t\tTPP & Cloud: trust_bundle, test_mode"))
 
 	fmt.Println("  -file")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a file name and a location where the resulting file should be written. If this option is used the key, certificate, and chain will be written to the same file. Do not use with -csr local. Example: /tmp/newcert.pem"))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a file name and a location where the resulting file should be written. If this option is used the key, certificate, and chain will be written to the same file. Example: /tmp/newcert.pem"))
 
 	fmt.Println("  -csr")
 	fmt.Printf("\t%s\n", ("Use to specify the CSR and private key location. Options include: local | service | file.\n" +
@@ -272,9 +272,6 @@ func validateEnrollmentFlags() error {
 
 	if enrollParams.csrOption == "file" && enrollParams.keyFile != "" { // Do not specify -key-file with -csr file as VCert cannot access the private key
 		return fmt.Errorf("-key-file cannot be used with -csr file as VCert cannot access the private key")
-	}
-	if enrollParams.csrOption == "local" && enrollParams.file != "" { // Local CSR not compatible with -file option
-		return fmt.Errorf("-file cannot be used with -csr local")
 	}
 	if enrollParams.csrOption == "service" && (!enrollParams.noPickup) { // Key password is required here
 		if enrollParams.noPrompt && len(enrollParams.keyPassword) == 0 {
