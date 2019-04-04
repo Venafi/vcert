@@ -28,16 +28,24 @@ import (
 
 // Config is basic structure for high level initiating connector to TPP/Venafi Cloud
 type Config struct {
-	ConnectorType   endpoint.ConnectorType
-	BaseUrl         string
-	Zone            string
-	Credentials     *endpoint.Authentication
+	// ConnectorType specify what do you want too use. May be "Cloud", "TPP" or "Fake" for development.
+	ConnectorType endpoint.ConnectorType
+	// BaseUrl should be specified for TPP and optional can be specified for Cloud if you not use https://venafi.cloud/
+	BaseUrl string
+	// Zone is name of zone in TPP or CLoud. For TPP it`s usually contains backslash symbol and should be escaped like "test\\zone" or `test\zone`
+	Zone string
+	// Credentials should contains user and password for TPP connection and APIKey for Cloud.
+	Credentials *endpoint.Authentication
+	// ConnectionTrust  may contains trusted CA or certificate of server if you use self-signed certificate.
 	ConnectionTrust string // *x509.CertPool
 	LogVerbose      bool
-	ConfigFile      string
-	ConfigSection   string
+	// ConfigFile is deprecated
+	ConfigFile string
+	// ConfigSection is deprecated
+	ConfigSection string
 }
 
+// LoadFromFile is deprecated. In the future will be rewrited.
 func (cfg *Config) LoadFromFile() error {
 	if cfg.ConfigSection == "" {
 		cfg.ConfigSection = ini.DEFAULT_SECTION
