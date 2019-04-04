@@ -25,6 +25,10 @@ import (
 	"github.com/Venafi/vcert/pkg/venafi/tpp"
 )
 
+// NewClient returns unified connector for TPP or Venafi Cloud based on config what you give to function.
+// Config should have Credentials compatible with selected ConnectorType.
+// Returned connector is concurrency-safe interface to TPP/Venafi Cloud which can be reused without restriction.
+// Also connector can have "fake" type and can be used for local tests. In this mode it doesn`t connect to any backend and enroll all certificates locally.
 func NewClient(cfg *Config) (endpoint.Connector, error) {
 	var err error
 

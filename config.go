@@ -26,6 +26,7 @@ import (
 	"path/filepath"
 )
 
+// Config is basic structure for high level initiating connector to TPP/Venafi Cloud
 type Config struct {
 	ConnectorType   endpoint.ConnectorType
 	BaseUrl         string
