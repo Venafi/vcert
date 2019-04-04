@@ -70,7 +70,7 @@ func (cfg *Config) LoadFromFile() error {
 		return fmt.Errorf("section %s has not been found in %s", cfg.ConfigSection, cfg.ConfigFile)
 	}
 
-	var m Dict = iniFile.Section(cfg.ConfigSection).KeysHash()
+	var m dict = iniFile.Section(cfg.ConfigSection).KeysHash()
 
 	var connectorType endpoint.ConnectorType
 	var baseUrl string
@@ -131,18 +131,18 @@ func expand(path string) (string, error) {
 	return filepath.Join(usr.HomeDir, path[1:]), nil
 }
 
-type Dict map[string]string
+type dict map[string]string
 
-func (d Dict) has(key string) bool {
+func (d dict) has(key string) bool {
 	if _, ok := d[key]; ok {
 		return true
 	}
 	return false
 }
 
-type Set map[string]bool
+type set map[string]bool
 
-func (d Set) has(key string) bool {
+func (d set) has(key string) bool {
 	if _, ok := d[key]; ok {
 		return true
 	}
@@ -150,14 +150,14 @@ func (d Set) has(key string) bool {
 }
 
 func validateSection(s *ini.Section) error {
-	var TPPValidKeys Set = map[string]bool{
+	var TPPValidKeys set = map[string]bool{
 		"tpp_url":      true,
 		"tpp_user":     true,
 		"tpp_password": true,
 		"tpp_zone":     true,
 		"trust_bundle": true,
 	}
-	var CloudValidKeys Set = map[string]bool{
+	var CloudValidKeys set = map[string]bool{
 		"trust_bundle": true,
 		"cloud_url":    true,
 		"cloud_apikey": true,
@@ -165,7 +165,7 @@ func validateSection(s *ini.Section) error {
 	}
 
 	log.Printf("Validating configuration section %s", s.Name())
-	var m Dict = s.KeysHash()
+	var m dict = s.KeysHash()
 
 	if m.has("tpp_url") {
 		// looks like TPP config section
