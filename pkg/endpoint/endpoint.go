@@ -148,33 +148,33 @@ func NewZoneConfiguration() *ZoneConfiguration {
 }
 
 // ValidateCertificateRequest validates the request against the zone configuration
-func (z *ZoneConfiguration) ValidateCertificateRequest(request *certificate.Request) error {
-	if !isComponentValid(z.SubjectCNRegexes, []string{request.Subject.CommonName}) {
+func (p *Policy) ValidateCertificateRequest(request *certificate.Request) error {
+	if !isComponentValid(p.SubjectCNRegexes, []string{request.Subject.CommonName}) {
 		return fmt.Errorf("The requested CN does not match any of the allowed CN regular expressions")
 	}
-	if !isComponentValid(z.SubjectORegexes, request.Subject.Organization) {
+	if !isComponentValid(p.SubjectORegexes, request.Subject.Organization) {
 		return fmt.Errorf("The requested Organization does not match any of the allowed Organization regular expressions")
 	}
-	if !isComponentValid(z.SubjectOURegexes, request.Subject.OrganizationalUnit) {
+	if !isComponentValid(p.SubjectOURegexes, request.Subject.OrganizationalUnit) {
 		return fmt.Errorf("The requested Organizational Unit does not match any of the allowed Organization Unit regular expressions")
 	}
-	if !isComponentValid(z.SubjectSTRegexes, request.Subject.Province) {
+	if !isComponentValid(p.SubjectSTRegexes, request.Subject.Province) {
 		return fmt.Errorf("The requested State/Province does not match any of the allowed State/Province regular expressions")
 	}
-	if !isComponentValid(z.SubjectLRegexes, request.Subject.Locality) {
+	if !isComponentValid(p.SubjectLRegexes, request.Subject.Locality) {
 		return fmt.Errorf("The requested Locality does not match any of the allowed Locality regular expressions")
 	}
-	if !isComponentValid(z.SubjectCRegexes, request.Subject.Country) {
+	if !isComponentValid(p.SubjectCRegexes, request.Subject.Country) {
 		return fmt.Errorf("The requested Country does not match any of the allowed Country regular expressions")
 	}
-	if !isComponentValid(z.DnsSanRegExs, request.DNSNames) {
+	if !isComponentValid(p.DnsSanRegExs, request.DNSNames) {
 		return fmt.Errorf("The requested Subject Alternative Name does not match any of the allowed Country regular expressions")
 	}
 	//todo: add ip, email and over cheking
 
-	if z.AllowedKeyConfigurations != nil && len(z.AllowedKeyConfigurations) > 0 {
+	if p.AllowedKeyConfigurations != nil && len(p.AllowedKeyConfigurations) > 0 {
 		match := false
-		for _, keyConf := range z.AllowedKeyConfigurations {
+		for _, keyConf := range p.AllowedKeyConfigurations {
 			if keyConf.KeyType == request.KeyType {
 				if request.KeyLength > 0 {
 					for _, size := range keyConf.KeySizes {
