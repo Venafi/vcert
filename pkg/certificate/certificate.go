@@ -135,8 +135,11 @@ const (
 type CSrOriginOption int
 
 const (
+	// LocalGeneratedCSR - this vcert library generates CSR internally based on Request data
 	LocalGeneratedCSR CSrOriginOption = iota // local generation is default.
+	// ServiceGeneratedCSR - server generate CSR internally based on zone configuration and data from Request
 	ServiceGeneratedCSR
+	// UserProvidedCSR - client provides CSR from external resource and vcert library just check and send this CSR to server
 	UserProvidedCSR
 )
 
@@ -210,6 +213,7 @@ func GenerateRequest(request *Request, privateKey crypto.Signer) error {
 	return err
 }
 
+// GenerateCSR creates CSR for sending to server based on data from Request fields. It rewrites CSR field if it`s already filled.
 func (request *Request) GenerateCSR() error {
 	certificateRequest := x509.CertificateRequest{}
 	certificateRequest.Subject = request.Subject
@@ -227,6 +231,7 @@ func (request *Request) GenerateCSR() error {
 	return err
 }
 
+// GeneratePrivateKey creates private key (if it doesn`t already exist) based on request.KeyType, request.KeyLength and request.KeyCurve fileds
 func (request *Request) GeneratePrivateKey() error {
 	if request.PrivateKey != nil {
 		return nil
@@ -246,6 +251,7 @@ func (request *Request) GeneratePrivateKey() error {
 	return err
 }
 
+// CheckCertificate validate that certificate returned by server matches data in request object. It can be used for control server.
 func (request *Request) CheckCertificate(certPEM string) error {
 	pemBlock, _ := pem.Decode([]byte(certPEM))
 	if pemBlock == nil {
@@ -403,6 +409,7 @@ func GenerateRSAPrivateKey(size int) (*rsa.PrivateKey, error) {
 	return priv, nil
 }
 
+// NewRequest duplicates new Request object based on issued certificate
 func NewRequest(cert *x509.Certificate) *Request {
 	req := &Request{}
 	// 1st fill with *cert content
