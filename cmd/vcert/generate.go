@@ -148,31 +148,9 @@ func generateCsrForCommandGenCsr(cf *commandFlags, privateKeyPass []byte) (priva
 	return
 }
 
-func writeOutKeyAndCsr(cf *commandFlags, key []byte, csr []byte) error {
-	var err error
+func writeOutKeyAndCsr(cf *commandFlags, key []byte, csr []byte) (err error) {
 
-	switch {
-	case cf.keyFile != "" && cf.csrFile != "":
-		keyWriter := getFileWriter(cf.keyFile)
-		keyFile, ok := keyWriter.(*os.File)
-		if ok {
-			defer keyFile.Close()
-		}
-		csrWriter := getFileWriter(cf.csrFile)
-		csrFile, ok := csrWriter.(*os.File)
-		if ok {
-			defer csrFile.Close()
-		}
-
-		_, err = keyWriter.Write(key)
-		if err != nil {
-			return err
-		}
-		_, err = csrWriter.Write(csr)
-		if err != nil {
-			return err
-		}
-	case cf.file != "":
+	if cf.file != "" {
 		writer := getFileWriter(cf.file)
 		f, ok := writer.(*os.File)
 		if ok {
@@ -184,24 +162,23 @@ func writeOutKeyAndCsr(cf *commandFlags, key []byte, csr []byte) error {
 			return err
 		}
 		_, err = writer.Write(csr)
-		if err != nil {
-			return err
-		}
-	default:
-		writer := getFileWriter("")
-		f, ok := writer.(*os.File)
-		if ok {
-			defer f.Close()
-		}
-
-		_, err = writer.Write(key)
-		if err != nil {
-			return err
-		}
-		_, err = writer.Write(csr)
-		if err != nil {
-			return err
-		}
+		return
 	}
-	return nil
+
+	keyWriter := getFileWriter(cf.keyFile)
+	keyFile, ok := keyWriter.(*os.File)
+	if ok {
+		defer keyFile.Close()
+	}
+	_, err = keyWriter.Write(key)
+	if err != nil {
+		return err
+	}
+	csrWriter := getFileWriter(cf.csrFile)
+	csrFile, ok := csrWriter.(*os.File)
+	if ok {
+		defer csrFile.Close()
+	}
+	_, err = csrWriter.Write(csr)
+	return
 }
