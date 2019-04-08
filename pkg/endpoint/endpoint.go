@@ -56,23 +56,34 @@ func (t ConnectorType) String() string {
 
 // Connector provides a common interface for external communications with TPP or Venafi Cloud
 type Connector interface {
+	// GetType returns connector type (cloud/TPP/fake). Can be useful because some features not supported by Cloud connection
 	GetType() ConnectorType
+	// SetBaseUrl sets server url. It usual is called by NewClient functions.
 	SetBaseURL(url string) (err error)
+	// SetZone is same as SetBaseUrl but for zone
 	SetZone(z string)
 	Ping() (err error)
+	// Register is deprecated and will be removed in the future
 	Register(email string) (err error)
+	// Authenticate is usually called by NewClient and you don`t required to call it manual.
 	Authenticate(auth *Authentication) (err error)
+	// ReadPolicyConfiguration returns information about zone policies. It can be used for checking request compatibility with policies.
+	ReadPolicyConfiguration(zone string) (policy *Policy, err error)
+	// ReadZoneConfiguration returns zone configuration. Zone configuration includes zone policy and contains additional information about zone.
 	ReadZoneConfiguration(zone string) (config *ZoneConfiguration, err error)
+	// GenerateRequest update certificate.Request with data from zone configuration.
 	GenerateRequest(config *ZoneConfiguration, req *certificate.Request) (err error)
+	// RequestCertificate makes request for enrolling certificate.
 	RequestCertificate(req *certificate.Request, zone string) (requestID string, err error)
+	// RetrieveCertificate immediately returns certificate if it already enrolled or waits and retries during req.Timeout
 	RetrieveCertificate(req *certificate.Request) (certificates *certificate.PEMCollection, err error)
 	RevokeCertificate(req *certificate.RevocationRequest) error
 	RenewCertificate(req *certificate.RenewalRequest) (requestID string, err error)
+	// ImportCertificate import already existed certificate (it may be not issued by Venafi Cloud or TPP) to server for information purposes
 	ImportCertificate(req *certificate.ImportRequest) (*certificate.ImportResponse, error)
-	ReadPolicyConfiguration(zone string) (policy *Policy, err error)
 }
 
-// Authentication provides a data construct for authentication data
+// Authentication provides a data construct for authentication data. Should be specified (User AND Password) OR APIKey.
 type Authentication struct {
 	User     string
 	Password string
@@ -101,13 +112,17 @@ func (err ErrCertificatePending) Error() string {
 	return fmt.Sprintf("Issuance is pending. You may try retrieving the certificate later using Pickup ID: %s\n\tStatus: %s", err.CertificateID, err.Status)
 }
 
+// Policy is struct contains restrictions for certificates. Most of the fields contains list of regular expression.
+// For satisfying policies all values in certificate field have to be matched AT LEAST ONE regular expression in corresponding policy field.
 type Policy struct {
-	SubjectCNRegexes         []string
-	SubjectORegexes          []string
-	SubjectOURegexes         []string
-	SubjectSTRegexes         []string
-	SubjectLRegexes          []string
-	SubjectCRegexes          []string
+	SubjectCNRegexes []string
+	SubjectORegexes  []string
+	SubjectOURegexes []string
+	SubjectSTRegexes []string
+	SubjectLRegexes  []string
+	SubjectCRegexes  []string
+	// AllowedKeyConfigurations is list of allowed key configuration. Certificate key configurations have to be listened in this list.
+	// For example: If key has type RSA and length 2048 bit for satisfying policy that list should contains AT LEAST ONE configuration with type RSA and value 2048 in KeySizes list of this configuration.
 	AllowedKeyConfigurations []AllowedKeyConfiguration
 	DnsSanRegExs             []string
 	IpSanRegExs              []string
@@ -147,7 +162,7 @@ func NewZoneConfiguration() *ZoneConfiguration {
 	return &zc
 }
 
-// ValidateCertificateRequest validates the request against the zone configuration
+// ValidateCertificateRequest validates the request against the Policy
 func (z *ZoneConfiguration) ValidateCertificateRequest(request *certificate.Request) error {
 	if !isComponentValid(z.SubjectCNRegexes, []string{request.Subject.CommonName}) {
 		return fmt.Errorf("The requested CN does not match any of the allowed CN regular expressions")
