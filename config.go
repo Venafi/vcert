@@ -26,17 +26,17 @@ import (
 	"path/filepath"
 )
 
-// Config is basic structure for high level initiating connector to TPP/Venafi Cloud
+// Config is a basic structure for high level initiating connector to Trust Platform (TPP)/Venafi Cloud
 type Config struct {
-	// ConnectorType specify what do you want too use. May be "Cloud", "TPP" or "Fake" for development.
+	// ConnectorType specify what do you want to use. May be "Cloud", "TPP" or "Fake" for development.
 	ConnectorType endpoint.ConnectorType
-	// BaseUrl should be specified for TPP and optional can be specified for Cloud if you not use https://venafi.cloud/
+	// BaseUrl should be specified for Venafi Platform. Optional for Cloud implementations that do not use https://venafi.cloud/.
 	BaseUrl string
-	// Zone is name of zone in TPP or CLoud. For TPP it`s usually contains backslash symbol and should be escaped like "test\\zone" or `test\zone`
+	// Zone is name of a policy zone in Venafi Platform or Cloud. For TPP, if necessary, escape backslash symbols.   For example,  "test\\zone" or `test\zone`.
 	Zone string
-	// Credentials should contains user and password for TPP connection and APIKey for Cloud.
+	// Credentials should contain either User and Password for TPP connections or an APIKey for Cloud.
 	Credentials *endpoint.Authentication
-	// ConnectionTrust  may contains trusted CA or certificate of server if you use self-signed certificate.
+	// ConnectionTrust  may contain a trusted CA or certificate of server if you use self-signed certificate.
 	ConnectionTrust string // *x509.CertPool
 	LogVerbose      bool
 	// ConfigFile is deprecated
