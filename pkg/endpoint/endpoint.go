@@ -121,7 +121,7 @@ type Policy struct {
 	SubjectSTRegexes []string
 	SubjectLRegexes  []string
 	SubjectCRegexes  []string
-	// AllowedKeyConfigurations lists all allowed key configurations. Certificate key configuration have to be listened in this list.
+	// AllowedKeyConfigurations lists all allowed key configurations. Certificate key configuration have to be listed in this list.
 	// For example: If key has type RSA and length 2048 bit for satisfying the policy, that list must contain AT LEAST ONE configuration with type RSA and value 2048 in KeySizes list of this configuration.
 	AllowedKeyConfigurations []AllowedKeyConfiguration
 	// DnsSanRegExs is a list of regular expressions that show allowable DNS names in SANs.
