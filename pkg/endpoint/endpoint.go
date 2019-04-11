@@ -58,9 +58,9 @@ func (t ConnectorType) String() string {
 type Connector interface {
 	// GetType returns a connector type (cloud/TPP/fake). Can be useful because some features are not supported by a Cloud connection.
 	GetType() ConnectorType
-	// SetBaseUrl sets a server URL. It usually is called by NewClient function.
+	// SetBaseUrl sets a server URL. It usually is called by the NewClient function.
 	SetBaseURL(url string) (err error)
-	// SetZone sets a zone (by name) for using in over requests with this connector.
+	// SetZone sets a zone (by name) for requests with this connector.
 	SetZone(z string)
 	Ping() (err error)
 	// Register is deprecated and will be removed in the future.
@@ -73,7 +73,7 @@ type Connector interface {
 	ReadZoneConfiguration(zone string) (config *ZoneConfiguration, err error)
 	// GenerateRequest update certificate.Request with data from zone configuration.
 	GenerateRequest(config *ZoneConfiguration, req *certificate.Request) (err error)
-	// RequestCertificate makes request for enrolling certificate.
+	// RequestCertificate makes a request to the server with data for enrolling the certificate.
 	RequestCertificate(req *certificate.Request, zone string) (requestID string, err error)
 	// RetrieveCertificate immediately returns an enrolled certificate. Otherwise, RetrieveCertificate waits and retries during req.Timeout.
 	RetrieveCertificate(req *certificate.Request) (certificates *certificate.PEMCollection, err error)
@@ -121,7 +121,7 @@ type Policy struct {
 	SubjectSTRegexes []string
 	SubjectLRegexes  []string
 	SubjectCRegexes  []string
-	// AllowedKeyConfigurations lists all allowed key configuration. Certificate key configurations have to be listened in this list.
+	// AllowedKeyConfigurations lists all allowed key configurations. Certificate key configuration have to be listened in this list.
 	// For example: If key has type RSA and length 2048 bit for satisfying the policy, that list must contain AT LEAST ONE configuration with type RSA and value 2048 in KeySizes list of this configuration.
 	AllowedKeyConfigurations []AllowedKeyConfiguration
 	// DnsSanRegExs is a list of regular expressions that show allowable DNS names in SANs.
