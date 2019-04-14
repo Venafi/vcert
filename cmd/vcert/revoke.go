@@ -53,10 +53,8 @@ func setupRevokeCommandFlags() {
 	revokeFlags.StringVar(&revokeParams.zone, "z", "", "")
 	revokeFlags.StringVar(&revokeParams.config, "config", "", "")
 	revokeFlags.StringVar(&revokeParams.profile, "profile", "", "")
-	revokeFlags.StringVar(&revokeParams.clientCert, "client-cert", "", "")
-	revokeFlags.StringVar(&revokeParams.clientKey, "client-key", "", "")
-	revokeFlags.StringVar(&revokeParams.clientKeyPW, "client-key-pw", "", "")
-	revokeFlags.StringVar(&revokeParams.caCert, "ca-cert", "", "")
+	revokeFlags.StringVar(&enrollParams.clientP12, "client-pkcs12", "", "")
+	revokeFlags.StringVar(&enrollParams.clientP12PW, "client-pkcs12-pw", "", "")
 
 	revokeFlags.Usage = func() {
 		fmt.Printf("%s\n", vcert.GetFormattedVersionString())
@@ -97,14 +95,10 @@ func showRevokeUsage() {
 		"\t\tFor Cloud: cloud_url, cloud_apikey, cloud_zone\n" +
 		"\t\tTPP & Cloud: trust_bundle, test_mode"))
 
-	fmt.Println("  -ca-cert")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a CA certificate chain for mutual TLS. Must be used in combination with -client-cert, -client-key, and -client-key-pw options."))
-	fmt.Println("  -client-cert")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a client TLS certicate. Must be used in combination with -ca-cert, -client-key, and -client-key-pw options."))
-	fmt.Println("  -client-key")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a client TLS private key. Must be used in combination with -ca-cert, -client-cert, and -client-key-pw options."))
-	fmt.Println("  -client-key-pw")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a client TLS private key password. Must be used in combination with -ca-cert, -client-cert, and -client-key options."))
+	fmt.Println("  -client-pkcs12")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a client PKCS#12 archive for mutual TLS."))
+	fmt.Println("  -client-pkcs12-pw")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the password for a client PKCS#12 archive. Must be used in combination with -client-pkcs12 option."))
 	fmt.Println("  -no-prompt")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to exclude the authentication prompt. If you enable the prompt and you enter incorrect information, an error is displayed. This is useful with scripting."))
 	fmt.Println("  -no-retire")
@@ -152,25 +146,8 @@ func validateRevokeFlags() error {
 			}
 
 			// mutual TLS with TPP service
-			if enrollParams.caCert != "" {
-				if enrollParams.clientCert == "" || enrollParams.clientKey == "" || enrollParams.clientKeyPW == "" {
-					return fmt.Errorf("-ca-cert, -client-cert, -client-key, and -client-key-pw must all be specified for mutual TLS connections with Trust Protection Platform")
-				}
-			}
-			if enrollParams.clientCert != "" {
-				if enrollParams.caCert == "" || enrollParams.clientKey == "" || enrollParams.clientKeyPW == "" {
-					return fmt.Errorf("-ca-cert, -client-cert, -client-key, and -client-key-pw must all be specified for mutual TLS connections with Trust Protection Platform")
-				}
-			}
-			if enrollParams.clientKey != "" {
-				if enrollParams.caCert == "" || enrollParams.clientCert == "" || enrollParams.clientKeyPW == "" {
-					return fmt.Errorf("-ca-cert, -client-cert, -client-key, and -client-key-pw must all be specified for mutual TLS connections with Trust Protection Platform")
-				}
-			}
-			if enrollParams.clientKeyPW != "" {
-				if enrollParams.caCert == "" || enrollParams.clientCert == "" || enrollParams.clientKey == "" {
-					return fmt.Errorf("-ca-cert, -client-cert, -client-key, and -client-key-pw must all be specified for mutual TLS connections with Trust Protection Platform")
-				}
+			if enrollParams.clientP12 == "" && enrollParams.clientP12PW != "" {
+				return fmt.Errorf("-client-pkcs12-pw can only be specified in combination with -client-pkcs12")
 			}
 		}
 	}

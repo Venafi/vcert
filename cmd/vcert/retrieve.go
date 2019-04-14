@@ -48,10 +48,8 @@ func setupRetrieveCommandFlags() {
 	pickupFlags.StringVar(&pickParams.keyFile, "key-file", "", "")
 	pickupFlags.StringVar(&pickParams.config, "config", "", "")
 	pickupFlags.StringVar(&pickParams.profile, "profile", "", "")
-	pickupFlags.StringVar(&pickParams.clientCert, "client-cert", "", "")
-	pickupFlags.StringVar(&pickParams.clientKey, "client-key", "", "")
-	pickupFlags.StringVar(&pickParams.clientKeyPW, "client-key-pw", "", "")
-	pickupFlags.StringVar(&pickParams.caCert, "ca-cert", "", "")
+	pickupFlags.StringVar(&enrollParams.clientP12, "client-pkcs12", "", "")
+	pickupFlags.StringVar(&enrollParams.clientP12PW, "client-pkcs12-pw", "", "")
 
 	pickupFlags.Usage = func() {
 		fmt.Printf("%s\n", vcert.GetFormattedVersionString())
@@ -89,14 +87,10 @@ func showPickupUsage() {
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to include the certificate chain in the output, and to specify where to place it in the file. By default, it is placed last. Options include: ignore | root-first | root-last"))
 	fmt.Println("  -chain-file")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a file name and a location where the resulting chain file should be written, if no chain file is specified the chain will be stored in the same file as the certificate. Example: /tmp/chain.pem"))
-	fmt.Println("  -ca-cert")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a CA certificate chain for mutual TLS. Must be used in combination with -client-cert, -client-key, and -client-key-pw options."))
-	fmt.Println("  -client-cert")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a client TLS certicate. Must be used in combination with -ca-cert, -client-key, and -client-key-pw options."))
-	fmt.Println("  -client-key")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a client TLS private key. Must be used in combination with -ca-cert, -client-cert, and -client-key-pw options."))
-	fmt.Println("  -client-key-pw")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a client TLS private key password. Must be used in combination with -ca-cert, -client-cert, and -client-key options."))
+	fmt.Println("  -client-pkcs12")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a client PKCS#12 archive for mutual TLS."))
+	fmt.Println("  -client-pkcs12-pw")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the password for a client PKCS#12 archive. Must be used in combination with -client-pkcs12 option."))
 
 	fmt.Println("  -config")
 	fmt.Printf("\t%s\n", ("Use to specify INI configuration file containing connection details\n" +
@@ -159,25 +153,8 @@ func validatePickupFlags() error {
 				}
 
 				// mutual TLS with TPP service
-				if enrollParams.caCert != "" {
-					if enrollParams.clientCert == "" || enrollParams.clientKey == "" || enrollParams.clientKeyPW == "" {
-						return fmt.Errorf("-ca-cert, -client-cert, -client-key, and -client-key-pw must all be specified for mutual TLS connections with Trust Protection Platform")
-					}
-				}
-				if enrollParams.clientCert != "" {
-					if enrollParams.caCert == "" || enrollParams.clientKey == "" || enrollParams.clientKeyPW == "" {
-						return fmt.Errorf("-ca-cert, -client-cert, -client-key, and -client-key-pw must all be specified for mutual TLS connections with Trust Protection Platform")
-					}
-				}
-				if enrollParams.clientKey != "" {
-					if enrollParams.caCert == "" || enrollParams.clientCert == "" || enrollParams.clientKeyPW == "" {
-						return fmt.Errorf("-ca-cert, -client-cert, -client-key, and -client-key-pw must all be specified for mutual TLS connections with Trust Protection Platform")
-					}
-				}
-				if enrollParams.clientKeyPW != "" {
-					if enrollParams.caCert == "" || enrollParams.clientCert == "" || enrollParams.clientKey == "" {
-						return fmt.Errorf("-ca-cert, -client-cert, -client-key, and -client-key-pw must all be specified for mutual TLS connections with Trust Protection Platform")
-					}
+				if enrollParams.clientP12 == "" && enrollParams.clientP12PW != "" {
+					return fmt.Errorf("-client-pkcs12-pw can only be specified in combination with -client-pkcs12")
 				}
 			}
 		}

@@ -104,10 +104,8 @@ type commandFlags struct {
 	insecure           bool
 	config             string
 	profile            string
-	clientCert         string
-	clientKey          string
-	clientKeyPW        string
-	caCert             string
+	clientP12          string
+	clientP12PW        string
 }
 
 func createFromCommandFlags(co command) *commandFlags {

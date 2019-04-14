@@ -64,10 +64,8 @@ func setupEnrollCommandFlags() {
 	enrollFlags.BoolVar(&enrollParams.insecure, "insecure", false, "")
 	enrollFlags.StringVar(&enrollParams.config, "config", "", "")
 	enrollFlags.StringVar(&enrollParams.profile, "profile", "", "")
-	enrollFlags.StringVar(&enrollParams.clientCert, "client-cert", "", "")
-	enrollFlags.StringVar(&enrollParams.clientKey, "client-key", "", "")
-	enrollFlags.StringVar(&enrollParams.clientKeyPW, "client-key-pw", "", "")
-	enrollFlags.StringVar(&enrollParams.caCert, "ca-cert", "", "")
+	enrollFlags.StringVar(&enrollParams.clientP12, "client-pkcs12", "", "")
+	enrollFlags.StringVar(&enrollParams.clientP12PW, "client-pkcs12-pw", "", "")
 
 	enrollFlags.Usage = func() {
 		fmt.Printf("%s\n", vcert.GetFormattedVersionString())
@@ -83,7 +81,7 @@ func showEnrollmentUsage() {
 	fmt.Printf("  %s enroll -tpp-url <https://tpp.example.com> -tpp-user <username> -tpp-password <password> -cn <common name> -z <zone>\n", os.Args[0])
 	fmt.Printf("  %s enroll -tpp-url <https://tpp.example.com> -tpp-user <username> -tpp-password <password> -cn <common name> -z <zone> -key-size 4096 -san-dns <alt common name> -san-dns <alt common name2>\n", os.Args[0])
 	fmt.Printf("  %s enroll -tpp-url <https://tpp.example.com> -tpp-user <username> -tpp-password <password> -cn <common name> -z <zone> -key-type ecdsa -key-curve p384 -san-dns <alt common name> -san-dns <alt common name2>\n", os.Args[0])
-	fmt.Printf("  %s enroll -tpp-url <https://tpp.example.com> -tpp-user <username> -tpp-password <password> -cn <common name> -z <zone> -client-cert <path to client cert> -client-key <path to client key> -client-key-pw <password for client key> -ca-cert <path to CA chain>\n", os.Args[0])
+	fmt.Printf("  %s enroll -tpp-url <https://tpp.example.com> -tpp-user <username> -tpp-password <password> -cn <common name> -z <zone> -client-pkcs12 <path to client PKCS#12 archive> -client-pkcs12-pw <password for client PKCS#12 archive>\n", os.Args[0])
 
 	fmt.Printf("\nRequired for both Venafi Cloud and Trust Protection Platform:\n")
 	fmt.Println("  -cn")
@@ -110,8 +108,6 @@ func showEnrollmentUsage() {
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to include the certificate chain in the output, and to specify where to place it in the file. By default, it is placed last. Options include: ignore | root-first | root-last"))
 	fmt.Println("  -cn")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the common name (CN). This is required for Enrollment."))
-	fmt.Println("  -ca-dn")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Specify the Certificate Authority DN, if one is not specified by zone/policy."))
 
 	fmt.Println("  -config")
 	fmt.Printf("\t%s\n", ("Use to specify INI configuration file containing connection details\n" +
@@ -132,14 +128,10 @@ func showEnrollmentUsage() {
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a file name and a location where the resulting certificate file should be written. Example: /tmp/newcert.pem"))
 	fmt.Println("  -chain-file")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a path and file name where the resulting chain file should be written, if no chain file is specified the chain will be stored in the same file as the certificate. Example: /tmp/chain.pem"))
-	fmt.Println("  -ca-cert")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a CA certificate chain for mutual TLS. Must be used in combination with -client-cert, -client-key, and -client-key-pw options."))
-	fmt.Println("  -client-cert")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a client TLS certicate. Must be used in combination with -ca-cert, -client-key, and -client-key-pw options."))
-	fmt.Println("  -client-key")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a client TLS private key. Must be used in combination with -ca-cert, -client-cert, and -client-key-pw options."))
-	fmt.Println("  -client-key-pw")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a client TLS private key password. Must be used in combination with -ca-cert, -client-cert, and -client-key options."))
+	fmt.Println("  -client-pkcs12")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a client PKCS#12 archive for mutual TLS."))
+	fmt.Println("  -client-pkcs12-pw")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the password for a client PKCS#12 archive. Must be used in combination with -client-pkcs12 option."))
 	fmt.Println("  -format")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the output format. PEM is the default format. Options include: pem | json | pkcs12. If PKCS#12 format is specified, then all objects should be written using -file option."))
 	fmt.Println("  -key-file")
@@ -247,25 +239,8 @@ func validateEnrollmentFlags() error {
 			}
 
 			// mutual TLS with TPP service
-			if enrollParams.caCert != "" {
-				if enrollParams.clientCert == "" || enrollParams.clientKey == "" || enrollParams.clientKeyPW == "" {
-					return fmt.Errorf("-ca-cert, -client-cert, -client-key, and -client-key-pw must all be specified for mutual TLS connections with Trust Protection Platform")
-				}
-			}
-			if enrollParams.clientCert != "" {
-				if enrollParams.caCert == "" || enrollParams.clientKey == "" || enrollParams.clientKeyPW == "" {
-					return fmt.Errorf("-ca-cert, -client-cert, -client-key, and -client-key-pw must all be specified for mutual TLS connections with Trust Protection Platform")
-				}
-			}
-			if enrollParams.clientKey != "" {
-				if enrollParams.caCert == "" || enrollParams.clientCert == "" || enrollParams.clientKeyPW == "" {
-					return fmt.Errorf("-ca-cert, -client-cert, -client-key, and -client-key-pw must all be specified for mutual TLS connections with Trust Protection Platform")
-				}
-			}
-			if enrollParams.clientKeyPW != "" {
-				if enrollParams.caCert == "" || enrollParams.clientCert == "" || enrollParams.clientKey == "" {
-					return fmt.Errorf("-ca-cert, -client-cert, -client-key, and -client-key-pw must all be specified for mutual TLS connections with Trust Protection Platform")
-				}
+			if enrollParams.clientP12 == "" && enrollParams.clientP12PW != "" {
+				return fmt.Errorf("-client-pkcs12-pw can only be specified in combination with -client-pkcs12")
 			}
 		}
 	}

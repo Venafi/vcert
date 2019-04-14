@@ -30,6 +30,8 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/crypto/pkcs12"
+
 	"github.com/Venafi/vcert"
 	"github.com/Venafi/vcert/cmd/vcert/output"
 	"github.com/Venafi/vcert/pkg/certificate"
@@ -73,50 +75,31 @@ func main() {
 		tlsConfig.InsecureSkipVerify = true
 	}
 
-	if cf.clientCert != "" && cf.clientKey != "" && cf.caCert != "" && cf.clientKeyPW != "" {
-		// Load client certificate and key
-		certIn, err := ioutil.ReadFile(cf.clientCert)
+	if cf.clientP12 != "" {
+		// Load client PKCS#12 archive
+		p12, err := ioutil.ReadFile(cf.clientP12)
 		if err != nil {
-			logger.Panicf("Error reading client-side certificate: %s", err)
-		}
-		keyIn, err := ioutil.ReadFile(cf.clientKey)
-		if err != nil {
-			logger.Panicf("Error reading client-side private key: %s", err)
+			logger.Panicf("Error reading PKCS#12 archive file: %s", err)
 		}
 
-		// Decrypt private key as necessary and parse key pair
-		var cert tls.Certificate
-		decodedKey, _ := pem.Decode(keyIn)
-		if x509.IsEncryptedPEMBlock(decodedKey) {
-			decryptedKey, err := x509.DecryptPEMBlock(decodedKey, []byte(cf.clientKeyPW))
-			if err != nil {
-				logger.Panicf("Error decrypting private key: %s", err)
-			}
-
-			decryptedKey = pem.EncodeToMemory(&pem.Block{
-				Type:  "RSA PRIVATE KEY",
-				Bytes: decryptedKey,
-			})
-
-			cert, err = tls.X509KeyPair(certIn, decryptedKey)
-			if err != nil {
-				logger.Panicf("Error loading key pair after decryption: %s", err)
-			}
-		} else if !x509.IsEncryptedPEMBlock(decodedKey) {
-			cert, err = tls.X509KeyPair(certIn, keyIn)
-			if err != nil {
-				logger.Panicf("Failed to parse client certificate and key: %s", err)
-			}
+		blocks, err := pkcs12.ToPEM(p12, cf.clientP12PW)
+		if err != nil {
+			logger.Panicf("Error converting PKCS#12 archive file to PEM blocks: %s", err)
 		}
 
-		// Load CA certificate
-		caCert, err := ioutil.ReadFile(cf.caCert)
+		var pemData []byte
+		for _, b := range blocks {
+			pemData = append(pemData, pem.EncodeToMemory(b)...)
+		}
+
+		// Construct TLS certificate from PEM data
+		cert, err := tls.X509KeyPair(pemData, pemData)
 		if err != nil {
-			logger.Panicf("Failed to load CA certificate: %s", err)
+			logger.Panicf("Error reading PEM data to build X.509 certificate: %s", err)
 		}
 
 		caCertPool := x509.NewCertPool()
-		caCertPool.AppendCertsFromPEM(caCert)
+		caCertPool.AppendCertsFromPEM(pemData)
 
 		// Setup HTTPS client
 		tlsConfig.Certificates = []tls.Certificate{cert}
@@ -213,18 +196,18 @@ func main() {
 		}
 
 		result := &output.Result{
-			pcc,
-			cf.pickupID,
-			&output.Config{
-				int(co),
-				cf.format,
-				certificate.ChainOptionFromString(cf.chainOption),
-				cf.file,
-				cf.keyFile,
-				cf.certFile,
-				cf.chainFile,
-				cf.pickupIDFile,
-				cf.keyPassword,
+			Pcc:      pcc,
+			PickupId: cf.pickupID,
+			Config: &output.Config{
+				Command:      int(co),
+				Format:       cf.format,
+				ChainOption:  certificate.ChainOptionFromString(cf.chainOption),
+				AllFile:      cf.file,
+				KeyFile:      cf.keyFile,
+				CertFile:     cf.certFile,
+				ChainFile:    cf.chainFile,
+				PickupIdFile: cf.pickupIDFile,
+				KeyPassword:  cf.keyPassword,
 			},
 		}
 		err = result.Flush()
@@ -260,18 +243,18 @@ func main() {
 		logf("Successfully retrieved request for %s", cf.pickupID)
 
 		result := &output.Result{
-			pcc,
-			cf.pickupID,
-			&output.Config{
-				int(co),
-				cf.format,
-				certificate.ChainOptionFromString(cf.chainOption),
-				cf.file,
-				cf.keyFile,
-				cf.certFile,
-				cf.chainFile,
-				cf.pickupIDFile,
-				cf.keyPassword,
+			Pcc:      pcc,
+			PickupId: cf.pickupID,
+			Config: &output.Config{
+				Command:      int(co),
+				Format:       cf.format,
+				ChainOption:  certificate.ChainOptionFromString(cf.chainOption),
+				AllFile:      cf.file,
+				KeyFile:      cf.keyFile,
+				CertFile:     cf.certFile,
+				ChainFile:    cf.chainFile,
+				PickupIdFile: cf.pickupIDFile,
+				KeyPassword:  cf.keyPassword,
 			},
 		}
 		err = result.Flush()
@@ -391,18 +374,18 @@ func main() {
 		}
 
 		result := &output.Result{
-			pcc,
-			cf.pickupID,
-			&output.Config{
-				int(co),
-				cf.format,
-				certificate.ChainOptionFromString(cf.chainOption),
-				cf.file,
-				cf.keyFile,
-				cf.certFile,
-				cf.chainFile,
-				cf.pickupIDFile,
-				cf.keyPassword,
+			Pcc:      pcc,
+			PickupId: cf.pickupID,
+			Config: &output.Config{
+				Command:      int(co),
+				Format:       cf.format,
+				ChainOption:  certificate.ChainOptionFromString(cf.chainOption),
+				AllFile:      cf.file,
+				KeyFile:      cf.keyFile,
+				CertFile:     cf.certFile,
+				ChainFile:    cf.chainFile,
+				PickupIdFile: cf.pickupIDFile,
+				KeyPassword:  cf.keyPassword,
 			},
 		}
 		err = result.Flush()

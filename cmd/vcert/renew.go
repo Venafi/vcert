@@ -64,10 +64,8 @@ func setupRenewCommandFlags() {
 	renewFlags.StringVar(&renewParams.thumbprint, "thumbprint", "", "")
 	renewFlags.StringVar(&renewParams.config, "config", "", "")
 	renewFlags.StringVar(&renewParams.profile, "profile", "", "")
-	renewFlags.StringVar(&renewParams.clientCert, "client-cert", "", "")
-	renewFlags.StringVar(&renewParams.clientKey, "client-key", "", "")
-	renewFlags.StringVar(&renewParams.clientKeyPW, "client-key-pw", "", "")
-	renewFlags.StringVar(&renewParams.caCert, "ca-cert", "", "")
+	renewFlags.StringVar(&enrollParams.clientP12, "client-pkcs12", "", "")
+	renewFlags.StringVar(&enrollParams.clientP12PW, "client-pkcs12-pw", "", "")
 
 	renewFlags.Usage = func() {
 		fmt.Printf("%s\n", vcert.GetFormattedVersionString())
@@ -104,14 +102,10 @@ func showRenewUsage() {
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to include the certificate chain in the output, and to specify where to place it in the file. By default, it is placed last. Options include: ignore | root-first | root-last"))
 	fmt.Println("  -file")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a file name and a location where the resulting file should be written. If this option is used the key, certificate, and chain will be written to the same file. Example: /tmp/newcert.pem"))
-	fmt.Println("  -ca-cert")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a CA certificate chain for mutual TLS. Must be used in combination with -client-cert, -client-key, and -client-key-pw options."))
-	fmt.Println("  -client-cert")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a client TLS certicate. Must be used in combination with -ca-cert, -client-key, and -client-key-pw options."))
-	fmt.Println("  -client-key")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a client TLS private key. Must be used in combination with -ca-cert, -client-cert, and -client-key-pw options."))
-	fmt.Println("  -client-key-pw")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a client TLS private key password. Must be used in combination with -ca-cert, -client-cert, and -client-key options."))
+	fmt.Println("  -client-pkcs12")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a client PKCS#12 archive for mutual TLS."))
+	fmt.Println("  -client-pkcs12-pw")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the password for a client PKCS#12 archive. Must be used in combination with -client-pkcs12 option."))
 
 	fmt.Println("  -config")
 	fmt.Printf("\t%s\n", ("Use to specify INI configuration file containing connection details\n" +
@@ -208,25 +202,8 @@ func validateRenewFlags() error {
 				}
 
 				// mutual TLS with TPP service
-				if enrollParams.caCert != "" {
-					if enrollParams.clientCert == "" || enrollParams.clientKey == "" || enrollParams.clientKeyPW == "" {
-						return fmt.Errorf("-ca-cert, -client-cert, -client-key, and -client-key-pw must all be specified for mutual TLS connections with Trust Protection Platform")
-					}
-				}
-				if enrollParams.clientCert != "" {
-					if enrollParams.caCert == "" || enrollParams.clientKey == "" || enrollParams.clientKeyPW == "" {
-						return fmt.Errorf("-ca-cert, -client-cert, -client-key, and -client-key-pw must all be specified for mutual TLS connections with Trust Protection Platform")
-					}
-				}
-				if enrollParams.clientKey != "" {
-					if enrollParams.caCert == "" || enrollParams.clientCert == "" || enrollParams.clientKeyPW == "" {
-						return fmt.Errorf("-ca-cert, -client-cert, -client-key, and -client-key-pw must all be specified for mutual TLS connections with Trust Protection Platform")
-					}
-				}
-				if enrollParams.clientKeyPW != "" {
-					if enrollParams.caCert == "" || enrollParams.clientCert == "" || enrollParams.clientKey == "" {
-						return fmt.Errorf("-ca-cert, -client-cert, -client-key, and -client-key-pw must all be specified for mutual TLS connections with Trust Protection Platform")
-					}
+				if enrollParams.clientP12 == "" && enrollParams.clientP12PW != "" {
+					return fmt.Errorf("-client-pkcs12-pw can only be specified in combination with -client-pkcs12")
 				}
 			}
 		}
