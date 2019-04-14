@@ -26,7 +26,10 @@ import (
 	"github.com/Venafi/vcert/pkg/venafi/tpp"
 )
 
-// NewClient builds a vcert Connector based on a provided configuration
+// NewClient returns a connector for either Trust Protection Platform (TPP) or Venafi Cloud based on provided configuration.
+// Config should have Credentials compatible with the selected ConnectorType.
+// Returned connector is a concurrency-safe interface to TPP or Venafi Cloud that can be reused without restriction.
+// Connector can also be of type "fake" for local tests, which doesn`t connect to any backend and all certificates enroll locally.
 func NewClient(cfg *Config) (endpoint.Connector, error) {
 	var err error
 
