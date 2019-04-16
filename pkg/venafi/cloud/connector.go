@@ -34,16 +34,20 @@ const apiURL = "api.venafi.cloud/v1/"
 type urlResource string
 
 const (
-	urlResourceUserAccounts urlResource = "useraccounts"
-	urlResourcePing                     = "ping"
-	urlResourceZones                    = "xzones"
-	urlResourceZoneByTag                = urlResourceZones + "/tag/%s"
-
-	urlResourceCertificateSearch      = "certificatesearch"
-	urlResourceManagedCertificates    = "managedcertificates"
-	urlResourceManagedCertificateById = urlResourceManagedCertificates + "/%s"
-	urlResourceDiscovery              = "discovery"
-	urlResourceTemplate               = "certificateissuingtemplates/%s"
+	urlResourceUserAccounts              urlResource = "useraccounts"
+	urlResourcePing                                  = "ping"
+	urlResourceZones                                 = "xzones"
+	urlResourceZoneByTag                             = urlResourceZones + "/tag/%s"
+	urlResourceCertificateRequests                   = "certificaterequests"
+	urlResourceCertificateStatus                     = urlResourceCertificateRequests + "/%s"
+	urlResourceCertificateRetrieveViaCSR             = urlResourceCertificateRequests + "/%s/certificate"
+	urlResourceCertificateRetrieve                   = "certificates/%s"
+	urlResourceCertificateRetrievePem                = urlResourceCertificateRetrieve + "/encoded"
+	urlResourceCertificateSearch                     = "certificatesearch"
+	urlResourceManagedCertificates                   = "managedcertificates"
+	urlResourceManagedCertificateById                = urlResourceManagedCertificates + "/%s"
+	urlResourceDiscovery                             = "discovery"
+	urlResourceTemplate                              = "certificateissuingtemplates/%s"
 )
 
 type condorChainOption string
