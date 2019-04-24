@@ -208,6 +208,7 @@ func retrieveCertificateNew(connector endpoint.Connector, req *certificate.Reque
 }
 
 func getEmailForRegistration(writer *bufio.Writer, reader *bufio.Reader) (string, error) {
+	// nolint: errcheck
 	writer.WriteString("Please enter your email address:")
 	writer.Flush()
 	line, _, err := reader.ReadLine()

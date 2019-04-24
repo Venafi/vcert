@@ -114,14 +114,20 @@ func PEMCollectionFromBytes(certBytes []byte, chainOrder ChainOption) (*PEMColle
 			collection, err = NewPEMCollection(chain[len(chain)-1], nil, nil)
 			if len(chain) > 1 && chainOrder != ChainOptionIgnore {
 				for _, caCert := range chain[:len(chain)-1] {
-					collection.AddChainElement(caCert)
+					err = collection.AddChainElement(caCert)
+					if err != nil {
+						return nil, err
+					}
 				}
 			}
 		default:
 			collection, err = NewPEMCollection(chain[0], nil, nil)
 			if len(chain) > 1 && chainOrder != ChainOptionIgnore {
 				for _, caCert := range chain[1:] {
-					collection.AddChainElement(caCert)
+					err = collection.AddChainElement(caCert)
+					if err != nil {
+						return nil, err
+					}
 				}
 			}
 		}

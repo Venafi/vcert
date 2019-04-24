@@ -139,6 +139,9 @@ func main() {
 
 		if cf.noPickup {
 			pcc, err = certificate.NewPEMCollection(nil, req.PrivateKey, []byte(cf.keyPassword))
+			if err != nil {
+				logger.Panicf("%s", err)
+			}
 		} else {
 			req.PickupID = cf.pickupID
 			req.ChainOption = certificate.ChainOptionFromString(cf.chainOption)
@@ -307,6 +310,9 @@ func main() {
 
 		if cf.noPickup {
 			pcc, err = certificate.NewPEMCollection(nil, req.PrivateKey, []byte(cf.keyPassword))
+			if err != nil {
+				logger.Panicf("%s", err)
+			}
 		} else {
 			req.PickupID = cf.pickupID
 			req.ChainOption = certificate.ChainOptionFromString(cf.chainOption)
@@ -323,7 +329,10 @@ func main() {
 				// so nothing to do here
 			} else {
 				// otherwise private key can be taken from *req
-				pcc.AddPrivateKey(req.PrivateKey, []byte(cf.keyPassword))
+				err = pcc.AddPrivateKey(req.PrivateKey, []byte(cf.keyPassword))
+				if err != nil {
+					logger.Fatal(err)
+				}
 			}
 		}
 

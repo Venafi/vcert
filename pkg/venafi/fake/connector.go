@@ -217,8 +217,10 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (pcc *certific
 	}
 	// no key password -- no key
 	if pk != nil && req.KeyPassword != "" {
-
-		pcc.AddPrivateKey(pk, []byte(req.KeyPassword))
+		err = pcc.AddPrivateKey(pk, []byte(req.KeyPassword))
+		if err != nil {
+			return
+		}
 	}
 	err = req.CheckCertificate(pcc.Certificate)
 	return
