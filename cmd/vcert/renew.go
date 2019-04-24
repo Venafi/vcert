@@ -174,7 +174,7 @@ func validateRenewFlags() error {
 			renewParams.tppURL != "" ||
 			renewParams.tppUser != "" ||
 			renewParams.tppPassword != "" ||
-			renewParams.testMode == true {
+			renewParams.testMode {
 			return fmt.Errorf("connection details cannot be specified with flags when -config is used")
 		}
 	} else {

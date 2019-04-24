@@ -56,7 +56,7 @@ type condorChainOption string
 
 const (
 	condorChainOptionRootFirst condorChainOption = "ROOT_FIRST"
-	condorChainOptionRootLast                    = "EE_FIRST"
+	condorChainOptionRootLast  condorChainOption = "EE_FIRST"
 )
 
 // Connector contains the base data needed to communicate with the Venafi Cloud servers
@@ -72,7 +72,7 @@ type Connector struct {
 // NewConnector creates a new Venafi Cloud Connector object used to communicate with Venafi Cloud
 func NewConnector(verbose bool, trust *x509.CertPool) *Connector {
 	c := Connector{verbose: verbose, trust: trust}
-	c.SetBaseURL(apiURL)
+	_ = c.SetBaseURL(apiURL)
 	return &c
 }
 
@@ -106,6 +106,9 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 	c.apiKey = auth.APIKey
 	url := c.getURL(urlResourceUserAccounts)
 	statusCode, status, body, err := c.request("GET", url, nil, true)
+	if err != nil {
+		return err
+	}
 	ud, err := parseUserDetailsResult(http.StatusOK, statusCode, status, body)
 	if err != nil {
 		return
@@ -119,7 +122,9 @@ func (c *Connector) Register(email string) (err error) {
 
 	url := c.getURL(urlResourceUserAccounts)
 	statusCode, status, body, err := c.request("POST", url, userAccount{Username: email, UserAccountType: "API"})
-
+	if err != nil {
+		return err
+	}
 	//the user has already been registered and there is nothing to parse
 	if statusCode == http.StatusAccepted {
 		return nil
@@ -196,7 +201,9 @@ func (c *Connector) getCertificateStatus(requestID string) (certStatus *certific
 	url := c.getURL(urlResourceCertificateStatus)
 	url = fmt.Sprintf(url, requestID)
 	statusCode, _, body, err := c.request("GET", url, nil)
-
+	if err != nil {
+		return nil, err
+	}
 	if statusCode == http.StatusOK {
 		certStatus = &certificateStatus{}
 		err = json.Unmarshal(body, certStatus)
@@ -320,8 +327,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 			return nil, fmt.Errorf("Failed to retrieve certificate. StatusCode: %d -- Status: %s -- Server Data: %s", statusCode, status, body)
 		}
 
-		certificates, err = newPEMCollectionFromResponse(body, certificate.ChainOptionIgnore)
-		return certificates, nil
+		return newPEMCollectionFromResponse(body, certificate.ChainOptionIgnore)
 	}
 }
 
@@ -450,6 +456,9 @@ func (c *Connector) getPoliciesByID(ids []string) (*certificatePolicy, error) {
 		url := c.getURL(urlResourcePoliciesByID)
 		url = fmt.Sprintf(url, id)
 		statusCode, status, body, err := c.request("GET", url, nil)
+		if err != nil {
+			return nil, err
+		}
 		p, err := parseCertificatePolicyResult(statusCode, status, body)
 		if err != nil {
 			return nil, err
@@ -477,7 +486,9 @@ func (c *Connector) searchCertificates(req *SearchRequest) (*CertificateSearchRe
 
 	url := c.getURL(urlResourceCertificateSearch)
 	statusCode, _, body, err := c.request("POST", url, req)
-
+	if err != nil {
+		return nil, err
+	}
 	searchResult, err := ParseCertificateSearchResponse(statusCode, body)
 	if err != nil {
 		return nil, err

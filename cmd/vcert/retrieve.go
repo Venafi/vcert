@@ -141,7 +141,7 @@ func validatePickupFlags() error {
 			pickParams.tppURL != "" ||
 			pickParams.tppUser != "" ||
 			pickParams.tppPassword != "" ||
-			pickParams.testMode == true {
+			pickParams.testMode {
 			return fmt.Errorf("connection details cannot be specified with flags when -config is used")
 		}
 	} else {

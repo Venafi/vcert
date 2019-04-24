@@ -45,7 +45,6 @@ func (c *Connector) GetType() endpoint.ConnectorType {
 }
 
 func (c *Connector) SetZone(z string) {
-	return
 }
 
 func (c *Connector) Ping() (err error) {
@@ -115,7 +114,7 @@ func issueCertificate(csr *x509.CertificateRequest) ([]byte, error) {
 			nameSet[name] = true
 		}
 		uniqNames := []string{}
-		for name, _ := range nameSet {
+		for name := range nameSet {
 			uniqNames = append(uniqNames, name)
 		}
 		csr.DNSNames = uniqNames
@@ -164,6 +163,9 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (pcc *certific
 
 	if fakeRequest.CSR != "" {
 		csrPEMbytes, err = base64.StdEncoding.DecodeString(fakeRequest.CSR)
+		if err != nil {
+			return nil, err
+		}
 
 	} else {
 		req := fakeRequest.Req
@@ -210,8 +212,12 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (pcc *certific
 		certBytes = append(cert_pem, []byte(caCertPEM)...)
 	}
 	pcc, err = certificate.PEMCollectionFromBytes(certBytes, req.ChainOption)
+	if err != nil {
+		return nil, err
+	}
 	// no key password -- no key
 	if pk != nil && req.KeyPassword != "" {
+
 		pcc.AddPrivateKey(pk, []byte(req.KeyPassword))
 	}
 	err = req.CheckCertificate(pcc.Certificate)

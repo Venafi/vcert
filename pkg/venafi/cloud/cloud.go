@@ -436,8 +436,6 @@ func newPEMCollectionFromResponse(data []byte, chainOrder certificate.ChainOptio
 }
 
 func certThumprint(asn1 []byte) string {
-	h := sha1.New()
-	h.Write(asn1)
-	s := h.Sum(nil)
-	return strings.ToUpper(fmt.Sprintf("%x", s))
+	h := sha1.Sum(asn1)
+	return strings.ToUpper(fmt.Sprintf("%x", h))
 }

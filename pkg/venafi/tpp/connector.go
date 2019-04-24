@@ -291,6 +291,9 @@ func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (er
 		revReq.Disable,
 	}
 	statusCode, status, body, err := c.request("POST", urlResourceCertificateRevoke, r)
+	if err != nil {
+		return err
+	}
 	revokeResponse, err := parseRevokeResult(statusCode, status, body)
 	if err != nil {
 		return
@@ -342,6 +345,9 @@ func (c *Connector) ReadZoneConfiguration(zone string) (config *endpoint.ZoneCon
 		return nil, fmt.Errorf("Invalid status: %s", status)
 	}
 	err = json.Unmarshal(body, &r)
+	if err != nil {
+		return nil, err
+	}
 	p := r.Policy.toPolicy()
 	r.Policy.toZoneConfig(zoneConfig)
 	zoneConfig.Policy = p

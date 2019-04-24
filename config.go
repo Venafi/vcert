@@ -178,7 +178,7 @@ func validateSection(s *ini.Section) error {
 
 	if m.has("tpp_url") {
 		// looks like TPP config section
-		for k, _ := range m {
+		for k := range m {
 			if !TPPValidKeys.has(k) {
 				return fmt.Errorf("illegal key '%s' in TPP section %s", k, s.Name())
 			}
@@ -191,7 +191,7 @@ func validateSection(s *ini.Section) error {
 		}
 	} else if m.has("cloud_apikey") {
 		// looks like Cloud config section
-		for k, _ := range m {
+		for k := range m {
 			if !CloudValidKeys.has(k) {
 				return fmt.Errorf("illegal key '%s' in Cloud section %s", k, s.Name())
 			}

@@ -130,14 +130,14 @@ func validateRevokeFlags() error {
 			revokeParams.tppURL != "" ||
 			revokeParams.tppUser != "" ||
 			revokeParams.tppPassword != "" ||
-			revokeParams.testMode == true {
+			revokeParams.testMode {
 			return fmt.Errorf("connection details cannot be specified with flags when -config is used")
 		}
 	} else {
 		if revokeParams.profile != "" {
 			return fmt.Errorf("-profile option cannot be used without -config option")
 		}
-		if revokeParams.testMode == false {
+		if !revokeParams.testMode {
 			if revokeParams.tppURL == "" {
 				return fmt.Errorf("missing required data for certificate revocation. Please check the help to see available command arguments")
 			} else {
