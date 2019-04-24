@@ -149,14 +149,14 @@ type urlResource string
 
 const (
 	urlResourceAuthorize           urlResource = "authorize/"
-	urlResourceCertificateRequest              = "certificates/request"
-	urlResourceCertificateRetrieve             = "certificates/retrieve"
-	urlResourceFindPolicy                      = "config/findpolicy"
-	urlResourceCertificateRevoke               = "certificates/revoke"
-	urlResourceCertificateRenew                = "certificates/renew"
-	urlResourceCertificateSearch               = "certificates/"
-	urlResourceCertificateImport               = "certificates/import"
-	urlResourceCertificatePolicy               = "certificates/checkpolicy"
+	urlResourceCertificateRequest  urlResource = "certificates/request"
+	urlResourceCertificateRetrieve urlResource = "certificates/retrieve"
+	urlResourceFindPolicy          urlResource = "config/findpolicy"
+	urlResourceCertificateRevoke   urlResource = "certificates/revoke"
+	urlResourceCertificateRenew    urlResource = "certificates/renew"
+	urlResourceCertificateSearch   urlResource = "certificates/"
+	urlResourceCertificateImport   urlResource = "certificates/import"
+	urlResourceCertificatePolicy   urlResource = "certificates/checkpolicy"
 )
 
 const (
@@ -206,7 +206,7 @@ func retrieveChainOptionFromString(order string) retrieveChainOption {
 	}
 }
 
-var baseUrlRegex = regexp.MustCompile("^https://[a-z\\d]+[-a-z\\d.]+[a-z\\d][:\\d]*/vedsdk/$")
+var baseUrlRegex = regexp.MustCompile(`^https://[a-z\d]+[-a-z\d.]+[a-z\d][:\d]*/vedsdk/$`)
 
 // SetBaseURL sets the base URL used to communicate with TPP
 func (c *Connector) SetBaseURL(url string) error {
@@ -339,9 +339,9 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 
 func getPolicyDN(zone string) string {
 	modified := zone
-	reg := regexp.MustCompile("^\\\\VED\\\\Policy")
+	reg := regexp.MustCompile(`^\\VED\\Policy`)
 	if reg.FindStringIndex(modified) == nil {
-		reg = regexp.MustCompile("^\\\\")
+		reg = regexp.MustCompile(`^\\`)
 		if reg.FindStringIndex(modified) == nil {
 			modified = "\\" + modified
 		}

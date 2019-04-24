@@ -110,7 +110,9 @@ func main() {
 
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tlsConfig
 
-	readPasswordsFromInputFlags(co, cf)
+	if err := readPasswordsFromInputFlags(co, cf); err != nil {
+		log.Fatal(err)
+	}
 
 	if co == commandGenCSR {
 		doGenCSR(cf)
@@ -173,7 +175,7 @@ func main() {
 		}
 		logf("Successfully posted request for %s, will pick up by %s", requestedFor, cf.pickupID)
 
-		if cf.noPickup == true {
+		if cf.noPickup {
 			pcc, err = certificate.NewPEMCollection(nil, req.PrivateKey, []byte(cf.keyPassword))
 		} else {
 			req.PickupID = cf.pickupID
@@ -191,7 +193,10 @@ func main() {
 				// so nothing to do here
 			} else {
 				// otherwise private key can be taken from *req
-				pcc.AddPrivateKey(req.PrivateKey, []byte(cf.keyPassword))
+				err := pcc.AddPrivateKey(req.PrivateKey, []byte(cf.keyPassword))
+				if err != nil {
+					log.Fatal(err)
+				}
 			}
 		}
 
@@ -338,7 +343,7 @@ func main() {
 		}
 		logf("Successfully posted renewal request for %s, will pick up by %s", requestedFor, cf.pickupID)
 
-		if cf.noPickup == true {
+		if cf.noPickup {
 			pcc, err = certificate.NewPEMCollection(nil, req.PrivateKey, []byte(cf.keyPassword))
 		} else {
 			req.PickupID = cf.pickupID

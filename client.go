@@ -55,7 +55,10 @@ func NewClient(cfg *Config) (endpoint.Connector, error) {
 	}
 
 	if cfg.BaseUrl != "" {
-		connector.SetBaseURL(cfg.BaseUrl)
+		err = connector.SetBaseURL(cfg.BaseUrl)
+		if err != nil {
+			return nil, err
+		}
 	}
 	connector.SetZone(cfg.Zone)
 

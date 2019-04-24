@@ -143,7 +143,7 @@ func (col *PEMCollection) AddPrivateKey(privateKey interface{}, privateKeyPasswo
 	}
 	var p *pem.Block
 	var err error
-	if privateKeyPassword != nil && len(privateKeyPassword) > 0 {
+	if len(privateKeyPassword) > 0 {
 		p, err = GetEncryptedPrivateKeyPEMBock(privateKey, privateKeyPassword)
 	} else {
 		p, err = GetPrivateKeyPEMBock(privateKey)

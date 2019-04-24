@@ -59,10 +59,10 @@ func wrapArgumentDescriptionText(text string) string {
 
 	if word.Len() == 0 {
 		if current+space.Len() <= limit {
-			space.WriteTo(buf)
+			_, _ = space.WriteTo(buf)
 		}
 	} else {
-		space.WriteTo(buf)
+		_, _ = space.WriteTo(buf)
 		word.WriteTo(buf)
 	}
 

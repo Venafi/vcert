@@ -99,7 +99,7 @@ func main() {
 	//
 	// 1.5. (optional) add certificate's private key to PEM collection
 	//
-	pcc.AddPrivateKey(enrollReq.PrivateKey, []byte(enrollReq.KeyPassword))
+	_ = pcc.AddPrivateKey(enrollReq.PrivateKey, []byte(enrollReq.KeyPassword))
 
 	t.Printf("Successfully picked up certificate for %s", commonName)
 	pp(pcc)

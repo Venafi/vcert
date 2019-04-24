@@ -189,7 +189,7 @@ func retrieveCertificate(connector endpoint.Connector, req *certificate.Request,
 			} else {
 				return nil, err
 			}
-		} else if certificates == nil && err == nil {
+		} else if certificates == nil {
 			return nil, fmt.Errorf("fail: certificate is not returned by remote, while error is nil")
 		} else {
 			return certificates, nil
@@ -205,7 +205,7 @@ func retrieveCertificateNew(connector endpoint.Connector, req *certificate.Reque
 	if err != nil {
 		return nil, err
 	}
-	if certificates == nil && err == nil {
+	if certificates == nil {
 		return nil, fmt.Errorf("fail: certificate is not returned by remote, while error is nil")
 	}
 	return certificates, nil
@@ -218,7 +218,7 @@ func getEmailForRegistration(writer *bufio.Writer, reader *bufio.Reader) (string
 	if err != nil {
 		return "", err
 	}
-	if line == nil || len(line) == 0 {
+	if len(line) == 0 {
 		return "", fmt.Errorf("Email is required for registration")
 	}
 	return string(line), nil
@@ -253,8 +253,5 @@ func doValuesMatch(value1 []byte, value2 []byte) bool {
 
 func isValidEmailAddress(email string) bool {
 	reg := regexp.MustCompile(emailRegex)
-	if reg.FindStringIndex(email) != nil {
-		return true
-	}
-	return false
+	return reg.FindStringIndex(email) != nil
 }
