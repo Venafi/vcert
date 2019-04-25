@@ -10,7 +10,7 @@ Feature: enrolling certificates with -csr option (VEN-40652)
   Scenario Outline: when it returns an error if both -cn and -csr file: options are used
     When I enroll a certificate in <endpoint> with -cn vdidev.example.com -csr file:csr.pem
     Then the exit status should not be 0
-    And the output should contain "The '-cn' cannot be used in -csr file: provided mode"
+    And the output should contain "The '-cn' option cannot be used in -csr file: provided mode"
     Examples:
     | endpoint  |
     | test-mode |

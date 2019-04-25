@@ -69,7 +69,7 @@ type Certificate struct {
 	ManagedCertificateId string   `json:"managedCertificateId"`
 	CertificateRequestId string   `json:"certificateRequestId"`
 	SubjectCN            []string `json:"subjectCN"`
-	/*...and many more fields... */
+	/* ... and many more fields ... */
 }
 
 func ParseCertificateSearchResponse(httpStatusCode int, body []byte) (searchResult *CertificateSearchResponse, err error) {

@@ -23,17 +23,22 @@ import (
 	"encoding/hex"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/pkg/certificate"
-	"github.com/Venafi/vcert/pkg/endpoint"
 	"io"
 	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/Venafi/vcert/pkg/certificate"
+	"github.com/Venafi/vcert/pkg/endpoint"
 )
 
+// fillCertificateRequest populates the certificate request payload with values from command flags
 func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certificate.Request {
+	if cf.caDN != "" {
+		req.CADN = cf.caDN
+	}
 	if cf.friendlyName != "" {
 		req.FriendlyName = cf.friendlyName
 	}
@@ -99,7 +104,6 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 }
 
 func generateRenewalRequest(cf *commandFlags, certReq *certificate.Request) *certificate.RenewalRequest {
-
 	req := &certificate.RenewalRequest{}
 
 	req.Thumbprint = cf.thumbprint
@@ -116,7 +120,7 @@ func readThumbprintFromFile(fname string) (string, error) {
 		return "", err
 	}
 
-	// check if it's thumbprint in the file
+	// check if there's a thumbprint in the file
 	s := strings.TrimSpace(string(bytes))
 	s = strings.Replace(s, ":", "", -1)
 	s = strings.ToUpper(s)
@@ -125,7 +129,7 @@ func readThumbprintFromFile(fname string) (string, error) {
 		return s, nil
 	}
 
-	// check if there is PEM certificate in the file
+	// check if there's a PEM certificate in the file
 	var block *pem.Block
 	var rest []byte
 	for {
@@ -146,9 +150,9 @@ func readThumbprintFromFile(fname string) (string, error) {
 		}
 		fp := sha1.Sum(cert.Raw)
 		return strings.ToUpper(hex.EncodeToString(fp[:])), nil
-	} else {
-		return "", fmt.Errorf("failed to parse file %s", fname)
 	}
+
+	return "", fmt.Errorf("failed to parse file %s", fname)
 }
 
 func readCSRfromFile(fileName string) ([]byte, error) {
@@ -193,8 +197,8 @@ func retrieveCertificate(connector endpoint.Connector, req *certificate.Request,
 	}
 }
 
-// TODO: this one utilizes req.Timeout feature that is added to connector.RetrieveCertificate()
-// TODO: ..however, it cannot do logging in CLI context right now -- logger.Printf("Issuance of certificate is pending...")
+/* TODO: This one utilizes req.Timeout feature that is added to connector.RetrieveCertificate(), but
+it cannot do logging in CLI context right now -- logger.Printf("Issuance of certificate is pending ...") */
 func retrieveCertificateNew(connector endpoint.Connector, req *certificate.Request, timeout time.Duration) (certificates *certificate.PEMCollection, err error) {
 	req.Timeout = timeout
 	certificates, err = connector.RetrieveCertificate(req)

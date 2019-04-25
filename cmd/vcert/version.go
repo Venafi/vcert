@@ -18,10 +18,14 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/Venafi/vcert"
 )
 
+// UtilityName is the full name of the command-line utility
 const UtilityName string = "Venafi Certificate Utility"
+
+// UtilityShortName is the short name of the command-line utility
 const UtilityShortName string = "vCert"
 
 var (
@@ -32,7 +36,7 @@ func printVersion() {
 	fmt.Printf("%s\n", GetFormattedVersionString())
 }
 
-//GetFormattedVersionString gets a friendly printable string to represent the version
+// GetFormattedVersionString gets a friendly, printable string to represent the version
 func GetFormattedVersionString() string {
 	return vcert.GetFormattedVersionString()
 }

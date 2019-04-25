@@ -27,7 +27,7 @@ Feature: renew action returns error if incorrect options are used
       And it should write Pickup ID to the file "p.txt"
       And it should write certificate to the file named "c.pem"
     When I renew the certificate in TPP with -no-prompt -no-pickup -id file:p.txt -thumbprint file:c.pem
-    Then it should fail with "-id and -thumbprint cannot be used both at the same time"
+    Then it should fail with "-id and -thumbprint cannot be used at the same time"
 
 
 
