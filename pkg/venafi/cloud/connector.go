@@ -149,6 +149,9 @@ func (c *Connector) ReadZoneConfiguration(zone string) (config *endpoint.ZoneCon
 	if err != nil {
 		return nil, err
 	}
+	if z.CertificateIssuingTemplateId == "" {
+		return nil, fmt.Errorf("Empty certificateTemplateID in zone. May be it`s old type zone.")
+	}
 	t, err := c.getTemplateByID(z.CertificateIssuingTemplateId)
 	if err != nil {
 		return
@@ -441,6 +444,9 @@ func (c *Connector) getZoneByTag(tag string) (*zone, error) {
 }
 
 func (c *Connector) getTemplateByID(id string) (*certificateTemplate, error) {
+	if id == "" {
+		return nil, fmt.Errorf("Empty template id")
+	}
 	url := c.getURL(urlResourceTemplate)
 	url = fmt.Sprintf(url, id)
 	statusCode, status, body, err := c.request("GET", url, nil)
