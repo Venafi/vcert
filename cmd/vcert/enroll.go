@@ -255,7 +255,7 @@ func validateEnrollmentFlags() error {
 	}
 
 	if enrollParams.format == "pkcs12" {
-		if enrollParams.file == "" {
+		if enrollParams.file == "" && enrollParams.csrOption != "service" {
 			return fmt.Errorf("PKCS#12 format can only be used if all objects are written to one file (see -file option)")
 		}
 		if enrollParams.certFile != "" || enrollParams.chainFile != "" || enrollParams.keyFile != "" {

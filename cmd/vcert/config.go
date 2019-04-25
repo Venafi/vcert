@@ -91,7 +91,7 @@ func buildConfig(cf *commandFlags) (*vcert.Config, error) {
 		cfg.Zone = cf.zone
 	}
 
-	if cfg.Zone == "" && cfg.ConnectorType != endpoint.ConnectorTypeFake {
+	if cfg.Zone == "" && cfg.ConnectorType != endpoint.ConnectorTypeFake && !(cf.pickupID != "" || cf.pickupIDFile != "") {
 		return nil, fmt.Errorf("Zone cannot be empty. Use -z option")
 	}
 
