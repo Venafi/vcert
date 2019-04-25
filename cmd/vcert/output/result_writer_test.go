@@ -17,8 +17,9 @@
 package output
 
 import (
-	"github.com/Venafi/vcert/pkg/certificate"
 	"testing"
+
+	"github.com/Venafi/vcert/pkg/certificate"
 )
 
 var (
@@ -102,9 +103,9 @@ lriDCQa4FOwP9/x1OJRXEsSl5YFqBppX5A==
 func TestPKCS12withEncPK(t *testing.T) {
 	result := &Result{
 		&certificate.PEMCollection{
-			cert,
-			encPK,
-			chain,
+			Certificate: cert,
+			PrivateKey:  encPK,
+			Chain:       chain,
 		},
 		"==pickup-id==",
 		&Config{
@@ -129,9 +130,9 @@ func TestPKCS12withEncPK(t *testing.T) {
 func TestPKCS12withPlainPK(t *testing.T) {
 	result := &Result{
 		&certificate.PEMCollection{
-			cert,
-			PK,
-			chain,
+			Certificate: cert,
+			PrivateKey:  PK,
+			Chain:       chain,
 		},
 		"==pickup-id==",
 		&Config{
@@ -156,9 +157,9 @@ func TestPKCS12withPlainPK(t *testing.T) {
 func TestPKCS12withPlainEcPK(t *testing.T) {
 	result := &Result{
 		&certificate.PEMCollection{
-			cert,
-			ec,
-			chain,
+			Certificate: cert,
+			PrivateKey:  ec,
+			Chain:       chain,
 		},
 		"==pickup-id==",
 		&Config{

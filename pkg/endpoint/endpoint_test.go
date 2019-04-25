@@ -43,19 +43,6 @@ func TestUpdateRequestSubject(t *testing.T) {
 
 	z.UpdateCertificateRequest(&req)
 
-	if !strings.EqualFold(req.Subject.Organization[0], z.Organization) {
-		t.Fatalf("Updated request did not contain the expected Organization: '%s' -- Actual Organization: '%s'", z.Organization, req.Subject.Organization[0])
-	}
-	if !strings.EqualFold(req.Subject.Country[0], z.Country) {
-		t.Fatalf("Updated request did not contain the expected Country: %s -- Actual Country %s", z.Country, req.Subject.Country[0])
-	}
-	if !strings.EqualFold(req.Subject.Province[0], z.Province) {
-		t.Fatalf("Updated request did not contain the expected Province: %s -- Actual Province %s", z.Province, req.Subject.Province[0])
-	}
-	if !strings.EqualFold(req.Subject.Locality[0], z.Locality) {
-		t.Fatalf("Updated request did not contain the expected Locality: %s -- Actual Locality %s", z.Locality, req.Subject.Locality[0])
-	}
-
 	sort.Strings(req.Subject.OrganizationalUnit)
 	for _, val := range z.OrganizationalUnit {
 		if sort.SearchStrings(req.Subject.OrganizationalUnit, val) >= len(req.Subject.OrganizationalUnit) {

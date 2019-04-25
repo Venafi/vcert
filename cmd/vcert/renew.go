@@ -18,9 +18,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/Venafi/vcert"
 	"os"
 	"strings"
+
+	"github.com/Venafi/vcert"
 )
 
 func setupRenewCommandFlags() {
@@ -34,7 +35,6 @@ func setupRenewCommandFlags() {
 	renewFlags.Var(&renewParams.keyCurve, "key-curve", "")
 	renewFlags.Var(&renewParams.keyType, "key-type", "")
 	renewFlags.IntVar(&renewParams.keySize, "key-size", 0, "")
-
 	renewFlags.StringVar(&renewParams.commonName, "cn", "", "")
 	renewFlags.StringVar(&renewParams.org, "o", "", "")
 	renewFlags.StringVar(&renewParams.state, "st", "", "")
@@ -57,13 +57,15 @@ func setupRenewCommandFlags() {
 	renewFlags.IntVar(&renewParams.testModeDelay, "test-mode-delay", 15, "")
 	renewFlags.StringVar(&renewParams.csrOption, "csr", "", "")
 	renewFlags.StringVar(&renewParams.keyPassword, "key-password", "", "")
-	renewFlags.StringVar(&renewParams.pickupIdFile, "pickup-id-file", "", "")
+	renewFlags.StringVar(&renewParams.pickupIDFile, "pickup-id-file", "", "")
 	renewFlags.IntVar(&renewParams.timeout, "timeout", 180, "")
 	renewFlags.BoolVar(&renewParams.insecure, "insecure", false, "")
 	renewFlags.StringVar(&renewParams.distinguishedName, "id", "", "")
 	renewFlags.StringVar(&renewParams.thumbprint, "thumbprint", "", "")
 	renewFlags.StringVar(&renewParams.config, "config", "", "")
 	renewFlags.StringVar(&renewParams.profile, "profile", "", "")
+	renewFlags.StringVar(&enrollParams.clientP12, "client-pkcs12", "", "")
+	renewFlags.StringVar(&enrollParams.clientP12PW, "client-pkcs12-pw", "", "")
 
 	renewFlags.Usage = func() {
 		fmt.Printf("%s\n", vcert.GetFormattedVersionString())
@@ -73,11 +75,11 @@ func setupRenewCommandFlags() {
 
 func showRenewUsage() {
 	fmt.Printf("Renew Usage:\n")
-	fmt.Printf("  %s renew <Required><Required Venafi Cloud> OR < Required Trust Protection Platform><Options>\n", os.Args[0])
+	fmt.Printf("  %s renew <Required Venafi Cloud Config> OR <Required Trust Protection Platform Config> <Options>\n", os.Args[0])
 	fmt.Printf("  %s renew -k <api key> -id <certificate DN>\n", os.Args[0])
 	fmt.Printf("  %s renew -k <api key> -thumbprint <certificate SHA1 fingerprint>\n", os.Args[0])
 
-	fmt.Printf("\nRequired: for both Venafi Cloud and Trust Protection Platform\n")
+	fmt.Printf("\nRequired for both Venafi Cloud and Trust Protection Platform:\n")
 	fmt.Println("  -id")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the ID of the certificate to renew. Required unless -thumbprint is specified."))
 	fmt.Println("  -thumbprint")
@@ -100,6 +102,10 @@ func showRenewUsage() {
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to include the certificate chain in the output, and to specify where to place it in the file. By default, it is placed last. Options include: ignore | root-first | root-last"))
 	fmt.Println("  -file")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a file name and a location where the resulting file should be written. If this option is used the key, certificate, and chain will be written to the same file. Example: /tmp/newcert.pem"))
+	fmt.Println("  -client-pkcs12")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a client PKCS#12 archive for mutual TLS."))
+	fmt.Println("  -client-pkcs12-pw")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the password for a client PKCS#12 archive. Use in combination with -client-pkcs12 option."))
 
 	fmt.Println("  -config")
 	fmt.Printf("\t%s\n", ("Use to specify INI configuration file containing connection details\n" +
@@ -157,17 +163,16 @@ func showRenewUsage() {
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Time to wait for certificate to be processed at the service side. In seconds (default 180)."))
 	fmt.Println("  -h")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to show the help text."))
-	fmt.Println()
 
-	fmt.Printf("\nOptions for Trust Protection Platform:\n")
+	fmt.Printf("\nAdditional Options for Trust Protection Platform:\n")
 	fmt.Println("  -key-type")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a key type. Options include: rsa (default) | ecdsa."))
 	fmt.Println("  -key-curve value")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the ECDSA key curve. Options include: p521 | p384 | p256 (default p521)."))
+	fmt.Println()
 }
 
 func validateRenewFlags() error {
-
 	if renewParams.config != "" {
 		if renewParams.apiKey != "" ||
 			renewParams.cloudURL != "" ||
@@ -183,9 +188,9 @@ func validateRenewFlags() error {
 		}
 		if !renewParams.testMode {
 			if renewParams.tppURL == "" {
-				// should be SaaS service
+				// should be SaaS endpoint
 				if renewParams.apiKey == "" {
-					return fmt.Errorf("An APIKey is required for enrollment")
+					return fmt.Errorf("An API key is required for renewal with Venafi Cloud")
 				}
 			} else {
 				// should be TPP service
@@ -195,6 +200,11 @@ func validateRenewFlags() error {
 				if renewParams.noPrompt && renewParams.tppPassword == "" {
 					return fmt.Errorf("A password is required for communicating with Trust Protection Platform")
 				}
+
+				// mutual TLS with TPP service
+				if enrollParams.clientP12 == "" && enrollParams.clientP12PW != "" {
+					return fmt.Errorf("-client-pkcs12-pw can only be specified in combination with -client-pkcs12")
+				}
 			}
 		}
 	}
@@ -202,15 +212,12 @@ func validateRenewFlags() error {
 	if renewParams.tppURL == "" && renewParams.apiKey == "" && !renewParams.testMode && renewParams.config == "" {
 		return fmt.Errorf("Missing required data for certificate renewal. Please check the help to see available command arguments")
 	}
-
 	if renewParams.distinguishedName == "" && renewParams.thumbprint == "" {
 		return fmt.Errorf("-id or -thumbprint required to identify the certificate to renew")
 	}
-
 	if renewParams.distinguishedName != "" && renewParams.thumbprint != "" {
-		return fmt.Errorf("-id and -thumbprint cannot be used both at the same time")
+		return fmt.Errorf("-id and -thumbprint cannot be used at the same time")
 	}
-
 	if (renewParams.file != "") && (renewParams.certFile != "" || renewParams.chainFile != "" || renewParams.keyFile != "") {
 		return fmt.Errorf("The '-file' cannot be used used with any other -*-file flags. Either all data goes into one file or individual files must be specified using the appropriate flags")
 	}
@@ -277,5 +284,6 @@ func validateRenewFlags() error {
 			return fmt.Errorf(`PKCS#12 format is not allowed for the enroll or renew actions when -csr is "local" and -no-pickup is specified`)
 		}
 	}
+
 	return nil
 }

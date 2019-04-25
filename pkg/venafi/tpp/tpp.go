@@ -23,14 +23,15 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/Venafi/vcert/pkg/certificate"
-	"github.com/Venafi/vcert/pkg/endpoint"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"regexp"
 	"strings"
+
+	"github.com/Venafi/vcert/pkg/certificate"
+	"github.com/Venafi/vcert/pkg/endpoint"
 )
 
 const defaultKeySize = 2048
@@ -76,7 +77,7 @@ type certificateRetrieveResponse struct {
 
 type RevocationReason int
 
-// this maps *certificate.RevocationRequest.Reason to TPP-specific webSDK codes
+// RevocationReasonsMap maps *certificate.RevocationRequest.Reason to TPP-specific webSDK codes
 var RevocationReasonsMap = map[string]RevocationReason{
 	"":                       0, // NoReason
 	"none":                   0, //
@@ -293,7 +294,7 @@ func (c *Connector) getHTTPClient() *http.Client {
 	return http.DefaultClient
 }
 
-//GenerateRequest creates a new certificate request, based on the zone/policy configuration and the user data
+// GenerateRequest creates a new certificate request, based on the zone/policy configuration and the user data
 func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *certificate.Request) (err error) {
 	if config == nil {
 		config, err = c.ReadZoneConfiguration(c.zone)

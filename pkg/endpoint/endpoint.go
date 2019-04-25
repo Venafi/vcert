@@ -19,11 +19,11 @@ package endpoint
 import (
 	"crypto/x509"
 	"fmt"
-	"github.com/Venafi/vcert/pkg/certificate"
 	"log"
 	"regexp"
 	"sort"
-	"strings"
+
+	"github.com/Venafi/vcert/pkg/certificate"
 )
 
 // ConnectorType represents the available connectors
@@ -246,31 +246,24 @@ func isComponentValid(regexes []string, component []string) bool {
 func (z *ZoneConfiguration) UpdateCertificateRequest(request *certificate.Request) {
 	if len(request.Subject.Organization) == 0 && z.Organization != "" {
 		request.Subject.Organization = []string{z.Organization}
-	} else if len(request.Subject.Organization) > 0 && !strings.EqualFold(request.Subject.Organization[0], z.Organization) {
-		request.Subject.Organization = []string{z.Organization}
-
 	}
+
 	if len(request.Subject.OrganizationalUnit) == 0 && z.OrganizationalUnit != nil {
 		request.Subject.OrganizationalUnit = z.OrganizationalUnit
 	}
 
 	if len(request.Subject.Country) == 0 && z.Country != "" {
 		request.Subject.Country = []string{z.Country}
-	} else if len(request.Subject.Country) > 0 && !strings.EqualFold(request.Subject.Country[0], z.Country) {
-		request.Subject.Country = []string{z.Country}
-
 	}
+
 	if len(request.Subject.Province) == 0 && z.Province != "" {
 		request.Subject.Province = []string{z.Province}
-	} else if len(request.Subject.Province) > 0 && !strings.EqualFold(request.Subject.Province[0], z.Province) {
-		request.Subject.Province = []string{z.Province}
 	}
+
 	if len(request.Subject.Locality) == 0 && z.Locality != "" {
 		request.Subject.Locality = []string{z.Locality}
-	} else if len(request.Subject.Locality) > 0 && !strings.EqualFold(request.Subject.Locality[0], z.Locality) {
-		request.Subject.Locality = []string{z.Locality}
-
 	}
+
 	if z.HashAlgorithm != x509.UnknownSignatureAlgorithm {
 		request.SignatureAlgorithm = z.HashAlgorithm
 	} else {

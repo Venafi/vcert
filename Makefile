@@ -37,7 +37,7 @@ tpp_test: get
 		-tpp-url       "${VCERT_TPP_URL}"      \
 		-tpp-user      "${VCERT_TPP_USER}"     \
 		-tpp-password  "${VCERT_TPP_PASSWORD}" \
-		-tpp-zone      "${VCERT_TPP_ZONE}"                       
+		-tpp-zone      "${VCERT_TPP_ZONE}"
 
 cloud_test: get
 	go test -v $(GOFLAGS) ./pkg/venafi/cloud   \

@@ -8,7 +8,7 @@ Feature: certificate revocation
 
   Scenario: revoking certificate using empty -id
     Then I revoke the certificate from TPP
-    Then the output should contain "certificate DN or Thumbprint is required to revoke the certificate"
+    Then the output should contain "Certificate DN or Thumbprint is required to revoke the certificate"
 
   Scenario: revoking certificate that does not exist
     When I revoke the certificate from TPP with -id xxx
