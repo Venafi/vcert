@@ -22,8 +22,14 @@ When(/^I enroll(?: a)?( random)? certificate (?:in|from|using) (\S+) with (.+)?$
   end
 end
 
+#I retreive the certificate from TPP using the same PickupID interactively
+When(/^I retrieve(?: the) certificate (?:in|from|using) (\S+) using (the same Pickup ID)(?: with)?(.+)?(interactively)$/) do |endpoint, same_pickup_id, flags|
+  cmd = "vcert pickup #{ENDPOINTS[endpoint]} -pickup-id '#{@pickup_id}'#{flags}"
+  steps %{Then I try to run `#{cmd}` interactively}
+end
+
 #I retreive the certificate from TPP using the same PickupID
-When(/^I retrieve(?: the) certificate (?:in|from|using) (\S+) using (the same Pickup ID)(?: with)?(.+)?$/) do |endpoint, same_pickup_id, flags|
+When(/^I retrieve(?: the) certificate (?:in|from|using) (\S+) using (the same Pickup ID)(?: with)?(.+)?(?!interactively)$/) do |endpoint, same_pickup_id, flags|
   cmd = "vcert pickup #{ENDPOINTS[endpoint]} -pickup-id '#{@pickup_id}'#{flags}"
   steps %{Then I try to run `#{cmd}`}
 end
