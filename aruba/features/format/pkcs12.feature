@@ -103,7 +103,7 @@ Feature: PKCS#12 format output
 
   Scenario Outline: Pickup PKCS12 with typing pass phrases
     When I enroll random certificate using <endpoint> with -no-prompt -no-pickup -csr service
-    And I retrieve the certificate using <endpoint> using the same Pickup ID with -timeout 99 -file all.p12 -format pkcs12 interactively
+    And I interactively retrieve the certificate using <endpoint> using the same Pickup ID with -timeout 99 -file all.p12 -format pkcs12
     And I type "newPassw0rd!"
     And I type "newPassw0rd!"
     Then the exit status should be 0
