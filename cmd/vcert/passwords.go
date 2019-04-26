@@ -48,7 +48,7 @@ func readPasswordsFromInputFlags(co command, cf *commandFlags) error {
 		}
 	}
 
-	if co == commandEnroll || co == commandGenCSR || co == commandRenew {
+	if co == commandEnroll || co == commandGenCSR || co == commandRenew || co == commandPickup && cf.format == "pkcs12" {
 		var keyPasswordNotNeeded = false
 
 		keyPasswordNotNeeded = keyPasswordNotNeeded || (cf.csrOption == "service" && cf.noPickup)
