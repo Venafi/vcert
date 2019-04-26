@@ -47,7 +47,7 @@ type certificateTemplate struct {
 	SubjectOURegexes       []string         `json:"subjectOURegexes,omitempty"`
 	SubjectSTRegexes       []string         `json:"subjectSTRegexes,omitempty"`
 	SubjectLRegexes        []string         `json:"subjectLRegexes,omitempty"`
-	SubjectCRegexes        []string         `json:"subjectCValues,omitempty"`
+	SubjectCValues         []string         `json:"subjectCValues,omitempty"`
 	SANRegexes             []string         `json:"sanRegexes,omitempty"`
 	KeyTypes               []allowedKeyType `json:"keyTypes,omitempty"`
 	KeyReuse               bool             `json:"keyReuse,omitempty"`
@@ -76,9 +76,12 @@ func (ct certificateTemplate) toPolicy() (p endpoint.Policy) {
 		}
 		return a
 	}
+	if len(ct.SubjectCValues) == 0 {
+		ct.SubjectCValues = []string{".*"}
+	}
 	p.SubjectCNRegexes = addStartEndToArray(ct.SubjectCNRegexes)
 	p.SubjectOURegexes = addStartEndToArray(ct.SubjectOURegexes)
-	p.SubjectCRegexes = addStartEndToArray(ct.SubjectCRegexes)
+	p.SubjectCRegexes = addStartEndToArray(ct.SubjectCValues)
 	p.SubjectSTRegexes = addStartEndToArray(ct.SubjectSTRegexes)
 	p.SubjectLRegexes = addStartEndToArray(ct.SubjectLRegexes)
 	p.SubjectORegexes = addStartEndToArray(ct.SubjectORegexes)
@@ -117,8 +120,8 @@ func isNotRegexp(s string) bool {
 	return true
 }
 func (ct certificateTemplate) toZoneConfig(zc *endpoint.ZoneConfiguration) {
-	if len(ct.SubjectCRegexes) > 0 && isNotRegexp(ct.SubjectCRegexes[0]) {
-		zc.Country = ct.SubjectCRegexes[0]
+	if len(ct.SubjectCValues) > 0 && isNotRegexp(ct.SubjectCValues[0]) {
+		zc.Country = ct.SubjectCValues[0]
 	}
 	if len(ct.SubjectORegexes) > 0 && isNotRegexp(ct.SubjectORegexes[0]) {
 		zc.Organization = ct.SubjectORegexes[0]
