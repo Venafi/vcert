@@ -188,8 +188,8 @@ func validateEnrollmentFlags() error {
 			enrollParams.tppURL != "" ||
 			enrollParams.tppUser != "" ||
 			enrollParams.tppPassword != "" ||
-			enrollParams.testMode == true {
-			return fmt.Errorf("Connection details cannot be specified with flags when -config is used")
+			enrollParams.testMode {
+			return fmt.Errorf("connection details cannot be specified with flags when -config is used")
 		}
 	} else {
 		if enrollParams.profile != "" {

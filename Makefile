@@ -61,3 +61,6 @@ collect_artifacts:
 	mv bin/windows/vcert.exe artifcats/vcert-$(VERSION)_windows.exe
 	mv bin/windows/vcert86.exe artifcats/vcert-$(VERSION)_windows86.exe
 	cd artifcats; sha1sum * > hashsums.sha1
+
+linter:
+	golangci-lint run
