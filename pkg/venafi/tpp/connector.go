@@ -341,7 +341,7 @@ func (c *Connector) ReadZoneConfiguration(zone string) (config *endpoint.ZoneCon
 		Policy serverPolicy
 	}
 	if statusCode != http.StatusOK {
-		return nil, fmt.Errorf("Invalid status: %s", status)
+		return nil, fmt.Errorf("Invalid status: %s Server response: %s", status, string(body))
 	}
 	err = json.Unmarshal(body, &r)
 	p := r.Policy.toPolicy()
