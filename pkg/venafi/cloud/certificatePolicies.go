@@ -52,7 +52,7 @@ type certificatePolicyType string
 
 const (
 	certificatePolicyTypeIdentity certificatePolicyType = "CERTIFICATE_IDENTITY"
-	certificatePolicyTypeUse                            = "CERTIFICATE_USE"
+	certificatePolicyTypeUse      certificatePolicyType = "CERTIFICATE_USE"
 )
 
 type keyType string
@@ -133,16 +133,6 @@ func (cp certificatePolicy) toZoneConfig(zc *endpoint.ZoneConfiguration) {
 		}
 	}
 }
-
-const (
-	keyTypeRSA        keyType = "RSA"
-	keyTypeDSA                = "DSA"
-	keyTypeEC                 = "EC"
-	keyTypeGost3410           = "GOST3410"
-	keyTypeECGost3410         = "ECGOST3410"
-	keyTypeReserved3          = "RESERVED3"
-	keyTypeUnknown            = "UNKNOWN"
-)
 
 /*
 "signatureAlgorithm":{"type":"string","enum":["MD2_WITH_RSA_ENCRYPTION","MD5_WITH_RSA_ENCRYPTION","SHA1_WITH_RSA_ENCRYPTION","SHA1_WITH_RSA_ENCRYPTION2","SHA256_WITH_RSA_ENCRYPTION","SHA384_WITH_RSA_ENCRYPTION","SHA512_WITH_RSA_ENCRYPTION","ID_DSA_WITH_SHA1","dsaWithSHA1","EC_DSA_WITH_SHA1","EC_DSA_WITH_SHA224","EC_DSA_WITH_SHA256","EC_DSA_WITH_SHA384","EC_DSA_WITH_SHA512","UNKNOWN","SHA1_WITH_RSAandMGF1","GOST_R3411_94_WITH_GOST_R3410_2001","GOST_R3411_94_WITH_GOST_R3410_94"]},

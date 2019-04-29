@@ -20,10 +20,11 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"github.com/Venafi/vcert/pkg/certificate"
-	"github.com/Venafi/vcert/pkg/endpoint"
 	"net/http"
 	"time"
+
+	"github.com/Venafi/vcert/pkg/certificate"
+	"github.com/Venafi/vcert/pkg/endpoint"
 )
 
 // Connector contains the base data needed to communicate with a TPP Server
@@ -61,7 +62,7 @@ func (c *Connector) Ping() (err error) {
 	return
 }
 
-//Register does nothing for TPP
+// Register does nothing for TPP
 func (c *Connector) Register(email string) (err error) {
 	return nil
 }
@@ -114,6 +115,7 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 	case certificate.LocalGeneratedCSR, certificate.UserProvidedCSR:
 		tppReq = certificateRequest{
 			PolicyDN:                getPolicyDN(zone),
+			CADN:                    req.CADN,
 			PKCS10:                  string(req.CSR),
 			ObjectName:              req.FriendlyName,
 			DisableAutomaticRenewal: true}
@@ -121,6 +123,7 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 	case certificate.ServiceGeneratedCSR:
 		tppReq = certificateRequest{
 			PolicyDN:                getPolicyDN(zone),
+			CADN:                    req.CADN,
 			ObjectName:              req.FriendlyName,
 			Subject:                 req.Subject.CommonName, // TODO: there is some problem because Subject is not only CN
 			SubjectAltNames:         wrapAltNames(req),
@@ -144,7 +147,6 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 
 // RequestCertificate submits the CSR to TPP returning the DN of the requested Certificate
 func (c *Connector) RequestCertificate(req *certificate.Request, zone string) (requestID string, err error) {
-
 	if zone == "" {
 		zone = c.zone
 	}
@@ -291,6 +293,9 @@ func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (er
 		revReq.Disable,
 	}
 	statusCode, status, body, err := c.request("POST", urlResourceCertificateRevoke, r)
+	if err != nil {
+		return err
+	}
 	revokeResponse, err := parseRevokeResult(statusCode, status, body)
 	if err != nil {
 		return
@@ -342,6 +347,9 @@ func (c *Connector) ReadZoneConfiguration(zone string) (config *endpoint.ZoneCon
 		return nil, fmt.Errorf("Invalid status: %s", status)
 	}
 	err = json.Unmarshal(body, &r)
+	if err != nil {
+		return nil, err
+	}
 	p := r.Policy.toPolicy()
 	r.Policy.toZoneConfig(zoneConfig)
 	zoneConfig.Policy = p

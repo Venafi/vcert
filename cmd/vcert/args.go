@@ -19,10 +19,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/Venafi/vcert/pkg/certificate"
 	"io/ioutil"
 	"os"
 	"strings"
+
+	"github.com/Venafi/vcert/pkg/certificate"
 )
 
 type command int
@@ -65,6 +66,7 @@ type commandFlags struct {
 	apiKey             string
 	cloudURL           string
 	zone               string
+	caDN               string
 	csrOption          string
 	keyType            certificate.KeyType
 	keySize            int
@@ -97,11 +99,13 @@ type commandFlags struct {
 	testModeDelay      int
 	revocationReason   string
 	revocationNoRetire bool
-	pickupIdFile       string
+	pickupIDFile       string
 	timeout            int
 	insecure           bool
 	config             string
 	profile            string
+	clientP12          string
+	clientP12PW        string
 }
 
 func createFromCommandFlags(co command) *commandFlags {
@@ -145,7 +149,6 @@ func validateFlags(c command) error {
 }
 
 func parseArgs() (co command, cf *commandFlags, err error) {
-
 	if len(os.Args) <= 1 {
 		showvcertUsage()
 		exit(0)

@@ -23,16 +23,19 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"flag"
-	"github.com/Venafi/vcert"
-	"github.com/Venafi/vcert/cmd/vcert/output"
-	"github.com/Venafi/vcert/pkg/certificate"
-	"github.com/Venafi/vcert/pkg/endpoint"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	"golang.org/x/crypto/pkcs12"
+
+	"github.com/Venafi/vcert"
+	"github.com/Venafi/vcert/cmd/vcert/output"
+	"github.com/Venafi/vcert/pkg/certificate"
+	"github.com/Venafi/vcert/pkg/endpoint"
 )
 
 var (
@@ -53,26 +56,63 @@ func init() {
 }
 
 func main() {
-
 	defer func() {
 		if r := recover(); r != nil {
 			// logger.Fatalf() does immediately os.Exit(1)
 			// so we use logger.Panic() and do recover() here to hide stacktrace
 			// exit() is a function to decide what to do
 
-			exit(1)  // it's os.Exit() by default, but can be overridden,
+			exit(1)  // it's os.Exit() by default, but can be overridden
 			panic(r) // so that panic() bubbling continues (it's needed when we call main() from cli_test.go)
 
 		}
 	}()
 
 	co, cf, _ := parseArgs()
+	var tlsConfig tls.Config
 
 	if cf.insecure {
-		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		tlsConfig.InsecureSkipVerify = true
 	}
 
-	readPasswordsFromInputFlags(co, cf)
+	if cf.clientP12 != "" {
+		// Load client PKCS#12 archive
+		p12, err := ioutil.ReadFile(cf.clientP12)
+		if err != nil {
+			logger.Panicf("Error reading PKCS#12 archive file: %s", err)
+		}
+
+		blocks, err := pkcs12.ToPEM(p12, cf.clientP12PW)
+		if err != nil {
+			logger.Panicf("Error converting PKCS#12 archive file to PEM blocks: %s", err)
+		}
+
+		var pemData []byte
+		for _, b := range blocks {
+			pemData = append(pemData, pem.EncodeToMemory(b)...)
+		}
+
+		// Construct TLS certificate from PEM data
+		cert, err := tls.X509KeyPair(pemData, pemData)
+		if err != nil {
+			logger.Panicf("Error reading PEM data to build X.509 certificate: %s", err)
+		}
+
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(pemData)
+
+		// Setup HTTPS client
+		tlsConfig.Certificates = []tls.Certificate{cert}
+		tlsConfig.Renegotiation = tls.RenegotiateFreelyAsClient
+		tlsConfig.RootCAs = caCertPool
+		tlsConfig.BuildNameToCertificate()
+	}
+
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tlsConfig
+
+	if err := readPasswordsFromInputFlags(co, cf); err != nil {
+		log.Fatal(err)
+	}
 
 	if co == commandGenCSR {
 		doGenCSR(cf)
@@ -81,14 +121,14 @@ func main() {
 
 	cfg, err := buildConfig(cf)
 	if err != nil {
-		logger.Panicf("failed to build vcert config: %s", err)
+		logger.Panicf("Failed to build vcert config: %s", err)
 	}
 
 	if cf.zone == "" && cfg.Zone != "" {
 		cf.zone = cfg.Zone
 	}
 
-	connector, err := vcert.NewClient(cfg) // the rest requires endpoint connection
+	connector, err := vcert.NewClient(cfg) // Everything else requires an endpoint connection
 	if err != nil {
 		logf("Unable to connect to %s: %s", cfg.ConnectorType, err)
 	} else {
@@ -135,8 +175,11 @@ func main() {
 		}
 		logf("Successfully posted request for %s, will pick up by %s", requestedFor, cf.pickupID)
 
-		if cf.noPickup == true {
+		if cf.noPickup {
 			pcc, err = certificate.NewPEMCollection(nil, req.PrivateKey, []byte(cf.keyPassword))
+			if err != nil {
+				logger.Panicf("%s", err)
+			}
 		} else {
 			req.PickupID = cf.pickupID
 			req.ChainOption = certificate.ChainOptionFromString(cf.chainOption)
@@ -153,23 +196,26 @@ func main() {
 				// so nothing to do here
 			} else {
 				// otherwise private key can be taken from *req
-				pcc.AddPrivateKey(req.PrivateKey, []byte(cf.keyPassword))
+				err := pcc.AddPrivateKey(req.PrivateKey, []byte(cf.keyPassword))
+				if err != nil {
+					log.Fatal(err)
+				}
 			}
 		}
 
 		result := &output.Result{
-			pcc,
-			cf.pickupID,
-			&output.Config{
-				int(co),
-				cf.format,
-				certificate.ChainOptionFromString(cf.chainOption),
-				cf.file,
-				cf.keyFile,
-				cf.certFile,
-				cf.chainFile,
-				cf.pickupIdFile,
-				cf.keyPassword,
+			Pcc:      pcc,
+			PickupId: cf.pickupID,
+			Config: &output.Config{
+				Command:      int(co),
+				Format:       cf.format,
+				ChainOption:  certificate.ChainOptionFromString(cf.chainOption),
+				AllFile:      cf.file,
+				KeyFile:      cf.keyFile,
+				CertFile:     cf.certFile,
+				ChainFile:    cf.chainFile,
+				PickupIdFile: cf.pickupIDFile,
+				KeyPassword:  cf.keyPassword,
 			},
 		}
 		err = result.Flush()
@@ -181,8 +227,8 @@ func main() {
 	}
 
 	if co == commandPickup {
-		if cf.pickupIdFile != "" {
-			bytes, err := ioutil.ReadFile(cf.pickupIdFile)
+		if cf.pickupIDFile != "" {
+			bytes, err := ioutil.ReadFile(cf.pickupIDFile)
 			if err != nil {
 				logger.Panicf("Failed to read Pickup ID value: %s", err)
 			}
@@ -205,18 +251,18 @@ func main() {
 		logf("Successfully retrieved request for %s", cf.pickupID)
 
 		result := &output.Result{
-			pcc,
-			cf.pickupID,
-			&output.Config{
-				int(co),
-				cf.format,
-				certificate.ChainOptionFromString(cf.chainOption),
-				cf.file,
-				cf.keyFile,
-				cf.certFile,
-				cf.chainFile,
-				cf.pickupIdFile,
-				cf.keyPassword,
+			Pcc:      pcc,
+			PickupId: cf.pickupID,
+			Config: &output.Config{
+				Command:      int(co),
+				Format:       cf.format,
+				ChainOption:  certificate.ChainOptionFromString(cf.chainOption),
+				AllFile:      cf.file,
+				KeyFile:      cf.keyFile,
+				CertFile:     cf.certFile,
+				ChainFile:    cf.chainFile,
+				PickupIdFile: cf.pickupIDFile,
+				KeyPassword:  cf.keyPassword,
 			},
 		}
 		err = result.Flush()
@@ -260,7 +306,7 @@ func main() {
 		case "local" == cf.csrOption || "" == cf.csrOption:
 			// restore certificate request from old certificate
 			req = certificate.NewRequest(oldCert)
-			// override values with from command line flags
+			// override values with those from command line flags
 			req = fillCertificateRequest(req, cf)
 
 		case "service" == cf.csrOption:
@@ -300,8 +346,11 @@ func main() {
 		}
 		logf("Successfully posted renewal request for %s, will pick up by %s", requestedFor, cf.pickupID)
 
-		if cf.noPickup == true {
+		if cf.noPickup {
 			pcc, err = certificate.NewPEMCollection(nil, req.PrivateKey, []byte(cf.keyPassword))
+			if err != nil {
+				logger.Panicf("%s", err)
+			}
 		} else {
 			req.PickupID = cf.pickupID
 			req.ChainOption = certificate.ChainOptionFromString(cf.chainOption)
@@ -318,7 +367,10 @@ func main() {
 				// so nothing to do here
 			} else {
 				// otherwise private key can be taken from *req
-				pcc.AddPrivateKey(req.PrivateKey, []byte(cf.keyPassword))
+				err = pcc.AddPrivateKey(req.PrivateKey, []byte(cf.keyPassword))
+				if err != nil {
+					logger.Fatal(err)
+				}
 			}
 		}
 
@@ -336,18 +388,18 @@ func main() {
 		}
 
 		result := &output.Result{
-			pcc,
-			cf.pickupID,
-			&output.Config{
-				int(co),
-				cf.format,
-				certificate.ChainOptionFromString(cf.chainOption),
-				cf.file,
-				cf.keyFile,
-				cf.certFile,
-				cf.chainFile,
-				cf.pickupIdFile,
-				cf.keyPassword,
+			Pcc:      pcc,
+			PickupId: cf.pickupID,
+			Config: &output.Config{
+				Command:      int(co),
+				Format:       cf.format,
+				ChainOption:  certificate.ChainOptionFromString(cf.chainOption),
+				AllFile:      cf.file,
+				KeyFile:      cf.keyFile,
+				CertFile:     cf.certFile,
+				ChainFile:    cf.chainFile,
+				PickupIdFile: cf.pickupIDFile,
+				KeyPassword:  cf.keyPassword,
 			},
 		}
 		err = result.Flush()

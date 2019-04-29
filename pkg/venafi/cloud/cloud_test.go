@@ -281,9 +281,9 @@ func TestGetURL(t *testing.T) {
 		t.Fatalf("Get URL did not match expected value. Expected: %s Actual: %s", fmt.Sprintf("%s%s", expectedURL, urlResourceCertificateRequests), url)
 	}
 
-	url = condor.getURL(urlResourceCertificateRetrieve)
-	if !strings.EqualFold(url, fmt.Sprintf("%s%s", expectedURL, urlResourceCertificateRetrieve)) {
-		t.Fatalf("Get URL did not match expected value. Expected: %s Actual: %s", fmt.Sprintf("%s%s", expectedURL, urlResourceCertificateRetrieve), url)
+	url = condor.getURL(urlResourceCertificateRetrieveViaCSR)
+	if !strings.EqualFold(url, fmt.Sprintf("%s%s", expectedURL, urlResourceCertificateRetrieveViaCSR)) {
+		t.Fatalf("Get URL did not match expected value. Expected: %s Actual: %s", fmt.Sprintf("%s%s", expectedURL, urlResourceCertificateRetrieveViaCSR), url)
 	}
 	condor.baseURL = ""
 	url = condor.getURL(urlResourceUserAccounts)

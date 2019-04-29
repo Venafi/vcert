@@ -31,7 +31,7 @@ import (
 	"time"
 )
 
-//EllipticCurve represents the types of supported elliptic curves
+// EllipticCurve represents the types of supported elliptic curves
 type EllipticCurve int
 
 func (ec *EllipticCurve) String() string {
@@ -49,7 +49,7 @@ func (ec *EllipticCurve) String() string {
 	}
 }
 
-//Set the elliptic cuve value via a string
+// Set EllipticCurve value via a string
 func (ec *EllipticCurve) Set(value string) error {
 	switch strings.ToLower(value) {
 	case "p521":
@@ -68,13 +68,13 @@ func (ec *EllipticCurve) Set(value string) error {
 }
 
 const (
-	//EllipticCurveP521 represents the P521 curve
+	// EllipticCurveP521 represents the P521 curve
 	EllipticCurveP521 EllipticCurve = iota
-	//EllipticCurveP224 represents the P224 curve
+	// EllipticCurveP224 represents the P224 curve
 	EllipticCurveP224
-	//EllipticCurveP256 represents the P256 curve
+	// EllipticCurveP256 represents the P256 curve
 	EllipticCurveP256
-	//EllipticCurveP384 represents the P384 curve
+	// EllipticCurveP384 represents the P384 curve
 	EllipticCurveP384
 	EllipticCurveDefault = EllipticCurveP521
 
@@ -88,7 +88,7 @@ func AllSupportedKeySizes() []int {
 	return []int{512, 1024, 2048, 4096, 8192}
 }
 
-//KeyType represents the types of supported keys
+// KeyType represents the types of supported keys
 type KeyType int
 
 func (kt *KeyType) String() string {
@@ -112,7 +112,7 @@ func (kt *KeyType) X509Type() x509.PublicKeyAlgorithm {
 	return x509.UnknownPublicKeyAlgorithm
 }
 
-//Set the key type via a string
+// Set the key type via a string
 func (kt *KeyType) Set(value string) error {
 	switch strings.ToLower(value) {
 	case "rsa":
@@ -126,9 +126,9 @@ func (kt *KeyType) Set(value string) error {
 }
 
 const (
-	//KeyTypeRSA represents a key type of RSA
+	// KeyTypeRSA represents a key type of RSA
 	KeyTypeRSA KeyType = iota
-	//KeyTypeECDSA represents a key type of ECDSA
+	// KeyTypeECDSA represents a key type of ECDSA
 	KeyTypeECDSA
 )
 
@@ -143,9 +143,10 @@ const (
 	UserProvidedCSR
 )
 
-//Request contains data needed to generate a certificate request
-// CSR is pem encoded Certificate Signed Request
+// Request contains data needed to generate a certificate request
+// CSR is a PEM-encoded Certificate Signing Request
 type Request struct {
+	CADN               string
 	Subject            pkix.Name
 	DNSNames           []string
 	EmailAddresses     []string
@@ -157,17 +158,17 @@ type Request struct {
 	KeyType            KeyType
 	KeyLength          int
 	KeyCurve           EllipticCurve
-	CSR                []byte //should be pem encoded CSR
+	CSR                []byte // should be a PEM-encoded CSR
 	PrivateKey         crypto.Signer
 	CsrOrigin          CSrOriginOption
 	PickupID           string
 	ChainOption        ChainOption
 	KeyPassword        string
 	FetchPrivateKey    bool
-	Thumbprint         string /* this one is here because *Request is used in RetrieveCertificate(),
-	   it should be refactored so that RetrieveCertificate() uses
-	   some abstract search object, instead of *Request{PickupID} */
-	Timeout time.Duration
+	/*	Thumbprint is here because *Request is used in RetrieveCertificate().
+		Code should be refactored so that RetrieveCertificate() uses some abstract search object, instead of *Request{PickupID} */
+	Thumbprint string
+	Timeout    time.Duration
 }
 
 type RevocationRequest struct {
@@ -201,10 +202,9 @@ type ImportResponse struct {
 	PrivateKeyVaultId  int    `json:",omitempty"`
 }
 
-//GenerateRequest generates a certificate request
-//please use method Request.GenerateCSR()
-// todo: remove usage from all libraries
-//deprecated
+// GenerateRequest generates a certificate request
+// Please use method Request.GenerateCSR()
+// TODO: Remove usage from all libraries, deprecated
 func GenerateRequest(request *Request, privateKey crypto.Signer) error {
 	pk := request.PrivateKey
 	request.PrivateKey = privateKey
@@ -332,8 +332,8 @@ func PublicKey(priv crypto.Signer) crypto.PublicKey {
 	return publicKey(priv)
 }
 
-//GetPrivateKeyPEMBock gets the private key as a PEM data block
-func GetPrivateKeyPEMBock(key interface{}) (*pem.Block, error) { //todo: change to crypto.Signer type
+// GetPrivateKeyPEMBock gets the private key as a PEM data block
+func GetPrivateKeyPEMBock(key interface{}) (*pem.Block, error) { // TODO: Change to crypto.Signer type
 	switch k := key.(type) {
 	case *rsa.PrivateKey:
 		return &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(k)}, nil
@@ -348,8 +348,8 @@ func GetPrivateKeyPEMBock(key interface{}) (*pem.Block, error) { //todo: change 
 	}
 }
 
-//GetEncryptedPrivateKeyPEMBock gets the private key as an encrypted PEM data block
-func GetEncryptedPrivateKeyPEMBock(key interface{}, password []byte) (*pem.Block, error) { //todo: change to crypto.Signer type
+// GetEncryptedPrivateKeyPEMBock gets the private key as an encrypted PEM data block
+func GetEncryptedPrivateKeyPEMBock(key interface{}, password []byte) (*pem.Block, error) { // TODO: Change to crypto.Signer type
 	switch k := key.(type) {
 	case *rsa.PrivateKey:
 		return x509.EncryptPEMBlock(rand.Reader, "RSA PRIVATE KEY", x509.MarshalPKCS1PrivateKey(k), password, x509.PEMCipherAES256)
@@ -364,17 +364,17 @@ func GetEncryptedPrivateKeyPEMBock(key interface{}, password []byte) (*pem.Block
 	}
 }
 
-//GetCertificatePEMBlock gets the certificate as a PEM data block
+// GetCertificatePEMBlock gets the certificate as a PEM data block
 func GetCertificatePEMBlock(cert []byte) *pem.Block {
 	return &pem.Block{Type: "CERTIFICATE", Bytes: cert}
 }
 
-//GetCertificateRequestPEMBlock gets the certificate request as a PEM data block
+// GetCertificateRequestPEMBlock gets the certificate request as a PEM data block
 func GetCertificateRequestPEMBlock(request []byte) *pem.Block {
 	return &pem.Block{Type: "CERTIFICATE REQUEST", Bytes: request}
 }
 
-//GenerateECDSAPrivateKey generates a new ecdsa private key using the curve specified
+// GenerateECDSAPrivateKey generates a new ecdsa private key using the curve specified
 func GenerateECDSAPrivateKey(curve EllipticCurve) (*ecdsa.PrivateKey, error) {
 	var priv *ecdsa.PrivateKey
 	var c elliptic.Curve
@@ -399,7 +399,7 @@ func GenerateECDSAPrivateKey(curve EllipticCurve) (*ecdsa.PrivateKey, error) {
 	return priv, nil
 }
 
-//GenerateRSAPrivateKey generates a new rsa private key using the size specified
+// GenerateRSAPrivateKey generates a new rsa private key using the size specified
 func GenerateRSAPrivateKey(size int) (*rsa.PrivateKey, error) {
 	priv, err := rsa.GenerateKey(rand.Reader, size)
 	if err != nil {
@@ -412,8 +412,8 @@ func GenerateRSAPrivateKey(size int) (*rsa.PrivateKey, error) {
 // NewRequest duplicates new Request object based on issued certificate
 func NewRequest(cert *x509.Certificate) *Request {
 	req := &Request{}
-	// 1st fill with *cert content
 
+	// First populate with *cert content
 	req.Subject = cert.Subject
 	req.DNSNames = cert.DNSNames
 	req.EmailAddresses = cert.EmailAddresses
@@ -427,8 +427,8 @@ func NewRequest(cert *x509.Certificate) *Request {
 	case *ecdsa.PublicKey:
 		req.KeyType = KeyTypeECDSA
 		req.KeyLength = pub.Curve.Params().BitSize
-		// TODO: req.KeyCurve = pub.Curve.Params().Name...
-	default: // case *dsa.PublicKey:
+		// TODO: req.KeyCurve = pub.Curve.Params().Name ...
+	default: // case *dsa.PublicKey
 		// vcert only works with RSA & ECDSA
 	}
 	return req

@@ -23,14 +23,15 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/Venafi/vcert/pkg/certificate"
-	"github.com/Venafi/vcert/pkg/endpoint"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"regexp"
 	"strings"
+
+	"github.com/Venafi/vcert/pkg/certificate"
+	"github.com/Venafi/vcert/pkg/endpoint"
 )
 
 const defaultKeySize = 2048
@@ -76,7 +77,7 @@ type certificateRetrieveResponse struct {
 
 type RevocationReason int
 
-// this maps *certificate.RevocationRequest.Reason to TPP-specific webSDK codes
+// RevocationReasonsMap maps *certificate.RevocationRequest.Reason to TPP-specific webSDK codes
 var RevocationReasonsMap = map[string]RevocationReason{
 	"":                       0, // NoReason
 	"none":                   0, //
@@ -148,14 +149,14 @@ type urlResource string
 
 const (
 	urlResourceAuthorize           urlResource = "authorize/"
-	urlResourceCertificateRequest              = "certificates/request"
-	urlResourceCertificateRetrieve             = "certificates/retrieve"
-	urlResourceFindPolicy                      = "config/findpolicy"
-	urlResourceCertificateRevoke               = "certificates/revoke"
-	urlResourceCertificateRenew                = "certificates/renew"
-	urlResourceCertificateSearch               = "certificates/"
-	urlResourceCertificateImport               = "certificates/import"
-	urlResourceCertificatePolicy               = "certificates/checkpolicy"
+	urlResourceCertificateRequest  urlResource = "certificates/request"
+	urlResourceCertificateRetrieve urlResource = "certificates/retrieve"
+	urlResourceFindPolicy          urlResource = "config/findpolicy"
+	urlResourceCertificateRevoke   urlResource = "certificates/revoke"
+	urlResourceCertificateRenew    urlResource = "certificates/renew"
+	urlResourceCertificateSearch   urlResource = "certificates/"
+	urlResourceCertificateImport   urlResource = "certificates/import"
+	urlResourceCertificatePolicy   urlResource = "certificates/checkpolicy"
 )
 
 const (
@@ -205,7 +206,7 @@ func retrieveChainOptionFromString(order string) retrieveChainOption {
 	}
 }
 
-var baseUrlRegex = regexp.MustCompile("^https://[a-z\\d]+[-a-z\\d.]+[a-z\\d][:\\d]*/vedsdk/$")
+var baseUrlRegex = regexp.MustCompile(`^https://[a-z\d]+[-a-z\d.]+[a-z\d][:\d]*/vedsdk/$`)
 
 // SetBaseURL sets the base URL used to communicate with TPP
 func (c *Connector) SetBaseURL(url string) error {
@@ -293,7 +294,7 @@ func (c *Connector) getHTTPClient() *http.Client {
 	return http.DefaultClient
 }
 
-//GenerateRequest creates a new certificate request, based on the zone/policy configuration and the user data
+// GenerateRequest creates a new certificate request, based on the zone/policy configuration and the user data
 func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *certificate.Request) (err error) {
 	if config == nil {
 		config, err = c.ReadZoneConfiguration(c.zone)
@@ -338,9 +339,9 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 
 func getPolicyDN(zone string) string {
 	modified := zone
-	reg := regexp.MustCompile("^\\\\VED\\\\Policy")
+	reg := regexp.MustCompile(`^\\VED\\Policy`)
 	if reg.FindStringIndex(modified) == nil {
-		reg = regexp.MustCompile("^\\\\")
+		reg = regexp.MustCompile(`^\\`)
 		if reg.FindStringIndex(modified) == nil {
 			modified = "\\" + modified
 		}

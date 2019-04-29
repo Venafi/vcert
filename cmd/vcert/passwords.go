@@ -88,24 +88,21 @@ func readPasswordsFromInputFlag(flagVar string, index int) (string, error) {
 	reg := regexp.MustCompile("^(?:F|f)(?:I|i)(?:L|l)(?:E|e):(?P<value>.*?$)")
 	groups := reg.SubexpNames()
 	matches := reg.FindAllStringSubmatch(flagVar, -1)
-	if matches != nil {
-		for _, m := range matches {
-			for grpIdx, value := range m {
-				if groups[grpIdx] == "value" {
-					return readPasswordFromFile(value, index)
-				}
+	for _, m := range matches {
+		for grpIdx, value := range m {
+			if groups[grpIdx] == "value" {
+				return readPasswordFromFile(value, index)
 			}
 		}
 	}
+
 	reg = regexp.MustCompile("^(?:P|p)(?:A|a)(?:S|s)(?:S|s):(?P<value>.*?$)")
 	groups = reg.SubexpNames()
 	matches = reg.FindAllStringSubmatch(flagVar, -1)
-	if matches != nil {
-		for _, m := range matches {
-			for grpIdx, value := range m {
-				if groups[grpIdx] == "value" {
-					return value, nil
-				}
+	for _, m := range matches {
+		for grpIdx, value := range m {
+			if groups[grpIdx] == "value" {
+				return value, nil
 			}
 		}
 	}

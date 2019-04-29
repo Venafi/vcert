@@ -37,7 +37,7 @@ tpp_test: get
 		-tpp-url       "${VCERT_TPP_URL}"      \
 		-tpp-user      "${VCERT_TPP_USER}"     \
 		-tpp-password  "${VCERT_TPP_PASSWORD}" \
-		-tpp-zone      "${VCERT_TPP_ZONE}"                       
+		-tpp-zone      "${VCERT_TPP_ZONE}"
 
 cloud_test: get
 	go test -v $(GOFLAGS) ./pkg/venafi/cloud   \
@@ -61,3 +61,6 @@ collect_artifacts:
 	mv bin/windows/vcert.exe artifcats/vcert-$(VERSION)_windows.exe
 	mv bin/windows/vcert86.exe artifcats/vcert-$(VERSION)_windows86.exe
 	cd artifcats; sha1sum * > hashsums.sha1
+
+linter:
+	golangci-lint run

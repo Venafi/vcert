@@ -1,0 +1,19 @@
+run:
+  tests: false
+#  modules-download-mode: readonly //todo: return after migrating to modules
+
+linters:
+  disable:
+    - deadcode
+    - varcheck
+    - unused
+  enable:
+
+issues:
+  exclude-rules:
+    - text: "composite literal uses unkeyed fields"
+      linters:
+        - govet
+    - text: "certificateRequest.Attributes"
+      linters:
+        - staticcheck

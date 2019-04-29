@@ -21,8 +21,6 @@ import (
 	"crypto/sha1"
 	"encoding/json"
 	"fmt"
-	"github.com/Venafi/vcert/pkg/certificate"
-	"github.com/Venafi/vcert/pkg/endpoint"
 	"io"
 	"io/ioutil"
 	"log"
@@ -30,6 +28,9 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/Venafi/vcert/pkg/certificate"
+	"github.com/Venafi/vcert/pkg/endpoint"
 )
 
 type apiKey struct {
@@ -436,8 +437,6 @@ func newPEMCollectionFromResponse(data []byte, chainOrder certificate.ChainOptio
 }
 
 func certThumprint(asn1 []byte) string {
-	h := sha1.New()
-	h.Write(asn1)
-	s := h.Sum(nil)
-	return strings.ToUpper(fmt.Sprintf("%x", s))
+	h := sha1.Sum(asn1)
+	return strings.ToUpper(fmt.Sprintf("%x", h))
 }
