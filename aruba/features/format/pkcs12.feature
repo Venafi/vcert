@@ -113,3 +113,15 @@ Feature: PKCS#12 format output
 #      | test-mode |
       # | TPP       |
       # | Cloud     | # -csr service is not supported by Cloud
+
+  Scenario Outline: where it should enroll a PKCS12 certificate with -csr service and without file option (VEN-48622)
+    When I enroll random certificate using <endpoint> with -csr service -no-prompt -no-pickup -format pkcs12
+      Then it should post certificate request
+    Then I retrieve the certificate using <endpoint> using the same Pickup ID with -key-password newPassw0rd! -timeout 59
+      And it should retrieve certificate
+      And it should output encrypted private key
+    Examples:
+      | endpoint  |
+      | test-mode |
+      | TPP       |
+
