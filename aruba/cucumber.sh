@@ -7,7 +7,7 @@ RUN_COMMAND="docker run -t --rm \
           -e VCERT_TPP_ZONE \
           -e VCERT_CLOUD_URL \
           -e VCERT_CLOUD_APIKEY \
-          -e VCERT_CLOUD_ZONE vcert.auto cucumber -v"
+          -e VCERT_CLOUD_ZONE vcert.auto cucumber --fail-fast --no-color -v"
 
 set -ex
 
