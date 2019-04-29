@@ -86,10 +86,10 @@ Feature: enrolling certificates with -csr option (VEN-40652)
   Scenario Outline: where it should enroll a certificate with -csr service -no-prompt
     When I enroll random certificate using <endpoint> with -csr service -no-prompt -no-pickup
       Then it should post certificate request
-    Then I retrieve the certificate using <endpoint> using the same Pickup ID with -timeout 59
+    Then I retrieve the certificate using <endpoint> using the same Pickup ID with -timeout 180
       And it should retrieve certificate
       And it should not output private key
-    Then I retrieve the certificate using <endpoint> using the same Pickup ID with -key-password newPassw0rd! -timeout 59
+    Then I retrieve the certificate using <endpoint> using the same Pickup ID with -key-password newPassw0rd! -timeout 180
       And it should retrieve certificate
       And it should output encrypted private key
     Examples:
