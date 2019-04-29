@@ -55,7 +55,7 @@ Feature: PKCS#12 format output
 
   Scenario Outline: where it outputs error when trying to pickup local-generated certificate and output it in PKCS#12 format
     When I enroll random certificate using <endpoint> with -no-prompt -no-pickup
-    And I retrieve the certificate using <endpoint> using the same Pickup ID with -no-prompt -file all.p12 -format pkcs12
+    And I retrieve the certificate using <endpoint> using the same Pickup ID with -timeout 180 -no-prompt -file all.p12 -format pkcs12
     And it should fail with "failed to encode pkcs12: at least certificate and private key are required"
     Examples:
       | endpoint  |
@@ -93,7 +93,7 @@ Feature: PKCS#12 format output
 
   Scenario Outline: where it pickups up service-generated certificate and outputs it in PKCS#12 format
     When I enroll random certificate using <endpoint> with -no-prompt -no-pickup -csr service
-    And I retrieve the certificate using <endpoint> using the same Pickup ID with -key-password newPassw0rd! -file all.p12 -format pkcs12
+    And I retrieve the certificate using <endpoint> using the same Pickup ID with -timeout 180 -key-password newPassw0rd! -file all.p12 -format pkcs12
     And "all.p12" should be PKCS#12 archive with password "newPassw0rd!"
     Examples:
       | endpoint  |
