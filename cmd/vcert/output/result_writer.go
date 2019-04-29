@@ -32,7 +32,7 @@ import (
 type command int
 
 const (
-	commandRegister command = iota
+	commandUnused command = iota
 	commandGenCSR
 	commandEnroll
 	commandPickup

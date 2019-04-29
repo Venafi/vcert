@@ -62,11 +62,6 @@ func (c *Connector) Ping() (err error) {
 	return
 }
 
-// Register does nothing for TPP
-func (c *Connector) Register(email string) (err error) {
-	return nil
-}
-
 // Authenticate authenticates the user to the TPP
 func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 	if auth == nil {

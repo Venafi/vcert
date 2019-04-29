@@ -63,8 +63,6 @@ type Connector interface {
 	// SetZone sets a zone (by name) for requests with this connector.
 	SetZone(z string)
 	Ping() (err error)
-	// Register is deprecated and will be removed in the future.
-	Register(email string) (err error)
 	// Authenticate is usually called by NewClient and it is not required that you manually call it.
 	Authenticate(auth *Authentication) (err error)
 	// ReadPolicyConfiguration returns information about zone policies. It can be used for checking request compatibility with policies.
