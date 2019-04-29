@@ -101,15 +101,15 @@ Feature: PKCS#12 format output
       | TPP       |
       # | Cloud     | # -csr service is not supported by Cloud
 
-  Scenario Outline: Pickup PKCS12 with typing pass phrases
-    When I enroll random certificate using <endpoint> with -no-prompt -no-pickup -csr service
-    And I interactively retrieve the certificate using <endpoint> using the same Pickup ID with -timeout 99 -file all.p12 -format pkcs12
-    And I type "newPassw0rd!"
-    And I type "newPassw0rd!"
-    Then the exit status should be 0
-    And "all.p12" should be PKCS#12 archive with password "newPassw0rd!"
-    Examples:
-      | endpoint  |
-      | test-mode |
+#  Scenario Outline: Pickup PKCS12 with typing pass phrases
+#    When I enroll random certificate using <endpoint> with -no-prompt -no-pickup -csr service
+#    And I interactively retrieve the certificate using <endpoint> using the same Pickup ID with -timeout 99 -file all.p12 -format pkcs12
+#    And I type "newPassw0rd!"
+#    And I type "newPassw0rd!"
+#    Then the exit status should be 0
+#    And "all.p12" should be PKCS#12 archive with password "newPassw0rd!"
+#    Examples:
+#      | endpoint  |
+#      | test-mode |
       # | TPP       |
       # | Cloud     | # -csr service is not supported by Cloud
