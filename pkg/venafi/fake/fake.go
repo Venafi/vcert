@@ -22,10 +22,6 @@ import (
 	"github.com/Venafi/vcert/pkg/endpoint"
 )
 
-func (c *Connector) SetBaseURL(url string) error {
-	return nil
-}
-
 //GenerateRequest creates a new certificate request, based on the zone/policy configuration and the user data
 func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *certificate.Request) (err error) {
 

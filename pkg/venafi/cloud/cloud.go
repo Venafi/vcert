@@ -25,7 +25,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"regexp"
 	"strings"
 	"time"
 
@@ -168,28 +167,6 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 	default:
 		return fmt.Errorf("unrecognised req.CsrOrigin %v", req.CsrOrigin)
 	}
-}
-
-//SetBaseURL allows overriding the default URL used to communicate with Venafi Cloud
-func (c *Connector) SetBaseURL(url string) error {
-	if url == "" {
-		return fmt.Errorf("base URL cannot be empty")
-	}
-	modified := strings.ToLower(url)
-	reg := regexp.MustCompile("^http(|s)://")
-	if reg.FindStringIndex(modified) == nil {
-		modified = "https://" + modified
-	} else {
-		modified = reg.ReplaceAllString(modified, "https://")
-	}
-	reg = regexp.MustCompile("/v1(|/)$")
-	if reg.FindStringIndex(modified) == nil {
-		modified += "v1/"
-	} else {
-		modified = reg.ReplaceAllString(modified, "/v1/")
-	}
-	c.baseURL = modified
-	return nil
 }
 
 func (c *Connector) getURL(resource urlResource) string {

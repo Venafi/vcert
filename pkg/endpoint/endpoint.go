@@ -58,8 +58,6 @@ func (t ConnectorType) String() string {
 type Connector interface {
 	// GetType returns a connector type (cloud/TPP/fake). Can be useful because some features are not supported by a Cloud connection.
 	GetType() ConnectorType
-	// SetBaseUrl sets a server URL. It usually is called by the NewClient function.
-	SetBaseURL(url string) (err error)
 	// SetZone sets a zone (by name) for requests with this connector.
 	SetZone(z string)
 	Ping() (err error)

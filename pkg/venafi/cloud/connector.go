@@ -23,6 +23,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
@@ -71,10 +72,37 @@ type Connector struct {
 }
 
 // NewConnector creates a new Venafi Cloud Connector object used to communicate with Venafi Cloud
-func NewConnector(verbose bool, trust *x509.CertPool) *Connector {
+func NewConnector(url string, verbose bool, trust *x509.CertPool) (*Connector, error) {
 	c := Connector{verbose: verbose, trust: trust}
-	_ = c.SetBaseURL(apiURL)
-	return &c
+	var err error
+	c.baseURL, err = normalizeURL(url)
+	if err != nil {
+		return nil, err
+	}
+	return &c, nil
+}
+
+//normalizeURL allows overriding the default URL used to communicate with Venafi Cloud
+func normalizeURL(url string) (normalizedURL string, err error) {
+	if url == "" {
+		url = apiURL
+		//return "", fmt.Errorf("base URL cannot be empty")
+	}
+	modified := strings.ToLower(url)
+	reg := regexp.MustCompile("^http(|s)://")
+	if reg.FindStringIndex(modified) == nil {
+		modified = "https://" + modified
+	} else {
+		modified = reg.ReplaceAllString(modified, "https://")
+	}
+	reg = regexp.MustCompile("/v1(|/)$")
+	if reg.FindStringIndex(modified) == nil {
+		modified += "v1/"
+	} else {
+		modified = reg.ReplaceAllString(modified, "/v1/")
+	}
+	normalizedURL = modified
+	return normalizedURL, nil
 }
 
 func (c *Connector) SetZone(z string) {

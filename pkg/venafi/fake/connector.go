@@ -36,9 +36,9 @@ type Connector struct {
 	verbose bool
 }
 
-func NewConnector(verbose bool, trust *x509.CertPool) *Connector {
+func NewConnector(verbose bool, trust *x509.CertPool) (*Connector, error) {
 	c := Connector{verbose: verbose}
-	return &c
+	return &c, nil
 }
 
 func (c *Connector) GetType() endpoint.ConnectorType {

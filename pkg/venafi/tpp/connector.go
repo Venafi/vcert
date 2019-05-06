@@ -21,6 +21,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/Venafi/vcert/pkg/certificate"
@@ -37,9 +39,38 @@ type Connector struct {
 }
 
 // NewConnector creates a new TPP Connector object used to communicate with TPP
-func NewConnector(verbose bool, trust *x509.CertPool) *Connector {
+func NewConnector(url string, verbose bool, trust *x509.CertPool) (*Connector, error) {
 	c := Connector{trust: trust, verbose: verbose}
-	return &c
+	var err error
+	c.baseURL, err = normalizeURL(url)
+	if err != nil {
+		return nil, err
+	}
+	return &c, nil
+}
+
+// SetBaseURL sets the base URL used to communicate with TPP
+func normalizeURL(url string) (normalizedURL string, err error) {
+	var baseUrlRegex = regexp.MustCompile(`^https://[a-z\d]+[-a-z\d.]+[a-z\d][:\d]*/vedsdk/$`)
+	modified := strings.ToLower(url)
+	if strings.HasPrefix(modified, "http://") {
+		modified = "https://" + modified[7:]
+	} else if !strings.HasPrefix(modified, "https://") {
+		modified = "https://" + modified
+	}
+	if !strings.HasSuffix(modified, "/") {
+		modified = modified + "/"
+	}
+
+	if !strings.HasSuffix(modified, "vedsdk/") {
+		modified += "vedsdk/"
+	}
+	if loc := baseUrlRegex.FindStringIndex(modified); loc == nil {
+		return "", fmt.Errorf("The specified TPP URL is invalid. %s\nExpected TPP URL format 'https://tpp.company.com/vedsdk/'", url)
+	}
+
+	normalizedURL = modified
+	return normalizedURL, nil
 }
 
 func (c *Connector) SetZone(z string) {
