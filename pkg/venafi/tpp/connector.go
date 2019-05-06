@@ -49,7 +49,7 @@ func NewConnector(url string, verbose bool, trust *x509.CertPool) (*Connector, e
 	return &c, nil
 }
 
-// SetBaseURL sets the base URL used to communicate with TPP
+// normalizeURL normalizes the base URL used to communicate with TPP
 func normalizeURL(url string) (normalizedURL string, err error) {
 	var baseUrlRegex = regexp.MustCompile(`^https://[a-z\d]+[-a-z\d.]+[a-z\d][:\d]*/vedsdk/$`)
 	modified := strings.ToLower(url)
