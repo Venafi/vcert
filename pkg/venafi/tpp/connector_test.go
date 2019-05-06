@@ -29,6 +29,7 @@ import (
 	"net/http"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 )
@@ -46,13 +47,13 @@ func init() {
 	}
 }
 
-func getTestConnector() *Connector {
-	return NewConnector(false, nil)
+func getTestConnector(url string) (c *Connector, err error) {
+	c, err = NewConnector(url, false, nil)
+	return c, err
 }
 
 func TestPingTPP(t *testing.T) {
-	tpp := getTestConnector()
-	err := tpp.SetBaseURL(ctx.TPPurl)
+	tpp, err := getTestConnector(ctx.TPPurl)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, ctx.TPPurl)
 	}
@@ -63,8 +64,7 @@ func TestPingTPP(t *testing.T) {
 }
 
 func TestBadPingTPP(t *testing.T) {
-	tpp := getTestConnector()
-	err := tpp.SetBaseURL("http://bonjo-w10dev:333/vedsdk/")
+	tpp, err := getTestConnector("http://bonjo-w10dev:333/vedsdk/")
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: http://bonjo-w10dev:333/vedsdk/", err)
 	}
@@ -75,8 +75,7 @@ func TestBadPingTPP(t *testing.T) {
 }
 
 func TestAuthorizeToTPP(t *testing.T) {
-	tpp := getTestConnector()
-	err := tpp.SetBaseURL(ctx.TPPurl)
+	tpp, err := getTestConnector(ctx.TPPurl)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, ctx.TPPurl)
 	}
@@ -88,8 +87,7 @@ func TestAuthorizeToTPP(t *testing.T) {
 }
 
 func TestBadAuthorizeToTPP(t *testing.T) {
-	tpp := getTestConnector()
-	err := tpp.SetBaseURL(ctx.TPPurl)
+	tpp, err := getTestConnector(ctx.TPPurl)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, ctx.TPPurl)
 	}
@@ -100,8 +98,7 @@ func TestBadAuthorizeToTPP(t *testing.T) {
 }
 
 func TestReadConfigData(t *testing.T) {
-	tpp := getTestConnector()
-	err := tpp.SetBaseURL(ctx.TPPurl)
+	tpp, err := getTestConnector(ctx.TPPurl)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
@@ -152,8 +149,7 @@ func TestReadConfigData(t *testing.T) {
 }
 
 func TestBadReadConfigData(t *testing.T) {
-	tpp := getTestConnector()
-	err := tpp.SetBaseURL(ctx.TPPurl)
+	tpp, err := getTestConnector(ctx.TPPurl)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
@@ -171,8 +167,7 @@ func TestBadReadConfigData(t *testing.T) {
 }
 
 func TestRequestCertificate(t *testing.T) {
-	tpp := getTestConnector()
-	err := tpp.SetBaseURL(ctx.TPPurl)
+	tpp, err := getTestConnector(ctx.TPPurl)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
@@ -210,8 +205,7 @@ func TestRequestCertificate(t *testing.T) {
 }
 
 func TestRequestCertificateServiceGenerated(t *testing.T) {
-	tpp := getTestConnector()
-	tpp.SetBaseURL(ctx.TPPurl)
+	tpp, err := getTestConnector(ctx.TPPurl)
 	tpp.Authenticate(&endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword})
 	config, err := tpp.ReadZoneConfiguration(getPolicyDN(ctx.TPPZone))
 	if err != nil {
@@ -263,8 +257,7 @@ func TestRequestCertificateServiceGenerated(t *testing.T) {
 }
 
 func TestRetrieveNonIssuedCertificate(t *testing.T) {
-	tpp := getTestConnector()
-	err := tpp.SetBaseURL(ctx.TPPurl)
+	tpp, err := getTestConnector(ctx.TPPurl)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
@@ -310,8 +303,7 @@ func TestRevokeCertificate(t *testing.T) {
 
 	cn := "www-1.venqa.venafi.com"
 
-	tpp := getTestConnector()
-	err := tpp.SetBaseURL(ctx.TPPurl)
+	tpp, err := getTestConnector(ctx.TPPurl)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
@@ -374,8 +366,7 @@ func TestRevokeNonIssuedCertificate(t *testing.T) {
 
 	certDN := fmt.Sprintf(`\VED\Policy\%s\%s`, ctx.TPPZone, cn)
 
-	tpp := getTestConnector()
-	err := tpp.SetBaseURL(ctx.TPPurl)
+	tpp, err := getTestConnector(ctx.TPPurl)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
@@ -398,8 +389,7 @@ func TestRevokeAndDisableCertificate(t *testing.T) {
 
 	cn := test.RandCN()
 
-	tpp := getTestConnector()
-	err := tpp.SetBaseURL(ctx.TPPurl)
+	tpp, err := getTestConnector(ctx.TPPurl)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
@@ -473,8 +463,7 @@ func TestRenewCertificate(t *testing.T) {
 
 	cn := test.RandCN()
 
-	tpp := getTestConnector()
-	err := tpp.SetBaseURL(ctx.TPPurl)
+	tpp, err := getTestConnector(ctx.TPPurl)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
@@ -622,10 +611,11 @@ ZtIVl/CH/az0xqLKWIlmWOip9SfUVlZdgege+PlQtRqoFVOsH8+MEg==
 
 func TestImportCertificate(t *testing.T) {
 
-	tpp := getTestConnector()
-
-	tpp.SetBaseURL(ctx.TPPurl)
-	err := tpp.Authenticate(&endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword})
+	tpp, err := getTestConnector(ctx.TPPurl)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+	err = tpp.Authenticate(&endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword})
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
@@ -652,8 +642,7 @@ func TestImportCertificate(t *testing.T) {
 
 func TestReadPolicyConfiguration(t *testing.T) {
 	//todo: add more zones tests
-	tpp := getTestConnector()
-	err := tpp.SetBaseURL(ctx.TPPurl)
+	tpp, err := getTestConnector(ctx.TPPurl)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
@@ -750,8 +739,7 @@ func pp(a interface{}) {
 }
 
 func Test_EnrollDoesntChange(t *testing.T) {
-	tpp := getTestConnector()
-	err := tpp.SetBaseURL(ctx.TPPurl)
+	tpp, err := getTestConnector(ctx.TPPurl)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
@@ -804,4 +792,89 @@ func pemRSADecode(priv []byte) *rsa.PrivateKey {
 		panic(err)
 	}
 	return parsedKey
+}
+
+func TestNormalizeURL(t *testing.T) {
+	url := "http://localhost/vedsdk/"
+	modifiedURL, err := normalizeURL(url)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, url)
+	}
+	if !strings.EqualFold(modifiedURL, expectedURL) {
+		t.Fatalf("Base URL did not match expected value. Expected: %s Actual: %s", expectedURL, modifiedURL)
+	}
+
+	url = "http://localhost"
+	modifiedURL = ""
+	modifiedURL, err = normalizeURL(url)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, url)
+	}
+	if !strings.EqualFold(modifiedURL, expectedURL) {
+		t.Fatalf("Base URL did not match expected value. Expected: %s Actual: %s", expectedURL, modifiedURL)
+	}
+
+	url = "http://localhost/vedsdk"
+	modifiedURL = ""
+	modifiedURL, err = normalizeURL(url)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, url)
+	}
+	if !strings.EqualFold(modifiedURL, expectedURL) {
+		t.Fatalf("Base URL did not match expected value. Expected: %s Actual: %s", expectedURL, modifiedURL)
+	}
+
+	url = "localhost/vedsdk"
+	modifiedURL = ""
+	modifiedURL, err = normalizeURL(url)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, url)
+	}
+	if !strings.EqualFold(modifiedURL, expectedURL) {
+		t.Fatalf("Base URL did not match expected value. Expected: %s Actual: %s", expectedURL, modifiedURL)
+	}
+
+	url = "ftp://wrongurlformat.com"
+	modifiedURL = ""
+	modifiedURL, err = normalizeURL(url)
+	if err == nil {
+		t.Fatalf("err was not expected to be nil. url: %s", url)
+	}
+	if strings.EqualFold(modifiedURL, expectedURL) {
+		t.Fatalf("Base URL should not match expected value. Expected: %s Actual: %s", expectedURL, modifiedURL)
+	}
+}
+
+func TestGetURL(t *testing.T) {
+	var err error
+	tpp := Connector{}
+	url := "http://localhost/vedsdk/"
+	tpp.baseURL = ""
+	tpp.baseURL, err = normalizeURL(url)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, url)
+	}
+	if !strings.EqualFold(tpp.baseURL, expectedURL) {
+		t.Fatalf("Base URL did not match expected value. Expected: %s Actual: %s", expectedURL, tpp.baseURL)
+	}
+
+	url, err = tpp.getURL(urlResourceAuthorize)
+	if !strings.EqualFold(url, fmt.Sprintf("%s%s", expectedURL, urlResourceAuthorize)) {
+		t.Fatalf("Get URL did not match expected value. Expected: %s Actual: %s", fmt.Sprintf("%s%s", expectedURL, urlResourceAuthorize), url)
+	}
+
+	url, err = tpp.getURL(urlResourceCertificateRequest)
+	if !strings.EqualFold(url, fmt.Sprintf("%s%s", expectedURL, urlResourceCertificateRequest)) {
+		t.Fatalf("Get URL did not match expected value. Expected: %s Actual: %s", fmt.Sprintf("%s%s", expectedURL, urlResourceCertificateRequest), url)
+	}
+
+	url, err = tpp.getURL(urlResourceCertificateRetrieve)
+	if !strings.EqualFold(url, fmt.Sprintf("%s%s", expectedURL, urlResourceCertificateRetrieve)) {
+		t.Fatalf("Get URL did not match expected value. Expected: %s Actual: %s", fmt.Sprintf("%s%s", expectedURL, urlResourceCertificateRetrieve), url)
+	}
+	tpp.baseURL = ""
+	url, err = tpp.getURL(urlResourceAuthorize)
+	if err == nil {
+		t.Fatalf("Get URL did not return an error when the base url had not been set.")
+	}
 }
