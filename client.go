@@ -54,10 +54,7 @@ func NewClient(cfg *Config) (endpoint.Connector, error) {
 			return nil, err
 		}
 	case endpoint.ConnectorTypeFake:
-		connector, err = fake.NewConnector(cfg.LogVerbose, connectionTrustBundle)
-		if err != nil {
-			return nil, err
-		}
+		connector = fake.NewConnector(cfg.LogVerbose, connectionTrustBundle)
 	default:
 		return nil, fmt.Errorf("ConnectorType is not defined")
 	}
