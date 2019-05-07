@@ -67,7 +67,7 @@ func TestNewClient(t *testing.T) {
 	haltIf(err)
 	print(req)
 
-	id, err := c.RequestCertificate(req, "")
+	id, err := c.RequestCertificate(req)
 	haltIf(err)
 	print(id)
 
@@ -118,7 +118,7 @@ func TestNewClientWithFileConfig(t *testing.T) {
 	haltIf(err)
 	print(req)
 
-	id, err := c.RequestCertificate(req, "")
+	id, err := c.RequestCertificate(req)
 	haltIf(err)
 	print(id)
 

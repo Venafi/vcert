@@ -78,7 +78,7 @@ func main() {
 	//
 	// 1.3. submit certificate request, get request ID as a response
 	//
-	requestID, err := c.RequestCertificate(enrollReq, "")
+	requestID, err := c.RequestCertificate(enrollReq)
 	if err != nil {
 		t.Fatalf("could not submit certificate request: %s", err)
 	}

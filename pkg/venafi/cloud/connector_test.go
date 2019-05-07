@@ -72,7 +72,7 @@ func TestReadZoneConfiguration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-	_, err = conn.ReadZoneConfiguration("notexistedzone")
+	_, err = conn.ReadZoneConfiguration()
 	if err == nil {
 		t.Fatalf("Unknown zone should have resulted in an error")
 	}
@@ -93,7 +93,7 @@ func TestReadZoneConfiguration(t *testing.T) {
 		}},
 	}
 	for _, c := range testCases {
-		zoneConfig, err := conn.ReadZoneConfiguration(c.zone)
+		zoneConfig, err := conn.ReadZoneConfiguration()
 		if err != nil {
 			t.Fatalf("%s", err)
 		}
@@ -112,7 +112,7 @@ func TestRequestCertificate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-	zoneConfig, err := conn.ReadZoneConfiguration(ctx.CloudZone)
+	zoneConfig, err := conn.ReadZoneConfiguration()
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -124,7 +124,7 @@ func TestRequestCertificate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-	_, err = conn.RequestCertificate(&req, ctx.CloudZone)
+	_, err = conn.RequestCertificate(&req)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -136,7 +136,7 @@ func TestRetrieveCertificate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-	zoneConfig, err := conn.ReadZoneConfiguration(ctx.CloudZone)
+	zoneConfig, err := conn.ReadZoneConfiguration()
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -148,7 +148,7 @@ func TestRetrieveCertificate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-	pickupID, err := conn.RequestCertificate(req, ctx.CloudZone)
+	pickupID, err := conn.RequestCertificate(req)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -202,7 +202,7 @@ func TestRetrieveCertificateRootFirst(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-	zoneConfig, err := conn.ReadZoneConfiguration(ctx.CloudZone)
+	zoneConfig, err := conn.ReadZoneConfiguration()
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -214,7 +214,7 @@ func TestRetrieveCertificateRootFirst(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-	pickupID, err := conn.RequestCertificate(req, ctx.CloudZone)
+	pickupID, err := conn.RequestCertificate(req)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -270,7 +270,7 @@ func TestGetCertificateStatus(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-	zoneConfig, err := conn.ReadZoneConfiguration(ctx.CloudZone)
+	zoneConfig, err := conn.ReadZoneConfiguration()
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -282,7 +282,7 @@ func TestGetCertificateStatus(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-	reqId, err := conn.RequestCertificate(req, ctx.CloudZone)
+	reqId, err := conn.RequestCertificate(req)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -305,7 +305,7 @@ func TestRenewCertificate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-	zoneConfig, err := conn.ReadZoneConfiguration(ctx.CloudZone)
+	zoneConfig, err := conn.ReadZoneConfiguration()
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -317,7 +317,7 @@ func TestRenewCertificate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-	pickupID, err := conn.RequestCertificate(req, ctx.CloudZone)
+	pickupID, err := conn.RequestCertificate(req)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -386,7 +386,7 @@ func TestReadPolicyConfiguration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-	policy, err := conn.ReadPolicyConfiguration(ctx.CloudZone)
+	policy, err := conn.ReadPolicyConfiguration()
 	if err != nil {
 		t.Fatalf("%s", err)
 	}

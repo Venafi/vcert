@@ -133,7 +133,7 @@ func TestReadConfigData(t *testing.T) {
 		}},
 	}
 	for _, c := range testCases {
-		zoneConfig, err := tpp.ReadZoneConfiguration(c.zone)
+		zoneConfig, err := tpp.ReadZoneConfiguration()
 		zoneConfig.Policy = endpoint.Policy{}
 		if err != nil {
 			t.Fatalf("%s", err)
@@ -142,7 +142,7 @@ func TestReadConfigData(t *testing.T) {
 			t.Fatalf("zone config for zone %s is not as expected \nget:    %+v \nexpect: %+v", c.zone, *zoneConfig, c.zoneConfig)
 		}
 	}
-	_, err = tpp.ReadZoneConfiguration(getPolicyDN("notexistedzone"))
+	_, err = tpp.ReadZoneConfiguration()
 	if err == nil {
 		t.Fatalf("err should be not nil for not existed zone")
 	}
@@ -160,7 +160,7 @@ func TestBadReadConfigData(t *testing.T) {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
 	}
-	_, err = tpp.ReadZoneConfiguration(getPolicyDN("Wrong Policy"))
+	_, err = tpp.ReadZoneConfiguration()
 	if err == nil {
 		t.Fatalf("err should not be nil, invalid policy was used")
 	}
@@ -178,7 +178,7 @@ func TestRequestCertificate(t *testing.T) {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
 	}
-	config, err := tpp.ReadZoneConfiguration(getPolicyDN(ctx.TPPZone))
+	config, err := tpp.ReadZoneConfiguration()
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
@@ -198,7 +198,7 @@ func TestRequestCertificate(t *testing.T) {
 	}
 
 	t.Logf("getPolicyDN(ctx.TPPZone) = %s", getPolicyDN(ctx.TPPZone))
-	_, err = tpp.RequestCertificate(req, getPolicyDN(ctx.TPPZone))
+	_, err = tpp.RequestCertificate(req)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
@@ -207,7 +207,7 @@ func TestRequestCertificate(t *testing.T) {
 func TestRequestCertificateServiceGenerated(t *testing.T) {
 	tpp, err := getTestConnector(ctx.TPPurl)
 	tpp.Authenticate(&endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword})
-	config, err := tpp.ReadZoneConfiguration(getPolicyDN(ctx.TPPZone))
+	config, err := tpp.ReadZoneConfiguration()
 	if err != nil {
 		t.Fatal("failed to read zone configuration")
 	}
@@ -230,7 +230,7 @@ func TestRequestCertificateServiceGenerated(t *testing.T) {
 
 	config.UpdateCertificateRequest(req)
 
-	pickupId, err := tpp.RequestCertificate(req, getPolicyDN(ctx.TPPZone))
+	pickupId, err := tpp.RequestCertificate(req)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
@@ -268,7 +268,7 @@ func TestRetrieveNonIssuedCertificate(t *testing.T) {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
 	}
-	config, err := tpp.ReadZoneConfiguration(getPolicyDN(ctx.TPPZone))
+	config, err := tpp.ReadZoneConfiguration()
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
@@ -286,7 +286,7 @@ func TestRetrieveNonIssuedCertificate(t *testing.T) {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
 
-	requestID, err := tpp.RequestCertificate(req, getPolicyDN(ctx.TPPZone))
+	requestID, err := tpp.RequestCertificate(req)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
@@ -314,7 +314,7 @@ func TestRevokeCertificate(t *testing.T) {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
 	}
-	config, err := tpp.ReadZoneConfiguration(getPolicyDN(ctx.TPPZone))
+	config, err := tpp.ReadZoneConfiguration()
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
@@ -332,7 +332,7 @@ func TestRevokeCertificate(t *testing.T) {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
 
-	certDN, err := tpp.RequestCertificate(req, getPolicyDN(ctx.TPPZone))
+	certDN, err := tpp.RequestCertificate(req)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
@@ -400,7 +400,7 @@ func TestRevokeAndDisableCertificate(t *testing.T) {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
 	}
-	config, err := tpp.ReadZoneConfiguration(getPolicyDN(ctx.TPPZone))
+	config, err := tpp.ReadZoneConfiguration()
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
@@ -418,7 +418,7 @@ func TestRevokeAndDisableCertificate(t *testing.T) {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
 
-	certDN, err := tpp.RequestCertificate(req, getPolicyDN(ctx.TPPZone))
+	certDN, err := tpp.RequestCertificate(req)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
@@ -453,7 +453,7 @@ func TestRevokeAndDisableCertificate(t *testing.T) {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
 
-	certDN, err = tpp.RequestCertificate(req, getPolicyDN(ctx.TPPZone))
+	certDN, err = tpp.RequestCertificate(req)
 	if err == nil {
 		t.Fatalf("Certificate/Request should return error if DN has been revoked with Disable=true")
 	}
@@ -474,7 +474,7 @@ func TestRenewCertificate(t *testing.T) {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
 	}
-	config, err := tpp.ReadZoneConfiguration(getPolicyDN(ctx.TPPZone))
+	config, err := tpp.ReadZoneConfiguration()
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
@@ -492,7 +492,7 @@ func TestRenewCertificate(t *testing.T) {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
 
-	certDN, err := tpp.RequestCertificate(req, getPolicyDN(ctx.TPPZone))
+	certDN, err := tpp.RequestCertificate(req)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
@@ -721,7 +721,7 @@ func TestReadPolicyConfiguration(t *testing.T) {
 		},
 	}
 	for _, c := range cases {
-		policy, err := tpp.ReadPolicyConfiguration(c.zone)
+		policy, err := tpp.ReadPolicyConfiguration()
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -750,7 +750,7 @@ func Test_EnrollDoesntChange(t *testing.T) {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
 	}
-	config, err := tpp.ReadZoneConfiguration(getPolicyDN(ctx.TPPZone))
+	config, err := tpp.ReadZoneConfiguration()
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
@@ -773,7 +773,7 @@ func Test_EnrollDoesntChange(t *testing.T) {
 	}
 
 	t.Logf("getPolicyDN(ctx.TPPZone) = %s", getPolicyDN(ctx.TPPZone))
-	_, err = tpp.RequestCertificate(req, getPolicyDN(ctx.TPPZone))
+	_, err = tpp.RequestCertificate(req)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
