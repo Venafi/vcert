@@ -52,7 +52,7 @@ func TestRetrieveCertificate(t *testing.T) {
 }
 
 func getTestConnector() *Connector {
-	c, _ := NewConnector(true, nil)
+	c := NewConnector(true, nil)
 	return c
 }
 
@@ -74,7 +74,7 @@ func TestReadZoneConfiguration(t *testing.T) {
 }
 
 func TestRequestCertificate(t *testing.T) {
-	var connector, _ = NewConnector(true, nil)
+	var connector = NewConnector(true, nil)
 	req := &certificate.Request{}
 	req.Subject.CommonName = "test-mode"
 	req.CsrOrigin = certificate.LocalGeneratedCSR
