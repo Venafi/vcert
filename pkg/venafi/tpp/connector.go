@@ -177,12 +177,9 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 }
 
 // RequestCertificate submits the CSR to TPP returning the DN of the requested Certificate
-func (c *Connector) RequestCertificate(req *certificate.Request, zone string) (requestID string, err error) {
-	if zone == "" {
-		zone = c.zone
-	}
+func (c *Connector) RequestCertificate(req *certificate.Request) (requestID string, err error) {
 
-	tppCertificateRequest, err := prepareRequest(req, zone)
+	tppCertificateRequest, err := prepareRequest(req, c.zone)
 	if err != nil {
 		return "", err
 	}
@@ -337,11 +334,11 @@ func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (er
 	return
 }
 
-func (c *Connector) ReadPolicyConfiguration(zone string) (policy *endpoint.Policy, err error) {
-	if zone == "" {
+func (c *Connector) ReadPolicyConfiguration() (policy *endpoint.Policy, err error) {
+	if c.zone == "" {
 		return nil, fmt.Errorf("empty zone")
 	}
-	rq := struct{ PolicyDN string }{getPolicyDN(zone)}
+	rq := struct{ PolicyDN string }{getPolicyDN(c.zone)}
 	statusCode, status, body, err := c.request("POST", urlResourceCertificatePolicy, rq)
 	if err != nil {
 		return
@@ -360,13 +357,13 @@ func (c *Connector) ReadPolicyConfiguration(zone string) (policy *endpoint.Polic
 }
 
 //ReadZoneConfiguration reads the policy data from TPP to get locked and pre-configured values for certificate requests
-func (c *Connector) ReadZoneConfiguration(zone string) (config *endpoint.ZoneConfiguration, err error) {
-	if zone == "" {
+func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration, err error) {
+	if c.zone == "" {
 		return nil, fmt.Errorf("empty zone")
 	}
 	zoneConfig := endpoint.NewZoneConfiguration()
 	zoneConfig.HashAlgorithm = x509.SHA256WithRSA //todo: check this can have problem with ECDSA key
-	rq := struct{ PolicyDN string }{getPolicyDN(zone)}
+	rq := struct{ PolicyDN string }{getPolicyDN(c.zone)}
 	statusCode, status, body, err := c.request("POST", urlResourceCertificatePolicy, rq)
 	if err != nil {
 		return

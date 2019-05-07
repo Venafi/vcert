@@ -139,7 +139,7 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 	switch req.CsrOrigin {
 	case certificate.LocalGeneratedCSR:
 		if config == nil {
-			config, err = c.ReadZoneConfiguration(c.zone)
+			config, err = c.ReadZoneConfiguration()
 			if err != nil {
 				return fmt.Errorf("could not read zone configuration: %s", err)
 			}

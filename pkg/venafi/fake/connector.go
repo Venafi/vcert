@@ -72,7 +72,7 @@ func validateRequest(req *certificate.Request) error {
 	return nil
 }
 
-func (c *Connector) RequestCertificate(req *certificate.Request, zone string) (requestID string, err error) {
+func (c *Connector) RequestCertificate(req *certificate.Request) (requestID string, err error) {
 	err = validateRequest(req)
 	if err != nil {
 		return "", fmt.Errorf("certificate request validation fail: %s", err)
@@ -231,7 +231,7 @@ func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (er
 	return fmt.Errorf("revocation is not supported in -test-mode")
 }
 
-func (c *Connector) ReadZoneConfiguration(zone string) (config *endpoint.ZoneConfiguration, err error) {
+func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration, err error) {
 	return endpoint.NewZoneConfiguration(), nil
 }
 
@@ -244,7 +244,7 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 	return nil, fmt.Errorf("import is not supported in -test-mode")
 }
 
-func (c *Connector) ReadPolicyConfiguration(zone string) (policy *endpoint.Policy, err error) {
+func (c *Connector) ReadPolicyConfiguration() (policy *endpoint.Policy, err error) {
 	policy = &endpoint.Policy{
 		[]string{".*"},
 		[]string{".*"},

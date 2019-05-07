@@ -168,8 +168,8 @@ func (c *Connector) Register(email string) (err error) {
 	return nil
 }
 
-func (c *Connector) ReadPolicyConfiguration(zone string) (policy *endpoint.Policy, err error) {
-	config, err := c.ReadZoneConfiguration(zone)
+func (c *Connector) ReadPolicyConfiguration() (policy *endpoint.Policy, err error) {
+	config, err := c.ReadZoneConfiguration()
 	if err != nil {
 		return nil, err
 	}
@@ -178,11 +178,11 @@ func (c *Connector) ReadPolicyConfiguration(zone string) (policy *endpoint.Polic
 }
 
 // ReadZoneConfiguration reads the Zone information needed for generating and requesting a certificate from Venafi Cloud
-func (c *Connector) ReadZoneConfiguration(zone string) (config *endpoint.ZoneConfiguration, err error) {
-	if zone == "" {
+func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration, err error) {
+	if c.zone == "" {
 		return nil, fmt.Errorf("empty zone name")
 	}
-	z, err := c.getZoneByTag(zone)
+	z, err := c.getZoneByTag(c.zone)
 	if err != nil {
 		return nil, err
 	}
@@ -195,11 +195,7 @@ func (c *Connector) ReadZoneConfiguration(zone string) (config *endpoint.ZoneCon
 }
 
 // RequestCertificate submits the CSR to the Venafi Cloud API for processing
-func (c *Connector) RequestCertificate(req *certificate.Request, zone string) (requestID string, err error) {
-	if zone == "" {
-		zone = c.zone
-	}
-
+func (c *Connector) RequestCertificate(req *certificate.Request) (requestID string, err error) {
 	if req.CsrOrigin == certificate.ServiceGeneratedCSR {
 		return "", fmt.Errorf("service generated CSR is not supported by Saas service")
 	}
@@ -208,7 +204,7 @@ func (c *Connector) RequestCertificate(req *certificate.Request, zone string) (r
 	if c.user == nil || c.user.Company == nil {
 		return "", fmt.Errorf("Must be autheticated to request a certificate")
 	}
-	z, err := c.getZoneByTag(zone)
+	z, err := c.getZoneByTag(c.zone)
 	if err != nil {
 		return "", err
 	}

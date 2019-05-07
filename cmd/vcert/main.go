@@ -149,7 +149,7 @@ func main() {
 		var req = &certificate.Request{}
 		var pcc = &certificate.PEMCollection{}
 
-		zoneConfig, err := connector.ReadZoneConfiguration(cf.zone)
+		zoneConfig, err := connector.ReadZoneConfiguration()
 
 		if err != nil {
 			logger.Panicf("%s", err)
@@ -169,7 +169,7 @@ func main() {
 		}
 
 		logf("Successfully created request for %s", requestedFor)
-		cf.pickupID, err = connector.RequestCertificate(req, cf.zone)
+		cf.pickupID, err = connector.RequestCertificate(req)
 		if err != nil {
 			logger.Panicf("%s", err)
 		}
