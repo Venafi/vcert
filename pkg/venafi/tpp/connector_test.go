@@ -349,7 +349,7 @@ func TestRevokeCertificate(t *testing.T) {
 		_, isPending = err.(endpoint.ErrCertificatePending)
 	}
 	if err != nil {
-		t.Fatalf("Error should not be nil, certificate has not been issued.")
+		t.Fatalf("Error should not be nil, certificate has not been issued. err: %s", err)
 	}
 
 	t.Logf("Start revocation for %s", certDN)
