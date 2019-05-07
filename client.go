@@ -44,12 +44,12 @@ func NewClient(cfg *Config) (endpoint.Connector, error) {
 	var connector endpoint.Connector
 	switch cfg.ConnectorType {
 	case endpoint.ConnectorTypeCloud:
-		connector, err = cloud.NewConnector(cfg.BaseUrl, cfg.LogVerbose, connectionTrustBundle)
+		connector, err = cloud.NewConnector(cfg.BaseUrl, cfg.Zone, cfg.LogVerbose, connectionTrustBundle)
 		if err != nil {
 			return nil, err
 		}
 	case endpoint.ConnectorTypeTPP:
-		connector, err = tpp.NewConnector(cfg.BaseUrl, cfg.LogVerbose, connectionTrustBundle)
+		connector, err = tpp.NewConnector(cfg.BaseUrl, cfg.Zone, cfg.LogVerbose, connectionTrustBundle)
 		if err != nil {
 			return nil, err
 		}

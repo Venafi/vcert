@@ -39,8 +39,8 @@ type Connector struct {
 }
 
 // NewConnector creates a new TPP Connector object used to communicate with TPP
-func NewConnector(url string, verbose bool, trust *x509.CertPool) (*Connector, error) {
-	c := Connector{trust: trust, verbose: verbose}
+func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (*Connector, error) {
+	c := Connector{verbose: verbose, trust: trust, zone: zone}
 	var err error
 	c.baseURL, err = normalizeURL(url)
 	if err != nil {

@@ -72,8 +72,8 @@ type Connector struct {
 }
 
 // NewConnector creates a new Venafi Cloud Connector object used to communicate with Venafi Cloud
-func NewConnector(url string, verbose bool, trust *x509.CertPool) (*Connector, error) {
-	c := Connector{verbose: verbose, trust: trust}
+func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (*Connector, error) {
+	c := Connector{verbose: verbose, trust: trust, zone: zone}
 	var err error
 	c.baseURL, err = normalizeURL(url)
 	if err != nil {
