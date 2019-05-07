@@ -723,6 +723,7 @@ func TestReadPolicyConfiguration(t *testing.T) {
 		},
 	}
 	for _, c := range cases {
+		tpp.SetZone(c.zone)
 		policy, err := tpp.ReadPolicyConfiguration()
 		if err != nil {
 			t.Fatal(err)
