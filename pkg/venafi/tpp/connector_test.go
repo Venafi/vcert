@@ -53,7 +53,7 @@ func getTestConnector(url string, zone string) (c *Connector, err error) {
 }
 
 func TestPingTPP(t *testing.T) {
-	tpp, err := getTestConnector(ctx.TPPurl, "")
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, ctx.TPPurl)
 	}
@@ -64,7 +64,7 @@ func TestPingTPP(t *testing.T) {
 }
 
 func TestBadPingTPP(t *testing.T) {
-	tpp, err := getTestConnector("http://bonjo-w10dev:333/vedsdk/", "")
+	tpp, err := getTestConnector("http://bonjo-w10dev:333/vedsdk/", ctx.TPPZone)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: http://bonjo-w10dev:333/vedsdk/", err)
 	}
@@ -75,7 +75,7 @@ func TestBadPingTPP(t *testing.T) {
 }
 
 func TestAuthorizeToTPP(t *testing.T) {
-	tpp, err := getTestConnector(ctx.TPPurl)
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, ctx.TPPurl)
 	}
@@ -87,7 +87,7 @@ func TestAuthorizeToTPP(t *testing.T) {
 }
 
 func TestBadAuthorizeToTPP(t *testing.T) {
-	tpp, err := getTestConnector(ctx.TPPurl)
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, ctx.TPPurl)
 	}
@@ -98,7 +98,7 @@ func TestBadAuthorizeToTPP(t *testing.T) {
 }
 
 func TestReadConfigData(t *testing.T) {
-	tpp, err := getTestConnector(ctx.TPPurl)
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
@@ -149,7 +149,7 @@ func TestReadConfigData(t *testing.T) {
 }
 
 func TestBadReadConfigData(t *testing.T) {
-	tpp, err := getTestConnector(ctx.TPPurl)
+	tpp, err := getTestConnector(ctx.TPPurl, "notexistedzone")
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
@@ -167,7 +167,7 @@ func TestBadReadConfigData(t *testing.T) {
 }
 
 func TestRequestCertificate(t *testing.T) {
-	tpp, err := getTestConnector(ctx.TPPurl)
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
@@ -205,7 +205,7 @@ func TestRequestCertificate(t *testing.T) {
 }
 
 func TestRequestCertificateServiceGenerated(t *testing.T) {
-	tpp, err := getTestConnector(ctx.TPPurl)
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	tpp.Authenticate(&endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword})
 	config, err := tpp.ReadZoneConfiguration()
 	if err != nil {
@@ -257,7 +257,7 @@ func TestRequestCertificateServiceGenerated(t *testing.T) {
 }
 
 func TestRetrieveNonIssuedCertificate(t *testing.T) {
-	tpp, err := getTestConnector(ctx.TPPurl)
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
@@ -303,7 +303,7 @@ func TestRevokeCertificate(t *testing.T) {
 
 	cn := "www-1.venqa.venafi.com"
 
-	tpp, err := getTestConnector(ctx.TPPurl)
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
@@ -366,7 +366,7 @@ func TestRevokeNonIssuedCertificate(t *testing.T) {
 
 	certDN := fmt.Sprintf(`\VED\Policy\%s\%s`, ctx.TPPZone, cn)
 
-	tpp, err := getTestConnector(ctx.TPPurl)
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
@@ -389,7 +389,7 @@ func TestRevokeAndDisableCertificate(t *testing.T) {
 
 	cn := test.RandCN()
 
-	tpp, err := getTestConnector(ctx.TPPurl)
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
@@ -463,7 +463,7 @@ func TestRenewCertificate(t *testing.T) {
 
 	cn := test.RandCN()
 
-	tpp, err := getTestConnector(ctx.TPPurl)
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
@@ -611,7 +611,7 @@ ZtIVl/CH/az0xqLKWIlmWOip9SfUVlZdgege+PlQtRqoFVOsH8+MEg==
 
 func TestImportCertificate(t *testing.T) {
 
-	tpp, err := getTestConnector(ctx.TPPurl)
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
@@ -642,7 +642,7 @@ func TestImportCertificate(t *testing.T) {
 
 func TestReadPolicyConfiguration(t *testing.T) {
 	//todo: add more zones tests
-	tpp, err := getTestConnector(ctx.TPPurl)
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
@@ -739,7 +739,7 @@ func pp(a interface{}) {
 }
 
 func Test_EnrollDoesntChange(t *testing.T) {
-	tpp, err := getTestConnector(ctx.TPPurl)
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
