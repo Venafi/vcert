@@ -133,6 +133,7 @@ func TestReadConfigData(t *testing.T) {
 		}},
 	}
 	for _, c := range testCases {
+		tpp.SetZone(c.zone)
 		zoneConfig, err := tpp.ReadZoneConfiguration()
 		zoneConfig.Policy = endpoint.Policy{}
 		if err != nil {
@@ -142,6 +143,7 @@ func TestReadConfigData(t *testing.T) {
 			t.Fatalf("zone config for zone %s is not as expected \nget:    %+v \nexpect: %+v", c.zone, *zoneConfig, c.zoneConfig)
 		}
 	}
+	tpp.SetZone("Wrong Zone")
 	_, err = tpp.ReadZoneConfiguration()
 	if err == nil {
 		t.Fatalf("err should be not nil for not existed zone")
