@@ -44,14 +44,14 @@ func init() {
 	}
 }
 
-func getTestConnector() *Connector {
+func getTestConnector(zone string) *Connector {
 	url, _ := normalizeURL(ctx.CloudUrl)
-	c, _ := NewConnector(url, true, nil)
+	c, _ := NewConnector(url, zone, true, nil)
 	return c
 }
 
 func TestPing(t *testing.T) {
-	conn := getTestConnector()
+	conn := getTestConnector("")
 	err := conn.Ping()
 	if err != nil {
 		t.Fatalf("%s", err)

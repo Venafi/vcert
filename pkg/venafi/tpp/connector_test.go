@@ -47,13 +47,13 @@ func init() {
 	}
 }
 
-func getTestConnector(url string) (c *Connector, err error) {
-	c, err = NewConnector(url, false, nil)
+func getTestConnector(url string, zone string) (c *Connector, err error) {
+	c, err = NewConnector(url, zone, false, nil)
 	return c, err
 }
 
 func TestPingTPP(t *testing.T) {
-	tpp, err := getTestConnector(ctx.TPPurl)
+	tpp, err := getTestConnector(ctx.TPPurl, "")
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, ctx.TPPurl)
 	}
@@ -64,7 +64,7 @@ func TestPingTPP(t *testing.T) {
 }
 
 func TestBadPingTPP(t *testing.T) {
-	tpp, err := getTestConnector("http://bonjo-w10dev:333/vedsdk/")
+	tpp, err := getTestConnector("http://bonjo-w10dev:333/vedsdk/", "")
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: http://bonjo-w10dev:333/vedsdk/", err)
 	}
