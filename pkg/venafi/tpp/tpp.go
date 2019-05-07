@@ -272,7 +272,7 @@ func (c *Connector) getHTTPClient() *http.Client {
 // GenerateRequest creates a new certificate request, based on the zone/policy configuration and the user data
 func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *certificate.Request) (err error) {
 	if config == nil {
-		config, err = c.ReadZoneConfiguration(c.zone)
+		config, err = c.ReadZoneConfiguration()
 		if err != nil {
 			return fmt.Errorf("could not read zone configuration: %s", err)
 		}
