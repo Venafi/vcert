@@ -59,7 +59,7 @@ func TestPing(t *testing.T) {
 }
 
 func TestAuthenticate(t *testing.T) {
-	conn := getTestConnector()
+	conn := getTestConnector(ctx.CloudZone)
 	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -67,11 +67,13 @@ func TestAuthenticate(t *testing.T) {
 }
 
 func TestReadZoneConfiguration(t *testing.T) {
-	conn := getTestConnector()
+	conn := getTestConnector(ctx.CloudZone)
 	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
+
+	conn.SetZone("UnknownZone")
 	_, err = conn.ReadZoneConfiguration()
 	if err == nil {
 		t.Fatalf("Unknown zone should have resulted in an error")
@@ -93,6 +95,7 @@ func TestReadZoneConfiguration(t *testing.T) {
 		}},
 	}
 	for _, c := range testCases {
+		conn.SetZone(c.zone)
 		zoneConfig, err := conn.ReadZoneConfiguration()
 		if err != nil {
 			t.Fatalf("%s", err)
@@ -106,7 +109,7 @@ func TestReadZoneConfiguration(t *testing.T) {
 }
 
 func TestRequestCertificate(t *testing.T) {
-	conn := getTestConnector()
+	conn := getTestConnector(ctx.CloudZone)
 	conn.verbose = true
 	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
 	if err != nil {
@@ -131,7 +134,7 @@ func TestRequestCertificate(t *testing.T) {
 }
 
 func TestRetrieveCertificate(t *testing.T) {
-	conn := getTestConnector()
+	conn := getTestConnector(ctx.CloudZone)
 	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -197,7 +200,7 @@ func TestRetrieveCertificate(t *testing.T) {
 }
 
 func TestRetrieveCertificateRootFirst(t *testing.T) {
-	conn := getTestConnector()
+	conn := getTestConnector(ctx.CloudZone)
 	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -265,7 +268,7 @@ func TestRetrieveCertificateRootFirst(t *testing.T) {
 }
 
 func TestGetCertificateStatus(t *testing.T) {
-	conn := getTestConnector()
+	conn := getTestConnector(ctx.CloudZone)
 	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -300,7 +303,7 @@ func TestGetCertificateStatus(t *testing.T) {
 }
 
 func TestRenewCertificate(t *testing.T) {
-	conn := getTestConnector()
+	conn := getTestConnector(ctx.CloudZone)
 	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -381,7 +384,7 @@ func TestRenewCertificate(t *testing.T) {
 
 func TestReadPolicyConfiguration(t *testing.T) {
 	//todo: add more zones
-	conn := getTestConnector()
+	conn := getTestConnector(ctx.CloudZone)
 	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -436,7 +439,7 @@ t+4v2LIW1q4GkwOUjPqgyIaJC5jj5pH9/g8=
 
 func TestImportCertificate(t *testing.T) {
 
-	conn := getTestConnector()
+	conn := getTestConnector(ctx.CloudZone)
 	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
 	if err != nil {
 		t.Fatalf("%s", err)
