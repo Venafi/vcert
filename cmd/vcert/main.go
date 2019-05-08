@@ -184,10 +184,7 @@ func main() {
 			}
 			logf("Successfully retrieved request for %s", cf.pickupID)
 
-			if cf.csrOption == "service" {
-				// pcc.PrivateKey should be already encrypted by endpoint
-				// so nothing to do here
-			} else {
+			if req.CsrOrigin == certificate.LocalGeneratedCSR {
 				// otherwise private key can be taken from *req
 				err := pcc.AddPrivateKey(req.PrivateKey, []byte(cf.keyPassword))
 				if err != nil {
@@ -355,10 +352,7 @@ func main() {
 			}
 			logf("Successfully retrieved request for %s", cf.pickupID)
 
-			if cf.csrOption == "service" {
-				// pcc.PrivateKey should be already encrypted by endpoint
-				// so nothing to do here
-			} else {
+			if req.CsrOrigin == certificate.LocalGeneratedCSR {
 				// otherwise private key can be taken from *req
 				err = pcc.AddPrivateKey(req.PrivateKey, []byte(cf.keyPassword))
 				if err != nil {
