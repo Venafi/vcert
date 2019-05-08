@@ -26,20 +26,17 @@ import (
 const projectName string = "Venafi Certificate Utility"
 
 var (
-	VersionBuildTimeStamp string
-	VersionString         string
+	versionBuildTimeStamp string
+	versionString         string
 )
 
 //GetFormattedVersionString gets a friendly printable string to represent the version
 func GetFormattedVersionString() string {
-	if VersionBuildTimeStamp != "" {
-		VersionBuildTimeStamp = fmt.Sprintf("\tBuild Timestamp: %s\n", VersionBuildTimeStamp)
+	if versionBuildTimeStamp != "" {
+		versionBuildTimeStamp = fmt.Sprintf("\tBuild Timestamp: %s\n", versionBuildTimeStamp)
 	}
-	return fmt.Sprintf("%s\n\tVersion: %s\n%s", projectName, GetVersionString(), VersionBuildTimeStamp)
-}
-
-//GetVersionString gets a simple version string
-func GetVersionString() string {
-	fmt.Println("Version:", VersionString)
-	return VersionString
+	if versionString == "" {
+		versionString = "Unknown"
+	}
+	return fmt.Sprintf("%s\n\tVersion: %s\n%s", projectName, versionString, versionBuildTimeStamp)
 }

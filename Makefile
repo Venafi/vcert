@@ -5,7 +5,7 @@ else
 	VERSION=`git describe --abbrev=0 --tags`
 endif
 
-GO_LDFLAGS=-ldflags "-X github.com/Venafi/vcert.VersionString=$(VERSION) -X github.com/Venafi/vcert.VersionBuildTimeStamp=`date -u +%Y%m%d.%H%M%S` -s -w"
+GO_LDFLAGS=-ldflags "-X github.com/Venafi/vcert.versionString=$(VERSION) -X github.com/Venafi/vcert.versionBuildTimeStamp=`date -u +%Y%m%d.%H%M%S` -s -w"
 version:
 	echo "$(VERSION)"
 
