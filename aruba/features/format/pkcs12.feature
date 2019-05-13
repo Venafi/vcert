@@ -56,7 +56,7 @@ Feature: PKCS#12 format output
   Scenario Outline: where it outputs error when trying to pickup local-generated certificate and output it in PKCS#12 format
     When I enroll random certificate using <endpoint> with -no-prompt -no-pickup
     And I retrieve the certificate using <endpoint> using the same Pickup ID with -timeout 99 -no-prompt -file all.p12 -format pkcs12
-    And it should fail with "failed to encode pkcs12: at least certificate and private key are required"
+    And it should fail with "key password must be provided"
     Examples:
       | endpoint  |
       | test-mode |
