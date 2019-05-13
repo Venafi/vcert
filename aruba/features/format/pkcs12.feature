@@ -56,7 +56,7 @@ Feature: PKCS#12 format output
   Scenario Outline: where it outputs error when trying to pickup local-generated certificate and output it in PKCS#12 format
     When I enroll random certificate using <endpoint> with -no-prompt -no-pickup
     And I retrieve the certificate using <endpoint> using the same Pickup ID with -timeout 99 -no-prompt -file all.p12 -format pkcs12
-    And it should fail with "failed to encode pkcs12: at least certificate and private key are required"
+    And it should fail with "key password must be provided"
     Examples:
       | endpoint  |
       | test-mode |
@@ -100,3 +100,28 @@ Feature: PKCS#12 format output
       | test-mode |
       | TPP       |
       # | Cloud     | # -csr service is not supported by Cloud
+
+#  Scenario Outline: Pickup PKCS12 with typing pass phrases
+#    When I enroll random certificate using <endpoint> with -no-prompt -no-pickup -csr service
+#    And I interactively retrieve the certificate using <endpoint> using the same Pickup ID with -timeout 99 -file all.p12 -format pkcs12
+#    And I type "newPassw0rd!"
+#    And I type "newPassw0rd!"
+#    Then the exit status should be 0
+#    And "all.p12" should be PKCS#12 archive with password "newPassw0rd!"
+#    Examples:
+#      | endpoint  |
+#      | test-mode |
+      # | TPP       |
+      # | Cloud     | # -csr service is not supported by Cloud
+
+  Scenario Outline: where it should enroll a PKCS12 certificate with -csr service and without file option (VEN-48622)
+    When I enroll random certificate using <endpoint> with -csr service -no-prompt -no-pickup -format pkcs12
+      Then it should post certificate request
+    Then I retrieve the certificate using <endpoint> using the same Pickup ID with -key-password newPassw0rd! -timeout 59
+      And it should retrieve certificate
+      And it should output encrypted private key
+    Examples:
+      | endpoint  |
+      | test-mode |
+      | TPP       |
+
