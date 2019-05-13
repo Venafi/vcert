@@ -71,7 +71,7 @@ func readPasswordsFromInputFlags(co command, cf *commandFlags) error {
 					logger.Panicf("Pass phrases don't match")
 				}
 				cf.keyPassword = string(input)
-			} else if cf.keyPassword == "" && cf.noPrompt {
+			} else if cf.keyPassword == "" && cf.noPrompt && co == commandPickup {
 				//TODO: cover with test
 				return fmt.Errorf("key password must be provided")
 			} else {
