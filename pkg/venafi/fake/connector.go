@@ -52,10 +52,6 @@ func (c *Connector) Ping() (err error) {
 	return
 }
 
-func (c *Connector) Register(email string) (err error) {
-	return
-}
-
 func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 	return
 }

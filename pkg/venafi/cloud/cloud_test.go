@@ -25,8 +25,6 @@ import (
 )
 
 var (
-	successRegister              = []byte("{\"user\":{\"username\":\"bskolmoski@venafi.com\",\"userId\":\"55de90d0-b316-11e5-84f8-2956bc596cca\",\"companyId\":\"4dd5ba80-a8f3-11e5-84f8-2956bc596cca\",\"userType\":\"EXTERNAL\",\"userAccountType\":\"API\",\"userStatus\":\"PENDING_ACTIVATION\",\"creationDate\":\"2016-01-04T19:07:01.597+0000\"},\"company\":{\"id\":\"4dd5ba80-a8f3-11e5-84f8-2956bc596cca\",\"companyType\":\"TPP_CUSTOMER\",\"active\":true,\"creationDate\":\"2015-12-22T21:31:04.054+0000\",\"domains\":[\"venafi.com\"]}}")
-	errorRegister                = []byte("{\"errors\":[{\"code\":10128,\"message\":\"Invalid change in apiKey status\",\"args\":[]}]}")
 	successGetUserAccount        = []byte("{\"user\": {\"username\": \"ben.skolmoski@venafi.com\",\"id\": \"aa4a4ee0-efaf-11e5-b223-d96cf8021ce5\",\"companyId\": \"a94d5140-efaf-11e5-b223-d96cf8021ce5\",\"userType\": \"EXTERNAL\",\"userAccountType\": \"API\",\"userStatus\": \"ACTIVE\",\"creationDate\": \"2016-03-21T21:55:45.998+0000\"},\"company\": {\"id\": \"a94d5140-efaf-11e5-b223-d96cf8021ce5\",\"companyType\": \"TPP_CUSTOMER\",\"active\": true,\"creationDate\": \"2016-03-21T21:55:44.326+0000\",\"domains\": [\"venafi.com\"]},\"apiKey\": {\"username\": \"ben.skolmoski@venafi.com\",\"apiType\": \"ALL\",\"apiVersion\": \"ALL\",\"apiKeyStatus\": \"ACTIVE\",\"creationDate\": \"2016-03-21T21:55:45.998+0000\"}}")
 	errorGetUserAccount          = []byte("{\"errors\": [{\"code\": 10501,\"message\": \"Unable to find api key for key cec682ba-f409-40c0-9b00-aeb67876b7a1\",\"args\": [\"cec682ba-f409-40c0-9b00-aeb67876b7a1\"]}]}")
 	successGetZoneByTag          = []byte("{\"id\": \"700e6820-0a60-11e7-a0e2-77cf2c42e000\",\"companyId\": \"700c4540-0a60-11e7-a0e2-77cf2c42e000\",\"tag\": \"Default\",\"zoneType\": \"OTHER\",\"certificatePolicyIds\": {\"CERTIFICATE_IDENTITY\": [\"700df2f0-0a60-11e7-a0e2-77cf2c42e000\"],\"CERTIFICATE_USE\": [\"700df2f1-0a60-11e7-a0e2-77cf2c42e000\"]},\"defaultCertificateIdentityPolicyId\": \"700df2f0-0a60-11e7-a0e2-77cf2c42e000\",  \"defaultCertificateUsePolicyId\": \"700df2f1-0a60-11e7-a0e2-77cf2c42e000\",\"systemGenerated\": true,\"creationDate\": \"2017-03-16T15:51:37.108+0000\"}")
@@ -44,17 +42,6 @@ const (
 	expectedURL = "https://api2.projectc.venafi.com/v1/"
 )
 
-func TestParseRegistrationData(t *testing.T) {
-	reg, err := parseUserDetailsData(successRegister)
-	if err != nil {
-		t.Fatalf("err is not nil, err: %s", err)
-	}
-
-	if reg.User.Username != "bskolmoski@venafi.com" {
-		t.Fatalf("Registration username did not match expected value of bskolmoski@venafi.com, actual: %s", reg.User.Username)
-	}
-}
-
 func TestParseGetUserAccountData(t *testing.T) {
 	reg, err := parseUserDetailsData(successGetUserAccount)
 	if err != nil {
@@ -66,33 +53,8 @@ func TestParseGetUserAccountData(t *testing.T) {
 	}
 }
 
-func TestParseRegistrationResponseError(t *testing.T) {
-	_, err := parseUserDetailsResult(http.StatusCreated, http.StatusConflict, "There was an error", errorRegister)
-	if err == nil {
-		t.Fatalf("err nil, expected error back")
-	}
-	_, err = parseUserDetailsResult(http.StatusCreated, http.StatusPreconditionFailed, "There was an error", errorRegister)
-	if err == nil {
-		t.Fatalf("err nil, expected error back")
-	}
-}
-
 func TestParseBadAPIKeyError(t *testing.T) {
 	_, err := parseUserDetailsResult(http.StatusOK, http.StatusPreconditionFailed, "Auth Error", errorGetUserAccount)
-	if err == nil {
-		t.Fatalf("err nil, expected error back")
-	}
-}
-
-func TestParseRegistrationResponseSuccess(t *testing.T) {
-	_, err := parseUserDetailsResult(http.StatusCreated, http.StatusCreated, "", successRegister)
-	if err != nil {
-		t.Fatalf("err is not nil, err: %s", err)
-	}
-}
-
-func TestParseRegistrationResponseUnknown(t *testing.T) {
-	_, err := parseUserDetailsResult(http.StatusCreated, http.StatusForbidden, "There was an error", errorRegister)
 	if err == nil {
 		t.Fatalf("err nil, expected error back")
 	}

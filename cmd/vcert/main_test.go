@@ -17,7 +17,6 @@
 package main
 
 import (
-	"bufio"
 	"crypto"
 	"crypto/ecdsa"
 	"crypto/rand"
@@ -217,9 +216,7 @@ func (ep *fakeEndPointConnector) Ping() error {
 func (ep *fakeEndPointConnector) SetBaseURL(string) error {
 	return nil
 }
-func (ep *fakeEndPointConnector) Register(string) error {
-	return nil
-}
+
 func (ep *fakeEndPointConnector) Authenticate(auth endpoint.Authentication) error {
 	return nil
 }
@@ -239,19 +236,6 @@ func (ep *fakeEndPointConnector) RetrieveCertificate(string, certificate.ChainOp
 func newFakeConnector() (*fakeEndPointConnector, error) {
 	ep := fakeEndPointConnector{}
 	return &ep, nil
-}
-
-func TestValidateFlagsForRegistration(t *testing.T) {
-	registerFlags.Set("email", testEmail)
-
-	err := validateFlags(commandRegister)
-	if err != nil {
-		t.Fatalf("Error was expected to be nil.  Error: %s", err)
-	}
-
-	if regParams.email != testEmail {
-		t.Fatalf("Email was not parsed according to set flag.  Expected: %s Actual: %s", testEmail, regParams.email)
-	}
 }
 
 func TestValidateFlagsForTPPMissingData(t *testing.T) {
@@ -489,16 +473,6 @@ func TestStringSliceSetByString(t *testing.T) {
 		if len(ss) != i+1 {
 			t.Fatalf("Unexpected count after adding to [].  Expected: %d Actual: %d", i+1, len(ss))
 		}
-	}
-}
-
-func TestGetEmailForRegistration(t *testing.T) {
-	email, err := getEmailForRegistration(bufio.NewWriter(ioutil.Discard), bufio.NewReader(strings.NewReader(testEmail)))
-	if err != nil {
-		t.Fatalf("Error was expected to be nil.  Error: %s", err)
-	}
-	if email != testEmail {
-		t.Fatalf("Unexpected email returned. Expected: %s Actual %s", testEmail, email)
 	}
 }
 

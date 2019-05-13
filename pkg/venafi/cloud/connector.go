@@ -118,28 +118,6 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 	return
 }
 
-// Register registers a new user with Venafi Cloud
-func (c *Connector) Register(email string) (err error) {
-
-	url := c.getURL(urlResourceUserAccounts)
-	statusCode, status, body, err := c.request("POST", url, userAccount{Username: email, UserAccountType: "API"})
-	if err != nil {
-		return err
-	}
-	//the user has already been registered and there is nothing to parse
-
-	// User has already been registered and there is nothing to parse
-	if statusCode == http.StatusAccepted {
-		return nil
-	}
-	ud, err := parseUserDetailsResult(http.StatusCreated, statusCode, status, body)
-	if err != nil {
-		return err
-	}
-	c.user = ud
-	return nil
-}
-
 func (c *Connector) ReadPolicyConfiguration(zone string) (policy *endpoint.Policy, err error) {
 	config, err := c.ReadZoneConfiguration(zone)
 	if err != nil {

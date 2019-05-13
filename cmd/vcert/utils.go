@@ -17,7 +17,6 @@
 package main
 
 import (
-	"bufio"
 	"crypto/sha1"
 	"crypto/x509"
 	"encoding/hex"
@@ -209,20 +208,6 @@ func retrieveCertificateNew(connector endpoint.Connector, req *certificate.Reque
 		return nil, fmt.Errorf("fail: certificate is not returned by remote, while error is nil")
 	}
 	return certificates, nil
-}
-
-func getEmailForRegistration(writer *bufio.Writer, reader *bufio.Reader) (string, error) {
-	// nolint: errcheck
-	writer.WriteString("Please enter your email address:")
-	writer.Flush()
-	line, _, err := reader.ReadLine()
-	if err != nil {
-		return "", err
-	}
-	if len(line) == 0 {
-		return "", fmt.Errorf("Email is required for registration")
-	}
-	return string(line), nil
 }
 
 func getFileWriter(fileName string) io.Writer {
