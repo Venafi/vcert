@@ -72,6 +72,7 @@ func readPasswordsFromInputFlags(co command, cf *commandFlags) error {
 				}
 				cf.keyPassword = string(input)
 			} else if cf.keyPassword == "" && cf.noPrompt {
+				//TODO: cover with test
 				return fmt.Errorf("key password must be provided")
 			} else {
 				temp, err := readPasswordsFromInputFlag(cf.keyPassword, lineIndex)
