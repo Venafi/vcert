@@ -257,7 +257,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 	if req.FetchPrivateKey {
 		return nil, fmt.Errorf("Failed to retrieve private key from Venafi Cloud service: not supported")
 	}
-	if req.PickupID == "" && req.Thumbprint != "" && req.CertID == "" {
+	if req.PickupID == "" && req.CertID == "" && req.Thumbprint != "" {
 		// search cert by Thumbprint and fill pickupID
 		var certificateRequestId string
 		searchResult, err := c.searchCertificatesByFingerprint(req.Thumbprint)
@@ -290,6 +290,8 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 	}
 
 	startTime := time.Now()
+	//Wait for certificate to be issued by checking it's PickupID
+	//If certID is filled then certificate should be already issued.
 	if req.CertID == "" {
 		for {
 			if req.PickupID == "" {
