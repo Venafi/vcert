@@ -93,11 +93,6 @@ func (c *Connector) Ping() (err error) {
 	return
 }
 
-// Register does nothing for TPP
-func (c *Connector) Register(email string) (err error) {
-	return nil
-}
-
 // Authenticate authenticates the user to the TPP
 func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 	if auth == nil {
@@ -372,7 +367,7 @@ func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration,
 		Policy serverPolicy
 	}
 	if statusCode != http.StatusOK {
-		return nil, fmt.Errorf("Invalid status: %s Server data: %s", status, body)
+		return nil, fmt.Errorf("Invalid status: %s Server response: %s", status, string(body))
 	}
 	err = json.Unmarshal(body, &r)
 	if err != nil {
