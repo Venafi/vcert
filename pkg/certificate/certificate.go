@@ -159,6 +159,7 @@ type Request struct {
 	KeyLength          int
 	KeyCurve           EllipticCurve
 	CSR                []byte // should be a PEM-encoded CSR
+	csr                []byte
 	PrivateKey         crypto.Signer
 	CsrOrigin          CSrOriginOption
 	PickupID           string
@@ -203,6 +204,40 @@ type ImportResponse struct {
 	CertificateVaultId int    `json:",omitempty"`
 	Guid               string `json:",omitempty"`
 	PrivateKeyVaultId  int    `json:",omitempty"`
+}
+
+func (request *Request) SetCSR(csr []byte) error {
+	//Determine CSR type and use appropriate function
+	_, err := x509.ParseCertificateRequest(csr)
+	if err == nil {
+		err := request.GetCSRasn1(csr)
+		if err != nil {
+			return err
+		}
+	} else {
+		err := request.GetCSRpem(csr)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (request Request) GetCSR() []byte {
+	return request.csr
+}
+
+func (request *Request) GetCSRasn1(rawASN1 []byte) error {
+	req := x509.CertificateRequest{}
+	req.Raw = rawASN1
+
+	request.csr = nil
+	return nil
+}
+
+func (request *Request) GetCSRpem([]byte) error {
+	request.csr = nil
+	return nil
 }
 
 // GenerateRequest generates a certificate request
@@ -294,10 +329,10 @@ func (request *Request) CheckCertificate(certPEM string) error {
 		default:
 			return fmt.Errorf("unknown key algorythm %d", cert.PublicKeyAlgorithm)
 		}
-	} else if len(request.CSR) != 0 {
-		pemBlock, _ := pem.Decode(request.CSR)
+	} else if len(request.csr) != 0 {
+		pemBlock, _ := pem.Decode(request.csr)
 		if pemBlock == nil {
-			return fmt.Errorf("bad csr: %s", string(request.CSR))
+			return fmt.Errorf("bad csr: %s", string(request.csr))
 		}
 		csr, err := x509.ParseCertificateRequest(pemBlock.Bytes)
 		if err != nil {
