@@ -257,8 +257,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 	if req.FetchPrivateKey {
 		return nil, fmt.Errorf("Failed to retrieve private key from Venafi Cloud service: not supported")
 	}
-	var certID string
-	if req.PickupID == "" && req.Thumbprint != "" {
+	if req.PickupID == "" && req.Thumbprint != "" && req.CertID == "" {
 		// search cert by Thumbprint and fill pickupID
 		var certificateRequestId string
 		searchResult, err := c.searchCertificatesByFingerprint(req.Thumbprint)
@@ -278,8 +277,9 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 			}
 			if c.CertificateRequestId != "" {
 				certificateRequestId = c.CertificateRequestId
-			} else {
-				certID = c.Id
+			}
+			if c.Id != "" {
+				req.CertID = c.Id
 			}
 		}
 		if !isOnlyOneCertificateRequestId {
@@ -290,33 +290,49 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 	}
 
 	startTime := time.Now()
-	for {
-		if req.PickupID == "" {
-			break
+	if req.CertID == "" {
+		for {
+			if req.PickupID == "" {
+				break
+			}
+			status, err := c.getCertificateStatus(req.PickupID)
+			if err != nil {
+				return nil, fmt.Errorf("unable to retrieve: %s", err)
+			}
+			if status.Status == "ISSUED" {
+				break // to fetch the cert itself
+			} else if status.Status == "FAILED" {
+				return nil, fmt.Errorf("Failed to retrieve certificate. Status: %v", status)
+			}
+			// status.Status == "REQUESTED" || status.Status == "PENDING"
+			if req.Timeout == 0 {
+				return nil, endpoint.ErrCertificatePending{CertificateID: req.PickupID, Status: status.Status}
+			}
+			if time.Now().After(startTime.Add(req.Timeout)) {
+				return nil, endpoint.ErrRetrieveCertificateTimeout{CertificateID: req.PickupID}
+			}
+			// fmt.Printf("pending... %s\n", status.Status)
+			time.Sleep(2 * time.Second)
 		}
-		status, err := c.getCertificateStatus(req.PickupID)
-		if err != nil {
-			return nil, fmt.Errorf("unable to retrieve: %s", err)
-		}
-		if status.Status == "ISSUED" {
-			break // to fetch the cert itself
-		} else if status.Status == "FAILED" {
-			return nil, fmt.Errorf("Failed to retrieve certificate. Status: %v", status)
-		}
-		// status.Status == "REQUESTED" || status.Status == "PENDING"
-		if req.Timeout == 0 {
-			return nil, endpoint.ErrCertificatePending{CertificateID: req.PickupID, Status: status.Status}
-		}
-		if time.Now().After(startTime.Add(req.Timeout)) {
-			return nil, endpoint.ErrRetrieveCertificateTimeout{CertificateID: req.PickupID}
-		}
-		// fmt.Printf("pending... %s\n", status.Status)
-		time.Sleep(2 * time.Second)
 	}
+
 	if c.user == nil || c.user.Company == nil {
 		return nil, fmt.Errorf("Must be autheticated to retieve certificate")
 	}
-	if req.PickupID != "" {
+
+	switch {
+	case req.CertID != "":
+		url := c.getURL(urlResourceCertificateRetrievePem)
+		url = fmt.Sprintf(url, req.CertID)
+		statusCode, status, body, err := c.request("GET", url, nil)
+		if err != nil {
+			return nil, err
+		}
+		if statusCode != http.StatusOK {
+			return nil, fmt.Errorf("Failed to retrieve certificate. StatusCode: %d -- Status: %s -- Server Data: %s", statusCode, status, body)
+		}
+		return newPEMCollectionFromResponse(body, certificate.ChainOptionIgnore)
+	case req.PickupID != "":
 		url := c.getURL(urlResourceCertificateRetrieveViaCSR)
 		url = fmt.Sprintf(url, req.PickupID)
 		url += "?chainOrder=%s&format=PEM"
@@ -342,19 +358,8 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 		} else {
 			return nil, fmt.Errorf("Failed to retrieve certificate. StatusCode: %d -- Status: %s -- Server Data: %s", statusCode, status, body) //todo:remove body from err
 		}
-	} else {
-		url := c.getURL(urlResourceCertificateRetrievePem)
-		url = fmt.Sprintf(url, certID)
-		statusCode, status, body, err := c.request("GET", url, nil)
-		if err != nil {
-			return nil, err
-		}
-		if statusCode != http.StatusOK {
-			return nil, fmt.Errorf("Failed to retrieve certificate. StatusCode: %d -- Status: %s -- Server Data: %s", statusCode, status, body)
-		}
-
-		return newPEMCollectionFromResponse(body, certificate.ChainOptionIgnore)
 	}
+	return nil, fmt.Errorf("Couldn't retrieve certificate because both PickupID and CertId are empty")
 }
 
 // RevokeCertificate attempts to revoke the certificate
@@ -648,6 +653,6 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 		return nil, fmt.Errorf("certificate has been imported but could not be found on platform after that")
 	}
 	cert := foundCert.Certificates[0]
-	resp := &certificate.ImportResponse{CertificateDN: cert.SubjectCN[0]}
+	resp := &certificate.ImportResponse{CertificateDN: cert.SubjectCN[0], CertId: cert.Id}
 	return resp, nil
 }

@@ -162,9 +162,11 @@ type Request struct {
 	PrivateKey         crypto.Signer
 	CsrOrigin          CSrOriginOption
 	PickupID           string
-	ChainOption        ChainOption
-	KeyPassword        string
-	FetchPrivateKey    bool
+	//Cloud Certificate ID
+	CertID          string
+	ChainOption     ChainOption
+	KeyPassword     string
+	FetchPrivateKey bool
 	/*	Thumbprint is here because *Request is used in RetrieveCertificate().
 		Code should be refactored so that RetrieveCertificate() uses some abstract search object, instead of *Request{PickupID} */
 	Thumbprint string
@@ -197,6 +199,7 @@ type ImportRequest struct {
 
 type ImportResponse struct {
 	CertificateDN      string `json:",omitempty"`
+	CertId             string `json:",omitempty"`
 	CertificateVaultId int    `json:",omitempty"`
 	Guid               string `json:",omitempty"`
 	PrivateKeyVaultId  int    `json:",omitempty"`

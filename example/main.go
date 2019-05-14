@@ -17,6 +17,7 @@
 package main
 
 import (
+	"crypto/sha1"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
@@ -27,6 +28,7 @@ import (
 	"math/big"
 	"net"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -157,8 +159,6 @@ func main() {
 	if err != nil {
 		t.Fatalf("could not submit certificate revocation request: %s", err)
 	}
-	t.Printf("Successfully submitted revocation request for %s", requestID)
-
 	//
 	// 2. Import certificate to another object of the same Zone
 	//
@@ -206,4 +206,12 @@ func getSerial(crt string) *big.Int {
 		t.Fatalf("could not parse x509 certificate: %s", err)
 	}
 	return newCert.SerialNumber
+}
+
+func calcThumbprint(cert string) string {
+	p, _ := pem.Decode([]byte(cert))
+	h := sha1.New()
+	h.Write(p.Bytes)
+	buf := h.Sum(nil)
+	return strings.ToUpper(fmt.Sprintf("%x", buf))
 }
