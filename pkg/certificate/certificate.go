@@ -24,6 +24,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/asn1"
 	"encoding/pem"
 	"fmt"
 	"net"
@@ -159,7 +160,7 @@ type Request struct {
 	KeyLength          int
 	KeyCurve           EllipticCurve
 	CSR                []byte // should be a PEM-encoded CSR
-	csr                []byte
+	csr                []byte // should be a PEM-encoded CSR
 	PrivateKey         crypto.Signer
 	CsrOrigin          CSrOriginOption
 	PickupID           string
@@ -225,7 +226,11 @@ func (request Request) GetCSR() []byte {
 }
 
 func (request Request) GetCSRasn1() []byte {
-	return request.csr
+	asn1Csr, err := asn1.Marshal(request.csr)
+	if err != nil {
+		return nil
+	}
+	return asn1Csr
 }
 
 func (request Request) GetCSRpem() []byte {
@@ -240,8 +245,8 @@ func (request *Request) SetCSRasn1(rawASN1 []byte) error {
 	return nil
 }
 
-func (request *Request) SetCSRpem([]byte) error {
-	request.csr = nil
+func (request *Request) SetCSRpem(csr []byte) error {
+	request.csr = pem.EncodeToMemory(GetCertificateRequestPEMBlock(csr))
 	return nil
 }
 
