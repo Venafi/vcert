@@ -21,7 +21,6 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
-	"encoding/asn1"
 	"encoding/pem"
 	"math/big"
 	"net"
@@ -530,8 +529,9 @@ func TestRequest_CheckCertificate(t *testing.T) {
 }
 
 func TestRequest_SetCSR(t *testing.T) {
+	checkCN := "setcsr.example.com"
 	certificateRequest := x509.CertificateRequest{}
-	certificateRequest.Subject.CommonName = "example.com"
+	certificateRequest.Subject.CommonName = checkCN
 	pk, err := GenerateRSAPrivateKey(512)
 	if err != nil {
 		t.Fatalf("Error generating RSA Private Key\nError: %s", err)
@@ -541,41 +541,33 @@ func TestRequest_SetCSR(t *testing.T) {
 	if err != nil {
 		csr = nil
 	}
+
 	rawCsr := csr
+
 	pemCsr := pem.EncodeToMemory(GetCertificateRequestPEMBlock(csr))
-
-	asn1Csr, _ := asn1.Marshal(csr)
-	var asn1CsrByte []byte
-	_, err = asn1.Unmarshal([]byte(asn1Csr), &asn1CsrByte)
-	if err != nil {
-		t.Fatal(err)
-	}
-	asn1CsrByteDecoded, err := x509.ParseCertificateRequest(asn1CsrByte)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Logf("asn1_csr_decoded.Subject.CommonName %s", asn1CsrByteDecoded.Subject.CommonName)
-
-	rawCsrDecoded, _ := x509.ParseCertificateRequest(rawCsr)
-	t.Logf("raw_csr_decoded.Subject.CommonName %s", rawCsrDecoded.Subject.CommonName)
-	t.Logf("pem csr: %s", pemCsr)
-	block, _ := pem.Decode(pemCsr)
-	t.Logf("pem csr type: %s", block.Type)
-	//t.Logf("raw csr decoded: %v",rawCsrDecoded)
-	//t.Logf("raw csr asn1: %v",asn1CsrByteDecoded)
 	r := Request{}
-	err = r.SetCSR(rawCsr)
-	if err != nil {
-		t.Fatal(err)
+
+	csrs := [][]byte{rawCsr, pemCsr}
+	for _, csr := range csrs {
+		err = r.SetCSR(csr)
+		if err != nil {
+			t.Fatal(err)
+		}
+		gotCsr := r.GetCSR()
+		block, _ := pem.Decode(gotCsr)
+		cert, err := x509.ParseCertificateRequest(block.Bytes)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if cert.Subject.CommonName != checkCN {
+			t.Fatalf("%s =! %s", cert.Subject.CommonName, checkCN)
+		}
+		err = r.SetCSR(pemCsr)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Logf("Got cn %s from csr %s", cert.Subject.CommonName, gotCsr)
 	}
-	csr = r.GetCSR()
-	t.Log("Check", csr)
-	err = r.SetCSR(pemCsr)
-	if err != nil {
-		t.Fatal(err)
-	}
-	csr = r.GetCSR()
-	t.Log("Check", csr)
 
 }
 
