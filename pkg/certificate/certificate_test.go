@@ -530,8 +530,8 @@ func TestRequest_CheckCertificate(t *testing.T) {
 }
 
 func TestRequest_SetCSR(t *testing.T) {
-	var raw_csr []byte
-	var pem_csr []byte
+	var rawCsr []byte
+	var pemCsr []byte
 	certificateRequest := x509.CertificateRequest{}
 	certificateRequest.Subject.CommonName = "example.com"
 	pk, err := GenerateRSAPrivateKey(512)
@@ -543,8 +543,8 @@ func TestRequest_SetCSR(t *testing.T) {
 	if err != nil {
 		csr = nil
 	}
-	raw_csr = csr
-	pem_csr = pem.EncodeToMemory(GetCertificateRequestPEMBlock(csr))
+	rawCsr = csr
+	pemCsr = pem.EncodeToMemory(GetCertificateRequestPEMBlock(csr))
 
 	asn1Csr, _ := asn1.Marshal(csr)
 	var asn1CsrByte []byte
@@ -558,17 +558,17 @@ func TestRequest_SetCSR(t *testing.T) {
 	}
 	t.Logf("asn1_csr_decoded.Subject.CommonName %s", asn1CsrByteDecoded.Subject.CommonName)
 
-	rawCsrDecoded, _ := x509.ParseCertificateRequest(raw_csr)
+	rawCsrDecoded, _ := x509.ParseCertificateRequest(rawCsr)
 	t.Logf("raw_csr_decoded.Subject.CommonName %s", rawCsrDecoded.Subject.CommonName)
-	t.Logf("pem csr: %s", pem_csr)
+	t.Logf("pem csr: %s", pemCsr)
 	r := Request{}
-	err = r.SetCSR(raw_csr)
+	err = r.SetCSR(rawCsr)
 	if err != nil {
 		t.Fatal(err)
 	}
 	csr = r.GetCSRasn1()
 	t.Log("Check", csr)
-	err = r.SetCSR(pem_csr)
+	err = r.SetCSR(pemCsr)
 	if err != nil {
 		t.Fatal(err)
 	}
