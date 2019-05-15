@@ -21,6 +21,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
+	"encoding/asn1"
 	"encoding/pem"
 	"math/big"
 	"net"
@@ -529,15 +530,39 @@ func TestRequest_CheckCertificate(t *testing.T) {
 }
 
 func TestRequest_SetCSR(t *testing.T) {
-	var asn1_cert []byte
-	var pem_cert []byte
-	asn1_cert = make([]byte, 5)
-	pem_cert = make([]byte, 5)
+	var raw_csr []byte
+	var pem_csr []byte
+	certificateRequest := x509.CertificateRequest{}
+	certificateRequest.Subject.CommonName = "example.com"
+	pk, err := GenerateRSAPrivateKey(512)
+	if err != nil {
+		t.Fatalf("Error generating RSA Private Key\nError: %s", err)
+	}
+
+	csr, err := x509.CreateCertificateRequest(rand.Reader, &certificateRequest, pk)
+	if err != nil {
+		csr = nil
+	}
+	raw_csr = csr
+	pem_csr = pem.EncodeToMemory(GetCertificateRequestPEMBlock(csr))
+
+	asn1_csr, _ := asn1.Marshal(csr)
+	var asn1_csr_byte []byte
+	asn1.Unmarshal([]byte(asn1_csr), &asn1_csr_byte)
+	asn1_csr_byte_decoded, err := x509.ParseCertificateRequest(asn1_csr_byte)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("asn1_csr_decoded.Subject.CommonName %s", asn1_csr_byte_decoded.Subject.CommonName)
+
+	raw_csr_decoded, _ := x509.ParseCertificateRequest(raw_csr)
+	t.Logf("raw_csr_decoded.Subject.CommonName %s", raw_csr_decoded.Subject.CommonName)
+	t.Logf("pem csr: %s", pem_csr)
 	r := Request{}
-	r.SetCSR(asn1_cert)
-	csr := r.GetCSRasn1()
+	r.SetCSR(raw_csr)
+	csr = r.GetCSRasn1()
 	t.Log("Check", csr)
-	r.SetCSR(pem_cert)
+	r.SetCSR(pem_csr)
 	csr = r.GetCSRpem()
 	t.Log("Check", csr)
 
