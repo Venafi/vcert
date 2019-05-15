@@ -546,26 +546,32 @@ func TestRequest_SetCSR(t *testing.T) {
 	raw_csr = csr
 	pem_csr = pem.EncodeToMemory(GetCertificateRequestPEMBlock(csr))
 
-	asn1_csr, _ := asn1.Marshal(csr)
-	var asn1_csr_byte []byte
-	_, err = asn1.Unmarshal([]byte(asn1_csr), &asn1_csr_byte)
+	asn1Csr, _ := asn1.Marshal(csr)
+	var asn1CsrByte []byte
+	_, err = asn1.Unmarshal([]byte(asn1Csr), &asn1CsrByte)
 	if err != nil {
 		t.Fatal(err)
 	}
-	asn1_csr_byte_decoded, err := x509.ParseCertificateRequest(asn1_csr_byte)
+	asn1CsrByteDecoded, err := x509.ParseCertificateRequest(asn1CsrByte)
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Logf("asn1_csr_decoded.Subject.CommonName %s", asn1_csr_byte_decoded.Subject.CommonName)
+	t.Logf("asn1_csr_decoded.Subject.CommonName %s", asn1CsrByteDecoded.Subject.CommonName)
 
-	raw_csr_decoded, _ := x509.ParseCertificateRequest(raw_csr)
-	t.Logf("raw_csr_decoded.Subject.CommonName %s", raw_csr_decoded.Subject.CommonName)
+	rawCsrDecoded, _ := x509.ParseCertificateRequest(raw_csr)
+	t.Logf("raw_csr_decoded.Subject.CommonName %s", rawCsrDecoded.Subject.CommonName)
 	t.Logf("pem csr: %s", pem_csr)
 	r := Request{}
-	r.SetCSR(raw_csr)
+	err = r.SetCSR(raw_csr)
+	if err != nil {
+		t.Fatal(err)
+	}
 	csr = r.GetCSRasn1()
 	t.Log("Check", csr)
-	r.SetCSR(pem_csr)
+	err = r.SetCSR(pem_csr)
+	if err != nil {
+		t.Fatal(err)
+	}
 	csr = r.GetCSRpem()
 	t.Log("Check", csr)
 
