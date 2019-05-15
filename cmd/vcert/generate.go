@@ -143,7 +143,7 @@ func generateCsrForCommandGenCsr(cf *commandFlags, privateKeyPass []byte) (priva
 	if err != nil {
 		return
 	}
-	csr = certReq.CSR
+	csr = certReq.GetCSR()
 
 	return
 }
