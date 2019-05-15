@@ -302,12 +302,11 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 		if config.CustomAttributeValues[tppAttributeManualCSR] == "0" {
 			return fmt.Errorf("Unable to request certificate with user provided CSR when zone configuration is 'Manual Csr' = 0")
 		}
-		if len(req.CSR) == 0 {
+		if len(req.GetCSR()) == 0 {
 			return fmt.Errorf("CSR was supposed to be provided by user, but it's empty")
 		}
 
 	case certificate.ServiceGeneratedCSR:
-		req.CSR = nil
 	}
 	return nil
 }

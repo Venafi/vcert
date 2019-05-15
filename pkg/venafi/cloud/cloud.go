@@ -155,13 +155,12 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 		err = req.GenerateCSR()
 		return
 	case certificate.UserProvidedCSR:
-		if len(req.CSR) == 0 {
+		if len(req.GetCSR()) == 0 {
 			return fmt.Errorf("CSR was supposed to be provided by user, but it's empty")
 		}
 		return nil
 
 	case certificate.ServiceGeneratedCSR:
-		req.CSR = nil
 		return nil
 
 	default:

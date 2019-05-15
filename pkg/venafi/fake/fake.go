@@ -37,12 +37,12 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 		}
 
 	case certificate.UserProvidedCSR:
-		if req.CSR == nil {
+		if req.GetCSR() == nil {
 			return fmt.Errorf("CSR was supposed to be provided by user, but it's empty")
 		}
 
 	case certificate.ServiceGeneratedCSR:
-		req.CSR = nil
+		req.SetCSR(nil)
 
 	default:
 		return fmt.Errorf("Unexpected option in PrivateKeyOrigin")

@@ -79,7 +79,7 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 	switch req.CsrOrigin {
 	case certificate.LocalGeneratedCSR, certificate.UserProvidedCSR:
 		// should return CSR as requestID payload
-		fakeRequest.CSR = base64.StdEncoding.EncodeToString(req.CSR)
+		fakeRequest.CSR = base64.StdEncoding.EncodeToString(req.GetCSR())
 
 	case certificate.ServiceGeneratedCSR:
 		// should return certificate.Request as requestID payload
@@ -177,7 +177,10 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (pcc *certific
 		if err != nil {
 			return
 		}
-		csrPEMbytes = req.CSR
+		err = req.SetCSR(csrPEMbytes)
+		if err != nil {
+			return nil, err
+		}
 		pk = req.PrivateKey
 	}
 

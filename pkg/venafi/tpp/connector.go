@@ -142,7 +142,7 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 		tppReq = certificateRequest{
 			PolicyDN:                getPolicyDN(zone),
 			CADN:                    req.CADN,
-			PKCS10:                  string(req.CSR),
+			PKCS10:                  string(req.GetCSR()),
 			ObjectName:              req.FriendlyName,
 			DisableAutomaticRenewal: true}
 
@@ -283,8 +283,8 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 
 	var r = certificateRenewRequest{}
 	r.CertificateDN = renewReq.CertificateDN
-	if renewReq.CertificateRequest != nil && len(renewReq.CertificateRequest.CSR) != 0 {
-		r.PKCS10 = string(renewReq.CertificateRequest.CSR)
+	if renewReq.CertificateRequest != nil && len(renewReq.CertificateRequest.GetCSR()) != 0 {
+		r.PKCS10 = string(renewReq.CertificateRequest.GetCSR())
 	}
 	statusCode, status, body, err := c.request("POST", urlResourceCertificateRenew, r)
 	if err != nil {

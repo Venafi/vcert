@@ -158,11 +158,11 @@ type Request struct {
 	KeyType            KeyType
 	KeyLength          int
 	KeyCurve           EllipticCurve
-	CSR                []byte // should be a PEM-encoded CSR
-	csr                []byte // should be a PEM-encoded CSR
-	PrivateKey         crypto.Signer
-	CsrOrigin          CSrOriginOption
-	PickupID           string
+	//CSR                []byte // should be a PEM-encoded CSR
+	csr        []byte // should be a PEM-encoded CSR
+	PrivateKey crypto.Signer
+	CsrOrigin  CSrOriginOption
+	PickupID   string
 	//Cloud Certificate ID
 	CertID          string
 	ChainOption     ChainOption
@@ -255,8 +255,8 @@ func (request *Request) GenerateCSR() error {
 	if err != nil {
 		csr = nil
 	}
-	request.CSR = csr
-	request.CSR = pem.EncodeToMemory(GetCertificateRequestPEMBlock(csr))
+	request.SetCSR(csr)
+	//request.CSR = pem.EncodeToMemory(GetCertificateRequestPEMBlock(csr))
 	return err
 }
 

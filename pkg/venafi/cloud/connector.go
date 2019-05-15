@@ -187,7 +187,7 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 		return "", err
 	}
 
-	statusCode, status, body, err := c.request("POST", url, certificateRequest{ZoneID: z.ID, CSR: string(req.CSR)})
+	statusCode, status, body, err := c.request("POST", url, certificateRequest{ZoneID: z.ID, CSR: string(req.GetCSR())})
 
 	if err != nil {
 		return "", err
@@ -423,8 +423,8 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 	}
 
 	req := certificateRequest{ZoneID: zoneId, ExistingManagedCertificateId: managedCertificateId}
-	if renewReq.CertificateRequest != nil && len(renewReq.CertificateRequest.CSR) != 0 {
-		req.CSR = string(renewReq.CertificateRequest.CSR)
+	if renewReq.CertificateRequest != nil && len(renewReq.CertificateRequest.GetCSR()) != 0 {
+		req.CSR = string(renewReq.CertificateRequest.GetCSR())
 		req.ReuseCSR = false
 	} else {
 		req.ReuseCSR = true
