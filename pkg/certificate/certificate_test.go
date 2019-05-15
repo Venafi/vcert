@@ -147,7 +147,7 @@ func TestGenerateCertificateRequestWithRSAKey(t *testing.T) {
 		t.Fatalf("Error generating Certificate Request\nError: %s", err)
 	}
 
-	pemBlock, _ := pem.Decode(req.CSR)
+	pemBlock, _ := pem.Decode(req.GetCSR())
 	if pemBlock == nil {
 		t.Fatalf("Failed to decode CSR as PEM")
 	}
@@ -176,7 +176,7 @@ func TestGenerateCertificateRequestWithECDSAKey(t *testing.T) {
 		t.Fatalf("Error generating Certificate Request\nError: %s", err)
 	}
 
-	pemBlock, _ := pem.Decode(req.CSR)
+	pemBlock, _ := pem.Decode(req.GetCSR())
 	if pemBlock == nil {
 		t.Fatalf("Failed to decode CSR as PEM")
 	}
@@ -393,7 +393,7 @@ func TestGetCertificateRequestPEMBlock(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error generating request\nError: %s", err)
 	}
-	csrPem := GetCertificateRequestPEMBlock(certRequest.CSR)
+	csrPem := GetCertificateRequestPEMBlock(certRequest.GetCSR())
 	if csrPem == nil {
 		t.Fatalf("GetCertificateRequestPEMBlock returned nil pem block")
 	}
@@ -510,8 +510,8 @@ func TestRequest_CheckCertificate(t *testing.T) {
 		{Request{KeyType: KeyTypeRSA, PrivateKey: rsaPrivKeyValid}, chechCertificateRSACert, true, ""},
 		{Request{KeyType: KeyTypeECDSA, PrivateKey: rsaPrivKeyValid}, chechCertificateRSACert, false, "key type"},
 		{Request{KeyType: KeyTypeRSA, PrivateKey: rsaPrivKeyInvalid}, chechCertificateRSACert, false, "key modules"},
-		{Request{CSR: []byte(checkCertificateCSRRSA)}, chechCertificateRSACert, true, ""},
-		{Request{CSR: []byte(checkCertificateCSRRSA)}, chechCertificateRSACert2, false, "key modules"},
+		{Request{csr: []byte(checkCertificateCSRRSA)}, chechCertificateRSACert, true, ""},
+		{Request{csr: []byte(checkCertificateCSRRSA)}, chechCertificateRSACert2, false, "key modules"},
 	}
 	for _, c := range cases {
 		err := c.request.CheckCertificate(c.cert)

@@ -35,7 +35,7 @@ func TestGenerateRequest(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error: %s", err)
 	}
-	if len(req.CSR) == 0 {
+	if len(req.GetCSR()) == 0 {
 		t.Fatalf("should generaet CSR")
 	}
 
@@ -51,7 +51,7 @@ func TestGenerateRequest(t *testing.T) {
 	req.Subject.CommonName = "vcert.test.vfidev.com"
 	req.CsrOrigin = certificate.ServiceGeneratedCSR
 	err = fake.GenerateRequest(nil, &req)
-	if err != nil || len(req.CSR) > 0 {
+	if err != nil || len(req.GetCSR()) > 0 {
 		t.Fatalf("should do nothing")
 	}
 }
