@@ -568,13 +568,13 @@ func TestRequest_SetCSR(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	csr = r.GetCSRasn1()
+	csr = r.GetCSR()
 	t.Log("Check", csr)
 	err = r.SetCSR(pemCsr)
 	if err != nil {
 		t.Fatal(err)
 	}
-	csr = r.GetCSRpem()
+	csr = r.GetCSR()
 	t.Log("Check", csr)
 
 }

@@ -24,7 +24,6 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"crypto/x509/pkix"
-	"encoding/asn1"
 	"encoding/pem"
 	"fmt"
 	"net"
@@ -208,46 +207,28 @@ type ImportResponse struct {
 }
 
 func (request *Request) SetCSR(csr []byte) error {
-	//Determine CSR type and use appropriate function
-	_, err := x509.ParseCertificateRequest(csr)
-	if err == nil {
-		err := request.SetCSRasn1(csr)
-		if err != nil {
-			return err
+	pemBlock, _ := pem.Decode(csr)
+	if pemBlock != nil {
+		if pemBlock.Type == "CERTIFICATE REQUEST" {
+			request.csr = csr
+			return nil
 		}
-	} else if err, _ := pem.Decode(csr); err != nil {
+	}
+
+	//Determine CSR type and use appropriate function
+	parsedCSR, err := x509.ParseCertificateRequest(csr)
+	if err != nil {
+		return err
+	}
+	if parsedCSR != nil {
+		request.csr = pem.EncodeToMemory(GetCertificateRequestPEMBlock(csr))
 		return nil
 	}
-	return nil
+	return fmt.Errorf("Can't determine CSR type for %s", csr)
 }
 
 func (request Request) GetCSR() []byte {
 	return request.csr
-}
-
-func (request Request) GetCSRasn1() []byte {
-	asn1Csr, err := asn1.Marshal(request.csr)
-	if err != nil {
-		return nil
-	}
-	return asn1Csr
-}
-
-func (request Request) GetCSRpem() []byte {
-	return request.csr
-}
-
-func (request *Request) SetCSRasn1(rawASN1 []byte) error {
-	req := x509.CertificateRequest{}
-	req.Raw = rawASN1
-
-	request.csr = nil
-	return nil
-}
-
-func (request *Request) SetCSRpem(csr []byte) error {
-	request.csr = pem.EncodeToMemory(GetCertificateRequestPEMBlock(csr))
-	return nil
 }
 
 // GenerateRequest generates a certificate request
