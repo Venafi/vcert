@@ -74,9 +74,12 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 		var err error
 		csrFileName := cf.csrOption[5:]
 		csr, err := readCSRfromFile(csrFileName)
-		req.SetCSR(csr)
 		if err != nil {
 			logger.Panicf("Failed to read CSR from file %s: %s", csrFileName, err)
+		}
+		err = req.SetCSR(csr)
+		if err != nil {
+			logger.Panicf("Failed to set CSR %s", err)
 		}
 		req.CsrOrigin = certificate.UserProvidedCSR
 
