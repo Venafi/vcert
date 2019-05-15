@@ -528,6 +528,21 @@ func TestRequest_CheckCertificate(t *testing.T) {
 	}
 }
 
+func TestRequest_SetCSR(t *testing.T) {
+	var asn1_cert []byte
+	var pem_cert []byte
+	asn1_cert = make([]byte, 5)
+	pem_cert = make([]byte, 5)
+	r := Request{}
+	r.SetCSR(asn1_cert)
+	csr := r.GetCSRasn1()
+	t.Log("Check", csr)
+	r.SetCSR(pem_cert)
+	csr = r.GetCSRpem()
+	t.Log("Check", csr)
+
+}
+
 func pemRSADecode(priv string) *rsa.PrivateKey {
 	privPem, _ := pem.Decode([]byte(priv))
 

@@ -210,15 +210,12 @@ func (request *Request) SetCSR(csr []byte) error {
 	//Determine CSR type and use appropriate function
 	_, err := x509.ParseCertificateRequest(csr)
 	if err == nil {
-		err := request.GetCSRasn1(csr)
+		err := request.SetCSRasn1(csr)
 		if err != nil {
 			return err
 		}
-	} else {
-		err := request.GetCSRpem(csr)
-		if err != nil {
-			return err
-		}
+	} else if err, _ := pem.Decode(csr); err != nil {
+		return nil
 	}
 	return nil
 }
@@ -227,7 +224,15 @@ func (request Request) GetCSR() []byte {
 	return request.csr
 }
 
-func (request *Request) GetCSRasn1(rawASN1 []byte) error {
+func (request Request) GetCSRasn1() []byte {
+	return request.csr
+}
+
+func (request Request) GetCSRpem() []byte {
+	return request.csr
+}
+
+func (request *Request) SetCSRasn1(rawASN1 []byte) error {
 	req := x509.CertificateRequest{}
 	req.Raw = rawASN1
 
@@ -235,7 +240,7 @@ func (request *Request) GetCSRasn1(rawASN1 []byte) error {
 	return nil
 }
 
-func (request *Request) GetCSRpem([]byte) error {
+func (request *Request) SetCSRpem([]byte) error {
 	request.csr = nil
 	return nil
 }
