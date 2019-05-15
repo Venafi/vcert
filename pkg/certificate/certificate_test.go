@@ -548,7 +548,10 @@ func TestRequest_SetCSR(t *testing.T) {
 
 	asn1_csr, _ := asn1.Marshal(csr)
 	var asn1_csr_byte []byte
-	asn1.Unmarshal([]byte(asn1_csr), &asn1_csr_byte)
+	_, err = asn1.Unmarshal([]byte(asn1_csr), &asn1_csr_byte)
+	if err != nil {
+		t.Fatal(err)
+	}
 	asn1_csr_byte_decoded, err := x509.ParseCertificateRequest(asn1_csr_byte)
 	if err != nil {
 		t.Fatal(err)
