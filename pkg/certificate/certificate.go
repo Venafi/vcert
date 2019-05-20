@@ -256,7 +256,7 @@ func (request *Request) GenerateCSR() error {
 	if err != nil {
 		csr = nil
 	}
-	request.SetCSR(csr)
+	err = request.SetCSR(csr)
 	//request.CSR = pem.EncodeToMemory(GetCertificateRequestPEMBlock(csr))
 	return err
 }
