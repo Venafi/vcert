@@ -177,10 +177,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (pcc *certific
 		if err != nil {
 			return
 		}
-		err = req.SetCSR(csrPEMbytes)
-		if err != nil {
-			return nil, err
-		}
+		csrPEMbytes = req.GetCSR()
 		pk = req.PrivateKey
 	}
 
