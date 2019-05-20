@@ -122,7 +122,6 @@ func generateSelfSigned(request *certificate.Request, ku x509.KeyUsage, eku []x5
 	certRequest.EmailAddresses = request.EmailAddresses
 	certRequest.IPAddresses = request.IPAddresses
 	certRequest.SignatureAlgorithm = request.SignatureAlgorithm
-	certRequest.PublicKeyAlgorithm = request.PublicKeyAlgorithm
 	certRequest.ExtKeyUsage = eku
 	certRequest.NotBefore = notBefore.UTC()
 	if ku&x509.KeyUsageCertSign != x509.KeyUsageCertSign {
@@ -171,7 +170,6 @@ func generateCASigned(request *certificate.Request, ku x509.KeyUsage, eku []x509
 	certRequest.EmailAddresses = request.EmailAddresses
 	certRequest.IPAddresses = request.IPAddresses
 	certRequest.SignatureAlgorithm = request.SignatureAlgorithm
-	certRequest.PublicKeyAlgorithm = request.PublicKeyAlgorithm
 	certRequest.ExtKeyUsage = eku
 	certRequest.NotBefore = notBefore.UTC()
 	if ku&x509.KeyUsageCertSign != x509.KeyUsageCertSign {

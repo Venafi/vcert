@@ -90,7 +90,6 @@ func generateSelfSigned(request *Request, ku x509.KeyUsage, eku []x509.ExtKeyUsa
 	certRequest.EmailAddresses = request.EmailAddresses
 	certRequest.IPAddresses = request.IPAddresses
 	certRequest.SignatureAlgorithm = request.SignatureAlgorithm
-	certRequest.PublicKeyAlgorithm = request.PublicKeyAlgorithm
 	certRequest.ExtKeyUsage = eku
 	certRequest.NotBefore = notBefore.UTC()
 	if ku&x509.KeyUsageCertSign != x509.KeyUsageCertSign {
@@ -528,7 +527,7 @@ func TestRequest_CheckCertificate(t *testing.T) {
 	}
 }
 
-func TestRequest_SetCSR(t *testing.T) {
+func TestRequest_SetCSR_and_GetCSR(t *testing.T) {
 	checkCN := "setcsr.example.com"
 	certificateRequest := x509.CertificateRequest{}
 	certificateRequest.Subject.CommonName = checkCN

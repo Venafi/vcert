@@ -153,7 +153,6 @@ type Request struct {
 	IPAddresses        []net.IP
 	Attributes         []pkix.AttributeTypeAndValueSET
 	SignatureAlgorithm x509.SignatureAlgorithm
-	PublicKeyAlgorithm x509.PublicKeyAlgorithm //deprecated
 	FriendlyName       string
 	KeyType            KeyType
 	KeyLength          int
@@ -206,6 +205,7 @@ type ImportResponse struct {
 	PrivateKeyVaultId  int    `json:",omitempty"`
 }
 
+// SetCSR sets CSR from PEM or DER format
 func (request *Request) SetCSR(csr []byte) error {
 	pemBlock, _ := pem.Decode(csr)
 	if pemBlock != nil {
@@ -227,6 +227,7 @@ func (request *Request) SetCSR(csr []byte) error {
 	return fmt.Errorf("Can't determine CSR type for %s", csr)
 }
 
+// GetCSR returns CSR in PEM format
 func (request Request) GetCSR() []byte {
 	return request.csr
 }
@@ -448,7 +449,6 @@ func NewRequest(cert *x509.Certificate) *Request {
 	req.EmailAddresses = cert.EmailAddresses
 	req.IPAddresses = cert.IPAddresses
 	req.SignatureAlgorithm = cert.SignatureAlgorithm
-	req.PublicKeyAlgorithm = cert.PublicKeyAlgorithm
 	switch pub := cert.PublicKey.(type) {
 	case *rsa.PublicKey:
 		req.KeyType = KeyTypeRSA
