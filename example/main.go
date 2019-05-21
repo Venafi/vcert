@@ -267,7 +267,10 @@ func getSerial(crt string) *big.Int {
 func calcThumbprint(cert string) string {
 	p, _ := pem.Decode([]byte(cert))
 	h := sha1.New()
-	h.Write(p.Bytes)
+	_, err := h.Write(p.Bytes)
+	if err != nil {
+		return fmt.Sprintf("Can't write: %s", err.Error())
+	}
 	buf := h.Sum(nil)
 	return strings.ToUpper(fmt.Sprintf("%x", buf))
 }
