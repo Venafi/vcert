@@ -26,15 +26,14 @@ import (
 	"github.com/Venafi/vcert/pkg/endpoint"
 )
 
-func buildConfig(cf *commandFlags) (*vcert.Config, error) {
-	cfg := &vcert.Config{}
+func buildConfig(cf *commandFlags) (cfg *vcert.Config, err error) {
 	cfg.LogVerbose = cf.verbose
 
 	if cf.config != "" {
 		// Loading configuration from file
 		cfg.ConfigFile = cf.config
 		cfg.ConfigSection = cf.profile
-		err := cfg.LoadFromFile()
+		*cfg, err = vcert.LoadConfigFromFile(cf.config)
 		if err != nil {
 			return nil, err
 		}

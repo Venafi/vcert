@@ -46,25 +46,26 @@ type Config struct {
 }
 
 // LoadFromFile is deprecated. In the future will be rewrited.
-func (cfg *Config) LoadFromFile() error {
+func LoadConfigFromFile(path string) (cfg Config, err error) {
+
 	if cfg.ConfigSection == "" {
 		cfg.ConfigSection = ini.DEFAULT_SECTION
 	}
 	log.Printf("Loading configuration from %s section %s", cfg.ConfigFile, cfg.ConfigSection)
 
-	fname, err := expand(cfg.ConfigFile)
+	fname, err := expand(path)
 	if err != nil {
-		return fmt.Errorf("failed to load config: %s", err)
+		return cfg, fmt.Errorf("failed to load config: %s", err)
 	}
 
 	iniFile, err := ini.Load(fname)
 	if err != nil {
-		return fmt.Errorf("failed to load config: %s", err)
+		return cfg, fmt.Errorf("failed to load config: %s", err)
 	}
 
 	err = validateFile(iniFile)
 	if err != nil {
-		return fmt.Errorf("failed to load config: %s", err)
+		return cfg, fmt.Errorf("failed to load config: %s", err)
 	}
 
 	ok := func() bool {
@@ -76,7 +77,7 @@ func (cfg *Config) LoadFromFile() error {
 		return false
 	}()
 	if !ok {
-		return fmt.Errorf("section %s has not been found in %s", cfg.ConfigSection, cfg.ConfigFile)
+		return cfg, fmt.Errorf("section %s has not been found in %s", cfg.ConfigSection, path)
 	}
 
 	var m dict = iniFile.Section(cfg.ConfigSection).KeysHash()
@@ -107,17 +108,17 @@ func (cfg *Config) LoadFromFile() error {
 	} else if m.has("test_mode") && m["test_mode"] == "true" {
 		connectorType = endpoint.ConnectorTypeFake
 	} else {
-		return fmt.Errorf("failed to load config: connector type cannot be defined")
+		return cfg, fmt.Errorf("failed to load config: connector type cannot be defined")
 	}
 
 	if m.has("trust_bundle") {
 		fname, err := expand(m["trust_bundle"])
 		if err != nil {
-			return fmt.Errorf("failed to load trust-bundle: %s", err)
+			return cfg, fmt.Errorf("failed to load trust-bundle: %s", err)
 		}
 		data, err := ioutil.ReadFile(fname)
 		if err != nil {
-			return fmt.Errorf("failed to load trust-bundle: %s", err)
+			return cfg, fmt.Errorf("failed to load trust-bundle: %s", err)
 		}
 		cfg.ConnectionTrust = string(data)
 	}
@@ -126,7 +127,7 @@ func (cfg *Config) LoadFromFile() error {
 	cfg.Credentials = auth
 	cfg.BaseUrl = baseUrl
 
-	return nil
+	return
 }
 
 func expand(path string) (string, error) {

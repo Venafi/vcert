@@ -95,16 +95,16 @@ func TestNewClientWithFileConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var cfg = &Config{
-		ConfigFile: tmpfile.Name(),
-	}
+	//var cfg = &Config{
+	//	ConfigFile: tmpfile.Name(),
+	//}
 
-	err = cfg.LoadFromFile()
+	cfg, err := LoadConfigFromFile(tmpfile.Name())
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	c, err := NewClient(cfg)
+	c, err := NewClient(&cfg)
 	haltIf(err)
 
 	req := &certificate.Request{
