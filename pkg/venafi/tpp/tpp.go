@@ -521,9 +521,9 @@ func (sp serverPolicy) toPolicy() (p endpoint.Policy) {
 		p.SubjectCNRegexes = make([]string, len(sp.WhitelistedDomains))
 		for i, d := range sp.WhitelistedDomains {
 			if sp.WildcardsAllowed {
-				p.SubjectCNRegexes[i] = addStartEnd(".*" + regexp.QuoteMeta("."+d))
+				p.SubjectCNRegexes[i] = addStartEnd(`[\p{L}\p{N}-_]+` + regexp.QuoteMeta("."+d))
 			} else {
-				p.SubjectCNRegexes[i] = escapeOne(d)
+				p.SubjectCNRegexes[i] = addStartEnd(`[\p{L}\p{N}-_*]+` + regexp.QuoteMeta("."+d))
 			}
 		}
 	}
@@ -558,11 +558,7 @@ func (sp serverPolicy) toPolicy() (p endpoint.Policy) {
 		} else {
 			p.DnsSanRegExs = make([]string, len(sp.WhitelistedDomains))
 			for i, d := range sp.WhitelistedDomains {
-				if sp.WildcardsAllowed {
-					p.DnsSanRegExs[i] = addStartEnd(".*" + regexp.QuoteMeta("."+d))
-				} else {
-					p.DnsSanRegExs[i] = escapeOne(d)
-				}
+				p.DnsSanRegExs[i] = addStartEnd(`[\p{L}\p{N}-_]+` + regexp.QuoteMeta("."+d))
 			}
 		}
 	} else {
