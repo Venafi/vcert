@@ -126,7 +126,7 @@ func main() {
 		cf.zone = cfg.Zone
 	}
 
-	connector, err := vcert.NewClient(cfg) // Everything else requires an endpoint connection
+	connector, err := vcert.NewClient(&cfg) // Everything else requires an endpoint connection
 	if err != nil {
 		logf("Unable to connect to %s: %s", cfg.ConnectorType, err)
 	} else {
