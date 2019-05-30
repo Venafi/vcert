@@ -55,7 +55,6 @@ var (
 )
 
 type commandFlags struct {
-	email              string
 	verbose            bool
 	tppURL             string
 	tppUser            string

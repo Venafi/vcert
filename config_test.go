@@ -99,9 +99,7 @@ func TestLoadFromFile(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		cfg := &Config{ConfigFile: tmpfile.Name()}
-
-		err = cfg.LoadFromFile()
+		_, err = LoadConfigFromFile(tmpfile.Name(), "")
 		if test_case.valid {
 			if err != nil {
 				t.Logf("config: %s", test_case.content)

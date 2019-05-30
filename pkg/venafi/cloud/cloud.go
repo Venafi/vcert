@@ -25,7 +25,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"regexp"
 	"strings"
 	"time"
 
@@ -140,7 +139,7 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 	switch req.CsrOrigin {
 	case certificate.LocalGeneratedCSR:
 		if config == nil {
-			config, err = c.ReadZoneConfiguration(c.zone)
+			config, err = c.ReadZoneConfiguration()
 			if err != nil {
 				return fmt.Errorf("could not read zone configuration: %s", err)
 			}
@@ -156,40 +155,17 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 		err = req.GenerateCSR()
 		return
 	case certificate.UserProvidedCSR:
-		if len(req.CSR) == 0 {
+		if len(req.GetCSR()) == 0 {
 			return fmt.Errorf("CSR was supposed to be provided by user, but it's empty")
 		}
 		return nil
 
 	case certificate.ServiceGeneratedCSR:
-		req.CSR = nil
 		return nil
 
 	default:
 		return fmt.Errorf("unrecognised req.CsrOrigin %v", req.CsrOrigin)
 	}
-}
-
-//SetBaseURL allows overriding the default URL used to communicate with Venafi Cloud
-func (c *Connector) SetBaseURL(url string) error {
-	if url == "" {
-		return fmt.Errorf("base URL cannot be empty")
-	}
-	modified := strings.ToLower(url)
-	reg := regexp.MustCompile("^http(|s)://")
-	if reg.FindStringIndex(modified) == nil {
-		modified = "https://" + modified
-	} else {
-		modified = reg.ReplaceAllString(modified, "https://")
-	}
-	reg = regexp.MustCompile("/v1(|/)$")
-	if reg.FindStringIndex(modified) == nil {
-		modified += "v1/"
-	} else {
-		modified = reg.ReplaceAllString(modified, "/v1/")
-	}
-	c.baseURL = modified
-	return nil
 }
 
 func (c *Connector) getURL(resource urlResource) string {

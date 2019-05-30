@@ -19,7 +19,6 @@ package vcert
 import (
 	"crypto/x509"
 	"fmt"
-
 	"github.com/Venafi/vcert/pkg/endpoint"
 	"github.com/Venafi/vcert/pkg/venafi/cloud"
 	"github.com/Venafi/vcert/pkg/venafi/fake"
@@ -45,21 +44,21 @@ func NewClient(cfg *Config) (endpoint.Connector, error) {
 	var connector endpoint.Connector
 	switch cfg.ConnectorType {
 	case endpoint.ConnectorTypeCloud:
-		connector = cloud.NewConnector(cfg.LogVerbose, connectionTrustBundle)
+		connector, err = cloud.NewConnector(cfg.BaseUrl, cfg.Zone, cfg.LogVerbose, connectionTrustBundle)
+		if err != nil {
+			return nil, err
+		}
 	case endpoint.ConnectorTypeTPP:
-		connector = tpp.NewConnector(cfg.LogVerbose, connectionTrustBundle)
+		connector, err = tpp.NewConnector(cfg.BaseUrl, cfg.Zone, cfg.LogVerbose, connectionTrustBundle)
+		if err != nil {
+			return nil, err
+		}
 	case endpoint.ConnectorTypeFake:
 		connector = fake.NewConnector(cfg.LogVerbose, connectionTrustBundle)
 	default:
 		return nil, fmt.Errorf("ConnectorType is not defined")
 	}
 
-	if cfg.BaseUrl != "" {
-		err = connector.SetBaseURL(cfg.BaseUrl)
-		if err != nil {
-			return nil, err
-		}
-	}
 	connector.SetZone(cfg.Zone)
 
 	err = connector.Authenticate(cfg.Credentials)

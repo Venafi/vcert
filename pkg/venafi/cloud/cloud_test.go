@@ -17,10 +17,8 @@
 package cloud
 
 import (
-	"fmt"
 	"github.com/Venafi/vcert/pkg/certificate"
 	"net/http"
-	"strings"
 	"testing"
 )
 
@@ -176,80 +174,5 @@ func TestParseCertificateRetrieveResponse(t *testing.T) {
 	_, err := newPEMCollectionFromResponse(successRetrieveCertificate, certificate.ChainOptionRootFirst)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
-	}
-}
-
-func TestSetBaseURL(t *testing.T) {
-	condor := Connector{}
-	url := "http://api2.projectc.venafi.com/v1"
-	err := condor.SetBaseURL(url)
-	if err != nil {
-		t.Fatalf("err is not nil, err: %s url: %s", err, url)
-	}
-	if !strings.EqualFold(condor.baseURL, expectedURL) {
-		t.Fatalf("Base URL did not match expected value. Expected: %s Actual: %s", expectedURL, condor.baseURL)
-	}
-
-	url = "http://api2.projectc.venafi.com/v1"
-	condor.baseURL = ""
-	err = condor.SetBaseURL(url)
-	if err != nil {
-		t.Fatalf("err is not nil, err: %s url: %s", err, url)
-	}
-	if !strings.EqualFold(condor.baseURL, expectedURL) {
-		t.Fatalf("Base URL did not match expected value. Expected: %s Actual: %s", expectedURL, condor.baseURL)
-	}
-
-	url = "http://api2.projectc.venafi.com/v1/"
-	condor.baseURL = ""
-	err = condor.SetBaseURL(url)
-	if err != nil {
-		t.Fatalf("err is not nil, err: %s url: %s", err, url)
-	}
-	if !strings.EqualFold(condor.baseURL, expectedURL) {
-		t.Fatalf("Base URL did not match expected value. Expected: %s Actual: %s", expectedURL, condor.baseURL)
-	}
-
-	url = "api2.projectc.venafi.com/v1/"
-	condor.baseURL = ""
-	err = condor.SetBaseURL(url)
-	if err != nil {
-		t.Fatalf("err is not nil, err: %s url: %s", err, url)
-	}
-	if !strings.EqualFold(condor.baseURL, expectedURL) {
-		t.Fatalf("Base URL did not match expected value. Expected: %s Actual: %s", expectedURL, condor.baseURL)
-	}
-}
-
-func TestGetURL(t *testing.T) {
-	condor := Connector{}
-	url := "http://api2.projectc.venafi.com/v1/"
-	condor.baseURL = ""
-	err := condor.SetBaseURL(url)
-	if err != nil {
-		t.Fatalf("err is not nil, err: %s url: %s", err, url)
-	}
-	if !strings.EqualFold(condor.baseURL, expectedURL) {
-		t.Fatalf("Base URL did not match expected value. Expected: %s Actual: %s", expectedURL, condor.baseURL)
-	}
-
-	url = condor.getURL(urlResourceUserAccounts)
-	if !strings.EqualFold(url, fmt.Sprintf("%s%s", expectedURL, urlResourceUserAccounts)) {
-		t.Fatalf("Get URL did not match expected value. Expected: %s Actual: %s", fmt.Sprintf("%s%s", expectedURL, urlResourceUserAccounts), url)
-	}
-
-	url = condor.getURL(urlResourceCertificateRequests)
-	if !strings.EqualFold(url, fmt.Sprintf("%s%s", expectedURL, urlResourceCertificateRequests)) {
-		t.Fatalf("Get URL did not match expected value. Expected: %s Actual: %s", fmt.Sprintf("%s%s", expectedURL, urlResourceCertificateRequests), url)
-	}
-
-	url = condor.getURL(urlResourceCertificateRetrieveViaCSR)
-	if !strings.EqualFold(url, fmt.Sprintf("%s%s", expectedURL, urlResourceCertificateRetrieveViaCSR)) {
-		t.Fatalf("Get URL did not match expected value. Expected: %s Actual: %s", fmt.Sprintf("%s%s", expectedURL, urlResourceCertificateRetrieveViaCSR), url)
-	}
-	condor.baseURL = ""
-	url = condor.getURL(urlResourceUserAccounts)
-	if url == "" {
-		t.Fatalf("Get URL did not return an error when the base url had not been set.")
 	}
 }

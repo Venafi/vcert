@@ -67,7 +67,7 @@ func TestNewClient(t *testing.T) {
 	haltIf(err)
 	print(req)
 
-	id, err := c.RequestCertificate(req, "")
+	id, err := c.RequestCertificate(req)
 	haltIf(err)
 	print(id)
 
@@ -95,16 +95,16 @@ func TestNewClientWithFileConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var cfg = &Config{
-		ConfigFile: tmpfile.Name(),
-	}
+	//var cfg = &Config{
+	//	ConfigFile: tmpfile.Name(),
+	//}
 
-	err = cfg.LoadFromFile()
+	cfg, err := LoadConfigFromFile(tmpfile.Name(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	c, err := NewClient(cfg)
+	c, err := NewClient(&cfg)
 	haltIf(err)
 
 	req := &certificate.Request{
@@ -118,7 +118,7 @@ func TestNewClientWithFileConfig(t *testing.T) {
 	haltIf(err)
 	print(req)
 
-	id, err := c.RequestCertificate(req, "")
+	id, err := c.RequestCertificate(req)
 	haltIf(err)
 	print(id)
 

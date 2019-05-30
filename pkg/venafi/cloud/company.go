@@ -39,7 +39,7 @@ type zone struct {
 	CertificatePolicyIDs             certificatePolicyID `json:"certificatePolicyIds,omitempty"`
 	DefaultCertificateIdentityPolicy string              `json:"defaultCertificateIdentityPolicyId,omitempty"`
 	DefaultCertificateUsePolicy      string              `json:"defaultCertificateUsePolicyId,omitempty"`
-	SystemGenerated                  bool                `json:"systemGeneratedate,omitempty"`
+	SystemGenerated                  bool                `json:"systemGenerated,omitempty"`
 	CreationDateString               string              `json:"creationDate,omitempty"`
 	CreationDate                     time.Time           `json:"-"`
 }

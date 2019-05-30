@@ -206,31 +206,6 @@ func retrieveChainOptionFromString(order string) retrieveChainOption {
 	}
 }
 
-var baseUrlRegex = regexp.MustCompile(`^https://[a-z\d]+[-a-z\d.]+[a-z\d][:\d]*/vedsdk/$`)
-
-// SetBaseURL sets the base URL used to communicate with TPP
-func (c *Connector) SetBaseURL(url string) error {
-	modified := strings.ToLower(url)
-	if strings.HasPrefix(modified, "http://") {
-		modified = "https://" + modified[7:]
-	} else if !strings.HasPrefix(modified, "https://") {
-		modified = "https://" + modified
-	}
-	if !strings.HasSuffix(modified, "/") {
-		modified = modified + "/"
-	}
-
-	if !strings.HasSuffix(modified, "vedsdk/") {
-		modified += "vedsdk/"
-	}
-	if loc := baseUrlRegex.FindStringIndex(modified); loc == nil {
-		return fmt.Errorf("The specified TPP URL is invalid. %s\nExpected TPP URL format 'https://tpp.company.com/vedsdk/'", url)
-	}
-
-	c.baseURL = modified
-	return nil
-}
-
 func (c *Connector) getURL(resource urlResource) (string, error) {
 	if c.baseURL == "" {
 		return "", fmt.Errorf("The Host URL has not been set")
@@ -301,7 +276,7 @@ func (c *Connector) getHTTPClient() *http.Client {
 // GenerateRequest creates a new certificate request, based on the zone/policy configuration and the user data
 func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *certificate.Request) (err error) {
 	if config == nil {
-		config, err = c.ReadZoneConfiguration(c.zone)
+		config, err = c.ReadZoneConfiguration()
 		if err != nil {
 			return fmt.Errorf("could not read zone configuration: %s", err)
 		}
@@ -331,12 +306,11 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 		if config.CustomAttributeValues[tppAttributeManualCSR] == "0" {
 			return fmt.Errorf("Unable to request certificate with user provided CSR when zone configuration is 'Manual Csr' = 0")
 		}
-		if len(req.CSR) == 0 {
+		if len(req.GetCSR()) == 0 {
 			return fmt.Errorf("CSR was supposed to be provided by user, but it's empty")
 		}
 
 	case certificate.ServiceGeneratedCSR:
-		req.CSR = nil
 	}
 	return nil
 }

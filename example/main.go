@@ -17,16 +17,19 @@
 package main
 
 import (
+	"crypto/sha1"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
 	"github.com/Venafi/vcert"
 	"github.com/Venafi/vcert/pkg/certificate"
+	"github.com/Venafi/vcert/pkg/endpoint"
 	t "log"
 	"math/big"
 	"net"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -40,7 +43,10 @@ func main() {
 	//
 	// 0. get client instance based on connection config
 	//
-	c, err := vcert.NewClient(tppConfig)
+	config := tppConfig
+	//config := cloudConfig
+	//config := mockConfig
+	c, err := vcert.NewClient(config)
 	if err != nil {
 		t.Fatalf("could not connect to endpoint: %s", err)
 	}
@@ -48,23 +54,46 @@ func main() {
 	//
 	// 1.1. compose request object
 	//
-	enrollReq := &certificate.Request{
-		Subject: pkix.Name{
-			CommonName:         commonName,
-			Organization:       []string{"Venafi.com"},
-			OrganizationalUnit: []string{"Integration Team"},
-			Locality:           []string{"Salt Lake"},
-			Province:           []string{"Salt Lake"},
-			Country:            []string{"US"},
-		},
-		DNSNames:       []string{"www.client.venafi.example.com", "ww1.client.venafi.example.com"},
-		EmailAddresses: []string{"e1@venafi.example.com", "e2@venafi.example.com"},
-		IPAddresses:    []net.IP{net.IPv4(127, 0, 0, 1), net.IPv4(127, 0, 0, 2)},
-		CsrOrigin:      certificate.LocalGeneratedCSR,
-		KeyType:        certificate.KeyTypeRSA,
-		KeyLength:      2048,
-		ChainOption:    certificate.ChainOptionRootLast,
-		KeyPassword:    "newPassw0rd!",
+	//Not all Venafi Cloud providers support IPAddress and EmailAddresses extensions.
+	var enrollReq = &certificate.Request{}
+	switch {
+	case config.ConnectorType == endpoint.ConnectorTypeTPP || config.ConnectorType == endpoint.ConnectorTypeFake:
+		enrollReq = &certificate.Request{
+			Subject: pkix.Name{
+				CommonName:         commonName,
+				Organization:       []string{"Venafi.com"},
+				OrganizationalUnit: []string{"Integration Team"},
+				Locality:           []string{"Salt Lake"},
+				Province:           []string{"Salt Lake"},
+				Country:            []string{"US"},
+			},
+			DNSNames:       []string{"www.client.venafi.example.com", "ww1.client.venafi.example.com"},
+			EmailAddresses: []string{"e1@venafi.example.com", "e2@venafi.example.com"},
+			IPAddresses:    []net.IP{net.IPv4(127, 0, 0, 1), net.IPv4(127, 0, 0, 2)},
+			CsrOrigin:      certificate.LocalGeneratedCSR,
+			KeyType:        certificate.KeyTypeRSA,
+			KeyLength:      2048,
+			ChainOption:    certificate.ChainOptionRootLast,
+			KeyPassword:    "newPassw0rd!",
+		}
+	case config.ConnectorType == endpoint.ConnectorTypeCloud:
+		enrollReq = &certificate.Request{
+			Subject: pkix.Name{
+				CommonName:         commonName,
+				Organization:       []string{"Venafi.com"},
+				OrganizationalUnit: []string{"Integration Team"},
+				Locality:           []string{"Salt Lake"},
+				Province:           []string{"Salt Lake"},
+				Country:            []string{"US"},
+			},
+			DNSNames:    []string{"www.client.venafi.example.com", "ww1.client.venafi.example.com"},
+			CsrOrigin:   certificate.LocalGeneratedCSR,
+			KeyType:     certificate.KeyTypeRSA,
+			KeyLength:   2048,
+			ChainOption: certificate.ChainOptionRootLast,
+			KeyPassword: "newPassw0rd!",
+		}
+
 	}
 
 	//
@@ -78,7 +107,7 @@ func main() {
 	//
 	// 1.3. submit certificate request, get request ID as a response
 	//
-	requestID, err := c.RequestCertificate(enrollReq, "")
+	requestID, err := c.RequestCertificate(enrollReq)
 	if err != nil {
 		t.Fatalf("could not submit certificate request: %s", err)
 	}
@@ -151,25 +180,39 @@ func main() {
 	}
 
 	//
-	// 3.2. submit revocation request
+	// 3.2. submit revocation request (not supported in Venafi Cloud)
 	//
-	err = c.RevokeCertificate(revokeReq)
-	if err != nil {
-		t.Fatalf("could not submit certificate revocation request: %s", err)
+	if config.ConnectorType != endpoint.ConnectorTypeCloud {
+		err = c.RevokeCertificate(revokeReq)
+		if err != nil {
+			t.Fatalf("could not submit certificate revocation request: %s", err)
+		}
+		t.Printf("Successfully submitted revocation request for %s", requestID)
 	}
-	t.Printf("Successfully submitted revocation request for %s", requestID)
-
 	//
 	// 2. Import certificate to another object of the same Zone
 	//
-	importObjectName := fmt.Sprintf("%s-imported", commonName)
-	importReq := &certificate.ImportRequest{
-		// if PolicyDN is empty, it is taken from cfg.Zone
-		ObjectName:      importObjectName,
-		CertificateData: pcc.Certificate,
-		PrivateKeyData:  pcc.PrivateKey,
-		Password:        "newPassw0rd!",
-		Reconcile:       false,
+	var importReq = &certificate.ImportRequest{}
+	switch {
+	case config.ConnectorType == endpoint.ConnectorTypeTPP || config.ConnectorType == endpoint.ConnectorTypeFake:
+		importObjectName := fmt.Sprintf("%s-imported", commonName)
+		importReq = &certificate.ImportRequest{
+			// if PolicyDN is empty, it is taken from cfg.Zone
+			ObjectName:      importObjectName,
+			CertificateData: pcc.Certificate,
+			PrivateKeyData:  pcc.PrivateKey,
+			Password:        "newPassw0rd!",
+			Reconcile:       false,
+		}
+	case config.ConnectorType == endpoint.ConnectorTypeCloud:
+		importObjectName := fmt.Sprintf("%s-imported", commonName)
+		importReq = &certificate.ImportRequest{
+			// if PolicyDN is empty, it is taken from cfg.Zone
+			ObjectName:      importObjectName,
+			CertificateData: pcc.Certificate,
+			PrivateKeyData:  "",
+			Reconcile:       false,
+		}
 	}
 	importResp, err := c.ImportCertificate(importReq)
 	if err != nil {
@@ -182,12 +225,25 @@ func main() {
 	//
 	// 3. retrieve certificate & key from new object
 	//
-	importedRetriveReq := &certificate.Request{
-		PickupID:        importResp.CertificateDN,
-		Timeout:         180 * time.Second,
-		KeyPassword:     "newPassw0rd!",
-		FetchPrivateKey: true,
+	var importedRetriveReq = &certificate.Request{}
+	switch {
+	case config.ConnectorType == endpoint.ConnectorTypeTPP || config.ConnectorType == endpoint.ConnectorTypeFake:
+		importedRetriveReq = &certificate.Request{
+			PickupID:        importResp.CertificateDN,
+			Timeout:         180 * time.Second,
+			KeyPassword:     "newPassw0rd!",
+			FetchPrivateKey: true,
+		}
+	case config.ConnectorType == endpoint.ConnectorTypeCloud:
+		//You can retrieve imported certificate by thumbprint or certificate Id.
+		thumbprint := calcThumbprint(pcc.Certificate)
+		importedRetriveReq = &certificate.Request{
+			Thumbprint: thumbprint,
+			//CertID: importResp.CertId,
+			Timeout: 180 * time.Second,
+		}
 	}
+
 	pcc3, err := c.RetrieveCertificate(importedRetriveReq)
 	if err != nil {
 		t.Fatalf("could not retrieve certificate using requestId %s: %s", requestID, err)
@@ -206,4 +262,15 @@ func getSerial(crt string) *big.Int {
 		t.Fatalf("could not parse x509 certificate: %s", err)
 	}
 	return newCert.SerialNumber
+}
+
+func calcThumbprint(cert string) string {
+	p, _ := pem.Decode([]byte(cert))
+	h := sha1.New()
+	_, err := h.Write(p.Bytes)
+	if err != nil {
+		return fmt.Sprintf("Can't write: %s", err.Error())
+	}
+	buf := h.Sum(nil)
+	return strings.ToUpper(fmt.Sprintf("%x", buf))
 }

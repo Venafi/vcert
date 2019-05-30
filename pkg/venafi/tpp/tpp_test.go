@@ -18,7 +18,6 @@ package tpp
 
 import (
 	"crypto/x509"
-	"fmt"
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
 	"net/http"
@@ -38,91 +37,6 @@ func TestParseAuthorizeData(t *testing.T) {
 	}
 	if apiKey != "3561721a-4a0a-a441-8a80-655a736c3d76" {
 		t.Fatalf("Parsed API Key did not match expected value. Expected: 3561721a-4a0a-a441-8a80-655a736c3d76 Actual: %s", apiKey)
-	}
-}
-
-func TestSetBaseURL(t *testing.T) {
-	tpp := Connector{}
-	url := "http://localhost/vedsdk/"
-	err := tpp.SetBaseURL(url)
-	if err != nil {
-		t.Fatalf("err is not nil, err: %s url: %s", err, url)
-	}
-	if !strings.EqualFold(tpp.baseURL, expectedURL) {
-		t.Fatalf("Base URL did not match expected value. Expected: %s Actual: %s", expectedURL, tpp.baseURL)
-	}
-
-	url = "http://localhost"
-	tpp.baseURL = ""
-	err = tpp.SetBaseURL(url)
-	if err != nil {
-		t.Fatalf("err is not nil, err: %s url: %s", err, url)
-	}
-	if !strings.EqualFold(tpp.baseURL, expectedURL) {
-		t.Fatalf("Base URL did not match expected value. Expected: %s Actual: %s", expectedURL, tpp.baseURL)
-	}
-
-	url = "http://localhost/vedsdk"
-	tpp.baseURL = ""
-	err = tpp.SetBaseURL(url)
-	if err != nil {
-		t.Fatalf("err is not nil, err: %s url: %s", err, url)
-	}
-	if !strings.EqualFold(tpp.baseURL, expectedURL) {
-		t.Fatalf("Base URL did not match expected value. Expected: %s Actual: %s", expectedURL, tpp.baseURL)
-	}
-
-	url = "localhost/vedsdk"
-	tpp.baseURL = ""
-	err = tpp.SetBaseURL(url)
-	if err != nil {
-		t.Fatalf("err is not nil, err: %s url: %s", err, url)
-	}
-	if !strings.EqualFold(tpp.baseURL, expectedURL) {
-		t.Fatalf("Base URL did not match expected value. Expected: %s Actual: %s", expectedURL, tpp.baseURL)
-	}
-
-	url = "ftp://wrongurlformat.com"
-	tpp.baseURL = ""
-	err = tpp.SetBaseURL(url)
-	if err == nil {
-		t.Fatalf("err was not expected to be nil. url: %s", url)
-	}
-	if strings.EqualFold(tpp.baseURL, expectedURL) {
-		t.Fatalf("Base URL should not match expected value. Expected: %s Actual: %s", expectedURL, tpp.baseURL)
-	}
-}
-
-func TestGetURL(t *testing.T) {
-	tpp := Connector{}
-	url := "http://localhost/vedsdk/"
-	tpp.baseURL = ""
-	err := tpp.SetBaseURL(url)
-	if err != nil {
-		t.Fatalf("err is not nil, err: %s url: %s", err, url)
-	}
-	if !strings.EqualFold(tpp.baseURL, expectedURL) {
-		t.Fatalf("Base URL did not match expected value. Expected: %s Actual: %s", expectedURL, tpp.baseURL)
-	}
-
-	url, err = tpp.getURL(urlResourceAuthorize)
-	if !strings.EqualFold(url, fmt.Sprintf("%s%s", expectedURL, urlResourceAuthorize)) {
-		t.Fatalf("Get URL did not match expected value. Expected: %s Actual: %s", fmt.Sprintf("%s%s", expectedURL, urlResourceAuthorize), url)
-	}
-
-	url, err = tpp.getURL(urlResourceCertificateRequest)
-	if !strings.EqualFold(url, fmt.Sprintf("%s%s", expectedURL, urlResourceCertificateRequest)) {
-		t.Fatalf("Get URL did not match expected value. Expected: %s Actual: %s", fmt.Sprintf("%s%s", expectedURL, urlResourceCertificateRequest), url)
-	}
-
-	url, err = tpp.getURL(urlResourceCertificateRetrieve)
-	if !strings.EqualFold(url, fmt.Sprintf("%s%s", expectedURL, urlResourceCertificateRetrieve)) {
-		t.Fatalf("Get URL did not match expected value. Expected: %s Actual: %s", fmt.Sprintf("%s%s", expectedURL, urlResourceCertificateRetrieve), url)
-	}
-	tpp.baseURL = ""
-	url, err = tpp.getURL(urlResourceAuthorize)
-	if err == nil {
-		t.Fatalf("Get URL did not return an error when the base url had not been set.")
 	}
 }
 

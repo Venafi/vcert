@@ -25,9 +25,8 @@ import (
 
 func TestRetrieveCertificate(t *testing.T) {
 
-	defaultZoneTag := ""
 	conn := getTestConnector()
-	zoneConfig, err := conn.ReadZoneConfiguration(defaultZoneTag)
+	zoneConfig, err := conn.ReadZoneConfiguration()
 
 	req := &certificate.Request{}
 	req.Subject.CommonName = fmt.Sprintf("vcert.test%d.venafi.example.com", time.Now().Nanosecond())
@@ -38,7 +37,7 @@ func TestRetrieveCertificate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-	pickupID, err := conn.RequestCertificate(req, defaultZoneTag)
+	pickupID, err := conn.RequestCertificate(req)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -67,7 +66,7 @@ func TestRevokeCertificate(t *testing.T) {
 
 func TestReadZoneConfiguration(t *testing.T) {
 	var connector = getTestConnector()
-	_, err := connector.ReadZoneConfiguration("")
+	_, err := connector.ReadZoneConfiguration()
 	if err != nil {
 		t.Fatal("should return empty zone-config object")
 	}
@@ -85,7 +84,7 @@ func TestRequestCertificate(t *testing.T) {
 		t.Fatalf("error: %s", err)
 	}
 
-	requestID, err := connector.RequestCertificate(req, "")
+	requestID, err := connector.RequestCertificate(req)
 	if err != nil {
 		t.Fatalf("error: %s", err)
 	}

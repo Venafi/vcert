@@ -1,15 +1,27 @@
 GOFLAGS ?= $(GOFLAGS:)
+ifdef BUILD_NUMBER
+	VERSION=`git describe --abbrev=0 --tags`+$(BUILD_NUMBER)
+else
+	VERSION=`git describe --abbrev=0 --tags`
+endif
+
+GO_LDFLAGS=-ldflags "-X github.com/Venafi/vcert.versionString=$(VERSION) -X github.com/Venafi/vcert.versionBuildTimeStamp=`date -u +%Y%m%d.%H%M%S` -s -w"
+version:
+	echo "$(VERSION)"
 
 get: gofmt
 	go get $(GOFLAGS) ./...
 
+build_quick: get
+	env GOOS=linux   GOARCH=amd64 go build $(GO_LDFLAGS) -o bin/linux/vcert         ./cmd/vcert
+
 build: get
-	env GOOS=linux   GOARCH=amd64 go build -ldflags '-s -w' -o bin/linux/vcert         ./cmd/vcert
-	env GOOS=linux   GOARCH=386   go build -ldflags '-s -w' -o bin/linux/vcert86       ./cmd/vcert
-	env GOOS=darwin  GOARCH=amd64 go build -ldflags '-s -w' -o bin/darwin/vcert        ./cmd/vcert
-	env GOOS=darwin  GOARCH=386   go build -ldflags '-s -w' -o bin/darwin/vcert86      ./cmd/vcert
-	env GOOS=windows GOARCH=amd64 go build -ldflags '-s -w' -o bin/windows/vcert.exe   ./cmd/vcert
-	env GOOS=windows GOARCH=386   go build -ldflags '-s -w' -o bin/windows/vcert86.exe ./cmd/vcert
+	env GOOS=linux   GOARCH=amd64 go build $(GO_LDFLAGS) -o bin/linux/vcert         ./cmd/vcert
+	env GOOS=linux   GOARCH=386   go build $(GO_LDFLAGS) -o bin/linux/vcert86       ./cmd/vcert
+	env GOOS=darwin  GOARCH=amd64 go build $(GO_LDFLAGS) -o bin/darwin/vcert        ./cmd/vcert
+	env GOOS=darwin  GOARCH=386   go build $(GO_LDFLAGS) -o bin/darwin/vcert86      ./cmd/vcert
+	env GOOS=windows GOARCH=amd64 go build $(GO_LDFLAGS) -o bin/windows/vcert.exe   ./cmd/vcert
+	env  GOOS=windows GOARCH=386   go build $(GO_LDFLAGS) -o bin/windows/vcert86.exe ./cmd/vcert
 
 cucumber:
 	rm -rf ./aruba/bin/
