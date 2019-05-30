@@ -31,9 +31,7 @@ func buildConfig(cf *commandFlags) (cfg vcert.Config, err error) {
 
 	if cf.config != "" {
 		// Loading configuration from file
-		cfg.ConfigFile = cf.config
-		cfg.ConfigSection = cf.profile
-		cfg, err = vcert.LoadConfigFromFile(cf.config)
+		cfg, err = vcert.LoadConfigFromFile(cf.config, cf.profile)
 		if err != nil {
 			return cfg, err
 		}
