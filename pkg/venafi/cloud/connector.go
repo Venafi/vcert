@@ -115,16 +115,8 @@ func (c *Connector) GetType() endpoint.ConnectorType {
 
 // Ping attempts to connect to the Venafi Cloud API and returns an errror if it cannot
 func (c *Connector) Ping() (err error) {
-	url := c.getURL(urlResourcePing)
 
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode != http.StatusOK {
-		err = fmt.Errorf("Unexpected status code on Venafi Cloud ping. Status: %d %s", resp.StatusCode, resp.Status)
-	}
-	return err
+	return nil
 }
 
 // Authenticate authenticates the user with Venafi Cloud using the provided API Key

@@ -39,19 +39,15 @@ type Config struct {
 	// ConnectionTrust  may contain a trusted CA or certificate of server if you use self-signed certificate.
 	ConnectionTrust string // *x509.CertPool
 	LogVerbose      bool
-	// ConfigFile is deprecated
-	ConfigFile string
-	// ConfigSection is deprecated
-	ConfigSection string
 }
 
 // LoadFromFile is deprecated. In the future will be rewrited.
-func LoadConfigFromFile(path string) (cfg Config, err error) {
+func LoadConfigFromFile(path, section string) (cfg Config, err error) {
 
-	if cfg.ConfigSection == "" {
-		cfg.ConfigSection = ini.DEFAULT_SECTION
+	if section == "" {
+		section = ini.DEFAULT_SECTION
 	}
-	log.Printf("Loading configuration from %s section %s", cfg.ConfigFile, cfg.ConfigSection)
+	log.Printf("Loading configuration from %s section %s", path, section)
 
 	fname, err := expand(path)
 	if err != nil {
@@ -69,18 +65,18 @@ func LoadConfigFromFile(path string) (cfg Config, err error) {
 	}
 
 	ok := func() bool {
-		for _, section := range iniFile.Sections() {
-			if section.Name() == cfg.ConfigSection {
+		for _, s := range iniFile.Sections() {
+			if s.Name() == section {
 				return true
 			}
 		}
 		return false
 	}()
 	if !ok {
-		return cfg, fmt.Errorf("section %s has not been found in %s", cfg.ConfigSection, path)
+		return cfg, fmt.Errorf("section %s has not been found in %s", section, path)
 	}
 
-	var m dict = iniFile.Section(cfg.ConfigSection).KeysHash()
+	var m dict = iniFile.Section(section).KeysHash()
 
 	var connectorType endpoint.ConnectorType
 	var baseUrl string

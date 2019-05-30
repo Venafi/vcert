@@ -42,10 +42,7 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 		}
 
 	case certificate.ServiceGeneratedCSR:
-		err = req.SetCSR(nil)
-		if err != nil {
-			return err
-		}
+		return nil
 
 	default:
 		return fmt.Errorf("Unexpected option in PrivateKeyOrigin")

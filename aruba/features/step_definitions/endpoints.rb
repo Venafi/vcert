@@ -8,6 +8,12 @@ ENDPOINTS = {
              " -z            '#{ENV['VCERT_TPP_ZONE']}'     " +
              " -insecure",
 
+    "TPPecdsa" => " -tpp-url      '#{ENV['VCERT_TPP_URL']}'      " +
+             " -tpp-user     '#{ENV['VCERT_TPP_USER']}'     " +
+             " -tpp-password '#{ENV['VCERT_TPP_PASSWORD']}' " +
+             " -z            '#{ENV['TPPZONE_ECDSA']}'     " +
+             " -insecure",
+
     "Cloud" => "-venafi-saas-url '#{ENV['VCERT_CLOUD_URL']}' -k '#{ENV['VCERT_CLOUD_APIKEY']}' -z '#{ENV['VCERT_CLOUD_ZONE']}'"
 }
 
