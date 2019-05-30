@@ -262,8 +262,12 @@ func (c *Connector) request(method string, resource urlResource, data interface{
 
 func (c *Connector) getHTTPClient() *http.Client {
 	if c.trust != nil {
-		tr := &http.Transport{TLSClientConfig: &tls.Config{RootCAs: c.trust}}
-		return &http.Client{Transport: tr}
+		tlsConfig := http.DefaultTransport.(*http.Transport).TLSClientConfig
+		if tlsConfig == nil {
+			tlsConfig = &tls.Config{}
+		}
+		tlsConfig.RootCAs = c.trust
+		return &http.Client{Transport: &http.Transport{TLSClientConfig: tlsConfig}}
 	}
 
 	return http.DefaultClient

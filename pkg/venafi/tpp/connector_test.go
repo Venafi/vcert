@@ -701,7 +701,7 @@ func TestReadPolicyConfiguration(t *testing.T) {
 			},
 		},
 		{
-			"devops\\only_ecc_p521",
+			os.Getenv("TPPZONE_ECDSA"),
 			endpoint.Policy{
 				[]string{".*"},
 				[]string{".*"},
