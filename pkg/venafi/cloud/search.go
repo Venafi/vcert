@@ -50,13 +50,13 @@ type Paging struct {
 
 const (
 	EQ    Operator = "EQ"
-	FIND           = "FIND"
-	GT             = "GT"
-	GTE            = "GTE"
-	IN             = "IN"
-	LT             = "LT"
-	LTE            = "LTE"
-	MATCH          = "MATCH"
+	FIND  Operator = "FIND"
+	GT    Operator = "GT"
+	GTE   Operator = "GTE"
+	IN    Operator = "IN"
+	LT    Operator = "LT"
+	LTE   Operator = "LTE"
+	MATCH Operator = "MATCH"
 )
 
 type CertificateSearchResponse struct {

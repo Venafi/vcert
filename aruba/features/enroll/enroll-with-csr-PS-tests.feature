@@ -19,11 +19,11 @@ Feature: few more tests from Ryan
 
 # cls
 # title ~ Service Generated CSR with ECC key ~
-# VCert enroll -tpp-url %TPP_URL% -tpp-user %TPP_USER% -tpp-password %TPP_PASS% -z "%ECC_POLICY%" -csr service -key-type ecdsa -key-curve p256 -cn service-gen-ecc.vcert.example -format json -key-password %KEY_PASS%
+# VCert enroll -tpp-url %TPP_URL% -tpp-user %TPP_USER% -tpp-password %TPP_PASS% -z "%ECC_POLICY%" -csr service -key-type ecdsa -key-curve p521 -cn service-gen-ecc.vcert.example -format json -key-password %KEY_PASS%
 # if ERRORLEVEL 1 goto :DONE
 # timeout /t 10
   Scenario: ~ Service Generated CSR with ECC key ~
-    When I enroll random certificate using TPP with -csr service -key-type ecdsa -key-curve p256 -format json -key-password newPassw0rd!
+    When I enroll random certificate using TPPecdsa with -csr service -key-type ecdsa -key-curve p521 -format json -key-password newPassw0rd!
     Then it should post certificate request
     And it should retrieve certificate
     And the JSON response at "PrivateKey" should include "-----BEGIN EC PRIVATE KEY-----"
@@ -77,17 +77,17 @@ Feature: few more tests from Ryan
 
 # cls
 # title ~ User Provided CSR with ECC key ~
-# VCert gencsr -cn user-provided-ecc.vcert.example -key-type ecdsa -key-curve p256 -key-file user-provided-ecc.key -csr-file user-provided-ecc.req -no-prompt
+# VCert gencsr -cn user-provided-ecc.vcert.example -key-type ecdsa -key-curve p521 -key-file user-provided-ecc.key -csr-file user-provided-ecc.req -no-prompt
 # echo.
 # VCert enroll -tpp-url %TPP_URL% -tpp-user %TPP_USER% -tpp-password %TPP_PASS% -z "%ECC_POLICY%" -csr file:user-provided-ecc.req
 # if ERRORLEVEL 1 goto :DONE
 # timeout /t 10
   Scenario: ~ User Provided CSR with ECC key ~
-    Given I generate CSR with -cn user-provided-ecc.vcert.example -key-type ecdsa -key-curve p256 -key-file user-provided-ecc.key -csr-file user-provided-ecc.req -no-prompt
-    When I enroll certificate using TPP with -csr file:user-provided-ecc.req -cert-file c.pem
+    Given I generate CSR with -cn user-provided-ecc.vcert.example -key-type ecdsa -key-curve p521 -key-file user-provided-ecc.key -csr-file user-provided-ecc.req -no-prompt
+    When I enroll certificate using TPPecdsa with -csr file:user-provided-ecc.req -cert-file c.pem
     And it should retrieve certificate
     And I decode certificate from file "c.pem"
-    Then that certificate should contain "CURVE: P-256"
+    Then that certificate should contain "CURVE: P-521"
 
 #  cls
 #  title ~ Service Generated CSR with SANS and should be no log output ~

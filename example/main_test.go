@@ -77,7 +77,7 @@ func TestRequestCertificate(t *testing.T) {
 	//
 	// 3. submit certificate request, get request ID as a response
 	//
-	requestID, err := c.RequestCertificate(req, "")
+	requestID, err := c.RequestCertificate(req)
 	if err != nil {
 		t.Fatalf("could not submit certificate request: %s", err)
 	}
@@ -231,7 +231,7 @@ func TestImportCertificate(t *testing.T) {
 		t.Fatalf("could not generate certificate request: %s", err)
 	}
 
-	requestID, err := c.RequestCertificate(req, "")
+	requestID, err := c.RequestCertificate(req)
 	if err != nil {
 		t.Fatalf("could not submit certificate request: %s", err)
 	}

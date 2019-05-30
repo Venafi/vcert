@@ -149,14 +149,14 @@ type urlResource string
 
 const (
 	urlResourceAuthorize           urlResource = "authorize/"
-	urlResourceCertificateRequest              = "certificates/request"
-	urlResourceCertificateRetrieve             = "certificates/retrieve"
-	urlResourceFindPolicy                      = "config/findpolicy"
-	urlResourceCertificateRevoke               = "certificates/revoke"
-	urlResourceCertificateRenew                = "certificates/renew"
-	urlResourceCertificateSearch               = "certificates/"
-	urlResourceCertificateImport               = "certificates/import"
-	urlResourceCertificatePolicy               = "certificates/checkpolicy"
+	urlResourceCertificateRequest  urlResource = "certificates/request"
+	urlResourceCertificateRetrieve urlResource = "certificates/retrieve"
+	urlResourceFindPolicy          urlResource = "config/findpolicy"
+	urlResourceCertificateRevoke   urlResource = "certificates/revoke"
+	urlResourceCertificateRenew    urlResource = "certificates/renew"
+	urlResourceCertificateSearch   urlResource = "certificates/"
+	urlResourceCertificateImport   urlResource = "certificates/import"
+	urlResourceCertificatePolicy   urlResource = "certificates/checkpolicy"
 )
 
 const (
@@ -204,31 +204,6 @@ func retrieveChainOptionFromString(order string) retrieveChainOption {
 	default:
 		return retrieveChainOptionRootLast
 	}
-}
-
-var baseUrlRegex = regexp.MustCompile("^https://[a-z\\d]+[-a-z\\d.]+[a-z\\d][:\\d]*/vedsdk/$")
-
-// SetBaseURL sets the base URL used to communicate with TPP
-func (c *Connector) SetBaseURL(url string) error {
-	modified := strings.ToLower(url)
-	if strings.HasPrefix(modified, "http://") {
-		modified = "https://" + modified[7:]
-	} else if !strings.HasPrefix(modified, "https://") {
-		modified = "https://" + modified
-	}
-	if !strings.HasSuffix(modified, "/") {
-		modified = modified + "/"
-	}
-
-	if !strings.HasSuffix(modified, "vedsdk/") {
-		modified += "vedsdk/"
-	}
-	if loc := baseUrlRegex.FindStringIndex(modified); loc == nil {
-		return fmt.Errorf("The specified TPP URL is invalid. %s\nExpected TPP URL format 'https://tpp.company.com/vedsdk/'", url)
-	}
-
-	c.baseURL = modified
-	return nil
 }
 
 func (c *Connector) getURL(resource urlResource) (string, error) {
@@ -287,8 +262,12 @@ func (c *Connector) request(method string, resource urlResource, data interface{
 
 func (c *Connector) getHTTPClient() *http.Client {
 	if c.trust != nil {
-		tr := &http.Transport{TLSClientConfig: &tls.Config{RootCAs: c.trust}}
-		return &http.Client{Transport: tr}
+		tlsConfig := http.DefaultTransport.(*http.Transport).TLSClientConfig
+		if tlsConfig == nil {
+			tlsConfig = &tls.Config{}
+		}
+		tlsConfig.RootCAs = c.trust
+		return &http.Client{Transport: &http.Transport{TLSClientConfig: tlsConfig}}
 	}
 
 	return http.DefaultClient
@@ -297,7 +276,7 @@ func (c *Connector) getHTTPClient() *http.Client {
 // GenerateRequest creates a new certificate request, based on the zone/policy configuration and the user data
 func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *certificate.Request) (err error) {
 	if config == nil {
-		config, err = c.ReadZoneConfiguration(c.zone)
+		config, err = c.ReadZoneConfiguration()
 		if err != nil {
 			return fmt.Errorf("could not read zone configuration: %s", err)
 		}
@@ -327,21 +306,20 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 		if config.CustomAttributeValues[tppAttributeManualCSR] == "0" {
 			return fmt.Errorf("Unable to request certificate with user provided CSR when zone configuration is 'Manual Csr' = 0")
 		}
-		if len(req.CSR) == 0 {
+		if len(req.GetCSR()) == 0 {
 			return fmt.Errorf("CSR was supposed to be provided by user, but it's empty")
 		}
 
 	case certificate.ServiceGeneratedCSR:
-		req.CSR = nil
 	}
 	return nil
 }
 
 func getPolicyDN(zone string) string {
 	modified := zone
-	reg := regexp.MustCompile("^\\\\VED\\\\Policy")
+	reg := regexp.MustCompile(`^\\VED\\Policy`)
 	if reg.FindStringIndex(modified) == nil {
-		reg = regexp.MustCompile("^\\\\")
+		reg = regexp.MustCompile(`^\\`)
 		if reg.FindStringIndex(modified) == nil {
 			modified = "\\" + modified
 		}

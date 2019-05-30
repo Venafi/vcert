@@ -188,8 +188,8 @@ func validateEnrollmentFlags() error {
 			enrollParams.tppURL != "" ||
 			enrollParams.tppUser != "" ||
 			enrollParams.tppPassword != "" ||
-			enrollParams.testMode == true {
-			return fmt.Errorf("Connection details cannot be specified with flags when -config is used")
+			enrollParams.testMode {
+			return fmt.Errorf("connection details cannot be specified with flags when -config is used")
 		}
 	} else {
 		if enrollParams.profile != "" {
@@ -255,7 +255,7 @@ func validateEnrollmentFlags() error {
 	}
 
 	if enrollParams.format == "pkcs12" {
-		if enrollParams.file == "" {
+		if enrollParams.file == "" && enrollParams.csrOption != "service" {
 			return fmt.Errorf("PKCS#12 format can only be used if all objects are written to one file (see -file option)")
 		}
 		if enrollParams.certFile != "" || enrollParams.chainFile != "" || enrollParams.keyFile != "" {

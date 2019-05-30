@@ -37,8 +37,10 @@ func wrapArgumentDescriptionText(text string) string {
 		if unicode.IsSpace(char) {
 			if space.Len() == 0 || word.Len() > 0 {
 				current += space.Len() + word.Len()
+				// nolint: errcheck
 				space.WriteTo(buf)
 				space.Reset()
+				// nolint: errcheck
 				word.WriteTo(buf)
 				word.Reset()
 			}
@@ -59,10 +61,13 @@ func wrapArgumentDescriptionText(text string) string {
 
 	if word.Len() == 0 {
 		if current+space.Len() <= limit {
+			// nolint: errcheck
 			space.WriteTo(buf)
 		}
 	} else {
+		// nolint: errcheck
 		space.WriteTo(buf)
+		// nolint: errcheck
 		word.WriteTo(buf)
 	}
 
@@ -71,7 +76,6 @@ func wrapArgumentDescriptionText(text string) string {
 
 func showvcertUsage() {
 	fmt.Printf("%s\n", GetFormattedVersionString())
-	fmt.Printf("\tTo gain access to the Venafi Cloud service, use the 'register' action.\n")
 	fmt.Printf("\tTo generate a certificate signing request (CSR), use the 'gencsr' action.\n")
 	fmt.Printf("\tTo enroll a certificate, use the 'enroll' action.\n")
 	fmt.Printf("\tTo retrieve a certificate, use the 'pickup' action.\n")

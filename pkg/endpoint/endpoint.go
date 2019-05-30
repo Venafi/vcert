@@ -58,23 +58,19 @@ func (t ConnectorType) String() string {
 type Connector interface {
 	// GetType returns a connector type (cloud/TPP/fake). Can be useful because some features are not supported by a Cloud connection.
 	GetType() ConnectorType
-	// SetBaseUrl sets a server URL. It usually is called by the NewClient function.
-	SetBaseURL(url string) (err error)
 	// SetZone sets a zone (by name) for requests with this connector.
 	SetZone(z string)
 	Ping() (err error)
-	// Register is deprecated and will be removed in the future.
-	Register(email string) (err error)
 	// Authenticate is usually called by NewClient and it is not required that you manually call it.
 	Authenticate(auth *Authentication) (err error)
 	// ReadPolicyConfiguration returns information about zone policies. It can be used for checking request compatibility with policies.
-	ReadPolicyConfiguration(zone string) (policy *Policy, err error)
+	ReadPolicyConfiguration() (policy *Policy, err error)
 	// ReadZoneConfiguration returns the zone configuration. A zone configuration includes zone policy and additional zone information.
-	ReadZoneConfiguration(zone string) (config *ZoneConfiguration, err error)
+	ReadZoneConfiguration() (config *ZoneConfiguration, err error)
 	// GenerateRequest update certificate.Request with data from zone configuration.
 	GenerateRequest(config *ZoneConfiguration, req *certificate.Request) (err error)
 	// RequestCertificate makes a request to the server with data for enrolling the certificate.
-	RequestCertificate(req *certificate.Request, zone string) (requestID string, err error)
+	RequestCertificate(req *certificate.Request) (requestID string, err error)
 	// RetrieveCertificate immediately returns an enrolled certificate. Otherwise, RetrieveCertificate waits and retries during req.Timeout.
 	RetrieveCertificate(req *certificate.Request) (certificates *certificate.PEMCollection, err error)
 	RevokeCertificate(req *certificate.RevocationRequest) error
@@ -165,33 +161,33 @@ func NewZoneConfiguration() *ZoneConfiguration {
 }
 
 // ValidateCertificateRequest validates the request against the Policy
-func (z *ZoneConfiguration) ValidateCertificateRequest(request *certificate.Request) error {
-	if !isComponentValid(z.SubjectCNRegexes, []string{request.Subject.CommonName}) {
+func (p *Policy) ValidateCertificateRequest(request *certificate.Request) error {
+	if !isComponentValid(p.SubjectCNRegexes, []string{request.Subject.CommonName}) {
 		return fmt.Errorf("The requested CN does not match any of the allowed CN regular expressions")
 	}
-	if !isComponentValid(z.SubjectORegexes, request.Subject.Organization) {
+	if !isComponentValid(p.SubjectORegexes, request.Subject.Organization) {
 		return fmt.Errorf("The requested Organization does not match any of the allowed Organization regular expressions")
 	}
-	if !isComponentValid(z.SubjectOURegexes, request.Subject.OrganizationalUnit) {
+	if !isComponentValid(p.SubjectOURegexes, request.Subject.OrganizationalUnit) {
 		return fmt.Errorf("The requested Organizational Unit does not match any of the allowed Organization Unit regular expressions")
 	}
-	if !isComponentValid(z.SubjectSTRegexes, request.Subject.Province) {
+	if !isComponentValid(p.SubjectSTRegexes, request.Subject.Province) {
 		return fmt.Errorf("The requested State/Province does not match any of the allowed State/Province regular expressions")
 	}
-	if !isComponentValid(z.SubjectLRegexes, request.Subject.Locality) {
+	if !isComponentValid(p.SubjectLRegexes, request.Subject.Locality) {
 		return fmt.Errorf("The requested Locality does not match any of the allowed Locality regular expressions")
 	}
-	if !isComponentValid(z.SubjectCRegexes, request.Subject.Country) {
+	if !isComponentValid(p.SubjectCRegexes, request.Subject.Country) {
 		return fmt.Errorf("The requested Country does not match any of the allowed Country regular expressions")
 	}
-	if !isComponentValid(z.DnsSanRegExs, request.DNSNames) {
+	if !isComponentValid(p.DnsSanRegExs, request.DNSNames) {
 		return fmt.Errorf("The requested Subject Alternative Name does not match any of the allowed Country regular expressions")
 	}
 	//todo: add ip, email and over cheking
 
-	if z.AllowedKeyConfigurations != nil && len(z.AllowedKeyConfigurations) > 0 {
+	if p.AllowedKeyConfigurations != nil && len(p.AllowedKeyConfigurations) > 0 {
 		match := false
-		for _, keyConf := range z.AllowedKeyConfigurations {
+		for _, keyConf := range p.AllowedKeyConfigurations {
 			if keyConf.KeyType == request.KeyType {
 				if request.KeyLength > 0 {
 					for _, size := range keyConf.KeySizes {
@@ -325,6 +321,4 @@ func (z *ZoneConfiguration) UpdateCertificateRequest(request *certificate.Reques
 			request.KeyLength = 2048
 		}
 	}
-
-	return
 }

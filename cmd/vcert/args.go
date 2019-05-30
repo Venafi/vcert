@@ -29,7 +29,7 @@ import (
 type command int
 
 const (
-	commandRegister command = iota
+	commandUnused command = iota
 	commandGenCSR
 	commandEnroll
 	commandPickup
@@ -38,9 +38,6 @@ const (
 )
 
 var (
-	registerFlags = flag.NewFlagSet("register", flag.PanicOnError)
-	regParams     commandFlags
-
 	genCsrFlags  = flag.NewFlagSet("gencsr", flag.PanicOnError)
 	genCsrParams commandFlags
 
@@ -58,7 +55,6 @@ var (
 )
 
 type commandFlags struct {
-	email              string
 	verbose            bool
 	tppURL             string
 	tppUser            string
@@ -112,8 +108,6 @@ func createFromCommandFlags(co command) *commandFlags {
 	var f commandFlags
 
 	switch co {
-	case commandRegister:
-		f = regParams
 	case commandGenCSR:
 		f = genCsrParams
 	case commandEnroll:
@@ -131,8 +125,6 @@ func createFromCommandFlags(co command) *commandFlags {
 
 func validateFlags(c command) error {
 	switch c {
-	case commandRegister:
-
 	case commandGenCSR:
 		return validateGenerateFlags()
 	case commandEnroll:
@@ -155,12 +147,6 @@ func parseArgs() (co command, cf *commandFlags, err error) {
 	}
 
 	switch strings.ToLower(os.Args[1]) {
-	case "register":
-		co = commandRegister
-		err = registerFlags.Parse(os.Args[2:])
-		if err != nil {
-			logger.Panicf("%s", err)
-		}
 	case "gencsr":
 		co = commandGenCSR
 		err = genCsrFlags.Parse(os.Args[2:])

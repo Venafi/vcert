@@ -36,11 +36,11 @@ type zone struct {
 	CompanyID                    string    `json:"companyId,omitempty"`
 	Tag                          string    `json:"tag,omitempty"`
 	ZoneType                     string    `json:"zoneType,omitempty"`
-	SystemGenerated              bool      `json:"systemGeneratedate,omitempty"`
+	SystemGenerated              bool      `json:"systemGenerated,omitempty"`
 	CreationDateString           string    `json:"creationDate,omitempty"`
 	CreationDate                 time.Time `json:"-"`
 	CertificateIssuingTemplateId string    `json:"certificateIssuingTemplateId"`
-}
+
 
 func (z *zone) getZoneConfiguration(ud *userDetails, policy *certificateTemplate) (zoneConfig *endpoint.ZoneConfiguration) {
 	zoneConfig = endpoint.NewZoneConfiguration()

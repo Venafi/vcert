@@ -37,8 +37,7 @@ Feature: Generating simple certificate request
     When I run `vcert gencsr -cn vfidev.example.com -no-prompt -csr-file csr.pem`
     Then the exit status should be 0
     And it should output private key
-    And it should output CSR
-    But it should not write CSR to the file named "csr.pem"
+    And it should write CSR to the file named "csr.pem"
 
   Scenario: where -csr-file and -key-file options are both specified
     When I run `vcert gencsr -cn vfidev.example.com -no-prompt -csr-file csr.pem -key-file k.pem`

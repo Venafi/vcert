@@ -39,47 +39,44 @@ type Config struct {
 	// ConnectionTrust  may contain a trusted CA or certificate of server if you use self-signed certificate.
 	ConnectionTrust string // *x509.CertPool
 	LogVerbose      bool
-	// ConfigFile is deprecated
-	ConfigFile string
-	// ConfigSection is deprecated
-	ConfigSection string
 }
 
 // LoadFromFile is deprecated. In the future will be rewrited.
-func (cfg *Config) LoadFromFile() error {
-	if cfg.ConfigSection == "" {
-		cfg.ConfigSection = ini.DEFAULT_SECTION
-	}
-	log.Printf("Loading configuration from %s section %s", cfg.ConfigFile, cfg.ConfigSection)
+func LoadConfigFromFile(path, section string) (cfg Config, err error) {
 
-	fname, err := expand(cfg.ConfigFile)
+	if section == "" {
+		section = ini.DEFAULT_SECTION
+	}
+	log.Printf("Loading configuration from %s section %s", path, section)
+
+	fname, err := expand(path)
 	if err != nil {
-		return fmt.Errorf("failed to load config: %s", err)
+		return cfg, fmt.Errorf("failed to load config: %s", err)
 	}
 
 	iniFile, err := ini.Load(fname)
 	if err != nil {
-		return fmt.Errorf("failed to load config: %s", err)
+		return cfg, fmt.Errorf("failed to load config: %s", err)
 	}
 
 	err = validateFile(iniFile)
 	if err != nil {
-		return fmt.Errorf("failed to load config: %s", err)
+		return cfg, fmt.Errorf("failed to load config: %s", err)
 	}
 
 	ok := func() bool {
-		for _, section := range iniFile.Sections() {
-			if section.Name() == cfg.ConfigSection {
+		for _, s := range iniFile.Sections() {
+			if s.Name() == section {
 				return true
 			}
 		}
 		return false
 	}()
 	if !ok {
-		return fmt.Errorf("section %s has not been found in %s", cfg.ConfigSection, cfg.ConfigFile)
+		return cfg, fmt.Errorf("section %s has not been found in %s", section, path)
 	}
 
-	var m Dict = iniFile.Section(cfg.ConfigSection).KeysHash()
+	var m dict = iniFile.Section(section).KeysHash()
 
 	var connectorType endpoint.ConnectorType
 	var baseUrl string
@@ -107,17 +104,17 @@ func (cfg *Config) LoadFromFile() error {
 	} else if m.has("test_mode") && m["test_mode"] == "true" {
 		connectorType = endpoint.ConnectorTypeFake
 	} else {
-		return fmt.Errorf("failed to load config: connector type cannot be defined")
+		return cfg, fmt.Errorf("failed to load config: connector type cannot be defined")
 	}
 
 	if m.has("trust_bundle") {
 		fname, err := expand(m["trust_bundle"])
 		if err != nil {
-			return fmt.Errorf("failed to load trust-bundle: %s", err)
+			return cfg, fmt.Errorf("failed to load trust-bundle: %s", err)
 		}
 		data, err := ioutil.ReadFile(fname)
 		if err != nil {
-			return fmt.Errorf("failed to load trust-bundle: %s", err)
+			return cfg, fmt.Errorf("failed to load trust-bundle: %s", err)
 		}
 		cfg.ConnectionTrust = string(data)
 	}
@@ -126,7 +123,7 @@ func (cfg *Config) LoadFromFile() error {
 	cfg.Credentials = auth
 	cfg.BaseUrl = baseUrl
 
-	return nil
+	return
 }
 
 func expand(path string) (string, error) {
@@ -140,18 +137,18 @@ func expand(path string) (string, error) {
 	return filepath.Join(usr.HomeDir, path[1:]), nil
 }
 
-type Dict map[string]string
+type dict map[string]string
 
-func (d Dict) has(key string) bool {
+func (d dict) has(key string) bool {
 	if _, ok := d[key]; ok {
 		return true
 	}
 	return false
 }
 
-type Set map[string]bool
+type set map[string]bool
 
-func (d Set) has(key string) bool {
+func (d set) has(key string) bool {
 	if _, ok := d[key]; ok {
 		return true
 	}
@@ -159,14 +156,14 @@ func (d Set) has(key string) bool {
 }
 
 func validateSection(s *ini.Section) error {
-	var TPPValidKeys Set = map[string]bool{
+	var TPPValidKeys set = map[string]bool{
 		"tpp_url":      true,
 		"tpp_user":     true,
 		"tpp_password": true,
 		"tpp_zone":     true,
 		"trust_bundle": true,
 	}
-	var CloudValidKeys Set = map[string]bool{
+	var CloudValidKeys set = map[string]bool{
 		"trust_bundle": true,
 		"cloud_url":    true,
 		"cloud_apikey": true,
@@ -174,11 +171,11 @@ func validateSection(s *ini.Section) error {
 	}
 
 	log.Printf("Validating configuration section %s", s.Name())
-	var m Dict = s.KeysHash()
+	var m dict = s.KeysHash()
 
 	if m.has("tpp_url") {
 		// looks like TPP config section
-		for k, _ := range m {
+		for k := range m {
 			if !TPPValidKeys.has(k) {
 				return fmt.Errorf("illegal key '%s' in TPP section %s", k, s.Name())
 			}
@@ -191,7 +188,7 @@ func validateSection(s *ini.Section) error {
 		}
 	} else if m.has("cloud_apikey") {
 		// looks like Cloud config section
-		for k, _ := range m {
+		for k := range m {
 			if !CloudValidKeys.has(k) {
 				return fmt.Errorf("illegal key '%s' in Cloud section %s", k, s.Name())
 			}
