@@ -99,7 +99,7 @@ func TestLoadFromFile(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		_, err = LoadConfigFromFile(tmpfile.Name())
+		_, err = LoadConfigFromFile(tmpfile.Name(), "")
 		if test_case.valid {
 			if err != nil {
 				t.Logf("config: %s", test_case.content)
