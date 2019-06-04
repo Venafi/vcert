@@ -40,7 +40,7 @@ type zone struct {
 	CreationDateString           string    `json:"creationDate,omitempty"`
 	CreationDate                 time.Time `json:"-"`
 	CertificateIssuingTemplateId string    `json:"certificateIssuingTemplateId"`
-
+}
 
 func (z *zone) getZoneConfiguration(ud *userDetails, policy *certificateTemplate) (zoneConfig *endpoint.ZoneConfiguration) {
 	zoneConfig = endpoint.NewZoneConfiguration()
