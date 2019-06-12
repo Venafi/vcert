@@ -38,7 +38,7 @@ type urlResource string
 const (
 	urlResourceUserAccounts              urlResource = "useraccounts"
 	urlResourcePing                                  = "ping"
-	urlResourceZones                                 = "xzones"
+	urlResourceZones                                 = "zones"
 	urlResourceZoneByTag                             = urlResourceZones + "/tag/%s"
 	urlResourceCertificateRequests                   = "certificaterequests"
 	urlResourceCertificateStatus                     = urlResourceCertificateRequests + "/%s"
