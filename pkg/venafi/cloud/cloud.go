@@ -19,6 +19,7 @@ package cloud
 import (
 	"bytes"
 	"crypto/sha1"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -202,7 +203,19 @@ func (c *Connector) request(method string, url string, data interface{}, authNot
 	}
 	r.Header.Add("cache-control", "no-cache")
 
-	res, err := http.DefaultClient.Do(r)
+	var httpClient *http.Client
+	if c.trust != nil {
+		tlsConfig := http.DefaultTransport.(*http.Transport).TLSClientConfig
+		if tlsConfig == nil {
+			tlsConfig = &tls.Config{}
+		}
+		tlsConfig.RootCAs = c.trust
+		httpClient = &http.Client{Transport: &http.Transport{TLSClientConfig: tlsConfig}}
+	} else {
+		httpClient = http.DefaultClient
+	}
+
+	res, err := httpClient.Do(r)
 	if res != nil {
 		statusCode = res.StatusCode
 		statusText = res.Status
