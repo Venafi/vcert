@@ -525,9 +525,9 @@ func (sp serverPolicy) toPolicy() (p endpoint.Policy) {
 		p.SubjectCNRegexes = make([]string, len(sp.WhitelistedDomains))
 		for i, d := range sp.WhitelistedDomains {
 			if sp.WildcardsAllowed {
-				p.SubjectCNRegexes[i] = addStartEnd(`[\p{L}\p{N}-_]+` + regexp.QuoteMeta("."+d))
-			} else {
 				p.SubjectCNRegexes[i] = addStartEnd(`[\p{L}\p{N}-_*]+` + regexp.QuoteMeta("."+d))
+			} else {
+				p.SubjectCNRegexes[i] = addStartEnd(`[\p{L}\p{N}-_]+` + regexp.QuoteMeta("."+d))
 			}
 		}
 	}
