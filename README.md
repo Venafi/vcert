@@ -6,6 +6,9 @@ VCert is a Go library, SDK, and command line utility designed to simplify key ge
 (also known as SSL/TLS certificates and keys) that comply with enterprise security policy by using the
 [Venafi Platform](https://www.venafi.com/platform/trust-protection-platform) or [Venafi Cloud](https://pki.venafi.com/venafi-cloud/).
 
+#### Compatibility
+VCert releases are tested using the latest version of Trust Protection Platform.  The [latest VCert release](../../releases/latest) should be compatible with Trust Protection Platform 17.3 or higher based on the subset of API methods it consumes.
+
 ## Installation
 
 1. Configure your Go environment according to https://golang.org/doc/install.
@@ -110,18 +113,15 @@ The completed test run will report on the number of test "scenarios" and "steps"
 
 ## Contributing to VCert
 
+Venafi welcomes contributions from the developer community.
+
 1. Fork it to your account (https://github.com/Venafi/vcert/fork)
 2. Clone your fork (`git clone git@github.com:youracct/vcert.git`)
 3. Create a feature branch (`git checkout -b your-branch-name`)
 4. Implement and test your changes
 5. Commit your changes (`git commit -am 'Added some cool functionality'`)
 6. Push to the branch (`git push origin your-branch-name`)
-7. Create a new Pull Request (https://github.com/youracct/vcert/pull/new/working-branch)
-
-## Release History
-
-- 3.18.3.1
-  - First open source release
+7. Create a new Pull Request (https://github.com/youracct/vcert/pull/new/your-branch-name)
 
 ## License
 
