@@ -89,15 +89,8 @@ func (ct certificateTemplate) toPolicy() (p endpoint.Policy) {
 	p.AllowKeyReuse = ct.KeyReuse
 	allowWildCards := false
 	for _, s := range p.SubjectCNRegexes {
-		if strings.HasPrefix(s, "^.*") {
+		if strings.HasPrefix(s, `^.*`) {
 			allowWildCards = true
-		}
-	}
-	if !allowWildCards {
-		for _, s := range p.DnsSanRegExs {
-			if strings.HasPrefix(s, "^.*") {
-				allowWildCards = true
-			}
 		}
 	}
 	p.AllowWildcards = allowWildCards
