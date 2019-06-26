@@ -121,7 +121,7 @@ Venafi welcomes contributions from the developer community.
 4. Implement and test your changes
 5. Commit your changes (`git commit -am 'Added some cool functionality'`)
 6. Push to the branch (`git push origin your-branch-name`)
-7. Create a new Pull Request (https://github.com/youracct/vcert/pull/new/working-branch)
+7. Create a new Pull Request (https://github.com/youracct/vcert/pull/new/your-branch-name)
 
 ## License
 
