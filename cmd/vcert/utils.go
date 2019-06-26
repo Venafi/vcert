@@ -165,7 +165,7 @@ func readCSRfromFile(fileName string) ([]byte, error) {
 	}
 	for {
 		block, rest := pem.Decode(bytes)
-		if block != nil && block.Type == "CERTIFICATE REQUEST" {
+		if block != nil && strings.HasSuffix(block.Type, "CERTIFICATE REQUEST") {
 			return pem.EncodeToMemory(block), nil
 		}
 		if block == nil || len(rest) == 0 {

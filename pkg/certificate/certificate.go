@@ -209,7 +209,7 @@ type ImportResponse struct {
 func (request *Request) SetCSR(csr []byte) error {
 	pemBlock, _ := pem.Decode(csr)
 	if pemBlock != nil {
-		if pemBlock.Type == "CERTIFICATE REQUEST" {
+		if strings.HasSuffix(pemBlock.Type, "CERTIFICATE REQUEST") {
 			request.csr = csr
 			return nil
 		}
