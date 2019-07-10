@@ -305,6 +305,9 @@ func parseZoneConfigurationResult(httpStatusCode int, httpStatus string, body []
 
 		respError := fmt.Sprintf("Unexpected status code on Venafi Cloud zone read. Status: %s\n", httpStatus)
 		for _, e := range respErrors {
+			if e.Code == 10051 {
+				return nil, endpoint.VenafiErrorZoneNotFound
+			}
 			respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
 		}
 		return nil, fmt.Errorf(respError)

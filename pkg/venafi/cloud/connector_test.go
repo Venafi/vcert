@@ -75,7 +75,7 @@ func TestReadZoneConfiguration(t *testing.T) {
 
 	conn.SetZone("UnknownZone")
 	_, err = conn.ReadZoneConfiguration()
-	if err == nil {
+	if err != endpoint.VenafiErrorZoneNotFound {
 		t.Fatalf("Unknown zone should have resulted in an error")
 	}
 	testCases := []struct {
