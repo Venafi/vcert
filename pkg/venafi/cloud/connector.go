@@ -93,6 +93,9 @@ func normalizeURL(url string) (normalizedURL string, err error) {
 	} else {
 		modified = reg.ReplaceAllString(modified, "https://")
 	}
+	if !strings.HasSuffix(modified, "/") {
+		modified = modified + "/"
+	}
 	reg = regexp.MustCompile("/v1(|/)$")
 	if reg.FindStringIndex(modified) == nil {
 		modified += "v1/"
