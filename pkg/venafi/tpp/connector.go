@@ -329,6 +329,8 @@ func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (er
 	return
 }
 
+var zoneNonFoundregexp = regexp.MustCompile("PolicyDN: .+ does not exist")
+
 func (c *Connector) ReadPolicyConfiguration() (policy *endpoint.Policy, err error) {
 	if c.zone == "" {
 		return nil, fmt.Errorf("empty zone")
@@ -340,11 +342,23 @@ func (c *Connector) ReadPolicyConfiguration() (policy *endpoint.Policy, err erro
 	}
 	var r struct {
 		Policy serverPolicy
+		Error  string
 	}
 	if statusCode == http.StatusOK {
 		err = json.Unmarshal(body, &r)
+		if err != nil {
+			return nil, err
+		}
 		p := r.Policy.toPolicy()
 		policy = &p
+	} else if statusCode == http.StatusBadRequest {
+		err = json.Unmarshal(body, &r)
+		if err != nil {
+			return nil, err
+		}
+		if zoneNonFoundregexp.Match([]byte(r.Error)) {
+			return nil, endpoint.VenafiErrorZoneNotFound
+		}
 	} else {
 		return nil, fmt.Errorf("Invalid status: %s Server data: %s", status, body)
 	}
@@ -365,18 +379,28 @@ func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration,
 	}
 	var r struct {
 		Policy serverPolicy
+		Error  string
 	}
-	if statusCode != http.StatusOK {
-		return nil, fmt.Errorf("Invalid status: %s Server response: %s", status, string(body))
+	if statusCode == http.StatusOK {
+		err = json.Unmarshal(body, &r)
+		if err != nil {
+			return nil, err
+		}
+		p := r.Policy.toPolicy()
+		r.Policy.toZoneConfig(zoneConfig)
+		zoneConfig.Policy = p
+		return zoneConfig, nil
+	} else if statusCode == http.StatusBadRequest {
+		err = json.Unmarshal(body, &r)
+		if err != nil {
+			return nil, err
+		}
+		if zoneNonFoundregexp.Match([]byte(r.Error)) {
+			return nil, endpoint.VenafiErrorZoneNotFound
+		}
 	}
-	err = json.Unmarshal(body, &r)
-	if err != nil {
-		return nil, err
-	}
-	p := r.Policy.toPolicy()
-	r.Policy.toZoneConfig(zoneConfig)
-	zoneConfig.Policy = p
-	return zoneConfig, nil
+	return nil, fmt.Errorf("Invalid status: %s Server response: %s", status, string(body))
+
 }
 
 func (c *Connector) ImportCertificate(r *certificate.ImportRequest) (*certificate.ImportResponse, error) {
