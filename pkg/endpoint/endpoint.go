@@ -18,8 +18,8 @@ package endpoint
 
 import (
 	"crypto/x509"
+	"encoding/pem"
 	"fmt"
-	"log"
 	"regexp"
 	"sort"
 
@@ -162,80 +162,131 @@ func NewZoneConfiguration() *ZoneConfiguration {
 
 // ValidateCertificateRequest validates the request against the Policy
 func (p *Policy) ValidateCertificateRequest(request *certificate.Request) error {
-	if !isComponentValid(p.SubjectCNRegexes, []string{request.Subject.CommonName}) {
-		return fmt.Errorf("The requested CN does not match any of the allowed CN regular expressions")
-	}
-	if !isComponentValid(p.SubjectORegexes, request.Subject.Organization) {
-		return fmt.Errorf("The requested Organization does not match any of the allowed Organization regular expressions")
-	}
-	if !isComponentValid(p.SubjectOURegexes, request.Subject.OrganizationalUnit) {
-		return fmt.Errorf("The requested Organizational Unit does not match any of the allowed Organization Unit regular expressions")
-	}
-	if !isComponentValid(p.SubjectSTRegexes, request.Subject.Province) {
-		return fmt.Errorf("The requested State/Province does not match any of the allowed State/Province regular expressions")
-	}
-	if !isComponentValid(p.SubjectLRegexes, request.Subject.Locality) {
-		return fmt.Errorf("The requested Locality does not match any of the allowed Locality regular expressions")
-	}
-	if !isComponentValid(p.SubjectCRegexes, request.Subject.Country) {
-		return fmt.Errorf("The requested Country does not match any of the allowed Country regular expressions")
-	}
-	if !isComponentValid(p.DnsSanRegExs, request.DNSNames) {
-		return fmt.Errorf("The requested Subject Alternative Name does not match any of the allowed Country regular expressions")
-	}
-	//todo: add ip, email and over cheking
 
-	if p.AllowedKeyConfigurations != nil && len(p.AllowedKeyConfigurations) > 0 {
-		match := false
-		for _, keyConf := range p.AllowedKeyConfigurations {
-			if keyConf.KeyType == request.KeyType {
-				if request.KeyLength > 0 {
-					for _, size := range keyConf.KeySizes {
-						if size == request.KeyLength {
-							match = true
-							break
+	//todo: add ip, email and over cheking
+	csr := request.GetCSR()
+	if len(csr) > 0 {
+		pemBlock, _ := pem.Decode(csr)
+		parsedCSR, err := x509.ParseCertificateRequest(pemBlock.Bytes)
+		if err != nil {
+			return err
+		}
+		if !checkStringByRegexp(parsedCSR.Subject.CommonName, p.SubjectCNRegexes) {
+			return fmt.Errorf("common name %s is not allowed in this p", parsedCSR.Subject.CommonName)
+		}
+		if !isComponentValid(parsedCSR.EmailAddresses, p.EmailSanRegExs, true) {
+			return fmt.Errorf("emails %v doesn't match regexps: %v", p.EmailSanRegExs, p.EmailSanRegExs)
+		}
+		if !isComponentValid(parsedCSR.DNSNames, p.DnsSanRegExs, true) {
+			return fmt.Errorf("DNS sans %v doesn't match regexps: %v", parsedCSR.DNSNames, p.DnsSanRegExs)
+		}
+		ips := make([]string, len(parsedCSR.IPAddresses))
+		for i, ip := range parsedCSR.IPAddresses {
+			ips[i] = ip.String()
+		}
+		if !isComponentValid(ips, p.IpSanRegExs, true) {
+			return fmt.Errorf("IPs %v doesn't match regexps: %v", p.IpSanRegExs, p.IpSanRegExs)
+		}
+		uris := make([]string, len(parsedCSR.URIs))
+		for i, uri := range parsedCSR.URIs {
+			uris[i] = uri.String()
+		}
+		if !isComponentValid(uris, p.UriSanRegExs, true) {
+			return fmt.Errorf("URIs %v doesn't match regexps: %v", uris, p.UriSanRegExs)
+		}
+		if !isComponentValid(parsedCSR.Subject.Organization, p.SubjectORegexes, false) {
+			return fmt.Errorf("Organization %v doesn't match regexps: %v", p.SubjectORegexes, p.SubjectORegexes)
+		}
+
+		if !isComponentValid(parsedCSR.Subject.OrganizationalUnit, p.SubjectOURegexes, false) {
+			return fmt.Errorf("Organization Unit %v doesn't match regexps: %v", parsedCSR.Subject.OrganizationalUnit, p.SubjectOURegexes)
+		}
+
+		if !isComponentValid(parsedCSR.Subject.Country, p.SubjectCRegexes, false) {
+			return fmt.Errorf("Country %v doesn't match regexps: %v", parsedCSR.Subject.Country, p.SubjectCRegexes)
+		}
+
+		if !isComponentValid(parsedCSR.Subject.Locality, p.SubjectLRegexes, false) {
+			return fmt.Errorf("Location %v doesn't match regexps: %v", parsedCSR.Subject.Locality, p.SubjectLRegexes)
+		}
+
+		if !isComponentValid(parsedCSR.Subject.Province, p.SubjectSTRegexes, false) {
+			return fmt.Errorf("State (Province) %v doesn't match regexps: %v", parsedCSR.Subject.Province, p.SubjectSTRegexes)
+		}
+	} else {
+		if !checkStringByRegexp(request.Subject.CommonName, p.SubjectCNRegexes) {
+			return fmt.Errorf("The requested CN does not match any of the allowed CN regular expressions")
+		}
+		if !isComponentValid(request.Subject.Organization, p.SubjectORegexes, false) {
+			return fmt.Errorf("The requested Organization does not match any of the allowed Organization regular expressions")
+		}
+		if !isComponentValid(request.Subject.OrganizationalUnit, p.SubjectOURegexes, false) {
+			return fmt.Errorf("The requested Organizational Unit does not match any of the allowed Organization Unit regular expressions")
+		}
+		if !isComponentValid(request.Subject.Province, p.SubjectSTRegexes, false) {
+			return fmt.Errorf("The requested State/Province does not match any of the allowed State/Province regular expressions")
+		}
+		if !isComponentValid(request.Subject.Locality, p.SubjectLRegexes, false) {
+			return fmt.Errorf("The requested Locality does not match any of the allowed Locality regular expressions")
+		}
+		if !isComponentValid(request.Subject.Country, p.SubjectCRegexes, false) {
+			return fmt.Errorf("The requested Country does not match any of the allowed Country regular expressions")
+		}
+		if !isComponentValid(request.DNSNames, p.DnsSanRegExs, true) {
+			return fmt.Errorf("The requested Subject Alternative Name does not match any of the allowed Country regular expressions")
+		}
+		if p.AllowedKeyConfigurations != nil && len(p.AllowedKeyConfigurations) > 0 {
+			match := false
+			for _, keyConf := range p.AllowedKeyConfigurations {
+				if keyConf.KeyType == request.KeyType {
+					if request.KeyLength > 0 {
+						for _, size := range keyConf.KeySizes {
+							if size == request.KeyLength {
+								match = true
+								break
+							}
 						}
+					} else {
+						match = true
 					}
-				} else {
-					match = true
+				}
+				if match {
+					break
 				}
 			}
-			if match {
-				break
+			if !match {
+				return fmt.Errorf("The requested Key Type and Size do not match any of the allowed Key Types and Sizes")
 			}
-		}
-		if !match {
-			return fmt.Errorf("The requested Key Type and Size do not match any of the allowed Key Types and Sizes")
 		}
 	}
 
 	return nil
 }
 
-func isComponentValid(regexes []string, component []string) bool {
-	if len(regexes) == 0 || len(component) == 0 {
+func checkStringByRegexp(s string, regexs []string) (matched bool) {
+	var err error
+	for _, r := range regexs {
+		matched, err = regexp.MatchString(r, s)
+		if err == nil && matched {
+			return true
+		}
+	}
+	return
+}
+
+func isComponentValid(ss []string, regexs []string, optional bool) (matched bool) {
+	if optional && len(ss) == 0 {
 		return true
 	}
-	regexOk := false
-	for _, subReg := range regexes {
-		matchedAny := false
-		reg, err := regexp.Compile(subReg)
-		if err != nil {
-			log.Printf("Bad regexp: %s", subReg)
+	if len(ss) == 0 {
+		ss = []string{""}
+	}
+	for _, s := range ss {
+		if !checkStringByRegexp(s, regexs) {
 			return false
 		}
-		for _, c := range component {
-			if reg.FindStringIndex(c) != nil {
-				matchedAny = true
-				break
-			}
-		}
-		if matchedAny {
-			regexOk = true
-			break
-		}
 	}
-	return regexOk
+	return true
 }
 
 // UpdateCertificateRequest updates a certificate request based on the zone configuration retrieved from the remote endpoint
