@@ -17,6 +17,8 @@
 package endpoint
 
 import (
+	"crypto/ecdsa"
+	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
@@ -213,6 +215,28 @@ func (p *Policy) ValidateCertificateRequest(request *certificate.Request) error 
 		if !isComponentValid(parsedCSR.Subject.Province, p.SubjectSTRegexes, false) {
 			return fmt.Errorf("State (Province) %v doesn't match regexps: %v", parsedCSR.Subject.Province, p.SubjectSTRegexes)
 		}
+		if len(p.AllowedKeyConfigurations) > 0 {
+			var keyValid bool
+			if parsedCSR.PublicKeyAlgorithm == x509.RSA {
+				pubkey, ok := parsedCSR.PublicKey.(*rsa.PublicKey)
+				if ok {
+					keyValid = checkKey(certificate.KeyTypeRSA, pubkey.Size()*8, "", p.AllowedKeyConfigurations)
+				} else {
+					return fmt.Errorf("invalid key in csr")
+				}
+			} else if parsedCSR.PublicKeyAlgorithm == x509.ECDSA {
+				pubkey, ok := parsedCSR.PublicKey.(*ecdsa.PublicKey)
+				if ok {
+					keyValid = checkKey(certificate.KeyTypeECDSA, 0, pubkey.Curve.Params().Name, p.AllowedKeyConfigurations)
+				} else {
+					return fmt.Errorf("invalid key in csr")
+				}
+			}
+			if !keyValid {
+				return fmt.Errorf("key type not compatible vith Venafi policies")
+			}
+		}
+
 	} else {
 		if !checkStringByRegexp(request.Subject.CommonName, p.SubjectCNRegexes) {
 			return fmt.Errorf("The requested CN does not match any of the allowed CN regular expressions")
@@ -235,32 +259,52 @@ func (p *Policy) ValidateCertificateRequest(request *certificate.Request) error 
 		if !isComponentValid(request.DNSNames, p.DnsSanRegExs, true) {
 			return fmt.Errorf("The requested Subject Alternative Name does not match any of the allowed Country regular expressions")
 		}
-		if p.AllowedKeyConfigurations != nil && len(p.AllowedKeyConfigurations) > 0 {
-			match := false
-			for _, keyConf := range p.AllowedKeyConfigurations {
-				if keyConf.KeyType == request.KeyType {
-					if request.KeyLength > 0 {
-						for _, size := range keyConf.KeySizes {
-							if size == request.KeyLength {
-								match = true
-								break
-							}
-						}
-					} else {
-						match = true
-					}
-				}
-				if match {
-					break
-				}
-			}
-			if !match {
+		if len(p.AllowedKeyConfigurations) > 0 {
+			if !checkKey(request.KeyType, request.KeyLength, request.KeyCurve.String(), p.AllowedKeyConfigurations) {
 				return fmt.Errorf("The requested Key Type and Size do not match any of the allowed Key Types and Sizes")
 			}
 		}
 	}
 
 	return nil
+}
+
+func checkKey(kt certificate.KeyType, bitsize int, curveStr string, allowed []AllowedKeyConfiguration) (valid bool) {
+	for _, allowedKey := range allowed {
+		if allowedKey.KeyType == kt {
+			switch allowedKey.KeyType {
+			case certificate.KeyTypeRSA:
+				return intInSlice(bitsize, allowedKey.KeySizes)
+			case certificate.KeyTypeECDSA:
+				var curve certificate.EllipticCurve
+				if err := curve.Set(curveStr); err != nil {
+					return false
+				}
+				return curveInSlice(curve, allowedKey.KeyCurves)
+			default:
+				return
+			}
+		}
+	}
+	return
+}
+
+func intInSlice(i int, s []int) bool {
+	for _, j := range s {
+		if i == j {
+			return true
+		}
+	}
+	return false
+}
+
+func curveInSlice(i certificate.EllipticCurve, s []certificate.EllipticCurve) bool {
+	for _, j := range s {
+		if i == j {
+			return true
+		}
+	}
+	return false
 }
 
 func checkStringByRegexp(s string, regexs []string) (matched bool) {
