@@ -47,6 +47,24 @@ iS8RUQh3qWhWsEZoxtdimLsoQAJCASFzdxe7UJ5V6KP3ae5ihe1pGAWyzz9TmNV3
 S/BIZL9MgWjew2mxMHM0wkqxI0abmB4QxK/dQDgJL0z5WUdG6U0B
 -----END CERTIFICATE REQUEST-----
 `
+const csr2 = `-----BEGIN CERTIFICATE REQUEST-----
+MIICnzCCAYcCAQAwWjELMAkGA1UEBhMCVVMxDTALBgNVBAgMBFV0YWgxITAfBgNV
+BAoMGEludGVybmV0IFdpZGdpdHMgUHR5IEx0ZDEZMBcGA1UEAwwQdGVzdC5leGFt
+cGxlLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAJobQx0qVM1w
+3Hc+5Zr2roMDsKWGwkn32Va7LmzgljUGtOMzvo2zwEW1sG/CzDW8F9S3UAtjAOCM
+t1xVOrFBdLmOeulNhSaS26mKAJ/D9k0t6lO4MmFPgOqVoy6k+iPWHCIdXTZLWpE2
+CSgG509mD4Uv4LbTumL9u+28dg9CYdgnlr2W9I5Svcsy0zNmCuGwoUdOO9XuWggx
+G9oltKSMiF1Krzep2KwtDhTGHbDVAWe+RcFujWPc/VRJSnvHpV7D0wGbzjDM2Kdz
+683kgDsmyRRZrowblW2Ptf/qbJsRKQoCmNjEzE1vXZNvDJBzQKIw15zSnzA/rPcS
+KN4+CFyHxFECAwEAAaAAMA0GCSqGSIb3DQEBCwUAA4IBAQAXvudH4bNBEKKijyff
+/vntKqLj0MILZE+uUAGzxGQZmKPWef8CofhOMIE/WzShMQgGGTum/UM8XnJ8HbRV
+Z+nenW8m8SIAEM1z9liiFVy3Z7qU3U9SrJkWPhS5Wrd5ESuOJ+hF7fNk9DYoFUnE
+VdGFFgBS3YE0Jmzgc6lXA43VcYMV5RH6O2rO8eBGu+dqK9w39YX4wt/0ZyPzfXIA
+0z69XXXvDOJ4pZWMr4WSbCzlfT0SeF9ScoBOAltlWTPhm3PbtT7rVyUVUEfvF0Ph
++jc0SpetPHF+5h2uXX8FxbvOxZH3rSPLmaIKVxt3S6461gJfWhUxPZ9ORow7DsR6
+WkJU
+-----END CERTIFICATE REQUEST-----
+`
 
 var csrCases = []struct {
 	csr         string
@@ -61,6 +79,41 @@ var csrCases = []struct {
 	{
 		csr:         csr1,
 		policy:      Policy{SubjectCNRegexes: []string{`^.*\.example\.co$`}, SubjectORegexes: any, SubjectCRegexes: any, SubjectLRegexes: any, SubjectOURegexes: any, SubjectSTRegexes: any},
+		shouldMatch: false,
+	},
+	{
+		csr:         csr1,
+		policy:      Policy{SubjectCNRegexes: []string{`^.*\.example\.com$`}, SubjectORegexes: any, SubjectCRegexes: []string{"US"}, SubjectLRegexes: any, SubjectOURegexes: any, SubjectSTRegexes: any},
+		shouldMatch: false,
+	},
+	{
+		csr: csr1,
+		policy: Policy{SubjectCNRegexes: any, SubjectORegexes: any, SubjectCRegexes: any, SubjectLRegexes: any, SubjectOURegexes: any, SubjectSTRegexes: any,
+			AllowedKeyConfigurations: []AllowedKeyConfiguration{{KeyType: certificate.KeyTypeECDSA, KeyCurves: []certificate.EllipticCurve{certificate.EllipticCurveP224, certificate.EllipticCurveP521}}}},
+		shouldMatch: true,
+	},
+	{
+		csr: csr1,
+		policy: Policy{SubjectCNRegexes: any, SubjectORegexes: any, SubjectCRegexes: any, SubjectLRegexes: any, SubjectOURegexes: any, SubjectSTRegexes: any,
+			AllowedKeyConfigurations: []AllowedKeyConfiguration{{KeyType: certificate.KeyTypeECDSA, KeyCurves: []certificate.EllipticCurve{certificate.EllipticCurveP256}}}},
+		shouldMatch: false,
+	},
+	{
+		csr: csr1,
+		policy: Policy{SubjectCNRegexes: any, SubjectORegexes: any, SubjectCRegexes: any, SubjectLRegexes: any, SubjectOURegexes: any, SubjectSTRegexes: any,
+			AllowedKeyConfigurations: []AllowedKeyConfiguration{{KeyType: certificate.KeyTypeECDSA}}},
+		shouldMatch: false,
+	},
+	{
+		csr: csr1,
+		policy: Policy{SubjectCNRegexes: any, SubjectORegexes: any, SubjectCRegexes: any, SubjectLRegexes: any, SubjectOURegexes: any, SubjectSTRegexes: any,
+			AllowedKeyConfigurations: []AllowedKeyConfiguration{{KeyType: certificate.KeyTypeRSA, KeySizes: []int{2048, 4096}}, {KeyType: certificate.KeyTypeECDSA, KeyCurves: []certificate.EllipticCurve{certificate.EllipticCurveP521}}}},
+		shouldMatch: true,
+	},
+	{
+		csr: csr2,
+		policy: Policy{SubjectCNRegexes: any, SubjectORegexes: any, SubjectCRegexes: any, SubjectLRegexes: any, SubjectOURegexes: any, SubjectSTRegexes: any,
+			AllowedKeyConfigurations: []AllowedKeyConfiguration{{KeyType: certificate.KeyTypeRSA, KeySizes: []int{8192, 4096}}}},
 		shouldMatch: false,
 	},
 }
