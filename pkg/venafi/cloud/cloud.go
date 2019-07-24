@@ -145,10 +145,6 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 				return fmt.Errorf("could not read zone configuration: %s", err)
 			}
 		}
-		err = config.ValidateCertificateRequest(req)
-		if err != nil {
-			return err
-		}
 		config.UpdateCertificateRequest(req)
 		if err := req.GeneratePrivateKey(); err != nil {
 			return err
