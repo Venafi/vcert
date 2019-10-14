@@ -75,7 +75,7 @@ Unit tests:
 make test
 ```
 
-Integration tests for Trust Protection Platform and Cloud products require endpoint connection variables:
+Integration tests for Trust Protection Platform and Cloud products require endpoint connection variables (Venafi Cloud products display the API key and Zone values in the user interface):
 
 ```sh
 export VCERT_TPP_URL=https://tpp.venafi.example/vedsdk
@@ -89,7 +89,7 @@ make tpp_test
 ```sh
 export VCERT_CLOUD_URL=https://api.venafi.cloud/v1
 export VCERT_CLOUD_APIKEY=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-export VCERT_CLOUD_ZONE=Default
+export VCERT_CLOUD_ZONE=zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzzzzzz
 
 make cloud_test
 ```
