@@ -89,7 +89,7 @@ make tpp_test
 ```sh
 export VCERT_CLOUD_URL=https://api.venafi.cloud/v1
 export VCERT_CLOUD_APIKEY=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-export VCERT_CLOUD_ZONE=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+export VCERT_CLOUD_ZONE=zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzzzzzz
 
 make cloud_test
 ```
