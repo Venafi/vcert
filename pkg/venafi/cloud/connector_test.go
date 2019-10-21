@@ -73,7 +73,7 @@ func TestReadZoneConfiguration(t *testing.T) {
 		t.Fatalf("%s", err)
 	}
 
-	conn.SetZone("UnknownZone")
+	conn.SetZone("d686146b-799b-4836-8ac3-f4a2d3a38934")
 	_, err = conn.ReadZoneConfiguration()
 	if err != endpoint.VenafiErrorZoneNotFound {
 		t.Fatalf("Unknown zone should have resulted in an error")
