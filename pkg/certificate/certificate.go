@@ -50,11 +50,11 @@ func (ec *EllipticCurve) String() string {
 // Set EllipticCurve value via a string
 func (ec *EllipticCurve) Set(value string) error {
 	switch strings.ToLower(value) {
-	case "p521":
+	case "p521", "p-521":
 		*ec = EllipticCurveP521
-	case "p384":
+	case "p384", "p-384":
 		*ec = EllipticCurveP384
-	case "p256":
+	case "p256", "p-256":
 		*ec = EllipticCurveP256
 	default:
 		*ec = EllipticCurveDefault
