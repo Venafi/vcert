@@ -124,7 +124,7 @@ func TestGenerateRSAPrivateKey(t *testing.T) {
 }
 
 func TestGenerateECDSAPrivateKey(t *testing.T) {
-	ellipticCurves := []EllipticCurve{EllipticCurveP224, EllipticCurveP256, EllipticCurveP384, EllipticCurveP521}
+	ellipticCurves := []EllipticCurve{EllipticCurveP256, EllipticCurveP384, EllipticCurveP521}
 	for _, curve := range ellipticCurves {
 		_, err := GenerateECDSAPrivateKey(curve)
 		if err != nil {
@@ -207,15 +207,10 @@ func TestEllipticCurveString(t *testing.T) {
 	if stringCurve != "P256" {
 		t.Fatalf("Unexpected string value was returned.  Expected: P256 Actual: %s", stringCurve)
 	}
-	curve = EllipticCurveP224
-	stringCurve = curve.String()
-	if stringCurve != "P224" {
-		t.Fatalf("Unexpected string value was returned.  Expected: P224 Actual: %s", stringCurve)
-	}
 }
 
 func TestEllipticCurveSetByString(t *testing.T) {
-	curve := EllipticCurveP224
+	curve := EllipticCurveDefault
 	curve.Set("P521")
 	if curve != EllipticCurveP521 {
 		t.Fatalf("Unexpected string value was returned.  Expected: P521 Actual: %s", curve.String())
@@ -228,10 +223,6 @@ func TestEllipticCurveSetByString(t *testing.T) {
 	if curve != EllipticCurveP256 {
 		t.Fatalf("Unexpected string value was returned.  Expected: P256 Actual: %s", curve.String())
 	}
-	curve.Set("P224")
-	if curve != EllipticCurveP224 {
-		t.Fatalf("Unexpected string value was returned.  Expected: P224 Actual: %s", curve.String())
-	}
 	curve.Set("p521")
 	if curve != EllipticCurveP521 {
 		t.Fatalf("Unexpected string value was returned.  Expected: p521 Actual: %s", curve.String())
@@ -243,10 +234,6 @@ func TestEllipticCurveSetByString(t *testing.T) {
 	curve.Set("p256")
 	if curve != EllipticCurveP256 {
 		t.Fatalf("Unexpected string value was returned.  Expected: p256 Actual: %s", curve.String())
-	}
-	curve.Set("p224")
-	if curve != EllipticCurveP224 {
-		t.Fatalf("Unexpected string value was returned.  Expected: p224 Actual: %s", curve.String())
 	}
 }
 
@@ -303,7 +290,7 @@ func TestGetPrivateKeyPEMBock(t *testing.T) {
 		t.Fatalf("GetPrivateKeyPEMBock returned nil for RSA key")
 	}
 
-	ellipticCurves := []EllipticCurve{EllipticCurveP224, EllipticCurveP256, EllipticCurveP384, EllipticCurveP521}
+	ellipticCurves := []EllipticCurve{EllipticCurveP256, EllipticCurveP384, EllipticCurveP521}
 	for _, curve := range ellipticCurves {
 		priv, err = GenerateECDSAPrivateKey(curve)
 		if err != nil {
@@ -344,7 +331,7 @@ func TestGetEncryptedPrivateKeyPEMBock(t *testing.T) {
 		t.Fatalf("Error: %s", err)
 	}
 
-	ellipticCurves := []EllipticCurve{EllipticCurveP224, EllipticCurveP256, EllipticCurveP384, EllipticCurveP521}
+	ellipticCurves := []EllipticCurve{EllipticCurveP256, EllipticCurveP384, EllipticCurveP521}
 	for _, curve := range ellipticCurves {
 		priv, err = GenerateECDSAPrivateKey(curve)
 		if err != nil {

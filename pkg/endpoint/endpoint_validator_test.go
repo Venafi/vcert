@@ -89,7 +89,7 @@ var csrCases = []struct {
 	{
 		csr: csr1,
 		policy: Policy{SubjectCNRegexes: any, SubjectORegexes: any, SubjectCRegexes: any, SubjectLRegexes: any, SubjectOURegexes: any, SubjectSTRegexes: any,
-			AllowedKeyConfigurations: []AllowedKeyConfiguration{{KeyType: certificate.KeyTypeECDSA, KeyCurves: []certificate.EllipticCurve{certificate.EllipticCurveP224, certificate.EllipticCurveP521}}}},
+			AllowedKeyConfigurations: []AllowedKeyConfiguration{{KeyType: certificate.KeyTypeECDSA, KeyCurves: []certificate.EllipticCurve{certificate.EllipticCurveP521}}}},
 		shouldMatch: true,
 	},
 	{

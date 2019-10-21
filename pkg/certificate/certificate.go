@@ -42,8 +42,6 @@ func (ec *EllipticCurve) String() string {
 		return "P384"
 	case EllipticCurveP256:
 		return "P256"
-	case EllipticCurveP224:
-		return "P224"
 	default:
 		return ""
 	}
@@ -58,8 +56,6 @@ func (ec *EllipticCurve) Set(value string) error {
 		*ec = EllipticCurveP384
 	case "p256":
 		*ec = EllipticCurveP256
-	case "p224":
-		*ec = EllipticCurveP224
 	default:
 		*ec = EllipticCurveDefault
 	}
@@ -70,19 +66,17 @@ func (ec *EllipticCurve) Set(value string) error {
 const (
 	// EllipticCurveP521 represents the P521 curve
 	EllipticCurveP521 EllipticCurve = iota
-	// EllipticCurveP224 represents the P224 curve
-	EllipticCurveP224
 	// EllipticCurveP256 represents the P256 curve
 	EllipticCurveP256
 	// EllipticCurveP384 represents the P384 curve
 	EllipticCurveP384
-	EllipticCurveDefault = EllipticCurveP521
+	EllipticCurveDefault = EllipticCurveP256
 
 	defaultRSAlength int = 2048
 )
 
 func AllSupportedCurves() []EllipticCurve {
-	return []EllipticCurve{EllipticCurveP521, EllipticCurveP224, EllipticCurveP256, EllipticCurveP384}
+	return []EllipticCurve{EllipticCurveP521, EllipticCurveP256, EllipticCurveP384}
 }
 func AllSupportedKeySizes() []int {
 	return []int{512, 1024, 2048, 4096, 8192}
@@ -417,8 +411,6 @@ func GenerateECDSAPrivateKey(curve EllipticCurve) (*ecdsa.PrivateKey, error) {
 		c = elliptic.P384()
 	case EllipticCurveP256:
 		c = elliptic.P256()
-	case EllipticCurveP224:
-		c = elliptic.P224()
 	}
 
 	priv, err = ecdsa.GenerateKey(c, rand.Reader)
