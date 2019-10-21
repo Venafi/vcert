@@ -293,7 +293,9 @@ func parseZoneConfigurationResult(httpStatusCode int, httpStatus string, body []
 			return nil, err
 		}
 		return z, nil
-	case http.StatusBadRequest, http.StatusPreconditionFailed, http.StatusNotFound:
+	case http.StatusBadRequest:
+		return nil, endpoint.VenafiErrorZoneNotFound
+	case http.StatusNotFound, http.StatusPreconditionFailed:
 		respErrors, err := parseResponseErrors(body)
 		if err != nil {
 			return nil, err
