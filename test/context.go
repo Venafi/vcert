@@ -22,13 +22,14 @@ import (
 )
 
 type Context struct {
-	TPPurl      string
-	TPPuser     string
-	TPPPassword string
-	TPPZone     string
-	CloudUrl    string
-	CloudAPIkey string
-	CloudZone   string
+	TPPurl            string
+	TPPuser           string
+	TPPPassword       string
+	TPPZone           string
+	TPPZoneRestricted string
+	CloudUrl          string
+	CloudAPIkey       string
+	CloudZone         string
 }
 
 func GetContext() *Context {
@@ -50,13 +51,14 @@ func GetContext() *Context {
 }
 
 func GetEnvContext() *Context {
-
+	//TODO: should rewrite to our standart variable names, TPPURL, TPPUSER etc
 	c := &Context{}
 
 	c.TPPurl = os.Getenv("VCERT_TPP_URL")
 	c.TPPuser = os.Getenv("VCERT_TPP_USER")
 	c.TPPPassword = os.Getenv("VCERT_TPP_PASSWORD")
 	c.TPPZone = os.Getenv("VCERT_TPP_ZONE")
+	c.TPPZoneRestricted = os.Getenv("TPPZONE_RESTRICTED")
 
 	c.CloudUrl = os.Getenv("VCERT_CLOUD_URL")
 	c.CloudAPIkey = os.Getenv("VCERT_CLOUD_APIKEY")

@@ -37,8 +37,8 @@ import (
 var ctx *test.Context
 
 func init() {
-	ctx = test.GetContext()
-	//ctx = test.GetEnvContext()
+	//ctx = test.GetContext()
+	ctx = test.GetEnvContext()
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	if ctx.TPPurl == "" {
@@ -122,7 +122,7 @@ func TestReadConfigData(t *testing.T) {
 			HashAlgorithm:         x509.SHA256WithRSA,
 			CustomAttributeValues: make(map[string]string),
 		}},
-		{getPolicyDN(os.Getenv("TPPZONE_RESTRICTED")), endpoint.ZoneConfiguration{
+		{getPolicyDN(ctx.TPPZoneRestricted), endpoint.ZoneConfiguration{
 			Organization:          "Venafi Inc.",
 			OrganizationalUnit:    []string{"Integration"},
 			Country:               "US",
@@ -135,6 +135,9 @@ func TestReadConfigData(t *testing.T) {
 	for _, c := range testCases {
 		tpp.SetZone(c.zone)
 		zoneConfig, err := tpp.ReadZoneConfiguration()
+		if err != nil {
+			t.Fatalf("%s", err)
+		}
 		zoneConfig.Policy = endpoint.Policy{}
 		if err != nil {
 			t.Fatalf("%s", err)

@@ -139,6 +139,11 @@ type authorizeResquest struct {
 	Password string `json:",omitempty"`
 }
 
+type refreshAccessTokenResquest struct {
+	client_id     string `json:",omitempty"`
+	refresh_token string `json:",omitempty"`
+}
+
 type policyRequest struct {
 	ObjectDN      string `json:",omitempty"`
 	Class         string `json:",omitempty"`
@@ -148,6 +153,7 @@ type policyRequest struct {
 type urlResource string
 
 const (
+	urlResourceRefreshAccessToken  urlResource = "vedauth/authorize/token"
 	urlResourceAuthorize           urlResource = "authorize/"
 	urlResourceCertificateRequest  urlResource = "certificates/request"
 	urlResourceCertificateRetrieve urlResource = "certificates/retrieve"
@@ -226,7 +232,9 @@ func (c *Connector) request(method string, resource urlResource, data interface{
 	}
 
 	r, _ := http.NewRequest(method, url, payload)
-	if c.apiKey != "" {
+	if c.AcessToken != "" {
+		r.Header.Add("Authorization:Bearer", c.AcessToken)
+	} else if c.apiKey != "" {
 		r.Header.Add("x-venafi-api-key", c.apiKey)
 	}
 	r.Header.Add("content-type", "application/json")
