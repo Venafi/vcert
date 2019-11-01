@@ -96,6 +96,35 @@ func TestBadAuthorizeToTPP(t *testing.T) {
 		t.Fatalf("err should not be nil, bad password was used")
 	}
 }
+func TestAuthenticationAccessToken(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+
+	err = tpp.Authenticate(&endpoint.Authentication{AcessToken: ctx.TPPacessToken})
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	tpp.SetZone(ctx.TPPZone)
+	_, err = tpp.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	err = tpp.Authenticate(&endpoint.Authentication{AcessToken: "WRONGm3XPAT5nlWxd3iA=="})
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	tpp.SetZone(ctx.TPPZone)
+	_, err = tpp.ReadZoneConfiguration()
+	if err == nil {
+		t.Fatalf("Auth with wrong token should fail")
+	}
+
+}
 
 func TestReadConfigData(t *testing.T) {
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
@@ -103,12 +132,7 @@ func TestReadConfigData(t *testing.T) {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
 
-	if ctx.TPPacessToken != "" {
-		err = tpp.Authenticate(&endpoint.Authentication{AcessToken: ctx.TPPacessToken})
-		if err != nil {
-			t.Fatalf("err is not nil, err: %s", err)
-		}
-	} else if tpp.apiKey == "" {
+	if tpp.apiKey == "" {
 		err = tpp.Authenticate(&endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword})
 		if err != nil {
 			t.Fatalf("err is not nil, err: %s", err)
