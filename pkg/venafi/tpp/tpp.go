@@ -233,7 +233,7 @@ func (c *Connector) request(method string, resource urlResource, data interface{
 
 	r, _ := http.NewRequest(method, url, payload)
 	if c.acessToken != "" {
-		r.Header.Add("Authorization:Bearer", c.acessToken)
+		r.Header.Add("Authorization", fmt.Sprintf("Bearer %s", c.acessToken))
 	} else if c.apiKey != "" {
 		r.Header.Add("x-venafi-api-key", c.apiKey)
 	}

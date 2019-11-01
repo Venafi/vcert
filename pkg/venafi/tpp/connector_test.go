@@ -103,8 +103,11 @@ func TestReadConfigData(t *testing.T) {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
 
-	if tpp.acessToken != "" {
-
+	if ctx.TPPacessToken != "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AcessToken: ctx.TPPacessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
 	} else if tpp.apiKey == "" {
 		err = tpp.Authenticate(&endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword})
 		if err != nil {
