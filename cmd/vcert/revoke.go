@@ -67,7 +67,7 @@ func showRevokeUsage() {
 	fmt.Printf("  %s revoke <Required Trust Protection Platform Config> <Options>\n", os.Args[0])
 	fmt.Printf("  %s revoke -id <certificate DN>\n", os.Args[0])
 	fmt.Printf("  %s revoke -thumbprint <certificate thumbprint>\n", os.Args[0])
-	fmt.Printf("  %s revoke -tpp-url <https://tpp.example.com> -tpp-user <username> -tpp-password <password> -id <certificate DN>\n", os.Args[0])
+	fmt.Printf("  %s revoke -u <https://tpp.example.com> -tpp-user <username> -tpp-password <password> -id <certificate DN>\n", os.Args[0])
 
 	fmt.Printf("\nRequired for Trust Protection Platform:\n")
 	fmt.Println("  -id")
@@ -83,8 +83,8 @@ func showRevokeUsage() {
 
 	fmt.Println("  -tpp-password")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the password required to authenticate with Trust Protection Platform."))
-	fmt.Println("  -tpp-url")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the URL of the Trust Protection Platform Server. Example: -tpp-url https://tpp.example.com"))
+	fmt.Println("  -u")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the URL of the Trust Protection Platform Server. Example: -u https://tpp.example.com"))
 	fmt.Println("  -tpp-user")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the username required to authenticate with Trust Protection Platform."))
 

@@ -61,7 +61,7 @@ func showPickupUsage() {
 	fmt.Printf("Pickup Usage:\n")
 	fmt.Printf("  %s pickup <Required Venafi Cloud Config> OR <Required Trust Protection Platform Config> <Options>\n", os.Args[0])
 	fmt.Printf("  %s pickup -k <api key> -pickup-id <request id> OR -pickup-id-file <file with Pickup ID value>\n", os.Args[0])
-	fmt.Printf("  %s pickup -tpp-url <https://tpp.example.com> -tpp-user <username> -tpp-password <password> -pickup-id <request id>\n", os.Args[0])
+	fmt.Printf("  %s pickup -u <https://tpp.example.com> -tpp-user <username> -tpp-password <password> -pickup-id <request id>\n", os.Args[0])
 
 	fmt.Printf("\nRequired for Venafi Cloud:\n")
 	fmt.Println("  -k")
@@ -75,8 +75,8 @@ func showPickupUsage() {
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify file name from where Pickup ID will be read. Either one of -pickup-id and -pickup-id-file options is required."))
 	fmt.Println("  -tpp-password")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the password required to authenticate with Trust Protection Platform."))
-	fmt.Println("  -tpp-url")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the URL of the Trust Protection Platform Server. Example: -tpp-url https://tpp.example.com"))
+	fmt.Println("  -u")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the URL of the Trust Protection Platform Server. Example: -u https://tpp.example.com"))
 	fmt.Println("  -tpp-user")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the username required to authenticate with Trust Protection Platform."))
 
