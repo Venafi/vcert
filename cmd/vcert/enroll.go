@@ -221,7 +221,7 @@ func validateEnrollmentFlags() error {
 	}
 
 	if !enrollParams.testMode && enrollParams.config == "" {
-		if enrollParams.tppURL == "" {
+		if enrollParams.tppUser == "" && enrollParams.tppAccessToken == "" {
 			// should be SaaS endpoint
 			if enrollParams.apiKey == "" {
 				return fmt.Errorf("An API key is required for enrollment with Venafi Cloud")
@@ -231,11 +231,11 @@ func validateEnrollmentFlags() error {
 			}
 		} else {
 			// should be TPP service
-			if enrollParams.tppUser == "" {
-				return fmt.Errorf("A username is required for communicating with Trust Protection Platform")
+			if enrollParams.tppUser == "" && enrollParams.tppAccessToken == "" {
+				return fmt.Errorf("An access token or username is required for communicating with Trust Protection Platform")
 			}
-			if enrollParams.noPrompt && enrollParams.tppPassword == "" {
-				return fmt.Errorf("A password is required for communicating with Trust Protection Platform")
+			if enrollParams.noPrompt && enrollParams.tppPassword == "" && enrollParams.tppAccessToken == "" {
+				return fmt.Errorf("An access token or password is required for communicating with Trust Protection Platform")
 			}
 			if enrollParams.zone == "" {
 				return fmt.Errorf("A zone is required for requesting a certificate from Trust Protection Platform")
