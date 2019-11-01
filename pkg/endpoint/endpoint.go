@@ -83,12 +83,12 @@ type Connector interface {
 
 // Authentication provides a struct for authentication data. Either specify User and Password for Trust Platform or specify an APIKey for Cloud.
 type Authentication struct {
-	User         string
-	Password     string
-	APIKey       string
-	RefreshToken string
-	ClientId     string
-	AcessToken   string
+	User     string
+	Password string
+	APIKey   string
+	//RefreshToken string
+	//ClientId     string
+	AcessToken string
 }
 
 // ErrRetrieveCertificateTimeout provides a common error structure for a timeout while retrieving a certificate

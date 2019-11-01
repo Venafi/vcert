@@ -115,9 +115,9 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 		}
 		c.apiKey = key
 		return nil
-	} else if auth.RefreshToken != "" && auth.ClientId != "" {
-		statusCode, status, body, err = c.request("POST", urlResourceRefreshAccessToken, refreshAccessTokenResquest{client_id: auth.ClientId, refresh_token: auth.RefreshToken})
-		//TODO: parse refresh token and set access token from here
+		//} else if auth.RefreshToken != "" && auth.ClientId != "" {
+		//	statusCode, status, body, err = c.request("POST", urlResourceRefreshAccessToken, refreshAccessTokenResquest{client_id: auth.ClientId, refresh_token: auth.RefreshToken})
+		//	TODO: parse refresh token and set access token from here
 	} else if auth.AcessToken != "" {
 		c.acessToken = auth.AcessToken
 		return nil
