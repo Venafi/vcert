@@ -81,9 +81,14 @@ func LoadConfigFromFile(path, section string) (cfg Config, err error) {
 	var connectorType endpoint.ConnectorType
 	var baseUrl string
 	var auth = &endpoint.Authentication{}
-	if m.has("tpp_url") {
+	if m.has("tpp_user") || m.has("access_token") {
 		connectorType = endpoint.ConnectorTypeTPP
-		baseUrl = m["tpp_url"]
+		if m["tpp_url"] != "" {
+			baseUrl = m["tpp_url"]
+		} else if m["url"] != "" {
+			baseUrl = m["url"]
+		}
+		auth.AcessToken = m["access_token"]
 		auth.User = m["tpp_user"]
 		auth.Password = m["tpp_password"]
 		if m.has("tpp_zone") {
@@ -94,8 +99,10 @@ func LoadConfigFromFile(path, section string) (cfg Config, err error) {
 		}
 	} else if m.has("cloud_apikey") {
 		connectorType = endpoint.ConnectorTypeCloud
-		if m.has("cloud_url") {
+		if m["cloud_url"] != "" {
 			baseUrl = m["cloud_url"]
+		} else if m["url"] != "" {
+			baseUrl = m["url"]
 		}
 		auth.APIKey = m["cloud_apikey"]
 		if m.has("cloud_zone") {
