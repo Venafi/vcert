@@ -27,9 +27,11 @@ import (
 func setupRenewCommandFlags() {
 	renewFlags.StringVar(&renewParams.cloudURL, "venafi-saas-url", "", "")
 	renewFlags.StringVar(&renewParams.apiKey, "k", "", "")
+	renewFlags.StringVar(&renewParams.url, "u", "", "")
 	renewFlags.StringVar(&renewParams.tppURL, "tpp-url", "", "")
 	renewFlags.StringVar(&renewParams.tppUser, "tpp-user", "", "")
 	renewFlags.StringVar(&renewParams.tppPassword, "tpp-password", "", "")
+	renewFlags.StringVar(&renewParams.tppAccessToken, "t", "", "")
 	renewFlags.StringVar(&renewParams.trustBundle, "trust-bundle", "", "")
 	renewFlags.StringVar(&renewParams.zone, "z", "", "")
 	renewFlags.Var(&renewParams.keyCurve, "key-curve", "")
@@ -64,8 +66,8 @@ func setupRenewCommandFlags() {
 	renewFlags.StringVar(&renewParams.thumbprint, "thumbprint", "", "")
 	renewFlags.StringVar(&renewParams.config, "config", "", "")
 	renewFlags.StringVar(&renewParams.profile, "profile", "", "")
-	renewFlags.StringVar(&enrollParams.clientP12, "client-pkcs12", "", "")
-	renewFlags.StringVar(&enrollParams.clientP12PW, "client-pkcs12-pw", "", "")
+	renewFlags.StringVar(&renewParams.clientP12, "client-pkcs12", "", "")
+	renewFlags.StringVar(&renewParams.clientP12PW, "client-pkcs12-pw", "", "")
 
 	renewFlags.Usage = func() {
 		fmt.Printf("%s\n", vcert.GetFormattedVersionString())
@@ -90,12 +92,14 @@ func showRenewUsage() {
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Your API Key"))
 
 	fmt.Printf("\nRequired for Trust Protection Platform:\n")
-	fmt.Println("  -tpp-password")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the password required to authenticate with Trust Protection Platform."))
 	fmt.Println("  -u")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the URL of the Trust Protection Platform Server. Example: -u https://tpp.example.com"))
 	fmt.Println("  -tpp-user")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the username required to authenticate with Trust Protection Platform."))
+	fmt.Println("  -t")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify access token for Trust Protection Platform Server. Example: -t https://tpp.example.com"))
+	fmt.Println("  -tpp-password")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Deprecated. Use access token instead. Use to specify the password required to authenticate with Trust Protection Platform."))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Deprecated. Use access token instead. Use to specify the username required to authenticate with Trust Protection Platform."))
 
 	fmt.Printf("\nOptions:\n")
 	fmt.Println("  -chain")
@@ -154,7 +158,7 @@ func showRenewUsage() {
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a PEM file name to be used "+
 		"as trust anchors when communicating with the remote server."))
 	fmt.Println("  -test-mode")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to test enrollment without a connection to a real endpoint. Options include: true | false (default false uses a real connection for enrollment)."))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to test renewment without a connection to a real endpoint. Options include: true | false (default false uses a real connection for renewment)."))
 	fmt.Println("  -test-mode-delay")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the maximum, random seconds for a test-mode connection delay (default 15)."))
 	fmt.Println("  -verbose")
@@ -179,6 +183,7 @@ func validateRenewFlags() error {
 			renewParams.tppURL != "" ||
 			renewParams.tppUser != "" ||
 			renewParams.tppPassword != "" ||
+			enrollParams.tppAccessToken != "" ||
 			renewParams.testMode {
 			return fmt.Errorf("connection details cannot be specified with flags when -config is used")
 		}
@@ -187,30 +192,30 @@ func validateRenewFlags() error {
 			return fmt.Errorf("-profile option cannot be used without -config option")
 		}
 		if !renewParams.testMode {
-			if renewParams.tppURL == "" {
+			if enrollParams.tppUser == "" && enrollParams.tppAccessToken == "" {
 				// should be SaaS endpoint
 				if renewParams.apiKey == "" {
 					return fmt.Errorf("An API key is required for renewal with Venafi Cloud")
 				}
 			} else {
 				// should be TPP service
-				if renewParams.tppUser == "" {
-					return fmt.Errorf("A username is required for communicating with Trust Protection Platform")
+				if enrollParams.tppUser == "" && enrollParams.tppAccessToken == "" {
+					return fmt.Errorf("An access token or username is required for communicating with Trust Protection Platform")
 				}
-				if renewParams.noPrompt && renewParams.tppPassword == "" {
-					return fmt.Errorf("A password is required for communicating with Trust Protection Platform")
+				if enrollParams.noPrompt && enrollParams.tppPassword == "" && enrollParams.tppAccessToken == "" {
+					return fmt.Errorf("An access token or password is required for communicating with Trust Protection Platform")
 				}
 
 				// mutual TLS with TPP service
-				if enrollParams.clientP12 == "" && enrollParams.clientP12PW != "" {
+				if renewParams.clientP12 == "" && renewParams.clientP12PW != "" {
 					return fmt.Errorf("-client-pkcs12-pw can only be specified in combination with -client-pkcs12")
 				}
 			}
 		}
 	}
 
-	if renewParams.tppURL == "" && renewParams.apiKey == "" && !renewParams.testMode && renewParams.config == "" {
-		return fmt.Errorf("Missing required data for certificate renewal. Please check the help to see available command arguments")
+	if renewParams.url == "" && renewParams.tppURL == "" && renewParams.apiKey == "" && !renewParams.testMode && renewParams.config == "" {
+		return fmt.Errorf("Missing required data for renewment. Please check the help to see available command arguments")
 	}
 	if renewParams.distinguishedName == "" && renewParams.thumbprint == "" {
 		return fmt.Errorf("-id or -thumbprint required to identify the certificate to renew")

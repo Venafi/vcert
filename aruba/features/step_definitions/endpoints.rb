@@ -2,7 +2,12 @@
 ENDPOINTS = {
     "test-mode" => "-test-mode -test-mode-delay 0",
 
-    "TPP" => " -tpp-url      '#{ENV['VCERT_TPP_URL']}'      " +
+    "TPP" => " -u      '#{ENV['VCERT_TPP_URL']}'      " +
+             " -t     '#{ENV['TPPACCESS_TOKEN']}'     " +
+             " -z            '#{ENV['VCERT_TPP_ZONE']}'     " +
+             " -insecure",
+
+    "TPPdeprecated" => " -tpp-url      '#{ENV['VCERT_TPP_URL']}'      " +
              " -tpp-user     '#{ENV['VCERT_TPP_USER']}'     " +
              " -tpp-password '#{ENV['VCERT_TPP_PASSWORD']}' " +
              " -z            '#{ENV['VCERT_TPP_ZONE']}'     " +

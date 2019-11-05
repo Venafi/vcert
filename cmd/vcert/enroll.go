@@ -80,10 +80,10 @@ func showEnrollmentUsage() {
 	fmt.Printf("  %s enroll <Required Venafi Cloud Config> OR <Required Trust Protection Platform Config> <Options>\n", os.Args[0])
 	fmt.Printf("  %s enroll -k <api key> -cn <common name> -z <zone>\n", os.Args[0])
 	fmt.Printf("  %s enroll -k <api key> -cn <common name> -z <zone> -key-type rsa -key-size 4096 -san-dns <alt common name> -san-dns <alt common name2>\n", os.Args[0])
-	fmt.Printf("  %s enroll -u <https://tpp.example.com> -tpp-user <username> -tpp-password <password> -cn <common name> -z <zone>\n", os.Args[0])
-	fmt.Printf("  %s enroll -u <https://tpp.example.com> -tpp-user <username> -tpp-password <password> -cn <common name> -z <zone> -key-size 4096 -san-dns <alt common name> -san-dns <alt common name2>\n", os.Args[0])
-	fmt.Printf("  %s enroll -u <https://tpp.example.com> -tpp-user <username> -tpp-password <password> -cn <common name> -z <zone> -key-type ecdsa -key-curve p384 -san-dns <alt common name> -san-dns <alt common name2>\n", os.Args[0])
-	fmt.Printf("  %s enroll -u <https://tpp.example.com> -tpp-user <username> -tpp-password <password> -cn <common name> -z <zone> -client-pkcs12 <client PKCS#12 archive> -client-pkcs12-pw <PKCS#12 archive password>\n", os.Args[0])
+	fmt.Printf("  %s enroll -u <https://tpp.example.com> -t <tpp access token> -cn <common name> -z <zone>\n", os.Args[0])
+	fmt.Printf("  %s enroll -u <https://tpp.example.com> -t <tpp access token> -cn <common name> -z <zone> -key-size 4096 -san-dns <alt common name> -san-dns <alt common name2>\n", os.Args[0])
+	fmt.Printf("  %s enroll -u <https://tpp.example.com> -t <tpp access token> -cn <common name> -z <zone> -key-type ecdsa -key-curve p384 -san-dns <alt common name> -san-dns <alt common name2>\n", os.Args[0])
+	fmt.Printf("  %s enroll -u <https://tpp.example.com> -t <tpp access token> -cn <common name> -z <zone> -client-pkcs12 <client PKCS#12 archive> -client-pkcs12-pw <PKCS#12 archive password>\n", os.Args[0])
 
 	fmt.Printf("\nRequired for both Venafi Cloud and Trust Protection Platform:\n")
 	fmt.Println("  -cn")
@@ -98,6 +98,8 @@ func showEnrollmentUsage() {
 	fmt.Printf("\nRequired for Trust Protection Platform:\n")
 	fmt.Println("  -nickname")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a name for the new certificate object that will be created and placed in a policy (which you can specify using the -z option)."))
+	fmt.Println("  -t")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify access token for Trust Protection Platform Server. Example: -t https://tpp.example.com"))
 	fmt.Println("  -tpp-password")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Deprecated. Use access token instead. Use to specify the password required to authenticate with Trust Protection Platform."))
 	fmt.Println("  -u")
@@ -190,6 +192,7 @@ func validateEnrollmentFlags() error {
 			enrollParams.tppURL != "" ||
 			enrollParams.tppUser != "" ||
 			enrollParams.tppPassword != "" ||
+			enrollParams.tppAccessToken != "" ||
 			enrollParams.testMode {
 			return fmt.Errorf("connection details cannot be specified with flags when -config is used")
 		}
