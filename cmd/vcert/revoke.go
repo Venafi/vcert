@@ -38,9 +38,11 @@ func setupRevokeCommandFlags() {
 	revokeFlags.StringVar(&revokeParams.thumbprint, "thumbprint", "", "")
 	revokeFlags.StringVar(&revokeParams.revocationReason, "reason", "", "")
 	revokeFlags.BoolVar(&revokeParams.revocationNoRetire, "no-retire", false, "")
+	revokeFlags.StringVar(&revokeParams.url, "u", "", "")
 	revokeFlags.StringVar(&revokeParams.tppURL, "tpp-url", "", "")
 	revokeFlags.StringVar(&revokeParams.tppUser, "tpp-user", "", "")
 	revokeFlags.StringVar(&revokeParams.tppPassword, "tpp-password", "", "")
+	revokeFlags.StringVar(&revokeParams.tppAccessToken, "t", "", "")
 	revokeFlags.StringVar(&revokeParams.trustBundle, "trust-bundle", "", "")
 	revokeFlags.StringVar(&revokeParams.file, "file", "", "")
 	revokeFlags.BoolVar(&revokeParams.verbose, "verbose", false, "")
@@ -53,8 +55,8 @@ func setupRevokeCommandFlags() {
 	revokeFlags.StringVar(&revokeParams.zone, "z", "", "")
 	revokeFlags.StringVar(&revokeParams.config, "config", "", "")
 	revokeFlags.StringVar(&revokeParams.profile, "profile", "", "")
-	revokeFlags.StringVar(&enrollParams.clientP12, "client-pkcs12", "", "")
-	revokeFlags.StringVar(&enrollParams.clientP12PW, "client-pkcs12-pw", "", "")
+	revokeFlags.StringVar(&revokeParams.clientP12, "client-pkcs12", "", "")
+	revokeFlags.StringVar(&revokeParams.clientP12PW, "client-pkcs12-pw", "", "")
 
 	revokeFlags.Usage = func() {
 		fmt.Printf("%s\n", vcert.GetFormattedVersionString())
