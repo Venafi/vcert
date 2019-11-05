@@ -27,11 +27,11 @@ func setupRetrieveCommandFlags() {
 	pickupFlags.StringVar(&pickParams.cloudURL, "venafi-saas-url", "", "")
 	pickupFlags.StringVar(&pickParams.pickupID, "pickup-id", "", "")
 	pickupFlags.StringVar(&pickParams.apiKey, "k", "", "")
-	enrollFlags.StringVar(&enrollParams.url, "u", "", "")
+	pickupFlags.StringVar(&pickParams.url, "u", "", "")
 	pickupFlags.StringVar(&pickParams.tppURL, "tpp-url", "", "")
 	pickupFlags.StringVar(&pickParams.tppUser, "tpp-user", "", "")
 	pickupFlags.StringVar(&pickParams.tppPassword, "tpp-password", "", "")
-	enrollFlags.StringVar(&enrollParams.tppAccessToken, "t", "", "")
+	pickupFlags.StringVar(&pickParams.tppAccessToken, "t", "", "")
 	pickupFlags.StringVar(&pickParams.trustBundle, "trust-bundle", "", "")
 	pickupFlags.StringVar(&pickParams.format, "format", "pem", "")
 	pickupFlags.StringVar(&pickParams.file, "file", "", "")
@@ -50,8 +50,8 @@ func setupRetrieveCommandFlags() {
 	pickupFlags.StringVar(&pickParams.keyFile, "key-file", "", "")
 	pickupFlags.StringVar(&pickParams.config, "config", "", "")
 	pickupFlags.StringVar(&pickParams.profile, "profile", "", "")
-	pickupFlags.StringVar(&enrollParams.clientP12, "client-pkcs12", "", "")
-	pickupFlags.StringVar(&enrollParams.clientP12PW, "client-pkcs12-pw", "", "")
+	pickupFlags.StringVar(&pickParams.clientP12, "client-pkcs12", "", "")
+	pickupFlags.StringVar(&pickParams.clientP12PW, "client-pkcs12-pw", "", "")
 
 	pickupFlags.Usage = func() {
 		fmt.Printf("%s\n", vcert.GetFormattedVersionString())
@@ -75,14 +75,10 @@ func showPickupUsage() {
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Example: -pickup-id 3260ece0-0da4-11e7-9be2-891dab33d0eb"))
 	fmt.Println("  -pickup-id-file")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify file name from where Pickup ID will be read. Either one of -pickup-id and -pickup-id-file options is required."))
-	fmt.Println("  -tpp-password")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Deprecated. Use access token instead. Use to specify the password required to authenticate with Trust Protection Platform."))
 	fmt.Println("  -u")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the URL of the Trust Protection Platform Server. Example: -u https://tpp.example.com"))
 	fmt.Println("  -t")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify access token for Trust Protection Platform Server. Example: -t https://tpp.example.com"))
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the URL of the Trust Protection Platform Server. Example: -u https://tpp.example.com"))
-	fmt.Println("  -tpp-user")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Deprecated. Use access token instead. Use to specify the username required to authenticate with Trust Protection Platform."))
 
 	fmt.Printf("\nOptions:\n")
 	fmt.Println("  -cert-file")
@@ -157,7 +153,7 @@ func validatePickupFlags() error {
 				}
 
 				// mutual TLS with TPP service
-				if enrollParams.clientP12 == "" && enrollParams.clientP12PW != "" {
+				if pickParams.clientP12 == "" && pickParams.clientP12PW != "" {
 					return fmt.Errorf("-client-pkcs12-pw can only be specified in combination with -client-pkcs12")
 				}
 			}

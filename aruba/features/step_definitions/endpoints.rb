@@ -27,6 +27,11 @@ ENDPOINT_CONFIGS = {
         test_mode = true
     ",
     "TPP" => "
+        url = #{ENV['VCERT_TPP_URL']}
+        access_token = #{ENV['TPPACCESS_TOKEN']}
+        tpp_zone = #{ENV['VCERT_TPP_ZONE']}
+    ",
+    "TPPdeprecated" => "
         tpp_url = #{ENV['VCERT_TPP_URL']}
         tpp_user = #{ENV['VCERT_TPP_USER']}
         tpp_password = #{ENV['VCERT_TPP_PASSWORD']}
