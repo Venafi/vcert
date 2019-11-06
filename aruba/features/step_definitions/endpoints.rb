@@ -38,7 +38,7 @@ ENDPOINT_CONFIGS = {
         tpp_zone = #{ENV['VCERT_TPP_ZONE']}
     ",
     "Cloud" => "
-        cloud_url = #{ENV['VCERT_CLOUD_URL']}
+        url = #{ENV['VCERT_CLOUD_URL']}
         cloud_apikey = #{ENV['VCERT_CLOUD_APIKEY']}
         cloud_zone = #{ENV['VCERT_CLOUD_ZONE']}
     "
