@@ -25,6 +25,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -169,6 +170,38 @@ func (c *Connector) getURL(resource urlResource) string {
 	return fmt.Sprintf("%s%s", c.baseURL, resource)
 }
 
+func (c *Connector) getHTTPClient() *http.Client {
+	if client != nil {
+		return c.client
+	}
+	var netTransport = &http.Transport{
+		Proxy: ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+			DualStack: true,
+		}).DialContext,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
+	if c.trust != nil {
+		tlsConfig := http.DefaultTransport.(*http.Transport).TLSClientConfig
+		if tlsConfig == nil {
+			tlsConfig = &tls.Config{}
+		} else {
+			tlsConfig = tlsConfig.Clone()
+		}
+		tlsConfig.RootCAs = c.trust
+	}
+	c.client = &http.Client{
+		Timeout:   time.Second * 10,
+		Transport: netTransport,
+	}
+	return c.client
+}
+
 func (c *Connector) request(method string, url string, data interface{}, authNotRequired ...bool) (statusCode int, statusText string, body []byte, err error) {
 	if c.user == nil || c.user.Company == nil {
 		if !(len(authNotRequired) == 1 && authNotRequired[0]) {
@@ -199,17 +232,7 @@ func (c *Connector) request(method string, url string, data interface{}, authNot
 	}
 	r.Header.Add("cache-control", "no-cache")
 
-	var httpClient *http.Client
-	if c.trust != nil {
-		tlsConfig := http.DefaultTransport.(*http.Transport).TLSClientConfig
-		if tlsConfig == nil {
-			tlsConfig = &tls.Config{}
-		}
-		tlsConfig.RootCAs = c.trust
-		httpClient = &http.Client{Transport: &http.Transport{TLSClientConfig: tlsConfig}}
-	} else {
-		httpClient = http.DefaultClient
-	}
+	var httpClient = c.getHTTPClient()
 
 	res, err := httpClient.Do(r)
 	if res != nil {

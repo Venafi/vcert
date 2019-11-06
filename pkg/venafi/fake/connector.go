@@ -25,6 +25,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"math/big"
+	"net/http"
 	"strings"
 	"time"
 
@@ -261,4 +262,8 @@ func (c *Connector) ReadPolicyConfiguration() (policy *endpoint.Policy, err erro
 		true,
 	}
 	return
+}
+
+func (c *Connector) SetHTTPClient(client *http.Client) {
+	c.client = client
 }
