@@ -4,6 +4,7 @@ RUN_COMMAND="docker run -t --rm \
           -e VCERT_TPP_URL \
           -e VCERT_TPP_USER \
           -e VCERT_TPP_PASSWORD \
+          -e TPPACCESS_TOKEN \
           -e VCERT_TPP_ZONE \
           -e TPPZONE_ECDSA \
           -e VCERT_CLOUD_URL \
