@@ -137,14 +137,14 @@ func validateRevokeFlags() error {
 			return fmt.Errorf("-profile option cannot be used without -config option")
 		}
 		if !revokeParams.testMode {
-			if revokeParams.tppURL == "" {
+			if revokeParams.url == "" && revokeParams.tppURL == "" {
 				return fmt.Errorf("Trust Protection Platform URL is required for certificate revocation. Please check the help to see available command arguments")
 			}
-			if revokeParams.tppUser == "" {
-				return fmt.Errorf("A username is required for communicating with Trust Protection Platform")
+			if revokeParams.tppUser == "" && revokeParams.tppAccessToken == "" {
+				return fmt.Errorf("An access token or  username is required for communicating with Trust Protection Platform")
 			}
-			if revokeParams.noPrompt && revokeParams.tppPassword == "" {
-				return fmt.Errorf("A password is required for communicating with Trust Protection Platform")
+			if revokeParams.noPrompt && revokeParams.tppPassword == "" && revokeParams.tppAccessToken == "" {
+				return fmt.Errorf("An access token or  password is required for communicating with Trust Protection Platform")
 			}
 
 			// mutual TLS with TPP service
