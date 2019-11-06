@@ -46,6 +46,12 @@ test: get
 
 tpp_test: get
 	go test -v $(GOFLAGS) ./pkg/venafi/tpp     \
+		-u       "${VCERT_TPP_URL}"      \
+		-t      "${VCERT_TPP_USER}"     \
+		-tpp-zone      "${VCERT_TPP_ZONE}"
+
+tpp_test_deptecated: get
+	go test -v $(GOFLAGS) ./pkg/venafi/tpp     \
 		-tpp-url       "${VCERT_TPP_URL}"      \
 		-tpp-user      "${VCERT_TPP_USER}"     \
 		-tpp-password  "${VCERT_TPP_PASSWORD}" \
