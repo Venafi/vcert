@@ -278,8 +278,8 @@ func (c *Connector) getHTTPClient() *http.Client {
 		TLSHandshakeTimeout:   10 * time.Second,
 		ExpectContinueTimeout: 1 * time.Second,
 	}
+	tlsConfig := http.DefaultTransport.(*http.Transport).TLSClientConfig
 	if c.trust != nil {
-		tlsConfig := http.DefaultTransport.(*http.Transport).TLSClientConfig
 		if tlsConfig == nil {
 			tlsConfig = &tls.Config{}
 		} else {
@@ -287,6 +287,7 @@ func (c *Connector) getHTTPClient() *http.Client {
 		}
 		tlsConfig.RootCAs = c.trust
 	}
+	netTransport.TLSClientConfig = tlsConfig
 	c.client = &http.Client{
 		Timeout:   time.Second * 10,
 		Transport: netTransport,
