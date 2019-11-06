@@ -129,6 +129,7 @@ func validatePickupFlags() error {
 	if pickParams.config != "" {
 		if pickParams.apiKey != "" ||
 			pickParams.cloudURL != "" ||
+			pickParams.url != "" ||
 			pickParams.tppURL != "" ||
 			pickParams.tppUser != "" ||
 			pickParams.tppPassword != "" ||
@@ -140,16 +141,17 @@ func validatePickupFlags() error {
 			return fmt.Errorf("-profile option cannot be used without -config option")
 		}
 		if !pickParams.testMode {
-			if pickParams.tppURL == "" {
+			if pickParams.tppUser == "" && pickParams.tppAccessToken == "" {
 				if pickParams.apiKey == "" {
 					return fmt.Errorf("An API key is required to pickup a certificate from Venafi Cloud")
 				}
 			} else {
-				if pickParams.tppUser == "" {
-					return fmt.Errorf("A username is required for communicating with Trust Protection Platform")
+				// should be TPP service
+				if pickParams.tppUser == "" && pickParams.tppAccessToken == "" {
+					return fmt.Errorf("An access token or username is required for communicating with Trust Protection Platform")
 				}
-				if pickParams.noPrompt && pickParams.tppPassword == "" {
-					return fmt.Errorf("A password is required for communicating with Trust Protection Platform")
+				if pickParams.noPrompt && pickParams.tppPassword == "" && pickParams.tppAccessToken == "" {
+					return fmt.Errorf("An access token or password is required for communicating with Trust Protection Platform")
 				}
 
 				// mutual TLS with TPP service
@@ -160,7 +162,7 @@ func validatePickupFlags() error {
 		}
 	}
 
-	if pickParams.tppURL == "" && pickParams.apiKey == "" && !pickParams.testMode && pickParams.config == "" {
+	if pickParams.url == "" && pickParams.tppURL == "" && pickParams.apiKey == "" && !pickParams.testMode && pickParams.config == "" {
 		return fmt.Errorf("Missing required data for certificate pickup. Please check the help to see available command arguments")
 	}
 	if pickParams.pickupID == "" && pickParams.pickupIDFile == "" {
