@@ -171,11 +171,11 @@ func (c *Connector) getURL(resource urlResource) string {
 }
 
 func (c *Connector) getHTTPClient() *http.Client {
-	if client != nil {
+	if c.client != nil {
 		return c.client
 	}
 	var netTransport = &http.Transport{
-		Proxy: ProxyFromEnvironment,
+		Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
 			Timeout:   30 * time.Second,
 			KeepAlive: 30 * time.Second,
