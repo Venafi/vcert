@@ -13,9 +13,8 @@ ENDPOINTS = {
              " -z            '#{ENV['VCERT_TPP_ZONE']}'     " +
              " -insecure",
 
-    "TPPecdsa" => " -tpp-url      '#{ENV['VCERT_TPP_URL']}'      " +
-             " -tpp-user     '#{ENV['VCERT_TPP_USER']}'     " +
-             " -tpp-password '#{ENV['VCERT_TPP_PASSWORD']}' " +
+    "TPPecdsa" => " -u      '#{ENV['VCERT_TPP_URL']}'      " +
+             " -t     '#{ENV['TPPACCESS_TOKEN']}'     " +
              " -z            '#{ENV['TPPZONE_ECDSA']}'     " +
              " -insecure",
 
