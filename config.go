@@ -164,6 +164,8 @@ func (d set) has(key string) bool {
 
 func validateSection(s *ini.Section) error {
 	var TPPValidKeys set = map[string]bool{
+		"url":          true,
+		"access_token": true,
 		"tpp_url":      true,
 		"tpp_user":     true,
 		"tpp_password": true,
@@ -171,6 +173,7 @@ func validateSection(s *ini.Section) error {
 		"trust_bundle": true,
 	}
 	var CloudValidKeys set = map[string]bool{
+		"url":          true,
 		"trust_bundle": true,
 		"cloud_url":    true,
 		"cloud_apikey": true,
@@ -180,17 +183,17 @@ func validateSection(s *ini.Section) error {
 	log.Printf("Validating configuration section %s", s.Name())
 	var m dict = s.KeysHash()
 
-	if m.has("tpp_url") {
+	if m.has("tpp_user") || m.has("access_token") {
 		// looks like TPP config section
 		for k := range m {
 			if !TPPValidKeys.has(k) {
 				return fmt.Errorf("illegal key '%s' in TPP section %s", k, s.Name())
 			}
 		}
-		if !m.has("tpp_user") {
+		if !m.has("tpp_user") && !m.has("access_token") {
 			return fmt.Errorf("configuration issue in section %s: missing TPP user", s.Name())
 		}
-		if !m.has("tpp_password") {
+		if !m.has("tpp_password") && !m.has("access_token") {
 			return fmt.Errorf("configuration issue in section %s: missing TPP password", s.Name())
 		}
 	} else if m.has("cloud_apikey") {
