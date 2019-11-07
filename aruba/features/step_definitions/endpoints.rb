@@ -56,7 +56,7 @@ ALL_ENDPOINTS_CONFIG = "
     tpp_zone = #{ENV['VCERT_TPP_ZONE']}
 
     [cloud-profile]
-    cloud_url = #{ENV['VCERT_CLOUD_URL']}
+    url = #{ENV['VCERT_CLOUD_URL']}
     cloud_apikey = #{ENV['VCERT_CLOUD_APIKEY']}
     cloud_zone = #{ENV['VCERT_CLOUD_ZONE']}
 

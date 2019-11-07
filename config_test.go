@@ -28,18 +28,22 @@ test_mode = true`
 const invalidTestModeConfig = `
 test_mode = false`
 
-const validTPPConfig = `# all fine here
-url = https://ha-tpp1.example.com:5008/vedsdk
+const validTPPConfigDeprecated = `# all fine here
+tpp_url = https://ha-tpp1.example.com:5008/vedsdk
 tpp_user = admin
 tpp_password = xxx
+tpp_zone = devops\vcert`
+
+const validTPPConfig = `# all fine here
+url = https://ha-tpp1.example.com:5008/vedsdk
+access_token = ns1dofUPmsdxTLQS2hM1gQ==
 tpp_zone = devops\vcert`
 
 const emptyConfig = ``
 
 const invalidTPPConfig = `# cloud zone cannot be used in TPP section
 url = https://ha-tpp1.example.com:5008/vedsdk
-tpp_user = admin
-tpp_password = xxx
+access_token = ns1dofUPmsdxTLQS2hM1gQ==
 tpp_zone = devops\vcert
 cloud_zone = Default`
 
@@ -51,13 +55,12 @@ tpp_zone = devops\vcert`
 
 const invalidTPPConfig3 = `# trust bundle cannot be loaded
 url = https://ha-tpp1.example.com:5008/vedsdk
-tpp_user = admin
-tpp_password = xxx
+access_token = ns1dofUPmsdxTLQS2hM1gQ==
 tpp_zone = devops\vcert
 trust_bundle = ~/.vcert/file.does-not-exist`
 
 const validCloudConfig = `
-cloud_url = https://api.dev12.qa.venafi.io/v1
+url = https://api.dev12.qa.venafi.io/v1
 cloud_apikey = xxxxxxxx-b256-4c43-a4d4-15372ce2d548
 cloud_zone = Default`
 
@@ -65,7 +68,7 @@ const validCloudConfig2 = `
 cloud_apikey = xxxxxxxx-b256-4c43-a4d4-15372ce2d548`
 
 const invalidCloudConfig = `# tpp user is illegal
-cloud_url = https://api.dev12.qa.venafi.io/v1
+url = https://api.dev12.qa.venafi.io/v1
 cloud_apikey = xxxxxxxx-b256-4c43-a4d4-15372ce2d548
 tpp_user = admin
 cloud_zone = Default`
