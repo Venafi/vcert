@@ -80,6 +80,7 @@ func TestLoadFromFile(t *testing.T) {
 	}{
 		{true, validTestModeConfig},
 		{true, validTPPConfig},
+		{true, validTPPConfigDeprecated},
 		{true, validCloudConfig},
 		{true, validCloudConfig},
 		{true, validCloudConfig2},
