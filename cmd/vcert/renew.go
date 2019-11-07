@@ -231,7 +231,7 @@ func validateRenewFlags() error {
 	}
 
 	if renewParams.csrOption == "service" {
-		if !(renewParams.noPickup) && renewParams.noPrompt && len(renewParams.keyPassword) == 0 && (renewParams.tppUser == "" || renewParams.tppAccessToken == "") {
+		if !(renewParams.noPickup) && renewParams.noPrompt && len(renewParams.keyPassword) == 0 && (renewParams.tppUser != "" || renewParams.tppAccessToken != "") {
 			return fmt.Errorf("-key-password cannot be empty in -csr service mode for TPP unless -no-pickup specified")
 		}
 		if renewParams.commonName != "" ||
