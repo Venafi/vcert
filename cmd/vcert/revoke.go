@@ -93,7 +93,7 @@ func showRevokeUsage() {
 	fmt.Printf("\nOptions:\n")
 	fmt.Println("  -config")
 	fmt.Printf("\t%s\n", ("Use to specify INI configuration file containing connection details\n" +
-		"\t\tFor TPP: tpp_url, tpp_user, tpp_password, tpp_zone\n" +
+		"\t\tFor TPP: url, tpp_user, tpp_password, tpp_zone\n" +
 		"\t\tFor Cloud: cloud_url, cloud_apikey, cloud_zone\n" +
 		"\t\tTPP & Cloud: trust_bundle, test_mode"))
 

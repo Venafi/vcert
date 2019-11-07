@@ -6,7 +6,7 @@ Feature: -config option
 
       TPP configuration example:
 
-        tpp_url = https://ha-tpp1.venafi.example.com:5008/vedsdk
+        url = https://ha-tpp1.venafi.example.com:5008/vedsdk
         tpp_user = user
         tpp_password = xxx
         tpp_zone = devops\vcert
@@ -41,7 +41,7 @@ Feature: -config option
   (4) There may be many [section]-s in INI-configuration file:
 
         [ha-tpp1]
-        tpp_url = https://ha-tpp1.venafi.example.com:5008/vedsdk
+        url = https://ha-tpp1.venafi.example.com:5008/vedsdk
         tpp_user = user
         tpp_password = xxx
         tpp_zone = devops\vcert
@@ -90,7 +90,7 @@ Feature: -config option
   Scenario: Where it returns error when ini-file contains both TPP and Cloud connection details
     Given a file named "mixed.ini" with:
     """
-    tpp_url = https://tpp.venafi.example.com/
+    url = https://tpp.venafi.example.com/
     tpp_user = user
     tpp_password = xxx
     tpp_zone = devops\vcert
@@ -102,7 +102,7 @@ Feature: -config option
   Scenario: Where it returns error when TPP configuration doesn't contain user
     Given a file named "incomplete.ini" with:
     """
-    tpp_url = https://tpp.venafi.example.com/
+    url = https://tpp.venafi.example.com/
     # tpp_user = user
     tpp_password = xxx
     tpp_zone = devops\vcert
@@ -113,7 +113,7 @@ Feature: -config option
   Scenario: Where it returns error when TPP configuration doesn't contain password
     Given a file named "incomplete.ini" with:
     """
-    tpp_url = https://tpp.venafi.example.com/
+    url = https://tpp.venafi.example.com/
     tpp_user = user
     # tpp_password = xxx
     tpp_zone = devops\vcert

@@ -29,7 +29,7 @@ const invalidTestModeConfig = `
 test_mode = false`
 
 const validTPPConfig = `# all fine here
-tpp_url = https://ha-tpp1.example.com:5008/vedsdk
+url = https://ha-tpp1.example.com:5008/vedsdk
 tpp_user = admin
 tpp_password = xxx
 tpp_zone = devops\vcert`
@@ -37,20 +37,20 @@ tpp_zone = devops\vcert`
 const emptyConfig = ``
 
 const invalidTPPConfig = `# cloud zone cannot be used in TPP section
-tpp_url = https://ha-tpp1.example.com:5008/vedsdk
+url = https://ha-tpp1.example.com:5008/vedsdk
 tpp_user = admin
 tpp_password = xxx
 tpp_zone = devops\vcert
 cloud_zone = Default`
 
 const invalidTPPConfig2 = `# missing password
-tpp_url = https://ha-tpp1.example.com:5008/vedsdk
+url = https://ha-tpp1.example.com:5008/vedsdk
 tpp_user = admin
 #tpp_password = xxx
 tpp_zone = devops\vcert`
 
 const invalidTPPConfig3 = `# trust bundle cannot be loaded
-tpp_url = https://ha-tpp1.example.com:5008/vedsdk
+url = https://ha-tpp1.example.com:5008/vedsdk
 tpp_user = admin
 tpp_password = xxx
 tpp_zone = devops\vcert
