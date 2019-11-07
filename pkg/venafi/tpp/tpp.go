@@ -256,6 +256,7 @@ func (c *Connector) request(method string, resource urlResource, data interface{
 	// I hope you know what are you doing
 	if trace {
 		log.Println("#################")
+		log.Printf("Headers are:\n%s", r.Header)
 		if method == "POST" {
 			log.Printf("JSON sent for %s\n%s\n", url, string(b))
 		} else {
