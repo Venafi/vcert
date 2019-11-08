@@ -183,7 +183,7 @@ func validateSection(s *ini.Section) error {
 	log.Printf("Validating configuration section %s", s.Name())
 	var m dict = s.KeysHash()
 
-	if m.has("access_token") || m.has("cloud_apikey") {
+	if m.has("access_token") && m.has("cloud_apikey") {
 		return fmt.Errorf("configuration issue in section %s: can't set both TPP token and cloud api key", s.Name())
 	}
 	if m.has("tpp_user") || m.has("access_token") || m.has("tpp_password") {
