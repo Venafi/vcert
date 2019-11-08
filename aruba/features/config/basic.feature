@@ -105,7 +105,7 @@ Feature: -config option
     cloud_apikey = xxxxxxxx-b256-4c43-a4d4-15372ce2d548
     """
     When I try to run `vcert enroll -config mixed2.ini -cn cfg.venafi.example.com -no-prompt`
-    Then it should fail with "illegal key 'cloud_apikey'"
+    Then it should fail with "could not set both TPP token and cloud api key"
 
   Scenario: Where it returns error when TPP configuration doesn't contain user
     Given a file named "incomplete.ini" with:
