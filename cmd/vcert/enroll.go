@@ -18,6 +18,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -276,7 +277,7 @@ func validateEnrollmentFlags() error {
 	}
 
 	if enrollParams.tppUser != "" || enrollParams.tppPassword != "" {
-		fmt.Println("Warning: User\\Password authentication is deprecated, please use access token instead.")
+		log.Println("Warning: User\\Password authentication is deprecated, please use access token instead.")
 	}
 
 	return nil

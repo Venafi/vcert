@@ -13,7 +13,6 @@ Feature: Tests with deprecated TPP options
 # timeout /t 10
   Scenario: ~ Service Generated CSR with RSA key ~
     When I enroll a certificate in TPPdeprecated with -csr service -key-type rsa -key-size 4096 -cn service-gen-rsa.vcert.example -format json -key-password newPassw0rd!
-    Then it should show deprecated warning
     Then it should retrieve certificate
     Then I get JSON response
     And that certificate should contain "Public-Key: (4096 bit)"
@@ -29,10 +28,8 @@ Feature: Tests with deprecated TPP options
 # timeout /t 10
   Scenario: ~ Service Generated CSR pickup later ID as param ~
     When I enroll certificate using TPPdeprecated with -csr service -cn service-gen-pickup-id-as-param.vcert.example -no-pickup
-    Then it should show deprecated warning
     Then it should post certificate request
     And I retrieve the certificate from TPPdeprecated using the same Pickup ID with -key-password newPassw0rd! -timeout 59
-    Then it should show deprecated warning
     Then it should retrieve certificate
     Then it should output encrypted private key
 
@@ -46,10 +43,8 @@ Feature: Tests with deprecated TPP options
 # timeout /t 10
   Scenario: ~ Service Generated CSR pickup later ID in file~
     When I enroll certificate using TPPdeprecated with -csr service -cn service-gen-pickup-id-in-file.vcert.example -no-pickup -pickup-id-file pickup_id.txt
-    Then it should show deprecated warning
     Then it should post certificate request
     And I retrieve the certificate from TPPdeprecated with -pickup-id-file pickup_id.txt -key-password newPassw0rd! -timeout 59
-    Then it should show deprecated warning
     Then it should retrieve certificate
     Then it should output encrypted private key
 
@@ -64,7 +59,6 @@ Feature: Tests with deprecated TPP options
   Scenario: ~ User Provided CSR with RSA key ~
     Given I generate CSR with -cn user-provided-rsa.vcert.example -key-type rsa -key-size 4096 -key-file user-provided-rsa.key -csr-file user-provided-rsa.req -no-prompt
     When I enroll certificate using TPPdeprecated with -csr file:user-provided-rsa.req -cert-file c.pem
-    And it should show deprecated warning
     And it should retrieve certificate
     And I decode certificate from file "c.pem"
     Then that certificate should contain "Public-Key: (4096 bit)"
