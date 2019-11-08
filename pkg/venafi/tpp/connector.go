@@ -36,6 +36,7 @@ type Connector struct {
 	verbose bool
 	trust   *x509.CertPool
 	zone    string
+	client  *http.Client
 }
 
 // NewConnector creates a new TPP Connector object used to communicate with TPP
@@ -433,4 +434,8 @@ func (c *Connector) ImportCertificate(r *certificate.ImportRequest) (*certificat
 	default:
 		return nil, fmt.Errorf("unexpected response status %d: %s", statusCode, string(body))
 	}
+}
+
+func (c *Connector) SetHTTPClient(client *http.Client) {
+	c.client = client
 }

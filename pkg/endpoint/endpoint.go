@@ -22,6 +22,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"net/http"
 	"regexp"
 	"sort"
 
@@ -79,6 +80,8 @@ type Connector interface {
 	RenewCertificate(req *certificate.RenewalRequest) (requestID string, err error)
 	// ImportCertificate adds an existing certificate to Venafi Platform even if the certificate was not issued by Venafi Cloud or Venafi Platform. For information purposes.
 	ImportCertificate(req *certificate.ImportRequest) (*certificate.ImportResponse, error)
+	// SetHTTPClient allows to set custom http.Client to this Connector.
+	SetHTTPClient(client *http.Client)
 }
 
 // Authentication provides a struct for authentication data. Either specify User and Password for Trust Platform or specify an APIKey for Cloud.
