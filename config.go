@@ -191,7 +191,7 @@ func validateSection(s *ini.Section) error {
 			}
 		}
 		if m.has("tpp_user") && m.has("access_token") {
-			return fmt.Errorf("Can't have both TPP user and access token", s.Name())
+			return fmt.Errorf("configuration issue in section %s: could not have both TPP user and access token", s.Name())
 		}
 		if !m.has("tpp_user") && !m.has("access_token") {
 			return fmt.Errorf("configuration issue in section %s: missing TPP user", s.Name())
