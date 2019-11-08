@@ -1,7 +1,7 @@
 Then(/^it should show deprecated warning$/) do
   steps %{
     Given the exit status should be 0
-    And the output should contain "Warning: User\Password authentication is deprecated, please use access token instead."
+    And the output should contain "Password authentication is deprecated"
   }
 end
 

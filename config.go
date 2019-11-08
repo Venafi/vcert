@@ -183,6 +183,9 @@ func validateSection(s *ini.Section) error {
 	log.Printf("Validating configuration section %s", s.Name())
 	var m dict = s.KeysHash()
 
+	if m.has("access_token") || m.has("cloud_apikey") {
+		return fmt.Errorf("configuration issue in section %s: can't set both TPP token and cloud api key", s.Name())
+	}
 	if m.has("tpp_user") || m.has("access_token") || m.has("tpp_password") {
 		// looks like TPP config section
 		for k := range m {
@@ -208,6 +211,9 @@ func validateSection(s *ini.Section) error {
 		}
 	} else if m.has("test_mode") {
 		// it's ok
+
+	} else if m.has("url") {
+		return fmt.Errorf("could not determine connection endpoint with only url information in section %s", s.Name())
 	} else {
 		return fmt.Errorf("section %s looks empty", s.Name())
 	}
