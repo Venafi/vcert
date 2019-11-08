@@ -183,12 +183,15 @@ func validateSection(s *ini.Section) error {
 	log.Printf("Validating configuration section %s", s.Name())
 	var m dict = s.KeysHash()
 
-	if m.has("tpp_user") || m.has("access_token") {
+	if m.has("tpp_user") || m.has("access_token") || m.has("tpp_password") {
 		// looks like TPP config section
 		for k := range m {
 			if !TPPValidKeys.has(k) {
 				return fmt.Errorf("illegal key '%s' in TPP section %s", k, s.Name())
 			}
+		}
+		if m.has("tpp_user") && m.has("access_token") {
+			return fmt.Errorf("Can't have both TPP user and access token", s.Name())
 		}
 		if !m.has("tpp_user") && !m.has("access_token") {
 			return fmt.Errorf("configuration issue in section %s: missing TPP user", s.Name())
