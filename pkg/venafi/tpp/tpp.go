@@ -26,9 +26,11 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
@@ -270,16 +272,36 @@ func (c *Connector) request(method string, resource urlResource, data interface{
 }
 
 func (c *Connector) getHTTPClient() *http.Client {
+	if c.client != nil {
+		return c.client
+	}
+	var netTransport = &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+			DualStack: true,
+		}).DialContext,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
+	tlsConfig := http.DefaultTransport.(*http.Transport).TLSClientConfig
 	if c.trust != nil {
-		tlsConfig := http.DefaultTransport.(*http.Transport).TLSClientConfig
 		if tlsConfig == nil {
 			tlsConfig = &tls.Config{}
+		} else {
+			tlsConfig = tlsConfig.Clone()
 		}
 		tlsConfig.RootCAs = c.trust
-		return &http.Client{Transport: &http.Transport{TLSClientConfig: tlsConfig}}
 	}
-
-	return http.DefaultClient
+	netTransport.TLSClientConfig = tlsConfig
+	c.client = &http.Client{
+		Timeout:   time.Second * 10,
+		Transport: netTransport,
+	}
+	return c.client
 }
 
 // GenerateRequest creates a new certificate request, based on the zone/policy configuration and the user data

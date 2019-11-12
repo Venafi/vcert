@@ -67,6 +67,7 @@ type Connector struct {
 	user    *userDetails
 	trust   *x509.CertPool
 	zone    string
+	client  *http.Client
 }
 
 // NewConnector creates a new Venafi Cloud Connector object used to communicate with Venafi Cloud
@@ -613,4 +614,8 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 	cert := foundCert.Certificates[0]
 	resp := &certificate.ImportResponse{CertificateDN: cert.SubjectCN[0], CertId: cert.Id}
 	return resp, nil
+}
+
+func (c *Connector) SetHTTPClient(client *http.Client) {
+	c.client = client
 }
