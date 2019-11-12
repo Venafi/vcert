@@ -26,7 +26,7 @@ import (
 	"github.com/Venafi/vcert/pkg/endpoint"
 )
 
-func buildConfig(cf *commandFlags) (cfg vcert.Config, err error) {
+func buildConfig(co command, cf *commandFlags) (cfg vcert.Config, err error) {
 	cfg.LogVerbose = cf.verbose
 
 	if cf.config != "" {
@@ -87,9 +87,10 @@ func buildConfig(cf *commandFlags) (cfg vcert.Config, err error) {
 		}
 		cfg.Zone = cf.zone
 	}
-
-	if cfg.Zone == "" && cfg.ConnectorType != endpoint.ConnectorTypeFake && !(cf.pickupID != "" || cf.pickupIDFile != "") {
-		return cfg, fmt.Errorf("Zone cannot be empty. Use -z option")
+	if co == commandEnroll || co == commandPickup {
+		if cfg.Zone == "" && cfg.ConnectorType != endpoint.ConnectorTypeFake && !(cf.pickupID != "" || cf.pickupIDFile != "") {
+			return cfg, fmt.Errorf("Zone cannot be empty. Use -z option")
+		}
 	}
 
 	return cfg, nil
