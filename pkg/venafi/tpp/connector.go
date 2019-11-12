@@ -31,12 +31,13 @@ import (
 
 // Connector contains the base data needed to communicate with a TPP Server
 type Connector struct {
-	baseURL string
-	apiKey  string
-	verbose bool
-	trust   *x509.CertPool
-	zone    string
-	client  *http.Client
+	baseURL     string
+	apiKey      string
+	accessToken string
+	verbose     bool
+	trust       *x509.CertPool
+	zone        string
+	client      *http.Client
 }
 
 // NewConnector creates a new TPP Connector object used to communicate with TPP
@@ -99,17 +100,30 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 	if auth == nil {
 		return fmt.Errorf("failed to authenticate: missing credentials")
 	}
-	statusCode, status, body, err := c.request("POST", urlResourceAuthorize, authorizeResquest{Username: auth.User, Password: auth.Password})
-	if err != nil {
-		return
-	}
+	var statusCode int
+	var status string
+	var body []byte
 
-	key, err := parseAuthorizeResult(statusCode, status, body)
-	if err != nil {
-		return
+	if auth.User != "" && auth.Password != "" {
+		statusCode, status, body, err = c.request("POST", urlResourceAuthorize, authorizeResquest{Username: auth.User, Password: auth.Password})
+		if err != nil {
+			return err
+		}
+
+		key, err := parseAuthorizeResult(statusCode, status, body)
+		if err != nil {
+			return err
+		}
+		c.apiKey = key
+		return nil
+		//} else if auth.RefreshToken != "" && auth.ClientId != "" {
+		//	statusCode, status, body, err = c.request("POST", urlResourceRefreshAccessToken, refreshAccessTokenResquest{client_id: auth.ClientId, refresh_token: auth.RefreshToken})
+		//	TODO: parse refresh token and set access token from here
+	} else if auth.AccessToken != "" {
+		c.accessToken = auth.AccessToken
+		return nil
 	}
-	c.apiKey = key
-	return
+	return fmt.Errorf("failed to authenticate: can't determin valid credentials set")
 }
 
 func wrapAltNames(req *certificate.Request) (items []sanItem) {

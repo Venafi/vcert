@@ -37,8 +37,8 @@ import (
 var ctx *test.Context
 
 func init() {
-	ctx = test.GetContext()
-	//ctx = test.GetEnvContext()
+	//ctx = test.GetContext()
+	ctx = test.GetEnvContext()
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	if ctx.TPPurl == "" {
@@ -96,6 +96,35 @@ func TestBadAuthorizeToTPP(t *testing.T) {
 		t.Fatalf("err should not be nil, bad password was used")
 	}
 }
+func TestAuthenticationAccessToken(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+
+	err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	tpp.SetZone(ctx.TPPZone)
+	_, err = tpp.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	err = tpp.Authenticate(&endpoint.Authentication{AccessToken: "WRONGm3XPAT5nlWxd3iA=="})
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	tpp.SetZone(ctx.TPPZone)
+	_, err = tpp.ReadZoneConfiguration()
+	if err == nil {
+		t.Fatalf("Auth with wrong token should fail")
+	}
+
+}
 
 func TestReadConfigData(t *testing.T) {
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
@@ -122,7 +151,7 @@ func TestReadConfigData(t *testing.T) {
 			HashAlgorithm:         x509.SHA256WithRSA,
 			CustomAttributeValues: make(map[string]string),
 		}},
-		{getPolicyDN(os.Getenv("TPPZONE_RESTRICTED")), endpoint.ZoneConfiguration{
+		{getPolicyDN(ctx.TPPZoneRestricted), endpoint.ZoneConfiguration{
 			Organization:          "Venafi Inc.",
 			OrganizationalUnit:    []string{"Integration"},
 			Country:               "US",
@@ -135,6 +164,9 @@ func TestReadConfigData(t *testing.T) {
 	for _, c := range testCases {
 		tpp.SetZone(c.zone)
 		zoneConfig, err := tpp.ReadZoneConfiguration()
+		if err != nil {
+			t.Fatalf("%s", err)
+		}
 		zoneConfig.Policy = endpoint.Policy{}
 		if err != nil {
 			t.Fatalf("%s", err)

@@ -27,9 +27,11 @@ func setupRetrieveCommandFlags() {
 	pickupFlags.StringVar(&pickParams.cloudURL, "venafi-saas-url", "", "")
 	pickupFlags.StringVar(&pickParams.pickupID, "pickup-id", "", "")
 	pickupFlags.StringVar(&pickParams.apiKey, "k", "", "")
+	pickupFlags.StringVar(&pickParams.url, "u", "", "")
 	pickupFlags.StringVar(&pickParams.tppURL, "tpp-url", "", "")
 	pickupFlags.StringVar(&pickParams.tppUser, "tpp-user", "", "")
 	pickupFlags.StringVar(&pickParams.tppPassword, "tpp-password", "", "")
+	pickupFlags.StringVar(&pickParams.tppAccessToken, "t", "", "")
 	pickupFlags.StringVar(&pickParams.trustBundle, "trust-bundle", "", "")
 	pickupFlags.StringVar(&pickParams.format, "format", "pem", "")
 	pickupFlags.StringVar(&pickParams.file, "file", "", "")
@@ -48,8 +50,8 @@ func setupRetrieveCommandFlags() {
 	pickupFlags.StringVar(&pickParams.keyFile, "key-file", "", "")
 	pickupFlags.StringVar(&pickParams.config, "config", "", "")
 	pickupFlags.StringVar(&pickParams.profile, "profile", "", "")
-	pickupFlags.StringVar(&enrollParams.clientP12, "client-pkcs12", "", "")
-	pickupFlags.StringVar(&enrollParams.clientP12PW, "client-pkcs12-pw", "", "")
+	pickupFlags.StringVar(&pickParams.clientP12, "client-pkcs12", "", "")
+	pickupFlags.StringVar(&pickParams.clientP12PW, "client-pkcs12-pw", "", "")
 
 	pickupFlags.Usage = func() {
 		fmt.Printf("%s\n", vcert.GetFormattedVersionString())
@@ -61,7 +63,7 @@ func showPickupUsage() {
 	fmt.Printf("Pickup Usage:\n")
 	fmt.Printf("  %s pickup <Required Venafi Cloud Config> OR <Required Trust Protection Platform Config> <Options>\n", os.Args[0])
 	fmt.Printf("  %s pickup -k <api key> -pickup-id <request id> OR -pickup-id-file <file with Pickup ID value>\n", os.Args[0])
-	fmt.Printf("  %s pickup -tpp-url <https://tpp.example.com> -tpp-user <username> -tpp-password <password> -pickup-id <request id>\n", os.Args[0])
+	fmt.Printf("  %s pickup -u <https://tpp.example.com> -tpp-user <username> -tpp-password <password> -pickup-id <request id>\n", os.Args[0])
 
 	fmt.Printf("\nRequired for Venafi Cloud:\n")
 	fmt.Println("  -k")
@@ -73,12 +75,10 @@ func showPickupUsage() {
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Example: -pickup-id 3260ece0-0da4-11e7-9be2-891dab33d0eb"))
 	fmt.Println("  -pickup-id-file")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify file name from where Pickup ID will be read. Either one of -pickup-id and -pickup-id-file options is required."))
-	fmt.Println("  -tpp-password")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the password required to authenticate with Trust Protection Platform."))
-	fmt.Println("  -tpp-url")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the URL of the Trust Protection Platform Server. Example: -tpp-url https://tpp.example.com"))
-	fmt.Println("  -tpp-user")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the username required to authenticate with Trust Protection Platform."))
+	fmt.Println("  -u")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the URL of the Trust Protection Platform Server. Example: -u https://tpp.example.com"))
+	fmt.Println("  -t")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify access token for Trust Protection Platform Server. Example: -t https://tpp.example.com"))
 
 	fmt.Printf("\nOptions:\n")
 	fmt.Println("  -cert-file")
@@ -94,7 +94,7 @@ func showPickupUsage() {
 
 	fmt.Println("  -config")
 	fmt.Printf("\t%s\n", ("Use to specify INI configuration file containing connection details\n" +
-		"\t\tFor TPP: tpp_url, tpp_user, tpp_password, tpp_zone\n" +
+		"\t\tFor TPP: url, tpp_user, tpp_password, tpp_zone\n" +
 		"\t\tFor Cloud: cloud_url, cloud_apikey, cloud_zone\n" +
 		"\t\tTPP & Cloud: trust_bundle, test_mode"))
 
@@ -129,6 +129,7 @@ func validatePickupFlags() error {
 	if pickParams.config != "" {
 		if pickParams.apiKey != "" ||
 			pickParams.cloudURL != "" ||
+			pickParams.url != "" ||
 			pickParams.tppURL != "" ||
 			pickParams.tppUser != "" ||
 			pickParams.tppPassword != "" ||
@@ -140,27 +141,28 @@ func validatePickupFlags() error {
 			return fmt.Errorf("-profile option cannot be used without -config option")
 		}
 		if !pickParams.testMode {
-			if pickParams.tppURL == "" {
+			if pickParams.tppUser == "" && pickParams.tppAccessToken == "" {
 				if pickParams.apiKey == "" {
 					return fmt.Errorf("An API key is required to pickup a certificate from Venafi Cloud")
 				}
 			} else {
-				if pickParams.tppUser == "" {
-					return fmt.Errorf("A username is required for communicating with Trust Protection Platform")
+				// should be TPP service
+				if pickParams.tppUser == "" && pickParams.tppAccessToken == "" {
+					return fmt.Errorf("An access token or username is required for communicating with Trust Protection Platform")
 				}
-				if pickParams.noPrompt && pickParams.tppPassword == "" {
-					return fmt.Errorf("A password is required for communicating with Trust Protection Platform")
+				if pickParams.noPrompt && pickParams.tppPassword == "" && pickParams.tppAccessToken == "" {
+					return fmt.Errorf("An access token or password is required for communicating with Trust Protection Platform")
 				}
 
 				// mutual TLS with TPP service
-				if enrollParams.clientP12 == "" && enrollParams.clientP12PW != "" {
+				if pickParams.clientP12 == "" && pickParams.clientP12PW != "" {
 					return fmt.Errorf("-client-pkcs12-pw can only be specified in combination with -client-pkcs12")
 				}
 			}
 		}
 	}
 
-	if pickParams.tppURL == "" && pickParams.apiKey == "" && !pickParams.testMode && pickParams.config == "" {
+	if pickParams.url == "" && pickParams.tppURL == "" && pickParams.apiKey == "" && !pickParams.testMode && pickParams.config == "" {
 		return fmt.Errorf("Missing required data for certificate pickup. Please check the help to see available command arguments")
 	}
 	if pickParams.pickupID == "" && pickParams.pickupIDFile == "" {

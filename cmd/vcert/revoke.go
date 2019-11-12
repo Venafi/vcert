@@ -38,9 +38,11 @@ func setupRevokeCommandFlags() {
 	revokeFlags.StringVar(&revokeParams.thumbprint, "thumbprint", "", "")
 	revokeFlags.StringVar(&revokeParams.revocationReason, "reason", "", "")
 	revokeFlags.BoolVar(&revokeParams.revocationNoRetire, "no-retire", false, "")
+	revokeFlags.StringVar(&revokeParams.url, "u", "", "")
 	revokeFlags.StringVar(&revokeParams.tppURL, "tpp-url", "", "")
 	revokeFlags.StringVar(&revokeParams.tppUser, "tpp-user", "", "")
 	revokeFlags.StringVar(&revokeParams.tppPassword, "tpp-password", "", "")
+	revokeFlags.StringVar(&revokeParams.tppAccessToken, "t", "", "")
 	revokeFlags.StringVar(&revokeParams.trustBundle, "trust-bundle", "", "")
 	revokeFlags.StringVar(&revokeParams.file, "file", "", "")
 	revokeFlags.BoolVar(&revokeParams.verbose, "verbose", false, "")
@@ -53,8 +55,8 @@ func setupRevokeCommandFlags() {
 	revokeFlags.StringVar(&revokeParams.zone, "z", "", "")
 	revokeFlags.StringVar(&revokeParams.config, "config", "", "")
 	revokeFlags.StringVar(&revokeParams.profile, "profile", "", "")
-	revokeFlags.StringVar(&enrollParams.clientP12, "client-pkcs12", "", "")
-	revokeFlags.StringVar(&enrollParams.clientP12PW, "client-pkcs12-pw", "", "")
+	revokeFlags.StringVar(&revokeParams.clientP12, "client-pkcs12", "", "")
+	revokeFlags.StringVar(&revokeParams.clientP12PW, "client-pkcs12-pw", "", "")
 
 	revokeFlags.Usage = func() {
 		fmt.Printf("%s\n", vcert.GetFormattedVersionString())
@@ -67,7 +69,7 @@ func showRevokeUsage() {
 	fmt.Printf("  %s revoke <Required Trust Protection Platform Config> <Options>\n", os.Args[0])
 	fmt.Printf("  %s revoke -id <certificate DN>\n", os.Args[0])
 	fmt.Printf("  %s revoke -thumbprint <certificate thumbprint>\n", os.Args[0])
-	fmt.Printf("  %s revoke -tpp-url <https://tpp.example.com> -tpp-user <username> -tpp-password <password> -id <certificate DN>\n", os.Args[0])
+	fmt.Printf("  %s revoke -u <https://tpp.example.com> -tpp-user <username> -tpp-password <password> -id <certificate DN>\n", os.Args[0])
 
 	fmt.Printf("\nRequired for Trust Protection Platform:\n")
 	fmt.Println("  -id")
@@ -83,15 +85,15 @@ func showRevokeUsage() {
 
 	fmt.Println("  -tpp-password")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the password required to authenticate with Trust Protection Platform."))
-	fmt.Println("  -tpp-url")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the URL of the Trust Protection Platform Server. Example: -tpp-url https://tpp.example.com"))
+	fmt.Println("  -u")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the URL of the Trust Protection Platform Server. Example: -u https://tpp.example.com"))
 	fmt.Println("  -tpp-user")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the username required to authenticate with Trust Protection Platform."))
 
 	fmt.Printf("\nOptions:\n")
 	fmt.Println("  -config")
 	fmt.Printf("\t%s\n", ("Use to specify INI configuration file containing connection details\n" +
-		"\t\tFor TPP: tpp_url, tpp_user, tpp_password, tpp_zone\n" +
+		"\t\tFor TPP: url, tpp_user, tpp_password, tpp_zone\n" +
 		"\t\tFor Cloud: cloud_url, cloud_apikey, cloud_zone\n" +
 		"\t\tTPP & Cloud: trust_bundle, test_mode"))
 
@@ -135,14 +137,14 @@ func validateRevokeFlags() error {
 			return fmt.Errorf("-profile option cannot be used without -config option")
 		}
 		if !revokeParams.testMode {
-			if revokeParams.tppURL == "" {
+			if revokeParams.url == "" && revokeParams.tppURL == "" {
 				return fmt.Errorf("Trust Protection Platform URL is required for certificate revocation. Please check the help to see available command arguments")
 			}
-			if revokeParams.tppUser == "" {
-				return fmt.Errorf("A username is required for communicating with Trust Protection Platform")
+			if revokeParams.tppUser == "" && revokeParams.tppAccessToken == "" {
+				return fmt.Errorf("An access token or  username is required for communicating with Trust Protection Platform")
 			}
-			if revokeParams.noPrompt && revokeParams.tppPassword == "" {
-				return fmt.Errorf("A password is required for communicating with Trust Protection Platform")
+			if revokeParams.noPrompt && revokeParams.tppPassword == "" && revokeParams.tppAccessToken == "" {
+				return fmt.Errorf("An access token or  password is required for communicating with Trust Protection Platform")
 			}
 
 			// mutual TLS with TPP service

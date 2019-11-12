@@ -6,9 +6,8 @@ Feature: -config option
 
       TPP configuration example:
 
-        tpp_url = https://ha-tpp1.venafi.example.com:5008/vedsdk
-        tpp_user = user
-        tpp_password = xxx
+        url = https://ha-tpp1.venafi.example.com:5008/vedsdk
+        access_token = ns1dofUPmsdxTLQSyhM1gQ==
         tpp_zone = devops\vcert
         trust_bundle = ~/.vcert/6.23.crt
 
@@ -41,9 +40,8 @@ Feature: -config option
   (4) There may be many [section]-s in INI-configuration file:
 
         [ha-tpp1]
-        tpp_url = https://ha-tpp1.venafi.example.com:5008/vedsdk
-        tpp_user = user
-        tpp_password = xxx
+        url = https://ha-tpp1.venafi.example.com:5008/vedsdk
+        access_token = ns1dofUPmsdxTLQSyhM1gQ==
         tpp_zone = devops\vcert
         trust_bundle = ~/.vcert/6.23.crt
 
@@ -87,10 +85,10 @@ Feature: -config option
     When I try to run `vcert enroll -config empty.ini -cn cfg.venafi.example.com -no-prompt`
     Then it should fail with "looks empty"
 
-  Scenario: Where it returns error when ini-file contains both TPP and Cloud connection details
+  Scenario: Where it returns error when ini-file contains both TPP and Cloud connection deprecated details
     Given a file named "mixed.ini" with:
     """
-    tpp_url = https://tpp.venafi.example.com/
+    url = https://tpp.venafi.example.com/
     tpp_user = user
     tpp_password = xxx
     tpp_zone = devops\vcert
@@ -99,10 +97,20 @@ Feature: -config option
     When I try to run `vcert enroll -config mixed.ini -cn cfg.venafi.example.com -no-prompt`
     Then it should fail with "illegal key 'cloud_apikey'"
 
+  Scenario: Where it returns error when ini-file contains both TPP and Cloud connection details
+    Given a file named "mixed2.ini" with:
+    """
+    url = https://tpp.venafi.example.com/
+    access_token = ns1dofUPmsdxTLQSyhM1gQ==
+    cloud_apikey = xxxxxxxx-b256-4c43-a4d4-15372ce2d548
+    """
+    When I try to run `vcert enroll -config mixed2.ini -cn cfg.venafi.example.com -no-prompt`
+    Then it should fail with "could not set both TPP token and cloud api key"
+
   Scenario: Where it returns error when TPP configuration doesn't contain user
     Given a file named "incomplete.ini" with:
     """
-    tpp_url = https://tpp.venafi.example.com/
+    url = https://tpp.venafi.example.com/
     # tpp_user = user
     tpp_password = xxx
     tpp_zone = devops\vcert
@@ -113,12 +121,23 @@ Feature: -config option
   Scenario: Where it returns error when TPP configuration doesn't contain password
     Given a file named "incomplete.ini" with:
     """
-    tpp_url = https://tpp.venafi.example.com/
+    url = https://tpp.venafi.example.com/
     tpp_user = user
     # tpp_password = xxx
     tpp_zone = devops\vcert
     """
     When I try to run `vcert enroll -config incomplete.ini -cn cfg.venafi.example.com -no-prompt`
     Then it should fail with "missing TPP password"
+
+
+  Scenario: Where it returns error when TPP configuration doesn't contain access token
+    Given a file named "incomplete.ini" with:
+    """
+    url = https://tpp.venafi.example.com/
+    #access_token = ns1dofUPmsdxTLQSyhM1gQ==
+    tpp_zone = devops\vcert
+    """
+    When I try to run `vcert enroll -config incomplete.ini -cn cfg.venafi.example.com -no-prompt`
+    Then it should fail with "could not determine connection endpoint with only url information"
 
 

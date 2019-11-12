@@ -56,9 +56,11 @@ var (
 
 type commandFlags struct {
 	verbose            bool
+	url                string
 	tppURL             string
 	tppUser            string
 	tppPassword        string
+	tppAccessToken     string
 	apiKey             string
 	cloudURL           string
 	zone               string

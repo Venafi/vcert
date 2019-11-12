@@ -1,3 +1,9 @@
+Then(/^it should show deprecated warning$/) do
+  steps %{
+    Given the exit status should be 0
+    And the output should contain "Password authentication is deprecated"
+  }
+end
 
 Then(/^it should retrieve certificate$/) do
   steps %{
