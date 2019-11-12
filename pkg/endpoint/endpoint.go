@@ -91,7 +91,7 @@ type Authentication struct {
 	APIKey   string
 	//RefreshToken string
 	//ClientId     string
-	AcessToken string
+	AccessToken string
 }
 
 // ErrRetrieveCertificateTimeout provides a common error structure for a timeout while retrieving a certificate

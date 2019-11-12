@@ -88,7 +88,7 @@ func LoadConfigFromFile(path, section string) (cfg Config, err error) {
 		} else if m["url"] != "" {
 			baseUrl = m["url"]
 		}
-		auth.AcessToken = m["access_token"]
+		auth.AccessToken = m["access_token"]
 		auth.User = m["tpp_user"]
 		auth.Password = m["tpp_password"]
 		if m.has("tpp_zone") {

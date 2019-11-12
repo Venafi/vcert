@@ -61,7 +61,7 @@ func buildConfig(cf *commandFlags) (cfg vcert.Config, err error) {
 			}
 
 			if cf.tppAccessToken != "" {
-				auth.AcessToken = cf.tppAccessToken
+				auth.AccessToken = cf.tppAccessToken
 			} else {
 				auth.User = cf.tppUser
 				auth.Password = cf.tppPassword

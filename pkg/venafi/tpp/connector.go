@@ -31,13 +31,13 @@ import (
 
 // Connector contains the base data needed to communicate with a TPP Server
 type Connector struct {
-	baseURL    string
-	apiKey     string
-	acessToken string
-	verbose    bool
-	trust      *x509.CertPool
-	zone       string
-	client     *http.Client
+	baseURL     string
+	apiKey      string
+	accessToken string
+	verbose     bool
+	trust       *x509.CertPool
+	zone        string
+	client      *http.Client
 }
 
 // NewConnector creates a new TPP Connector object used to communicate with TPP
@@ -119,8 +119,8 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 		//} else if auth.RefreshToken != "" && auth.ClientId != "" {
 		//	statusCode, status, body, err = c.request("POST", urlResourceRefreshAccessToken, refreshAccessTokenResquest{client_id: auth.ClientId, refresh_token: auth.RefreshToken})
 		//	TODO: parse refresh token and set access token from here
-	} else if auth.AcessToken != "" {
-		c.acessToken = auth.AcessToken
+	} else if auth.AccessToken != "" {
+		c.accessToken = auth.AccessToken
 		return nil
 	}
 	return fmt.Errorf("failed to authenticate: can't determin valid credentials set")

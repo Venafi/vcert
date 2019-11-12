@@ -102,7 +102,7 @@ func TestAuthenticationAccessToken(t *testing.T) {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
 
-	err = tpp.Authenticate(&endpoint.Authentication{AcessToken: ctx.TPPacessToken})
+	err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
@@ -113,7 +113,7 @@ func TestAuthenticationAccessToken(t *testing.T) {
 		t.Fatalf("%s", err)
 	}
 
-	err = tpp.Authenticate(&endpoint.Authentication{AcessToken: "WRONGm3XPAT5nlWxd3iA=="})
+	err = tpp.Authenticate(&endpoint.Authentication{AccessToken: "WRONGm3XPAT5nlWxd3iA=="})
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
