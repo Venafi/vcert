@@ -100,12 +100,12 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 	if auth == nil {
 		return fmt.Errorf("failed to authenticate: missing credentials")
 	}
-	var statusCode int
-	var status string
-	var body []byte
-
+	if auth.AcessToken != "" {
+		c.acessToken = auth.AcessToken
+		return nil
+	}
 	if auth.User != "" && auth.Password != "" {
-		statusCode, status, body, err = c.request("POST", urlResourceAuthorize, authorizeResquest{Username: auth.User, Password: auth.Password})
+		statusCode, status, body, err := c.request("POST", urlResourceAuthorize, authorizeResquest{Username: auth.User, Password: auth.Password})
 		if err != nil {
 			return err
 		}
@@ -119,9 +119,6 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 		//} else if auth.RefreshToken != "" && auth.ClientId != "" {
 		//	statusCode, status, body, err = c.request("POST", urlResourceRefreshAccessToken, refreshAccessTokenResquest{client_id: auth.ClientId, refresh_token: auth.RefreshToken})
 		//	TODO: parse refresh token and set access token from here
-	} else if auth.AcessToken != "" {
-		c.acessToken = auth.AcessToken
-		return nil
 	}
 	return fmt.Errorf("failed to authenticate: can't determin valid credentials set")
 }
