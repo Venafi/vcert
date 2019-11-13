@@ -117,7 +117,7 @@ func main() {
 		return
 	}
 
-	cfg, err := buildConfig(cf)
+	cfg, err := buildConfig(co, cf)
 	if err != nil {
 		logger.Panicf("Failed to build vcert config: %s", err)
 	}
