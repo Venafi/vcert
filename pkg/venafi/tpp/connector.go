@@ -460,14 +460,12 @@ func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.Cert
 	if filter.Limit != nil {
 		limit = *filter.Limit
 	}
-	date := time.Now()
-	if filter.ValidToGreater != nil {
-		date = *filter.ValidToGreater
-	}
 	url := urlResourceCertificatesList + urlResource(
 		"?ParentDNRecursive="+neturl.QueryEscape(getPolicyDN(c.zone))+
-			"&ValidToGreater="+neturl.QueryEscape(date.Format(time.RFC3339))+
 			"&limit="+fmt.Sprintf("%d", limit))
+	if !filter.WithExpired {
+		url += urlResource("&ValidToGreater=" + neturl.QueryEscape(time.Now().Format(time.RFC3339)))
+	}
 	statusCode, status, body, err := c.request("GET", url, nil)
 	if err != nil {
 		return nil, err

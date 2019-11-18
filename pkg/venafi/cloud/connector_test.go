@@ -542,7 +542,6 @@ func TestRetrieveCertificatesList(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-	ti := time.Now()
 	c := 10
-	conn.ListCertificates(endpoint.Filter{&c, &ti})
+	conn.ListCertificates(endpoint.Filter{&c, false})
 }

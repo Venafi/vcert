@@ -22,12 +22,10 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"github.com/Venafi/vcert/pkg/certificate"
 	"net/http"
 	"regexp"
 	"sort"
-	"time"
-
-	"github.com/Venafi/vcert/pkg/certificate"
 )
 
 // ConnectorType represents the available connectors
@@ -88,8 +86,8 @@ type Connector interface {
 }
 
 type Filter struct {
-	Limit          *int
-	ValidToGreater *time.Time
+	Limit       *int
+	WithExpired bool
 }
 
 // Authentication provides a struct for authentication data. Either specify User and Password for Trust Platform or specify an APIKey for Cloud.

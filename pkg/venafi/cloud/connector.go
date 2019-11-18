@@ -625,15 +625,17 @@ func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.Cert
 	req := &SearchRequest{
 		Expression: &Expression{
 			Operands: []Operand{
-				{
-					"validityEnd",
-					GTE,
-					filter.ValidToGreater.Format(time.RFC3339),
-				},
 				{"issuanceZoneId", EQ, c.zone},
 			},
 		},
 		Paging: &Paging{PageSize: *filter.Limit, PageNumber: 0},
+	}
+	if !filter.WithExpired {
+		req.Expression.Operands = append(req.Expression.Operands, Operand{
+			"validityEnd",
+			GTE,
+			time.Now().Format(time.RFC3339),
+		})
 	}
 
 	_, err := c.searchCertificates(req)
