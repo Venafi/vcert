@@ -199,6 +199,17 @@ type ImportResponse struct {
 	PrivateKeyVaultId  int    `json:",omitempty"`
 }
 
+type CertificateInfo struct {
+	CN   string
+	SANS struct {
+		DNS, Email, IP, URI, UPN []string
+	}
+	Serial     string
+	Thumbprint string
+	ValidFrom  time.Time
+	ValidTo    time.Time
+}
+
 // SetCSR sets CSR from PEM or DER format
 func (request *Request) SetCSR(csr []byte) error {
 	pemBlock, _ := pem.Decode(csr)

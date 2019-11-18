@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	neturl "net/url"
 	"regexp"
 	"strings"
 	"time"
@@ -452,4 +453,40 @@ func (c *Connector) ImportCertificate(r *certificate.ImportRequest) (*certificat
 
 func (c *Connector) SetHTTPClient(client *http.Client) {
 	c.client = client
+}
+
+func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.CertificateInfo, error) {
+	limit := 100
+	if filter.Limit != nil {
+		limit = *filter.Limit
+	}
+	date := time.Now()
+	if filter.ValidToGreater != nil {
+		date = *filter.ValidToGreater
+	}
+	url := urlResourceCertificatesList + urlResource(
+		"?ParentDNRecursive="+neturl.QueryEscape(getPolicyDN(c.zone))+
+			"&ValidToGreater="+neturl.QueryEscape(date.Format(time.RFC3339))+
+			"&limit="+fmt.Sprintf("%d", limit))
+	statusCode, status, body, err := c.request("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	if statusCode != 200 {
+		return nil, fmt.Errorf("can`t get certificates list: %d %s\n%s", statusCode, status, string(body))
+	}
+	var r struct {
+		Certificates []struct {
+			X509 certificate.CertificateInfo
+		}
+	}
+	err = json.Unmarshal(body, &r)
+	if err != nil {
+		return nil, err
+	}
+	infos := make([]certificate.CertificateInfo, len(r.Certificates))
+	for i, c := range r.Certificates {
+		infos[i] = c.X509
+	}
+	return infos, nil
 }

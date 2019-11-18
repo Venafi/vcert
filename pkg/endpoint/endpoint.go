@@ -25,6 +25,7 @@ import (
 	"net/http"
 	"regexp"
 	"sort"
+	"time"
 
 	"github.com/Venafi/vcert/pkg/certificate"
 )
@@ -82,6 +83,13 @@ type Connector interface {
 	ImportCertificate(req *certificate.ImportRequest) (*certificate.ImportResponse, error)
 	// SetHTTPClient allows to set custom http.Client to this Connector.
 	SetHTTPClient(client *http.Client)
+	// ListCertificates
+	ListCertificates(filter Filter) ([]certificate.CertificateInfo, error)
+}
+
+type Filter struct {
+	Limit          *int
+	ValidToGreater *time.Time
 }
 
 // Authentication provides a struct for authentication data. Either specify User and Password for Trust Platform or specify an APIKey for Cloud.

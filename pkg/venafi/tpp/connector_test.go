@@ -913,3 +913,24 @@ func TestGetURL(t *testing.T) {
 		t.Fatalf("Get URL did not return an error when the base url had not been set.")
 	}
 }
+
+func Test_GetCertificateList(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+	count := 10
+	l, err := tpp.ListCertificates(endpoint.Filter{Limit: &count})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(l) != count {
+		t.Errorf("mismatched certificates number: wait %d, got %d", count, len(l))
+	}
+}

@@ -619,3 +619,7 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 func (c *Connector) SetHTTPClient(client *http.Client) {
 	c.client = client
 }
+
+func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.CertificateInfo, error) {
+	return nil, nil
+}

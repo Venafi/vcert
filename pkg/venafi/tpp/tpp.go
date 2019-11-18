@@ -165,6 +165,7 @@ const (
 	urlResourceCertificateSearch   urlResource = "certificates/"
 	urlResourceCertificateImport   urlResource = "certificates/import"
 	urlResourceCertificatePolicy   urlResource = "certificates/checkpolicy"
+	urlResourceCertificatesList    urlResource = "certificates/"
 )
 
 const (
