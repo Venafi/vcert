@@ -692,7 +692,7 @@ func TestReadPolicyConfiguration(t *testing.T) {
 		policy endpoint.Policy
 	}{
 		{
-			"devops\\vcert",
+			"devops\\vcert", // todo: replace with env variable
 			endpoint.Policy{
 				[]string{".*"},
 				[]string{".*"},

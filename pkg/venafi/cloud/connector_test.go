@@ -35,7 +35,7 @@ import (
 var ctx *test.Context
 
 func init() {
-	ctx = test.GetContext()
+	ctx = test.GetEnvContext()
 	// http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	if ctx.CloudAPIkey == "" {
@@ -534,4 +534,15 @@ func TestGetURL(t *testing.T) {
 	if url == "" {
 		t.Fatalf("Get URL did not return an error when the base url had not been set.")
 	}
+}
+
+func TestRetrieveCertificatesList(t *testing.T) {
+	conn := getTestConnector(ctx.CloudZone)
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	ti := time.Now()
+	c := 10
+	conn.ListCertificates(endpoint.Filter{&c, &ti})
 }

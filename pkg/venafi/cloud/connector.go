@@ -45,7 +45,7 @@ const (
 	urlResourceCertificateRetrieveViaCSR             = urlResourceCertificateRequests + "/%s/certificate"
 	urlResourceCertificateRetrieve                   = "certificates/%s"
 	urlResourceCertificateRetrievePem                = urlResourceCertificateRetrieve + "/encoded"
-	urlResourceCertificateSearch                     = "certificatesearch"
+	urlResourceManagedCertificateSearch              = "managedcertificatesearch"
 	urlResourceManagedCertificates                   = "managedcertificates"
 	urlResourceManagedCertificateByID                = urlResourceManagedCertificates + "/%s"
 	urlResourceDiscovery                             = "discovery"
@@ -474,7 +474,7 @@ func (c *Connector) searchCertificates(req *SearchRequest) (*CertificateSearchRe
 
 	var err error
 
-	url := c.getURL(urlResourceCertificateSearch)
+	url := c.getURL(urlResourceManagedCertificateSearch)
 	statusCode, _, body, err := c.request("POST", url, req)
 	if err != nil {
 		return nil, err
@@ -621,5 +621,25 @@ func (c *Connector) SetHTTPClient(client *http.Client) {
 }
 
 func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.CertificateInfo, error) {
+
+	req := &SearchRequest{
+		Expression: &Expression{
+			Operands: []Operand{
+				{
+					"validityEnd",
+					GTE,
+					filter.ValidToGreater.Format(time.RFC3339),
+				},
+				{"issuanceZoneId", EQ, c.zone},
+			},
+		},
+		Paging: &Paging{PageSize: *filter.Limit, PageNumber: 0},
+	}
+
+	_, err := c.searchCertificates(req)
+	if err != nil {
+		return nil, err
+	}
+
 	return nil, nil
 }
