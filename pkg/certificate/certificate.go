@@ -368,7 +368,7 @@ func PublicKey(priv crypto.Signer) crypto.PublicKey {
 }
 
 // GetPrivateKeyPEMBock gets the private key as a PEM data block
-func GetPrivateKeyPEMBock(key crypto.Signer) (*pem.Block, error) { // TODO: Change to crypto.Signer type
+func GetPrivateKeyPEMBock(key crypto.Signer) (*pem.Block, error) {
 	switch k := key.(type) {
 	case *rsa.PrivateKey:
 		return &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(k)}, nil
@@ -384,7 +384,7 @@ func GetPrivateKeyPEMBock(key crypto.Signer) (*pem.Block, error) { // TODO: Chan
 }
 
 // GetEncryptedPrivateKeyPEMBock gets the private key as an encrypted PEM data block
-func GetEncryptedPrivateKeyPEMBock(key crypto.Signer, password []byte) (*pem.Block, error) { // TODO: Change to crypto.Signer type
+func GetEncryptedPrivateKeyPEMBock(key crypto.Signer, password []byte) (*pem.Block, error) {
 	switch k := key.(type) {
 	case *rsa.PrivateKey:
 		return x509.EncryptPEMBlock(rand.Reader, "RSA PRIVATE KEY", x509.MarshalPKCS1PrivateKey(k), password, x509.PEMCipherAES256)

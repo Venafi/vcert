@@ -140,18 +140,6 @@ func wrapAltNames(req *certificate.Request) (items []sanItem) {
 	return items
 }
 
-//todo:remove unused
-func wrapKeyType(kt certificate.KeyType) string {
-	switch kt {
-	case certificate.KeyTypeRSA:
-		return "RSA"
-	case certificate.KeyTypeECDSA:
-		return "ECC"
-	default:
-		return kt.String()
-	}
-}
-
 func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRequest, err error) {
 	switch req.CsrOrigin {
 	case certificate.LocalGeneratedCSR, certificate.UserProvidedCSR:
