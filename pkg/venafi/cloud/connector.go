@@ -246,12 +246,12 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 		reqIds := []string{}
 		isOnlyOneCertificateRequestId := true
 		for _, c := range searchResult.Certificates {
-			reqIds = append(reqIds, c.CertificateRequestId)
-			if certificateRequestId != "" && certificateRequestId != c.CertificateRequestId {
+			reqIds = append(reqIds, c.CurrentCertificateData.CertificateRequestId)
+			if certificateRequestId != "" && certificateRequestId != c.CurrentCertificateData.CertificateRequestId {
 				isOnlyOneCertificateRequestId = false
 			}
-			if c.CertificateRequestId != "" {
-				certificateRequestId = c.CertificateRequestId
+			if c.CurrentCertificateData.CertificateRequestId != "" {
+				certificateRequestId = c.CurrentCertificateData.CertificateRequestId
 			}
 			if c.Id != "" {
 				req.CertID = c.Id
@@ -363,11 +363,11 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 		reqIds := []string{}
 		isOnlyOneCertificateRequestId := true
 		for _, c := range searchResult.Certificates {
-			reqIds = append(reqIds, c.CertificateRequestId)
-			if certificateRequestId != "" && certificateRequestId != c.CertificateRequestId {
+			reqIds = append(reqIds, c.CurrentCertificateData.CertificateRequestId)
+			if certificateRequestId != "" && certificateRequestId != c.CurrentCertificateData.CertificateRequestId {
 				isOnlyOneCertificateRequestId = false
 			}
-			certificateRequestId = c.CertificateRequestId
+			certificateRequestId = c.CurrentCertificateData.CertificateRequestId
 		}
 		if !isOnlyOneCertificateRequestId {
 			return "", fmt.Errorf("Error: more than one CertificateRequestId was found with the same Fingerprint: %s", reqIds)
@@ -476,6 +476,7 @@ func (c *Connector) searchCertificates(req *SearchRequest) (*CertificateSearchRe
 
 	url := c.getURL(urlResourceManagedCertificateSearch)
 	statusCode, _, body, err := c.request("POST", url, req)
+	fmt.Println(string(body))
 	if err != nil {
 		return nil, err
 	}
@@ -612,7 +613,7 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 		return nil, fmt.Errorf("certificate has been imported but could not be found on platform after that")
 	}
 	cert := foundCert.Certificates[0]
-	resp := &certificate.ImportResponse{CertificateDN: cert.SubjectCN[0], CertId: cert.Id}
+	resp := &certificate.ImportResponse{CertificateDN: cert.CurrentCertificateData.SubjectCN[0], CertId: cert.Id}
 	return resp, nil
 }
 
@@ -627,6 +628,7 @@ func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.Cert
 			Operands: []Operand{
 				{"issuanceZoneId", EQ, c.zone},
 			},
+			Operator: AND,
 		},
 		Paging: &Paging{PageSize: *filter.Limit, PageNumber: 0},
 	}
@@ -638,10 +640,13 @@ func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.Cert
 		})
 	}
 
-	_, err := c.searchCertificates(req)
+	r, err := c.searchCertificates(req)
 	if err != nil {
 		return nil, err
 	}
-
-	return nil, nil
+	infos := make([]certificate.CertificateInfo, len(r.Certificates))
+	for i, c := range r.Certificates {
+		infos[i] = c.ToCertificateInfo()
+	}
+	return infos, nil
 }

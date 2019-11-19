@@ -542,6 +542,12 @@ func TestRetrieveCertificatesList(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-	c := 10
-	conn.ListCertificates(endpoint.Filter{&c, false})
+	count := 10
+	l, err := conn.ListCertificates(endpoint.Filter{&count, false})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(l) != count {
+		t.Errorf("mismatched certificates number: wait %d, got %d", count, len(l))
+	}
 }
