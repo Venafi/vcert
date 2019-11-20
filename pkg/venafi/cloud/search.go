@@ -89,8 +89,8 @@ func (c Certificate) ToCertificateInfo() certificate.CertificateInfo {
 	if len(d.SubjectCN) > 0 {
 		cn = d.SubjectCN[0]
 	}
-	start, _ := time.Parse("2006-01-02T15:04:05+0700", d.ValidityStart)
-	end, _ := time.Parse("2006-01-02T15:04:05+0700", d.ValidityEnd)
+	start, _ := time.Parse("2006-01-02T15:04:05-0700", d.ValidityStart)
+	end, _ := time.Parse("2006-01-02T15:04:05-0700", d.ValidityEnd)
 	ci := certificate.CertificateInfo{
 		CN: cn,
 		SANS: struct {

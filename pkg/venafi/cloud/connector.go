@@ -476,7 +476,6 @@ func (c *Connector) searchCertificates(req *SearchRequest) (*CertificateSearchRe
 
 	url := c.getURL(urlResourceManagedCertificateSearch)
 	statusCode, _, body, err := c.request("POST", url, req)
-	fmt.Println(string(body))
 	if err != nil {
 		return nil, err
 	}
@@ -622,6 +621,41 @@ func (c *Connector) SetHTTPClient(client *http.Client) {
 }
 
 func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.CertificateInfo, error) {
+	const batchSize = 100
+	limit := 100000000
+	if filter.Limit != nil {
+		limit = *filter.Limit
+	}
+	var buf [][]certificate.CertificateInfo
+	for page := 0; limit > 0; limit, page = limit-batchSize, page+1 {
+		var b []certificate.CertificateInfo
+		var err error
+		b, err = c.getCertsBatch(page, batchSize, filter.WithExpired)
+		if limit < batchSize {
+			b = b[:limit]
+		}
+		if err != nil {
+			return nil, err
+		}
+		if len(b) == 0 {
+			break
+		}
+		buf = append(buf, b)
+	}
+	sumLen := 0
+	for _, b := range buf {
+		sumLen += len(b)
+	}
+	infos := make([]certificate.CertificateInfo, sumLen)
+	offset := 0
+	for _, b := range buf {
+		copy(infos[offset:], b[:])
+		offset += len(b)
+	}
+	return infos, nil
+}
+
+func (c *Connector) getCertsBatch(page, pageSize int, withExpired bool) ([]certificate.CertificateInfo, error) {
 
 	req := &SearchRequest{
 		Expression: &Expression{
@@ -630,16 +664,15 @@ func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.Cert
 			},
 			Operator: AND,
 		},
-		Paging: &Paging{PageSize: *filter.Limit, PageNumber: 0},
+		Paging: &Paging{PageSize: pageSize, PageNumber: page},
 	}
-	if !filter.WithExpired {
+	if !withExpired {
 		req.Expression.Operands = append(req.Expression.Operands, Operand{
 			"validityEnd",
 			GTE,
 			time.Now().Format(time.RFC3339),
 		})
 	}
-
 	r, err := c.searchCertificates(req)
 	if err != nil {
 		return nil, err
