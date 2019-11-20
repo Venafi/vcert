@@ -444,14 +444,47 @@ func (c *Connector) SetHTTPClient(client *http.Client) {
 }
 
 func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.CertificateInfo, error) {
-	limit := 100
+	const batchSize = 100
+	limit := 100000000
 	if filter.Limit != nil {
 		limit = *filter.Limit
 	}
+	var buf [][]certificate.CertificateInfo
+	for offset := 0; limit > 0; limit, offset = limit-batchSize, offset+batchSize {
+		var b []certificate.CertificateInfo
+		var err error
+		if limit > batchSize {
+			b, err = c.getCertsBatch(offset, batchSize, filter.WithExpired)
+		} else {
+			b, err = c.getCertsBatch(offset, limit, filter.WithExpired)
+		}
+		if err != nil {
+			return nil, err
+		}
+		if len(b) == 0 {
+			break
+		}
+		buf = append(buf, b)
+	}
+	sumLen := 0
+	for _, b := range buf {
+		sumLen += len(b)
+	}
+	infos := make([]certificate.CertificateInfo, sumLen)
+	offset := 0
+	for _, b := range buf {
+		copy(infos[offset:], b[:])
+		offset += len(b)
+	}
+	return infos, nil
+}
+
+func (c *Connector) getCertsBatch(offset, limit int, withExpired bool) ([]certificate.CertificateInfo, error) {
 	url := urlResourceCertificatesList + urlResource(
 		"?ParentDNRecursive="+neturl.QueryEscape(getPolicyDN(c.zone))+
-			"&limit="+fmt.Sprintf("%d", limit))
-	if !filter.WithExpired {
+			"&limit="+fmt.Sprintf("%d", limit)+
+			"&offset="+fmt.Sprintf("%d", offset))
+	if !withExpired {
 		url += urlResource("&ValidToGreater=" + neturl.QueryEscape(time.Now().Format(time.RFC3339)))
 	}
 	statusCode, status, body, err := c.request("GET", url, nil)

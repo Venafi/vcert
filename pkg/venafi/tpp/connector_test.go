@@ -925,12 +925,20 @@ func Test_GetCertificateList(t *testing.T) {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
 	}
-	count := 10
-	l, err := tpp.ListCertificates(endpoint.Filter{Limit: &count})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(l) != count {
-		t.Errorf("mismatched certificates number: wait %d, got %d", count, len(l))
+	for _, count := range []int{10, 100, 101, 153, 200, 2000} {
+		l, err := tpp.ListCertificates(endpoint.Filter{Limit: &count})
+		if err != nil {
+			t.Fatal(err)
+		}
+		set := make(map[string]struct{})
+		for _, c := range l {
+			set[c.Thumbprint] = struct{}{}
+			if c.ValidTo.Before(time.Now()) {
+				t.Errorf("cert %s is expired: %v", c.Thumbprint, c.ValidTo)
+			}
+		}
+		if len(set) != count {
+			t.Errorf("mismatched certificates number: wait %d, got %d", count, len(set))
+		}
 	}
 }
