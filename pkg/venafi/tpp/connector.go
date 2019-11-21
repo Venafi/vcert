@@ -496,6 +496,7 @@ func (c *Connector) getCertsBatch(offset, limit int, withExpired bool) ([]certif
 	}
 	var r struct {
 		Certificates []struct {
+			DN   string
 			X509 certificate.CertificateInfo
 		}
 	}
@@ -505,6 +506,7 @@ func (c *Connector) getCertsBatch(offset, limit int, withExpired bool) ([]certif
 	}
 	infos := make([]certificate.CertificateInfo, len(r.Certificates))
 	for i, c := range r.Certificates {
+		c.X509.ID = c.DN
 		infos[i] = c.X509
 	}
 	return infos, nil

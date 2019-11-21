@@ -200,6 +200,7 @@ type ImportResponse struct {
 }
 
 type CertificateInfo struct {
+	ID   string
 	CN   string
 	SANS struct {
 		DNS, Email, IP, URI, UPN []string

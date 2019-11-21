@@ -92,6 +92,7 @@ func (c Certificate) ToCertificateInfo() certificate.CertificateInfo {
 	start, _ := time.Parse("2006-01-02T15:04:05-0700", d.ValidityStart)
 	end, _ := time.Parse("2006-01-02T15:04:05-0700", d.ValidityEnd)
 	ci := certificate.CertificateInfo{
+		ID: c.Id,
 		CN: cn,
 		SANS: struct {
 			DNS, Email, IP, URI, UPN []string
