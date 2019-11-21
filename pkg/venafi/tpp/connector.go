@@ -444,7 +444,7 @@ func (c *Connector) SetHTTPClient(client *http.Client) {
 }
 
 func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.CertificateInfo, error) {
-	const batchSize = 100
+	const batchSize = 500
 	limit := 100000000
 	if filter.Limit != nil {
 		limit = *filter.Limit
