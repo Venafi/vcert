@@ -444,6 +444,12 @@ func (c *Connector) SetHTTPClient(client *http.Client) {
 }
 
 func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.CertificateInfo, error) {
+	min := func(i, j int) int {
+		if i < j {
+			return i
+		}
+		return j
+	}
 	const batchSize = 500
 	limit := 100000000
 	if filter.Limit != nil {
@@ -453,15 +459,11 @@ func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.Cert
 	for offset := 0; limit > 0; limit, offset = limit-batchSize, offset+batchSize {
 		var b []certificate.CertificateInfo
 		var err error
-		if limit > batchSize {
-			b, err = c.getCertsBatch(offset, batchSize, filter.WithExpired)
-		} else {
-			b, err = c.getCertsBatch(offset, limit, filter.WithExpired)
-		}
+		b, err = c.getCertsBatch(offset, min(limit, batchSize), filter.WithExpired)
 		if err != nil {
 			return nil, err
 		}
-		if len(b) == 0 {
+		if len(b) < min(limit, batchSize) {
 			break
 		}
 		buf = append(buf, b)

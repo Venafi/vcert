@@ -637,7 +637,7 @@ func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.Cert
 		if err != nil {
 			return nil, err
 		}
-		if len(b) == 0 {
+		if len(b) < batchSize {
 			break
 		}
 		buf = append(buf, b)
