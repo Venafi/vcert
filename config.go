@@ -18,12 +18,14 @@ package vcert
 
 import (
 	"fmt"
-	"github.com/Venafi/vcert/pkg/endpoint"
-	"gopkg.in/ini.v1"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os/user"
 	"path/filepath"
+
+	"github.com/Venafi/vcert/pkg/endpoint"
+	"gopkg.in/ini.v1"
 )
 
 // Config is a basic structure for high level initiating connector to Trust Platform (TPP)/Venafi Cloud
@@ -39,9 +41,11 @@ type Config struct {
 	// ConnectionTrust  may contain a trusted CA or certificate of server if you use self-signed certificate.
 	ConnectionTrust string // *x509.CertPool
 	LogVerbose      bool
+	// http.Client to use durring construction
+	Client *http.Client
 }
 
-// LoadFromFile is deprecated. In the future will be rewrited.
+// LoadConfigFromFile is deprecated. In the future will be rewrited.
 func LoadConfigFromFile(path, section string) (cfg Config, err error) {
 
 	if section == "" {
