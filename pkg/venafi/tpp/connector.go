@@ -250,6 +250,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 				return
 			}
 			err = req.CheckCertificate(certificates.Certificate)
+			//todo: add private key from request if it presented in request and not presented ir response
 			return
 		}
 		if req.Timeout == 0 {

@@ -2,6 +2,7 @@ package vcert
 
 import (
 	"crypto/tls"
+	"crypto/x509/pkix"
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
 	"net"
@@ -50,20 +51,19 @@ func (cfg *Config) NewListener(domains ...string) net.Listener {
 }
 
 func getSimpleCertificate(conn endpoint.Connector, cn string) (tls.Certificate, error) {
-	req := certificate.Request{}
-	request_id, err := conn.RequestCertificate(&req)
+	req := certificate.Request{Subject: pkix.Name{CommonName: cn}, DNSNames: []string{cn}}
+	requestID, err := conn.RequestCertificate(&req)
 	if err != nil {
 		return tls.Certificate{}, err
 	}
-	req.PickupID = request_id
+	req.PickupID = requestID
 	req.Timeout = time.Minute
-	cert, err := conn.RetrieveCertificate(&req)
+	certCollection, err := conn.RetrieveCertificate(&req)
 	if err != nil {
 		return tls.Certificate{}, err
 	}
-	_ = cert //todo: parse
-	c := tls.Certificate{}
-	return c, nil
+	certCollection.AddPrivateKey(req.PrivateKey, nil) //todo: can be removed after improving retrieve function
+	return certCollection.ToTLSCertificate(), nil
 }
 
 type listener struct {
