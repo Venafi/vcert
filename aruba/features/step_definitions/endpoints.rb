@@ -18,7 +18,7 @@ ENDPOINTS = {
              " -z            '#{ENV['TPPZONE_ECDSA']}'     " +
              " -insecure",
 
-    "Cloud" => "-venafi-saas-url '#{ENV['VCERT_CLOUD_URL']}' -k '#{ENV['VCERT_CLOUD_APIKEY']}' -z '#{ENV['VCERT_CLOUD_ZONE']}'"
+    "Cloud" => "-u '#{ENV['VCERT_CLOUD_URL']}' -k '#{ENV['VCERT_CLOUD_APIKEY']}' -z '#{ENV['VCERT_CLOUD_ZONE']}'"
 }
 
 ENDPOINT_CONFIGS = {
