@@ -151,6 +151,9 @@ func issueCertificate(csr *x509.CertificateRequest) ([]byte, error) {
 
 func (c *Connector) RetrieveCertificate(req *certificate.Request) (pcc *certificate.PEMCollection, err error) {
 	ok := false
+
+	fmt.Printf("VCert Connector Retrieve Certificate Thumbprint: %X", req.Thumbprint)
+
 	if pcc, ok = c.pickupToCert[req.PickupID]; !ok {
 		pcc, ok = c.thumbToCert[req.Thumbprint]
 	}
@@ -234,8 +237,15 @@ func (c *Connector) issueCertificateIntoMap(fakeRequest *fakeRequestID) (pcc *ce
 		}
 	}
 
+	block, _ := pem.Decode([]byte(pcc.Certificate))
+
+	certs, err := x509.ParseCertificates(block.Bytes)
+	if err != nil {
+		return nil, err
+	}
+
 	c.pickupToCert[req.PickupID] = pcc
-	c.thumbToCert[fmt.Sprintf("%X", sha1.Sum(certBytes))] = pcc
+	c.thumbToCert[fmt.Sprintf("%X", sha1.Sum(certs[0].Raw))] = pcc
 	return
 }
 
