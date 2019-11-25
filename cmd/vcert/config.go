@@ -68,7 +68,11 @@ func buildConfig(co command, cf *commandFlags) (cfg vcert.Config, err error) {
 			}
 		} else {
 			connectorType = endpoint.ConnectorTypeCloud
-			baseURL = cf.cloudURL
+			if cf.cloudURL != "" {
+				baseURL = cf.cloudURL
+			} else if cf.url != "" {
+				baseURL = cf.url
+			}
 			auth.APIKey = cf.apiKey
 		}
 		cfg.ConnectorType = connectorType
