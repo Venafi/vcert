@@ -74,13 +74,27 @@ func TestBadPingTPP(t *testing.T) {
 	}
 }
 
+func TestGetRefreshToken(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+
+	refreshToken, err := tpp.GetRefreshToken(&endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword})
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	fmt.Println(refreshToken)
+
+}
+
 func TestRefreshAccessToken(t *testing.T) {
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
 
-	auth := &endpoint.Authentication{RefreshToken: ctx.TPPRefreshToken, ClientId: "xxxxx"}
+	auth := &endpoint.Authentication{RefreshToken: ctx.TPPRefreshToken, ClientId: ctx.ClientID}
 	err = tpp.Authenticate(auth)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)

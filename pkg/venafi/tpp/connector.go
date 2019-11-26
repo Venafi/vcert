@@ -105,7 +105,8 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 	var body []byte
 
 	if auth.User != "" && auth.Password != "" {
-		statusCode, status, body, err = c.request("POST", urlResourceAuthorize, authorizeResquest{Username: auth.User, Password: auth.Password})
+		statusCode, status, body, err = c.request("POST", urlResourceAuthorize,
+			authorizeResquest{Username: auth.User, Password: auth.Password})
 		if err != nil {
 			return err
 		}
@@ -117,7 +118,8 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 		c.apiKey = key
 		return nil
 	} else if auth.RefreshToken != "" && auth.ClientId != "" {
-		statusCode, status, body, err = c.request("POST", urlResourceRefreshAccessToken, refreshAccessTokenResquest{client_id: auth.ClientId, refresh_token: auth.RefreshToken})
+		statusCode, status, body, err = c.request("POST", urlResourceRefreshAccessToken,
+			refreshAccessTokenResquest{client_id: auth.ClientId, refresh_token: auth.RefreshToken})
 		//	TODO: parse refresh token and set access token from here
 		c.accessToken = "6dIlsLEMYi8zZXgLjSI1xA=="
 		return nil
@@ -126,6 +128,33 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 		return nil
 	}
 	return fmt.Errorf("failed to authenticate: can't determin valid credentials set")
+}
+
+// Get OAuth refresh and access token
+func (c *Connector) GetRefreshToken(auth *endpoint.Authentication) (resp oauthAuthorizeResponse, err error) {
+
+	if auth == nil {
+		return resp, fmt.Errorf("failed to authenticate: missing credentials")
+	}
+
+	if auth.User != "" && auth.Password != "" {
+		statusCode, status, body, err := c.request("POST", urlResourceAuthorizeOAuth,
+			oauthAuthorizeRequest{username: auth.User, password: auth.Password, scope: auth.Scope, client_id: auth.ClientId})
+
+		if err != nil {
+			return resp, err
+		}
+
+		resp, err := parseAuthorizeOAuthResult(statusCode, status, body)
+		if err != nil {
+			return resp, err
+		}
+
+		return resp, nil
+
+	} else {
+		return resp, fmt.Errorf("failed to authenticate: missing credentials")
+	}
 }
 
 func wrapAltNames(req *certificate.Request) (items []sanItem) {

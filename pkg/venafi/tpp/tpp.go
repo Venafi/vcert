@@ -146,6 +146,21 @@ type refreshAccessTokenResquest struct {
 	refresh_token string `json:",omitempty"`
 }
 
+type oauthAuthorizeRequest struct {
+	client_id string `json:",omitempty"`
+	username  string `json:",omitempty"`
+	password  string `json:",omitempty"`
+	scope     string `json:",omitempty"`
+}
+type oauthAuthorizeResponse struct {
+	access_token  string `json:",omitempty"`
+	expires       string `json:",omitempty"`
+	identity      string `json:",omitempty"`
+	refresh_token string `json:",omitempty"`
+	scope         string `json:",omitempty"`
+	token_type    string `json:",omitempty"`
+}
+
 type policyRequest struct {
 	ObjectDN      string `json:",omitempty"`
 	Class         string `json:",omitempty"`
@@ -156,6 +171,7 @@ type urlResource string
 
 const (
 	urlResourceRefreshAccessToken  urlResource = "vedauth/authorize/token"
+	urlResourceAuthorizeOAuth      urlResource = "vedauth/authorize/oauth"
 	urlResourceAuthorize           urlResource = "authorize/"
 	urlResourceCertificateRequest  urlResource = "certificates/request"
 	urlResourceCertificateRetrieve urlResource = "certificates/retrieve"
@@ -375,6 +391,18 @@ func parseAuthorizeResult(httpStatusCode int, httpStatus string, body []byte) (s
 func parseAuthorizeData(b []byte) (data authorizeResponse, err error) {
 	err = json.Unmarshal(b, &data)
 	return
+}
+
+func parseAuthorizeOAuthResult(i int, s string, bytes []byte) (resp oauthAuthorizeResponse, err error) {
+	resp = oauthAuthorizeResponse{
+		scope:         "scope",
+		refresh_token: "refresh_token",
+		access_token:  "access_token",
+		expires:       "xxx1",
+		identity:      "xxx2",
+		token_type:    "xxx3",
+	}
+	return resp, nil
 }
 
 func parseConfigResult(httpStatusCode int, httpStatus string, body []byte) (tppData tppPolicyData, err error) {

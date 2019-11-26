@@ -29,6 +29,7 @@ type Context struct {
 	TPPZone           string
 	TPPZoneRestricted string
 	TPPRefreshToken   string
+	ClientID          string
 	CloudUrl          string
 	CloudAPIkey       string
 	CloudZone         string
@@ -61,6 +62,7 @@ func GetEnvContext() *Context {
 	c.TPPPassword = os.Getenv("VCERT_TPP_PASSWORD")
 	c.TPPaccessToken = os.Getenv("TPPACCESS_TOKEN")
 	c.TPPRefreshToken = os.Getenv("TPPREFRESH_TOKEN")
+	c.ClientID = os.Getenv("CLIENT_ID")
 	c.TPPZone = os.Getenv("VCERT_TPP_ZONE")
 	c.TPPZoneRestricted = os.Getenv("TPPZONE_RESTRICTED")
 
