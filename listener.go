@@ -9,8 +9,9 @@ import (
 	"time"
 )
 
-// NewListener returns a net.Listener that listens on the standard TLS
-// port (443) on all interfaces and returns *tls.Conn connections with
+// NewListener returns a net.Listener that listens on the first port
+// specified in domains list (like "example.com:8443") or on default
+// (443) port on all interfaces and returns *tls.Conn connections with
 // certificates enrolled via Venafi for the provided domain.
 //
 // It enables one-line HTTPS servers:
@@ -32,7 +33,14 @@ func (cfg *Config) NewListener(domains ...string) net.Listener {
 	}
 	certs := make([]tls.Certificate, len(domains))
 	certsMap := make(map[string]*tls.Certificate)
+	port := "443"
+
 	for i, d := range domains {
+		parsedHost, parsedPort, err := net.SplitHostPort(d)
+		if err == nil {
+			port = parsedPort
+			d = parsedHost
+		}
 		cert, err := getSimpleCertificate(conn, d)
 		if err != nil {
 			l.e = err
@@ -46,7 +54,7 @@ func (cfg *Config) NewListener(domains ...string) net.Listener {
 		Certificates:      certs,
 		NameToCertificate: certsMap,
 	}
-	l.Listener, l.e = net.Listen("tcp", ":443") //todo: parse port from domains
+	l.Listener, l.e = net.Listen("tcp", ":"+port)
 	return &l
 }
 
