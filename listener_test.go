@@ -29,6 +29,7 @@ func testListener(t *testing.T, port string, domains []string) {
 	time.Sleep(time.Millisecond * 100)
 
 	r, err := http.Get("https://localhost:" + port + "/")
+	//todo: custom client and check server certificate
 	if err != nil {
 		t.Fatal(err)
 	}
