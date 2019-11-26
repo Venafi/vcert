@@ -32,7 +32,7 @@ make build
 
 ## Usage example
 
-For code samples of programmatic use, please review the files in [/example](/example).
+For code samples of programmatic use, please review the files in [/examples](/examples/).
 
 1. In your main.go file, make the following import declarations:  `github.com/Venafi/vcert`, `github.com/Venafi/vcert/pkg/certificate`, and `github.com/Venafi/vcert/pkg/endpoint`.
 2. Create a configuration object of type `&vcert.Config` that specifies the Venafi connection details.  Solutions are typically designed to get those details from a secrets vault, .ini file, environment variables, or command line parameters.
