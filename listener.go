@@ -60,7 +60,11 @@ func (cfg *Config) NewListener(domains ...string) net.Listener {
 
 func getSimpleCertificate(conn endpoint.Connector, cn string) (tls.Certificate, error) {
 	req := certificate.Request{Subject: pkix.Name{CommonName: cn}, DNSNames: []string{cn}, CsrOrigin: certificate.LocalGeneratedCSR}
-	err := conn.GenerateRequest(nil, &req)
+	zc, err := conn.ReadZoneConfiguration()
+	if err != nil {
+		return tls.Certificate{}, err
+	}
+	err = conn.GenerateRequest(zc, &req)
 	if err != nil {
 		return tls.Certificate{}, err
 	}
