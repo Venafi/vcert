@@ -42,10 +42,11 @@ type Connector struct {
 }
 
 func NewConnector(verbose bool, trust *x509.CertPool) *Connector {
-	c := Connector{verbose: verbose}
-	c.thumbToCert = make(map[string]*certificate.PEMCollection)
-	c.pickupToCert = make(map[string]*certificate.PEMCollection)
-	return &c
+	return &Connector{
+		verbose:      verbose,
+		thumbToCert:  make(map[string]*certificate.PEMCollection),
+		pickupToCert: make(map[string]*certificate.PEMCollection),
+	}
 }
 
 func (c *Connector) GetType() endpoint.ConnectorType {
