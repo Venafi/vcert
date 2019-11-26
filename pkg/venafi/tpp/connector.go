@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	neturl "net/url"
 	"regexp"
 	"strings"
 	"time"
@@ -137,18 +138,6 @@ func wrapAltNames(req *certificate.Request) (items []sanItem) {
 		items = append(items, sanItem{7, name.String()})
 	}
 	return items
-}
-
-//todo:remove unused
-func wrapKeyType(kt certificate.KeyType) string {
-	switch kt {
-	case certificate.KeyTypeRSA:
-		return "RSA"
-	case certificate.KeyTypeECDSA:
-		return "ECC"
-	default:
-		return kt.String()
-	}
 }
 
 func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRequest, err error) {
@@ -452,4 +441,75 @@ func (c *Connector) ImportCertificate(r *certificate.ImportRequest) (*certificat
 
 func (c *Connector) SetHTTPClient(client *http.Client) {
 	c.client = client
+}
+
+func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.CertificateInfo, error) {
+	min := func(i, j int) int {
+		if i < j {
+			return i
+		}
+		return j
+	}
+	const batchSize = 500
+	limit := 100000000
+	if filter.Limit != nil {
+		limit = *filter.Limit
+	}
+	var buf [][]certificate.CertificateInfo
+	for offset := 0; limit > 0; limit, offset = limit-batchSize, offset+batchSize {
+		var b []certificate.CertificateInfo
+		var err error
+		b, err = c.getCertsBatch(offset, min(limit, batchSize), filter.WithExpired)
+		if err != nil {
+			return nil, err
+		}
+		if len(b) < min(limit, batchSize) {
+			break
+		}
+		buf = append(buf, b)
+	}
+	sumLen := 0
+	for _, b := range buf {
+		sumLen += len(b)
+	}
+	infos := make([]certificate.CertificateInfo, sumLen)
+	offset := 0
+	for _, b := range buf {
+		copy(infos[offset:], b[:])
+		offset += len(b)
+	}
+	return infos, nil
+}
+
+func (c *Connector) getCertsBatch(offset, limit int, withExpired bool) ([]certificate.CertificateInfo, error) {
+	url := urlResourceCertificatesList + urlResource(
+		"?ParentDNRecursive="+neturl.QueryEscape(getPolicyDN(c.zone))+
+			"&limit="+fmt.Sprintf("%d", limit)+
+			"&offset="+fmt.Sprintf("%d", offset))
+	if !withExpired {
+		url += urlResource("&ValidToGreater=" + neturl.QueryEscape(time.Now().Format(time.RFC3339)))
+	}
+	statusCode, status, body, err := c.request("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	if statusCode != 200 {
+		return nil, fmt.Errorf("can`t get certificates list: %d %s\n%s", statusCode, status, string(body))
+	}
+	var r struct {
+		Certificates []struct {
+			DN   string
+			X509 certificate.CertificateInfo
+		}
+	}
+	err = json.Unmarshal(body, &r)
+	if err != nil {
+		return nil, err
+	}
+	infos := make([]certificate.CertificateInfo, len(r.Certificates))
+	for i, c := range r.Certificates {
+		c.X509.ID = c.DN
+		infos[i] = c.X509
+	}
+	return infos, nil
 }

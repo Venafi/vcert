@@ -35,7 +35,7 @@ import (
 var ctx *test.Context
 
 func init() {
-	ctx = test.GetContext()
+	ctx = test.GetEnvContext()
 	// http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	if ctx.CloudAPIkey == "" {
@@ -533,5 +533,29 @@ func TestGetURL(t *testing.T) {
 	url = condor.getURL(urlResourceUserAccounts)
 	if url == "" {
 		t.Fatalf("Get URL did not return an error when the base url had not been set.")
+	}
+}
+
+func TestRetrieveCertificatesList(t *testing.T) {
+	conn := getTestConnector(ctx.CloudZone)
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	for _, count := range []int{10, 100, 101, 153} {
+		l, err := conn.ListCertificates(endpoint.Filter{Limit: &count})
+		if err != nil {
+			t.Fatal(err)
+		}
+		set := make(map[string]struct{})
+		for _, c := range l {
+			set[c.Thumbprint] = struct{}{}
+			if c.ValidTo.Before(time.Now()) {
+				t.Errorf("cert %s is expired: %v", c.Thumbprint, c.ValidTo)
+			}
+		}
+		if len(set) != count {
+			t.Errorf("mismatched certificates number: wait %d, got %d (%d)", count, len(set), len(l))
+		}
 	}
 }

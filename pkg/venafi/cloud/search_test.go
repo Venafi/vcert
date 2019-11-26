@@ -108,7 +108,7 @@ func TestParseCertificateSearchResponse(t *testing.T) {
 	if len(searchResult.Certificates) != 1 {
 		t.Fatal("wrong count")
 	}
-	if searchResult.Certificates[0].ManagedCertificateId != "ab239881-5de9-11e8-bb9b-8d6e819a14f1" {
+	if searchResult.Certificates[0].CurrentCertificateData.ManagedCertificateId != "ab239881-5de9-11e8-bb9b-8d6e819a14f1" {
 		t.Fatal("wrong ManagedCertificateId value")
 	}
 
