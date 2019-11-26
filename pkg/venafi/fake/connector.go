@@ -19,10 +19,12 @@ package fake
 import (
 	"crypto"
 	"crypto/rand"
+	"crypto/sha1"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"math/big"
 	"net/http"
@@ -35,11 +37,16 @@ import (
 
 type Connector struct {
 	verbose bool
+
+	thumbToCert, pickupToCert map[string]*certificate.PEMCollection
 }
 
 func NewConnector(verbose bool, trust *x509.CertPool) *Connector {
-	c := Connector{verbose: verbose}
-	return &c
+	return &Connector{
+		verbose:      verbose,
+		thumbToCert:  make(map[string]*certificate.PEMCollection),
+		pickupToCert: make(map[string]*certificate.PEMCollection),
+	}
 }
 
 func (c *Connector) GetType() endpoint.ConnectorType {
@@ -81,14 +88,12 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 	case certificate.LocalGeneratedCSR, certificate.UserProvidedCSR:
 		// should return CSR as requestID payload
 		fakeRequest.CSR = base64.StdEncoding.EncodeToString(req.GetCSR())
-
 	case certificate.ServiceGeneratedCSR:
 		// should return certificate.Request as requestID payload
-		fakeRequest.Req = req
-
 	default:
 		return "", fmt.Errorf("Unexpected option in PrivateKeyOrigin")
 	}
+	fakeRequest.Req = req
 
 	js, err := json.Marshal(fakeRequest)
 	if err != nil {
@@ -96,6 +101,9 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 	}
 	pickupID := base64.StdEncoding.EncodeToString(js)
 	req.PickupID = pickupID
+
+	c.issueCertificateIntoMap(&fakeRequest)
+
 	return pickupID, nil
 }
 
@@ -143,20 +151,29 @@ func issueCertificate(csr *x509.CertificateRequest) ([]byte, error) {
 }
 
 func (c *Connector) RetrieveCertificate(req *certificate.Request) (pcc *certificate.PEMCollection, err error) {
+	ok := false
 
-	bytes, err := base64.StdEncoding.DecodeString(req.PickupID)
-	if err != nil {
-		return nil, fmt.Errorf("Test-mode: could not parse requestID as base64 encoded fakeRequestID structure")
+	if pcc, ok = c.pickupToCert[req.PickupID]; !ok {
+		pcc, ok = c.thumbToCert[req.Thumbprint]
 	}
 
-	var fakeRequest = &fakeRequestID{}
-	err = json.Unmarshal(bytes, fakeRequest)
-	if err != nil {
-		return nil, fmt.Errorf("failed to json.Unmarshal(fakeRequestId): %s\n", err)
+	if !ok {
+		err = errors.New("no cert has been issued with this id or thumbprint")
+		return
 	}
 
+	err = req.CheckCertificate(pcc.Certificate)
+	return
+}
+
+func (c *Connector) issueCertificateIntoMap(fakeRequest *fakeRequestID) (pcc *certificate.PEMCollection, err error) {
 	var csrPEMbytes []byte
 	var pk crypto.Signer
+
+	req := fakeRequest.Req
+	if req == nil {
+		req = &certificate.Request{}
+	}
 
 	if fakeRequest.CSR != "" {
 		csrPEMbytes, err = base64.StdEncoding.DecodeString(fakeRequest.CSR)
@@ -165,7 +182,6 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (pcc *certific
 		}
 
 	} else {
-		req := fakeRequest.Req
 
 		err = req.GeneratePrivateKey()
 		if err != nil {
@@ -196,7 +212,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (pcc *certific
 		return nil, err
 	}
 
-	cert_pem, err := issueCertificate(csr)
+	certPem, err := issueCertificate(csr)
 	if err != nil {
 		return nil, err
 	}
@@ -204,9 +220,9 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (pcc *certific
 	var certBytes []byte
 	switch req.ChainOption {
 	case certificate.ChainOptionRootFirst:
-		certBytes = append([]byte(caCertPEM+"\n"), cert_pem...)
+		certBytes = append([]byte(caCertPEM+"\n"), certPem...)
 	default:
-		certBytes = append(cert_pem, []byte(caCertPEM)...)
+		certBytes = append(certPem, []byte(caCertPEM)...)
 	}
 	pcc, err = certificate.PEMCollectionFromBytes(certBytes, req.ChainOption)
 	if err != nil {
@@ -219,13 +235,34 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (pcc *certific
 			return
 		}
 	}
-	err = req.CheckCertificate(pcc.Certificate)
+
+	block, _ := pem.Decode([]byte(pcc.Certificate))
+
+	certs, err := x509.ParseCertificates(block.Bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	c.pickupToCert[req.PickupID] = pcc
+	c.thumbToCert[fmt.Sprintf("%X", sha1.Sum(certs[0].Raw))] = pcc
 	return
 }
 
 // RevokeCertificate attempts to revoke the certificate
 func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (err error) {
-	return fmt.Errorf("revocation is not supported in -test-mode")
+	_, ok := RevocationReasonsMap[revReq.Reason]
+	if !ok {
+		return fmt.Errorf("could not parse revocation reason `%s`", revReq.Reason)
+	}
+
+	_, ok = c.thumbToCert[revReq.Thumbprint]
+
+	if !ok {
+		err = errors.New("no cert has been issued with this thumbprint")
+		return
+	}
+
+	return
 }
 
 func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration, err error) {
