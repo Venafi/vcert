@@ -51,7 +51,11 @@ func (cfg *Config) NewListener(domains ...string) net.Listener {
 }
 
 func getSimpleCertificate(conn endpoint.Connector, cn string) (tls.Certificate, error) {
-	req := certificate.Request{Subject: pkix.Name{CommonName: cn}, DNSNames: []string{cn}}
+	req := certificate.Request{Subject: pkix.Name{CommonName: cn}, DNSNames: []string{cn}, CsrOrigin: certificate.LocalGeneratedCSR}
+	err := conn.GenerateRequest(nil, &req)
+	if err != nil {
+		return tls.Certificate{}, err
+	}
 	requestID, err := conn.RequestCertificate(&req)
 	if err != nil {
 		return tls.Certificate{}, err
@@ -62,8 +66,8 @@ func getSimpleCertificate(conn endpoint.Connector, cn string) (tls.Certificate, 
 	if err != nil {
 		return tls.Certificate{}, err
 	}
-	certCollection.AddPrivateKey(req.PrivateKey, nil) //todo: can be removed after improving retrieve function
-	return certCollection.ToTLSCertificate(), nil
+	err = certCollection.AddPrivateKey(req.PrivateKey, nil)
+	return certCollection.ToTLSCertificate(), err
 }
 
 type listener struct {
