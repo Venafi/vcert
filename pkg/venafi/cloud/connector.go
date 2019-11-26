@@ -308,7 +308,6 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 		if statusCode != http.StatusOK {
 			return nil, fmt.Errorf("Failed to retrieve certificate. StatusCode: %d -- Status: %s -- Server Data: %s", statusCode, status, body)
 		}
-		//todo: add private key from request if it presented in request and not presented ir response
 		return newPEMCollectionFromResponse(body, certificate.ChainOptionIgnore)
 	case req.PickupID != "":
 		url := c.getURL(urlResourceCertificateRetrieveViaCSR)
@@ -325,7 +324,6 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 			return nil, err
 		}
 		if statusCode == http.StatusOK {
-			//todo: add private key from request if it presented in request and not presented ir response
 			certificates, err = newPEMCollectionFromResponse(body, req.ChainOption)
 			if err != nil {
 				return nil, err
