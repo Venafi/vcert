@@ -50,3 +50,15 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 
 	return nil
 }
+
+type RevocationReason int
+
+var RevocationReasonsMap = map[string]RevocationReason{
+	"":                       0, // NoReason
+	"none":                   0, //
+	"key-compromise":         1, // UserKeyCompromised
+	"ca-compromise":          2, // CAKeyCompromised
+	"affiliation-changed":    3, // UserChangedAffiliation
+	"superseded":             4, // CertificateSuperseded
+	"cessation-of-operation": 5, // OriginalUseNoLongerValid
+}

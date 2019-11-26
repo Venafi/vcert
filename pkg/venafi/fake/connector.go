@@ -152,8 +152,6 @@ func issueCertificate(csr *x509.CertificateRequest) ([]byte, error) {
 func (c *Connector) RetrieveCertificate(req *certificate.Request) (pcc *certificate.PEMCollection, err error) {
 	ok := false
 
-	fmt.Printf("VCert Connector Retrieve Certificate Thumbprint: %X", req.Thumbprint)
-
 	if pcc, ok = c.pickupToCert[req.PickupID]; !ok {
 		pcc, ok = c.thumbToCert[req.Thumbprint]
 	}
@@ -251,7 +249,19 @@ func (c *Connector) issueCertificateIntoMap(fakeRequest *fakeRequestID) (pcc *ce
 
 // RevokeCertificate attempts to revoke the certificate
 func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (err error) {
-	return fmt.Errorf("revocation is not supported in -test-mode")
+	_, ok := RevocationReasonsMap[revReq.Reason]
+	if !ok {
+		return fmt.Errorf("could not parse revocation reason `%s`", revReq.Reason)
+	}
+
+	_, ok = c.thumbToCert[revReq.Thumbprint]
+
+	if !ok {
+		err = errors.New("no cert has been issued with this thumbprint")
+		return
+	}
+
+	return
 }
 
 func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration, err error) {
