@@ -25,6 +25,7 @@ import (
 	"github.com/Venafi/vcert"
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
+	"github.com/Venafi/vcert/pkg/venafi/tpp"
 	t "log"
 	"math/big"
 	"net"
@@ -250,6 +251,32 @@ func main() {
 	}
 	t.Printf("Successfully retrieved imported certificate from %s", importResp.CertificateDN)
 	pp(pcc3)
+
+	//
+	// 4. Get refresh token and refresh access token
+	//
+	if config.ConnectorType == endpoint.ConnectorTypeTPP {
+		tppConnector, err := tpp.NewConnector(config.BaseUrl, config.Zone, false, nil)
+		if err != nil {
+			t.Fatalf("could not create TPP connector: %s", err)
+		}
+
+		resp, err := tppConnector.GetRefreshToken(&endpoint.Authentication{
+			User:     os.Getenv("VCERT_TPP_USER"),
+			Password: os.Getenv("VCERT_TPP_PASSWORD"),
+			Scope:    "certificate:approve,delete,discover,manage,revoke;", ClientId: "websdk"})
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("Refresh token is %s", resp.Refresh_token)
+
+		auth := &endpoint.Authentication{RefreshToken: resp.Refresh_token, ClientId: "websdk"}
+		err = tppConnector.Authenticate(auth)
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+
+	}
 }
 
 func getSerial(crt string) *big.Int {

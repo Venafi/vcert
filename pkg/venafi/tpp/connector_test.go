@@ -51,14 +51,14 @@ func init() {
 		panic(err)
 	}
 
-	refreshToken, err := tpp.GetRefreshToken(&endpoint.Authentication{
+	resp, err := tpp.GetRefreshToken(&endpoint.Authentication{
 		User: ctx.TPPuser, Password: ctx.TPPPassword,
 		Scope: "certificate:approve,delete,discover,manage,revoke;", ClientId: "websdk"})
 	if err != nil {
 		panic(err)
 	}
 
-	ctx.TPPRefreshToken = refreshToken.Refresh_token
+	ctx.TPPRefreshToken = resp.Refresh_token
 }
 
 func getTestConnector(url string, zone string) (c *Connector, err error) {
