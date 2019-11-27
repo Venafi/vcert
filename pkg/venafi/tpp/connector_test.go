@@ -20,6 +20,7 @@ import (
 	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
+	"crypto/x509/pkix"
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
@@ -941,4 +942,50 @@ func Test_GetCertificateList(t *testing.T) {
 			t.Errorf("mismatched certificates number: wait %d, got %d", count, len(set))
 		}
 	}
+}
+
+func Test_GetCertificateListFull(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZoneRestricted)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+	validList, err := tpp.ListCertificates(endpoint.Filter{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	fullList, err := tpp.ListCertificates(endpoint.Filter{WithExpired: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(validList) >= len(fullList) {
+		t.Fatalf("valid certificates numbe (%v) should be less than all certificates number (%v)", len(validList), len(fullList))
+	}
+	req := certificate.Request{Subject: pkix.Name{CommonName: test.RandCN()}, KeyType: certificate.KeyTypeECDSA, KeyCurve: certificate.EllipticCurveP521}
+	tpp.GenerateRequest(nil, &req)
+	req.PickupID, err = tpp.RequestCertificate(&req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	validList2, err := tpp.ListCertificates(endpoint.Filter{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	fullList2, err := tpp.ListCertificates(endpoint.Filter{WithExpired: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(fullList)+1 != len(fullList2) {
+		t.Fatal("list should be longer")
+	}
+
+	if len(validList)+1 != len(validList2) {
+		t.Fatal("list should be longer")
+	}
+
 }

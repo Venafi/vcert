@@ -621,6 +621,9 @@ func (c *Connector) SetHTTPClient(client *http.Client) {
 }
 
 func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.CertificateInfo, error) {
+	if c.zone == "" {
+		return nil, fmt.Errorf("empty zone")
+	}
 	const batchSize = 100
 	limit := 100000000
 	if filter.Limit != nil {
@@ -656,7 +659,6 @@ func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.Cert
 }
 
 func (c *Connector) getCertsBatch(page, pageSize int, withExpired bool) ([]certificate.CertificateInfo, error) {
-
 	req := &SearchRequest{
 		Expression: &Expression{
 			Operands: []Operand{
