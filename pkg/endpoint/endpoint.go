@@ -22,11 +22,10 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"github.com/Venafi/vcert/pkg/certificate"
 	"net/http"
 	"regexp"
 	"sort"
-
-	"github.com/Venafi/vcert/pkg/certificate"
 )
 
 // ConnectorType represents the available connectors
@@ -82,6 +81,13 @@ type Connector interface {
 	ImportCertificate(req *certificate.ImportRequest) (*certificate.ImportResponse, error)
 	// SetHTTPClient allows to set custom http.Client to this Connector.
 	SetHTTPClient(client *http.Client)
+	// ListCertificates
+	ListCertificates(filter Filter) ([]certificate.CertificateInfo, error)
+}
+
+type Filter struct {
+	Limit       *int
+	WithExpired bool
 }
 
 // Authentication provides a struct for authentication data. Either specify User and Password for Trust Platform or specify an APIKey for Cloud.

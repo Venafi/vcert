@@ -193,6 +193,7 @@ const (
 	urlResourceCertificateSearch   urlResource = "vedsdk/certificates/"
 	urlResourceCertificateImport   urlResource = "vedsdk/certificates/import"
 	urlResourceCertificatePolicy   urlResource = "vedsdk/certificates/checkpolicy"
+	urlResourceCertificatesList    urlResource = "vedsdk/certificates/"
 )
 
 const (

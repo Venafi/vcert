@@ -1,6 +1,6 @@
 run:
   tests: false
-#  modules-download-mode: readonly //todo: return after migrating to modules
+  modules-download-mode: readonly
 
 linters:
   disable:

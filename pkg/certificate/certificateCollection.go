@@ -56,7 +56,7 @@ type PEMCollection struct {
 }
 
 //NewPEMCollection creates a PEMCollection based on the data being passed in
-func NewPEMCollection(certificate *x509.Certificate, privateKey crypto.Signer, privateKeyPassword []byte) (*PEMCollection, error) { //todo: change to crypto.Signer type
+func NewPEMCollection(certificate *x509.Certificate, privateKey crypto.Signer, privateKeyPassword []byte) (*PEMCollection, error) {
 	collection := PEMCollection{}
 	if certificate != nil {
 		collection.Certificate = string(pem.EncodeToMemory(GetCertificatePEMBlock(certificate.Raw)))
@@ -144,7 +144,7 @@ func PEMCollectionFromBytes(certBytes []byte, chainOrder ChainOption) (*PEMColle
 }
 
 //AddPrivateKey adds a Private Key to the PEMCollection. Note that the collection can only contain one private key
-func (col *PEMCollection) AddPrivateKey(privateKey crypto.Signer, privateKeyPassword []byte) error { //todo: change to crypto.Signer type
+func (col *PEMCollection) AddPrivateKey(privateKey crypto.Signer, privateKeyPassword []byte) error {
 	if col.PrivateKey != "" {
 		return fmt.Errorf("The PEM Collection can only contain one private key")
 	}

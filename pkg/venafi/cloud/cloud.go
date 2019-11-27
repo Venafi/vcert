@@ -71,7 +71,7 @@ type certificateRequestResponseData struct {
 	DER                    string    `json:"der,omitempty"`
 }
 
-type certificateRequest struct { // TODO: this is actually certificate request object (sent with POST)
+type certificateRequest struct {
 	//CompanyID      string `json:"companyId,omitempty"`
 	CSR                          string `json:"certificateSigningRequest,omitempty"`
 	ZoneID                       string `json:"zoneId,omitempty"`
@@ -80,7 +80,7 @@ type certificateRequest struct { // TODO: this is actually certificate request o
 	//DownloadFormat string `json:"downloadFormat,omitempty"`
 }
 
-type certificateStatus struct { // TODO: this is actually the same certificate request object (received with GET)
+type certificateStatus struct {
 	Id                        string                            `json:"Id,omitempty"`
 	ManagedCertificateId      string                            `json:"managedCertificateId,omitempty"`
 	ZoneId                    string                            `json:"zoneId,omitempty"`

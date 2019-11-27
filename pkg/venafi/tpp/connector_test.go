@@ -751,7 +751,7 @@ func TestReadPolicyConfiguration(t *testing.T) {
 		policy endpoint.Policy
 	}{
 		{
-			"devops\\vcert",
+			"devops\\vcert", // todo: replace with env variable
 			endpoint.Policy{
 				[]string{".*"},
 				[]string{".*"},
@@ -970,5 +970,34 @@ func TestGetURL(t *testing.T) {
 	url, err = tpp.getURL(urlResourceAuthorize)
 	if err == nil {
 		t.Fatalf("Get URL did not return an error when the base url had not been set.")
+	}
+}
+
+func Test_GetCertificateList(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+	for _, count := range []int{10, 100, 101, 153, 200, 2000} {
+		l, err := tpp.ListCertificates(endpoint.Filter{Limit: &count})
+		if err != nil {
+			t.Fatal(err)
+		}
+		set := make(map[string]struct{})
+		for _, c := range l {
+			set[c.Thumbprint] = struct{}{}
+			if c.ValidTo.Before(time.Now()) {
+				t.Errorf("cert %s is expired: %v", c.Thumbprint, c.ValidTo)
+			}
+		}
+		if len(set) != count {
+			t.Errorf("mismatched certificates number: wait %d, got %d", count, len(set))
+		}
 	}
 }
