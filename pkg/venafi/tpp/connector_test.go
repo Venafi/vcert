@@ -89,7 +89,7 @@ func TestBadPingTPP(t *testing.T) {
 }
 
 func TestGetRefreshToken(t *testing.T) {
-	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	tpp, err := getTestConnector(ctx.TPPurl, "")
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
@@ -114,7 +114,7 @@ func TestGetRefreshToken(t *testing.T) {
 }
 
 func TestRefreshAccessToken(t *testing.T) {
-	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	tpp, err := getTestConnector(ctx.TPPurl, "")
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}

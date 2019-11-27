@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"flag"
+	"github.com/Venafi/vcert/pkg/venafi/tpp"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -49,6 +50,7 @@ func init() {
 	setupRetrieveCommandFlags()
 	setupRevokeCommandFlags()
 	setupRenewCommandFlags()
+	setupGetcredCommandFlags()
 
 	flag.BoolVar(&showVersion, "version", false, "Displays the running version of the "+UtilityShortName+" utility.")
 }
@@ -395,6 +397,31 @@ func main() {
 			logger.Panicf("Failed to output the results: %s", err)
 		}
 		return
+	}
+
+	if co == commandGetcred {
+		logf("Getting credentials")
+		tppConnector, err := tpp.NewConnector(cfg.BaseUrl, "", false, nil)
+		if err != nil {
+			logger.Panicf("could not create TPP connector: %s", err)
+		}
+
+		resp, err := tppConnector.GetRefreshToken(&endpoint.Authentication{
+			User:     cfg.Credentials.User,
+			Password: cfg.Credentials.Password,
+			// TODO: set scope and clientId in buildConfig
+			Scope:    cf.scope,
+			ClientId: cf.clientId})
+		if err != nil {
+			logger.Panicf("%s", err)
+		}
+		logf("Refresh token is %s", resp.Refresh_token)
+
+		auth := &endpoint.Authentication{RefreshToken: resp.Refresh_token, ClientId: "websdk"}
+		err = tppConnector.Authenticate(auth)
+		if err != nil {
+			logger.Panicf("err is not nil, err: %s", err)
+		}
 	}
 
 }
