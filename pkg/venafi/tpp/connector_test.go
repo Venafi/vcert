@@ -966,12 +966,13 @@ func Test_GetCertificateListFull(t *testing.T) {
 	if len(validList) >= len(fullList) {
 		t.Fatalf("valid certificates numbe (%v) should be less than all certificates number (%v)", len(validList), len(fullList))
 	}
-	req := certificate.Request{Subject: pkix.Name{CommonName: test.RandCN()}, KeyType: certificate.KeyTypeECDSA, KeyCurve: certificate.EllipticCurveP521}
+	req := certificate.Request{Subject: pkix.Name{CommonName: fmt.Sprintf("test%d%d.vfidev.com", time.Now().Unix(), time.Now().Nanosecond())}, KeyType: certificate.KeyTypeRSA, KeyLength: 2048}
 	tpp.GenerateRequest(nil, &req)
 	req.PickupID, err = tpp.RequestCertificate(&req)
 	if err != nil {
 		t.Fatal(err)
 	}
+	time.Sleep(time.Second * 10) //todo: remove after fix bug VEN-54714
 	validList2, err := tpp.ListCertificates(endpoint.Filter{})
 	if err != nil {
 		t.Fatal(err)
