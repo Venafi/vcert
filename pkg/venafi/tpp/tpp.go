@@ -142,25 +142,37 @@ type authorizeResquest struct {
 }
 
 type refreshAccessTokenResquest struct {
-	client_id     string `json:",omitempty"`
-	refresh_token string `json:",omitempty"`
+	Client_id     string `json:"client_id"`
+	Refresh_token string `json:"refresh_token"`
 }
 
-type oauthAuthorizeRequest struct {
-	client_id string `json:",omitempty"`
-	username  string `json:",omitempty"`
-	password  string `json:",omitempty"`
-	scope     string `json:",omitempty"`
+type oauthGetRefreshTokenRequest struct {
+	Client_id string `json:"client_id"`
+	Username  string `json:"username"`
+	Password  string `json:"password"`
+	Scope     string `json:"scope"`
 }
-type oauthAuthorizeResponse struct {
-	access_token  string `json:",omitempty"`
-	expires       string `json:",omitempty"`
-	identity      string `json:",omitempty"`
-	refresh_token string `json:",omitempty"`
-	scope         string `json:",omitempty"`
-	token_type    string `json:",omitempty"`
+type oauthGetRefreshTokenResponse struct {
+	Access_token  string `json:"access_token,omitempty"`
+	Expires       int    `json:"expires,omitempty"`
+	Identity      string `json:"identity,omitempty"`
+	Refresh_token string `json:"refresh_token,omitempty"`
+	Scope         string `json:"scope,omitempty"`
+	Token_type    string `json:"token_type,omitempty"`
 }
 
+type oauthRefreshAccessTokenRequest struct {
+	Refresh_token string `json:"refresh_token,omitempty"`
+	Client_id     string `json:"client_id"`
+}
+
+type oauthRefreshAccessTokenResponse struct {
+	Access_token  string `json:"access_token,omitempty"`
+	Expires       int    `json:"expires,omitempty"`
+	Identity      string `json:"identity,omitempty"`
+	Refresh_token string `json:"refresh_token,omitempty"`
+	Token_type    string `json:"token_type,omitempty"`
+}
 type policyRequest struct {
 	ObjectDN      string `json:",omitempty"`
 	Class         string `json:",omitempty"`
@@ -172,15 +184,15 @@ type urlResource string
 const (
 	urlResourceRefreshAccessToken  urlResource = "vedauth/authorize/token"
 	urlResourceAuthorizeOAuth      urlResource = "vedauth/authorize/oauth"
-	urlResourceAuthorize           urlResource = "authorize/"
-	urlResourceCertificateRequest  urlResource = "certificates/request"
-	urlResourceCertificateRetrieve urlResource = "certificates/retrieve"
-	urlResourceFindPolicy          urlResource = "config/findpolicy"
-	urlResourceCertificateRevoke   urlResource = "certificates/revoke"
-	urlResourceCertificateRenew    urlResource = "certificates/renew"
-	urlResourceCertificateSearch   urlResource = "certificates/"
-	urlResourceCertificateImport   urlResource = "certificates/import"
-	urlResourceCertificatePolicy   urlResource = "certificates/checkpolicy"
+	urlResourceAuthorize           urlResource = "vedsdk/authorize/"
+	urlResourceCertificateRequest  urlResource = "vedsdk/certificates/request"
+	urlResourceCertificateRetrieve urlResource = "vedsdk/certificates/retrieve"
+	urlResourceFindPolicy          urlResource = "vedsdk/config/findpolicy"
+	urlResourceCertificateRevoke   urlResource = "vedsdk/certificates/revoke"
+	urlResourceCertificateRenew    urlResource = "vedsdk/certificates/renew"
+	urlResourceCertificateSearch   urlResource = "vedsdk/certificates/"
+	urlResourceCertificateImport   urlResource = "vedsdk/certificates/import"
+	urlResourceCertificatePolicy   urlResource = "vedsdk/certificates/checkpolicy"
 )
 
 const (
@@ -391,18 +403,6 @@ func parseAuthorizeResult(httpStatusCode int, httpStatus string, body []byte) (s
 func parseAuthorizeData(b []byte) (data authorizeResponse, err error) {
 	err = json.Unmarshal(b, &data)
 	return
-}
-
-func parseAuthorizeOAuthResult(i int, s string, bytes []byte) (resp oauthAuthorizeResponse, err error) {
-	resp = oauthAuthorizeResponse{
-		scope:         "scope",
-		refresh_token: "refresh_token",
-		access_token:  "access_token",
-		expires:       "xxx1",
-		identity:      "xxx2",
-		token_type:    "xxx3",
-	}
-	return resp, nil
 }
 
 func parseConfigResult(httpStatusCode int, httpStatus string, body []byte) (tppData tppPolicyData, err error) {

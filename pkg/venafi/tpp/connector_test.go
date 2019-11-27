@@ -45,6 +45,20 @@ func init() {
 		fmt.Println("TPP URL cannot be empty. See Makefile")
 		os.Exit(1)
 	}
+
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		panic(err)
+	}
+
+	refreshToken, err := tpp.GetRefreshToken(&endpoint.Authentication{
+		User: ctx.TPPuser, Password: ctx.TPPPassword,
+		Scope: "certificate:approve,delete,discover,manage,revoke;", ClientId: "websdk"})
+	if err != nil {
+		panic(err)
+	}
+
+	ctx.TPPRefreshToken = refreshToken.Refresh_token
 }
 
 func getTestConnector(url string, zone string) (c *Connector, err error) {
@@ -80,12 +94,23 @@ func TestGetRefreshToken(t *testing.T) {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
 
-	refreshToken, err := tpp.GetRefreshToken(&endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword})
+	refreshToken, err := tpp.GetRefreshToken(&endpoint.Authentication{
+		User: ctx.TPPuser, Password: ctx.TPPPassword,
+		Scope: "certificate:approve,delete,discover,manage,revoke;", ClientId: "websdk"})
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-	fmt.Println(refreshToken)
 
+	err = tpp.Authenticate(&endpoint.Authentication{AccessToken: refreshToken.Access_token})
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	tpp.SetZone(ctx.TPPZone)
+	_, err = tpp.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
 }
 
 func TestRefreshAccessToken(t *testing.T) {
@@ -93,7 +118,6 @@ func TestRefreshAccessToken(t *testing.T) {
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
-
 	auth := &endpoint.Authentication{RefreshToken: ctx.TPPRefreshToken, ClientId: ctx.ClientID}
 	err = tpp.Authenticate(auth)
 	if err != nil {

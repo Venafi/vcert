@@ -61,7 +61,6 @@ func GetEnvContext() *Context {
 	c.TPPuser = os.Getenv("VCERT_TPP_USER")
 	c.TPPPassword = os.Getenv("VCERT_TPP_PASSWORD")
 	c.TPPaccessToken = os.Getenv("TPPACCESS_TOKEN")
-	c.TPPRefreshToken = os.Getenv("TPPREFRESH_TOKEN")
 	c.ClientID = os.Getenv("CLIENT_ID")
 	c.TPPZone = os.Getenv("VCERT_TPP_ZONE")
 	c.TPPZoneRestricted = os.Getenv("TPPZONE_RESTRICTED")

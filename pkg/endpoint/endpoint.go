@@ -90,6 +90,7 @@ type Authentication struct {
 	Password     string
 	APIKey       string
 	RefreshToken string
+	Scope        string
 	ClientId     string
 	AccessToken  string
 }

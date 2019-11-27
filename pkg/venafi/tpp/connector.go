@@ -53,7 +53,7 @@ func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (
 
 // normalizeURL normalizes the base URL used to communicate with TPP
 func normalizeURL(url string) (normalizedURL string, err error) {
-	var baseUrlRegex = regexp.MustCompile(`^https://[a-z\d]+[-a-z\d.]+[a-z\d][:\d]*/vedsdk/$`)
+	var baseUrlRegex = regexp.MustCompile(`^https://[a-z\d]+[-a-z\d.]+[a-z\d][:\d]*/$`)
 	modified := strings.ToLower(url)
 	if strings.HasPrefix(modified, "http://") {
 		modified = "https://" + modified[7:]
@@ -64,15 +64,14 @@ func normalizeURL(url string) (normalizedURL string, err error) {
 		modified = modified + "/"
 	}
 
-	if !strings.HasSuffix(modified, "vedsdk/") {
-		modified += "vedsdk/"
+	if strings.HasSuffix(modified, "vedsdk/") {
+		modified = modified[:len(modified)-7]
 	}
 	if loc := baseUrlRegex.FindStringIndex(modified); loc == nil {
 		return "", fmt.Errorf("The specified TPP URL is invalid. %s\nExpected TPP URL format 'https://tpp.company.com/vedsdk/'", url)
 	}
 
-	normalizedURL = modified
-	return normalizedURL, nil
+	return modified, nil
 }
 
 func (c *Connector) SetZone(z string) {
@@ -118,10 +117,11 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 		c.apiKey = key
 		return nil
 	} else if auth.RefreshToken != "" && auth.ClientId != "" {
-		statusCode, status, body, err = c.request("POST", urlResourceRefreshAccessToken,
-			refreshAccessTokenResquest{client_id: auth.ClientId, refresh_token: auth.RefreshToken})
-		//	TODO: parse refresh token and set access token from here
-		c.accessToken = "6dIlsLEMYi8zZXgLjSI1xA=="
+		resp, err := c.RefreshAccessToken(auth)
+		if err != nil {
+			return err
+		}
+		c.accessToken = resp.Access_token
 		return nil
 	} else if auth.AccessToken != "" {
 		c.accessToken = auth.AccessToken
@@ -131,30 +131,76 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 }
 
 // Get OAuth refresh and access token
-func (c *Connector) GetRefreshToken(auth *endpoint.Authentication) (resp oauthAuthorizeResponse, err error) {
+func (c *Connector) GetRefreshToken(auth *endpoint.Authentication) (resp oauthGetRefreshTokenResponse, err error) {
 
 	if auth == nil {
 		return resp, fmt.Errorf("failed to authenticate: missing credentials")
 	}
 
 	if auth.User != "" && auth.Password != "" {
-		statusCode, status, body, err := c.request("POST", urlResourceAuthorizeOAuth,
-			oauthAuthorizeRequest{username: auth.User, password: auth.Password, scope: auth.Scope, client_id: auth.ClientId})
-
+		data := oauthGetRefreshTokenRequest{Username: auth.User, Password: auth.Password, Scope: auth.Scope, Client_id: auth.ClientId}
+		result, err := processAuthData(c, urlResourceAuthorizeOAuth, data)
 		if err != nil {
 			return resp, err
 		}
-
-		resp, err := parseAuthorizeOAuthResult(statusCode, status, body)
-		if err != nil {
-			return resp, err
-		}
-
+		resp = result.(oauthGetRefreshTokenResponse)
 		return resp, nil
 
 	} else {
 		return resp, fmt.Errorf("failed to authenticate: missing credentials")
 	}
+}
+
+// Refresh OAuth access token
+func (c *Connector) RefreshAccessToken(auth *endpoint.Authentication) (resp oauthRefreshAccessTokenResponse, err error) {
+
+	if auth == nil {
+		return resp, fmt.Errorf("failed to authenticate: missing credentials")
+	}
+
+	if auth.RefreshToken != "" {
+		data := oauthRefreshAccessTokenRequest{Client_id: auth.ClientId, Refresh_token: auth.RefreshToken}
+		result, err := processAuthData(c, urlResourceRefreshAccessToken, data)
+		if err != nil {
+			return resp, err
+		}
+		resp = result.(oauthRefreshAccessTokenResponse)
+		return resp, nil
+	} else {
+		return resp, fmt.Errorf("failed to authenticate: missing refresh token")
+	}
+}
+
+func processAuthData(c *Connector, url urlResource, data interface{}) (resp interface{}, err error) {
+
+	statusCode, status, body, err := c.request("POST", url, data)
+	if err != nil {
+		return resp, err
+	}
+
+	var getRefresh oauthGetRefreshTokenResponse
+	var refreshAccess oauthRefreshAccessTokenResponse
+
+	if statusCode == http.StatusOK {
+		switch data.(type) {
+		case oauthGetRefreshTokenRequest:
+			err = json.Unmarshal(body, &getRefresh)
+			if err != nil {
+				return resp, err
+			}
+			resp = getRefresh
+		case oauthRefreshAccessTokenRequest:
+			err = json.Unmarshal(body, &refreshAccess)
+			if err != nil {
+				return resp, err
+			}
+			resp = refreshAccess
+		}
+	} else {
+		return resp, fmt.Errorf("Unexpected status code on TPP Authorize. Status: %s", status)
+	}
+
+	return resp, nil
 }
 
 func wrapAltNames(req *certificate.Request) (items []sanItem) {
