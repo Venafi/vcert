@@ -26,7 +26,7 @@ import (
 )
 
 const (
-	expectedURL = "https://localhost/vedsdk/"
+	expectedURL = "https://localhost/"
 )
 
 func TestParseConfigFindPolicyData(t *testing.T) {

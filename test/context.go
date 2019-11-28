@@ -17,7 +17,6 @@
 package test
 
 import (
-	"flag"
 	"os"
 )
 
@@ -33,24 +32,6 @@ type Context struct {
 	CloudUrl          string
 	CloudAPIkey       string
 	CloudZone         string
-}
-
-func GetContext() *Context {
-
-	c := &Context{}
-
-	flag.StringVar(&c.TPPurl, "tpp-url", "", "")
-	flag.StringVar(&c.TPPuser, "tpp-user", "", "")
-	flag.StringVar(&c.TPPPassword, "tpp-password", "", "")
-	flag.StringVar(&c.TPPZone, "tpp-zone", "", "")
-
-	flag.StringVar(&c.CloudUrl, "cloud-url", "", "")
-	flag.StringVar(&c.CloudAPIkey, "cloud-api-key", "", "")
-	flag.StringVar(&c.CloudZone, "cloud-zone", "", "")
-
-	flag.Parse()
-
-	return c
 }
 
 func GetEnvContext() *Context {
