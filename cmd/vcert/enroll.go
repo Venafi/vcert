@@ -18,7 +18,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"strings"
 
@@ -95,29 +94,23 @@ func showEnrollmentUsage() {
 	fmt.Printf("\nRequired for Venafi Cloud:\n")
 	fmt.Println("  -k")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Your API Key"))
-
-	fmt.Printf("\nRequired for Trust Protection Platform:\n")
-	fmt.Println("  -nickname")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a name for the new certificate object that will be created and placed in a policy (which you can specify using the -z option)."))
 	fmt.Println("  -t")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify access token for Trust Protection Platform Server. Example: -t https://tpp.example.com"))
-	fmt.Println("  -tpp-password")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Deprecated. Use access token instead. Use to specify the password required to authenticate with Trust Protection Platform."))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify access token for Trust Protection Platform Server. Example: -t <tpp access token>"))
 	fmt.Println("  -u")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the URL of the Trust Protection Platform or Cloud Server. Example: -u https://tpp.example.com"))
-	fmt.Println("  -tpp-user")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Deprecated. Use access token instead. Use to specify the username required to authenticate with Trust Protection Platform."))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the URL of the Trust Protection Platform. Example: -u https://tpp.example.com"))
 
 	fmt.Printf("\nOptions:\n")
 	fmt.Println("  -chain")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to include the certificate chain in the output, and to specify where to place it in the file. By default, it is placed last. Options include: ignore | root-first | root-last"))
 	fmt.Println("  -cn")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the common name (CN). This is required for Enrollment."))
+	fmt.Println("  -nickname")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a name for the new certificate object that will be created and placed in a policy (which you can specify using the -z option)."))
 
 	fmt.Println("  -config")
 	fmt.Printf("\t%s\n", ("Use to specify INI configuration file containing connection details\n" +
-		"\t\tFor TPP: url, tpp_user, tpp_password, tpp_zone\n" +
-		"\t\tFor Cloud: cloud_url, cloud_apikey, cloud_zone\n" +
+		"\t\tFor TPP: url, access_token, tpp_zone\n" +
+		"\t\tFor Cloud: cloud_apikey, cloud_zone\n" +
 		"\t\tTPP & Cloud: trust_bundle, test_mode"))
 
 	fmt.Println("  -file")
@@ -194,6 +187,7 @@ func validateEnrollmentFlags() error {
 			enrollParams.tppUser != "" ||
 			enrollParams.tppPassword != "" ||
 			enrollParams.tppAccessToken != "" ||
+			enrollParams.url != "" ||
 			enrollParams.testMode {
 			return fmt.Errorf("connection details cannot be specified with flags when -config is used")
 		}
@@ -277,7 +271,7 @@ func validateEnrollmentFlags() error {
 	}
 
 	if enrollParams.tppUser != "" || enrollParams.tppPassword != "" {
-		log.Println("Warning: User\\Password authentication is deprecated, please use access token instead.")
+		logf("Warning: User\\Password authentication is deprecated, please use access token instead.")
 	}
 
 	return nil
