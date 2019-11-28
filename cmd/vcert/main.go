@@ -425,11 +425,14 @@ func main() {
 				logger.Panicf("%s", err)
 			}
 			if cf.format == "json" {
-				fmt.Println(json.MarshalIndent(resp, "", "    "))
+				jsonData, err := json.MarshalIndent(resp, "", "    ")
+				if err != nil {
+					logger.Panicf("%s", err)
+				}
+				fmt.Println(string(jsonData))
 			} else {
 				fmt.Println("access_token: ", resp.Access_token)
 				fmt.Println("refresh_token: ", resp.Refresh_token)
-				fmt.Println(json.MarshalIndent(resp, "", "    "))
 			}
 		} else {
 			resp, err := tppConnector.GetRefreshToken(&endpoint.Authentication{
@@ -441,7 +444,11 @@ func main() {
 				logger.Panicf("%s", err)
 			}
 			if cf.format == "json" {
-				fmt.Println(json.MarshalIndent(resp, "", "    "))
+				jsonData, err := json.MarshalIndent(resp, "", "    ")
+				if err != nil {
+					logger.Panicf("%s", err)
+				}
+				fmt.Println(string(jsonData))
 			} else {
 				fmt.Println("access_token: ", resp.Access_token)
 				fmt.Println("refresh_token: ", resp.Refresh_token)
