@@ -129,6 +129,64 @@ func main() {
 		cf.zone = cfg.Zone
 	}
 
+	if co == commandGetcred {
+		logf("Getting credentials")
+		var connectionTrustBundle *x509.CertPool
+		if cfg.ConnectionTrust != "" {
+			logf("You specified a trust bundle.")
+			connectionTrustBundle = x509.NewCertPool()
+			if !connectionTrustBundle.AppendCertsFromPEM([]byte(cfg.ConnectionTrust)) {
+				logger.Panicf("Failed to parse PEM trust bundle")
+			}
+		}
+		tppConnector, err := tpp.NewConnector(cfg.BaseUrl, "", cfg.LogVerbose, connectionTrustBundle)
+		if err != nil {
+			logger.Panicf("could not create TPP connector: %s", err)
+		}
+
+		if cfg.Credentials.RefreshToken != "" {
+			resp, err := tppConnector.RefreshAccessToken(&endpoint.Authentication{
+				RefreshToken: cfg.Credentials.RefreshToken,
+				ClientId:     cf.clientId,
+				Scope:        cf.scope,
+			})
+			if err != nil {
+				logger.Panicf("%s", err)
+			}
+			if cf.format == "json" {
+				jsonData, err := json.MarshalIndent(resp, "", "    ")
+				if err != nil {
+					logger.Panicf("%s", err)
+				}
+				fmt.Println(string(jsonData))
+			} else {
+				fmt.Println("access_token: ", resp.Access_token)
+				fmt.Println("refresh_token: ", resp.Refresh_token)
+			}
+		} else {
+			resp, err := tppConnector.GetRefreshToken(&endpoint.Authentication{
+				User:     cfg.Credentials.User,
+				Password: cfg.Credentials.Password,
+				Scope:    cf.scope,
+				ClientId: cf.clientId})
+			if err != nil {
+				logger.Panicf("%s", err)
+			}
+			if cf.format == "json" {
+				jsonData, err := json.MarshalIndent(resp, "", "    ")
+				if err != nil {
+					logger.Panicf("%s", err)
+				}
+				fmt.Println(string(jsonData))
+			} else {
+				fmt.Println("access_token: ", resp.Access_token)
+				fmt.Println("refresh_token: ", resp.Refresh_token)
+
+			}
+		}
+		return
+	}
+
 	connector, err := vcert.NewClient(&cfg) // Everything else requires an endpoint connection
 	if err != nil {
 		logf("Unable to connect to %s: %s", cfg.ConnectorType, err)
@@ -398,63 +456,6 @@ func main() {
 			logger.Panicf("Failed to output the results: %s", err)
 		}
 		return
-	}
-
-	if co == commandGetcred {
-		logf("Getting credentials")
-		var connectionTrustBundle *x509.CertPool
-		if cfg.ConnectionTrust != "" {
-			logf("You specified a trust bundle.")
-			connectionTrustBundle = x509.NewCertPool()
-			if !connectionTrustBundle.AppendCertsFromPEM([]byte(cfg.ConnectionTrust)) {
-				logger.Panicf("Failed to parse PEM trust bundle")
-			}
-		}
-		tppConnector, err := tpp.NewConnector(cfg.BaseUrl, "", cfg.LogVerbose, connectionTrustBundle)
-		if err != nil {
-			logger.Panicf("could not create TPP connector: %s", err)
-		}
-
-		if cfg.Credentials.RefreshToken != "" {
-			resp, err := tppConnector.RefreshAccessToken(&endpoint.Authentication{
-				RefreshToken: cfg.Credentials.RefreshToken,
-				ClientId:     cf.clientId,
-				Scope:        cf.scope,
-			})
-			if err != nil {
-				logger.Panicf("%s", err)
-			}
-			if cf.format == "json" {
-				jsonData, err := json.MarshalIndent(resp, "", "    ")
-				if err != nil {
-					logger.Panicf("%s", err)
-				}
-				fmt.Println(string(jsonData))
-			} else {
-				fmt.Println("access_token: ", resp.Access_token)
-				fmt.Println("refresh_token: ", resp.Refresh_token)
-			}
-		} else {
-			resp, err := tppConnector.GetRefreshToken(&endpoint.Authentication{
-				User:     cfg.Credentials.User,
-				Password: cfg.Credentials.Password,
-				Scope:    cf.scope,
-				ClientId: cf.clientId})
-			if err != nil {
-				logger.Panicf("%s", err)
-			}
-			if cf.format == "json" {
-				jsonData, err := json.MarshalIndent(resp, "", "    ")
-				if err != nil {
-					logger.Panicf("%s", err)
-				}
-				fmt.Println(string(jsonData))
-			} else {
-				fmt.Println("access_token: ", resp.Access_token)
-				fmt.Println("refresh_token: ", resp.Refresh_token)
-
-			}
-		}
 	}
 
 }
