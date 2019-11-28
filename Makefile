@@ -48,10 +48,7 @@ tpp_test: get
 	go test -v $(GOFLAGS) ./pkg/venafi/tpp
 
 cloud_test: get
-	go test -v $(GOFLAGS) ./pkg/venafi/cloud   \
-		-cloud-url     "${VCERT_CLOUD_URL}"    \
-		-cloud-api-key "${VCERT_CLOUD_APIKEY}" \
-		-cloud-zone    "${VCERT_CLOUD_ZONE}"
+	go test -v $(GOFLAGS) ./pkg/venafi/cloud
 
 ifdef BUILD_NUMBER
 VERSION=`git describe --abbrev=0 --tags`+$(BUILD_NUMBER)

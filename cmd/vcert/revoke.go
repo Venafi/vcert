@@ -83,18 +83,15 @@ func showRevokeUsage() {
 		" Value may be specified as a string or read from the certificate file using the file: prefix. "+
 		"Implies -no-retire=true"))
 
-	fmt.Println("  -tpp-password")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the password required to authenticate with Trust Protection Platform."))
 	fmt.Println("  -u")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the URL of the Trust Protection Platform Server. Example: -u https://tpp.example.com"))
-	fmt.Println("  -tpp-user")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the username required to authenticate with Trust Protection Platform."))
-
+	fmt.Println("  -t")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify access token for Trust Protection Platform Server. Example: -t ns1dofUPmsdxTLQS2hM1gQ=="))
 	fmt.Printf("\nOptions:\n")
 	fmt.Println("  -config")
 	fmt.Printf("\t%s\n", ("Use to specify INI configuration file containing connection details\n" +
-		"\t\tFor TPP: url, tpp_user, tpp_password, tpp_zone\n" +
-		"\t\tFor Cloud: cloud_url, cloud_apikey, cloud_zone\n" +
+		"\t\tFor TPP: url, access_token, tpp_zone\n" +
+		"\t\tFor Cloud: cloud_apikey, cloud_zone\n" +
 		"\t\tTPP & Cloud: trust_bundle, test_mode"))
 
 	fmt.Println("  -client-pkcs12")
