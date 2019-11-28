@@ -70,15 +70,17 @@ func showPickupUsage() {
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Your API Key"))
 
 	fmt.Printf("\nRequired for Trust Protection Platform:\n")
+	fmt.Println("  -u")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the URL of the Trust Protection Platform Server. Example: -u https://tpp.example.com"))
+	fmt.Println("  -t")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify access token for Trust Protection Platform Server. Example: -t https://tpp.example.com"))
+
+	fmt.Printf("\nRequired for both Venafi Cloud and Trust Protection Platform:\n")
 	fmt.Println("  -pickup-id")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the certificate ID of the certificate for retrieve."))
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Example: -pickup-id 3260ece0-0da4-11e7-9be2-891dab33d0eb"))
 	fmt.Println("  -pickup-id-file")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify file name from where Pickup ID will be read. Either one of -pickup-id and -pickup-id-file options is required."))
-	fmt.Println("  -u")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the URL of the Trust Protection Platform Server. Example: -u https://tpp.example.com"))
-	fmt.Println("  -t")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify access token for Trust Protection Platform Server. Example: -t https://tpp.example.com"))
 
 	fmt.Printf("\nOptions:\n")
 	fmt.Println("  -cert-file")

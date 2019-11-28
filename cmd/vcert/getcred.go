@@ -33,6 +33,7 @@ func setupGetcredCommandFlags() {
 	getcredFlags.StringVar(&getcredParams.profile, "profile", "", "")
 	getcredFlags.StringVar(&getcredParams.clientP12, "client-pkcs12", "", "")
 	getcredFlags.StringVar(&getcredParams.clientP12PW, "client-pkcs12-pw", "", "")
+	getcredFlags.StringVar(&getcredParams.format, "format", "", "")
 
 	getcredFlags.Usage = func() {
 		fmt.Printf("%s\n", vcert.GetFormattedVersionString())
@@ -42,12 +43,30 @@ func setupGetcredCommandFlags() {
 
 func showGetcredUsage() {
 	fmt.Printf("Getting credentials usage:\n")
+	fmt.Println("  -format")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the output format. If not specified will be plain text. Options include: json ."))
 	//TODO
 	fmt.Println()
 }
 
 // validateGetcredFlags valdiates the combination of command flags specified in an getcredment request
 func validateGetcredFlags() error {
+	if enrollParams.config != "" {
+		if enrollParams.apiKey != "" ||
+			enrollParams.cloudURL != "" ||
+			enrollParams.tppURL != "" ||
+			enrollParams.tppUser != "" ||
+			enrollParams.tppPassword != "" ||
+			enrollParams.tppToken != "" ||
+			enrollParams.url != "" ||
+			enrollParams.testMode {
+			return fmt.Errorf("connection details cannot be specified with flags when -config is used")
+		}
+	} else {
+		if enrollParams.profile != "" {
+			return fmt.Errorf("-profile option cannot be used without -config option")
+		}
+	}
 	//TODO
 	return nil
 }

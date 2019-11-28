@@ -434,6 +434,13 @@ func TestGetcredFlags(t *testing.T) {
 		t.Fatalf("-u must be specified")
 	}
 
+	getcredFlags.Set("k", "xxxxxxxxxxxxxxxxxxxxxxx")
+	getcredFlags.Set("u", "https://tpp.example.com")
+	err = validateFlags(commandGetcred)
+	if err == nil {
+		t.Fatalf("getcred is TPP only command and can not be used with Cloud api key")
+	}
+
 }
 
 func TestIPSliceString(t *testing.T) {

@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"flag"
+	"fmt"
 	"github.com/Venafi/vcert/pkg/venafi/tpp"
 	"io/ioutil"
 	"log"
@@ -418,22 +419,34 @@ func main() {
 			resp, err := tppConnector.RefreshAccessToken(&endpoint.Authentication{
 				RefreshToken: cfg.Credentials.RefreshToken,
 				ClientId:     cf.clientId,
+				Scope:        cf.scope,
 			})
 			if err != nil {
 				logger.Panicf("%s", err)
 			}
-			logf("Acces token is %s", resp.Refresh_token)
+			if cf.format == "json" {
+				fmt.Println(json.MarshalIndent(resp, "", "    "))
+			} else {
+				fmt.Println("access_token: ", resp.Access_token)
+				fmt.Println("refresh_token: ", resp.Refresh_token)
+				fmt.Println(json.MarshalIndent(resp, "", "    "))
+			}
 		} else {
 			resp, err := tppConnector.GetRefreshToken(&endpoint.Authentication{
 				User:     cfg.Credentials.User,
 				Password: cfg.Credentials.Password,
-				// TODO: set scope and clientId in buildConfig
 				Scope:    cf.scope,
 				ClientId: cf.clientId})
 			if err != nil {
 				logger.Panicf("%s", err)
 			}
-			logf("Refresh token is %s", resp.Refresh_token)
+			if cf.format == "json" {
+				fmt.Println(json.MarshalIndent(resp, "", "    "))
+			} else {
+				fmt.Println("access_token: ", resp.Access_token)
+				fmt.Println("refresh_token: ", resp.Refresh_token)
+
+			}
 		}
 	}
 
