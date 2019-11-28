@@ -94,12 +94,8 @@ func showEnrollmentUsage() {
 	fmt.Printf("\nRequired for Venafi Cloud:\n")
 	fmt.Println("  -k")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Your API Key"))
-
-	fmt.Printf("\nFriendly name of the certificate in Trust Protection Platform:\n")
-	fmt.Println("  -nickname")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a name for the new certificate object that will be created and placed in a policy (which you can specify using the -z option)."))
 	fmt.Println("  -t")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Deprecated. Use access token instead. Use to specify the password required to authenticate with Trust Protection Platform."))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify access token for Trust Protection Platform Server. Example: -t <tpp access token>"))
 	fmt.Println("  -u")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the URL of the Trust Protection Platform. Example: -u https://tpp.example.com"))
 
@@ -108,6 +104,8 @@ func showEnrollmentUsage() {
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to include the certificate chain in the output, and to specify where to place it in the file. By default, it is placed last. Options include: ignore | root-first | root-last"))
 	fmt.Println("  -cn")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the common name (CN). This is required for Enrollment."))
+	fmt.Println("  -nickname")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a name for the new certificate object that will be created and placed in a policy (which you can specify using the -z option)."))
 
 	fmt.Println("  -config")
 	fmt.Printf("\t%s\n", ("Use to specify INI configuration file containing connection details\n" +
