@@ -401,7 +401,15 @@ func main() {
 
 	if co == commandGetcred {
 		logf("Getting credentials")
-		tppConnector, err := tpp.NewConnector(cfg.BaseUrl, "", false, nil)
+		var connectionTrustBundle *x509.CertPool
+		if cfg.ConnectionTrust != "" {
+			logf("You specified a trust bundle.")
+			connectionTrustBundle = x509.NewCertPool()
+			if !connectionTrustBundle.AppendCertsFromPEM([]byte(cfg.ConnectionTrust)) {
+				logger.Panicf("Failed to parse PEM trust bundle")
+			}
+		}
+		tppConnector, err := tpp.NewConnector(cfg.BaseUrl, "", cfg.LogVerbose, connectionTrustBundle)
 		if err != nil {
 			logger.Panicf("could not create TPP connector: %s", err)
 		}
