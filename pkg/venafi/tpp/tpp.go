@@ -388,24 +388,6 @@ func getPolicyDN(zone string) string {
 	return modified
 }
 
-func parseAuthorizeResult(httpStatusCode int, httpStatus string, body []byte) (string, error) {
-	switch httpStatusCode {
-	case http.StatusOK:
-		auth, err := parseAuthorizeData(body)
-		if err != nil {
-			return "", err
-		}
-		return auth.APIKey, nil
-	default:
-		return "", fmt.Errorf("Unexpected status code on TPP Authorize. Status: %s", httpStatus)
-	}
-}
-
-func parseAuthorizeData(b []byte) (data authorizeResponse, err error) {
-	err = json.Unmarshal(b, &data)
-	return
-}
-
 func parseConfigResult(httpStatusCode int, httpStatus string, body []byte) (tppData tppPolicyData, err error) {
 	tppData = tppPolicyData{}
 	switch httpStatusCode {

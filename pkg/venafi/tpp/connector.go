@@ -100,22 +100,15 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 	if auth == nil {
 		return fmt.Errorf("failed to authenticate: missing credentials")
 	}
-	var statusCode int
-	var status string
-	var body []byte
 
 	if auth.User != "" && auth.Password != "" {
-		statusCode, status, body, err = c.request("POST", urlResourceAuthorize,
-			authorizeResquest{Username: auth.User, Password: auth.Password})
+		data := authorizeResquest{Username: auth.User, Password: auth.Password}
+		result, err := processAuthData(c, urlResourceAuthorize, data)
+		resp := result.(authorizeResponse)
+		c.apiKey = resp.APIKey
 		if err != nil {
 			return err
 		}
-
-		key, err := parseAuthorizeResult(statusCode, status, body)
-		if err != nil {
-			return err
-		}
-		c.apiKey = key
 		return nil
 	} else if auth.RefreshToken != "" && auth.ClientId != "" {
 		resp, err := c.RefreshAccessToken(auth)
@@ -181,6 +174,7 @@ func processAuthData(c *Connector, url urlResource, data interface{}) (resp inte
 
 	var getRefresh oauthGetRefreshTokenResponse
 	var refreshAccess oauthRefreshAccessTokenResponse
+	var authorize authorizeResponse
 
 	if statusCode == http.StatusOK {
 		switch data.(type) {
@@ -196,9 +190,17 @@ func processAuthData(c *Connector, url urlResource, data interface{}) (resp inte
 				return resp, err
 			}
 			resp = refreshAccess
+		case authorizeResquest:
+			err = json.Unmarshal(body, &authorize)
+			if err != nil {
+				return resp, err
+			}
+			resp = authorize
+		default:
+			return resp, fmt.Errorf("can not determine data type")
 		}
 	} else {
-		return resp, fmt.Errorf("Unexpected status code on TPP Authorize. Status: %s", status)
+		return resp, fmt.Errorf("unexpected status code on TPP Authorize. Status: %s", status)
 	}
 
 	return resp, nil

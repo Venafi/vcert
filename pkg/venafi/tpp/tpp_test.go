@@ -29,17 +29,6 @@ const (
 	expectedURL = "https://localhost/vedsdk/"
 )
 
-func TestParseAuthorizeData(t *testing.T) {
-	data := []byte("{\"APIKey\":\"3561721a-4a0a-a441-8a80-655a736c3d76\",\"ValidUntil\":\"/Date(1455728250931)/\"}")
-	apiKey, err := parseAuthorizeResult(http.StatusOK, "", data)
-	if err != nil {
-		t.Fatalf("err is not nil, err: %s", err)
-	}
-	if apiKey != "3561721a-4a0a-a441-8a80-655a736c3d76" {
-		t.Fatalf("Parsed API Key did not match expected value. Expected: 3561721a-4a0a-a441-8a80-655a736c3d76 Actual: %s", apiKey)
-	}
-}
-
 func TestParseConfigFindPolicyData(t *testing.T) {
 	data := []byte("{\"Locked\":false,\"PolicyDN\":\"\\\\VED\\\\Policy\\\\Web SDK Testing\",\"Result\":1,\"Values\":[\"Engineering\",\"Quality Assurance\"]}")
 	tppData, err := parseConfigResult(http.StatusOK, "", data)
