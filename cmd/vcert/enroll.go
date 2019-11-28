@@ -32,7 +32,7 @@ func setupEnrollCommandFlags() {
 	enrollFlags.StringVar(&enrollParams.tppURL, "tpp-url", "", "")
 	enrollFlags.StringVar(&enrollParams.tppUser, "tpp-user", "", "")
 	enrollFlags.StringVar(&enrollParams.tppPassword, "tpp-password", "", "")
-	enrollFlags.StringVar(&enrollParams.tppAccessToken, "t", "", "")
+	enrollFlags.StringVar(&enrollParams.tppToken, "t", "", "")
 	enrollFlags.StringVar(&enrollParams.trustBundle, "trust-bundle", "", "")
 	enrollFlags.StringVar(&enrollParams.zone, "z", "", "")
 	enrollFlags.StringVar(&enrollParams.caDN, "ca-dn", "", "")
@@ -193,7 +193,7 @@ func validateEnrollmentFlags() error {
 			enrollParams.tppURL != "" ||
 			enrollParams.tppUser != "" ||
 			enrollParams.tppPassword != "" ||
-			enrollParams.tppAccessToken != "" ||
+			enrollParams.tppToken != "" ||
 			enrollParams.url != "" ||
 			enrollParams.testMode {
 			return fmt.Errorf("connection details cannot be specified with flags when -config is used")
@@ -226,7 +226,7 @@ func validateEnrollmentFlags() error {
 	}
 
 	if !enrollParams.testMode && enrollParams.config == "" {
-		if enrollParams.tppUser == "" && enrollParams.tppAccessToken == "" {
+		if enrollParams.tppUser == "" && enrollParams.tppToken == "" {
 			// should be SaaS endpoint
 			if enrollParams.apiKey == "" {
 				return fmt.Errorf("An API key is required for enrollment with Venafi Cloud")
@@ -236,10 +236,10 @@ func validateEnrollmentFlags() error {
 			}
 		} else {
 			// should be TPP service
-			if enrollParams.tppUser == "" && enrollParams.tppAccessToken == "" {
+			if enrollParams.tppUser == "" && enrollParams.tppToken == "" {
 				return fmt.Errorf("An access token or username is required for communicating with Trust Protection Platform")
 			}
-			if enrollParams.noPrompt && enrollParams.tppPassword == "" && enrollParams.tppAccessToken == "" {
+			if enrollParams.noPrompt && enrollParams.tppPassword == "" && enrollParams.tppToken == "" {
 				return fmt.Errorf("An access token or password is required for communicating with Trust Protection Platform")
 			}
 			if enrollParams.zone == "" {

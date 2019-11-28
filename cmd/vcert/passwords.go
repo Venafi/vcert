@@ -29,7 +29,7 @@ func readPasswordsFromInputFlags(co command, cf *commandFlags) error {
 	lineIndex := 0
 
 	if (co == commandEnroll && cf.tppURL != "") || (co == commandPickup && cf.tppURL != "") {
-		if cf.tppPassword == "" && !cf.noPrompt && cf.tppAccessToken == "" {
+		if cf.tppPassword == "" && !cf.noPrompt && cf.tppToken == "" {
 			fmt.Printf("Enter password for %s:", cf.tppUser)
 			input, err := gopass.GetPasswdMasked()
 			if err != nil {

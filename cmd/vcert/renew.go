@@ -31,7 +31,7 @@ func setupRenewCommandFlags() {
 	renewFlags.StringVar(&renewParams.tppURL, "tpp-url", "", "")
 	renewFlags.StringVar(&renewParams.tppUser, "tpp-user", "", "")
 	renewFlags.StringVar(&renewParams.tppPassword, "tpp-password", "", "")
-	renewFlags.StringVar(&renewParams.tppAccessToken, "t", "", "")
+	renewFlags.StringVar(&renewParams.tppToken, "t", "", "")
 	renewFlags.StringVar(&renewParams.trustBundle, "trust-bundle", "", "")
 	renewFlags.StringVar(&renewParams.zone, "z", "", "")
 	renewFlags.Var(&renewParams.keyCurve, "key-curve", "")
@@ -183,7 +183,7 @@ func validateRenewFlags() error {
 			renewParams.tppURL != "" ||
 			renewParams.tppUser != "" ||
 			renewParams.tppPassword != "" ||
-			renewParams.tppAccessToken != "" ||
+			renewParams.tppToken != "" ||
 			renewParams.testMode {
 			return fmt.Errorf("connection details cannot be specified with flags when -config is used")
 		}
@@ -192,17 +192,17 @@ func validateRenewFlags() error {
 			return fmt.Errorf("-profile option cannot be used without -config option")
 		}
 		if !renewParams.testMode {
-			if renewParams.tppUser == "" && renewParams.tppAccessToken == "" {
+			if renewParams.tppUser == "" && renewParams.tppToken == "" {
 				// should be SaaS endpoint
 				if renewParams.apiKey == "" {
 					return fmt.Errorf("An API key is required for renewal with Venafi Cloud")
 				}
 			} else {
 				// should be TPP service
-				if renewParams.tppUser == "" && renewParams.tppAccessToken == "" {
+				if renewParams.tppUser == "" && renewParams.tppToken == "" {
 					return fmt.Errorf("An access token or username is required for communicating with Trust Protection Platform")
 				}
-				if renewParams.noPrompt && renewParams.tppPassword == "" && renewParams.tppAccessToken == "" {
+				if renewParams.noPrompt && renewParams.tppPassword == "" && renewParams.tppToken == "" {
 					return fmt.Errorf("An access token or password is required for communicating with Trust Protection Platform")
 				}
 
@@ -231,7 +231,7 @@ func validateRenewFlags() error {
 	}
 
 	if renewParams.csrOption == "service" {
-		if !(renewParams.noPickup) && renewParams.noPrompt && len(renewParams.keyPassword) == 0 && (renewParams.tppUser != "" || renewParams.tppAccessToken != "") {
+		if !(renewParams.noPickup) && renewParams.noPrompt && len(renewParams.keyPassword) == 0 && (renewParams.tppUser != "" || renewParams.tppToken != "") {
 			return fmt.Errorf("-key-password cannot be empty in -csr service mode for TPP unless -no-pickup specified")
 		}
 		if renewParams.commonName != "" ||

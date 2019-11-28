@@ -31,7 +31,7 @@ func setupRetrieveCommandFlags() {
 	pickupFlags.StringVar(&pickParams.tppURL, "tpp-url", "", "")
 	pickupFlags.StringVar(&pickParams.tppUser, "tpp-user", "", "")
 	pickupFlags.StringVar(&pickParams.tppPassword, "tpp-password", "", "")
-	pickupFlags.StringVar(&pickParams.tppAccessToken, "t", "", "")
+	pickupFlags.StringVar(&pickParams.tppToken, "t", "", "")
 	pickupFlags.StringVar(&pickParams.trustBundle, "trust-bundle", "", "")
 	pickupFlags.StringVar(&pickParams.format, "format", "pem", "")
 	pickupFlags.StringVar(&pickParams.file, "file", "", "")
@@ -141,16 +141,16 @@ func validatePickupFlags() error {
 			return fmt.Errorf("-profile option cannot be used without -config option")
 		}
 		if !pickParams.testMode {
-			if pickParams.tppUser == "" && pickParams.tppAccessToken == "" {
+			if pickParams.tppUser == "" && pickParams.tppToken == "" {
 				if pickParams.apiKey == "" {
 					return fmt.Errorf("An API key is required to pickup a certificate from Venafi Cloud")
 				}
 			} else {
 				// should be TPP service
-				if pickParams.tppUser == "" && pickParams.tppAccessToken == "" {
+				if pickParams.tppUser == "" && pickParams.tppToken == "" {
 					return fmt.Errorf("An access token or username is required for communicating with Trust Protection Platform")
 				}
-				if pickParams.noPrompt && pickParams.tppPassword == "" && pickParams.tppAccessToken == "" {
+				if pickParams.noPrompt && pickParams.tppPassword == "" && pickParams.tppToken == "" {
 					return fmt.Errorf("An access token or password is required for communicating with Trust Protection Platform")
 				}
 

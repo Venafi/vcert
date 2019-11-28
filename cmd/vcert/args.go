@@ -64,7 +64,7 @@ type commandFlags struct {
 	tppURL             string
 	tppUser            string
 	tppPassword        string
-	tppAccessToken     string
+	tppToken           string
 	apiKey             string
 	cloudURL           string
 	zone               string

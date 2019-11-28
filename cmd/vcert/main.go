@@ -414,21 +414,26 @@ func main() {
 			logger.Panicf("could not create TPP connector: %s", err)
 		}
 
-		resp, err := tppConnector.GetRefreshToken(&endpoint.Authentication{
-			User:     cfg.Credentials.User,
-			Password: cfg.Credentials.Password,
-			// TODO: set scope and clientId in buildConfig
-			Scope:    cf.scope,
-			ClientId: cf.clientId})
-		if err != nil {
-			logger.Panicf("%s", err)
-		}
-		logf("Refresh token is %s", resp.Refresh_token)
-
-		auth := &endpoint.Authentication{RefreshToken: resp.Refresh_token, ClientId: "websdk"}
-		err = tppConnector.Authenticate(auth)
-		if err != nil {
-			logger.Panicf("err is not nil, err: %s", err)
+		if cfg.Credentials.RefreshToken != "" {
+			resp, err := tppConnector.RefreshAccessToken(&endpoint.Authentication{
+				RefreshToken: cfg.Credentials.RefreshToken,
+				ClientId:     cf.clientId,
+			})
+			if err != nil {
+				logger.Panicf("%s", err)
+			}
+			logf("Acces token is %s", resp.Refresh_token)
+		} else {
+			resp, err := tppConnector.GetRefreshToken(&endpoint.Authentication{
+				User:     cfg.Credentials.User,
+				Password: cfg.Credentials.Password,
+				// TODO: set scope and clientId in buildConfig
+				Scope:    cf.scope,
+				ClientId: cf.clientId})
+			if err != nil {
+				logger.Panicf("%s", err)
+			}
+			logf("Refresh token is %s", resp.Refresh_token)
 		}
 	}
 

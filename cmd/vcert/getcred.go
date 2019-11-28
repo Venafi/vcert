@@ -25,7 +25,7 @@ func setupGetcredCommandFlags() {
 	getcredFlags.StringVar(&getcredParams.url, "u", "", "")
 	getcredFlags.StringVar(&getcredParams.tppUser, "tpp-user", "", "")
 	getcredFlags.StringVar(&getcredParams.tppPassword, "tpp-password", "", "")
-	getcredFlags.StringVar(&getcredParams.tppAccessToken, "t", "", "")
+	getcredFlags.StringVar(&getcredParams.tppToken, "t", "", "")
 	getcredFlags.StringVar(&getcredParams.trustBundle, "trust-bundle", "", "")
 	getcredFlags.StringVar(&getcredParams.scope, "scope", "", "")
 	getcredFlags.StringVar(&getcredParams.clientId, "client-id", "", "")

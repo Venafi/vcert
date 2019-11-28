@@ -42,7 +42,7 @@ func setupRevokeCommandFlags() {
 	revokeFlags.StringVar(&revokeParams.tppURL, "tpp-url", "", "")
 	revokeFlags.StringVar(&revokeParams.tppUser, "tpp-user", "", "")
 	revokeFlags.StringVar(&revokeParams.tppPassword, "tpp-password", "", "")
-	revokeFlags.StringVar(&revokeParams.tppAccessToken, "t", "", "")
+	revokeFlags.StringVar(&revokeParams.tppToken, "t", "", "")
 	revokeFlags.StringVar(&revokeParams.trustBundle, "trust-bundle", "", "")
 	revokeFlags.StringVar(&revokeParams.file, "file", "", "")
 	revokeFlags.BoolVar(&revokeParams.verbose, "verbose", false, "")
@@ -140,10 +140,10 @@ func validateRevokeFlags() error {
 			if revokeParams.url == "" && revokeParams.tppURL == "" {
 				return fmt.Errorf("Trust Protection Platform URL is required for certificate revocation. Please check the help to see available command arguments")
 			}
-			if revokeParams.tppUser == "" && revokeParams.tppAccessToken == "" {
+			if revokeParams.tppUser == "" && revokeParams.tppToken == "" {
 				return fmt.Errorf("An access token or  username is required for communicating with Trust Protection Platform")
 			}
-			if revokeParams.noPrompt && revokeParams.tppPassword == "" && revokeParams.tppAccessToken == "" {
+			if revokeParams.noPrompt && revokeParams.tppPassword == "" && revokeParams.tppToken == "" {
 				return fmt.Errorf("An access token or  password is required for communicating with Trust Protection Platform")
 			}
 
