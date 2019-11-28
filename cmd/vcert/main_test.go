@@ -275,6 +275,17 @@ func TestValidateFlagsForTPPMissingData(t *testing.T) {
 	if err == nil {
 		t.Fatalf("Error was not expected to be nil.  Zone is required for enrollment")
 	}
+
+	enrollFlags.Set("tpp-url", "https://localhost/vedsdk")
+	enrollFlags.Set("t", "udd3OCDO/Vu3An01KSlLzQ==")
+	enrollFlags.Set("cn", "test")
+	enrollFlags.Set("z", "Test Policy")
+
+	err = validateFlags(commandEnroll)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
 }
 
 func TestValidateFlagsForEnrollmentMissingData(t *testing.T) {
@@ -396,6 +407,33 @@ func TestValidateFlagsMixedPickupFileOutputs(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
+}
+
+func TestGetcredFlags(t *testing.T) {
+
+	var err error
+
+	getcredFlags.Set("t", "3rlybZwAdV1qo/KpNJ5FWg==")
+	getcredFlags.Set("u", "https://tpp.example.com")
+	getcredFlags.Set("trust-bundle", "/opt/venafi/bundle.pem")
+	err = validateFlags(commandGetcred)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	getcredFlags.Set("t", "3rlybZwAdV1qo/KpNJ5FWg==")
+	getcredFlags.Set("u", "https://tpp.example.com")
+	err = validateFlags(commandGetcred)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	getcredFlags.Set("t", "3rlybZwAdV1qo/KpNJ5FWg==")
+	err = validateFlags(commandGetcred)
+	if err == nil {
+		t.Fatalf("-u must be specified")
+	}
+
 }
 
 func TestIPSliceString(t *testing.T) {
