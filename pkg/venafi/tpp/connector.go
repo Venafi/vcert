@@ -113,12 +113,16 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 		return nil
 
 	} else if auth.RefreshToken != "" && auth.ClientId != "" {
-		resp, err := c.RefreshAccessToken(auth)
+		data := oauthRefreshAccessTokenRequest{Client_id: auth.ClientId, Refresh_token: auth.RefreshToken}
+		result, err := processAuthData(c, urlResourceRefreshAccessToken, data)
 		if err != nil {
 			return err
 		}
+		resp := result.(oauthRefreshAccessTokenResponse)
 		c.accessToken = resp.Access_token
 		return nil
+	} else if "p12" == "nop12" {
+		//  	TODO: p12 method should be here
 	} else if auth.AccessToken != "" {
 		c.accessToken = auth.AccessToken
 		return nil
@@ -144,26 +148,6 @@ func (c *Connector) GetRefreshToken(auth *endpoint.Authentication) (resp oauthGe
 
 	} else {
 		return resp, fmt.Errorf("failed to authenticate: missing credentials")
-	}
-}
-
-// Refresh OAuth access token
-func (c *Connector) RefreshAccessToken(auth *endpoint.Authentication) (resp oauthRefreshAccessTokenResponse, err error) {
-
-	if auth == nil {
-		return resp, fmt.Errorf("failed to authenticate: missing credentials")
-	}
-
-	if auth.RefreshToken != "" {
-		data := oauthRefreshAccessTokenRequest{Client_id: auth.ClientId, Refresh_token: auth.RefreshToken}
-		result, err := processAuthData(c, urlResourceRefreshAccessToken, data)
-		if err != nil {
-			return resp, err
-		}
-		resp = result.(oauthRefreshAccessTokenResponse)
-		return resp, nil
-	} else {
-		return resp, fmt.Errorf("failed to authenticate: missing refresh token")
 	}
 }
 
