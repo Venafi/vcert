@@ -85,7 +85,7 @@ func (c *Connector) GetType() endpoint.ConnectorType {
 
 //Ping attempts to connect to the TPP Server WebSDK API and returns an errror if it cannot
 func (c *Connector) Ping() (err error) {
-	statusCode, status, _, err := c.request("GET", "", nil)
+	statusCode, status, _, err := c.request("GET", "vedsdk/", nil)
 	if err != nil {
 		return
 	}
