@@ -182,18 +182,19 @@ type policyRequest struct {
 type urlResource string
 
 const (
-	urlResourceRefreshAccessToken  urlResource = "vedauth/authorize/token"
-	urlResourceAuthorizeOAuth      urlResource = "vedauth/authorize/oauth"
-	urlResourceAuthorize           urlResource = "vedsdk/authorize/"
-	urlResourceCertificateRequest  urlResource = "vedsdk/certificates/request"
-	urlResourceCertificateRetrieve urlResource = "vedsdk/certificates/retrieve"
-	urlResourceFindPolicy          urlResource = "vedsdk/config/findpolicy"
-	urlResourceCertificateRevoke   urlResource = "vedsdk/certificates/revoke"
-	urlResourceCertificateRenew    urlResource = "vedsdk/certificates/renew"
-	urlResourceCertificateSearch   urlResource = "vedsdk/certificates/"
-	urlResourceCertificateImport   urlResource = "vedsdk/certificates/import"
-	urlResourceCertificatePolicy   urlResource = "vedsdk/certificates/checkpolicy"
-	urlResourceCertificatesList    urlResource = "vedsdk/certificates/"
+	urlResourceRefreshAccessToken   urlResource = "vedauth/authorize/token"
+	urlResourceAuthorizeOAuth       urlResource = "vedauth/authorize/oauth"
+	urlResourceAuthorizeCertificate urlResource = "vedauth/Authorize/Certificate"
+	urlResourceAuthorize            urlResource = "vedsdk/authorize/"
+	urlResourceCertificateRequest   urlResource = "vedsdk/certificates/request"
+	urlResourceCertificateRetrieve  urlResource = "vedsdk/certificates/retrieve"
+	urlResourceFindPolicy           urlResource = "vedsdk/config/findpolicy"
+	urlResourceCertificateRevoke    urlResource = "vedsdk/certificates/revoke"
+	urlResourceCertificateRenew     urlResource = "vedsdk/certificates/renew"
+	urlResourceCertificateSearch    urlResource = "vedsdk/certificates/"
+	urlResourceCertificateImport    urlResource = "vedsdk/certificates/import"
+	urlResourceCertificatePolicy    urlResource = "vedsdk/certificates/checkpolicy"
+	urlResourceCertificatesList     urlResource = "vedsdk/certificates/"
 )
 
 const (
