@@ -99,6 +99,7 @@ type Authentication struct {
 	Scope        string
 	ClientId     string
 	AccessToken  string
+	ClientPKCS12 bool
 }
 
 // ErrRetrieveCertificateTimeout provides a common error structure for a timeout while retrieving a certificate

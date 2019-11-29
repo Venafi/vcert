@@ -166,6 +166,11 @@ type oauthRefreshAccessTokenRequest struct {
 	Client_id     string `json:"client_id"`
 }
 
+type oauthCertificateTokenRequest struct {
+	Client_id string `json:"client_id"`
+	Scope     string `json:"scope,omitempty"`
+}
+
 type oauthRefreshAccessTokenResponse struct {
 	Access_token  string `json:"access_token,omitempty"`
 	Expires       int    `json:"expires,omitempty"`
