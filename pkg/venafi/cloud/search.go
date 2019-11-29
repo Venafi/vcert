@@ -71,6 +71,7 @@ type CertificateSearchResponse struct {
 type Certificate struct {
 	Id                     string `json:"id"`
 	CurrentCertificateData struct {
+		ID                            string
 		ManagedCertificateId          string              `json:"managedCertificateId"`
 		CertificateRequestId          string              `json:"certificateRequestId"`
 		SubjectCN                     []string            `json:"subjectCN"`

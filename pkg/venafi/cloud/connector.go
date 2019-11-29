@@ -254,7 +254,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 				certificateRequestId = c.CurrentCertificateData.CertificateRequestId
 			}
 			if c.Id != "" {
-				req.CertID = c.Id
+				req.CertID = c.CurrentCertificateData.ID
 			}
 		}
 		if !isOnlyOneCertificateRequestId {
@@ -621,6 +621,9 @@ func (c *Connector) SetHTTPClient(client *http.Client) {
 }
 
 func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.CertificateInfo, error) {
+	if c.zone == "" {
+		return nil, fmt.Errorf("empty zone")
+	}
 	const batchSize = 100
 	limit := 100000000
 	if filter.Limit != nil {
@@ -637,10 +640,10 @@ func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.Cert
 		if err != nil {
 			return nil, err
 		}
+		buf = append(buf, b)
 		if len(b) < batchSize {
 			break
 		}
-		buf = append(buf, b)
 	}
 	sumLen := 0
 	for _, b := range buf {
@@ -656,7 +659,6 @@ func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.Cert
 }
 
 func (c *Connector) getCertsBatch(page, pageSize int, withExpired bool) ([]certificate.CertificateInfo, error) {
-
 	req := &SearchRequest{
 		Expression: &Expression{
 			Operands: []Operand{
