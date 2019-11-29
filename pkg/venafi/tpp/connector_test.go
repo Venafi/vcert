@@ -20,6 +20,7 @@ import (
 	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
+	"crypto/x509/pkix"
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
@@ -1000,4 +1001,72 @@ func Test_GetCertificateList(t *testing.T) {
 			t.Errorf("mismatched certificates number: wait %d, got %d", count, len(set))
 		}
 	}
+}
+
+func Test_GetCertificateListFull(t *testing.T) {
+	const certPem = `-----BEGIN CERTIFICATE-----
+MIICZjCCAcegAwIBAgIIe1Dq0CjsAx8wCgYIKoZIzj0EAwQwEjEQMA4GA1UEAxMH
+VGVzdCBDQTAeFw0xOTExMjAxNDU3MDBaFw0xOTExMjYxNDUwMDBaMHoxCzAJBgNV
+BAYTAlVTMQ0wCwYDVQQIEwRVdGFoMRIwEAYDVQQHEwlTYWx0IExha2UxFDASBgNV
+BAoTC1ZlYW5maSBJbmMuMRQwEgYDVQQLEwtJbnRlZ3JhdGlvbjEcMBoGA1UEAxMT
+ZXhwaXJlZDEudmZpZGV2LmNvbTCBmzAQBgcqhkjOPQIBBgUrgQQAIwOBhgAEAWNR
+bh7m40QpJAMV9DQMFQA6ZwIwQpBZp470b4pWt5Ih+64oLHMgwDTOkjv701hCYWK0
+BdxNXYCpEGvnA3BahHprAaQHsDWxHygKJdtNeGW8ein7hN1CdMtm72aFp5DHI82U
+jDWQHczRatUpOEdzjB+9JwYtI1BIFTVA8xvpRrQwEqwio1wwWjAMBgNVHRMBAf8E
+AjAAMB0GA1UdDgQWBBSgTpxmCxUnyqB/xpXevPcQklFtxDALBgNVHQ8EBAMCBeAw
+HgYDVR0RBBcwFYITZXhwaXJlZDEudmZpZGV2LmNvbTAKBggqhkjOPQQDBAOBjAAw
+gYgCQgFrpA/sLEzrWumVicNJGLHFK2FhhMxOxOeC1Fk3HTJDiMfxHMe1QBP++wLp
+vOjeQhOnqrPdQINzUCKMSuqxqFGbQAJCAZs3Be1Pz6eeKHNLzr7mYQ2/pWSjfun4
+45nAry0Rb308mXI49fEprVJDQ0zyb3gM8Z8OA0wDyaQ+pcwloQkvOAM2
+-----END CERTIFICATE-----
+`
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZoneRestricted)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+	importReq := certificate.ImportRequest{CertificateData: certPem}
+	_, err = tpp.ImportCertificate(&importReq)
+	if err != nil {
+		t.Fatal(err)
+	}
+	validList, err := tpp.ListCertificates(endpoint.Filter{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	fullList, err := tpp.ListCertificates(endpoint.Filter{WithExpired: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(validList) >= len(fullList) {
+		t.Fatalf("valid certificates numbe (%v) should be less than all certificates number (%v)", len(validList), len(fullList))
+	}
+	req := certificate.Request{Subject: pkix.Name{CommonName: fmt.Sprintf("test%d%d.vfidev.com", time.Now().Unix(), time.Now().Nanosecond())}, KeyType: certificate.KeyTypeRSA, KeyLength: 2048}
+	tpp.GenerateRequest(nil, &req)
+	req.PickupID, err = tpp.RequestCertificate(&req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	time.Sleep(time.Second * 10) //todo: remove after fix bug VEN-54714
+	validList2, err := tpp.ListCertificates(endpoint.Filter{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	fullList2, err := tpp.ListCertificates(endpoint.Filter{WithExpired: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(fullList)+1 != len(fullList2) {
+		t.Fatal("list should be longer")
+	}
+
+	if len(validList)+1 != len(validList2) {
+		t.Fatal("list should be longer")
+	}
+
 }
