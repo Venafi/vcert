@@ -559,3 +559,36 @@ func TestRetrieveCertificatesList(t *testing.T) {
 		}
 	}
 }
+
+func TestSearchCertificate(t *testing.T) {
+	conn := getTestConnector(ctx.CloudZone)
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	if err != nil {
+		t.Fatal(err)
+	}
+	zoneConfig, err := conn.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatal(err)
+	}
+	req := certificate.Request{}
+	req.Subject.CommonName = test.RandCN()
+	req.Timeout = time.Second * 10
+	err = conn.GenerateRequest(zoneConfig, &req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.PickupID, err = conn.RequestCertificate(&req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cert, err := conn.RetrieveCertificate(&req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	p, _ := pem.Decode([]byte(cert.Certificate))
+	thumbprint := certThumprint(p.Bytes)
+	_, err = conn.searchCertificatesByFingerprint(thumbprint)
+	if err != nil {
+		t.Fatal(err)
+	}
+}

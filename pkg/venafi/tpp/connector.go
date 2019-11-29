@@ -444,6 +444,9 @@ func (c *Connector) SetHTTPClient(client *http.Client) {
 }
 
 func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.CertificateInfo, error) {
+	if c.zone == "" {
+		return nil, fmt.Errorf("empty zone")
+	}
 	min := func(i, j int) int {
 		if i < j {
 			return i
