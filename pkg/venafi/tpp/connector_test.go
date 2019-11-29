@@ -114,12 +114,47 @@ func TestGetRefreshToken(t *testing.T) {
 	}
 }
 
+func TestFailRefreshAccessToken(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+	auth := &endpoint.Authentication{RefreshToken: "WRONGREFRESHTOKEN", ClientId: ctx.ClientID}
+	err = tpp.Authenticate(auth)
+	if err == nil {
+		t.Fatalf("err should not be nil, er")
+	}
+
+	if fmt.Sprintf("%s", err) != "unexpected status code on TPP Authorize. Status: 400 Bad Request" {
+		t.Fatalf("error text should be: unexpected status code on TPP Authorize. Status: 400 Bad Request. but it is: %s", err)
+	}
+}
+
 func TestRefreshAccessToken(t *testing.T) {
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
 	auth := &endpoint.Authentication{RefreshToken: ctx.TPPRefreshToken, ClientId: ctx.ClientID}
+	err = tpp.Authenticate(auth)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	tpp.SetZone(ctx.TPPZone)
+	_, err = tpp.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+}
+
+func TestRefreshAccessTokenNoClientID(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+	auth := &endpoint.Authentication{RefreshToken: ctx.TPPRefreshToken}
 	err = tpp.Authenticate(auth)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
