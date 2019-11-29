@@ -254,7 +254,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 				certificateRequestId = c.CurrentCertificateData.CertificateRequestId
 			}
 			if c.Id != "" {
-				req.CertID = c.Id
+				req.CertID = c.CurrentCertificateData.ID
 			}
 		}
 		if !isOnlyOneCertificateRequestId {
