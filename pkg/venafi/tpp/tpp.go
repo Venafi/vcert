@@ -650,12 +650,28 @@ func (sp serverPolicy) toPolicy() (p endpoint.Policy) {
 		}
 		p.AllowedKeyConfigurations = append(p.AllowedKeyConfigurations, key)
 	} else {
+		var ks []int
+		for _, s := range certificate.AllSupportedKeySizes() {
+			if !sp.KeyPair.KeySize.Locked || s >= sp.KeyPair.KeySize.Value {
+				ks = append(ks, s)
+			}
+		}
 		p.AllowedKeyConfigurations = append(p.AllowedKeyConfigurations, endpoint.AllowedKeyConfiguration{
-			KeyType: certificate.KeyTypeRSA, KeySizes: certificate.AllSupportedKeySizes(),
+			KeyType: certificate.KeyTypeRSA, KeySizes: ks,
 		})
-		p.AllowedKeyConfigurations = append(p.AllowedKeyConfigurations, endpoint.AllowedKeyConfiguration{
-			KeyType: certificate.KeyTypeECDSA, KeyCurves: certificate.AllSupportedCurves(),
-		})
+		if sp.KeyPair.EllipticCurve.Locked {
+			var curve certificate.EllipticCurve
+			if err := curve.Set(sp.KeyPair.EllipticCurve.Value); err != nil {
+				panic(err)
+			}
+			p.AllowedKeyConfigurations = append(p.AllowedKeyConfigurations, endpoint.AllowedKeyConfiguration{
+				KeyType: certificate.KeyTypeECDSA, KeyCurves: []certificate.EllipticCurve{curve},
+			})
+		} else {
+			p.AllowedKeyConfigurations = append(p.AllowedKeyConfigurations, endpoint.AllowedKeyConfiguration{
+				KeyType: certificate.KeyTypeECDSA, KeyCurves: certificate.AllSupportedCurves(),
+			})
+		}
 	}
 	p.AllowWildcards = sp.WildcardsAllowed
 	p.AllowKeyReuse = sp.PrivateKeyReuseAllowed
