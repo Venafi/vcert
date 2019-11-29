@@ -572,6 +572,7 @@ func TestSearchCertificate(t *testing.T) {
 	}
 	req := certificate.Request{}
 	req.Subject.CommonName = test.RandCN()
+	req.Timeout = time.Second * 10
 	err = conn.GenerateRequest(zoneConfig, &req)
 	if err != nil {
 		t.Fatal(err)
