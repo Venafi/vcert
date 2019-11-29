@@ -972,7 +972,7 @@ vOjeQhOnqrPdQINzUCKMSuqxqFGbQAJCAZs3Be1Pz6eeKHNLzr7mYQ2/pWSjfun4
 		}
 	}
 	importReq := certificate.ImportRequest{CertificateData: certPem}
-	_, err = conn.ImportCertificate(&importReq)
+	_, err = tpp.ImportCertificate(&importReq)
 	if err != nil {
 		t.Fatal(err)
 	}
