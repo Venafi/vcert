@@ -945,6 +945,22 @@ func Test_GetCertificateList(t *testing.T) {
 }
 
 func Test_GetCertificateListFull(t *testing.T) {
+	const certPem = `-----BEGIN CERTIFICATE-----
+MIICZjCCAcegAwIBAgIIe1Dq0CjsAx8wCgYIKoZIzj0EAwQwEjEQMA4GA1UEAxMH
+VGVzdCBDQTAeFw0xOTExMjAxNDU3MDBaFw0xOTExMjYxNDUwMDBaMHoxCzAJBgNV
+BAYTAlVTMQ0wCwYDVQQIEwRVdGFoMRIwEAYDVQQHEwlTYWx0IExha2UxFDASBgNV
+BAoTC1ZlYW5maSBJbmMuMRQwEgYDVQQLEwtJbnRlZ3JhdGlvbjEcMBoGA1UEAxMT
+ZXhwaXJlZDEudmZpZGV2LmNvbTCBmzAQBgcqhkjOPQIBBgUrgQQAIwOBhgAEAWNR
+bh7m40QpJAMV9DQMFQA6ZwIwQpBZp470b4pWt5Ih+64oLHMgwDTOkjv701hCYWK0
+BdxNXYCpEGvnA3BahHprAaQHsDWxHygKJdtNeGW8ein7hN1CdMtm72aFp5DHI82U
+jDWQHczRatUpOEdzjB+9JwYtI1BIFTVA8xvpRrQwEqwio1wwWjAMBgNVHRMBAf8E
+AjAAMB0GA1UdDgQWBBSgTpxmCxUnyqB/xpXevPcQklFtxDALBgNVHQ8EBAMCBeAw
+HgYDVR0RBBcwFYITZXhwaXJlZDEudmZpZGV2LmNvbTAKBggqhkjOPQQDBAOBjAAw
+gYgCQgFrpA/sLEzrWumVicNJGLHFK2FhhMxOxOeC1Fk3HTJDiMfxHMe1QBP++wLp
+vOjeQhOnqrPdQINzUCKMSuqxqFGbQAJCAZs3Be1Pz6eeKHNLzr7mYQ2/pWSjfun4
+45nAry0Rb308mXI49fEprVJDQ0zyb3gM8Z8OA0wDyaQ+pcwloQkvOAM2
+-----END CERTIFICATE-----
+`
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZoneRestricted)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
@@ -954,6 +970,11 @@ func Test_GetCertificateListFull(t *testing.T) {
 		if err != nil {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
+	}
+	importReq := certificate.ImportRequest{CertificateData: certPem}
+	_, err = conn.ImportCertificate(&importReq)
+	if err != nil {
+		t.Fatal(err)
 	}
 	validList, err := tpp.ListCertificates(endpoint.Filter{})
 	if err != nil {
