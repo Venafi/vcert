@@ -131,6 +131,11 @@ func main() {
 
 	if co == commandGetcred {
 		logf("Getting credentials")
+
+		var clientP12 bool
+		if cf.clientP12 != "" {
+			clientP12 = true
+		}
 		var connectionTrustBundle *x509.CertPool
 		if cfg.ConnectionTrust != "" {
 			logf("You specified a trust bundle.")
@@ -163,7 +168,7 @@ func main() {
 				fmt.Println("access_token: ", resp.Access_token)
 				fmt.Println("refresh_token: ", resp.Refresh_token)
 			}
-		} else {
+		} else if cfg.Credentials.User != "" && cfg.Credentials.Password != "" {
 			resp, err := tppConnector.GetRefreshToken(&endpoint.Authentication{
 				User:     cfg.Credentials.User,
 				Password: cfg.Credentials.Password,
@@ -183,8 +188,28 @@ func main() {
 				fmt.Println("refresh_token: ", resp.Refresh_token)
 
 			}
+		} else if clientP12 {
+			resp, err := tppConnector.GetRefreshToken(&endpoint.Authentication{
+				ClientPKCS12: clientP12,
+				Scope:        cf.scope,
+				ClientId:     cf.clientId})
+			if err != nil {
+				logger.Panicf("%s", err)
+			}
+			if cf.format == "json" {
+				jsonData, err := json.MarshalIndent(resp, "", "    ")
+				if err != nil {
+					logger.Panicf("%s", err)
+				}
+				fmt.Println(string(jsonData))
+			} else {
+				fmt.Println("access_token: ", resp.Access_token)
+				fmt.Println("refresh_token: ", resp.Refresh_token)
+
+			}
+		} else {
+			logger.Panicf("Failed to determine credentials set")
 		}
-		return
 	}
 
 	connector, err := vcert.NewClient(&cfg) // Everything else requires an endpoint connection

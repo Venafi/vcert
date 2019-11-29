@@ -123,17 +123,6 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 		c.accessToken = resp.Access_token
 		return nil
 
-	} else if auth.ClientPKCS12 {
-		data := oauthCertificateTokenRequest{Client_id: auth.ClientId, Scope: auth.Scope}
-		result, err := processAuthData(c, urlResourceAuthorizeCertificate, data)
-		if err != nil {
-			return err
-		}
-
-		resp := result.(oauthRefreshAccessTokenResponse)
-		c.accessToken = resp.Access_token
-		return nil
-
 	} else if auth.AccessToken != "" {
 		c.accessToken = auth.AccessToken
 		return nil
@@ -157,9 +146,18 @@ func (c *Connector) GetRefreshToken(auth *endpoint.Authentication) (resp oauthGe
 		resp = result.(oauthGetRefreshTokenResponse)
 		return resp, nil
 
-	} else {
-		return resp, fmt.Errorf("failed to authenticate: missing credentials")
+	} else if auth.ClientPKCS12 {
+		data := oauthCertificateTokenRequest{Client_id: auth.ClientId, Scope: auth.Scope}
+		result, err := processAuthData(c, urlResourceAuthorizeCertificate, data)
+		if err != nil {
+			return resp, err
+		}
+
+		resp = result.(oauthGetRefreshTokenResponse)
+		return resp, nil
 	}
+
+	return resp, fmt.Errorf("failed to authenticate: missing credentials")
 }
 
 // Refresh OAuth access token
@@ -214,11 +212,11 @@ func processAuthData(c *Connector, url urlResource, data interface{}) (resp inte
 			}
 			resp = authorize
 		case oauthCertificateTokenRequest:
-			err = json.Unmarshal(body, &refreshAccess)
+			err = json.Unmarshal(body, &getRefresh)
 			if err != nil {
 				return resp, err
 			}
-			resp = refreshAccess
+			resp = getRefresh
 		default:
 			return resp, fmt.Errorf("can not determine data type")
 		}
