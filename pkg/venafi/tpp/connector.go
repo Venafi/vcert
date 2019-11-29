@@ -118,11 +118,22 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 		if err != nil {
 			return err
 		}
+
 		resp := result.(oauthRefreshAccessTokenResponse)
 		c.accessToken = resp.Access_token
 		return nil
-	} else if "p12" == "nop12" {
-		//  	TODO: p12 method should be here
+
+	} else if auth.ClientPKCS12 {
+		data := oauthCertificateTokenRequest{Client_id: auth.ClientId, Scope: auth.Scope}
+		result, err := processAuthData(c, urlResourceAuthorizeCertificate, data)
+		if err != nil {
+			return err
+		}
+
+		resp := result.(oauthRefreshAccessTokenResponse)
+		c.accessToken = resp.Access_token
+		return nil
+
 	} else if auth.AccessToken != "" {
 		c.accessToken = auth.AccessToken
 		return nil
@@ -182,6 +193,12 @@ func processAuthData(c *Connector, url urlResource, data interface{}) (resp inte
 				return resp, err
 			}
 			resp = authorize
+		case oauthCertificateTokenRequest:
+			err = json.Unmarshal(body, &refreshAccess)
+			if err != nil {
+				return resp, err
+			}
+			resp = refreshAccess
 		default:
 			return resp, fmt.Errorf("can not determine data type")
 		}
