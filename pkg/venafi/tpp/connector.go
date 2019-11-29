@@ -104,12 +104,14 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 	if auth.User != "" && auth.Password != "" {
 		data := authorizeResquest{Username: auth.User, Password: auth.Password}
 		result, err := processAuthData(c, urlResourceAuthorize, data)
-		resp := result.(authorizeResponse)
-		c.apiKey = resp.APIKey
 		if err != nil {
 			return err
 		}
+
+		resp := result.(authorizeResponse)
+		c.apiKey = resp.APIKey
 		return nil
+
 	} else if auth.RefreshToken != "" && auth.ClientId != "" {
 		resp, err := c.RefreshAccessToken(auth)
 		if err != nil {
