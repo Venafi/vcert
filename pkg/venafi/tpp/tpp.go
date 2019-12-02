@@ -133,7 +133,7 @@ type certificateRequestResponse struct {
 
 type authorizeResponse struct {
 	APIKey     string `json:",omitempty"`
-	ValidUntil string `json:",omitempty"`
+	ValidUntil string `json:",omitempty"` //todo: add usage
 }
 
 type authorizeResquest struct {
