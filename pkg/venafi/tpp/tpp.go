@@ -38,6 +38,7 @@ import (
 
 const defaultKeySize = 2048
 const defaultSignatureAlgorithm = x509.SHA256WithRSA
+const defaultClientID = "vedsdk"
 
 type certificateRequest struct {
 	PolicyDN                string          `json:",omitempty"`

@@ -101,6 +101,10 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 		return fmt.Errorf("failed to authenticate: missing credentials")
 	}
 
+	if auth.ClientId == "" {
+		auth.ClientId = defaultClientID
+	}
+
 	if auth.User != "" && auth.Password != "" {
 		data := authorizeResquest{Username: auth.User, Password: auth.Password}
 		result, err := processAuthData(c, urlResourceAuthorize, data)
@@ -112,7 +116,7 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 		c.apiKey = resp.APIKey
 		return nil
 
-	} else if auth.RefreshToken != "" && auth.ClientId != "" {
+	} else if auth.RefreshToken != "" {
 		data := oauthRefreshAccessTokenRequest{Client_id: auth.ClientId, Refresh_token: auth.RefreshToken}
 		result, err := processAuthData(c, urlResourceRefreshAccessToken, data)
 		if err != nil {
