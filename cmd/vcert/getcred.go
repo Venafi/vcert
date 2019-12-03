@@ -31,9 +31,10 @@ func setupGetcredCommandFlags() {
 	getcredFlags.StringVar(&getcredParams.clientId, "client-id", "vedsdk", "")
 	getcredFlags.StringVar(&getcredParams.config, "config", "", "")
 	getcredFlags.StringVar(&getcredParams.profile, "profile", "", "")
-	getcredFlags.StringVar(&getcredParams.clientP12, "client-pkcs12", "", "")
-	getcredFlags.StringVar(&getcredParams.clientP12PW, "client-pkcs12-pw", "", "")
+	getcredFlags.StringVar(&getcredParams.clientP12, "p12-file", "", "")
+	getcredFlags.StringVar(&getcredParams.clientP12PW, "p12-password", "", "")
 	getcredFlags.StringVar(&getcredParams.format, "format", "", "")
+	getcredFlags.BoolVar(&getcredParams.verbose, "verbose", false, "")
 
 	getcredFlags.Usage = func() {
 		fmt.Printf("%s\n", vcert.GetFormattedVersionString())
@@ -45,6 +46,8 @@ func showGetcredUsage() {
 	fmt.Printf("Getting credentials usage:\n")
 	fmt.Println("  -format")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the output format. If not specified will be plain text. Options include: json ."))
+	fmt.Println("  -verbose")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to increase the level of logging detail, which is helpful when troubleshooting issues."))
 	//TODO
 	fmt.Println()
 }
