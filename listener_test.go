@@ -11,12 +11,21 @@ import (
 
 func TestConfig_NewListener(t *testing.T) {
 
-	testListener(t, "18443", []string{"test.example.com:18443"})
-	testListener(t, "443", []string{"example.com"})
-	testListener(t, "8443", []string{"example.com", "test.example.com:8443"})
+	t.Run("normal", func(t *testing.T) {
+		testListener(t, "18443", []string{"test.example.com:18443"}, true)
+	})
+	t.Run("default port", func(t *testing.T) {
+		testListener(t, "443", []string{"example.com"}, true)
+	})
+	t.Run("two domains", func(t *testing.T) {
+		testListener(t, "8443", []string{"example.com", "test.example.com:8443"}, true)
+	})
+	t.Run("port conflict", func(t *testing.T) {
+		testListener(t, "8444", []string{"example.com:443", "test.example.com:8444"}, false)
+	})
 }
 
-func testListener(t *testing.T, port string, domains []string) {
+func testListener(t *testing.T, port string, domains []string, success bool) {
 	const text = "It works!\n"
 	cfg := Config{ConnectorType: endpoint.ConnectorTypeFake}
 	mux := http.NewServeMux()
@@ -25,13 +34,18 @@ func testListener(t *testing.T, port string, domains []string) {
 	})
 
 	listener := cfg.NewListener(domains...)
+	defer listener.Close()
 	go http.Serve(listener, mux)
 	time.Sleep(time.Millisecond * 100)
 
 	r, err := http.Get("https://localhost:" + port + "/")
 	//todo: custom client and check server certificate
-	if err != nil {
+	if success && err != nil {
 		t.Fatal(err)
+	} else if !success && err == nil {
+		t.Fatal("test should fail but it doesnt")
+	} else if !success {
+		return
 	}
 	if r.StatusCode != 200 {
 		t.Fatalf("bad code: %v", r.StatusCode)
@@ -40,5 +54,5 @@ func testListener(t *testing.T, port string, domains []string) {
 	if string(b) != text {
 		t.Fatalf("bad text: %v", text)
 	}
-	listener.Close()
+
 }

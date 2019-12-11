@@ -3,6 +3,7 @@ package vcert
 import (
 	"crypto/tls"
 	"crypto/x509/pkix"
+	"fmt"
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
 	"net"
@@ -33,11 +34,14 @@ func (cfg *Config) NewListener(domains ...string) net.Listener {
 	}
 	certs := make([]tls.Certificate, len(domains))
 	certsMap := make(map[string]*tls.Certificate)
-	port := "443"
-
+	port := ""
 	for i, d := range domains {
 		parsedHost, parsedPort, err := net.SplitHostPort(d)
 		if err == nil {
+			if port != "" && parsedPort != port {
+				l.e = fmt.Errorf("ports conflict: %v and %v", parsedPort, port)
+				return &l
+			}
 			port = parsedPort
 			d = parsedHost
 		}
@@ -48,6 +52,9 @@ func (cfg *Config) NewListener(domains ...string) net.Listener {
 		}
 		certs[i] = cert
 		certsMap[d] = &certs[i]
+	}
+	if port == "" {
+		port = "443"
 	}
 
 	l.conf = &tls.Config{
