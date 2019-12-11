@@ -141,6 +141,13 @@ func (c *Connector) GetRefreshToken(auth *endpoint.Authentication) (resp oauthGe
 		return resp, fmt.Errorf("failed to authenticate: missing credentials")
 	}
 
+	if auth.Scope == "" {
+		auth.Scope = defaultScope
+	}
+	if auth.ClientId == "" {
+		auth.ClientId = defaultClientID
+	}
+
 	if auth.User != "" && auth.Password != "" {
 		data := oauthGetRefreshTokenRequest{Username: auth.User, Password: auth.Password, Scope: auth.Scope, Client_id: auth.ClientId}
 		result, err := processAuthData(c, urlResourceAuthorizeOAuth, data)

@@ -114,6 +114,31 @@ func TestGetRefreshToken(t *testing.T) {
 	}
 }
 
+func TestGetRefreshTokenWithDefaultScope(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+
+	refreshToken, err := tpp.GetRefreshToken(&endpoint.Authentication{
+		User: ctx.TPPuser, Password: ctx.TPPPassword})
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	//TODO: make sure that scope is certificate:manage,revoke and vcert-go for client id
+	err = tpp.Authenticate(&endpoint.Authentication{AccessToken: refreshToken.Access_token})
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	tpp.SetZone(ctx.TPPZone)
+	_, err = tpp.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+}
+
 func TestFailRefreshAccessToken(t *testing.T) {
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
