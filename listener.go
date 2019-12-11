@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
+	"log"
 	"net"
 	"time"
 )
@@ -45,6 +46,7 @@ func (cfg *Config) NewListener(domains ...string) net.Listener {
 			port = parsedPort
 			d = parsedHost
 		}
+		log.Println("Retrieving certificate for domain", d)
 		cert, err := getSimpleCertificate(conn, d)
 		if err != nil {
 			l.e = err
@@ -62,6 +64,7 @@ func (cfg *Config) NewListener(domains ...string) net.Listener {
 		NameToCertificate: certsMap,
 	}
 	l.Listener, l.e = net.Listen("tcp", ":"+port)
+	log.Println("Starting server on port", port)
 	return &l
 }
 
