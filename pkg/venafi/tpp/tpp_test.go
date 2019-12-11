@@ -268,3 +268,145 @@ func TestGetHttpClient(t *testing.T) {
 		t.Fatalf("Failed to get http client")
 	}
 }
+
+func TestConvertServerPolicyToInternalPolicy(t *testing.T) {
+	sp := serverPolicy{
+		KeyPair: struct {
+			KeyAlgorithm _strValue
+			KeySize      struct {
+				Locked bool
+				Value  int
+			}
+			EllipticCurve struct {
+				Locked bool
+				Value  string
+			}
+		}{
+			KeyAlgorithm: _strValue{
+				Locked: true,
+				Value:  "rsa",
+			},
+			KeySize: struct {
+				Locked bool
+				Value  int
+			}{
+				Locked: true,
+				Value:  2048,
+			},
+			EllipticCurve: struct {
+				Locked bool
+				Value  string
+			}{
+				Locked: false,
+				Value:  "",
+			},
+		},
+	}
+	p := sp.toPolicy()
+	if len(p.AllowedKeyConfigurations) != 1 {
+		t.Fatal("invalid configurations values")
+	}
+	k := p.AllowedKeyConfigurations[0]
+	if k.KeyType != certificate.KeyTypeRSA {
+		t.Fatal("invalid key type")
+	}
+	if len(k.KeySizes) != 3 || k.KeySizes[0] != 2048 || k.KeySizes[1] != 4096 || k.KeySizes[2] != 8192 {
+		t.Fatal("bad key lengths")
+	}
+
+	sp = serverPolicy{
+		KeyPair: struct {
+			KeyAlgorithm _strValue
+			KeySize      struct {
+				Locked bool
+				Value  int
+			}
+			EllipticCurve struct {
+				Locked bool
+				Value  string
+			}
+		}{
+			KeyAlgorithm: _strValue{
+				Locked: true,
+				Value:  "ec",
+			},
+			KeySize: struct {
+				Locked bool
+				Value  int
+			}{
+				Locked: true,
+				Value:  2048,
+			},
+			EllipticCurve: struct {
+				Locked bool
+				Value  string
+			}{
+				Locked: true,
+				Value:  "p521",
+			},
+		},
+	}
+	p = sp.toPolicy()
+	if len(p.AllowedKeyConfigurations) != 1 {
+		t.Fatal("invalid configurations values")
+	}
+	k = p.AllowedKeyConfigurations[0]
+	if k.KeyType != certificate.KeyTypeECDSA {
+		t.Fatal("invalid key type")
+	}
+	if len(k.KeyCurves) != 1 || k.KeyCurves[0] != certificate.EllipticCurveP521 {
+		t.Fatal("bad key curve")
+	}
+
+	sp = serverPolicy{
+		KeyPair: struct {
+			KeyAlgorithm _strValue
+			KeySize      struct {
+				Locked bool
+				Value  int
+			}
+			EllipticCurve struct {
+				Locked bool
+				Value  string
+			}
+		}{
+			KeyAlgorithm: _strValue{
+				Locked: false,
+				Value:  "ec",
+			},
+			KeySize: struct {
+				Locked bool
+				Value  int
+			}{
+				Locked: true,
+				Value:  2048,
+			},
+			EllipticCurve: struct {
+				Locked bool
+				Value  string
+			}{
+				Locked: true,
+				Value:  "p384",
+			},
+		},
+	}
+	p = sp.toPolicy()
+	if len(p.AllowedKeyConfigurations) != 2 {
+		t.Fatal("invalid configurations values")
+	}
+	k = p.AllowedKeyConfigurations[0]
+	if k.KeyType != certificate.KeyTypeRSA {
+		t.Fatal("invalid key type")
+	}
+	if len(k.KeySizes) != 3 || k.KeySizes[0] != 2048 || k.KeySizes[1] != 4096 || k.KeySizes[2] != 8192 {
+		t.Fatal("bad key lengths")
+	}
+	k = p.AllowedKeyConfigurations[1]
+	if k.KeyType != certificate.KeyTypeECDSA {
+		t.Fatal("invalid key type")
+	}
+	if len(k.KeyCurves) != 1 || k.KeyCurves[0] != certificate.EllipticCurveP384 {
+		t.Fatal("bad key curve")
+	}
+
+}
