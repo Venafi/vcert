@@ -21,7 +21,7 @@ import (
 	"encoding/pem"
 )
 
-const caCertPEM = `-----BEGIN CERTIFICATE-----
+const CaCertPEM = `-----BEGIN CERTIFICATE-----
 MIID1TCCAr2gAwIBAgIJAIOVTvMIMD7OMA0GCSqGSIb3DQEBCwUAMIGAMQswCQYD
 VQQGEwJVUzENMAsGA1UECAwEVXRhaDEXMBUGA1UEBwwOU2FsdCBMYWtlIENpdHkx
 DzANBgNVBAoMBlZlbmFmaTEbMBkGA1UECwwSTk9UIEZPUiBQUk9EVUNUSU9OMRsw
@@ -74,7 +74,7 @@ wWh1aVElz5xMF+SnGUCW7t02dvhK0i29mOfx/eG5jkSm33NvVBq/IA==
 -----END RSA PRIVATE KEY-----`
 
 var (
-	caBlock, _ = pem.Decode([]byte(caCertPEM))
+	caBlock, _ = pem.Decode([]byte(CaCertPEM))
 	caCrt, _   = x509.ParseCertificate(caBlock.Bytes)
 
 	caKeyBlock, _ = pem.Decode([]byte(caKeyPEM))
