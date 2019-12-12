@@ -47,7 +47,7 @@ func init() {
 	}
 }
 
-func getRefreshToken() (TPPRefreshToken string) {
+func setTokens(ctx *test.Context) *test.Context {
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
 		panic(err)
@@ -60,7 +60,9 @@ func getRefreshToken() (TPPRefreshToken string) {
 		panic(err)
 	}
 
-	return resp.Refresh_token
+	ctx.TPPRefreshToken = resp.Refresh_token
+	ctx.TPPaccessToken = resp.Access_token
+	return ctx
 }
 
 func getTestConnector(url string, zone string) (c *Connector, err error) {
@@ -163,7 +165,9 @@ func TestRefreshAccessToken(t *testing.T) {
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
-	auth := &endpoint.Authentication{RefreshToken: getRefreshToken(), ClientId: ctx.ClientID}
+	ctx = setTokens(ctx)
+
+	auth := &endpoint.Authentication{RefreshToken: ctx.TPPaccessToken, ClientId: ctx.ClientID}
 	err = tpp.Authenticate(auth)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
