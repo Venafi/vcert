@@ -14,7 +14,7 @@ func main() {
 	conf := initConfig()
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "It works!\n")
+		fmt.Fprintf(w, "It works! %v\n", r.Host)
 	})
 	log.Fatal(http.Serve(conf.NewListener("test.example.com:8443", "example.com"), mux))
 
