@@ -54,7 +54,7 @@ func init() {
 
 	resp, err := tpp.GetRefreshToken(&endpoint.Authentication{
 		User: ctx.TPPuser, Password: ctx.TPPPassword,
-		Scope: "certificate:approve,delete,discover,manage,revoke;", ClientId: "websdk"})
+		Scope: "certificate:approve,delete,discover,manage,revoke;"})
 	if err != nil {
 		panic(err)
 	}
@@ -126,7 +126,7 @@ func TestGetRefreshTokenWithDefaultScope(t *testing.T) {
 		t.Fatalf("%s", err)
 	}
 
-	if refreshToken.Scope != defaultScope+";" {
+	if refreshToken.Scope != defaultScope {
 		t.Fatalf("Scope from refresh roken %s is not as default scope %s;", refreshToken.Scope, defaultScope)
 	}
 	err = tpp.Authenticate(&endpoint.Authentication{AccessToken: refreshToken.Access_token})
