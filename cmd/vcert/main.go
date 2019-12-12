@@ -210,6 +210,7 @@ func main() {
 		} else {
 			logger.Panicf("Failed to determine credentials set")
 		}
+		return
 	}
 
 	connector, err := vcert.NewClient(&cfg) // Everything else requires an endpoint connection
