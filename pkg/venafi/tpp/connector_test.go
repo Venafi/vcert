@@ -174,6 +174,9 @@ func TestRefreshAccessToken(t *testing.T) {
 		t.Fatalf("%s", err)
 	}
 
+	//Set new refresh token since old was expired
+	ctx.TPPRefreshToken = auth.RefreshToken
+
 }
 
 func TestRefreshAccessTokenNoClientID(t *testing.T) {
