@@ -264,7 +264,7 @@ func main() {
 		resp, err := tppConnector.GetRefreshToken(&endpoint.Authentication{
 			User:     os.Getenv("VCERT_TPP_USER"),
 			Password: os.Getenv("VCERT_TPP_PASSWORD"),
-			Scope:    "certificate:approve,delete,discover,manage,revoke;", ClientId: "websdk"})
+			Scope:    "certificate:manage,revoke;", ClientId: "websdk"})
 		if err != nil {
 			panic(err)
 		}

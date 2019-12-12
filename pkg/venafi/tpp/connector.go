@@ -125,6 +125,7 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 
 		resp := result.(oauthRefreshAccessTokenResponse)
 		c.accessToken = resp.Access_token
+		auth.RefreshToken = resp.Refresh_token
 		return nil
 
 	} else if auth.AccessToken != "" {
@@ -139,6 +140,13 @@ func (c *Connector) GetRefreshToken(auth *endpoint.Authentication) (resp oauthGe
 
 	if auth == nil {
 		return resp, fmt.Errorf("failed to authenticate: missing credentials")
+	}
+
+	if auth.Scope == "" {
+		auth.Scope = defaultScope
+	}
+	if auth.ClientId == "" {
+		auth.ClientId = defaultClientID
 	}
 
 	if auth.User != "" && auth.Password != "" {

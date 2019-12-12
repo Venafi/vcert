@@ -38,7 +38,6 @@ import (
 var ctx *test.Context
 
 func init() {
-	//ctx = test.GetContext()
 	ctx = test.GetEnvContext()
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
@@ -54,12 +53,13 @@ func init() {
 
 	resp, err := tpp.GetRefreshToken(&endpoint.Authentication{
 		User: ctx.TPPuser, Password: ctx.TPPPassword,
-		Scope: "certificate:approve,delete,discover,manage,revoke;", ClientId: "websdk"})
+		Scope: "certificate:approve,delete,discover,manage,revoke;"})
 	if err != nil {
 		panic(err)
 	}
 
 	ctx.TPPRefreshToken = resp.Refresh_token
+	ctx.TPPaccessToken = resp.Access_token
 }
 
 func getTestConnector(url string, zone string) (c *Connector, err error) {
@@ -114,6 +114,33 @@ func TestGetRefreshToken(t *testing.T) {
 	}
 }
 
+func TestGetRefreshTokenWithDefaultScope(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+
+	refreshToken, err := tpp.GetRefreshToken(&endpoint.Authentication{
+		User: ctx.TPPuser, Password: ctx.TPPPassword})
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	if refreshToken.Scope != defaultScope {
+		t.Fatalf("Scope from refresh roken %s is not as default scope %s;", refreshToken.Scope, defaultScope)
+	}
+	err = tpp.Authenticate(&endpoint.Authentication{AccessToken: refreshToken.Access_token})
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	tpp.SetZone(ctx.TPPZone)
+	_, err = tpp.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+}
+
 func TestFailRefreshAccessToken(t *testing.T) {
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
@@ -135,6 +162,7 @@ func TestRefreshAccessToken(t *testing.T) {
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
+
 	auth := &endpoint.Authentication{RefreshToken: ctx.TPPRefreshToken, ClientId: ctx.ClientID}
 	err = tpp.Authenticate(auth)
 	if err != nil {
@@ -146,6 +174,9 @@ func TestRefreshAccessToken(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
+
+	//Uppdate refresh token for further tests
+	ctx.TPPRefreshToken = auth.RefreshToken
 
 }
 
@@ -166,29 +197,10 @@ func TestRefreshAccessTokenNoClientID(t *testing.T) {
 		t.Fatalf("%s", err)
 	}
 
-}
+	//Update tokens for further tests
+	ctx.TPPRefreshToken = auth.RefreshToken
+	ctx.TPPaccessToken = tpp.accessToken
 
-func TestAuthorizeToTPP(t *testing.T) {
-	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
-	if err != nil {
-		t.Fatalf("err is not nil, err: %s url: %s", err, ctx.TPPurl)
-	}
-	auth := &endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword}
-	err = tpp.Authenticate(auth)
-	if err != nil {
-		t.Fatalf("err is not nil, err: %s, %+v", err, auth)
-	}
-}
-
-func TestBadAuthorizeToTPP(t *testing.T) {
-	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
-	if err != nil {
-		t.Fatalf("err is not nil, err: %s url: %s", err, ctx.TPPurl)
-	}
-	err = tpp.Authenticate(&endpoint.Authentication{User: ctx.TPPuser, Password: "wrongPassword"})
-	if err == nil {
-		t.Fatalf("err should not be nil, bad password was used")
-	}
 }
 
 func TestAuthenticationAccessToken(t *testing.T) {
@@ -219,6 +231,29 @@ func TestAuthenticationAccessToken(t *testing.T) {
 		t.Fatalf("Auth with wrong token should fail")
 	}
 
+}
+
+func TestAuthorizeToTPP(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, ctx.TPPurl)
+	}
+	auth := &endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword}
+	err = tpp.Authenticate(auth)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s, %+v", err, auth)
+	}
+}
+
+func TestBadAuthorizeToTPP(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, ctx.TPPurl)
+	}
+	err = tpp.Authenticate(&endpoint.Authentication{User: ctx.TPPuser, Password: "wrongPassword"})
+	if err == nil {
+		t.Fatalf("err should not be nil, bad password was used")
+	}
 }
 
 func TestReadConfigData(t *testing.T) {
