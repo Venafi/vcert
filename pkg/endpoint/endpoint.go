@@ -92,12 +92,14 @@ type Filter struct {
 
 // Authentication provides a struct for authentication data. Either specify User and Password for Trust Platform or specify an APIKey for Cloud.
 type Authentication struct {
-	User     string
-	Password string
-	APIKey   string
-	//RefreshToken string
-	//ClientId     string
-	AccessToken string
+	User         string
+	Password     string
+	APIKey       string
+	RefreshToken string
+	Scope        string
+	ClientId     string
+	AccessToken  string
+	ClientPKCS12 bool
 }
 
 // ErrRetrieveCertificateTimeout provides a common error structure for a timeout while retrieving a certificate
