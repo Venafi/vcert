@@ -126,7 +126,9 @@ func TestGetRefreshTokenWithDefaultScope(t *testing.T) {
 		t.Fatalf("%s", err)
 	}
 
-	//TODO: make sure that scope is certificate:manage,revoke and vcert-go for client id
+	if refreshToken.Scope != defaultScope+";" {
+		t.Fatalf("Scope from refresh roken %s is not as default scope %s;", refreshToken.Scope, defaultScope)
+	}
 	err = tpp.Authenticate(&endpoint.Authentication{AccessToken: refreshToken.Access_token})
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
