@@ -45,9 +45,7 @@ func init() {
 		fmt.Println("TPP URL cannot be empty. See Makefile")
 		os.Exit(1)
 	}
-}
 
-func setTokens(ctx *test.Context) *test.Context {
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
 		panic(err)
@@ -62,7 +60,6 @@ func setTokens(ctx *test.Context) *test.Context {
 
 	ctx.TPPRefreshToken = resp.Refresh_token
 	ctx.TPPaccessToken = resp.Access_token
-	return ctx
 }
 
 func getTestConnector(url string, zone string) (c *Connector, err error) {
@@ -165,9 +162,8 @@ func TestRefreshAccessToken(t *testing.T) {
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
-	ctx = setTokens(ctx)
 
-	auth := &endpoint.Authentication{RefreshToken: ctx.TPPaccessToken, ClientId: ctx.ClientID}
+	auth := &endpoint.Authentication{RefreshToken: ctx.TPPRefreshToken, ClientId: ctx.ClientID}
 	err = tpp.Authenticate(auth)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
@@ -178,6 +174,9 @@ func TestRefreshAccessToken(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
+
+	//Uppdate refresh token for further tests
+	ctx.TPPRefreshToken = auth.RefreshToken
 
 }
 
@@ -186,7 +185,7 @@ func TestRefreshAccessTokenNoClientID(t *testing.T) {
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
-	auth := &endpoint.Authentication{RefreshToken: getRefreshToken()}
+	auth := &endpoint.Authentication{RefreshToken: ctx.TPPRefreshToken}
 	err = tpp.Authenticate(auth)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
@@ -198,29 +197,10 @@ func TestRefreshAccessTokenNoClientID(t *testing.T) {
 		t.Fatalf("%s", err)
 	}
 
-}
+	//Update tokens for further tests
+	ctx.TPPRefreshToken = auth.RefreshToken
+	ctx.TPPaccessToken = tpp.accessToken
 
-func TestAuthorizeToTPP(t *testing.T) {
-	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
-	if err != nil {
-		t.Fatalf("err is not nil, err: %s url: %s", err, ctx.TPPurl)
-	}
-	auth := &endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword}
-	err = tpp.Authenticate(auth)
-	if err != nil {
-		t.Fatalf("err is not nil, err: %s, %+v", err, auth)
-	}
-}
-
-func TestBadAuthorizeToTPP(t *testing.T) {
-	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
-	if err != nil {
-		t.Fatalf("err is not nil, err: %s url: %s", err, ctx.TPPurl)
-	}
-	err = tpp.Authenticate(&endpoint.Authentication{User: ctx.TPPuser, Password: "wrongPassword"})
-	if err == nil {
-		t.Fatalf("err should not be nil, bad password was used")
-	}
 }
 
 func TestAuthenticationAccessToken(t *testing.T) {
@@ -251,6 +231,29 @@ func TestAuthenticationAccessToken(t *testing.T) {
 		t.Fatalf("Auth with wrong token should fail")
 	}
 
+}
+
+func TestAuthorizeToTPP(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, ctx.TPPurl)
+	}
+	auth := &endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword}
+	err = tpp.Authenticate(auth)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s, %+v", err, auth)
+	}
+}
+
+func TestBadAuthorizeToTPP(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, ctx.TPPurl)
+	}
+	err = tpp.Authenticate(&endpoint.Authentication{User: ctx.TPPuser, Password: "wrongPassword"})
+	if err == nil {
+		t.Fatalf("err should not be nil, bad password was used")
+	}
 }
 
 func TestReadConfigData(t *testing.T) {

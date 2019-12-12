@@ -125,6 +125,7 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 
 		resp := result.(oauthRefreshAccessTokenResponse)
 		c.accessToken = resp.Access_token
+		auth.RefreshToken = resp.Refresh_token
 		return nil
 
 	} else if auth.AccessToken != "" {
