@@ -27,11 +27,11 @@ type Context struct {
 	TPPaccessToken    string
 	TPPZone           string
 	TPPZoneRestricted string
-	TPPRefreshToken   string
-	ClientID          string
-	CloudUrl          string
-	CloudAPIkey       string
-	CloudZone         string
+	//TPPRefreshToken   string
+	ClientID    string
+	CloudUrl    string
+	CloudAPIkey string
+	CloudZone   string
 }
 
 func GetEnvContext() *Context {

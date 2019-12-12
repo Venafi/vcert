@@ -38,7 +38,6 @@ import (
 var ctx *test.Context
 
 func init() {
-	//ctx = test.GetContext()
 	ctx = test.GetEnvContext()
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
@@ -46,7 +45,9 @@ func init() {
 		fmt.Println("TPP URL cannot be empty. See Makefile")
 		os.Exit(1)
 	}
+}
 
+func getRefreshToken() (TPPRefreshToken string) {
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
 		panic(err)
@@ -59,7 +60,7 @@ func init() {
 		panic(err)
 	}
 
-	ctx.TPPRefreshToken = resp.Refresh_token
+	return resp.Refresh_token
 }
 
 func getTestConnector(url string, zone string) (c *Connector, err error) {
@@ -162,7 +163,7 @@ func TestRefreshAccessToken(t *testing.T) {
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
-	auth := &endpoint.Authentication{RefreshToken: ctx.TPPRefreshToken, ClientId: ctx.ClientID}
+	auth := &endpoint.Authentication{RefreshToken: getRefreshToken(), ClientId: ctx.ClientID}
 	err = tpp.Authenticate(auth)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
@@ -174,9 +175,6 @@ func TestRefreshAccessToken(t *testing.T) {
 		t.Fatalf("%s", err)
 	}
 
-	//Set new refresh token since old was expired
-	ctx.TPPRefreshToken = auth.RefreshToken
-
 }
 
 func TestRefreshAccessTokenNoClientID(t *testing.T) {
@@ -184,7 +182,7 @@ func TestRefreshAccessTokenNoClientID(t *testing.T) {
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
-	auth := &endpoint.Authentication{RefreshToken: ctx.TPPRefreshToken}
+	auth := &endpoint.Authentication{RefreshToken: getRefreshToken()}
 	err = tpp.Authenticate(auth)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
