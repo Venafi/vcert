@@ -71,8 +71,11 @@ func main() {
 
 	co, cf, _ := parseArgs()
 	var tlsConfig tls.Config
+
 	//Set RenegotiateFreelyAsClient in case of we're communicating with MTLS TPP server with only user\password
-	tlsConfig.Renegotiation = tls.RenegotiateFreelyAsClient
+	if cf.tppUser != "" || cf.tppToken != "" {
+		tlsConfig.Renegotiation = tls.RenegotiateFreelyAsClient
+	}
 
 	if cf.insecure {
 		tlsConfig.InsecureSkipVerify = true
@@ -106,7 +109,6 @@ func main() {
 
 		// Setup HTTPS client
 		tlsConfig.Certificates = []tls.Certificate{cert}
-		tlsConfig.Renegotiation = tls.RenegotiateFreelyAsClient
 		tlsConfig.RootCAs = caCertPool
 		tlsConfig.BuildNameToCertificate()
 	}
