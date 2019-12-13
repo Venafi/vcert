@@ -82,3 +82,15 @@ When(/^the outputs should( not)? be the same$/) do |negated|
   end
 end
 
+
+Then(/^it should( not)? output access token$/) do |negated|
+  steps %{Then the output should#{negated} contain "access_token:"}
+end
+
+And(/^it should( not)? output refresh token$/) do |negated|
+  steps %{Then the output should#{negated} contain "refresh_token:"}
+  unless negated
+    m = last_command_started.output.match /^refresh_token: "(.+)"$/
+    @refresh_token = m[1]
+  end
+end

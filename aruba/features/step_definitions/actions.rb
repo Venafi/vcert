@@ -77,9 +77,18 @@ When(/^I get tokens from TPP(?: with)?(.+)?$/) do
   cmd = "vcert getcred -u '#{ENV['VCERT_TPP_URL']}' -tpp-user '#{ENV['VCERT_TPP_USER']}'" +
       " -tpp-password '#{ENV['VCERT_TPP_PASSWORD']}' "
   steps %{Then I try to run `#{cmd}`}
+
+  r = last_command_started.output.match /^refresh_token: "(.+)"$/
+  if r
+    @refresh_token = r[1]
+  end
+  a = last_command_started.output.match /^access_token: "(.+)"$/
+  if a
+    @access_token = a[1]
+  end
 end
 
-When(/^I refresh access token (?: with)?(.+)?$/) do |token|
-  cmd = "vcert getcred -u '#{ENV['VCERT_TPP_URL']}' -t #{token}"
+When(/^I refresh access token$/) do
+  cmd = "vcert getcred -u '#{ENV['VCERT_TPP_URL']}' -t #{@access_token }"
   steps %{Then I try to run `#{cmd}`}
 end
