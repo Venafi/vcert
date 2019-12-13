@@ -71,3 +71,15 @@ When(/^I generate( random)? CSR(?: with)?(.+)?$/) do |random, flags|
   cmd = "vcert gencsr#{cn}#{flags}"
   steps %{Then I try to run `#{cmd}`}
 end
+
+# Getting credentials
+When(/^I get tokens from TPP(?: with)?(.+)?$/) do
+  cmd = "vcert getcred -u '#{ENV['VCERT_TPP_URL']}' -tpp-user '#{ENV['VCERT_TPP_USER']}'" +
+      " -tpp-password '#{ENV['VCERT_TPP_PASSWORD']}' "
+  steps %{Then I try to run `#{cmd}`}
+end
+
+When(/^I refresh access token (?: with)?(.+)?$/) do |token|
+  cmd = "vcert getcred -u '#{ENV['VCERT_TPP_URL']}' -t #{token}"
+  steps %{Then I try to run `#{cmd}`}
+end
