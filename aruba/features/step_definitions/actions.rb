@@ -78,11 +78,15 @@ When(/^I get tokens from TPP(?: with)?(.+)?$/) do |flags|
       " -tpp-password '#{ENV['VCERT_TPP_PASSWORD']}' #{flags} -insecure"
   steps %{
     Then I try to run `#{cmd}`
-    And I remember the output
   }
 end
 
 When(/^I refresh access token$/) do
-  cmd = "vcert getcred -u '#{ENV['VCERT_TPP_URL']}' -t #{@access_token }"
-  steps %{Then I try to run `#{cmd}`}
+  cmd = "vcert getcred -u '#{ENV['VCERT_TPP_URL']}' -t #{@refresh_token} -insecure"
+  steps %{
+    Then I try to run `#{cmd}`
+      And I remember the output
+      And it should output access token
+      And it should output refresh token
+  }
 end

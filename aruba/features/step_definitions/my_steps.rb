@@ -76,25 +76,38 @@ end
 
 When(/^the outputs should( not)? be the same$/) do |negated|
   if negated
-    expect(last_command_started.output.to_s).not_to send(:an_output_string_being_eq,  @previous_command_output)
+    expect(last_command_started.output.to_s).not_to send(:an_output_string_being_eq, @previous_command_output)
   else
-    expect(last_command_started.output.to_s).to send(:an_output_string_being_eq,  @previous_command_output)
+    expect(last_command_started.output.to_s).to send(:an_output_string_being_eq, @previous_command_output)
   end
 end
 
 
-Then(/^it should( not)? output access token$/) do |negated|
-  steps %{Then the output should#{negated} contain "access_token:"}
-  unless negated
-    m = @previous_command_output.match /^access_token:  (.+)$/
-    @access_token = m[1]
-  end
-end
+Then(/^it should( not)? output (access|refresh) token( in JSON)?$/) do |negated, token, json|
 
-And(/^it should( not)? output refresh token$/) do |negated|
-  steps %{Then the output should#{negated} contain "refresh_token:"}
+  if @previous_command_output.nil?
+    fail(ArgumentError.new('@previous_command_output is nil'))
+  end
+
+  unless json
+    steps %{Then the output should#{negated} contain "access_token:"}
+  end
+
   unless negated
-    m = @previous_command_output.match /^refresh_token:  (.+)$/
-    @refresh_token = m[1]
+    if json then
+      JSON.parse(@previous_command_output)
+      @access_token = unescape_text(normalize_json(@previous_command_output, "access_token")).tr('"', '')
+    else
+      if token === "access"
+        m = @previous_command_output.match /^access_token:  (.+)$/
+        @access_token = m[1]
+      elsif token === "refresh"
+        m = @previous_command_output.match /^refresh_token:  (.+)$/
+        @refresh_token = m[1]
+      else
+        fail(ArgumentError.new("Cant determine token type for #{token}"))
+      end
+
+    end
   end
 end
