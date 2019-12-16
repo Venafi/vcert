@@ -1,5 +1,5 @@
 FROM ruby
-MAINTAINER Alexander Tarasenko <alexander.tarasenko@venafi.com>
+MAINTAINER Venafi DevOps Integrations <opensource@venafi.com>
 
 RUN gem install aruba json_spec
 COPY . /vcert/

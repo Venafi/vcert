@@ -35,6 +35,7 @@ func setupGetcredCommandFlags() {
 	getcredFlags.StringVar(&getcredParams.clientP12PW, "p12-password", "", "")
 	getcredFlags.StringVar(&getcredParams.format, "format", "", "")
 	getcredFlags.BoolVar(&getcredParams.verbose, "verbose", false, "")
+	getcredFlags.BoolVar(&getcredParams.insecure, "insecure", false, "")
 
 	getcredFlags.Usage = func() {
 		fmt.Printf("%s\n", vcert.GetFormattedVersionString())
