@@ -52,7 +52,6 @@ func testListener(t *testing.T, host string, domains []string, success bool) {
 	connectionTrustBundle.AppendCertsFromPEM([]byte(fake.CaCertPEM))
 	client = http.Client{Transport: &http.Transport{TLSClientConfig: &tls.Config{RootCAs: connectionTrustBundle}}}
 	r, err := client.Get("https://" + host + "/")
-	//todo: custom client and check server certificate
 	if success && err != nil {
 		t.Fatal(err)
 	} else if !success && err == nil {
