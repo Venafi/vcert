@@ -24,9 +24,18 @@ Feature: Getting credentials tokens from TPP
 
   Scenario: request with PKCS12 if possible
     When I get credentials from TPP with PKSC12
+    And I remember the output
+      And it should output access token
+      And it should output refresh token
 
   Scenario: request with PKCS12 if possible with no password
     When I get credentials from TPP with PKSC12 and no password
+    And I remember the output
+      And it should output access token
+      And it should output refresh token
 
   Scenario: request refresh token and refresh access token with username and no password
     When I get credentials from TPP with username and no password
+    And I remember the output
+      And it should output access token
+      And it should output refresh token
