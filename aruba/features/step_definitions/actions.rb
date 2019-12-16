@@ -73,9 +73,30 @@ When(/^I generate( random)? CSR(?: with)?(.+)?$/) do |random, flags|
 end
 
 # Getting credentials
-When(/^I get tokens from TPP(?: with)?(.+)?$/) do |flags|
-  cmd = "vcert getcred -u '#{ENV['VCERT_TPP_URL']}' -tpp-user '#{ENV['VCERT_TPP_USER']}'" +
-      " -tpp-password '#{ENV['VCERT_TPP_PASSWORD']}' #{flags} -insecure"
+When(/^I get credentials from TPP(?: with)?(.+)?$/) do |flags|
+  if flags === " PKSC12"
+    if "#{ENV['PKCS12_FILE']}" === ""
+      puts "No PKCS12 file was specified. Skipping scenario"
+      skip_this_scenario
+    else
+      cmd = "vcert getcred -u '#{ENV['VCERT_TPP_URL']}' -p12-file '#{ENV['PKCS12_FILE']}' -p12-password "+
+          "'#{ENV['PKCS12_FILE_PASSWORD']}'"
+    end
+  elsif flags === "PKSC12 and no password"
+    if "#{ENV['PKCS12_FILE']}" === ""
+      puts "No PKCS12 file was specified. Skipping scenario"
+      skip_this_scenario
+    else
+      cmd = "vcert getcred -u '#{ENV['VCERT_TPP_URL']}' -p12-file '#{ENV['PKCS12_FILE']}' -p12-password "+
+          "'#{ENV['PKCS12_FILE_PASSWORD']}'"
+    end
+  elsif flags === "username and no password"
+    cmd = "vcert getcred -u '#{ENV['VCERT_TPP_URL']}' -tpp-user '#{ENV['VCERT_TPP_USER']}' #{flags} -insecure"
+  else
+    cmd = "vcert getcred -u '#{ENV['VCERT_TPP_URL']}' -tpp-user '#{ENV['VCERT_TPP_USER']}'" +
+        " -tpp-password '#{ENV['VCERT_TPP_PASSWORD']}' #{flags} -insecure"
+  end
+
   steps %{
     Then I try to run `#{cmd}`
   }
