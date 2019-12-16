@@ -134,7 +134,10 @@ func main() {
 	}
 
 	if co == commandGetcred {
-		logf("Getting credentials")
+        //TODO: quick workaround to supress logs when output is in JSON.
+		if cf.format != "json" {
+			logf("Getting credentials")
+		}
 
 		var clientP12 bool
 		if cf.clientP12 != "" {

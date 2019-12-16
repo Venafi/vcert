@@ -89,6 +89,7 @@ Then(/^it should( not)? output (access|refresh) token( in JSON)?$/) do |negated,
     fail(ArgumentError.new('@previous_command_output is nil'))
   end
 
+  puts("Checking output:\n"+@previous_command_output)
   unless json
     steps %{Then the output should#{negated} contain "access_token:"}
   end
@@ -96,7 +97,13 @@ Then(/^it should( not)? output (access|refresh) token( in JSON)?$/) do |negated,
   unless negated
     if json then
       JSON.parse(@previous_command_output)
-      @access_token = unescape_text(normalize_json(@previous_command_output, "access_token")).tr('"', '')
+      if token === "access"
+        @access_token = unescape_text(normalize_json(@previous_command_output, "access_token")).tr('"', '')
+      elsif token === "refresh"
+        @refresh_token = unescape_text(normalize_json(@previous_command_output, "refresh_token")).tr('"', '')
+      else
+        fail(ArgumentError.new("Cant determine token type for #{token}"))
+      end
     else
       if token === "access"
         m = @previous_command_output.match /^access_token:  (.+)$/
@@ -107,7 +114,6 @@ Then(/^it should( not)? output (access|refresh) token( in JSON)?$/) do |negated,
       else
         fail(ArgumentError.new("Cant determine token type for #{token}"))
       end
-
     end
   end
 end
