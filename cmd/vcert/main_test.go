@@ -409,33 +409,72 @@ func TestValidateFlagsMixedPickupFileOutputs(t *testing.T) {
 	}
 }
 
-func TestGetcredFlags(t *testing.T) {
+func TestGetcredFlagsTrustBundle(t *testing.T) {
 
 	var err error
 
-	getcredFlags.Set("t", "3rlybZwAdV1qo/KpNJ5FWg==")
-	getcredFlags.Set("u", "https://tpp.example.com")
-	getcredFlags.Set("trust-bundle", "/opt/venafi/bundle.pem")
+	err = getcredFlags.Set("t", "3rlybZwAdV1qo/KpNJ5FWg==")
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	err = getcredFlags.Set("u", "https://tpp.example.com")
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	err = getcredFlags.Set("trust-bundle", "/opt/venafi/bundle.pem")
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	err = validateFlags(commandGetcred)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+}
+
+func TestGetcredFlagsNoTrust(t *testing.T) {
+
+	var err error
+	err = getcredFlags.Set("t", "3rlybZwAdV1qo/KpNJ5FWg==")
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	err = getcredFlags.Set("u", "https://tpp.example.com")
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
 	err = validateFlags(commandGetcred)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
 
-	getcredFlags.Set("t", "3rlybZwAdV1qo/KpNJ5FWg==")
-	getcredFlags.Set("u", "https://tpp.example.com")
-	err = validateFlags(commandGetcred)
+}
+
+func TestGetcredFlagsNoUrl(t *testing.T) {
+
+	var err error
+
+	err = getcredFlags.Set("t", "3rlybZwAdV1qo/KpNJ5FWg==")
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-
-	getcredFlags.Set("t", "3rlybZwAdV1qo/KpNJ5FWg==")
 	err = validateFlags(commandGetcred)
 	if err == nil {
 		t.Fatalf("-u must be specified")
 	}
+}
 
-	getcredFlags.Set("k", "xxxxxxxxxxxxxxxxxxxxxxx")
-	getcredFlags.Set("u", "https://tpp.example.com")
+func TestGetcredFlagsCloud(t *testing.T) {
+
+	var err error
+
+	err = getcredFlags.Set("k", "xxxxxxxxxxxxxxxxxxxxxxx")
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	err = getcredFlags.Set("u", "https://tpp.example.com")
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
 	err = validateFlags(commandGetcred)
 	if err == nil {
 		t.Fatalf("getcred is TPP only command and can not be used with Cloud api key")

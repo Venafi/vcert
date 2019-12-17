@@ -55,21 +55,26 @@ func showGetcredUsage() {
 
 // validateGetcredFlags valdiates the combination of command flags specified in an getcredment request
 func validateGetcredFlags() error {
-	if enrollParams.config != "" {
-		if enrollParams.apiKey != "" ||
-			enrollParams.cloudURL != "" ||
-			enrollParams.tppURL != "" ||
-			enrollParams.tppUser != "" ||
-			enrollParams.tppPassword != "" ||
-			enrollParams.tppToken != "" ||
-			enrollParams.url != "" ||
-			enrollParams.testMode {
+	if getcredParams.config != "" {
+		if getcredParams.apiKey != "" ||
+			getcredParams.cloudURL != "" ||
+			getcredParams.tppURL != "" ||
+			getcredParams.tppUser != "" ||
+			getcredParams.tppPassword != "" ||
+			getcredParams.tppToken != "" ||
+			getcredParams.url != "" ||
+			getcredParams.testMode {
 			return fmt.Errorf("connection details cannot be specified with flags when -config is used")
 		}
 	} else {
-		if enrollParams.profile != "" {
+		if getcredParams.profile != "" {
 			return fmt.Errorf("-profile option cannot be used without -config option")
 		}
+	}
+
+	logf(getcredParams.url)
+	if getcredParams.url == "" && getcredParams.tppURL == "" {
+		return fmt.Errorf("Missing url parameter.")
 	}
 	//TODO
 	return nil
