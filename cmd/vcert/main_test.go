@@ -236,6 +236,32 @@ func newFakeConnector() (*fakeEndPointConnector, error) {
 	return &ep, nil
 }
 
+func TestValidateFlagsForEnrollmentMissingData(t *testing.T) {
+	err := enrollFlags.Set("k", "")
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	err = validateFlags(commandEnroll)
+	if err == nil {
+		t.Fatalf("Error was not expected to be nil.  APIKey is required for enrollment")
+	}
+}
+
+func TestGetcredFlagsNoUrl(t *testing.T) {
+
+	p := getcredFlags.Parsed()
+	fmt.Println(p)
+	err := getcredFlags.Set("t", "3rlybZwAdV1qo/KpNJ5FWg==")
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	err = validateFlags(commandGetcred)
+	if err == nil {
+		t.Fatalf("-u must be specified")
+	}
+}
+
 func TestValidateFlagsForTPPMissingData(t *testing.T) {
 	enrollFlags.Set("tpp-url", "https://localhost/vedsdk")
 	enrollFlags.Set("tpp-user", "")
@@ -286,15 +312,6 @@ func TestValidateFlagsForTPPMissingData(t *testing.T) {
 		t.Fatalf("%s", err)
 	}
 
-}
-
-func TestValidateFlagsForEnrollmentMissingData(t *testing.T) {
-	enrollFlags.Set("k", "")
-
-	err := validateFlags(commandEnroll)
-	if err == nil {
-		t.Fatalf("Error was not expected to be nil.  APIKey is required for enrollment")
-	}
 }
 
 func TestValidateFlagsForPickupMissingData(t *testing.T) {
@@ -449,20 +466,6 @@ func TestGetcredFlagsNoTrust(t *testing.T) {
 
 }
 
-func TestGetcredFlagsNoUrl(t *testing.T) {
-
-	var err error
-
-	err = getcredFlags.Set("t", "3rlybZwAdV1qo/KpNJ5FWg==")
-	if err != nil {
-		t.Fatalf("%s", err)
-	}
-	err = validateFlags(commandGetcred)
-	if err == nil {
-		t.Fatalf("-u must be specified")
-	}
-}
-
 func TestGetcredFlagsCloud(t *testing.T) {
 
 	var err error
@@ -471,15 +474,6 @@ func TestGetcredFlagsCloud(t *testing.T) {
 	if err == nil {
 		t.Fatalf("getcred have no -k flag")
 	}
-	err = getcredFlags.Set("u", "https://tpp.example.com")
-	if err != nil {
-		t.Fatalf("%s", err)
-	}
-	err = validateFlags(commandGetcred)
-	if err == nil {
-		t.Fatalf("getcred is TPP only command and can not be used with Cloud api key")
-	}
-
 }
 
 func TestIPSliceString(t *testing.T) {
