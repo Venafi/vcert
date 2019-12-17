@@ -73,7 +73,7 @@ When(/^I generate( random)? CSR(?: with)?(.+)?$/) do |random, flags|
 end
 
 # Getting credentials
-When(/^I get credentials from TPP(?: with)?(.+)?$/) do |flags|
+When(/^I( interactively)? get credentials from TPP(?: with)?(.+)?$/) do |interactively, flags|
   if flags === " PKSC12"
     if "#{ENV['PKCS12_FILE']}" === ""
       puts "No PKCS12 file was specified. Skipping scenario"
@@ -97,9 +97,13 @@ When(/^I get credentials from TPP(?: with)?(.+)?$/) do |flags|
         " -tpp-password '#{ENV['VCERT_TPP_PASSWORD']}' #{flags} -insecure"
   end
 
-  steps %{
+  if interactively
+    Then I try to run `#{cmd} interactively`
+  else
+    steps %{
     Then I try to run `#{cmd}`
   }
+  end
 end
 
 When(/^I refresh access token$/) do

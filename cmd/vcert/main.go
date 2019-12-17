@@ -73,12 +73,16 @@ func main() {
 	var tlsConfig tls.Config
 
 	//Set RenegotiateFreelyAsClient in case of we're communicating with MTLS TPP server with only user\password
-	if cf.tppUser != "" || cf.tppToken != "" {
+	if cf.apiKey == "" {
 		tlsConfig.Renegotiation = tls.RenegotiateFreelyAsClient
 	}
 
 	if cf.insecure {
 		tlsConfig.InsecureSkipVerify = true
+	}
+
+	if err := readPasswordsFromInputFlags(co, cf); err != nil {
+		log.Fatal(err)
 	}
 
 	if cf.clientP12 != "" {
@@ -114,10 +118,6 @@ func main() {
 	}
 
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tlsConfig
-
-	if err := readPasswordsFromInputFlags(co, cf); err != nil {
-		log.Fatal(err)
-	}
 
 	if co == commandGenCSR {
 		doGenCSR(cf)

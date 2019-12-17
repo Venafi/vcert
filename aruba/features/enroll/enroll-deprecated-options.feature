@@ -12,7 +12,7 @@ Feature: Tests with deprecated TPP options
 # if ERRORLEVEL 1 goto :DONE
 # timeout /t 10
   Scenario: ~ Service Generated CSR with RSA key ~
-    When I enroll a certificate in TPPdeprecated with -csr service -key-type rsa -key-size 4096 -cn service-gen-rsa.vcert.example -format json -key-password newPassw0rd!
+    When I enroll a certificate in TPPdeprecated with -csr sbervice -key-type rsa -key-size 4096 -cn service-gen-rsa.vcert.example -format json -key-password newPassw0rd!
     Then it should retrieve certificate
     Then I get JSON response
     And that certificate should contain "Public-Key: (4096 bit)"
