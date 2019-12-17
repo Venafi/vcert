@@ -330,7 +330,7 @@ func TestBadReadConfigData(t *testing.T) {
 	}
 }
 
-func TestRequestCertificate(t *testing.T) {
+func TestRequestCertificateUserPassword(t *testing.T) {
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
@@ -342,6 +342,25 @@ func TestRequestCertificate(t *testing.T) {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
 	}
+	DoRequestCertificate(t, tpp)
+}
+
+func TestRequestCertificateToken(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+	DoRequestCertificate(t, tpp)
+}
+
+func DoRequestCertificate(t *testing.T, tpp *Connector) {
 	config, err := tpp.ReadZoneConfiguration()
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
@@ -370,7 +389,15 @@ func TestRequestCertificate(t *testing.T) {
 
 func TestRequestCertificateServiceGenerated(t *testing.T) {
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
-	tpp.Authenticate(&endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword})
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+
+	err = tpp.Authenticate(&endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword})
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
 	config, err := tpp.ReadZoneConfiguration()
 	if err != nil {
 		t.Fatal("failed to read zone configuration")
