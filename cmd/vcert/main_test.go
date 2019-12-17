@@ -468,8 +468,8 @@ func TestGetcredFlagsCloud(t *testing.T) {
 	var err error
 
 	err = getcredFlags.Set("k", "xxxxxxxxxxxxxxxxxxxxxxx")
-	if err != nil {
-		t.Fatalf("%s", err)
+	if err == nil {
+		t.Fatalf("getcred have no -k flag")
 	}
 	err = getcredFlags.Set("u", "https://tpp.example.com")
 	if err != nil {
