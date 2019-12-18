@@ -82,7 +82,7 @@ When(/^I( interactively)? get credentials from TPP(?: with)?(.+)?$/) do |interac
       cmd = "vcert getcred -u '#{ENV['VCERT_TPP_MTLS_URL']}' -p12-file '#{ENV['PKCS12_FILE']}' -p12-password "+
           "'#{ENV['PKCS12_FILE_PASSWORD']}' -trust-bundle '#{ENV['MTLS_TRUST_BUNDLE']}'"
     end
-  elsif flags === "PKSC12 and no password"
+  elsif flags === " PKSC12 and no password"
     if "#{ENV['PKCS12_FILE']}" === ""
       puts "No PKCS12 file was specified. Skipping scenario"
       skip_this_scenario
