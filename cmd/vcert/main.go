@@ -239,6 +239,16 @@ func main() {
 	}
 
 	if co == commandEnroll {
+
+		switch cf.csrOption {
+		case "":
+		case "local":
+		case "service":
+		case "file:":
+		default:
+			logger.Panicf("unexpected -csr option: %s", cf.csrOption)
+		}
+
 		var req = &certificate.Request{}
 		var pcc = &certificate.PEMCollection{}
 
