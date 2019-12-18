@@ -64,6 +64,7 @@ func showPickupUsage() {
 	fmt.Printf("  %s pickup <Required Venafi Cloud Config> OR <Required Trust Protection Platform Config> <Options>\n", os.Args[0])
 	fmt.Printf("  %s pickup -k <api key> -pickup-id <request id> OR -pickup-id-file <file with Pickup ID value>\n", os.Args[0])
 	fmt.Printf("  %s pickup -u <https://tpp.example.com> -t <tpp access token> -pickup-id <request id>\n", os.Args[0])
+	fmt.Printf("\n   The -pickup-id value is a certificate object DN for TPP and a guid for Venafi Cloud\n")
 
 	fmt.Printf("\nRequired for Venafi Cloud:\n")
 	fmt.Println("  -k")
