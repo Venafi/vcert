@@ -204,9 +204,9 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (pcc *certific
 	var certBytes []byte
 	switch req.ChainOption {
 	case certificate.ChainOptionRootFirst:
-		certBytes = append([]byte(caCertPEM+"\n"), cert_pem...)
+		certBytes = append([]byte(CaCertPEM+"\n"), cert_pem...)
 	default:
-		certBytes = append(cert_pem, []byte(caCertPEM)...)
+		certBytes = append(cert_pem, []byte(CaCertPEM)...)
 	}
 	pcc, err = certificate.PEMCollectionFromBytes(certBytes, req.ChainOption)
 	if err != nil {

@@ -18,6 +18,7 @@ package certificate
 
 import (
 	"crypto"
+	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
@@ -171,4 +172,23 @@ func (col *PEMCollection) AddChainElement(certificate *x509.Certificate) error {
 	pemChain = append(pemChain, string(pem.EncodeToMemory(GetCertificatePEMBlock(certificate.Raw))))
 	col.Chain = pemChain
 	return nil
+}
+
+func (col *PEMCollection) ToTLSCertificate() tls.Certificate {
+	cert := tls.Certificate{}
+	b, _ := pem.Decode([]byte(col.Certificate))
+	cert.Certificate = append(cert.Certificate, b.Bytes)
+	for _, c := range col.Chain {
+		b, _ := pem.Decode([]byte(c))
+		cert.Certificate = append(cert.Certificate, b.Bytes)
+	}
+	b, _ = pem.Decode([]byte(col.PrivateKey))
+
+	switch b.Type {
+	case "EC PRIVATE KEY":
+		cert.PrivateKey, _ = x509.ParseECPrivateKey(b.Bytes)
+	case "RSA PRIVATE KEY":
+		cert.PrivateKey, _ = x509.ParsePKCS1PrivateKey(b.Bytes)
+	}
+	return cert
 }
