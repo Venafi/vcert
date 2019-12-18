@@ -42,7 +42,7 @@ func main() {
 	var commonName = os.Args[1]
 
 	//
-	// 0. get client instance based on connection config
+	// 0. Get client instance based on connection config
 	//
 	config := tppConfig
 	//config := cloudConfig
@@ -53,7 +53,7 @@ func main() {
 	}
 
 	//
-	// 1.1. compose request object
+	// 1.1. Compose request object
 	//
 	//Not all Venafi Cloud providers support IPAddress and EmailAddresses extensions.
 	var enrollReq = &certificate.Request{}
@@ -98,7 +98,7 @@ func main() {
 	}
 
 	//
-	// 1.2. generate private key and certificate request (CSR) based on request's options
+	// 1.2. Generate private key and certificate request (CSR) based on request's options
 	//
 	err = c.GenerateRequest(nil, enrollReq)
 	if err != nil {
@@ -106,7 +106,7 @@ func main() {
 	}
 
 	//
-	// 1.3. submit certificate request, get request ID as a response
+	// 1.3. Submit certificate request, get request ID as a response
 	//
 	requestID, err := c.RequestCertificate(enrollReq)
 	if err != nil {
@@ -115,7 +115,7 @@ func main() {
 	t.Printf("Successfully submitted certificate request. Will pickup certificate by ID %s", requestID)
 
 	//
-	// 1.4. retrieve certificate using request ID obtained on previous step, get PEM collection as a response
+	// 1.4. Retrieve certificate using request ID obtained on previous step, get PEM collection as a response
 	//
 	pickupReq := &certificate.Request{
 		PickupID: requestID,
@@ -127,7 +127,7 @@ func main() {
 	}
 
 	//
-	// 1.5. (optional) add certificate's private key to PEM collection
+	// 1.5. (optional) Add certificate's private key to PEM collection
 	//
 	_ = pcc.AddPrivateKey(enrollReq.PrivateKey, []byte(enrollReq.KeyPassword))
 
@@ -135,7 +135,7 @@ func main() {
 	pp(pcc)
 
 	//
-	// 2.1. compose renewal object
+	// 2.1. Compose renewal object
 	//
 	renewReq := &certificate.RenewalRequest{
 		// certificate is identified using DN
@@ -146,7 +146,7 @@ func main() {
 	}
 
 	//
-	// 2.2. submit renewal request
+	// 2.2. Submit renewal request
 	//
 	newRequestID, err := c.RenewCertificate(renewReq)
 	if err != nil {
@@ -155,7 +155,7 @@ func main() {
 	t.Printf("Successfully submitted certificate renewal request. Will pickup certificate by ID %s", newRequestID)
 
 	//
-	// 2.3. retrieve certificate using request ID obtained on previous step, get PEM collection as a response
+	// 2.3. Retrieve certificate using request ID obtained on previous step, get PEM collection as a response
 	//
 	renewRetrieveReq := &certificate.Request{
 		PickupID: newRequestID,
@@ -171,7 +171,7 @@ func main() {
 	t.Printf("New serial number %s", getSerial(pcc2.Certificate))
 
 	//
-	// 3.1. compose revocation object
+	// 3.1. Compose revocation object
 	//
 	revokeReq := &certificate.RevocationRequest{
 		CertificateDN: requestID,
@@ -181,7 +181,7 @@ func main() {
 	}
 
 	//
-	// 3.2. submit revocation request (not supported in Venafi Cloud)
+	// 3.2. Submit revocation request (not supported in Venafi Cloud)
 	//
 	if config.ConnectorType != endpoint.ConnectorTypeCloud {
 		err = c.RevokeCertificate(revokeReq)
@@ -191,7 +191,7 @@ func main() {
 		t.Printf("Successfully submitted revocation request for %s", requestID)
 	}
 	//
-	// 2. Import certificate to another object of the same Zone
+	// 4. Import certificate to another object of the same Zone
 	//
 	var importReq = &certificate.ImportRequest{}
 	switch {
@@ -224,7 +224,7 @@ func main() {
 	t.Printf("Successfully imported certificate to %s", importResp.CertificateDN)
 
 	//
-	// 3. retrieve certificate & key from new object
+	// 5. Retrieve certificate & key from new object
 	//
 	var importedRetriveReq = &certificate.Request{}
 	switch {
@@ -253,7 +253,7 @@ func main() {
 	pp(pcc3)
 
 	//
-	// 4. Get refresh token and refresh access token
+	// 6. Get refresh token and refresh access token
 	//
 	if config.ConnectorType == endpoint.ConnectorTypeTPP {
 		tppConnector, err := tpp.NewConnector(config.BaseUrl, config.Zone, false, nil)
@@ -276,6 +276,24 @@ func main() {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
 
+	}
+
+	//
+	// 7. Audit certificates list in zone
+	//
+
+	_l := 10
+	certList, err := c.ListCertificates(endpoint.Filter{Limit: &_l})
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println("ID             Common Name              Expire")
+	for _, cert := range certList {
+		validTo := cert.ValidTo.String()
+		if cert.ValidTo.Before(time.Now()) {
+			validTo = fmt.Sprintf("\033[1;31m%s\033[0m", validTo)
+		}
+		fmt.Printf("%v    %v     %v\n", cert.ID, cert.CN, validTo)
 	}
 }
 
