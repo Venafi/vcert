@@ -37,7 +37,6 @@ Feature: Getting credentials tokens from TPP
 
   Scenario: request refresh token and refresh access token with username and no password
     When I interactively get credentials from TPP with username and no password
-    And I type "newPassw0rd!"
     And I remember the output
       And it should output access token
       And it should output refresh token

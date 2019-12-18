@@ -106,7 +106,7 @@ Then(/^it should( not)? output (access|refresh) token( in JSON)?$/) do |negated,
       end
     else
       if token === "access"
-        m = @previous_command_output.match /^access_token:  (.+)$/
+        m = @previous_command_output.match /access_token:  (.+)$/
         @access_token = m[1]
       elsif token === "refresh"
         m = @previous_command_output.match /^refresh_token:  (.+)$/
