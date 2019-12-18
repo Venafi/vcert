@@ -118,6 +118,12 @@ func main() {
 		tlsConfig.BuildNameToCertificate()
 	}
 
+	csrOptionRegex := regexp.MustCompile(`^file:.*$|^local$|^service$|^$`)
+	if !csrOptionRegex.MatchString(cf.csrOption) {
+		logger.Panicf("unexpected -csr option: %s", cf.csrOption)
+	}
+
+	//Setting TLS configuration
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tlsConfig
 
 	if co == commandGenCSR {
@@ -240,11 +246,6 @@ func main() {
 	}
 
 	if co == commandEnroll {
-
-		csrOptionRegex := regexp.MustCompile(`^file:.*$|^local$|^service$|^$`)
-		if !csrOptionRegex.MatchString(cf.csrOption) {
-			logger.Panicf("unexpected -csr option: %s", cf.csrOption)
-		}
 
 		var req = &certificate.Request{}
 		var pcc = &certificate.PEMCollection{}
