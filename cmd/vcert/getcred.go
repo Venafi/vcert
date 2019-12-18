@@ -23,8 +23,8 @@ import (
 
 func setupGetcredCommandFlags() {
 	getcredFlags.StringVar(&getcredParams.url, "u", "", "")
-	getcredFlags.StringVar(&getcredParams.tppUser, "tpp-user", "", "")
-	getcredFlags.StringVar(&getcredParams.tppPassword, "tpp-password", "", "")
+	getcredFlags.StringVar(&getcredParams.tppUser, "username", "", "")
+	getcredFlags.StringVar(&getcredParams.tppPassword, "password", "", "")
 	getcredFlags.StringVar(&getcredParams.tppToken, "t", "", "")
 	getcredFlags.StringVar(&getcredParams.trustBundle, "trust-bundle", "", "")
 	getcredFlags.StringVar(&getcredParams.scope, "scope", "certificates:manage,revoke", "")
@@ -45,12 +45,30 @@ func setupGetcredCommandFlags() {
 
 func showGetcredUsage() {
 	fmt.Printf("Getting credentials usage:\n")
+	fmt.Println("  -u")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify TPP url."))
+	fmt.Println("  -username")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify TPP user."))
+	fmt.Println("  -password")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify TPP password."))
+	fmt.Println("  -p12-file")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify TPP PKSC12 file if using MTLS connection."))
+	fmt.Println("  -p12-file-password")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify TPP PKSC12 file password if using MTLS connection."))
+	fmt.Println("  -t")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the refresh token."))
 	fmt.Println("  -format")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the output format. If not specified will be plain text. Options include: json ."))
 	fmt.Println("  -verbose")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to increase the level of logging detail, which is helpful when troubleshooting issues."))
-	//TODO
-	fmt.Println()
+	fmt.Printf("Getting credentials examples:\n")
+	fmt.Println("Get refresh token:\n")
+	fmt.Printf("vcert getcred -u https:/venafi.example.com/vedsdk -trust-bundle /opt/venafi/bundle.pem -t 3rlybZwAdV1qo/KpNJ5FWg==\n")
+	fmt.Println("Refresh access token:\n")
+	fmt.Printf("vcert getcred -u https:/venafi.example.com/vedsdk -trust-bundle /opt/venafi/bundle.pem -t 3rlybZwAdV1qo/KpNJ5FWg==\n")
+	fmt.Println("Get refresh token using MTLS:\n")
+	fmt.Printf("vcert getcred -u https:/venafi.example.com/vedsdk -trust-bundle /opt/venafi/bundle.pem --p12-file venafi.p12 -p12-password secretPass\n")
+
 }
 
 // validateGetcredFlags valdiates the combination of command flags specified in an getcredment request

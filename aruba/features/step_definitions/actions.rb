@@ -91,10 +91,10 @@ When(/^I( interactively)? get credentials from TPP(?: with)?(.+)?$/) do |interac
           "'#{ENV['PKCS12_FILE_PASSWORD']}'"
     end
   elsif flags === " username and no password"
-    cmd = "vcert getcred -u '#{ENV['VCERT_TPP_URL']}' -tpp-user '#{ENV['VCERT_TPP_USER']}' -insecure"
+    cmd = "vcert getcred -u '#{ENV['VCERT_TPP_URL']}' -username '#{ENV['VCERT_TPP_USER']}' -insecure"
   else
-    cmd = "vcert getcred -u '#{ENV['VCERT_TPP_URL']}' -tpp-user '#{ENV['VCERT_TPP_USER']}'" +
-        " -tpp-password '#{ENV['VCERT_TPP_PASSWORD']}' #{flags} -insecure"
+    cmd = "vcert getcred -u '#{ENV['VCERT_TPP_URL']}' -username '#{ENV['VCERT_TPP_USER']}'" +
+        " -password '#{ENV['VCERT_TPP_PASSWORD']}' #{flags} -insecure"
   end
 
   if interactively
