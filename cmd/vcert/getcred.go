@@ -27,7 +27,7 @@ func setupGetcredCommandFlags() {
 	getcredFlags.StringVar(&getcredParams.tppPassword, "password", "", "")
 	getcredFlags.StringVar(&getcredParams.tppToken, "t", "", "")
 	getcredFlags.StringVar(&getcredParams.trustBundle, "trust-bundle", "", "")
-	getcredFlags.StringVar(&getcredParams.scope, "scope", "certificates:manage,revoke", "")
+	getcredFlags.StringVar(&getcredParams.scope, "scope", "", "")
 	getcredFlags.StringVar(&getcredParams.clientId, "client-id", "vedsdk", "")
 	getcredFlags.StringVar(&getcredParams.config, "config", "", "")
 	getcredFlags.StringVar(&getcredParams.profile, "profile", "", "")
@@ -45,6 +45,8 @@ func setupGetcredCommandFlags() {
 
 func showGetcredUsage() {
 	fmt.Printf("Getting credentials usage:\n")
+	fmt.Println("  -scope")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify API scope."))
 	fmt.Println("  -u")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify TPP url."))
 	fmt.Println("  -username")
