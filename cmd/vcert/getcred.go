@@ -61,12 +61,12 @@ func showGetcredUsage() {
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the output format. If not specified will be plain text. Options include: json ."))
 	fmt.Println("  -verbose")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to increase the level of logging detail, which is helpful when troubleshooting issues."))
-	fmt.Printf("Getting credentials examples:\n")
-	fmt.Println("Get refresh token:\n")
+	fmt.Printf("\nGetting credentials examples:\n")
+	fmt.Printf("\nGet refresh token:\n")
 	fmt.Printf("vcert getcred -u https:/venafi.example.com/vedsdk -trust-bundle /opt/venafi/bundle.pem -t 3rlybZwAdV1qo/KpNJ5FWg==\n")
-	fmt.Println("Refresh access token:\n")
+	fmt.Printf("\nRefresh access token:\n")
 	fmt.Printf("vcert getcred -u https:/venafi.example.com/vedsdk -trust-bundle /opt/venafi/bundle.pem -t 3rlybZwAdV1qo/KpNJ5FWg==\n")
-	fmt.Println("Get refresh token using MTLS:\n")
+	fmt.Printf("\nGet refresh token using MTLS:\n")
 	fmt.Printf("vcert getcred -u https:/venafi.example.com/vedsdk -trust-bundle /opt/venafi/bundle.pem --p12-file venafi.p12 -p12-password secretPass\n")
 
 }
