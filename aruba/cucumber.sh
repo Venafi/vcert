@@ -1,6 +1,4 @@
 #!/bin/bash
-export TPPACCESS_TOKEN=$(./aruba/bin/vcert getcred -u $VCERT_TPP_URL -insecure\
-                      -tpp-user $VCERT_TPP_USER -tpp-password $VCERT_TPP_PASSWORD -scope "certificate:approve,delete,discover,manage,revoke;" -format json|jq -r .access_token)
 echo "Using token $TPPACCESS_TOKEN"
 RUN_COMMAND="docker run -t --rm \
           -e VCERT_TPP_URL \
