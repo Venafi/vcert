@@ -76,7 +76,7 @@ func validateGetcredFlags() error {
 		return fmt.Errorf("Missing url parameter.")
 	}
 
-	if getcredParams.tppToken == "" && getcredParams.tppUser == "" {
+	if getcredParams.tppToken == "" && getcredParams.tppUser == "" && getcredParams.clientP12 == "" {
 		return fmt.Errorf("Refresh token of username must be specified")
 	}
 	return nil

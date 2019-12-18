@@ -154,7 +154,7 @@ type oauthGetRefreshTokenRequest struct {
 	Password  string `json:"password"`
 	Scope     string `json:"scope"`
 }
-type oauthGetRefreshTokenResponse struct {
+type OauthGetRefreshTokenResponse struct {
 	Access_token  string `json:"access_token,omitempty"`
 	Expires       int    `json:"expires,omitempty"`
 	Identity      string `json:"identity,omitempty"`
@@ -173,7 +173,7 @@ type oauthCertificateTokenRequest struct {
 	Scope     string `json:"scope,omitempty"`
 }
 
-type oauthRefreshAccessTokenResponse struct {
+type OauthRefreshAccessTokenResponse struct {
 	Access_token  string `json:"access_token,omitempty"`
 	Expires       int    `json:"expires,omitempty"`
 	Identity      string `json:"identity,omitempty"`
