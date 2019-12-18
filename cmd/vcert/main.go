@@ -28,6 +28,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -240,12 +241,8 @@ func main() {
 
 	if co == commandEnroll {
 
-		switch cf.csrOption {
-		case "":
-		case "local":
-		case "service":
-		case "file:":
-		default:
+		csrOptionRegex := regexp.MustCompile(`^file:.*$|^local$|^service$|^$`)
+		if !csrOptionRegex.MatchString(cf.csrOption) {
 			logger.Panicf("unexpected -csr option: %s", cf.csrOption)
 		}
 
