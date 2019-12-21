@@ -86,24 +86,24 @@ func showEnrollmentUsage() {
 	fmt.Printf("  %s enroll -u <https://tpp.example.com> -t <tpp access token> -cn <common name> -z <zone> -client-pkcs12 <client PKCS#12 archive> -client-pkcs12-pw <PKCS#12 archive password>\n", os.Args[0])
 
 	fmt.Printf("\nRequired for both Venafi Cloud and Trust Protection Platform:\n")
-	fmt.Println("  -cn")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the common name (CN)."))
 	fmt.Println("  -z")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Specify the zone used to determine enrollment configuration. In Trust Protection Platform this is equivelant to the policy path where the certificate object will be stored. "+UtilityShortName+" prepends \\VED\\Policy\\, so you only need to specify policy folders within the root Policy folder. Example: -z Corp\\Engineering"))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("The zone that defines the enrollment configuration. In Trust Protection Platform this is equivelant to the policy path where the certificate object will be stored. "+UtilityShortName+" prepends \\VED\\Policy\\, so you only need to specify policy folders within the root Policy folder. Example: -z Corp\\Engineering"))
 
 	fmt.Printf("\nRequired for Venafi Cloud:\n")
 	fmt.Println("  -k")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Your API Key"))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Your API Key for Venafi Cloud."))
+	
+	fmt.Printf("\nRequired for Trust Protection Platform:\n")
 	fmt.Println("  -t")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify access token for Trust Protection Platform Server. Example: -t <tpp access token>"))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Your access token for Trust Protection Platform. Example: -t <tpp access token>"))
 	fmt.Println("  -u")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the URL of the Trust Protection Platform. Example: -u https://tpp.example.com"))
-
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("The URL of the Trust Protection Platform WebSDK. Example: -u https://tpp.example.com"))
+	
 	fmt.Printf("\nOptions:\n")
 	fmt.Println("  -chain")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to include the certificate chain in the output, and to specify where to place it in the file. By default, it is placed last. Options include: ignore | root-first | root-last"))
 	fmt.Println("  -cn")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the common name (CN). This is required for Enrollment."))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the common name (CN). This is required for enrollment except when providing a CSR file."))
 	fmt.Println("  -nickname")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a name for the new certificate object that will be created and placed in a policy (which you can specify using the -z option)."))
 
@@ -120,12 +120,12 @@ func showEnrollmentUsage() {
 	fmt.Printf("\t%s\n", ("Use to specify the CSR and private key location. Options include: local | service | file.\n" +
 		"\t\tlocal:   The private key and CSR will be generated locally (default)\n" +
 		"\t\tservice: The private key and CSR will be generated at service side\n" +
-		"\t\tfile:    The CSR will be read from a file by name. Example: file:/tmp/csr.pem"))
+		"\t\tfile:    The CSR will be read from a file by name. Example: file:/path-to/csr.pem"))
 
 	fmt.Println("  -cert-file")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a file name and a location where the resulting certificate file should be written. Example: /tmp/newcert.pem"))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a file name and a location where the resulting certificate file should be written. Example: /path-to/newcert.pem"))
 	fmt.Println("  -chain-file")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a path and file name where the resulting chain file should be written, if no chain file is specified the chain will be stored in the same file as the certificate. Example: /tmp/chain.pem"))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a path and file name where the resulting chain file should be written, if no chain file is specified the chain will be stored in the same file as the certificate. Example: /path-to/chain.pem"))
 	fmt.Println("  -client-pkcs12")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a client PKCS#12 archive for mutual TLS (for 2FA, use the getcred action to authenticate with Venafi Platform using a client certificate)."))
 	fmt.Println("  -client-pkcs12-pw")
@@ -133,15 +133,15 @@ func showEnrollmentUsage() {
 	fmt.Println("  -format")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the output format. PEM is the default format. Options include: pem | json | pkcs12. If PKCS#12 format is specified, then all objects should be written using -file option."))
 	fmt.Println("  -key-file")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a file name and a location where the resulting private key file should be written. Do not use in combination with -csr file. Example: /tmp/newkey.pem"))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a file name and a location where the resulting private key file should be written. Do not use in combination with -csr file. Example: /path-to/newkey.pem"))
 	fmt.Println("  -key-password")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a password for encrypting the private key. "+
 		"For a non-encrypted private key, omit this option and instead specify -no-prompt. "+
-		"Example: -key-password file:/Temp/mypasswrds.txt"))
+		"Example: -key-password file:/path-to/mypasswds.txt"))
 	fmt.Println("  -key-size")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Specify a key size (default 2048)."))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a key size (default 2048)."))
 	fmt.Println("  -no-prompt")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Bypasses the authentication prompt. Useful for scripting."))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to bypass authentication and password prompts. Useful for scripting."))
 	fmt.Println("  -no-pickup")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to not wait for the certificate to be issued."))
 	fmt.Println("  -pickup-id-file")
