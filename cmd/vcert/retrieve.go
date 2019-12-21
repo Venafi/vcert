@@ -72,17 +72,17 @@ func showPickupUsage() {
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Example: -pickup-id 3260ece0-0da4-11e7-9be2-891dab33d0eb"))
 	fmt.Println("  -pickup-id-file")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify file name from where Pickup ID will be read. Either -pickup-id or -pickup-id-file is required."))
-	
+
 	fmt.Printf("\nRequired for Venafi Cloud:\n")
 	fmt.Println("  -k")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Your API Key for Venafi Cloud."))
-	
+
 	fmt.Printf("\nRequired for Trust Protection Platform:\n")
 	fmt.Println("  -t")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Your access token for Trust Protection Platform. Example: -t <tpp access token>"))
 	fmt.Println("  -u")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("The URL of the Trust Protection Platform WebSDK. Example: -u https://tpp.example.com"))
-		
+
 	fmt.Printf("\nOptions:\n")
 	fmt.Println("  -cert-file")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a file name and a location where the resulting certificate file should be written. Example: /path-to/newcert.pem"))
