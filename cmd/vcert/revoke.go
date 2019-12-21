@@ -67,9 +67,8 @@ func setupRevokeCommandFlags() {
 func showRevokeUsage() {
 	fmt.Printf("Revoke Usage:\n")
 	fmt.Printf("  %s revoke <Required Trust Protection Platform Config> <Options>\n", os.Args[0])
-	fmt.Printf("  %s revoke -id <certificate DN>\n", os.Args[0])
-	fmt.Printf("  %s revoke -thumbprint <certificate thumbprint>\n", os.Args[0])
-	fmt.Printf("  %s revoke -u <https://tpp.example.com> -tpp-user <username> -tpp-password <password> -id <certificate DN>\n", os.Args[0])
+	fmt.Printf("  %s revoke -u <https://tpp.example.com> -t <tpp access token> -thumbprint <certificate thumbprint>\n", os.Args[0])
+	fmt.Printf("  %s revoke -u <https://tpp.example.com> -t <tpp access token> -id <certificate DN>\n", os.Args[0])
 
 	fmt.Printf("\nRequired for Trust Protection Platform:\n")
 	fmt.Println("  -id")
@@ -83,10 +82,11 @@ func showRevokeUsage() {
 		" Value may be specified as a string or read from the certificate file using the file: prefix. "+
 		"Implies -no-retire=true"))
 
-	fmt.Println("  -u")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the URL of the Trust Protection Platform Server. Example: -u https://tpp.example.com"))
 	fmt.Println("  -t")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify access token for Trust Protection Platform Server. Example: -t ns1dofUPmsdxTLQS2hM1gQ=="))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Your access token for Trust Protection Platform. Example: -t <tpp access token>"))
+	fmt.Println("  -u")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("The URL of the Trust Protection Platform WebSDK. Example: -u https://tpp.example.com"))
+	
 	fmt.Printf("\nOptions:\n")
 	fmt.Println("  -config")
 	fmt.Printf("\t%s\n", ("Use to specify INI configuration file containing connection details\n" +
@@ -95,7 +95,7 @@ func showRevokeUsage() {
 		"\t\tTPP & Cloud: trust_bundle, test_mode"))
 
 	fmt.Println("  -client-pkcs12")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a client PKCS#12 archive for mutual TLS."))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a client PKCS#12 archive for mutual TLS (for 2FA, use the getcred action to authenticate with Venafi Platform using a client certificate)."))
 	fmt.Println("  -client-pkcs12-pw")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the password for a client PKCS#12 archive. Use in combination with -client-pkcs12 option."))
 	fmt.Println("  -no-prompt")
@@ -105,7 +105,7 @@ func showRevokeUsage() {
 	fmt.Println("  -profile")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify effective section in ini-configuration file specified by -config option"))
 	fmt.Println("  -reason")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Revocation reason. One of the following values: "+fmt.Sprintf("%v", RevocationReasonOptions)))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("The revocation reason. Options include: "+fmt.Sprintf("%v", RevocationReasonOptions)))
 	fmt.Println("  -test-mode")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to test enrollment without a connection to a real endpoint. Options include: true | false (default false uses a real connection for enrollment)."))
 	fmt.Println("  -test-mode-delay")
