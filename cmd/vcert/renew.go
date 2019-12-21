@@ -78,7 +78,7 @@ func setupRenewCommandFlags() {
 func showRenewUsage() {
 	fmt.Printf("Renew Usage:\n")
 	fmt.Printf("  %s renew <Required Venafi Cloud Config> OR <Required Trust Protection Platform Config> <Options>\n", os.Args[0])
-	fmt.Printf("  %s renew -k <api key> -id <certificate DN>\n", os.Args[0])
+	fmt.Printf("  %s renew -t <tpp access token> -id <certificate DN>\n", os.Args[0])
 	fmt.Printf("  %s renew -k <api key> -thumbprint <certificate SHA1 fingerprint>\n", os.Args[0])
 
 	fmt.Printf("\nRequired for both Venafi Cloud and Trust Protection Platform:\n")
@@ -89,21 +89,21 @@ func showRenewUsage() {
 
 	fmt.Printf("\nRequired for Venafi Cloud:\n")
 	fmt.Println("  -k")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Your API Key"))
-
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Your API Key for Venafi Cloud."))
+	
 	fmt.Printf("\nRequired for Trust Protection Platform:\n")
-	fmt.Println("  -u")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the URL of the Trust Protection Platform Server. Example: -u https://tpp.example.com"))
 	fmt.Println("  -t")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify access token for Trust Protection Platform Server. Example: -t ns1dofUPmsdxTLQS2hM1gQ=="))
-
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Your access token for Trust Protection Platform. Example: -t <tpp access token>"))
+	fmt.Println("  -u")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("The URL of the Trust Protection Platform WebSDK. Example: -u https://tpp.example.com"))
+	
 	fmt.Printf("\nOptions:\n")
 	fmt.Println("  -chain")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to include the certificate chain in the output, and to specify where to place it in the file. By default, it is placed last. Options include: ignore | root-first | root-last"))
 	fmt.Println("  -file")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a file name and a location where the resulting file should be written. If this option is used the key, certificate, and chain will be written to the same file. Example: /tmp/newcert.pem"))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a file name and a location where the resulting file should be written. If this option is used the key, certificate, and chain will be written to the same file. Example: /path-to/newcert.pem"))
 	fmt.Println("  -client-pkcs12")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a client PKCS#12 archive for mutual TLS."))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a client PKCS#12 archive for mutual TLS (for 2FA, use the getcred action to authenticate with Venafi Platform using a client certificate)."))
 	fmt.Println("  -client-pkcs12-pw")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the password for a client PKCS#12 archive. Use in combination with -client-pkcs12 option."))
 
@@ -117,24 +117,24 @@ func showRenewUsage() {
 	fmt.Printf("\t%s\n", ("Use to specify the CSR and private key location. Options include: local | service | file.\n" +
 		"\t\tlocal:   New private key and CSR will be generated locally (default)\n" +
 		"\t\tservice: The private key and CSR will be generated at service side. If it is allowed by policy, the private key will be reused.\n" +
-		"\t\tfile:    CSR used for renewal will be read from a file. Example: -csr file:/tmp/csr.pem."))
+		"\t\tfile:    CSR used for renewal will be read from a file. Example: -csr file:/path-to/csr.pem."))
 
 	fmt.Println("  -cert-file")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a file name and a location where the resulting certificate file should be written. Example: /tmp/newcert.pem"))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a file name and a location where the resulting certificate file should be written. Example: /path-to/newcert.pem"))
 	fmt.Println("  -chain-file")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a path and file name where the resulting chain file should be written, if no chain file is specified the chain will be stored in the same file as the certificate. Example: /tmp/chain.pem"))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a path and file name where the resulting chain file should be written, if no chain file is specified the chain will be stored in the same file as the certificate. Example: /path-to/chain.pem"))
 	fmt.Println("  -format")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the output format. PEM is the default format. Options include: pem | json | pkcs12. If PKCS#12 format is specified, then all objects should be written using -file option."))
 	fmt.Println("  -key-file")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a file name and a location where the resulting private key file should be written. Example: /tmp/newkey.pem"))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a file name and a location where the resulting private key file should be written. Example: /path-to/newkey.pem"))
 	fmt.Println("  -key-password")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a password for encrypting the private key. "+
 		"For a non-encrypted private key, omit this option and instead specify -no-prompt. "+
-		"Example: -key-password file:/Temp/mypasswrds.txt"))
+		"Example: -key-password file:/path-to/mypasswds.txt"))
 	fmt.Println("  -key-size")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Specify a key size (default 2048)."))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a key size (default 2048)."))
 	fmt.Println("  -no-prompt")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Bypasses the authentication prompt. Useful for scripting."))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to bypass authentication and password prompts. Useful for scripting."))
 	fmt.Println("  -no-pickup")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to not wait for the certificate to be issued."))
 	fmt.Println("  -pickup-id-file")
