@@ -86,7 +86,7 @@ func showRevokeUsage() {
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Your access token for Trust Protection Platform. Example: -t <tpp access token>"))
 	fmt.Println("  -u")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("The URL of the Trust Protection Platform WebSDK. Example: -u https://tpp.example.com"))
-	
+
 	fmt.Printf("\nOptions:\n")
 	fmt.Println("  -config")
 	fmt.Printf("\t%s\n", ("Use to specify INI configuration file containing connection details\n" +
