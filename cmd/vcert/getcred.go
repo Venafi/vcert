@@ -97,11 +97,11 @@ func validateGetcredFlags() error {
 	}
 
 	if getcredParams.url == "" && getcredParams.tppURL == "" {
-		return fmt.Errorf("Missing url parameter.")
+		return fmt.Errorf("missing -u (URL) parameter")
 	}
 
 	if getcredParams.tppToken == "" && getcredParams.tppUser == "" && getcredParams.clientP12 == "" {
-		return fmt.Errorf("Refresh token of username must be specified")
+		return fmt.Errorf("either -username, -p12-file, or -t must be specified")
 	}
 	return nil
 }
