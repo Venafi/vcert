@@ -58,7 +58,7 @@ func showGetcredUsage() {
 	fmt.Println("  -password")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the Trust Protection Platform user's password.")
 	fmt.Println("  -p12-file")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a PKCS#12 file containing a client certificate (and private key) of a Trust Protection Platform user to be used for mutual TLS. Required if -username or -t is not present and may not be combined with either.")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a PKCS#12 file containing a client certificate (and private key) of a Trust Protection Platform user to be used for mutual TLS. Required if -username or -t is not present and may not be combined with either. Must specify -trust-bundle if the chain for the client certificate is not in the PKCS#12 file. ")
 	fmt.Println("  -p12-password")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the password of the PKCS#12 file containing the client certificate.")
 	fmt.Println("  -t")
