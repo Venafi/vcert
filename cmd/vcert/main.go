@@ -179,7 +179,7 @@ func main() {
 				}
 				fmt.Println(string(jsonData))
 			} else {
-				tm := time.Unix(int64(resp.Expires), 0)
+				tm := time.Unix(int64(resp.Expires), 0).UTC().Format(time.RFC3339)
 				fmt.Println("access_token: ", resp.Access_token)
 				fmt.Println("access_token_expires: ", tm)
 				fmt.Println("refresh_token: ", resp.Refresh_token)
@@ -200,7 +200,7 @@ func main() {
 				}
 				fmt.Println(string(jsonData))
 			} else {
-				tm := time.Unix(int64(resp.Expires), 0)
+				tm := time.Unix(int64(resp.Expires), 0).UTC().Format(time.RFC3339)
 				fmt.Println("access_token: ", resp.Access_token)
 				fmt.Println("access_token_expires: ", tm)
 				fmt.Println("refresh_token: ", resp.Refresh_token)
@@ -221,7 +221,7 @@ func main() {
 				}
 				fmt.Println(string(jsonData))
 			} else {
-				tm := time.Unix(int64(resp.Expires), 0)
+				tm := time.Unix(int64(resp.Expires), 0).UTC().Format(time.RFC3339)
 				fmt.Println("access_token: ", resp.Access_token)
 				fmt.Println("access_token_expires: ", tm)
 				fmt.Println("refresh_token: ", resp.Refresh_token)
