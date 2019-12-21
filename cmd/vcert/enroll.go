@@ -91,7 +91,7 @@ func showEnrollmentUsage() {
 
 	fmt.Printf("\nRequired for Venafi Cloud:\n")
 	fmt.Println("  -k")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Your API Key for Venafi Cloud."))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Your API Key for Venafi Cloud.  Example: -k xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"))
 
 	fmt.Printf("\nRequired for Trust Protection Platform:\n")
 	fmt.Println("  -t")
@@ -114,7 +114,7 @@ func showEnrollmentUsage() {
 		"\t\tTPP & Cloud: trust_bundle, test_mode"))
 
 	fmt.Println("  -file")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a file name and a location where the resulting file should be written. If this option is used the key, certificate, and chain will be written to the same file. Example: /tmp/newcert.pem"))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a file name and a location where the resulting file should be written. If this option is used the key, certificate, and chain will be written to the same file. Example: /path-to/newcert.pem"))
 
 	fmt.Println("  -csr")
 	fmt.Printf("\t%s\n", ("Use to specify the CSR and private key location. Options include: local | service | file.\n" +
@@ -147,7 +147,7 @@ func showEnrollmentUsage() {
 	fmt.Println("  -pickup-id-file")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a file name where Pickup ID will be stored."))
 	fmt.Println("  -profile")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify effective section in ini-configuration file specified by -config option"))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify effective section in ini-configuration file specified by -config option."))
 	fmt.Println("  -san-dns")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a DNS Subject Alternative Name. To specify more than one, use spaces like this: -san-dns test.abc.xyz -san-dns test1.abc.xyz etc."))
 	fmt.Println("  -san-email")
@@ -172,9 +172,9 @@ func showEnrollmentUsage() {
 
 	fmt.Printf("\nAdditional Options for Trust Protection Platform:\n")
 	fmt.Println("  -key-type")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a key type. Options include: rsa (default) | ecdsa."))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a key type. Options include: rsa (default) | ecdsa"))
 	fmt.Println("  -key-curve value")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the ECDSA key curve. Options include: p521 | p384 | p256 (default p521)."))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the ECDSA key curve. Options include: p521 (default) | p384 | p256"))
 	fmt.Println()
 }
 
