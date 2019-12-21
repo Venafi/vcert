@@ -62,7 +62,7 @@ func showGetcredUsage() {
 	fmt.Println("  -p12-password")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the password of the PKCS#12 file containing the client certificate."))
 	fmt.Println("  -t")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a refresh token for a Trust Protection Platform user. Required if -username or -p12-file is not present and may not be combined with either.")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a refresh token for a Trust Protection Platform user. Required if -username or -p12-file is not present and may not be combined with either."))
 
 	fmt.Printf("\nOptions:\n")
 	fmt.Println("  -client-id")
