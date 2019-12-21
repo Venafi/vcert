@@ -46,7 +46,7 @@ func setupGetcredCommandFlags() {
 func showGetcredUsage() {
 	fmt.Printf("Get Credentials Usage:\n")
 	fmt.Printf("vcert getcred -u https://tpp.example.com -username <TPP user> -password <TPP user password>\n")
-	fmt.Printf("vcert getcred -u https://tpp.example.com -p12-file <PKCS#12 client certificate> -p12-password <PKCS#12 password>\n")
+	fmt.Printf("vcert getcred -u https://tpp.example.com -p12-file <PKCS#12 client certificate> -p12-password <PKCS#12 password> -trust-bundle /path-to/bundle.pem\n")
 	fmt.Printf("vcert getcred -u https://tpp.example.com -t <refresh token>\n")
 	fmt.Printf("vcert getcred -u https://tpp.example.com -t <refresh token> -scope <scopes and restrictions>\n")
 
@@ -59,7 +59,7 @@ func showGetcredUsage() {
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the Trust Protection Platform user's password.")
 	fmt.Println("  -p12-file")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a PKCS#12 file containing a client certificate (and private key) of a Trust Protection Platform user to be used for mutual TLS. Required if -username or -t is not present and may not be combined with either.")
-	fmt.Println("  -p12-file-password")
+	fmt.Println("  -p12-password")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the password of the PKCS#12 file containing the client certificate.")
 	fmt.Println("  -t")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a refresh token for a Trust Protection Platform user. Required if -username or -p12-file is not present and may not be combined with either.")
