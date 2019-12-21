@@ -127,7 +127,7 @@ func showEnrollmentUsage() {
 	fmt.Println("  -chain-file")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a path and file name where the resulting chain file should be written, if no chain file is specified the chain will be stored in the same file as the certificate. Example: /tmp/chain.pem"))
 	fmt.Println("  -client-pkcs12")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a client PKCS#12 archive for mutual TLS."))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a client PKCS#12 archive for mutual TLS (for 2FA, use the getcred action to authenticate with Venafi Platform using a client certificate)."))
 	fmt.Println("  -client-pkcs12-pw")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the password for a client PKCS#12 archive. Use in combination with -client-pkcs12 option."))
 	fmt.Println("  -format")
