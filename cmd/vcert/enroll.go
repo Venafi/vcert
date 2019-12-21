@@ -92,13 +92,13 @@ func showEnrollmentUsage() {
 	fmt.Printf("\nRequired for Venafi Cloud:\n")
 	fmt.Println("  -k")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Your API Key for Venafi Cloud."))
-	
+
 	fmt.Printf("\nRequired for Trust Protection Platform:\n")
 	fmt.Println("  -t")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Your access token for Trust Protection Platform. Example: -t <tpp access token>"))
 	fmt.Println("  -u")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("The URL of the Trust Protection Platform WebSDK. Example: -u https://tpp.example.com"))
-	
+
 	fmt.Printf("\nOptions:\n")
 	fmt.Println("  -chain")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to include the certificate chain in the output, and to specify where to place it in the file. By default, it is placed last. Options include: ignore | root-first | root-last"))
