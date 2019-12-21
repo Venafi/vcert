@@ -68,7 +68,7 @@ func showGetcredUsage() {
 	fmt.Println("  -client-id")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the application that will be using the token. \"vcert-cli\" is the default.")
 	fmt.Println("  -format")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the output format. Options include: text (default) | json.")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Specify \"json\" to get JSON formatted output instead of the plain text default.")
 	fmt.Println("  -scope")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to request specific scopes and restrictions. \"certificate:manage,revoke;\" is the default.")
 	fmt.Println("  -trust-bundle")
