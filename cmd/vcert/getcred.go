@@ -50,9 +50,9 @@ func showGetcredUsage() {
 	fmt.Printf("vcert getcred -u https://tpp.example.com -t <refresh token>\n")
 	fmt.Printf("vcert getcred -u https://tpp.example.com -t <refresh token> -scope <scopes and restrictions>\n")
 
-	fmt.Printf("\nRequired:\n")
+	fmt.Printf("\nRequired for Trust Protection Platform:\n")
 	fmt.Println("  -u")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the URL of the Trust Protection Platform WebSDK server. Example: -u https://tpp.example.com"))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the URL of the WebSDK server. Example: -u https://tpp.example.com"))
 	fmt.Println("  -username")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the username of a Trust Protection Platform user. Required if -p12-file or -t is not present and may not be combined with either."))
 	fmt.Println("  -password")
