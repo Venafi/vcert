@@ -20,6 +20,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"github.com/Venafi/vcert/pkg/verror"
 	"net/http"
 	neturl "net/url"
 	"regexp"
@@ -473,7 +474,7 @@ func (c *Connector) ReadPolicyConfiguration() (policy *endpoint.Policy, err erro
 			return nil, err
 		}
 		if zoneNonFoundregexp.Match([]byte(r.Error)) {
-			return nil, endpoint.VenafiErrorZoneNotFound
+			return nil, verror.ZoneNotFoundError
 		}
 	} else {
 		return nil, fmt.Errorf("Invalid status: %s Server data: %s", status, body)
@@ -512,7 +513,7 @@ func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration,
 			return nil, err
 		}
 		if zoneNonFoundregexp.Match([]byte(r.Error)) {
-			return nil, endpoint.VenafiErrorZoneNotFound
+			return nil, verror.ZoneNotFoundError
 		}
 	}
 	return nil, fmt.Errorf("Invalid status: %s Server response: %s", status, string(body))

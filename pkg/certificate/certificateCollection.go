@@ -22,6 +22,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"github.com/Venafi/vcert/pkg/verror"
 	"strings"
 )
 
@@ -147,7 +148,7 @@ func PEMCollectionFromBytes(certBytes []byte, chainOrder ChainOption) (*PEMColle
 //AddPrivateKey adds a Private Key to the PEMCollection. Note that the collection can only contain one private key
 func (col *PEMCollection) AddPrivateKey(privateKey crypto.Signer, privateKeyPassword []byte) error {
 	if col.PrivateKey != "" {
-		return fmt.Errorf("The PEM Collection can only contain one private key")
+		return fmt.Errorf("%w: the PEM Collection can only contain one private key", verror.VcertError)
 	}
 	var p *pem.Block
 	var err error
@@ -166,7 +167,7 @@ func (col *PEMCollection) AddPrivateKey(privateKey crypto.Signer, privateKeyPass
 //AddChainElement adds a chain element to the collection
 func (col *PEMCollection) AddChainElement(certificate *x509.Certificate) error {
 	if certificate == nil {
-		return fmt.Errorf("Certificate cannot be nil")
+		return fmt.Errorf("%w: certificate cannot be nil", verror.VcertError)
 	}
 	pemChain := col.Chain
 	pemChain = append(pemChain, string(pem.EncodeToMemory(GetCertificatePEMBlock(certificate.Raw))))

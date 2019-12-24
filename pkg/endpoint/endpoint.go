@@ -465,11 +465,3 @@ func (z *ZoneConfiguration) UpdateCertificateRequest(request *certificate.Reques
 		}
 	}
 }
-
-type VenafiError string
-
-const VenafiErrorZoneNotFound VenafiError = "Zone not found"
-
-func (e VenafiError) Error() string {
-	return string(e)
-}
