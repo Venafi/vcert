@@ -137,6 +137,18 @@ const (
 	UserProvidedCSR
 )
 
+type CustomFieldType int
+
+const (
+	CustomFieldPlain CustomFieldType = 0 + iota
+)
+
+type CustomField struct {
+	Type  CustomFieldType
+	Name  string
+	Value string
+}
+
 // Request contains data needed to generate a certificate request
 // CSR is a PEM-encoded Certificate Signing Request
 type Request struct {
@@ -163,8 +175,9 @@ type Request struct {
 	FetchPrivateKey bool
 	/*	Thumbprint is here because *Request is used in RetrieveCertificate().
 		Code should be refactored so that RetrieveCertificate() uses some abstract search object, instead of *Request{PickupID} */
-	Thumbprint string
-	Timeout    time.Duration
+	Thumbprint   string
+	Timeout      time.Duration
+	CustomFields []CustomField
 }
 
 type RevocationRequest struct {

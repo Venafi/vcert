@@ -255,26 +255,24 @@ func wrapAltNames(req *certificate.Request) (items []sanItem) {
 func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRequest, err error) {
 	switch req.CsrOrigin {
 	case certificate.LocalGeneratedCSR, certificate.UserProvidedCSR:
-		tppReq = certificateRequest{
-			PolicyDN:                getPolicyDN(zone),
-			CADN:                    req.CADN,
-			PKCS10:                  string(req.GetCSR()),
-			ObjectName:              req.FriendlyName,
-			DisableAutomaticRenewal: true}
-
+		tppReq.PKCS10 = string(req.GetCSR())
 	case certificate.ServiceGeneratedCSR:
-		tppReq = certificateRequest{
-			PolicyDN:                getPolicyDN(zone),
-			CADN:                    req.CADN,
-			ObjectName:              req.FriendlyName,
-			Subject:                 req.Subject.CommonName, // TODO: there is some problem because Subject is not only CN
-			SubjectAltNames:         wrapAltNames(req),
-			DisableAutomaticRenewal: true}
-
+		tppReq.Subject = req.Subject.CommonName // TODO: there is some problem because Subject is not only CN
+		tppReq.SubjectAltNames = wrapAltNames(req)
 	default:
 		return tppReq, fmt.Errorf("Unexpected option in PrivateKeyOrigin")
 	}
-
+	tppReq.PolicyDN = getPolicyDN(zone)
+	tppReq.CADN = req.CADN
+	tppReq.ObjectName = req.FriendlyName
+	tppReq.DisableAutomaticRenewal = true
+	customFieldsMap := make(map[string][]string)
+	for _, f := range req.CustomFields {
+		customFieldsMap[f.Name] = append(customFieldsMap[f.Name], f.Value)
+	}
+	for name, value := range customFieldsMap {
+		tppReq.CustomFields = append(tppReq.CustomFields, customField{name, value})
+	}
 	switch req.KeyType {
 	case certificate.KeyTypeRSA:
 		tppReq.KeyAlgorithm = "RSA"
