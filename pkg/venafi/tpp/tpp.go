@@ -38,6 +38,8 @@ import (
 
 const defaultKeySize = 2048
 const defaultSignatureAlgorithm = x509.SHA256WithRSA
+const defaultClientID = "vcert-go"
+const defaultScope = "certificate:manage,revoke;"
 
 type certificateRequest struct {
 	PolicyDN                string          `json:",omitempty"`
@@ -142,10 +144,42 @@ type authorizeResquest struct {
 }
 
 type refreshAccessTokenResquest struct {
-	client_id     string `json:",omitempty"`
-	refresh_token string `json:",omitempty"`
+	Client_id     string `json:"client_id"`
+	Refresh_token string `json:"refresh_token"`
 }
 
+type oauthGetRefreshTokenRequest struct {
+	Client_id string `json:"client_id"`
+	Username  string `json:"username"`
+	Password  string `json:"password"`
+	Scope     string `json:"scope"`
+}
+type oauthGetRefreshTokenResponse struct {
+	Access_token  string `json:"access_token,omitempty"`
+	Expires       int    `json:"expires,omitempty"`
+	Identity      string `json:"identity,omitempty"`
+	Refresh_token string `json:"refresh_token,omitempty"`
+	Scope         string `json:"scope,omitempty"`
+	Token_type    string `json:"token_type,omitempty"`
+}
+
+type oauthRefreshAccessTokenRequest struct {
+	Refresh_token string `json:"refresh_token,omitempty"`
+	Client_id     string `json:"client_id"`
+}
+
+type oauthCertificateTokenRequest struct {
+	Client_id string `json:"client_id"`
+	Scope     string `json:"scope,omitempty"`
+}
+
+type oauthRefreshAccessTokenResponse struct {
+	Access_token  string `json:"access_token,omitempty"`
+	Expires       int    `json:"expires,omitempty"`
+	Identity      string `json:"identity,omitempty"`
+	Refresh_token string `json:"refresh_token,omitempty"`
+	Token_type    string `json:"token_type,omitempty"`
+}
 type policyRequest struct {
 	ObjectDN      string `json:",omitempty"`
 	Class         string `json:",omitempty"`
@@ -155,17 +189,19 @@ type policyRequest struct {
 type urlResource string
 
 const (
-	urlResourceRefreshAccessToken  urlResource = "vedauth/authorize/token"
-	urlResourceAuthorize           urlResource = "authorize/"
-	urlResourceCertificateRequest  urlResource = "certificates/request"
-	urlResourceCertificateRetrieve urlResource = "certificates/retrieve"
-	urlResourceFindPolicy          urlResource = "config/findpolicy"
-	urlResourceCertificateRevoke   urlResource = "certificates/revoke"
-	urlResourceCertificateRenew    urlResource = "certificates/renew"
-	urlResourceCertificateSearch   urlResource = "certificates/"
-	urlResourceCertificateImport   urlResource = "certificates/import"
-	urlResourceCertificatePolicy   urlResource = "certificates/checkpolicy"
-	urlResourceCertificatesList    urlResource = "certificates/"
+	urlResourceRefreshAccessToken   urlResource = "vedauth/authorize/token"
+	urlResourceAuthorizeOAuth       urlResource = "vedauth/authorize/oauth"
+	urlResourceAuthorizeCertificate urlResource = "vedauth/Authorize/Certificate"
+	urlResourceAuthorize            urlResource = "vedsdk/authorize/"
+	urlResourceCertificateRequest   urlResource = "vedsdk/certificates/request"
+	urlResourceCertificateRetrieve  urlResource = "vedsdk/certificates/retrieve"
+	urlResourceFindPolicy           urlResource = "vedsdk/config/findpolicy"
+	urlResourceCertificateRevoke    urlResource = "vedsdk/certificates/revoke"
+	urlResourceCertificateRenew     urlResource = "vedsdk/certificates/renew"
+	urlResourceCertificateSearch    urlResource = "vedsdk/certificates/"
+	urlResourceCertificateImport    urlResource = "vedsdk/certificates/import"
+	urlResourceCertificatePolicy    urlResource = "vedsdk/certificates/checkpolicy"
+	urlResourceCertificatesList     urlResource = "vedsdk/certificates/"
 )
 
 const (
@@ -358,24 +394,6 @@ func getPolicyDN(zone string) string {
 		modified = "\\VED\\Policy" + modified
 	}
 	return modified
-}
-
-func parseAuthorizeResult(httpStatusCode int, httpStatus string, body []byte) (string, error) {
-	switch httpStatusCode {
-	case http.StatusOK:
-		auth, err := parseAuthorizeData(body)
-		if err != nil {
-			return "", err
-		}
-		return auth.APIKey, nil
-	default:
-		return "", fmt.Errorf("Unexpected status code on TPP Authorize. Status: %s", httpStatus)
-	}
-}
-
-func parseAuthorizeData(b []byte) (data authorizeResponse, err error) {
-	err = json.Unmarshal(b, &data)
-	return
 }
 
 func parseConfigResult(httpStatusCode int, httpStatus string, body []byte) (tppData tppPolicyData, err error) {

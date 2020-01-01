@@ -17,7 +17,6 @@
 package test
 
 import (
-	"flag"
 	"os"
 )
 
@@ -28,27 +27,11 @@ type Context struct {
 	TPPaccessToken    string
 	TPPZone           string
 	TPPZoneRestricted string
+	TPPRefreshToken   string
+	ClientID          string
 	CloudUrl          string
 	CloudAPIkey       string
 	CloudZone         string
-}
-
-func GetContext() *Context {
-
-	c := &Context{}
-
-	flag.StringVar(&c.TPPurl, "tpp-url", "", "")
-	flag.StringVar(&c.TPPuser, "tpp-user", "", "")
-	flag.StringVar(&c.TPPPassword, "tpp-password", "", "")
-	flag.StringVar(&c.TPPZone, "tpp-zone", "", "")
-
-	flag.StringVar(&c.CloudUrl, "cloud-url", "", "")
-	flag.StringVar(&c.CloudAPIkey, "cloud-api-key", "", "")
-	flag.StringVar(&c.CloudZone, "cloud-zone", "", "")
-
-	flag.Parse()
-
-	return c
 }
 
 func GetEnvContext() *Context {
@@ -58,7 +41,7 @@ func GetEnvContext() *Context {
 	c.TPPurl = os.Getenv("VCERT_TPP_URL")
 	c.TPPuser = os.Getenv("VCERT_TPP_USER")
 	c.TPPPassword = os.Getenv("VCERT_TPP_PASSWORD")
-	c.TPPaccessToken = os.Getenv("TPPACCESS_TOKEN")
+	c.ClientID = os.Getenv("CLIENT_ID")
 	c.TPPZone = os.Getenv("VCERT_TPP_ZONE")
 	c.TPPZoneRestricted = os.Getenv("TPPZONE_RESTRICTED")
 
