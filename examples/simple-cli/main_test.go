@@ -37,7 +37,7 @@ func init() {
 
 func TestRequestCertificate(t *testing.T) {
 	//
-	// 0. get client instance based on connection config
+	// 0. Get client instance based on connection config
 	//
 	c, err := vcert.NewClient(effectiveConfig)
 	if err != nil {
@@ -45,7 +45,7 @@ func TestRequestCertificate(t *testing.T) {
 	}
 
 	//
-	// 1. compose request object
+	// 1. Compose request object
 	//
 	req := &certificate.Request{
 		Subject: pkix.Name{
@@ -67,7 +67,7 @@ func TestRequestCertificate(t *testing.T) {
 	}
 
 	//
-	// 2. generate private key and certificate request (CSR) based on request's options
+	// 2. Generate private key and certificate request (CSR) based on request's options
 	//
 	err = c.GenerateRequest(nil, req)
 	if err != nil {
@@ -75,7 +75,7 @@ func TestRequestCertificate(t *testing.T) {
 	}
 
 	//
-	// 3. submit certificate request, get request ID as a response
+	// 3. Submit certificate request, get request ID as a response
 	//
 	requestID, err := c.RequestCertificate(req)
 	if err != nil {
@@ -83,7 +83,7 @@ func TestRequestCertificate(t *testing.T) {
 	}
 
 	//
-	// 4. retrieve certificate using request ID obtained on previous step, get PEM collection as a response
+	// 4. Retrieve certificate using request ID obtained on previous step, get PEM collection as a response
 	//
 	req.PickupID = requestID
 	req.Timeout = 180 * time.Second
@@ -93,7 +93,7 @@ func TestRequestCertificate(t *testing.T) {
 	}
 
 	//
-	// 5. (optional) add certificate's private key to PEM collection
+	// 5. (optional) Add certificate's private key to PEM collection
 	//
 	pcc.AddPrivateKey(req.PrivateKey, []byte(req.KeyPassword))
 
@@ -106,7 +106,7 @@ func TestRequestCertificate(t *testing.T) {
 
 func TestRevokeCertificate(t *testing.T) {
 	//
-	// 0. get client instance based on connection config
+	// 0. Get client instance based on connection config
 	//
 	c, err := vcert.NewClient(effectiveConfig)
 	if err != nil {
@@ -114,7 +114,7 @@ func TestRevokeCertificate(t *testing.T) {
 	}
 
 	//
-	// 1. compose revocation object
+	// 1. Compose revocation object
 	//
 	req := &certificate.RevocationRequest{
 		CertificateDN: `\VED\Policy\` + effectiveConfig.Zone + `\client.venafi.example.com`,
@@ -124,7 +124,7 @@ func TestRevokeCertificate(t *testing.T) {
 	}
 
 	//
-	// 2. submit revocation request
+	// 2. Submit revocation request
 	//
 	err = c.RevokeCertificate(req)
 	if err != nil {
@@ -138,7 +138,7 @@ func TestRevokeCertificate(t *testing.T) {
 
 func TestRenewCertificate(t *testing.T) {
 	//
-	// 0. get client instance based on connection config
+	// 0. Get client instance based on connection config
 	//
 	c, err := vcert.NewClient(effectiveConfig)
 	if err != nil {
@@ -146,7 +146,7 @@ func TestRenewCertificate(t *testing.T) {
 	}
 
 	//
-	// 1. compose renewal object
+	// 1. Compose renewal object
 	//
 	renewReq := &certificate.RenewalRequest{
 		// certificate is identified using DN
@@ -157,7 +157,7 @@ func TestRenewCertificate(t *testing.T) {
 	}
 
 	//
-	// 2. submit renewal request
+	// 2. Submit renewal request
 	//
 	requestID, err := c.RenewCertificate(renewReq)
 	if err != nil {
@@ -165,7 +165,7 @@ func TestRenewCertificate(t *testing.T) {
 	}
 
 	//
-	// 4. retrieve certificate using request ID obtained on previous step, get PEM collection as a response
+	// 3. Retrieve certificate using request ID obtained on previous step, get PEM collection as a response
 	//
 	req := &certificate.Request{
 		PickupID: requestID,
@@ -177,12 +177,12 @@ func TestRenewCertificate(t *testing.T) {
 	}
 
 	//
-	// 3. Done!
+	// 4. Done!
 	//
 	pp(requestID)
 	pp(pcc)
 
-	// decoding renewed certificate
+	// decode renewed certificate
 	block, _ := pem.Decode([]byte(pcc.Certificate))
 	if block == nil || block.Type != "CERTIFICATE" {
 		t.Fatalf("could not get PEM certificate block")
@@ -192,14 +192,14 @@ func TestRenewCertificate(t *testing.T) {
 		t.Fatalf("could not parse x509 certificate: %s", err)
 	}
 
-	// renewed certificate serial number
+	// renew certificate by serial number
 	pp(cert.SerialNumber)
 
 }
 
 func TestImportCertificate(t *testing.T) {
 	//
-	// 0. get client instance based on connection config
+	// 0. Get client instance based on connection config
 	//
 	c, err := vcert.NewClient(effectiveConfig)
 	if err != nil {
@@ -207,7 +207,7 @@ func TestImportCertificate(t *testing.T) {
 	}
 
 	//
-	// 1. compose, generate, submit request and retrieve certificate
+	// 1. Compose, generate, submit request and retrieve certificate
 	//
 	req := &certificate.Request{
 		Subject: pkix.Name{
@@ -268,7 +268,7 @@ func TestImportCertificate(t *testing.T) {
 	pp(importResp)
 
 	//
-	// 3. retrieve certificate & key from new object
+	// 3. Retrieve certificate & key from new object
 	//
 	req = &certificate.Request{
 		PickupID:        importResp.CertificateDN,
