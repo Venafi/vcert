@@ -357,7 +357,7 @@ func TestRequestCertificate(t *testing.T) {
 	req.Subject.Country = []string{"US"}
 	req.FriendlyName = cn
 	req.CustomFields = []certificate.CustomField{
-		{Name: "Date Required", Value: "2019-10-10"},
+		{Name: "custom", Value: "2019-10-10"},
 	}
 	err = tpp.GenerateRequest(config, req)
 	if err != nil {
