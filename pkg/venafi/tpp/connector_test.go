@@ -28,6 +28,7 @@ import (
 	"github.com/Venafi/vcert/pkg/endpoint"
 	"github.com/Venafi/vcert/test"
 	"net/http"
+	"net/url"
 	"os"
 	"reflect"
 	"strings"
@@ -348,13 +349,15 @@ func TestRequestCertificate(t *testing.T) {
 	}
 
 	cn := test.RandCN()
-	req := &certificate.Request{}
+	req := &certificate.Request{Timeout: time.Second * 30}
 	req.Subject.CommonName = cn
 	req.Subject.Organization = []string{"Venafi, Inc."}
 	req.Subject.OrganizationalUnit = []string{"Automated Tests"}
 	req.Subject.Locality = []string{"Las Vegas"}
 	req.Subject.Province = []string{"Nevada"}
 	req.Subject.Country = []string{"US"}
+	u := url.URL{Scheme: "https", Host: "example.com", Path: "/test"}
+	req.URIs = []*url.URL{&u}
 	req.FriendlyName = cn
 	err = tpp.GenerateRequest(config, req)
 	if err != nil {
@@ -362,9 +365,24 @@ func TestRequestCertificate(t *testing.T) {
 	}
 
 	t.Logf("getPolicyDN(ctx.TPPZone) = %s", getPolicyDN(ctx.TPPZone))
-	_, err = tpp.RequestCertificate(req)
+	req.PickupID, err = tpp.RequestCertificate(req)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
+	}
+	certCollections, err := tpp.RetrieveCertificate(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	p, _ := pem.Decode([]byte(certCollections.Certificate))
+	cert, err := x509.ParseCertificate(p.Bytes)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+	if cert.Subject.CommonName != cn {
+		t.Fatalf("mismatched common names: %v and %v", cn, cert.Subject.CommonName)
+	}
+	if cert.URIs[0].String() != u.String() {
+		t.Fatalf("mismatched URIs: %v and %v", u.String(), cert.URIs[0].String())
 	}
 }
 
