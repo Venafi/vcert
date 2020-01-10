@@ -28,7 +28,7 @@ func setupGetcredCommandFlags() {
 	getcredFlags.StringVar(&getcredParams.tppToken, "t", "", "")
 	getcredFlags.StringVar(&getcredParams.trustBundle, "trust-bundle", "", "")
 	getcredFlags.StringVar(&getcredParams.scope, "scope", "", "")
-	getcredFlags.StringVar(&getcredParams.clientId, "client-id", "vedsdk", "")
+	getcredFlags.StringVar(&getcredParams.clientId, "client-id", "vcert-cli", "")
 	getcredFlags.StringVar(&getcredParams.config, "config", "", "")
 	getcredFlags.StringVar(&getcredParams.profile, "profile", "", "")
 	getcredFlags.StringVar(&getcredParams.clientP12, "p12-file", "", "")
@@ -44,35 +44,37 @@ func setupGetcredCommandFlags() {
 }
 
 func showGetcredUsage() {
-	fmt.Printf("Getting credentials usage:\n")
-	fmt.Println("  -scope")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify API scope."))
+	fmt.Printf("Get Credentials Usage:\n")
+	fmt.Printf("vcert getcred -u https://tpp.example.com -username <TPP user> -password <TPP user password>\n")
+	fmt.Printf("vcert getcred -u https://tpp.example.com -p12-file <PKCS#12 client certificate> -p12-password <PKCS#12 password> -trust-bundle /path-to/bundle.pem\n")
+	fmt.Printf("vcert getcred -u https://tpp.example.com -t <refresh token>\n")
+	fmt.Printf("vcert getcred -u https://tpp.example.com -t <refresh token> -scope <scopes and restrictions>\n")
+
+	fmt.Printf("\nRequired for Trust Protection Platform:\n")
 	fmt.Println("  -u")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify TPP url."))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the URL of the WebSDK server. Example: -u https://tpp.example.com"))
 	fmt.Println("  -username")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify TPP user."))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the username of a Trust Protection Platform user. Required if -p12-file or -t is not present and may not be combined with either."))
 	fmt.Println("  -password")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify TPP password."))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the Trust Protection Platform user's password."))
 	fmt.Println("  -p12-file")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify TPP PKSC12 file if using MTLS connection."))
-	fmt.Println("  -p12-file-password")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify TPP PKSC12 file password if using MTLS connection."))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a PKCS#12 file containing a client certificate (and private key) of a Trust Protection Platform user to be used for mutual TLS. Required if -username or -t is not present and may not be combined with either. Must specify -trust-bundle if the chain for the client certificate is not in the PKCS#12 file."))
+	fmt.Println("  -p12-password")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the password of the PKCS#12 file containing the client certificate."))
 	fmt.Println("  -t")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the refresh token."))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a refresh token for a Trust Protection Platform user. Required if -username or -p12-file is not present and may not be combined with either."))
+
+	fmt.Printf("\nOptions:\n")
+	fmt.Println("  -client-id")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the application that will be using the token. \"vcert-cli\" is the default."))
 	fmt.Println("  -format")
-	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify the output format. If not specified will be plain text. Options include: json ."))
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Specify \"json\" to get JSON formatted output instead of the plain text default."))
+	fmt.Println("  -scope")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to request specific scopes and restrictions. \"certificate:manage,revoke;\" is the default."))
+	fmt.Println("  -trust-bundle")
+	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to specify a PEM file name to be used as trust anchors when communicating with the remote server."))
 	fmt.Println("  -verbose")
 	fmt.Printf("\t%s\n", wrapArgumentDescriptionText("Use to increase the level of logging detail, which is helpful when troubleshooting issues."))
-	fmt.Printf("\nGetting credentials examples:\n")
-	fmt.Printf("\nGet refresh token:\n")
-	fmt.Printf("vcert getcred -u https:/venafi.example.com/vedsdk -trust-bundle /opt/venafi/bundle.pem -t 3rlybZwAdV1qo/KpNJ5FWg==\n")
-	fmt.Printf("\nGet refresh token with custom scope:\n")
-	fmt.Printf(`vcert getcred -u https:/venafi.example.com/vedsdk -trust-bundle /opt/venafi/bundle.pem -t 3rlybZwAdV1qo/KpNJ5FWg==\n -scope "certificate:approve,delete,discover,manage,revoke;" -format json`)
-	fmt.Printf("\n\nRefresh access token:\n")
-	fmt.Printf("vcert getcred -u https:/venafi.example.com/vedsdk -trust-bundle /opt/venafi/bundle.pem -t 3rlybZwAdV1qo/KpNJ5FWg==\n")
-	fmt.Printf("\nGet refresh token using MTLS:\n")
-	fmt.Printf("vcert getcred -u https:/venafi.example.com/vedsdk -trust-bundle /opt/venafi/bundle.pem --p12-file venafi.p12 -p12-password secretPass\n")
-
 }
 
 // validateGetcredFlags valdiates the combination of command flags specified in an getcredment request
@@ -95,11 +97,11 @@ func validateGetcredFlags() error {
 	}
 
 	if getcredParams.url == "" && getcredParams.tppURL == "" {
-		return fmt.Errorf("Missing url parameter.")
+		return fmt.Errorf("missing -u (URL) parameter")
 	}
 
 	if getcredParams.tppToken == "" && getcredParams.tppUser == "" && getcredParams.clientP12 == "" {
-		return fmt.Errorf("Refresh token of username must be specified")
+		return fmt.Errorf("either -username, -p12-file, or -t must be specified")
 	}
 	return nil
 }
