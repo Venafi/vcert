@@ -257,7 +257,7 @@ func main() {
 	// 6. Get refresh token and refresh access token
 	//
 	if config.ConnectorType == endpoint.ConnectorTypeTPP {
-		tppConnector, err := tpp.NewConnector(config.BaseUrl, config.Zone, false, nil)
+		tppConnector, err := tpp.NewConnector(config.BaseUrl, "", false, nil)
 		if err != nil {
 			t.Fatalf("could not create TPP connector: %s", err)
 		}

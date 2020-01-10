@@ -49,19 +49,23 @@ func buildConfig(co command, cf *commandFlags) (cfg vcert.Config, err error) {
 					time.Sleep(1 * time.Second)
 				}
 			}
-		} else if cf.tppUser != "" || cf.tppAccessToken != "" {
+		} else if cf.tppUser != "" || cf.tppToken != "" || cf.clientP12 != "" {
 			connectorType = endpoint.ConnectorTypeTPP
 			if cf.url != "" {
 				baseURL = cf.url
 			} else if cf.tppURL != "" {
 				baseURL = cf.tppURL
 			}
-			if cf.tppAccessToken == "" && cf.tppPassword == "" {
+			if cf.tppToken == "" && cf.tppPassword == "" && cf.clientP12 == "" {
 				logger.Panicf("A password is required to communicate with TPP")
 			}
 
-			if cf.tppAccessToken != "" {
-				auth.AccessToken = cf.tppAccessToken
+			if cf.tppToken != "" {
+				if co == commandGetcred {
+					auth.RefreshToken = cf.tppToken
+				} else {
+					auth.AccessToken = cf.tppToken
+				}
 			} else {
 				auth.User = cf.tppUser
 				auth.Password = cf.tppPassword

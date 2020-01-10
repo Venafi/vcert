@@ -65,3 +65,7 @@ Feature: Enroll certificate
     Given I enroll a certificate in test-mode with -no-prompt -cn vfidev.example.com -cert-file c.pem -chain-file ch.pem
     Then the file "c.pem" should match /(-----BEGIN CERTIFICATE-----.+){1}/
     Then the file "ch.pem" should match /(-----BEGIN CERTIFICATE-----.+){1}/
+
+  Scenario: enroll with wrong csr option should return error
+    Given I enroll a certificate in test-mode with -cn vfidev.example.com -csr sservice -no-prompt
+    Then the exit status should not be 0

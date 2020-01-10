@@ -22,10 +22,13 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"flag"
+	"fmt"
+	"github.com/Venafi/vcert/pkg/venafi/tpp"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -49,6 +52,7 @@ func init() {
 	setupRetrieveCommandFlags()
 	setupRevokeCommandFlags()
 	setupRenewCommandFlags()
+	setupGetcredCommandFlags()
 
 	flag.BoolVar(&showVersion, "version", false, "Displays the running version of the "+UtilityShortName+" utility.")
 }
@@ -69,8 +73,17 @@ func main() {
 	co, cf, _ := parseArgs()
 	var tlsConfig tls.Config
 
+	//Set RenegotiateFreelyAsClient in case of we're communicating with MTLS TPP server with only user\password
+	if cf.apiKey == "" {
+		tlsConfig.Renegotiation = tls.RenegotiateFreelyAsClient
+	}
+
 	if cf.insecure {
 		tlsConfig.InsecureSkipVerify = true
+	}
+
+	if err := readPasswordsFromInputFlags(co, cf); err != nil {
+		log.Fatal(err)
 	}
 
 	if cf.clientP12 != "" {
@@ -101,16 +114,17 @@ func main() {
 
 		// Setup HTTPS client
 		tlsConfig.Certificates = []tls.Certificate{cert}
-		tlsConfig.Renegotiation = tls.RenegotiateFreelyAsClient
 		tlsConfig.RootCAs = caCertPool
 		tlsConfig.BuildNameToCertificate()
 	}
 
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tlsConfig
-
-	if err := readPasswordsFromInputFlags(co, cf); err != nil {
-		log.Fatal(err)
+	csrOptionRegex := regexp.MustCompile(`^file:.*$|^local$|^service$|^$`)
+	if !csrOptionRegex.MatchString(cf.csrOption) {
+		logger.Panicf("unexpected -csr option: %s", cf.csrOption)
 	}
+
+	//Setting TLS configuration
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tlsConfig
 
 	if co == commandGenCSR {
 		doGenCSR(cf)
@@ -126,6 +140,99 @@ func main() {
 		cf.zone = cfg.Zone
 	}
 
+	if co == commandGetcred {
+		//TODO: quick workaround to supress logs when output is in JSON.
+		if cf.format != "json" {
+			logf("Getting credentials")
+		}
+
+		var clientP12 bool
+		if cf.clientP12 != "" {
+			clientP12 = true
+		}
+		var connectionTrustBundle *x509.CertPool
+		if cfg.ConnectionTrust != "" {
+			logf("You specified a trust bundle.")
+			connectionTrustBundle = x509.NewCertPool()
+			if !connectionTrustBundle.AppendCertsFromPEM([]byte(cfg.ConnectionTrust)) {
+				logger.Panicf("Failed to parse PEM trust bundle")
+			}
+		}
+		tppConnector, err := tpp.NewConnector(cfg.BaseUrl, "", cfg.LogVerbose, connectionTrustBundle)
+		if err != nil {
+			logger.Panicf("could not create TPP connector: %s", err)
+		}
+
+		if cfg.Credentials.RefreshToken != "" {
+			resp, err := tppConnector.RefreshAccessToken(&endpoint.Authentication{
+				RefreshToken: cfg.Credentials.RefreshToken,
+				ClientId:     cf.clientId,
+				Scope:        cf.scope,
+			})
+			if err != nil {
+				logger.Panicf("%s", err)
+			}
+			if cf.format == "json" {
+				jsonData, err := json.MarshalIndent(resp, "", "    ")
+				if err != nil {
+					logger.Panicf("%s", err)
+				}
+				fmt.Println(string(jsonData))
+			} else {
+				tm := time.Unix(int64(resp.Expires), 0).UTC().Format(time.RFC3339)
+				fmt.Println("access_token: ", resp.Access_token)
+				fmt.Println("access_token_expires: ", tm)
+				fmt.Println("refresh_token: ", resp.Refresh_token)
+			}
+		} else if cfg.Credentials.User != "" && cfg.Credentials.Password != "" {
+			resp, err := tppConnector.GetRefreshToken(&endpoint.Authentication{
+				User:     cfg.Credentials.User,
+				Password: cfg.Credentials.Password,
+				Scope:    cf.scope,
+				ClientId: cf.clientId})
+			if err != nil {
+				logger.Panicf("%s", err)
+			}
+			if cf.format == "json" {
+				jsonData, err := json.MarshalIndent(resp, "", "    ")
+				if err != nil {
+					logger.Panicf("%s", err)
+				}
+				fmt.Println(string(jsonData))
+			} else {
+				tm := time.Unix(int64(resp.Expires), 0).UTC().Format(time.RFC3339)
+				fmt.Println("access_token: ", resp.Access_token)
+				fmt.Println("access_token_expires: ", tm)
+				fmt.Println("refresh_token: ", resp.Refresh_token)
+
+			}
+		} else if clientP12 {
+			resp, err := tppConnector.GetRefreshToken(&endpoint.Authentication{
+				ClientPKCS12: clientP12,
+				Scope:        cf.scope,
+				ClientId:     cf.clientId})
+			if err != nil {
+				logger.Panicf("%s", err)
+			}
+			if cf.format == "json" {
+				jsonData, err := json.MarshalIndent(resp, "", "    ")
+				if err != nil {
+					logger.Panicf("%s", err)
+				}
+				fmt.Println(string(jsonData))
+			} else {
+				tm := time.Unix(int64(resp.Expires), 0).UTC().Format(time.RFC3339)
+				fmt.Println("access_token: ", resp.Access_token)
+				fmt.Println("access_token_expires: ", tm)
+				fmt.Println("refresh_token: ", resp.Refresh_token)
+
+			}
+		} else {
+			logger.Panicf("Failed to determine credentials set")
+		}
+		return
+	}
+
 	connector, err := vcert.NewClient(&cfg) // Everything else requires an endpoint connection
 	if err != nil {
 		logf("Unable to connect to %s: %s", cfg.ConnectorType, err)
@@ -139,6 +246,7 @@ func main() {
 	}
 
 	if co == commandEnroll {
+
 		var req = &certificate.Request{}
 		var pcc = &certificate.PEMCollection{}
 

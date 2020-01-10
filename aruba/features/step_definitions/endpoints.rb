@@ -1,4 +1,4 @@
-
+#TODO: we need to rewrite aruba tests to use trust bundle instead of insecure flag
 ENDPOINTS = {
     "test-mode" => "-test-mode -test-mode-delay 0",
 

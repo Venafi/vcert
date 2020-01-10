@@ -71,3 +71,52 @@ When(/^I generate( random)? CSR(?: with)?(.+)?$/) do |random, flags|
   cmd = "vcert gencsr#{cn}#{flags}"
   steps %{Then I try to run `#{cmd}`}
 end
+
+# Getting credentials
+When(/^I( interactively)? get credentials from TPP(?: with)?(.+)?$/) do |interactively, flags|
+  if flags === " PKSC12"
+    if "#{ENV['PKCS12_FILE']}" === ""
+      puts "No PKCS12 file was specified. Skipping scenario"
+      skip_this_scenario
+    else
+      cmd = "vcert getcred -u '#{ENV['VCERT_TPP_MTLS_URL']}' -p12-file '#{ENV['PKCS12_FILE']}' -p12-password "+
+          "'#{ENV['PKCS12_FILE_PASSWORD']}' -trust-bundle '#{ENV['MTLS_TRUST_BUNDLE']}'"
+    end
+  elsif flags === " PKSC12 and no password"
+    if "#{ENV['PKCS12_FILE']}" === ""
+      puts "No PKCS12 file was specified. Skipping scenario"
+      skip_this_scenario
+    else
+      cmd = "vcert getcred -u '#{ENV['VCERT_TPP_URL']}' -p12-file '#{ENV['PKCS12_FILE']}' -p12-password "+
+          "'#{ENV['PKCS12_FILE_PASSWORD']}'"
+    end
+  elsif flags === " username and no password"
+    cmd = "vcert getcred -u '#{ENV['VCERT_TPP_URL']}' -username '#{ENV['VCERT_TPP_USER']}' -insecure"
+  else
+    cmd = "vcert getcred -u '#{ENV['VCERT_TPP_URL']}' -username '#{ENV['VCERT_TPP_USER']}'" +
+        " -password '#{ENV['VCERT_TPP_PASSWORD']}' #{flags} -insecure"
+  end
+
+  if interactively
+    puts cmd
+    steps %{
+      Then I run `#{cmd}` interactively
+      And I type "#{ENV['VCERT_TPP_PASSWORD']}"
+      Then the exit status should be 0
+    }
+  else
+    steps %{
+    Then I try to run `#{cmd}`
+  }
+  end
+end
+
+When(/^I refresh access token$/) do
+  cmd = "vcert getcred -u '#{ENV['VCERT_TPP_URL']}' -t #{@refresh_token} -insecure"
+  steps %{
+    Then I try to run `#{cmd}`
+      And I remember the output
+      And it should output access token
+      And it should output refresh token
+  }
+end

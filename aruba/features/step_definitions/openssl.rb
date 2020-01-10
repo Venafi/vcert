@@ -113,7 +113,6 @@ When(/^"([^"]*)" should be PKCS#12 archive with password "([^"]*)"$/) do |filena
   steps %{
     Then I try to run `openssl pkcs12 -in "#{filename}" -passin pass:#{password} -noout`
     And the exit status should be 0
-    And the output should be 0 bytes long
   }
   # -nokeys           Don't output private keys
   # -nocerts          Don't output certificates
