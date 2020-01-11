@@ -117,7 +117,7 @@ func (kt *KeyType) Set(value string) error {
 		*kt = KeyTypeECDSA
 		return nil
 	}
-	return fmt.Errorf("%w: unknow key type: %s", verror.VcertError, value) //todo: check all calls
+	return fmt.Errorf("%w: unknown key type: %s", verror.VcertError, value) //todo: check all calls
 }
 
 const (
@@ -323,7 +323,7 @@ func (request *Request) CheckCertificate(certPEM string) error {
 				return fmt.Errorf("%w: request KeyType not matched with real PrivateKey type", verror.CertificateCheckError)
 			}
 			if certPubkey.X.Cmp(reqPubkey.X) != 0 {
-				return fmt.Errorf("%w: unmatched X for eliptic keys", verror.CertificateCheckError)
+				return fmt.Errorf("%w: unmatched X for elliptic keys", verror.CertificateCheckError)
 			}
 		default:
 			return fmt.Errorf("%w: unknown key algorythm %d", verror.CertificateCheckError, cert.PublicKeyAlgorithm)
@@ -331,7 +331,7 @@ func (request *Request) CheckCertificate(certPEM string) error {
 	} else if len(request.csr) != 0 {
 		pemBlock, _ := pem.Decode(request.csr)
 		if pemBlock == nil {
-			return fmt.Errorf("%w: bad csr: %s", verror.CertificateCheckError, string(request.csr))
+			return fmt.Errorf("%w: bad CSR: %s", verror.CertificateCheckError, string(request.csr))
 		}
 		csr, err := x509.ParseCertificateRequest(pemBlock.Bytes)
 		if err != nil {
@@ -351,7 +351,7 @@ func (request *Request) CheckCertificate(certPEM string) error {
 			certPubKey := cert.PublicKey.(*ecdsa.PublicKey)
 			reqPubKey := csr.PublicKey.(*ecdsa.PublicKey)
 			if certPubKey.X.Cmp(reqPubKey.X) != 0 {
-				return fmt.Errorf("%w: unmatched X for eliptic keys", verror.CertificateCheckError)
+				return fmt.Errorf("%w: unmatched X for elliptic keys", verror.CertificateCheckError)
 			}
 		}
 	}
