@@ -314,7 +314,7 @@ func (request *Request) CheckCertificate(certPEM string) error {
 			}
 
 			if certPubKey.N.Cmp(reqPubkey.N) != 0 {
-				return fmt.Errorf("%w: unmatched key modules", verror.CertificateCheckError)
+				return fmt.Errorf("%w: unmatched key modulus", verror.CertificateCheckError)
 			}
 		case x509.ECDSA:
 			certPubkey := cert.PublicKey.(*ecdsa.PublicKey)
@@ -345,7 +345,7 @@ func (request *Request) CheckCertificate(certPEM string) error {
 			certPubKey := cert.PublicKey.(*rsa.PublicKey)
 			reqPubKey := csr.PublicKey.(*rsa.PublicKey)
 			if certPubKey.N.Cmp(reqPubKey.N) != 0 {
-				return fmt.Errorf("%w: unmatched key modules", verror.CertificateCheckError)
+				return fmt.Errorf("%w: unmatched key modulus", verror.CertificateCheckError)
 			}
 		case x509.ECDSA:
 			certPubKey := cert.PublicKey.(*ecdsa.PublicKey)
