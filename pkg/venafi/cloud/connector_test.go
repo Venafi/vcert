@@ -77,7 +77,7 @@ func TestReadZoneConfiguration(t *testing.T) {
 
 	conn.SetZone("d686146b-799b-4836-8ac3-f4a2d3a38934")
 	_, err = conn.ReadZoneConfiguration()
-	if errors.Is(err, verror.ZoneNotFoundError) {
+	if !errors.Is(err, verror.ZoneNotFoundError) {
 		t.Fatalf("Unknown zone should have resulted in an error")
 	}
 	testCases := []struct {

@@ -12,5 +12,5 @@ var (
 	PolicyValidationError           = fmt.Errorf("%w: policy doesn't match request", VcertError)
 	CertificateCheckError           = fmt.Errorf("%w: request doesn't match certificate")
 	AuthError                       = fmt.Errorf("%w: auth error")
-	ZoneNotFoundError               = fmt.Errorf("%w: ", UserDataError)
+	ZoneNotFoundError               = fmt.Errorf("%w: zone not found", UserDataError)
 )
