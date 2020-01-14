@@ -19,6 +19,8 @@ package vcert
 import (
 	"crypto/x509"
 	"fmt"
+	"log"
+	"os"
 	"github.com/Venafi/vcert/pkg/verror"
 
 	"github.com/Venafi/vcert/pkg/endpoint"
@@ -32,9 +34,16 @@ import (
 // Returned connector is a concurrency-safe interface to TPP or Venafi Cloud that can be reused without restriction.
 // Connector can also be of type "fake" for local tests, which doesn`t connect to any backend and all certificates enroll locally.
 func (cfg *Config) NewClient() (connector endpoint.Connector, err error) {
-	var connectionTrustBundle *x509.CertPool
+	//TODO: make logger global so we can use it everywhere
+	const UtilityShortName string = "vCert"
+	var (
+		connectionTrustBundle *x509.CertPool
+		logger                = log.New(os.Stderr, UtilityShortName+": ", log.LstdFlags)
+		logf                  = logger.Printf
+	)
+
 	if cfg.ConnectionTrust != "" {
-		fmt.Println("You specified a trust bundle.")
+		logf("You specified a trust bundle.")
 		connectionTrustBundle = x509.NewCertPool()
 		if !connectionTrustBundle.AppendCertsFromPEM([]byte(cfg.ConnectionTrust)) {
 			return nil, fmt.Errorf("%w: failed to parse PEM trust bundle", verror.UserDataError)

@@ -236,6 +236,32 @@ func newFakeConnector() (*fakeEndPointConnector, error) {
 	return &ep, nil
 }
 
+func TestValidateFlagsForEnrollmentMissingData(t *testing.T) {
+	err := enrollFlags.Set("k", "")
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	err = validateFlags(commandEnroll)
+	if err == nil {
+		t.Fatalf("Error was not expected to be nil.  APIKey is required for enrollment")
+	}
+}
+
+func TestGetcredFlagsNoUrl(t *testing.T) {
+
+	p := getcredFlags.Parsed()
+	fmt.Println(p)
+	err := getcredFlags.Set("t", "3rlybZwAdV1qo/KpNJ5FWg==")
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	err = validateFlags(commandGetcred)
+	if err == nil {
+		t.Fatalf("-u must be specified")
+	}
+}
+
 func TestValidateFlagsForTPPMissingData(t *testing.T) {
 	enrollFlags.Set("tpp-url", "https://localhost/vedsdk")
 	enrollFlags.Set("tpp-user", "")
@@ -275,15 +301,17 @@ func TestValidateFlagsForTPPMissingData(t *testing.T) {
 	if err == nil {
 		t.Fatalf("Error was not expected to be nil.  Zone is required for enrollment")
 	}
-}
 
-func TestValidateFlagsForEnrollmentMissingData(t *testing.T) {
-	enrollFlags.Set("k", "")
+	enrollFlags.Set("tpp-url", "https://localhost/vedsdk")
+	enrollFlags.Set("t", "udd3OCDO/Vu3An01KSlLzQ==")
+	enrollFlags.Set("cn", "test")
+	enrollFlags.Set("z", "Test Policy")
 
-	err := validateFlags(commandEnroll)
-	if err == nil {
-		t.Fatalf("Error was not expected to be nil.  APIKey is required for enrollment")
+	err = validateFlags(commandEnroll)
+	if err != nil {
+		t.Fatalf("%s", err)
 	}
+
 }
 
 func TestValidateFlagsForPickupMissingData(t *testing.T) {
@@ -395,6 +423,56 @@ func TestValidateFlagsMixedPickupFileOutputs(t *testing.T) {
 	err = validateFlags(commandPickup)
 	if err != nil {
 		t.Fatalf("%s", err)
+	}
+}
+
+func TestGetcredFlagsTrustBundle(t *testing.T) {
+
+	var err error
+
+	err = getcredFlags.Set("t", "3rlybZwAdV1qo/KpNJ5FWg==")
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	err = getcredFlags.Set("u", "https://tpp.example.com")
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	err = getcredFlags.Set("trust-bundle", "/opt/venafi/bundle.pem")
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	err = validateFlags(commandGetcred)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+}
+
+func TestGetcredFlagsNoTrust(t *testing.T) {
+
+	var err error
+	err = getcredFlags.Set("t", "3rlybZwAdV1qo/KpNJ5FWg==")
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	err = getcredFlags.Set("u", "https://tpp.example.com")
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	err = validateFlags(commandGetcred)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+}
+
+func TestGetcredFlagsCloud(t *testing.T) {
+
+	var err error
+
+	err = getcredFlags.Set("k", "xxxxxxxxxxxxxxxxxxxxxxx")
+	if err == nil {
+		t.Fatalf("getcred have no -k flag")
 	}
 }
 

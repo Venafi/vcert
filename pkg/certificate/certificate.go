@@ -28,6 +28,7 @@ import (
 	"fmt"
 	"github.com/Venafi/vcert/pkg/verror"
 	"net"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -146,6 +147,7 @@ type Request struct {
 	DNSNames           []string
 	EmailAddresses     []string
 	IPAddresses        []net.IP
+	URIs               []*url.URL
 	Attributes         []pkix.AttributeTypeAndValueSET
 	SignatureAlgorithm x509.SignatureAlgorithm
 	FriendlyName       string
@@ -257,6 +259,7 @@ func (request *Request) GenerateCSR() error {
 	certificateRequest.DNSNames = request.DNSNames
 	certificateRequest.EmailAddresses = request.EmailAddresses
 	certificateRequest.IPAddresses = request.IPAddresses
+	certificateRequest.URIs = request.URIs
 	certificateRequest.Attributes = request.Attributes
 
 	csr, err := x509.CreateCertificateRequest(rand.Reader, &certificateRequest, request.PrivateKey)

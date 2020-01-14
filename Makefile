@@ -14,6 +14,7 @@ get: gofmt
 
 build_quick: get
 	env GOOS=linux   GOARCH=amd64 go build $(GO_LDFLAGS) -o bin/linux/vcert         ./cmd/vcert
+	cp bin/linux/vcert aruba/bin/vcert
 
 build: get
 	env GOOS=linux   GOARCH=amd64 go build $(GO_LDFLAGS) -o bin/linux/vcert         ./cmd/vcert

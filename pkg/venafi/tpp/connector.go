@@ -124,7 +124,7 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 			return err
 		}
 
-		resp := result.(oauthRefreshAccessTokenResponse)
+		resp := result.(OauthRefreshAccessTokenResponse)
 		c.accessToken = resp.Access_token
 		auth.RefreshToken = resp.Refresh_token
 		return nil
@@ -137,7 +137,7 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 }
 
 // Get OAuth refresh and access token
-func (c *Connector) GetRefreshToken(auth *endpoint.Authentication) (resp oauthGetRefreshTokenResponse, err error) {
+func (c *Connector) GetRefreshToken(auth *endpoint.Authentication) (resp OauthGetRefreshTokenResponse, err error) {
 
 	if auth == nil {
 		return resp, fmt.Errorf("failed to authenticate: missing credentials")
@@ -156,7 +156,7 @@ func (c *Connector) GetRefreshToken(auth *endpoint.Authentication) (resp oauthGe
 		if err != nil {
 			return resp, err
 		}
-		resp = result.(oauthGetRefreshTokenResponse)
+		resp = result.(OauthGetRefreshTokenResponse)
 		return resp, nil
 
 	} else if auth.ClientPKCS12 {
@@ -166,7 +166,7 @@ func (c *Connector) GetRefreshToken(auth *endpoint.Authentication) (resp oauthGe
 			return resp, err
 		}
 
-		resp = result.(oauthGetRefreshTokenResponse)
+		resp = result.(OauthGetRefreshTokenResponse)
 		return resp, nil
 	}
 
@@ -174,7 +174,7 @@ func (c *Connector) GetRefreshToken(auth *endpoint.Authentication) (resp oauthGe
 }
 
 // Refresh OAuth access token
-func (c *Connector) RefreshAccessToken(auth *endpoint.Authentication) (resp oauthRefreshAccessTokenResponse, err error) {
+func (c *Connector) RefreshAccessToken(auth *endpoint.Authentication) (resp OauthRefreshAccessTokenResponse, err error) {
 
 	if auth == nil {
 		return resp, fmt.Errorf("failed to authenticate: missing credentials")
@@ -186,7 +186,7 @@ func (c *Connector) RefreshAccessToken(auth *endpoint.Authentication) (resp oaut
 		if err != nil {
 			return resp, err
 		}
-		resp = result.(oauthRefreshAccessTokenResponse)
+		resp = result.(OauthRefreshAccessTokenResponse)
 		return resp, nil
 	} else {
 		return resp, fmt.Errorf("failed to authenticate: missing refresh token")
@@ -200,8 +200,8 @@ func processAuthData(c *Connector, url urlResource, data interface{}) (resp inte
 		return resp, err
 	}
 
-	var getRefresh oauthGetRefreshTokenResponse
-	var refreshAccess oauthRefreshAccessTokenResponse
+	var getRefresh OauthGetRefreshTokenResponse
+	var refreshAccess OauthRefreshAccessTokenResponse
 	var authorize authorizeResponse
 
 	if statusCode == http.StatusOK {

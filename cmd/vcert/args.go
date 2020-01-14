@@ -35,6 +35,7 @@ const (
 	commandPickup
 	commandRevoke
 	commandRenew
+	commandGetcred
 )
 
 var (
@@ -52,6 +53,9 @@ var (
 
 	renewFlags  = flag.NewFlagSet("renew", flag.PanicOnError)
 	renewParams commandFlags
+
+	getcredFlags  = flag.NewFlagSet("getcred", flag.PanicOnError)
+	getcredParams commandFlags
 )
 
 type commandFlags struct {
@@ -60,7 +64,7 @@ type commandFlags struct {
 	tppURL             string
 	tppUser            string
 	tppPassword        string
-	tppAccessToken     string
+	tppToken           string
 	apiKey             string
 	cloudURL           string
 	zone               string
@@ -104,6 +108,8 @@ type commandFlags struct {
 	profile            string
 	clientP12          string
 	clientP12PW        string
+	clientId           string
+	scope              string
 }
 
 func createFromCommandFlags(co command) *commandFlags {
@@ -120,6 +126,8 @@ func createFromCommandFlags(co command) *commandFlags {
 		f = revokeParams
 	case commandRenew:
 		f = renewParams
+	case commandGetcred:
+		f = getcredParams
 	}
 
 	return &f
@@ -137,6 +145,8 @@ func validateFlags(c command) error {
 		return validateRevokeFlags()
 	case commandRenew:
 		return validateRenewFlags()
+	case commandGetcred:
+		return validateGetcredFlags()
 	}
 
 	return nil
@@ -177,6 +187,12 @@ func parseArgs() (co command, cf *commandFlags, err error) {
 	case "renew":
 		co = commandRenew
 		err = renewFlags.Parse(os.Args[2:])
+		if err != nil {
+			logger.Panicf("%s", err)
+		}
+	case "getcred":
+		co = commandGetcred
+		err = getcredFlags.Parse(os.Args[2:])
 		if err != nil {
 			logger.Panicf("%s", err)
 		}
