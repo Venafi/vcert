@@ -488,29 +488,32 @@ func TestRequest_CheckCertificate(t *testing.T) {
 	rsaPrivKeyValid := pemRSADecode(checkCertificatePrivateKeyRSAvalid)
 
 	cases := []struct {
+		name         string
 		request      Request
 		cert         string
 		valid        bool
 		errorMessage string
 	}{
-		{Request{KeyType: KeyTypeRSA, PrivateKey: rsaPrivKeyValid}, chechCertificateRSACert, true, ""},
-		{Request{KeyType: KeyTypeECDSA, PrivateKey: rsaPrivKeyValid}, chechCertificateRSACert, false, "key type"},
-		{Request{KeyType: KeyTypeRSA, PrivateKey: rsaPrivKeyInvalid}, chechCertificateRSACert, false, "key modules"},
-		{Request{csr: []byte(checkCertificateCSRRSA)}, chechCertificateRSACert, true, ""},
-		{Request{csr: []byte(checkCertificateCSRRSA)}, chechCertificateRSACert2, false, "key modules"},
+		{"valid req", Request{KeyType: KeyTypeRSA, PrivateKey: rsaPrivKeyValid}, chechCertificateRSACert, true, ""},
+		{"mismatched key type", Request{KeyType: KeyTypeECDSA, PrivateKey: rsaPrivKeyValid}, chechCertificateRSACert, false, "key type"},
+		{"mismatched keys", Request{KeyType: KeyTypeRSA, PrivateKey: rsaPrivKeyInvalid}, chechCertificateRSACert, false, "key modulus"},
+		{"valid csr", Request{csr: []byte(checkCertificateCSRRSA)}, chechCertificateRSACert, true, ""},
+		{"csr mismatched keys", Request{csr: []byte(checkCertificateCSRRSA)}, chechCertificateRSACert2, false, "key modulus"},
 	}
-	for _, c := range cases {
-		err := c.request.CheckCertificate(c.cert)
-		if c.valid && err != nil {
-			t.Fatalf("cert should be valid but checker found error: %s", err)
-		}
-		if !c.valid && err == nil {
-			t.Fatalf("certificate should failed but check returns that its valid")
-		}
-		if !c.valid && !strings.Contains(err.Error(), c.errorMessage) {
-			t.Fatalf("unexpected error '%s' (should conatins %s)", err.Error(), c.errorMessage)
-		}
-
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			err := c.request.CheckCertificate(c.cert)
+			if c.valid && err != nil {
+				t.Fatalf("cert should be valid but checker found error: %s", err)
+			}
+			if !c.valid && err == nil {
+				t.Fatalf("certificate should failed but check returns that its valid")
+			}
+			if !c.valid && !strings.Contains(err.Error(), c.errorMessage) {
+				t.Fatalf("unexpected error '%s' (should conatins %s)", err.Error(), c.errorMessage)
+			}
+		})
 	}
 }
 

@@ -17,7 +17,6 @@
 package cloud
 
 import (
-	"strings"
 	"testing"
 )
 
@@ -33,18 +32,6 @@ func TestParseResponseErrors(t *testing.T) {
 	}
 }
 
-func TestParseResponseError(t *testing.T) {
-	data := []byte("{\"code\":10128,\"message\":\"Invalid change in apiKey status\",\"args\":[]}")
-	e, err := parseResponseError(data)
-	if err != nil {
-		t.Fatalf("err is not nil, err: %s", err)
-	}
-
-	if e.Code != 10128 {
-		t.Fatalf("ParseResponseError returned incorrect code.  Expected: 10128 Actual: %d", e.Code)
-	}
-}
-
 func TestParseResponseErrorWithArgs(t *testing.T) {
 	data := []byte("{\"errors\": [{\"code\": 10726,\"message\": \"Distinguished name component CN with value \\\"test.venafi.io\\\" is invalid\",\"args\": [\"CN\",\"test.venafi.io\",[\".*.example.com\",\".*.example.org\",\".*.example.net\",\".*.invalid\",\".*.local\",\".*.localhost\",\".*.test\"]]}]}")
 	errors, err := parseResponseErrors(data)
@@ -57,13 +44,5 @@ func TestParseResponseErrorWithArgs(t *testing.T) {
 	}
 	if errors[0].Code != 10726 {
 		t.Fatalf("ParseResponseErrors returned incorrect code.  Expected: 10726 Actual: %d", errors[0].Code)
-	}
-
-	a, err := errors[0].parseResponseArgs()
-	if err != nil {
-		t.Fatalf("err is not nil, err: %s", err)
-	}
-	if !strings.Contains(a, ".*.invalid") {
-		t.Fatalf("ErrorResponse.Args did not contain expected string: .*.invalid  Actual: %s", a)
 	}
 }

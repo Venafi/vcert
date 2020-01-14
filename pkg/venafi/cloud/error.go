@@ -19,6 +19,7 @@ package cloud
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Venafi/vcert/pkg/verror"
 )
 
 type responseError struct {
@@ -35,25 +36,8 @@ func parseResponseErrors(b []byte) ([]responseError, error) {
 	var data jsonData
 	err := json.Unmarshal(b, &data)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %v", verror.ServerError, err)
 	}
 
 	return data.Errors, nil
-}
-
-func parseResponseError(b []byte) (responseError, error) {
-	e := responseError{}
-	err := json.Unmarshal(b, &e)
-	if err != nil {
-		return e, err
-	}
-
-	return e, nil
-}
-
-func (re *responseError) parseResponseArgs() (string, error) {
-	if re.Args == nil {
-		return "", nil
-	}
-	return fmt.Sprintf("%v", re.Args), nil
 }

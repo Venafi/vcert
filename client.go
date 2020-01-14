@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"github.com/Venafi/vcert/pkg/verror"
 
 	"github.com/Venafi/vcert/pkg/endpoint"
 	"github.com/Venafi/vcert/pkg/venafi/cloud"
@@ -45,7 +46,7 @@ func (cfg *Config) NewClient() (connector endpoint.Connector, err error) {
 		logf("You specified a trust bundle.")
 		connectionTrustBundle = x509.NewCertPool()
 		if !connectionTrustBundle.AppendCertsFromPEM([]byte(cfg.ConnectionTrust)) {
-			return nil, fmt.Errorf("Failed to parse PEM trust bundle")
+			return nil, fmt.Errorf("%w: failed to parse PEM trust bundle", verror.UserDataError)
 		}
 	}
 
@@ -57,7 +58,7 @@ func (cfg *Config) NewClient() (connector endpoint.Connector, err error) {
 	case endpoint.ConnectorTypeFake:
 		connector = fake.NewConnector(cfg.LogVerbose, connectionTrustBundle)
 	default:
-		err = fmt.Errorf("ConnectorType is not defined")
+		err = fmt.Errorf("%w: ConnectorType is not defined", verror.UserDataError)
 	}
 	if err != nil {
 		return
