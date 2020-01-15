@@ -78,6 +78,10 @@ func main() {
 			KeyLength:      2048,
 			ChainOption:    certificate.ChainOptionRootLast,
 			KeyPassword:    "newPassw0rd!",
+			//Before setting custom field in request you need to configure custom field on TPP
+			CustomFields: []certificate.CustomField{
+				{Name: "custom", Value: "2019-12-10"},
+			},
 		}
 	case config.ConnectorType == endpoint.ConnectorTypeCloud:
 		enrollReq = &certificate.Request{
@@ -95,9 +99,6 @@ func main() {
 			KeyLength:   2048,
 			ChainOption: certificate.ChainOptionRootLast,
 			KeyPassword: "newPassw0rd!",
-			CustomFields: []certificate.CustomField{
-				{Name: "custom", Value: "2019-12-10"},
-			},
 		}
 
 	}
