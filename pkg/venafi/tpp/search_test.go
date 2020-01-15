@@ -154,7 +154,7 @@ func TestParseCertificateDetailsResponse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if res.CustomFields.CustomField.Name != "custom" {
+	if res.CustomFields[0].CustomField.Name != "custom" {
 		t.Fatal("failed to parse cert DN")
 	}
 }

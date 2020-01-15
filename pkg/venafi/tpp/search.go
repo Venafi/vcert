@@ -26,7 +26,7 @@ import (
 type SearchRequest []string
 
 type CertificateDetailsRepsonse struct {
-	CustomFields struct {
+	CustomFields []struct {
 		CustomField customField
 	} `json:"CustomFields"`
 }
