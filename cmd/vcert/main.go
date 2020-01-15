@@ -21,9 +21,9 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"encoding/pem"
-	"flag"
 	"fmt"
 	"github.com/Venafi/vcert/pkg/venafi/tpp"
+	"github.com/urfave/cli/v2"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -54,7 +54,6 @@ func init() {
 	setupRenewCommandFlags()
 	setupGetcredCommandFlags()
 
-	flag.BoolVar(&showVersion, "version", false, "Displays the running version of the "+UtilityShortName+" utility.")
 }
 
 func main() {
@@ -69,6 +68,24 @@ func main() {
 
 		}
 	}()
+
+	app := &cli.App{
+		Name:        UtilityName,
+		HelpName:    "",
+		Usage:       "",
+		UsageText:   "",
+		ArgsUsage:   "",
+		Version:     GetFormattedVersionString(),
+		Description: "",
+		Commands: []*cli.Command{
+			commandEnroll1,
+		},
+	}
+	err := app.Run(os.Args)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return
 
 	co, cf, _ := parseArgs()
 	var tlsConfig tls.Config

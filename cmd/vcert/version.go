@@ -28,10 +28,6 @@ const UtilityName string = "Venafi Certificate Utility"
 // UtilityShortName is the short name of the command-line utility
 const UtilityShortName string = "vCert"
 
-var (
-	showVersion bool
-)
-
 func printVersion() {
 	fmt.Printf("%s\n", GetFormattedVersionString())
 }
