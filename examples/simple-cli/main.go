@@ -26,6 +26,7 @@ import (
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
 	"github.com/Venafi/vcert/pkg/venafi/tpp"
+	"io/ioutil"
 	t "log"
 	"math/big"
 	"net"
@@ -94,6 +95,9 @@ func main() {
 			KeyLength:   2048,
 			ChainOption: certificate.ChainOptionRootLast,
 			KeyPassword: "newPassw0rd!",
+			CustomFields: []certificate.CustomField{
+				{Name: "custom", Value: "2019-12-10"},
+			},
 		}
 
 	}
@@ -257,7 +261,19 @@ func main() {
 	// 6. Get refresh token and refresh access token
 	//
 	if config.ConnectorType == endpoint.ConnectorTypeTPP {
-		tppConnector, err := tpp.NewConnector(config.BaseUrl, "", false, nil)
+		var connectionTrustBundle *x509.CertPool
+		trustBundleFilePath := os.Getenv("VCERT_TRUST_BUNDLE_PATH")
+		if trustBundleFilePath != "" {
+			buf, err := ioutil.ReadFile(trustBundleFilePath)
+			if err != nil {
+				panic(err)
+			}
+			connectionTrustBundle = x509.NewCertPool()
+			if !connectionTrustBundle.AppendCertsFromPEM(buf) {
+				panic("Failed to parse PEM trust bundle")
+			}
+		}
+		tppConnector, err := tpp.NewConnector(config.BaseUrl, "", false, connectionTrustBundle)
 		if err != nil {
 			t.Fatalf("could not create TPP connector: %s", err)
 		}
