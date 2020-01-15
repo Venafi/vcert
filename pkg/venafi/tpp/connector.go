@@ -528,27 +528,25 @@ func (c *Connector) ImportCertificate(r *certificate.ImportRequest) (*certificat
 
 	statusCode, _, body, err := c.request("POST", urlResourceCertificateImport, r)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %v", verror.ServerTemporaryUnavailableError, err)
 	}
 	switch statusCode {
 	case http.StatusOK:
-
 		var response = &certificate.ImportResponse{}
 		err := json.Unmarshal(body, response)
 		if err != nil {
-			return nil, fmt.Errorf("failed to decode import response message: %s", err)
+			return nil, fmt.Errorf("%w: failed to decode import response message: %s", verror.ServerError, err)
 		}
 		return response, nil
-
 	case http.StatusBadRequest:
 		var errorResponse = &struct{ Error string }{}
 		err := json.Unmarshal(body, errorResponse)
 		if err != nil {
-			return nil, fmt.Errorf("failed to decode error message: %s", err)
+			return nil, fmt.Errorf("%w: failed to decode error message: %s", verror.ServerBadDataResponce, err)
 		}
-		return nil, fmt.Errorf("%s", errorResponse.Error)
+		return nil, fmt.Errorf("%w: can't import certificate %s", verror.ServerBadDataResponce, errorResponse.Error)
 	default:
-		return nil, fmt.Errorf("unexpected response status %d: %s", statusCode, string(body))
+		return nil, fmt.Errorf("%w: unexpected response status %d: %s", verror.ServerTemporaryUnavailableError, statusCode, string(body))
 	}
 }
 
