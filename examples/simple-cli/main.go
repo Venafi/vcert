@@ -68,7 +68,8 @@ func main() {
 				Province:           []string{"Salt Lake"},
 				Country:            []string{"US"},
 			},
-			DNSNames:       []string{"www.client.venafi.example.com", "ww1.client.venafi.example.com"},
+			DNSNames: []string{"www.client.venafi.example.com", "ww1.client.venafi.example.com"},
+
 			EmailAddresses: []string{"e1@venafi.example.com", "e2@venafi.example.com"},
 			IPAddresses:    []net.IP{net.IPv4(127, 0, 0, 1), net.IPv4(127, 0, 0, 2)},
 			CsrOrigin:      certificate.LocalGeneratedCSR,
@@ -256,7 +257,7 @@ func main() {
 	// 6. Get refresh token and refresh access token
 	//
 	if config.ConnectorType == endpoint.ConnectorTypeTPP {
-		tppConnector, err := tpp.NewConnector(config.BaseUrl, config.Zone, false, nil)
+		tppConnector, err := tpp.NewConnector(config.BaseUrl, "", false, nil)
 		if err != nil {
 			t.Fatalf("could not create TPP connector: %s", err)
 		}

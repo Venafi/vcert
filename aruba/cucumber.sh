@@ -1,5 +1,5 @@
 #!/bin/bash
-
+echo "Using token $TPPACCESS_TOKEN"
 RUN_COMMAND="docker run -t --rm \
           -e VCERT_TPP_URL \
           -e VCERT_TPP_USER \

@@ -76,6 +76,7 @@ func wrapArgumentDescriptionText(text string) string {
 
 func showvcertUsage() {
 	fmt.Printf("%s\n", GetFormattedVersionString())
+	fmt.Printf("\tTo obtain a new token for authentication, use the 'getcred' action.\n")
 	fmt.Printf("\tTo generate a certificate signing request (CSR), use the 'gencsr' action.\n")
 	fmt.Printf("\tTo enroll a certificate, use the 'enroll' action.\n")
 	fmt.Printf("\tTo retrieve a certificate, use the 'pickup' action.\n")

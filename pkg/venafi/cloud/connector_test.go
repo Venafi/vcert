@@ -21,9 +21,11 @@ import (
 	"crypto/x509"
 	"encoding/hex"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
+	"github.com/Venafi/vcert/pkg/verror"
 	"github.com/Venafi/vcert/test"
 	"os"
 	"reflect"
@@ -75,7 +77,7 @@ func TestReadZoneConfiguration(t *testing.T) {
 
 	conn.SetZone("d686146b-799b-4836-8ac3-f4a2d3a38934")
 	_, err = conn.ReadZoneConfiguration()
-	if err != endpoint.VenafiErrorZoneNotFound {
+	if !errors.Is(err, verror.ZoneNotFoundError) {
 		t.Fatalf("Unknown zone should have resulted in an error")
 	}
 	testCases := []struct {
