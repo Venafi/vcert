@@ -116,42 +116,59 @@ var (
 	}
 
 	flagOrg = &cli.StringFlag{
-		Name:  "o",
-		Usage: "",
+		Name:        "o",
+		Usage:       "Use to specify organization O",
+		Destination: &flags.org,
 	}
+
 	flagState = &cli.StringFlag{
-		Name:  "st",
-		Usage: "",
+		Name:        "st",
+		Usage:       "Use to specify state ST",
+		Destination: &flags.state,
 	}
+
 	flagCountry = &cli.StringFlag{
-		Name:  "c",
-		Usage: "",
+		Name:        "c",
+		Usage:       "Use to specify country C",
+		Destination: &flags.country,
 	}
+
 	flagLocality = &cli.StringFlag{
-		Name:  "l",
-		Usage: "",
+		Name:        "l",
+		Usage:       "Use to specify locality L",
+		Destination: &flags.locality,
 	}
+
+	//todo: need to set destination for slice
 	flagOrgUnits = &cli.StringSliceFlag{
 		Name:  "ou",
-		Usage: "",
+		Usage: "Use to specify organization unit OU",
+		//Destination: &flags.orgUnits,
 	}
+
+	//todo: need to set destination for slice
 	flagDNSSans = &cli.StringSliceFlag{
 		Name:  "san-dns",
-		Usage: "",
+		Usage: "Use to specify a DNS Subject Alternative Name. To specify more than one, use spaces like this: -san-dns test.abc.xyz -san-dns test1.abc.xyz etc.",
 	}
-	//todo: problem
+
+	//todo: need to set destination for slice
 	flagIPSans = &cli.StringSliceFlag{
-		Name:  "san-ip",
-		Usage: "",
+		Name: "san-ip",
+		Usage: "Use to specify an IP Address Subject Alternative Name. " +
+			"This option can be repeated to specify more than one value, like this: -san-ip 1.1.1.1 -san-ip 2.2.2.2.",
 	}
-	//todo: problem
+
+	//todo: need to set destination for slice
 	flagEmailSans = &cli.StringSliceFlag{
-		Name:  "san-email",
-		Usage: "",
+		Name: "san-email",
+		Usage: "Use to specify an Email Subject Alternative Name. " +
+			"This option can be repeated to specify more than one value, like this: -san-email abc@abc.xyz -san-email def@abc.xyz etc.",
 	}
 	flagFormat = &cli.StringFlag{
-		Name:  "format",
-		Usage: "",
+		Name: "format",
+		Usage: "Use to specify the output format. PEM is the default format. Options include: pem | json | pkcs12." +
+			" If PKCS#12 format is specified, then all objects should be written using -file option.",
 		Value: "pem",
 	}
 	flagFile = &cli.StringFlag{
