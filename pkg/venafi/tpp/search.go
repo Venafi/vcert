@@ -25,6 +25,13 @@ import (
 
 type SearchRequest []string
 
+type CertificateDetailsResponse struct {
+	CustomFields []struct {
+		Name  string   `json:"Name"`
+		Value []string `json:"Value"`
+	} `json:"CustomFields"`
+}
+
 type CertificateSearchResponse struct {
 	Certificates []Certificate `json:"Certificates"`
 	Count        int           `json:"TotalCount"`
@@ -33,7 +40,8 @@ type CertificateSearchResponse struct {
 type Certificate struct {
 	//Id                   string   `json:"DN"`
 	//ManagedCertificateId string   `json:"DN"`
-	CertificateRequestId string `json:"DN"`
+	CertificateRequestId   string `json:"DN"`
+	CertificateRequestGuid string `json:"Guid"`
 	/*...and some more fields... */
 }
 
@@ -62,6 +70,35 @@ func (c *Connector) searchCertificates(req *SearchRequest) (*CertificateSearchRe
 		return nil, err
 	}
 	return searchResult, nil
+}
+
+func (c *Connector) searchCertificateDetails(guid string) (*CertificateDetailsResponse, error) {
+	var err error
+
+	url := fmt.Sprintf("%s%s", urlResourceCertificateSearch, guid)
+	statusCode, _, body, err := c.request("GET", urlResource(url), nil)
+	if err != nil {
+		return nil, err
+	}
+	return parseCertificateDetailsResponse(statusCode, body)
+}
+
+func parseCertificateDetailsResponse(statusCode int, body []byte) (searchResult *CertificateDetailsResponse, err error) {
+	switch statusCode {
+	case http.StatusOK:
+		var searchResult = &CertificateDetailsResponse{}
+		err = json.Unmarshal(body, searchResult)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to parse search results: %s, body: %s", err, body)
+		}
+		return searchResult, nil
+	default:
+		if body != nil {
+			return nil, NewResponseError(body)
+		} else {
+			return nil, fmt.Errorf("Unexpected status code on certificate search. Status: %d", statusCode)
+		}
+	}
 }
 
 func ParseCertificateSearchResponse(httpStatusCode int, body []byte) (searchResult *CertificateSearchResponse, err error) {

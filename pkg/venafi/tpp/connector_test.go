@@ -378,6 +378,9 @@ func DoRequestCertificate(t *testing.T, tpp *Connector) {
 	u := url.URL{Scheme: "https", Host: "example.com", Path: "/test"}
 	req.URIs = []*url.URL{&u}
 	req.FriendlyName = cn
+	req.CustomFields = []certificate.CustomField{
+		{Name: "custom", Value: "2019-10-10"},
+	}
 	err = tpp.GenerateRequest(config, req)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)

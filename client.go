@@ -19,9 +19,9 @@ package vcert
 import (
 	"crypto/x509"
 	"fmt"
+	"github.com/Venafi/vcert/pkg/verror"
 	"log"
 	"os"
-	"github.com/Venafi/vcert/pkg/verror"
 
 	"github.com/Venafi/vcert/pkg/endpoint"
 	"github.com/Venafi/vcert/pkg/venafi/cloud"
