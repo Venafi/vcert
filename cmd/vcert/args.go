@@ -56,6 +56,8 @@ var (
 
 	getcredFlags  = flag.NewFlagSet("getcred", flag.PanicOnError)
 	getcredParams commandFlags
+
+	flags commandFlags
 )
 
 type commandFlags struct {

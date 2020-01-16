@@ -6,9 +6,16 @@ import (
 
 var (
 	flagUrl = &cli.StringFlag{
-		Name:    "url",
-		Usage:   "",
-		Aliases: []string{"venafi-saas-url", "tpp-url", "u"},
+		Name:        "u",
+		Usage:       "",
+		Destination: &flags.url,
+	}
+	flagUrlDeprecated = &cli.StringFlag{
+		Name:        "venafi-saas-url",
+		Usage:       "",
+		Aliases:     []string{"tpp-url"},
+		Destination: &flags.url,
+		Hidden:      true,
 	}
 	flagKey = &cli.StringFlag{
 		Name:    "apikey",
@@ -16,8 +23,9 @@ var (
 		Aliases: []string{"k"},
 	}
 	flagTPPUser = &cli.StringFlag{
-		Name:  "tpp-user",
-		Usage: "",
+		Name:        "tpp-user",
+		Usage:       "",
+		Destination: &flags.tppUser,
 	}
 	flagTPPPassword = &cli.StringFlag{
 		Name:  "tpp-password",
@@ -177,14 +185,7 @@ var (
 		Usage: "",
 	}
 
-	enrollFlags1 = []cli.Flag{flagUrl, flagKey, flagTPPUser} //todo: add over, rename
+	commonFlags  = []cli.Flag{flagZone, flagInsecure}                                                                 //todo: add over, rename
+	enrollFlags1 = []cli.Flag{flagUrl, flagKey, flagTPPUser, flagTPPToken, flagZone, flagInsecure, flagUrlDeprecated} //todo: add over, rename
 
-)
-
-var (
-	commandEnroll1 = &cli.Command{
-		Name:  "enroll",
-		Flags: enrollFlags1,
-		Usage: "",
-	}
 )
