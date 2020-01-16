@@ -25,9 +25,10 @@ import (
 
 type SearchRequest []string
 
-type CertificateDetailsRepsonse struct {
+type CertificateDetailsResponse struct {
 	CustomFields []struct {
-		CustomField customField
+		Name  string   `json:"Name"`
+		Value []string `json:"Value"`
 	} `json:"CustomFields"`
 }
 
@@ -71,7 +72,7 @@ func (c *Connector) searchCertificates(req *SearchRequest) (*CertificateSearchRe
 	return searchResult, nil
 }
 
-func (c *Connector) searchCertificateDetails(guid string) (*CertificateDetailsRepsonse, error) {
+func (c *Connector) searchCertificateDetails(guid string) (*CertificateDetailsResponse, error) {
 	var err error
 
 	url := fmt.Sprintf("%s%s", urlResourceCertificateSearch, guid)
@@ -82,10 +83,10 @@ func (c *Connector) searchCertificateDetails(guid string) (*CertificateDetailsRe
 	return parseCertificateDetailsResponse(statusCode, body)
 }
 
-func parseCertificateDetailsResponse(statusCode int, body []byte) (searchResult *CertificateDetailsRepsonse, err error) {
+func parseCertificateDetailsResponse(statusCode int, body []byte) (searchResult *CertificateDetailsResponse, err error) {
 	switch statusCode {
 	case http.StatusOK:
-		var searchResult = &CertificateDetailsRepsonse{}
+		var searchResult = &CertificateDetailsResponse{}
 		err = json.Unmarshal(body, searchResult)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to parse search results: %s, body: %s", err, body)

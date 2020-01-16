@@ -154,8 +154,8 @@ func TestParseCertificateDetailsResponse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if res.CustomFields[0].CustomField.Name != "custom" {
-		t.Fatal("failed to parse cert DN")
+	if res.CustomFields[0].Value[0] != "2019-10-10" {
+		t.Fatal("invalid custom field value")
 	}
 }
 
@@ -178,6 +178,7 @@ func TestRequestAndSearchCertificate(t *testing.T) {
 	}
 
 	cn := test.RandCN()
+	cfValue := cn
 	req := &certificate.Request{Timeout: time.Second * 30}
 	req.Subject.CommonName = cn
 	req.Subject.Organization = []string{"Venafi, Inc."}
@@ -189,7 +190,7 @@ func TestRequestAndSearchCertificate(t *testing.T) {
 	req.URIs = []*url.URL{&u}
 	req.FriendlyName = cn
 	req.CustomFields = []certificate.CustomField{
-		{Name: "custom", Value: "2019-10-10"},
+		{Name: "custom", Value: cfValue},
 	}
 	err = tpp.GenerateRequest(config, req)
 	if err != nil {
@@ -222,13 +223,16 @@ func TestRequestAndSearchCertificate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println(searchResult)
+
 	guid := searchResult.Certificates[0].CertificateRequestGuid
 	details, err := tpp.searchCertificateDetails(guid)
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println(details)
+
+	if details.CustomFields[0].Value[0] != cfValue {
+		t.Fatalf("mismtached custom field valud: want %s but got %s", details.CustomFields[0].Value[0], cfValue)
+	}
 }
 
 func calcThumbprint(cert string) string {
