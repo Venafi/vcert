@@ -165,50 +165,82 @@ var (
 		Usage: "Use to specify an Email Subject Alternative Name. " +
 			"This option can be repeated to specify more than one value, like this: -san-email abc@abc.xyz -san-email def@abc.xyz etc.",
 	}
+
 	flagFormat = &cli.StringFlag{
 		Name: "format",
 		Usage: "Use to specify the output format. PEM is the default format. Options include: pem | json | pkcs12." +
 			" If PKCS#12 format is specified, then all objects should be written using -file option.",
 		Value: "pem",
 	}
+
 	flagFile = &cli.StringFlag{
-		Name:  "file",
-		Usage: "",
+		Name: "file",
+		Usage: "Use to specify a file name and a location where the resulting file should be written. " +
+			"If this option is used the key, certificate, and chain will be written to the same file. Example: /path-to/newcert.pem",
+		Destination: &flags.file,
 	}
+
 	flagKeyFile = &cli.StringFlag{
-		Name:  "key-file",
-		Usage: "",
+		Name: "key-file",
+		Usage: "Use to specify a file name and a location where the resulting private key file should be written. " +
+			"Do not use in combination with -csr file. Example: /path-to/newkey.pem",
+		Destination: &flags.keyFile,
 	}
+
 	flagCertFile = &cli.StringFlag{
-		Name:  "cert-file",
-		Usage: "",
+		Name: "cert-file",
+		Usage: "Use to specify a file name and a location where the resulting " +
+			"certificate file should be written. Example: /path-to/newcert.pem",
+		Destination: &flags.certFile,
 	}
+
 	flagChainFile = &cli.StringFlag{
-		Name:  "chain-file",
-		Usage: "",
+		Name: "chain-file",
+		Usage: "Use to specify a path and file name where the resulting chain file should be written, " +
+			"if no chain file is specified the chain will be stored in the same file as the certificate. Example: /path-to/chain.pem",
+		Destination: &flags.chainFile,
 	}
+
 	flagChainOption = &cli.StringFlag{
-		Name:  "chain",
-		Usage: "",
-		Value: "root-last",
+		Name: "chain",
+		Usage: "Use to include the certificate chain in the output, and to specify where to place it in the file. " +
+			"By default, it is placed last. Options include: ignore | root-first | root-last",
+		Value:       "root-last",
+		Destination: &flags.chainOption,
 	}
+
 	flagVerbose = &cli.BoolFlag{
-		Name: "verbose",
+		Name:        "verbose",
+		Usage:       "Use to increase the level of logging detail, which is helpful when troubleshooting issues",
+		Destination: &flags.verbose,
 	}
+
 	flagNoPrompt = &cli.BoolFlag{
-		Name: "np-prompt",
+		Name: "no-prompt",
+		Usage: "Use to exclude the authentication prompt. If you enable the prompt and you enter incorrect information, " +
+			"an error is displayed. This is useful with scripting.",
+		Destination: &flags.noPrompt,
 	}
+
 	flagNoPickup = &cli.BoolFlag{
-		Name: "no-pickup",
+		Name:        "no-pickup",
+		Usage:       "Use to not wait for the certificate to be issued.",
+		Destination: &flags.noPickup,
 	}
+
 	flagTestMode = &cli.BoolFlag{
 		Name: "test-mode",
+		Usage: "Use to test enrollment without a connection to a real endpoint." +
+			" Options include: true | false (default false uses a real connection for enrollment).",
+		Destination: &flags.testMode,
 	}
+
 	flagTestModeDelay = &cli.IntFlag{
 		Name:  "test-mode-delay",
 		Usage: "",
 		Value: 15,
 	}
+
 	flagCSR = &cli.StringFlag{
 		Name:  "csr",
 		Usage: "",
