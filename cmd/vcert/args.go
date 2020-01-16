@@ -73,8 +73,10 @@ type commandFlags struct {
 	caDN               string
 	csrOption          string
 	keyType            certificate.KeyType
+	keyTypeString      string
 	keySize            int
 	keyCurve           certificate.EllipticCurve
+	keyCurveString     string
 	keyPassword        string
 	friendlyName       string
 	commonName         string
