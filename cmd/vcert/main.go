@@ -70,16 +70,19 @@ func main() {
 	}()
 
 	app := &cli.App{
-		Name:        UtilityName,
-		HelpName:    "",
-		Usage:       "",
-		UsageText:   "",
-		ArgsUsage:   "",
-		Version:     GetFormattedVersionString(),
-		Description: "",
+		Usage:     UtilityName,
+		UsageText: "",
+		Version:   GetFormattedVersionString(), //todo: replace with plain version
+		Compiled:  time.Now(),                  //todo: replace with parsing vcert.versionBuildTimeStamp
 		Commands: []*cli.Command{
+			commandGetcred1,
+			commandGenCSR1,
 			commandEnroll1,
+			commandPickup1,
+			commandRenew1,
+			commandRevoke1,
 		},
+		Flags: commonFlags,
 	}
 	err := app.Run(os.Args)
 	if err != nil {

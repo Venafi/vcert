@@ -18,10 +18,6 @@ VCert is a Go library, SDK, and command line utility designed to simplify key ge
 */
 package vcert
 
-import (
-	"fmt"
-)
-
 //projectName contains the friendly name of the vcert utiltity
 const projectName string = "Venafi Certificate Utility"
 
@@ -32,11 +28,8 @@ var (
 
 //GetFormattedVersionString gets a friendly printable string to represent the version
 func GetFormattedVersionString() string {
-	if versionBuildTimeStamp != "" {
-		versionBuildTimeStamp = fmt.Sprintf("\tBuild Timestamp: %s\n", versionBuildTimeStamp)
-	}
 	if versionString == "" {
 		versionString = "Unknown"
 	}
-	return fmt.Sprintf("%s\n\tVersion: %s\n%s", projectName, versionString, versionBuildTimeStamp)
+	return versionString
 }
