@@ -310,7 +310,16 @@ var (
 
 	commonFlags = []cli.Flag{flagInsecure, flagFormat}
 
-	//todo: add over, rename
+	genCsrFlags1 = []cli.Flag{}
+
 	enrollFlags1 = []cli.Flag{flagUrl, flagTPPUserDeprecated, flagTPPPasswordDeprecated,
 		flagTPPToken, flagKey, flagZone, flagUrlDeprecated, flagCommonName}
+
+	pickupFlags1 = []cli.Flag{}
+
+	revokeFlags1 = []cli.Flag{}
+
+	renewFlags1 = []cli.Flag{}
+
+	getcredFlags1 = []cli.Flag{}
 )
