@@ -314,21 +314,38 @@ var (
 		Destination: &flags.clientP12PW,
 	}
 
+	flagDistinguishedName = &cli.StringFlag{
+		Name: "id",
+		Usage: "Use to specify the ID of the certificate to revoke. Required unless -thumbprint is specified. " +
+			"Marks the certificate as disabled and no new certificate will be enrolled to replace the revoked one. " +
+			"If a replacement certificate is necessary, also specify -no-retire=true.",
+		Destination: &flags.distinguishedName,
+	}
+
+	flagThumbprint = &cli.StringFlag{
+		Name: "thumbprint",
+		Usage: "Use to specify the SHA1 thumbprint of the certificate to renew." +
+			" Value may be specified as a string or read from the certificate file using the file: prefix. " +
+			"Implies -no-retire=true",
+		Destination: &flags.thumbprint,
+	}
+
 	commonFlags      = []cli.Flag{flagInsecure, flagFormat, flagVerbose, flagNoPrompt}
 	credentialsFlags = []cli.StringFlag{
-		*flagTPPUser,
-		*flagTPPPassword,
-		*flagTPPUserDeprecated,
-		*flagTPPPasswordDeprecated,
 		*flagClientP12,
 		*flagClientP12PW,
-		*flagUrl,
-		*flagKey,
-		*flagUrlDeprecated,
-		*flagTPPToken,
-		*flagTrustBundle,
 		*flagConfig,
-		*flagProfile}
+		*flagKey,
+		*flagProfile,
+		*flagTPPPassword,
+		*flagTPPPasswordDeprecated,
+		*flagTPPToken,
+		*flagTPPUser,
+		*flagTPPUserDeprecated,
+		*flagTrustBundle,
+		*flagUrl,
+		*flagUrlDeprecated,
+	}
 
 	genCsrFlags1 = []cli.Flag{}
 
@@ -371,7 +388,10 @@ var (
 		flagPickupID,
 	}
 
-	revokeFlags1 = []cli.Flag{}
+	revokeFlags1 = []cli.Flag{
+		flagDistinguishedName,
+		flagThumbprint,
+	}
 
 	renewFlags1 = []cli.Flag{}
 
