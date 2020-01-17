@@ -361,26 +361,46 @@ var (
 		Destination: &flags.clientId,
 	}
 
-	commonFlags      = []cli.Flag{flagInsecure, flagFormat, flagVerbose, flagNoPrompt}
-	credentialsFlags = []cli.StringFlag{
-		*flagClientP12,
-		*flagClientP12PW,
-		*flagConfig,
-		*flagKey,
-		*flagProfile,
-		*flagTPPPassword,
-		*flagTPPPasswordDeprecated,
-		*flagTPPToken,
-		*flagTPPUser,
-		*flagTPPUserDeprecated,
-		*flagTrustBundle,
-		*flagUrl,
-		*flagUrlDeprecated,
+	commonFlags = []cli.Flag{flagInsecure, flagFormat, flagVerbose, flagNoPrompt}
+
+	credentialsFlags = append(
+		commonFlags,
+		flagClientP12,
+		flagClientP12PW,
+		flagConfig,
+		flagKey,
+		flagProfile,
+		flagTPPPassword,
+		flagTPPPasswordDeprecated,
+		flagTPPToken,
+		flagTPPUser,
+		flagTPPUserDeprecated,
+		flagTrustBundle,
+		flagUrl,
+		flagUrlDeprecated,
+	)
+
+	genCsrFlags1 = []cli.Flag{
+		flagFormat,
+		flagVerbose,
+		flagNoPrompt,
+		flagKeyCurve,
+		flagKeyFile,
+		flagKeyPassword,
+		flagKeySize,
+		flagKeyType,
+		flagOrg,
+		flagCountry,
+		flagState,
+		flagLocality,
+		flagOrgUnits,
+		flagEmailSans,
+		flagIPSans,
+		flagDNSSans,
 	}
 
-	genCsrFlags1 = []cli.Flag{}
-
-	enrollFlags1 = []cli.Flag{
+	enrollFlags1 = append(
+		credentialsFlags,
 		flagCADN,
 		flagCertFile,
 		flagChainFile,
@@ -407,9 +427,10 @@ var (
 		flagTestModeDelay,
 		flagTimeout,
 		flagZone,
-	}
+	)
 
-	pickupFlags1 = []cli.Flag{
+	pickupFlags1 = append(
+		credentialsFlags,
 		flagCertFile,
 		flagChainFile,
 		flagChainOption,
@@ -417,9 +438,10 @@ var (
 		flagKeyFile,
 		flagKeyPassword,
 		flagPickupID,
-	}
+	)
 
-	revokeFlags1 = []cli.Flag{
+	revokeFlags1 = append(
+		credentialsFlags,
 		flagDistinguishedName,
 		flagRevocationNoRetire,
 		flagRevocationReason,
@@ -427,9 +449,10 @@ var (
 		flagTestModeDelay,
 		flagThumbprint,
 		flagZone,
-	}
+	)
 
-	renewFlags1 = []cli.Flag{
+	renewFlags1 = append(
+		credentialsFlags,
 		flagCADN,
 		flagCertFile,
 		flagChainFile,
@@ -456,10 +479,11 @@ var (
 		flagTestModeDelay,
 		flagTimeout,
 		flagZone,
-	}
+	)
 
-	getcredFlags1 = []cli.Flag{
+	getcredFlags1 = append(
+		credentialsFlags,
 		flagScope,
 		flagClientId,
-	}
+	)
 )
