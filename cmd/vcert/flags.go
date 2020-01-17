@@ -33,9 +33,8 @@ var (
 	}
 
 	flagTPPUserDeprecated = &cli.StringFlag{
-		Name:        "username",
+		Name:        "tpp-user",
 		Usage:       "",
-		Aliases:     []string{"tpp-user"},
 		Destination: &flags.tppUser,
 		Hidden:      true,
 	}
@@ -410,6 +409,7 @@ var (
 		flagCSROption,
 		flagDNSSans,
 		flagEmailSans,
+		flagFile,
 		flagFriendlyName,
 		flagIPSans,
 		flagKeyCurve,
