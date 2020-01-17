@@ -330,6 +330,25 @@ var (
 		Destination: &flags.thumbprint,
 	}
 
+	//todo: make check agains RevocationReasonOptions[]string variable
+	flagRevocationReason = &cli.StringFlag{
+		Name: "reason",
+		Usage: `The revocation reason. Options include: 
+	"none",
+	"key-compromise",
+	"ca-compromise",
+	"affiliation-changed",
+	"superseded",
+	"cessation-of-operation"`,
+		Destination: &flags.revocationReason,
+	}
+
+	flagRevocationNoRetire = &cli.StringFlag{
+		Name:        "reason",
+		Usage:       "Do not disable certificate object. Works only with -id <certificate DN>)",
+		Destination: &flags.revocationReason,
+	}
+
 	commonFlags      = []cli.Flag{flagInsecure, flagFormat, flagVerbose, flagNoPrompt}
 	credentialsFlags = []cli.StringFlag{
 		*flagClientP12,
@@ -390,7 +409,12 @@ var (
 
 	revokeFlags1 = []cli.Flag{
 		flagDistinguishedName,
+		flagRevocationNoRetire,
+		flagRevocationReason,
+		flagTestMode,
+		flagTestModeDelay,
 		flagThumbprint,
+		flagZone,
 	}
 
 	renewFlags1 = []cli.Flag{}
