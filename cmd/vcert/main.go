@@ -82,7 +82,6 @@ func main() {
 			commandRenew1,
 			commandRevoke1,
 		},
-		Flags: commonFlags,
 	}
 	err := app.Run(os.Args)
 	if err != nil {
