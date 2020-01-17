@@ -242,7 +242,7 @@ var (
 		Destination: &flags.testModeDelay,
 	}
 
-	flagCSR = &cli.StringFlag{
+	flagCSROption = &cli.StringFlag{
 		Name: "csr",
 		Usage: "Use to specify the CSR and private key location. Options include: local | service | file.\n" +
 			"\t\tlocal:   The private key and CSR will be generated locally (default)\n" +
@@ -263,6 +263,12 @@ var (
 		Name:        "pickup-id-file",
 		Usage:       "Use to specify file name from where Pickup ID will be read. Either -pickup-id or -pickup-id-file is required.",
 		Destination: &flags.pickupIDFile,
+	}
+
+	flagPickupID = &cli.StringFlag{
+		Name:        "pickup-id",
+		Usage:       "Use to specify the certificate ID of the certificate for retrieve.",
+		Destination: &flags.pickupID,
 	}
 
 	flagTimeout = &cli.IntFlag{
@@ -308,43 +314,62 @@ var (
 		Destination: &flags.clientP12PW,
 	}
 
-	commonFlags      = []cli.Flag{flagInsecure, flagFormat, flagVerbose}
+	commonFlags      = []cli.Flag{flagInsecure, flagFormat, flagVerbose, flagNoPrompt}
 	credentialsFlags = []cli.StringFlag{
 		*flagTPPUser,
 		*flagTPPPassword,
 		*flagTPPUserDeprecated,
 		*flagTPPPasswordDeprecated,
+		*flagClientP12,
+		*flagClientP12PW,
 		*flagUrl,
 		*flagKey,
 		*flagUrlDeprecated,
 		*flagTPPToken,
-		*flagTrustBundle}
+		*flagTrustBundle,
+		*flagConfig,
+		*flagProfile}
 
 	genCsrFlags1 = []cli.Flag{}
 
 	enrollFlags1 = []cli.Flag{
-		flagZone,
 		flagCADN,
-		flagKeyCurve,
-		flagKeySize,
-		flagKeyType,
-		flagFriendlyName,
-		flagCommonName,
-		flagOrg,
-		flagState,
-		flagCountry,
-		flagLocality,
-		flagOrgUnits,
-		flagDNSSans,
-		flagIPSans,
-		flagEmailSans,
-		flagKeyFile,
 		flagCertFile,
 		flagChainFile,
 		flagChainOption,
+		flagCommonName,
+		flagCountry,
+		flagCSROption,
+		flagDNSSans,
+		flagEmailSans,
+		flagFriendlyName,
+		flagIPSans,
+		flagKeyCurve,
+		flagKeyFile,
+		flagKeyPassword,
+		flagKeySize,
+		flagKeyType,
+		flagLocality,
+		flagNoPickup,
+		flagOrg,
+		flagOrgUnits,
+		flagPickupIDFile,
+		flagState,
+		flagTestMode,
+		flagTestModeDelay,
+		flagTimeout,
+		flagZone,
 	}
 
-	pickupFlags1 = []cli.Flag{}
+	pickupFlags1 = []cli.Flag{
+		flagCertFile,
+		flagChainFile,
+		flagChainOption,
+		flagKeyFile,
+		flagKeyFile,
+		flagKeyPassword,
+		flagPickupID,
+	}
 
 	revokeFlags1 = []cli.Flag{}
 
