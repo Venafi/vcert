@@ -308,12 +308,41 @@ var (
 		Destination: &flags.clientP12PW,
 	}
 
-	commonFlags = []cli.Flag{flagInsecure, flagFormat}
+	commonFlags      = []cli.Flag{flagInsecure, flagFormat, flagVerbose}
+	credentialsFlags = []cli.StringFlag{
+		*flagTPPUser,
+		*flagTPPPassword,
+		*flagTPPUserDeprecated,
+		*flagTPPPasswordDeprecated,
+		*flagUrl,
+		*flagKey,
+		*flagUrlDeprecated,
+		*flagTPPToken,
+		*flagTrustBundle}
 
 	genCsrFlags1 = []cli.Flag{}
 
-	enrollFlags1 = []cli.Flag{flagUrl, flagTPPUserDeprecated, flagTPPPasswordDeprecated,
-		flagTPPToken, flagKey, flagZone, flagUrlDeprecated, flagCommonName}
+	enrollFlags1 = []cli.Flag{
+		flagZone,
+		flagCADN,
+		flagKeyCurve,
+		flagKeySize,
+		flagKeyType,
+		flagFriendlyName,
+		flagCommonName,
+		flagOrg,
+		flagState,
+		flagCountry,
+		flagLocality,
+		flagOrgUnits,
+		flagDNSSans,
+		flagIPSans,
+		flagEmailSans,
+		flagKeyFile,
+		flagCertFile,
+		flagChainFile,
+		flagChainOption,
+	}
 
 	pickupFlags1 = []cli.Flag{}
 
