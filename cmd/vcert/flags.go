@@ -349,6 +349,18 @@ var (
 		Destination: &flags.revocationReason,
 	}
 
+	flagScope = &cli.StringFlag{
+		Name:        "scope",
+		Usage:       "Use to request specific scopes and restrictions. \"certificate:manage,revoke;\" is the default.",
+		Destination: &flags.scope,
+	}
+
+	flagClientId = &cli.StringFlag{
+		Name:        "client-id",
+		Usage:       "Use to specify the application that will be using the token. \"vcert-cli\" is the default.",
+		Destination: &flags.clientId,
+	}
+
 	commonFlags      = []cli.Flag{flagInsecure, flagFormat, flagVerbose, flagNoPrompt}
 	credentialsFlags = []cli.StringFlag{
 		*flagClientP12,
@@ -417,7 +429,37 @@ var (
 		flagZone,
 	}
 
-	renewFlags1 = []cli.Flag{}
+	renewFlags1 = []cli.Flag{
+		flagCADN,
+		flagCertFile,
+		flagChainFile,
+		flagChainOption,
+		flagCommonName,
+		flagCountry,
+		flagCSROption,
+		flagDNSSans,
+		flagEmailSans,
+		flagFriendlyName,
+		flagIPSans,
+		flagKeyCurve,
+		flagKeyFile,
+		flagKeyPassword,
+		flagKeySize,
+		flagKeyType,
+		flagLocality,
+		flagNoPickup,
+		flagOrg,
+		flagOrgUnits,
+		flagPickupIDFile,
+		flagState,
+		flagTestMode,
+		flagTestModeDelay,
+		flagTimeout,
+		flagZone,
+	}
 
-	getcredFlags1 = []cli.Flag{}
+	getcredFlags1 = []cli.Flag{
+		flagScope,
+		flagClientId,
+	}
 )
