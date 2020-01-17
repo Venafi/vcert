@@ -482,7 +482,16 @@ var (
 	)
 
 	getcredFlags1 = append(
-		credentialsFlags,
+		commonFlags,
+		flagClientP12,
+		flagClientP12PW,
+		flagConfig,
+		flagProfile,
+		flagTPPPassword,
+		flagTPPToken,
+		flagTPPUser,
+		flagTrustBundle,
+		flagUrl,
 		flagScope,
 		flagClientId,
 	)
