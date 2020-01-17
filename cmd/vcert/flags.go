@@ -236,47 +236,76 @@ var (
 	}
 
 	flagTestModeDelay = &cli.IntFlag{
-		Name:  "test-mode-delay",
-		Usage: "",
-		Value: 15,
+		Name:        "test-mode-delay",
+		Usage:       "Use to specify the maximum, random seconds for a test-mode connection delay (default 15).",
+		Value:       15,
+		Destination: &flags.testModeDelay,
 	}
 
 	flagCSR = &cli.StringFlag{
-		Name:  "csr",
-		Usage: "",
+		Name: "csr",
+		Usage: "Use to specify the CSR and private key location. Options include: local | service | file.\n" +
+			"\t\tlocal:   The private key and CSR will be generated locally (default)\n" +
+			"\t\tservice: The private key and CSR will be generated at service side\n" +
+			"\t\tfile:    The CSR will be read from a file by name. Example: file:/path-to/csr.pem",
+		Destination: &flags.csrOption,
 	}
+
 	flagKeyPassword = &cli.StringFlag{
-		Name:  "key-password",
-		Usage: "",
+		Name: "key-password",
+		Usage: "Use to specify a password for encrypting the private key. " +
+			"For a non-encrypted private key, omit this option and instead specify -no-prompt. " +
+			"Example: -key-password file:/path-to/mypasswds.txt",
+		Destination: &flags.keyPassword,
 	}
+
 	flagPickupIDFile = &cli.StringFlag{
-		Name:  "pickup-id-file",
-		Usage: "",
+		Name:        "pickup-id-file",
+		Usage:       "Use to specify file name from where Pickup ID will be read. Either -pickup-id or -pickup-id-file is required.",
+		Destination: &flags.pickupIDFile,
 	}
+
 	flagTimeout = &cli.IntFlag{
-		Name:  "timeout",
-		Value: 180,
-		Usage: "",
+		Name:        "timeout",
+		Value:       180,
+		Usage:       "Time to wait for certificate to be processed at the service side (default is 0 for `pickup` meaning just one retrieve attempt).",
+		Destination: &flags.timeout,
 	}
+
 	flagInsecure = &cli.BoolFlag{
-		Name:  "insecure",
-		Usage: "",
+		Name:        "insecure",
+		Usage:       "Skip TLS verify. Only for testing",
+		Hidden:      true,
+		Destination: &flags.insecure,
 	}
+
 	flagConfig = &cli.StringFlag{
-		Name:  "config",
-		Usage: "",
+		Name: "config",
+		Usage: "Use to specify INI configuration file containing connection details\n" +
+			"\t\tFor TPP: url, access_token, tpp_zone\n" +
+			"\t\tFor Cloud: cloud_apikey, cloud_zone\n" +
+			"\t\tTPP & Cloud: trust_bundle, test_mode",
+		Destination: &flags.config,
 	}
+
 	flagProfile = &cli.StringFlag{
-		Name:  "profile",
-		Usage: "",
+		Name:        "profile",
+		Usage:       "Use to specify effective section in ini-configuration file specified by -config option.",
+		Destination: &flags.profile,
 	}
+
 	flagClientP12 = &cli.StringFlag{
-		Name:  "client-pkcs12",
-		Usage: "",
+		Name:        "client-pkcs12",
+		Aliases:     []string{"p12-file"},
+		Usage:       "Use to specify a client PKCS#12 archive for mutual TLS (for 2FA, use the getcred action to authenticate with Venafi Platform using a client certificate).",
+		Destination: &flags.clientP12,
 	}
+
 	flagClientP12PW = &cli.StringFlag{
-		Name:  "client-pkcs12p-pw",
-		Usage: "",
+		Name:        "client-pkcs12-pw",
+		Aliases:     []string{"p12-password"},
+		Usage:       "Use to specify the password for a client PKCS#12 archive. Use in combination with -client-pkcs12 option.",
+		Destination: &flags.clientP12PW,
 	}
 
 	commonFlags = []cli.Flag{flagInsecure, flagFormat}
