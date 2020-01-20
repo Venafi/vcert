@@ -7,6 +7,7 @@ import (
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/urfave/cli/v2"
 	"log"
+	"net/http"
 	"time"
 )
 
@@ -29,6 +30,9 @@ var (
 			if flags.insecure {
 				tlsConfig.InsecureSkipVerify = true
 			}
+
+			//Setting TLS configuration
+			http.DefaultTransport.(*http.Transport).TLSClientConfig = &tlsConfig
 
 			connector, err := vcert.NewClient(&cfg) // Everything else requires an endpoint connection
 			if err != nil {
