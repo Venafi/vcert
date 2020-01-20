@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"github.com/Venafi/vcert"
 	"github.com/Venafi/vcert/cmd/vcert/output"
 	"github.com/Venafi/vcert/pkg/certificate"
@@ -11,11 +12,24 @@ import (
 
 var (
 	commandEnroll1 = &cli.Command{
+		Flags: enrollFlags1,
 		Action: func(c *cli.Context) error {
 			cfg, err := buildConfig(commandEnroll, &flags)
 			if err != nil {
 				logger.Panicf("Failed to build vcert config: %s", err)
 			}
+
+			var tlsConfig tls.Config
+
+			//Set RenegotiateFreelyAsClient in case of we're communicating with MTLS TPP server with only user\password
+			if flags.apiKey == "" {
+				tlsConfig.Renegotiation = tls.RenegotiateFreelyAsClient
+			}
+
+			if flags.insecure {
+				tlsConfig.InsecureSkipVerify = true
+			}
+
 			connector, err := vcert.NewClient(&cfg) // Everything else requires an endpoint connection
 			if err != nil {
 				logf("Unable to connect to %s: %s", cfg.ConnectorType, err)
@@ -99,7 +113,6 @@ var (
 			return nil
 		},
 		Name:  "enroll",
-		Flags: enrollFlags1,
 		Usage: "To enroll a certificate,",
 	}
 	commandGetcred1 = &cli.Command{
