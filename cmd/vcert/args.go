@@ -72,12 +72,12 @@ var (
 type commandFlags struct {
 	verbose            bool
 	url                string
-	tppURL             string
+	tppURL             string //deprecated
 	tppUser            string
 	tppPassword        string
 	tppToken           string
 	apiKey             string
-	cloudURL           string
+	cloudURL           string //deprecated
 	zone               string
 	caDN               string
 	csrOption          string
