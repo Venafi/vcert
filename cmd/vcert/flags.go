@@ -169,7 +169,8 @@ var (
 		Name: "format",
 		Usage: "Use to specify the output format. PEM is the default format. Options include: pem | json | pkcs12." +
 			" If PKCS#12 format is specified, then all objects should be written using -file option.",
-		Value: "pem",
+		Destination: &flags.format,
+		Value:       "pem",
 	}
 
 	flagFile = &cli.StringFlag{
@@ -380,7 +381,6 @@ var (
 	)
 
 	genCsrFlags1 = []cli.Flag{
-		flagFormat,
 		flagVerbose,
 		flagNoPrompt,
 		flagKeyCurve,

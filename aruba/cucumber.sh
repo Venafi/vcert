@@ -11,7 +11,7 @@ RUN_COMMAND="docker run -t --rm \
           -e VCERT_CLOUD_APIKEY \
           -e VCERT_CLOUD_ZONE vcert.auto cucumber --no-color -v"
 
-set -ex
+#set -ex
 
 if [ x$1 != x ]; then
     echo One-feature run
