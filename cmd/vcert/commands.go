@@ -169,7 +169,6 @@ func doCommandEnroll1(c *cli.Context) error {
 		},
 	}
 
-	//TODO: certfificate and chain not printed, figure out why
 	err = result.Flush()
 
 	if err != nil {
