@@ -26,26 +26,46 @@ var (
 	commandGetcred1 = &cli.Command{
 		Name:  "getcred",
 		Flags: getcredFlags1,
+		Action: func(c *cli.Context) error {
+			err = doCommandGetcred1(c)
+			return err
+		},
 		Usage: "To obtain a new token for authentication",
 	}
 	commandGenCSR1 = &cli.Command{
 		Name:  "gencsr",
 		Flags: genCsrFlags1,
+		Action: func(c *cli.Context) error {
+			err = doCommandGenCSR1(c)
+			return err
+		},
 		Usage: "To generate a certificate signing request (CSR)",
 	}
 	commandPickup1 = &cli.Command{
 		Name:  "pickup",
 		Flags: pickupFlags1,
+		Action: func(c *cli.Context) error {
+			err = doCommandPickup1(c)
+			return err
+		},
 		Usage: "To retrieve a certificate",
 	}
 	commandRevoke1 = &cli.Command{
 		Name:  "revoke",
 		Flags: revokeFlags1,
+		Action: func(c *cli.Context) error {
+			err = doCommandRevoke1(c)
+			return err
+		},
 		Usage: "To revoke a certificate",
 	}
 	commandRenew1 = &cli.Command{
 		Name:  "renew",
 		Flags: renewFlags1,
+		Action: func(c *cli.Context) error {
+			err = doCommandRenew1(c)
+			return err
+		},
 		Usage: "To renew a certificate",
 	}
 )
@@ -65,12 +85,13 @@ func setTLSConfig() {
 }
 
 func doCommandEnroll1(c *cli.Context) error {
+
+	setTLSConfig()
+
 	cfg, err := buildConfig(commandEnroll, &flags)
 	if err != nil {
 		logger.Panicf("Failed to build vcert config: %s", err)
 	}
-
-	setTLSConfig()
 
 	connector, err := vcert.NewClient(&cfg) // Everything else requires an endpoint connection
 	if err != nil {
@@ -147,10 +168,44 @@ func doCommandEnroll1(c *cli.Context) error {
 			KeyPassword:  flags.keyPassword,
 		},
 	}
+
+	//TODO: certfificate and chain not printed, figure out why
 	err = result.Flush()
 
 	if err != nil {
 		logger.Panicf("Failed to output the results: %s", err)
 	}
+	return nil
+}
+
+func doCommandGetcred1(c *cli.Context) error {
+	return nil
+}
+
+func doCommandGenCSR1(c *cli.Context) error {
+
+	setTLSConfig()
+
+	return nil
+}
+
+func doCommandPickup1(c *cli.Context) error {
+
+	setTLSConfig()
+
+	return nil
+}
+
+func doCommandRevoke1(c *cli.Context) error {
+
+	setTLSConfig()
+
+	return nil
+}
+
+func doCommandRenew1(c *cli.Context) error {
+
+	setTLSConfig()
+
 	return nil
 }
