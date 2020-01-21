@@ -38,23 +38,32 @@ const (
 	commandGetcred
 )
 
+const (
+	commandGenCSRName  = "gencsr"
+	commandEnrollName  = "enroll"
+	commandPickupName  = "pickup"
+	commandRevokeName  = "revoke"
+	commandRenewName   = "renew"
+	commandGetcredName = "getcred"
+)
+
 var (
-	genCsrFlags  = flag.NewFlagSet("gencsr", flag.PanicOnError)
+	genCsrFlags  = flag.NewFlagSet(commandGenCSRName, flag.PanicOnError)
 	genCsrParams commandFlags
 
-	enrollFlags  = flag.NewFlagSet("enroll", flag.PanicOnError)
+	enrollFlags  = flag.NewFlagSet(commandEnrollName, flag.PanicOnError)
 	enrollParams commandFlags
 
 	pickupFlags = flag.NewFlagSet("pickup", flag.PanicOnError)
 	pickParams  commandFlags
 
-	revokeFlags  = flag.NewFlagSet("revoke", flag.PanicOnError)
+	revokeFlags  = flag.NewFlagSet(commandRevokeName, flag.PanicOnError)
 	revokeParams commandFlags
 
-	renewFlags  = flag.NewFlagSet("renew", flag.PanicOnError)
+	renewFlags  = flag.NewFlagSet(commandRenewName, flag.PanicOnError)
 	renewParams commandFlags
 
-	getcredFlags  = flag.NewFlagSet("getcred", flag.PanicOnError)
+	getcredFlags  = flag.NewFlagSet(commandGetcredName, flag.PanicOnError)
 	getcredParams commandFlags
 
 	flags commandFlags
@@ -163,13 +172,13 @@ func parseArgs() (co command, cf *commandFlags, err error) {
 	}
 
 	switch strings.ToLower(os.Args[1]) {
-	case "gencsr":
+	case commandGenCSRName:
 		co = commandGenCSR
 		err = genCsrFlags.Parse(os.Args[2:])
 		if err != nil {
 			logger.Panicf("%s", err)
 		}
-	case "enroll":
+	case commandEnrollName:
 		co = commandEnroll
 		err = enrollFlags.Parse(os.Args[2:])
 		if err != nil {
@@ -182,19 +191,19 @@ func parseArgs() (co command, cf *commandFlags, err error) {
 		if err != nil {
 			logger.Panicf("%s", err)
 		}
-	case "revoke":
+	case commandRevokeName:
 		co = commandRevoke
 		err = revokeFlags.Parse(os.Args[2:])
 		if err != nil {
 			logger.Panicf("%s", err)
 		}
-	case "renew":
+	case commandRenewName:
 		co = commandRenew
 		err = renewFlags.Parse(os.Args[2:])
 		if err != nil {
 			logger.Panicf("%s", err)
 		}
-	case "getcred":
+	case commandGetcredName:
 		co = commandGetcred
 		err = getcredFlags.Parse(os.Args[2:])
 		if err != nil {

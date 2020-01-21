@@ -20,11 +20,11 @@ var (
 			err = doCommandEnroll1(c)
 			return err
 		},
-		Name:  "enroll",
+		Name:  commandEnrollName,
 		Usage: "To enroll a certificate,",
 	}
 	commandGetcred1 = &cli.Command{
-		Name:  "getcred",
+		Name:  commandGetcredName,
 		Flags: getcredFlags1,
 		Action: func(c *cli.Context) error {
 			err = doCommandGetcred1(c)
@@ -33,7 +33,7 @@ var (
 		Usage: "To obtain a new token for authentication",
 	}
 	commandGenCSR1 = &cli.Command{
-		Name:  "gencsr",
+		Name:  commandGenCSRName,
 		Flags: genCsrFlags1,
 		Action: func(c *cli.Context) error {
 			err = doCommandGenCSR1(c)
@@ -42,7 +42,7 @@ var (
 		Usage: "To generate a certificate signing request (CSR)",
 	}
 	commandPickup1 = &cli.Command{
-		Name:  "pickup",
+		Name:  commandPickupName,
 		Flags: pickupFlags1,
 		Action: func(c *cli.Context) error {
 			err = doCommandPickup1(c)
@@ -51,7 +51,7 @@ var (
 		Usage: "To retrieve a certificate",
 	}
 	commandRevoke1 = &cli.Command{
-		Name:  "revoke",
+		Name:  commandRevokeName,
 		Flags: revokeFlags1,
 		Action: func(c *cli.Context) error {
 			err = doCommandRevoke1(c)
@@ -60,7 +60,7 @@ var (
 		Usage: "To revoke a certificate",
 	}
 	commandRenew1 = &cli.Command{
-		Name:  "renew",
+		Name:  commandRenewName,
 		Flags: renewFlags1,
 		Action: func(c *cli.Context) error {
 			err = doCommandRenew1(c)
