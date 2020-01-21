@@ -381,7 +381,6 @@ var (
 	)
 
 	genCsrFlags1 = []cli.Flag{
-		flagFormat,
 		flagVerbose,
 		flagNoPrompt,
 		flagKeyCurve,
@@ -411,7 +410,6 @@ var (
 		flagDNSSans,
 		flagEmailSans,
 		flagFile,
-		flagFormat,
 		flagFriendlyName,
 		flagIPSans,
 		flagKeyCurve,
