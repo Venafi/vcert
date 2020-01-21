@@ -54,7 +54,7 @@ var (
 	enrollFlags  = flag.NewFlagSet(commandEnrollName, flag.PanicOnError)
 	enrollParams commandFlags
 
-	pickupFlags = flag.NewFlagSet("pickup", flag.PanicOnError)
+	pickupFlags = flag.NewFlagSet(commandPickupName, flag.PanicOnError)
 	pickParams  commandFlags
 
 	revokeFlags  = flag.NewFlagSet(commandRevokeName, flag.PanicOnError)
