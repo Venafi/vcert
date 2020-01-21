@@ -16,6 +16,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -337,12 +338,111 @@ func doCommandPickup1(c *cli.Context) error {
 
 	setTLSConfig()
 
+	cfg, err := buildConfig(commandPickup, &flags)
+	if err != nil {
+		logger.Panicf("Failed to build vcert config: %s", err)
+	}
+
+	connector, err := vcert.NewClient(&cfg) // Everything else requires an endpoint connection
+	if err != nil {
+		logf("Unable to connect to %s: %s", cfg.ConnectorType, err)
+	} else {
+		logf("Successfully connected to %s", cfg.ConnectorType)
+	}
+
+	if flags.pickupIDFile != "" {
+		bytes, err := ioutil.ReadFile(flags.pickupIDFile)
+		if err != nil {
+			logger.Panicf("Failed to read Pickup ID value: %s", err)
+		}
+		flags.pickupID = strings.TrimSpace(string(bytes))
+	}
+	var req = &certificate.Request{
+		PickupID:    flags.pickupID,
+		ChainOption: certificate.ChainOptionFromString(flags.chainOption),
+	}
+	if flags.keyPassword != "" {
+		// key password is provided, which means will be requesting private key
+		req.KeyPassword = flags.keyPassword
+		req.FetchPrivateKey = true
+	}
+	var pcc *certificate.PEMCollection
+	pcc, err = retrieveCertificate(connector, req, time.Duration(flags.timeout)*time.Second)
+	if err != nil {
+		logger.Panicf("Failed to retrieve certificate: %s", err)
+	}
+	logf("Successfully retrieved request for %s", flags.pickupID)
+
+	result := &output.Result{
+		Pcc:      pcc,
+		PickupId: flags.pickupID,
+		Config: &output.Config{
+			Command:      int(commandPickup),
+			Format:       flags.format,
+			ChainOption:  certificate.ChainOptionFromString(flags.chainOption),
+			AllFile:      flags.file,
+			KeyFile:      flags.keyFile,
+			CertFile:     flags.certFile,
+			ChainFile:    flags.chainFile,
+			PickupIdFile: flags.pickupIDFile,
+			KeyPassword:  flags.keyPassword,
+		},
+	}
+	err = result.Flush()
+
+	if err != nil {
+		logger.Panicf("Failed to output the results: %s", err)
+	}
 	return nil
 }
 
 func doCommandRevoke1(c *cli.Context) error {
 
 	setTLSConfig()
+
+	cfg, err := buildConfig(commandPickup, &flags)
+	if err != nil {
+		logger.Panicf("Failed to build vcert config: %s", err)
+	}
+
+	connector, err := vcert.NewClient(&cfg) // Everything else requires an endpoint connection
+	if err != nil {
+		logf("Unable to connect to %s: %s", cfg.ConnectorType, err)
+	} else {
+		logf("Successfully connected to %s", cfg.ConnectorType)
+	}
+
+	var revReq = &certificate.RevocationRequest{}
+	switch true {
+	case flags.distinguishedName != "":
+		revReq.CertificateDN = flags.distinguishedName
+		revReq.Disable = !flags.revocationNoRetire
+	case flags.thumbprint != "":
+		revReq.Thumbprint = flags.thumbprint
+		revReq.Disable = false
+	default:
+		logger.Panicf("Certificate DN or Thumbprint is required")
+		return nil
+	}
+
+	requestedFor := func() string {
+		if flags.distinguishedName != "" {
+			return flags.distinguishedName
+		}
+		if flags.thumbprint != "" {
+			return flags.thumbprint
+		}
+		return ""
+	}()
+
+	revReq.Reason = flags.revocationReason
+	revReq.Comments = "revocation request from command line utility"
+
+	err = connector.RevokeCertificate(revReq)
+	if err != nil {
+		logger.Panicf("Failed to revoke certificate: %s", err)
+	}
+	logf("Successfully created revocation request for %s", requestedFor)
 
 	return nil
 }
@@ -351,5 +451,147 @@ func doCommandRenew1(c *cli.Context) error {
 
 	setTLSConfig()
 
+	cfg, err := buildConfig(commandPickup, &flags)
+	if err != nil {
+		logger.Panicf("Failed to build vcert config: %s", err)
+	}
+
+	connector, err := vcert.NewClient(&cfg) // Everything else requires an endpoint connection
+	if err != nil {
+		logf("Unable to connect to %s: %s", cfg.ConnectorType, err)
+	} else {
+		logf("Successfully connected to %s", cfg.ConnectorType)
+	}
+
+	var req = &certificate.Request{}
+	var pcc = &certificate.PEMCollection{}
+
+	searchReq := &certificate.Request{
+		PickupID:   flags.distinguishedName,
+		Thumbprint: flags.thumbprint,
+	}
+
+	// here we fetch old cert anyway
+	oldPcc, err := connector.RetrieveCertificate(searchReq)
+	if err != nil {
+		logger.Panicf("Failed to fetch old certificate by id %s: %s", flags.distinguishedName, err)
+	}
+	oldCertBlock, _ := pem.Decode([]byte(oldPcc.Certificate))
+	if oldCertBlock == nil || oldCertBlock.Type != "CERTIFICATE" {
+		logger.Panicf("Failed to fetch old certificate by id %s: PEM parse error", flags.distinguishedName)
+	}
+	oldCert, err := x509.ParseCertificate([]byte(oldCertBlock.Bytes))
+	if err != nil {
+		logger.Panicf("Failed to fetch old certificate by id %s: %s", flags.distinguishedName, err)
+	}
+	// now we have old one
+	logf("Fetched the latest certificate. Serial: %x, NotAfter: %s", oldCert.SerialNumber, oldCert.NotAfter)
+
+	switch true {
+	case 0 == strings.Index(flags.csrOption, "file:"):
+		// will be just sending CSR to backend
+		req = fillCertificateRequest(req, &flags)
+
+	case "local" == flags.csrOption || "" == flags.csrOption:
+		// restore certificate request from old certificate
+		req = certificate.NewRequest(oldCert)
+		// override values with those from command line flags
+		req = fillCertificateRequest(req, &flags)
+
+	case "service" == flags.csrOption:
+		// logger.Panic("service side renewal is not implemented")
+		req = fillCertificateRequest(req, &flags)
+
+	default:
+		logger.Panicf("unexpected -csr option: %s", flags.csrOption)
+	}
+
+	// here we ignore zone for Renew action, however, API still needs it
+	zoneConfig := &endpoint.ZoneConfiguration{}
+
+	err = connector.GenerateRequest(zoneConfig, req)
+	if err != nil {
+		logger.Panicf("%s", err)
+	}
+
+	requestedFor := func() string {
+		if flags.distinguishedName != "" {
+			return flags.distinguishedName
+		}
+		if flags.thumbprint != "" {
+			return flags.thumbprint
+		}
+		return ""
+	}()
+
+	logf("Successfully created request for %s", requestedFor)
+
+	renewReq := generateRenewalRequest(&flags, req)
+
+	flags.pickupID, err = connector.RenewCertificate(renewReq)
+
+	if err != nil {
+		logger.Panicf("%s", err)
+	}
+	logf("Successfully posted renewal request for %s, will pick up by %s", requestedFor, flags.pickupID)
+
+	if flags.noPickup {
+		pcc, err = certificate.NewPEMCollection(nil, req.PrivateKey, []byte(flags.keyPassword))
+		if err != nil {
+			logger.Panicf("%s", err)
+		}
+	} else {
+		req.PickupID = flags.pickupID
+		req.ChainOption = certificate.ChainOptionFromString(flags.chainOption)
+		req.KeyPassword = flags.keyPassword
+
+		pcc, err = retrieveCertificate(connector, req, time.Duration(flags.timeout)*time.Second)
+		if err != nil {
+			logger.Panicf("%s", err)
+		}
+		logf("Successfully retrieved request for %s", flags.pickupID)
+
+		if req.CsrOrigin == certificate.LocalGeneratedCSR {
+			// otherwise private key can be taken from *req
+			err = pcc.AddPrivateKey(req.PrivateKey, []byte(flags.keyPassword))
+			if err != nil {
+				logger.Fatal(err)
+			}
+		}
+	}
+
+	// check if previous and renewed certificates are of the same private key
+	newCertBlock, _ := pem.Decode([]byte(pcc.Certificate))
+	if newCertBlock != nil && newCertBlock.Type == "CERTIFICATE" {
+		newCert, err := x509.ParseCertificate([]byte(newCertBlock.Bytes))
+		if err == nil {
+			old, _ := json.Marshal(oldCert.PublicKey)
+			new, _ := json.Marshal(newCert.PublicKey)
+			if len(old) > 0 && string(old) == string(new) {
+				logf("WARNING: private key reused")
+			}
+		}
+	}
+
+	result := &output.Result{
+		Pcc:      pcc,
+		PickupId: flags.pickupID,
+		Config: &output.Config{
+			Command:      int(commandRenew),
+			Format:       flags.format,
+			ChainOption:  certificate.ChainOptionFromString(flags.chainOption),
+			AllFile:      flags.file,
+			KeyFile:      flags.keyFile,
+			CertFile:     flags.certFile,
+			ChainFile:    flags.chainFile,
+			PickupIdFile: flags.pickupIDFile,
+			KeyPassword:  flags.keyPassword,
+		},
+	}
+	err = result.Flush()
+
+	if err != nil {
+		logger.Panicf("Failed to output the results: %s", err)
+	}
 	return nil
 }
