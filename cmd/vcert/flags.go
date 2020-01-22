@@ -407,6 +407,7 @@ var (
 		flagCommonName,
 		flagCountry,
 		flagCSROption,
+		flagDistinguishedName,
 		flagDNSSans,
 		flagEmailSans,
 		flagFile,
