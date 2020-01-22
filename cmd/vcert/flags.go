@@ -407,6 +407,7 @@ var (
 		flagCommonName,
 		flagCountry,
 		flagCSROption,
+		flagDistinguishedName,
 		flagDNSSans,
 		flagEmailSans,
 		flagFile,
@@ -435,9 +436,10 @@ var (
 		flagChainFile,
 		flagChainOption,
 		flagKeyFile,
-		flagKeyFile,
 		flagKeyPassword,
 		flagPickupID,
+		flagTestMode,
+		flagTestModeDelay,
 	)
 
 	revokeFlags1 = append(
