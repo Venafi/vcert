@@ -22,60 +22,42 @@ import (
 
 var (
 	tlsConfig      tls.Config
-	err            error
+	connectionType endpoint.ConnectorType
 	commandEnroll1 = &cli.Command{
-		Flags: enrollFlags1,
-		Action: func(c *cli.Context) error {
-			err = doCommandEnroll1(c)
-			return err
-		},
-		Name:  commandEnrollName,
-		Usage: "To enroll a certificate,",
+		Flags:  enrollFlags1,
+		Action: doCommandEnroll1,
+		Name:   commandEnrollName,
+		Usage:  "To enroll a certificate,",
 	}
 	commandGetcred1 = &cli.Command{
-		Name:  commandGetcredName,
-		Flags: getcredFlags1,
-		Action: func(c *cli.Context) error {
-			err = doCommandGetcred1(c)
-			return err
-		},
-		Usage: "To obtain a new token for authentication",
+		Name:   commandGetcredName,
+		Flags:  getcredFlags1,
+		Action: doCommandGetcred1,
+		Usage:  "To obtain a new token for authentication",
 	}
 	commandGenCSR1 = &cli.Command{
-		Name:  commandGenCSRName,
-		Flags: genCsrFlags1,
-		Action: func(c *cli.Context) error {
-			err = doCommandGenCSR1(c)
-			return err
-		},
-		Usage: "To generate a certificate signing request (CSR)",
+		Name:   commandGenCSRName,
+		Flags:  genCsrFlags1,
+		Action: doCommandGenCSR1,
+		Usage:  "To generate a certificate signing request (CSR)",
 	}
 	commandPickup1 = &cli.Command{
-		Name:  commandPickupName,
-		Flags: pickupFlags1,
-		Action: func(c *cli.Context) error {
-			err = doCommandPickup1(c)
-			return err
-		},
-		Usage: "To retrieve a certificate",
+		Name:   commandPickupName,
+		Flags:  pickupFlags1,
+		Action: doCommandPickup1,
+		Usage:  "To retrieve a certificate",
 	}
 	commandRevoke1 = &cli.Command{
-		Name:  commandRevokeName,
-		Flags: revokeFlags1,
-		Action: func(c *cli.Context) error {
-			err = doCommandRevoke1(c)
-			return err
-		},
-		Usage: "To revoke a certificate",
+		Name:   commandRevokeName,
+		Flags:  revokeFlags1,
+		Action: doCommandRevoke1,
+		Usage:  "To revoke a certificate",
 	}
 	commandRenew1 = &cli.Command{
-		Name:  commandRenewName,
-		Flags: renewFlags1,
-		Action: func(c *cli.Context) error {
-			err = doCommandRenew1(c)
-			return err
-		},
-		Usage: "To renew a certificate",
+		Name:   commandRenewName,
+		Flags:  renewFlags1,
+		Action: doCommandRenew1,
+		Usage:  "To renew a certificate",
 	}
 )
 
@@ -126,7 +108,10 @@ func setTLSConfig() {
 }
 
 func doCommandEnroll1(c *cli.Context) error {
-
+	err := validateEnrollFlags()
+	if err != nil {
+		return err
+	}
 	setTLSConfig()
 
 	cfg, err := buildConfig(commandEnroll, &flags)
@@ -219,7 +204,10 @@ func doCommandEnroll1(c *cli.Context) error {
 }
 
 func doCommandGetcred1(c *cli.Context) error {
-
+	err := validateGetcredFlags1()
+	if err != nil {
+		return err
+	}
 	setTLSConfig()
 
 	cfg, err := buildConfig(commandGetcred, &flags)
@@ -321,7 +309,10 @@ func doCommandGetcred1(c *cli.Context) error {
 }
 
 func doCommandGenCSR1(c *cli.Context) error {
-
+	err := validateGenerateFlags1()
+	if err != nil {
+		return err
+	}
 	key, csr, err := generateCsrForCommandGenCsr(&flags, []byte(flags.keyPassword))
 	if err != nil {
 		logger.Panicf("%s", err)
@@ -335,7 +326,10 @@ func doCommandGenCSR1(c *cli.Context) error {
 }
 
 func doCommandPickup1(c *cli.Context) error {
-
+	err := validatePickupFlags1()
+	if err != nil {
+		return err
+	}
 	setTLSConfig()
 
 	cfg, err := buildConfig(commandPickup, &flags)
@@ -397,7 +391,10 @@ func doCommandPickup1(c *cli.Context) error {
 }
 
 func doCommandRevoke1(c *cli.Context) error {
-
+	err := validateRevokeFlags1()
+	if err != nil {
+		return err
+	}
 	setTLSConfig()
 
 	cfg, err := buildConfig(commandPickup, &flags)
@@ -448,7 +445,10 @@ func doCommandRevoke1(c *cli.Context) error {
 }
 
 func doCommandRenew1(c *cli.Context) error {
-
+	err := validateRenewFlags1()
+	if err != nil {
+		return err
+	}
 	setTLSConfig()
 
 	cfg, err := buildConfig(commandPickup, &flags)
