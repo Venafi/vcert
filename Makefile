@@ -46,8 +46,7 @@ test: get
 	go test -v -cover ./cmd/vcert
 
 tpp_test: get
-	echo skip while QA dont work
-#	go test -v $(GOFLAGS) ./pkg/venafi/tpp
+	go test -v $(GOFLAGS) ./pkg/venafi/tpp
 
 cloud_test: get
 	go test -v $(GOFLAGS) ./pkg/venafi/cloud
