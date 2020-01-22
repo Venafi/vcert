@@ -438,6 +438,7 @@ var (
 		flagKeyFile,
 		flagKeyPassword,
 		flagPickupID,
+		flagTestMode,
 	)
 
 	revokeFlags1 = append(
