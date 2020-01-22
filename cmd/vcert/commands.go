@@ -134,7 +134,7 @@ func doCommandEnroll1(c *cli.Context) error {
 		logger.Panicf("Failed to build vcert config: %s", err)
 	}
 
-	connector, err := vcert.NewClient(&cfg) // Everything else requires an endpoint connection
+	connector, err := vcert.NewClient(&cfg)
 	if err != nil {
 		logf("Unable to connect to %s: %s", cfg.ConnectorType, err)
 	} else {
