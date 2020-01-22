@@ -436,7 +436,6 @@ var (
 		flagChainFile,
 		flagChainOption,
 		flagKeyFile,
-		flagKeyFile,
 		flagKeyPassword,
 		flagPickupID,
 	)
