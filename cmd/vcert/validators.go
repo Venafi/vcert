@@ -3,10 +3,40 @@ package main
 import (
 	"fmt"
 	"github.com/Venafi/vcert/pkg/certificate"
+	"io/ioutil"
 	"strings"
 )
 
+func readFiles() {
+	if strings.HasPrefix(flags.distinguishedName, "file:") {
+		fileName := flags.distinguishedName[5:]
+		bytes, err := ioutil.ReadFile(fileName)
+		if err != nil {
+			logger.Panicf("Failed to read Certificate DN: %s", err)
+		}
+		flags.distinguishedName = strings.TrimSpace(string(bytes))
+	}
+	var err error
+	if strings.HasPrefix(flags.thumbprint, "file:") {
+		certFileName := flags.thumbprint[5:]
+		flags.thumbprint, err = readThumbprintFromFile(certFileName)
+		if err != nil {
+			logger.Panicf("Failed to read certificate fingerprint: %s", err)
+		}
+	}
+}
+
 func validateCommonFlags() error {
+	if flags.format != "" && flags.format != "pem" && flags.format != "json" && flags.format != "pkcs12" {
+		return fmt.Errorf("Unexpected output format: %s", flags.format)
+	}
+	if flags.file != "" && (flags.certFile != "" || flags.chainFile != "" || flags.keyFile != "") {
+		return fmt.Errorf("The '-file' option cannot be used used with any other -*-file flags. Either all data goes into one file or individual files must be specified using the appropriate flags")
+	}
+	return nil
+}
+
+func validateConnectionFlags() error {
 	if flags.config != "" {
 		if flags.apiKey != "" ||
 			flags.tppUser != "" ||
@@ -43,17 +73,19 @@ func validateCommonFlags() error {
 			}
 		}
 	}
-	if flags.file != "" && (flags.certFile != "" || flags.chainFile != "" || flags.keyFile != "") {
-		return fmt.Errorf("The '-file' option cannot be used used with any other -*-file flags. Either all data goes into one file or individual files must be specified using the appropriate flags")
-	}
 	return nil
 }
 
 func validateEnrollFlags() error {
-	err := validateCommonFlags()
+	err := validateConnectionFlags()
 	if err != nil {
 		return err
 	}
+	err = validateCommonFlags()
+	if err != nil {
+		return err
+	}
+	readFiles()
 	if strings.Index(flags.csrOption, "file:") == 0 {
 		if flags.commonName != "" {
 			return fmt.Errorf("The '-cn' option cannot be used in -csr file: provided mode")
@@ -90,10 +122,15 @@ func validateEnrollFlags() error {
 }
 
 func validateGetcredFlags1() error {
-	err := validateCommonFlags()
+	err := validateConnectionFlags()
 	if err != nil {
 		return err
 	}
+	err = validateCommonFlags()
+	if err != nil {
+		return err
+	}
+	readFiles()
 	if flags.tppToken == "" && flags.tppUser == "" && flags.clientP12 == "" {
 		return fmt.Errorf("either -username, -p12-file, or -t must be specified")
 	}
@@ -101,6 +138,11 @@ func validateGetcredFlags1() error {
 }
 
 func validateGenerateFlags1() error {
+	err := validateCommonFlags()
+	if err != nil {
+		return err
+	}
+	readFiles()
 	if flags.keyType == certificate.KeyTypeRSA && flags.keySize < 1024 {
 		return fmt.Errorf("Key Size must be 1024 or greater")
 	}
@@ -113,10 +155,15 @@ func validateGenerateFlags1() error {
 }
 
 func validateRenewFlags1() error {
-	err := validateCommonFlags()
+	err := validateConnectionFlags()
 	if err != nil {
 		return err
 	}
+	err = validateCommonFlags()
+	if err != nil {
+		return err
+	}
+	readFiles()
 
 	if flags.distinguishedName == "" && flags.thumbprint == "" {
 		return fmt.Errorf("-id or -thumbprint required to identify the certificate to renew")
@@ -200,10 +247,15 @@ func validatePKCS12Flags() error {
 }
 
 func validatePickupFlags1() error {
-	err := validateCommonFlags()
+	err := validateConnectionFlags()
 	if err != nil {
 		return err
 	}
+	err = validateCommonFlags()
+	if err != nil {
+		return err
+	}
+	readFiles()
 
 	if flags.pickupID == "" && flags.pickupIDFile == "" {
 		return fmt.Errorf("A Pickup ID is required to pickup a certificate provided by -pickup-id OR -pickup-id-file options")
@@ -225,10 +277,15 @@ func validatePickupFlags1() error {
 }
 
 func validateRevokeFlags1() error {
-	err := validateCommonFlags()
+	err := validateConnectionFlags()
 	if err != nil {
 		return err
 	}
+	err = validateCommonFlags()
+	if err != nil {
+		return err
+	}
+	readFiles()
 	if flags.distinguishedName == "" && flags.thumbprint == "" {
 		return fmt.Errorf("Certificate DN or Thumbprint is required to revoke the certificate")
 	}
