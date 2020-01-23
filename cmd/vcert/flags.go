@@ -344,7 +344,7 @@ var (
 	}
 
 	flagRevocationNoRetire = &cli.StringFlag{
-		Name:        "reason",
+		Name:        "no-retire",
 		Usage:       "Do not disable certificate object. Works only with -id <certificate DN>)",
 		Destination: &flags.revocationReason,
 	}
