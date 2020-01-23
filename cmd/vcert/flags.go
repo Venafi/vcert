@@ -97,9 +97,10 @@ var (
 	}
 
 	flagKeySize = &cli.IntFlag{
-		Name:  "key-size",
-		Usage: "Use to specify a key size (default 2048).",
-		Value: 2048,
+		Name:        "key-size",
+		Usage:       "Use to specify a key size (default 2048).",
+		Value:       2048,
+		Destination: &flags.keySize,
 	}
 
 	flagFriendlyName = &cli.StringFlag{
@@ -251,6 +252,12 @@ var (
 		Destination: &flags.csrOption,
 	}
 
+	flagCSRFile = &cli.StringFlag{
+		Name:        "csr-file",
+		Usage:       "Use to specify a file name and a location where the resulting CSR file should be written. Example: /tmp/newcsr.pem",
+		Destination: &flags.csrOption,
+	}
+
 	flagKeyPassword = &cli.StringFlag{
 		Name: "key-password",
 		Usage: "Use to specify a password for encrypting the private key. " +
@@ -381,21 +388,23 @@ var (
 	)
 
 	genCsrFlags1 = []cli.Flag{
-		flagVerbose,
-		flagNoPrompt,
+		flagCommonName,
+		flagCountry,
+		flagCSRFile,
+		flagDNSSans,
+		flagEmailSans,
+		flagIPSans,
 		flagKeyCurve,
 		flagKeyFile,
 		flagKeyPassword,
 		flagKeySize,
 		flagKeyType,
-		flagOrg,
-		flagCountry,
-		flagState,
 		flagLocality,
+		flagNoPrompt,
+		flagOrg,
 		flagOrgUnits,
-		flagEmailSans,
-		flagIPSans,
-		flagDNSSans,
+		flagState,
+		flagVerbose,
 	}
 
 	enrollFlags1 = append(

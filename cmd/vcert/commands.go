@@ -39,7 +39,10 @@ var (
 		Name:   commandGenCSRName,
 		Flags:  genCsrFlags1,
 		Action: doCommandGenCSR1,
-		Usage:  "To generate a certificate signing request (CSR)",
+		Usage: "To generate a certificate signing request (CSR)\n" +
+			"\tExamples:\n" +
+			"\tgencsr -cn <common name> -o <organization> -ou <organizational unit> -c <country> -st <state> -l <locality> -key-file <key output file> -csr-file <csr output file>\n" +
+			"\tgencsr -cn <common name> -o <organization> -ou <organizational unit> -ou <organizational unit2> -c <country> -st <state> -l <locality> -key-file <key output file> -csr-file <csr output file>\n",
 	}
 	commandPickup1 = &cli.Command{
 		Name:   commandPickupName,
