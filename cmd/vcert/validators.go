@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/Venafi/vcert/pkg/certificate"
 	"io/ioutil"
+	"regexp"
 	"strings"
 )
 
@@ -33,6 +34,12 @@ func validateCommonFlags() error {
 	if flags.file != "" && (flags.certFile != "" || flags.chainFile != "" || flags.keyFile != "") {
 		return fmt.Errorf("The '-file' option cannot be used used with any other -*-file flags. Either all data goes into one file or individual files must be specified using the appropriate flags")
 	}
+
+	csrOptionRegex := regexp.MustCompile(`^file:.*$|^local$|^service$|^$`)
+	if !csrOptionRegex.MatchString(flags.csrOption) {
+		logger.Panicf("unexpected -csr option: %s", flags.csrOption)
+	}
+
 	return nil
 }
 
