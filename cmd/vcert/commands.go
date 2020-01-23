@@ -7,7 +7,6 @@ import (
 	"encoding/pem"
 	"fmt"
 	"github.com/Venafi/vcert"
-	"github.com/Venafi/vcert/cmd/vcert/output"
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
 	"github.com/Venafi/vcert/pkg/venafi/tpp"
@@ -111,13 +110,13 @@ func setTLSConfig() {
 }
 
 func doCommandEnroll1(c *cli.Context) error {
-	err := validateEnrollFlags()
+	err := validateEnrollFlags(c)
 	if err != nil {
 		return err
 	}
 	setTLSConfig()
 
-	cfg, err := buildConfig(commandEnroll, &flags)
+	cfg, err := buildConfig(c, &flags)
 	if err != nil {
 		logger.Panicf("Failed to build vcert config: %s", err)
 	}
@@ -182,11 +181,11 @@ func doCommandEnroll1(c *cli.Context) error {
 		}
 	}
 
-	result := &output.Result{
+	result := &Result{
 		Pcc:      pcc,
 		PickupId: flags.pickupID,
-		Config: &output.Config{
-			Command:      int(commandEnroll),
+		Config: &Config{
+			Command:      c.Command.Name,
 			Format:       flags.format,
 			ChainOption:  certificate.ChainOptionFromString(flags.chainOption),
 			AllFile:      flags.file,
@@ -207,13 +206,13 @@ func doCommandEnroll1(c *cli.Context) error {
 }
 
 func doCommandGetcred1(c *cli.Context) error {
-	err := validateGetcredFlags1()
+	err := validateGetcredFlags1(c)
 	if err != nil {
 		return err
 	}
 	setTLSConfig()
 
-	cfg, err := buildConfig(commandGetcred, &flags)
+	cfg, err := buildConfig(c, &flags)
 	if err != nil {
 		logger.Panicf("Failed to build vcert config: %s", err)
 	}
@@ -312,7 +311,7 @@ func doCommandGetcred1(c *cli.Context) error {
 }
 
 func doCommandGenCSR1(c *cli.Context) error {
-	err := validateGenerateFlags1()
+	err := validateGenerateFlags1(c)
 	if err != nil {
 		return err
 	}
@@ -329,13 +328,13 @@ func doCommandGenCSR1(c *cli.Context) error {
 }
 
 func doCommandPickup1(c *cli.Context) error {
-	err := validatePickupFlags1()
+	err := validatePickupFlags1(c)
 	if err != nil {
 		return err
 	}
 	setTLSConfig()
 
-	cfg, err := buildConfig(commandPickup, &flags)
+	cfg, err := buildConfig(c, &flags)
 	if err != nil {
 		logger.Panicf("Failed to build vcert config: %s", err)
 	}
@@ -370,11 +369,11 @@ func doCommandPickup1(c *cli.Context) error {
 	}
 	logf("Successfully retrieved request for %s", flags.pickupID)
 
-	result := &output.Result{
+	result := &Result{
 		Pcc:      pcc,
 		PickupId: flags.pickupID,
-		Config: &output.Config{
-			Command:      int(commandPickup),
+		Config: &Config{
+			Command:      c.Command.Name,
 			Format:       flags.format,
 			ChainOption:  certificate.ChainOptionFromString(flags.chainOption),
 			AllFile:      flags.file,
@@ -394,13 +393,13 @@ func doCommandPickup1(c *cli.Context) error {
 }
 
 func doCommandRevoke1(c *cli.Context) error {
-	err := validateRevokeFlags1()
+	err := validateRevokeFlags1(c)
 	if err != nil {
 		return err
 	}
 	setTLSConfig()
 
-	cfg, err := buildConfig(commandPickup, &flags)
+	cfg, err := buildConfig(c, &flags)
 	if err != nil {
 		logger.Panicf("Failed to build vcert config: %s", err)
 	}
@@ -448,13 +447,13 @@ func doCommandRevoke1(c *cli.Context) error {
 }
 
 func doCommandRenew1(c *cli.Context) error {
-	err := validateRenewFlags1()
+	err := validateRenewFlags1(c)
 	if err != nil {
 		return err
 	}
 	setTLSConfig()
 
-	cfg, err := buildConfig(commandPickup, &flags)
+	cfg, err := buildConfig(c, &flags)
 	if err != nil {
 		logger.Panicf("Failed to build vcert config: %s", err)
 	}
@@ -576,11 +575,11 @@ func doCommandRenew1(c *cli.Context) error {
 		}
 	}
 
-	result := &output.Result{
+	result := &Result{
 		Pcc:      pcc,
 		PickupId: flags.pickupID,
-		Config: &output.Config{
-			Command:      int(commandRenew),
+		Config: &Config{
+			Command:      c.Command.Name,
 			Format:       flags.format,
 			ChainOption:  certificate.ChainOptionFromString(flags.chainOption),
 			AllFile:      flags.file,

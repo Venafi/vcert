@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package output
+package main
 
 import (
 	"crypto/rand"
@@ -29,19 +29,8 @@ import (
 	"strings"
 )
 
-type command int
-
-const (
-	commandUnused command = iota
-	commandGenCSR
-	commandEnroll
-	commandPickup
-	commandRevoke
-	commandRenew
-)
-
 type Config struct {
-	Command     int
+	Command     string
 	Format      string
 	ChainOption certificate.ChainOption
 
@@ -240,7 +229,7 @@ func (r *Result) Flush() error {
 		}
 	}
 	// PickupId is special -- it wasn't supposed to be written to -file
-	if r.Config.Command == int(commandEnroll) || r.Config.Command == int(commandRenew) {
+	if r.Config.Command == commandEnrollName || r.Config.Command == commandRenewName {
 		if r.Config.PickupIdFile != "" && r.PickupId != "" {
 			err = ioutil.WriteFile(r.Config.PickupIdFile, []byte(r.format(r.PickupId)+"\n"), 0600)
 			errors = append(errors, err)

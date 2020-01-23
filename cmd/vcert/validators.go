@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/Venafi/vcert/pkg/certificate"
+	"github.com/urfave/cli/v2"
 	"io/ioutil"
 	"regexp"
 	"strings"
@@ -27,7 +28,7 @@ func readFiles() {
 	}
 }
 
-func validateCommonFlags() error {
+func validateCommonFlags(c *cli.Context) error {
 	if flags.format != "" && flags.format != "pem" && flags.format != "json" && flags.format != "pkcs12" {
 		return fmt.Errorf("Unexpected output format: %s", flags.format)
 	}
@@ -40,10 +41,14 @@ func validateCommonFlags() error {
 		logger.Panicf("unexpected -csr option: %s", flags.csrOption)
 	}
 
+	if err := readPasswordsFromInputFlags(c, &flags); err != nil {
+		return fmt.Errorf(err.Error())
+	}
+
 	return nil
 }
 
-func validateConnectionFlags() error {
+func validateConnectionFlags(c *cli.Context) error {
 	if flags.config != "" {
 		if flags.apiKey != "" ||
 			flags.tppUser != "" ||
@@ -83,18 +88,14 @@ func validateConnectionFlags() error {
 	return nil
 }
 
-func validateEnrollFlags() error {
-	err := validateConnectionFlags()
+func validateEnrollFlags(c *cli.Context) error {
+	err := validateConnectionFlags(c)
 	if err != nil {
 		return err
 	}
-	err = validateCommonFlags()
+	err = validateCommonFlags(c)
 	if err != nil {
 		return err
-	}
-
-	if err := readPasswordsFromInputFlags(commandEnroll, &flags); err != nil {
-		return fmt.Errorf(err.Error())
 	}
 
 	readFiles()
@@ -121,7 +122,7 @@ func validateEnrollFlags() error {
 			return fmt.Errorf("-key-password cannot be empty in -csr service mode unless -no-pickup specified")
 		}
 	}
-	err = validatePKCS12Flags()
+	err = validatePKCS12Flags(c)
 	if err != nil {
 		return err
 	}
@@ -133,12 +134,8 @@ func validateEnrollFlags() error {
 	return nil
 }
 
-func validateGetcredFlags1() error {
+func validateGetcredFlags1(c *cli.Context) error {
 	var err error
-
-	if err := readPasswordsFromInputFlags(commandGetcred, &flags); err != nil {
-		return fmt.Errorf(err.Error())
-	}
 
 	if flags.config != "" {
 		if flags.apiKey != "" ||
@@ -174,7 +171,7 @@ func validateGetcredFlags1() error {
 		}
 	}
 
-	err = validateCommonFlags()
+	err = validateCommonFlags(c)
 	if err != nil {
 		return err
 	}
@@ -185,8 +182,8 @@ func validateGetcredFlags1() error {
 	return nil
 }
 
-func validateGenerateFlags1() error {
-	err := validateCommonFlags()
+func validateGenerateFlags1(c *cli.Context) error {
+	err := validateCommonFlags(c)
 	if err != nil {
 		return err
 	}
@@ -202,17 +199,13 @@ func validateGenerateFlags1() error {
 	return nil
 }
 
-func validateRenewFlags1() error {
+func validateRenewFlags1(c *cli.Context) error {
 
-	if err := readPasswordsFromInputFlags(commandRenew, &flags); err != nil {
-		return fmt.Errorf(err.Error())
-	}
-
-	err := validateConnectionFlags()
+	err := validateConnectionFlags(c)
 	if err != nil {
 		return err
 	}
-	err = validateCommonFlags()
+	err = validateCommonFlags(c)
 	if err != nil {
 		return err
 	}
@@ -273,7 +266,7 @@ func validateRenewFlags1() error {
 		}
 	}
 
-	err = validatePKCS12Flags()
+	err = validatePKCS12Flags(c)
 	if err != nil {
 		return err
 	}
@@ -281,7 +274,7 @@ func validateRenewFlags1() error {
 	return nil
 }
 
-func validatePKCS12Flags() error {
+func validatePKCS12Flags(c *cli.Context) error {
 	if flags.format == "pkcs12" {
 		if flags.file == "" { // todo: for enroll it also checks  flags.csrOption != "service"
 			return fmt.Errorf("PKCS#12 format can only be used if all objects are written to one file (see -file option)")
@@ -299,17 +292,13 @@ func validatePKCS12Flags() error {
 	return nil
 }
 
-func validatePickupFlags1() error {
+func validatePickupFlags1(c *cli.Context) error {
 
-	if err := readPasswordsFromInputFlags(commandPickup, &flags); err != nil {
-		return fmt.Errorf(err.Error())
-	}
-
-	err := validateConnectionFlags()
+	err := validateConnectionFlags(c)
 	if err != nil {
 		return err
 	}
-	err = validateCommonFlags()
+	err = validateCommonFlags(c)
 	if err != nil {
 		return err
 	}
@@ -334,17 +323,13 @@ func validatePickupFlags1() error {
 	return nil
 }
 
-func validateRevokeFlags1() error {
+func validateRevokeFlags1(c *cli.Context) error {
 
-	if err := readPasswordsFromInputFlags(commandRevoke, &flags); err != nil {
-		return fmt.Errorf(err.Error())
-	}
-
-	err := validateConnectionFlags()
+	err := validateConnectionFlags(c)
 	if err != nil {
 		return err
 	}
-	err = validateCommonFlags()
+	err = validateCommonFlags(c)
 	if err != nil {
 		return err
 	}

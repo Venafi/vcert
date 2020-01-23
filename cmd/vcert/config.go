@@ -18,6 +18,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/urfave/cli/v2"
 	"io/ioutil"
 	"math/rand"
 	"time"
@@ -26,7 +27,7 @@ import (
 	"github.com/Venafi/vcert/pkg/endpoint"
 )
 
-func buildConfig(co command, cf *commandFlags) (cfg vcert.Config, err error) {
+func buildConfig(c *cli.Context, cf *commandFlags) (cfg vcert.Config, err error) {
 	cfg.LogVerbose = cf.verbose
 
 	if cf.config != "" {
@@ -57,7 +58,7 @@ func buildConfig(co command, cf *commandFlags) (cfg vcert.Config, err error) {
 			}
 
 			if cf.tppToken != "" {
-				if co == commandGetcred {
+				if c.Command.Name == commandGetcredName {
 					auth.RefreshToken = cf.tppToken
 				} else {
 					auth.AccessToken = cf.tppToken
@@ -96,7 +97,7 @@ func buildConfig(co command, cf *commandFlags) (cfg vcert.Config, err error) {
 		}
 		cfg.Zone = cf.zone
 	}
-	if co == commandEnroll || co == commandPickup {
+	if c.Command.Name == commandEnrollName || c.Command.Name == commandPickupName {
 		if cfg.Zone == "" && cfg.ConnectorType != endpoint.ConnectorTypeFake && !(cf.pickupID != "" || cf.pickupIDFile != "") {
 			return cfg, fmt.Errorf("Zone cannot be empty. Use -z option")
 		}
