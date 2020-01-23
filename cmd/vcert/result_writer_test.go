@@ -109,7 +109,7 @@ func TestPKCS12withEncPK(t *testing.T) {
 		},
 		"==pickup-id==",
 		&Config{
-			int(commandEnroll),
+			"enroll",
 			"pkcs12",
 			certificate.ChainOptionFromString(""),
 			"/tmp/TestPKCS12withEncPK",
@@ -136,7 +136,7 @@ func TestPKCS12withPlainPK(t *testing.T) {
 		},
 		"==pickup-id==",
 		&Config{
-			int(commandEnroll),
+			"enroll",
 			"pkcs12",
 			certificate.ChainOptionFromString(""),
 			"/tmp/TestPKCS12withPlainPK",
@@ -163,7 +163,7 @@ func TestPKCS12withPlainEcPK(t *testing.T) {
 		},
 		"==pickup-id==",
 		&Config{
-			int(commandEnroll),
+			"enroll",
 			"pkcs12",
 			certificate.ChainOptionFromString(""),
 			"/tmp/TestPKCS12withPlainEcPK",

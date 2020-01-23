@@ -110,7 +110,7 @@ func setTLSConfig() {
 }
 
 func doCommandEnroll1(c *cli.Context) error {
-	err := validateEnrollFlags(c)
+	err := validateEnrollFlags(c.Command.Name)
 	if err != nil {
 		return err
 	}
@@ -206,7 +206,7 @@ func doCommandEnroll1(c *cli.Context) error {
 }
 
 func doCommandGetcred1(c *cli.Context) error {
-	err := validateGetcredFlags1(c)
+	err := validateGetcredFlags1(c.Command.Name)
 	if err != nil {
 		return err
 	}
@@ -311,7 +311,7 @@ func doCommandGetcred1(c *cli.Context) error {
 }
 
 func doCommandGenCSR1(c *cli.Context) error {
-	err := validateGenerateFlags1(c)
+	err := validateGenerateFlags1(c.Command.Name)
 	if err != nil {
 		return err
 	}
@@ -328,7 +328,7 @@ func doCommandGenCSR1(c *cli.Context) error {
 }
 
 func doCommandPickup1(c *cli.Context) error {
-	err := validatePickupFlags1(c)
+	err := validatePickupFlags1(c.Command.Name)
 	if err != nil {
 		return err
 	}
@@ -393,7 +393,7 @@ func doCommandPickup1(c *cli.Context) error {
 }
 
 func doCommandRevoke1(c *cli.Context) error {
-	err := validateRevokeFlags1(c)
+	err := validateRevokeFlags1(c.Command.Name)
 	if err != nil {
 		return err
 	}
@@ -447,7 +447,7 @@ func doCommandRevoke1(c *cli.Context) error {
 }
 
 func doCommandRenew1(c *cli.Context) error {
-	err := validateRenewFlags1(c)
+	err := validateRenewFlags1(c.Command.Name)
 	if err != nil {
 		return err
 	}

@@ -20,18 +20,17 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/howeyc/gopass"
-	"github.com/urfave/cli/v2"
 	"os"
 	"regexp"
 	"strings"
 )
 
-func readPasswordsFromInputFlags(c *cli.Context, cf *commandFlags) error {
+func readPasswordsFromInputFlags(commandName string, cf *commandFlags) error {
 	lineIndex := 0
 
-	if (c.Command.Name == commandEnrollName && (cf.tppURL != "" || cf.url != "")) ||
-		(c.Command.Name == commandPickupName && (cf.tppURL != "" || cf.url != "")) ||
-		(c.Command.Name == commandGetcredName && (cf.tppURL != "" || cf.url != "")) {
+	if (commandName == commandEnrollName && (cf.tppURL != "" || cf.url != "")) ||
+		(commandName == commandPickupName && (cf.tppURL != "" || cf.url != "")) ||
+		(commandName == commandGetcredName && (cf.tppURL != "" || cf.url != "")) {
 		if cf.clientP12 != "" && cf.clientP12PW == "" {
 			fmt.Printf("Enter password for %s:", cf.clientP12)
 			input, err := gopass.GetPasswdMasked()
@@ -58,7 +57,7 @@ func readPasswordsFromInputFlags(c *cli.Context, cf *commandFlags) error {
 		}
 	}
 
-	if c.Command.Name == commandEnrollName || c.Command.Name == commandGenCSRName || c.Command.Name == commandRenewName || c.Command.Name == commandPickupName && cf.format == "pkcs12" {
+	if commandName == commandEnrollName || commandName == commandGenCSRName || commandName == commandRenewName || commandName == commandPickupName && cf.format == "pkcs12" {
 		var keyPasswordNotNeeded = false
 
 		keyPasswordNotNeeded = keyPasswordNotNeeded || (cf.csrOption == "service" && cf.noPickup)
@@ -81,7 +80,7 @@ func readPasswordsFromInputFlags(c *cli.Context, cf *commandFlags) error {
 					logger.Panicf("Pass phrases don't match")
 				}
 				cf.keyPassword = string(input)
-			} else if cf.keyPassword == "" && cf.noPrompt && c.Command.Name == commandPickupName {
+			} else if cf.keyPassword == "" && cf.noPrompt && commandName == commandPickupName {
 				//TODO: cover with test
 				return fmt.Errorf("key password must be provided")
 			} else {

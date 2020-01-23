@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/Venafi/vcert/pkg/certificate"
-	"github.com/urfave/cli/v2"
 	"io/ioutil"
 	"regexp"
 	"strings"
@@ -28,7 +27,7 @@ func readFiles() {
 	}
 }
 
-func validateCommonFlags(c *cli.Context) error {
+func validateCommonFlags(commandName string) error {
 	if flags.format != "" && flags.format != "pem" && flags.format != "json" && flags.format != "pkcs12" {
 		return fmt.Errorf("Unexpected output format: %s", flags.format)
 	}
@@ -41,14 +40,14 @@ func validateCommonFlags(c *cli.Context) error {
 		logger.Panicf("unexpected -csr option: %s", flags.csrOption)
 	}
 
-	if err := readPasswordsFromInputFlags(c, &flags); err != nil {
+	if err := readPasswordsFromInputFlags(commandName, &flags); err != nil {
 		return fmt.Errorf(err.Error())
 	}
 
 	return nil
 }
 
-func validateConnectionFlags(c *cli.Context) error {
+func validateConnectionFlags(commandName string) error {
 	if flags.config != "" {
 		if flags.apiKey != "" ||
 			flags.tppUser != "" ||
@@ -88,12 +87,12 @@ func validateConnectionFlags(c *cli.Context) error {
 	return nil
 }
 
-func validateEnrollFlags(c *cli.Context) error {
-	err := validateConnectionFlags(c)
+func validateEnrollFlags(commandName string) error {
+	err := validateConnectionFlags(commandName)
 	if err != nil {
 		return err
 	}
-	err = validateCommonFlags(c)
+	err = validateCommonFlags(commandName)
 	if err != nil {
 		return err
 	}
@@ -122,7 +121,7 @@ func validateEnrollFlags(c *cli.Context) error {
 			return fmt.Errorf("-key-password cannot be empty in -csr service mode unless -no-pickup specified")
 		}
 	}
-	err = validatePKCS12Flags(c)
+	err = validatePKCS12Flags(commandName)
 	if err != nil {
 		return err
 	}
@@ -134,7 +133,7 @@ func validateEnrollFlags(c *cli.Context) error {
 	return nil
 }
 
-func validateGetcredFlags1(c *cli.Context) error {
+func validateGetcredFlags1(commandName string) error {
 	var err error
 
 	if flags.config != "" {
@@ -171,7 +170,7 @@ func validateGetcredFlags1(c *cli.Context) error {
 		}
 	}
 
-	err = validateCommonFlags(c)
+	err = validateCommonFlags(commandName)
 	if err != nil {
 		return err
 	}
@@ -182,8 +181,8 @@ func validateGetcredFlags1(c *cli.Context) error {
 	return nil
 }
 
-func validateGenerateFlags1(c *cli.Context) error {
-	err := validateCommonFlags(c)
+func validateGenerateFlags1(commandName string) error {
+	err := validateCommonFlags(commandName)
 	if err != nil {
 		return err
 	}
@@ -199,13 +198,13 @@ func validateGenerateFlags1(c *cli.Context) error {
 	return nil
 }
 
-func validateRenewFlags1(c *cli.Context) error {
+func validateRenewFlags1(commandName string) error {
 
-	err := validateConnectionFlags(c)
+	err := validateConnectionFlags(commandName)
 	if err != nil {
 		return err
 	}
-	err = validateCommonFlags(c)
+	err = validateCommonFlags(commandName)
 	if err != nil {
 		return err
 	}
@@ -266,7 +265,7 @@ func validateRenewFlags1(c *cli.Context) error {
 		}
 	}
 
-	err = validatePKCS12Flags(c)
+	err = validatePKCS12Flags(commandName)
 	if err != nil {
 		return err
 	}
@@ -274,7 +273,7 @@ func validateRenewFlags1(c *cli.Context) error {
 	return nil
 }
 
-func validatePKCS12Flags(c *cli.Context) error {
+func validatePKCS12Flags(commandName string) error {
 	if flags.format == "pkcs12" {
 		if flags.file == "" { // todo: for enroll it also checks  flags.csrOption != "service"
 			return fmt.Errorf("PKCS#12 format can only be used if all objects are written to one file (see -file option)")
@@ -292,13 +291,13 @@ func validatePKCS12Flags(c *cli.Context) error {
 	return nil
 }
 
-func validatePickupFlags1(c *cli.Context) error {
+func validatePickupFlags1(commandName string) error {
 
-	err := validateConnectionFlags(c)
+	err := validateConnectionFlags(commandName)
 	if err != nil {
 		return err
 	}
-	err = validateCommonFlags(c)
+	err = validateCommonFlags(commandName)
 	if err != nil {
 		return err
 	}
@@ -323,13 +322,13 @@ func validatePickupFlags1(c *cli.Context) error {
 	return nil
 }
 
-func validateRevokeFlags1(c *cli.Context) error {
+func validateRevokeFlags1(commandName string) error {
 
-	err := validateConnectionFlags(c)
+	err := validateConnectionFlags(commandName)
 	if err != nil {
 		return err
 	}
-	err = validateCommonFlags(c)
+	err = validateCommonFlags(commandName)
 	if err != nil {
 		return err
 	}
