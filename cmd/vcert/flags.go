@@ -474,8 +474,8 @@ var (
 		flagCommonName,
 		flagCountry,
 		flagCSROption,
-		flagDNSSans,
 		flagDistinguishedName,
+		flagDNSSans,
 		flagEmailSans,
 		flagFriendlyName,
 		flagIPSans,
@@ -492,6 +492,7 @@ var (
 		flagState,
 		flagTestMode,
 		flagTestModeDelay,
+		flagThumbprint,
 		flagTimeout,
 		flagZone,
 	)
