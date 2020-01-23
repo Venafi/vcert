@@ -111,7 +111,10 @@ func validateEnrollFlags(commandName string) error {
 	if flags.chainOption == "ignore" && flags.chainFile != "" {
 		return fmt.Errorf("The `-chain ignore` option cannot be used with -chain-file option")
 	}
-	// todo: validate not "" zone for tpp
+
+	if flags.zone == "" {
+		return fmt.Errorf("A zone is required for requesting a certificate from Venafi Cloud")
+	}
 
 	if flags.csrOption == "file" && flags.keyFile != "" { // Do not specify -key-file with -csr file as VCert cannot access the private key
 		return fmt.Errorf("-key-file cannot be used with -csr file as VCert cannot access the private key")
