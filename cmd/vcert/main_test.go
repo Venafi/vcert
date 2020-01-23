@@ -237,12 +237,12 @@ func newFakeConnector() (*fakeEndPointConnector, error) {
 }
 
 func TestValidateFlagsForEnrollmentMissingData(t *testing.T) {
-	err := enrollFlags.Set("k", "")
-	if err != nil {
-		t.Fatalf("%s", err)
-	}
 
-	err = validateFlags(commandEnroll)
+	var flags commandFlags
+
+	flags.apiKey = ""
+
+	err := validateEnrollFlags(commandEnrollName)
 	if err == nil {
 		t.Fatalf("Error was not expected to be nil.  APIKey is required for enrollment")
 	}
@@ -250,23 +250,24 @@ func TestValidateFlagsForEnrollmentMissingData(t *testing.T) {
 
 func TestGetcredFlagsNoUrl(t *testing.T) {
 
-	p := getcredFlags.Parsed()
-	fmt.Println(p)
-	err := getcredFlags.Set("t", "3rlybZwAdV1qo/KpNJ5FWg==")
-	if err != nil {
-		t.Fatalf("%s", err)
-	}
-	err = validateFlags(commandGetcred)
+	var flags commandFlags
+
+	flags.tppToken = "3rlybZwAdV1qo/KpNJ5FWg=="
+
+	err := validateGetcredFlags1(commandGenCSRName)
 	if err == nil {
 		t.Fatalf("-u must be specified")
 	}
 }
 
 func TestValidateFlagsForTPPMissingData(t *testing.T) {
-	enrollFlags.Set("tpp-url", "https://localhost/vedsdk")
-	enrollFlags.Set("tpp-user", "")
 
-	err := validateFlags(commandEnroll)
+	var flags commandFlags
+
+	flags.url = "https://localhost/vedsdk"
+	flags.tppUser = ""
+
+	err := validateEnrollFlags(commandEnrollName)
 	if err == nil {
 		t.Fatalf("Error was not expected to be nil.  Username and password are required for enrollment")
 	}
@@ -275,7 +276,7 @@ func TestValidateFlagsForTPPMissingData(t *testing.T) {
 	enrollFlags.Set("tpp-user", "admin")
 	enrollFlags.Set("z", "Test Policy")
 
-	err = validateFlags(commandEnroll)
+	err = validateEnrollFlags(commandEnrollName)
 	if err == nil {
 		t.Fatalf("Error was not expected to be nil.  CN is required for enrollment")
 	}
@@ -286,7 +287,7 @@ func TestValidateFlagsForTPPMissingData(t *testing.T) {
 	enrollFlags.Set("cn", "test")
 	enrollFlags.Set("z", "Test")
 
-	err = validateFlags(commandEnroll)
+	err = validateEnrollFlags(commandEnrollName)
 	if err == nil {
 		t.Fatalf("Error was not expected to be nil.  tpp-password is required for enrollment")
 	}
@@ -297,7 +298,7 @@ func TestValidateFlagsForTPPMissingData(t *testing.T) {
 	enrollFlags.Set("cn", "test")
 	enrollFlags.Set("z", "")
 
-	err = validateFlags(commandEnroll)
+	err = validateEnrollFlags(commandEnrollName)
 	if err == nil {
 		t.Fatalf("Error was not expected to be nil.  Zone is required for enrollment")
 	}
@@ -307,7 +308,7 @@ func TestValidateFlagsForTPPMissingData(t *testing.T) {
 	enrollFlags.Set("cn", "test")
 	enrollFlags.Set("z", "Test Policy")
 
-	err = validateFlags(commandEnroll)
+	err = validateEnrollFlags(commandEnrollName)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -317,14 +318,14 @@ func TestValidateFlagsForTPPMissingData(t *testing.T) {
 func TestValidateFlagsForPickupMissingData(t *testing.T) {
 	pickupFlags.Set("k", "")
 
-	err := validateFlags(commandPickup)
+	err := validatePickupFlags1(commandPickupName)
 	if err == nil {
 		t.Fatalf("Error was not expected to be nil.  APIKey is required for Pickup")
 	}
 
 	pickupFlags.Set("k", "asdf")
 
-	err = validateFlags(commandPickup)
+	err = validatePickupFlags1(commandPickupName)
 	if err == nil {
 		t.Fatalf("Error was not expected to be nil.  pickup-id is required for Pickup")
 	}
@@ -332,7 +333,7 @@ func TestValidateFlagsForPickupMissingData(t *testing.T) {
 	pickupFlags.Set("k", "asdf")
 	pickupFlags.Set("pickup-id", "asdf")
 
-	err = validateFlags(commandPickup)
+	err = validatePickupFlags1(commandPickupName)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -342,7 +343,7 @@ func TestValidateFlagsMixedEnrollmentFileOutputs(t *testing.T) {
 	enrollFlags.Set("k", "1234")
 	enrollFlags.Set("file", "file123")
 	enrollFlags.Set("key-file", "file123")
-	err := validateFlags(commandEnroll)
+	err := validateEnrollFlags(commandEnrollName)
 	if err == nil {
 		t.Fatalf("Error was not expected to be nil.  APIKey is required for Pickup")
 	}
@@ -351,7 +352,7 @@ func TestValidateFlagsMixedEnrollmentFileOutputs(t *testing.T) {
 	enrollFlags.Set("file", "file123")
 	enrollFlags.Set("cert-file", "file123")
 	enrollFlags.Set("key-file", "")
-	err = validateFlags(commandEnroll)
+	err = validateEnrollFlags(commandEnrollName)
 	if err == nil {
 		t.Fatalf("Error was not expected to be nil.  pickup-id is required for Pickup")
 	}
@@ -361,7 +362,7 @@ func TestValidateFlagsMixedEnrollmentFileOutputs(t *testing.T) {
 	enrollFlags.Set("chain-file", "file123")
 	enrollFlags.Set("cert-file", "")
 	enrollFlags.Set("key-file", "")
-	err = validateFlags(commandEnroll)
+	err = validateEnrollFlags(commandEnrollName)
 	if err == nil {
 		t.Fatalf("Error was not expected to be nil.  pickup-id is required for Pickup")
 	}
@@ -372,7 +373,7 @@ func TestValidateFlagsMixedEnrollmentFileOutputs(t *testing.T) {
 	enrollFlags.Set("chain-file", "")
 	enrollFlags.Set("cert-file", "")
 	enrollFlags.Set("key-file", "")
-	err = validateFlags(commandEnroll)
+	err = validateEnrollFlags(commandEnrollName)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -383,7 +384,8 @@ func TestValidateFlagsMixedEnrollmentFileOutputs(t *testing.T) {
 	enrollFlags.Set("chain-file", "")
 	enrollFlags.Set("cert-file", "")
 	enrollFlags.Set("key-file", "asdf")
-	err = validateFlags(commandEnroll)
+	flags.keyFile = "asdf"
+	err = validateEnrollFlags(commandEnrollName)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -393,7 +395,7 @@ func TestValidateFlagsMixedPickupFileOutputs(t *testing.T) {
 	pickupFlags.Set("k", "1234")
 	pickupFlags.Set("file", "file123")
 	pickupFlags.Set("cert-file", "file123")
-	err := validateFlags(commandPickup)
+	err := validatePickupFlags1(commandPickupName)
 	if err == nil {
 		t.Fatalf("Error was not expected to be nil.  APIKey is required for Pickup")
 	}
@@ -402,7 +404,7 @@ func TestValidateFlagsMixedPickupFileOutputs(t *testing.T) {
 	pickupFlags.Set("file", "file123")
 	pickupFlags.Set("chain-file", "file123")
 	pickupFlags.Set("cert-file", "")
-	err = validateFlags(commandPickup)
+	err = validatePickupFlags1(commandPickupName)
 	if err == nil {
 		t.Fatalf("Error was not expected to be nil.  pickup-id is required for Pickup")
 	}
@@ -411,7 +413,7 @@ func TestValidateFlagsMixedPickupFileOutputs(t *testing.T) {
 	pickupFlags.Set("file", "file123")
 	pickupFlags.Set("chain-file", "")
 	pickupFlags.Set("cert-file", "")
-	err = validateFlags(commandPickup)
+	err = validatePickupFlags1(commandPickupName)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -420,7 +422,7 @@ func TestValidateFlagsMixedPickupFileOutputs(t *testing.T) {
 	pickupFlags.Set("file", "")
 	pickupFlags.Set("chain-file", "")
 	pickupFlags.Set("cert-file", "asdf")
-	err = validateFlags(commandPickup)
+	err = validatePickupFlags1(commandPickupName)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -442,7 +444,7 @@ func TestGetcredFlagsTrustBundle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-	err = validateFlags(commandGetcred)
+	err = validateGetcredFlags1(commandGetcredName)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -459,7 +461,7 @@ func TestGetcredFlagsNoTrust(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-	err = validateFlags(commandGetcred)
+	err = validateGetcredFlags1(commandGetcredName)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -554,19 +556,27 @@ func TestStringSliceSetByString(t *testing.T) {
 
 func TestGenerateCertRequest(t *testing.T) {
 	//setup flags
-	enrollFlags.Set("nickname", "vcert Unit Test")
-	enrollFlags.Set("cn", "unit.test.vcert")
-	enrollFlags.Set("o", "Venafi")
-	enrollFlags.Set("ou", "vcert Unit Testing")
-	cf := createFromCommandFlags(commandEnroll)
+	var flags commandFlags
+
+	//enrollFlags.Set("nickname", "vcert Unit Test")
+	//enrollFlags.Set("cn", "unit.test.vcert")
+	//enrollFlags.Set("o", "Venafi")
+	//enrollFlags.Set("ou", "vcert Unit Testing")
+
+	flags.distinguishedName = "vcert Unit Test"
+	flags.commonName = "unit.test.vcert"
+	flags.org = "Venafi"
+	flags.orgUnits = []string{"vcert Unit Testing"}
+
+	//cf := createFromCommandFlags(commandEnroll)
 
 	req := &certificate.Request{}
-	req = fillCertificateRequest(req, cf)
+	req = fillCertificateRequest(req, &flags)
 	if req == nil {
 		t.Fatalf("generateCertificateRequest returned a nil request")
 	}
-	if req.Subject.CommonName != cf.commonName {
-		t.Fatalf("generated request did not contain the expected common name, expected: %s -- actual: %s", cf.commonName, req.Subject.CommonName)
+	if req.Subject.CommonName != flags.commonName {
+		t.Fatalf("generated request did not contain the expected common name, expected: %s -- actual: %s", flags.commonName, req.Subject.CommonName)
 	}
 }
 
@@ -589,6 +599,9 @@ func TestGetFileWriter(t *testing.T) {
 }
 
 func TestReadPasswordFromInputFlags(t *testing.T) {
+
+	var flags commandFlags
+
 	f, err := ioutil.TempFile(os.TempDir(), "vcertTest")
 	if err != nil {
 		t.Fatalf("Failed to create temp file for testing readPasswordsFromInputFlags.  Error: %s", err)
@@ -600,20 +613,25 @@ func TestReadPasswordFromInputFlags(t *testing.T) {
 		t.Fatalf("Failed to write to temp file for testing readPasswordsFromInputFlags.  Error: %s", err)
 	}
 	f.Close()
-	enrollFlags.Set("tpp-url", "https://localhost")
-	enrollFlags.Set("tpp-password", fmt.Sprintf("file:%s", tempFileName))
-	enrollFlags.Set("key-password", fmt.Sprintf("file:%s", tempFileName))
-	cf := createFromCommandFlags(commandEnroll)
 
-	err = readPasswordsFromInputFlags(commandEnroll, cf)
+	//enrollFlags.Set("tpp-url", "https://localhost")
+	//enrollFlags.Set("tpp-password", fmt.Sprintf("file:%s", tempFileName))
+	//enrollFlags.Set("key-password", fmt.Sprintf("file:%s", tempFileName))
+	//cf := createFromCommandFlags(commandEnroll)
+
+	flags.url = "https://localhost"
+	flags.tppPassword = fmt.Sprintf("file:%s", tempFileName)
+	flags.keyPassword = fmt.Sprintf("file:%s", tempFileName)
+
+	err = readPasswordsFromInputFlags(commandEnrollName, &flags)
 	if err != nil {
 		t.Fatalf("Failed to readPasswordsFromInputFlags.  Error: %s", err)
 	}
-	if cf.tppPassword != "password0" {
-		t.Fatalf("tpp-password read from file did not match expected value.  Expected: password0 -- Actual: %s", cf.tppPassword)
+	if flags.tppPassword != "password0" {
+		t.Fatalf("tpp-password read from file did not match expected value.  Expected: password0 -- Actual: %s", flags.tppPassword)
 	}
-	if cf.keyPassword != "password1" {
-		t.Fatalf("key-password read from file did not match expected value.  Expected: password1 -- Actual: %s", cf.keyPassword)
+	if flags.keyPassword != "password1" {
+		t.Fatalf("key-password read from file did not match expected value.  Expected: password1 -- Actual: %s", flags.keyPassword)
 	}
 
 	enrollFlags.Set("tpp-password", fmt.Sprintf("file:%s", tempFileName))
@@ -628,22 +646,25 @@ func TestReadPasswordFromInputFlags(t *testing.T) {
 		t.Fatalf("Failed to write to temp file for testing readPasswordsFromInputFlags.  Error: %s", err)
 	}
 	f.Close()
-	enrollFlags.Set("key-password", fmt.Sprintf("file:%s", tempFileName))
-	cf = createFromCommandFlags(commandEnroll)
 
-	err = readPasswordsFromInputFlags(commandEnroll, cf)
+	//enrollFlags.Set("key-password", fmt.Sprintf("file:%s", tempFileName))
+	//cf = createFromCommandFlags(commandEnroll)
+	flags.keyPassword = fmt.Sprintf("file:%s", tempFileName)
+
+	err = readPasswordsFromInputFlags(commandEnrollName, &flags)
 	if err != nil {
 		t.Fatalf("Failed to readPasswordFromInput.  Error: %s", err)
 	}
-	if cf.tppPassword != "password0" {
-		t.Fatalf("tpp-password read from file did not match expected value.  Expected: password0 -- Actual: %s", cf.tppPassword)
+	if flags.tppPassword != "password0" {
+		t.Fatalf("tpp-password read from file did not match expected value.  Expected: password0 -- Actual: %s", flags.tppPassword)
 	}
-	if cf.keyPassword != "key-pass" {
-		t.Fatalf("key-password read from file did not match expected value.  Expected: key-pass -- Actual: %s", cf.keyPassword)
+	if flags.keyPassword != "key-pass" {
+		t.Fatalf("key-password read from file did not match expected value.  Expected: key-pass -- Actual: %s", flags.keyPassword)
 	}
 }
 
 func TestReadPasswordFromInput(t *testing.T) {
+
 	f, err := ioutil.TempFile(os.TempDir(), "vcertTest")
 	if err != nil {
 		t.Fatalf("Failed to create temp file for testing readPasswordFromInput.  Error: %s", err)

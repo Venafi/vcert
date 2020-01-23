@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func readFiles() {
+func readData(commandName string) {
 	if strings.HasPrefix(flags.distinguishedName, "file:") {
 		fileName := flags.distinguishedName[5:]
 		bytes, err := ioutil.ReadFile(fileName)
@@ -25,6 +25,10 @@ func readFiles() {
 			logger.Panicf("Failed to read certificate fingerprint: %s", err)
 		}
 	}
+
+	if err = readPasswordsFromInputFlags(commandName, &flags); err != nil {
+		logger.Panicf("Failed to read password from input: %s", err)
+	}
 }
 
 func validateCommonFlags(commandName string) error {
@@ -38,10 +42,6 @@ func validateCommonFlags(commandName string) error {
 	csrOptionRegex := regexp.MustCompile(`^file:.*$|^local$|^service$|^$`)
 	if !csrOptionRegex.MatchString(flags.csrOption) {
 		logger.Panicf("unexpected -csr option: %s", flags.csrOption)
-	}
-
-	if err := readPasswordsFromInputFlags(commandName, &flags); err != nil {
-		return fmt.Errorf(err.Error())
 	}
 
 	return nil
@@ -97,7 +97,7 @@ func validateEnrollFlags(commandName string) error {
 		return err
 	}
 
-	readFiles()
+	readData(commandName)
 	if strings.Index(flags.csrOption, "file:") == 0 {
 		if flags.commonName != "" {
 			return fmt.Errorf("The '-cn' option cannot be used in -csr file: provided mode")
@@ -174,7 +174,7 @@ func validateGetcredFlags1(commandName string) error {
 	if err != nil {
 		return err
 	}
-	readFiles()
+	readData(commandName)
 	if flags.tppToken == "" && flags.tppUser == "" && flags.clientP12 == "" {
 		return fmt.Errorf("either -username, -p12-file, or -t must be specified")
 	}
@@ -186,7 +186,7 @@ func validateGenerateFlags1(commandName string) error {
 	if err != nil {
 		return err
 	}
-	readFiles()
+	readData(commandName)
 	if flags.keyType == certificate.KeyTypeRSA && flags.keySize < 1024 {
 		return fmt.Errorf("Key Size must be 1024 or greater")
 	}
@@ -208,7 +208,7 @@ func validateRenewFlags1(commandName string) error {
 	if err != nil {
 		return err
 	}
-	readFiles()
+	readData(commandName)
 
 	if flags.distinguishedName == "" && flags.thumbprint == "" {
 		return fmt.Errorf("-id or -thumbprint required to identify the certificate to renew")
@@ -301,7 +301,7 @@ func validatePickupFlags1(commandName string) error {
 	if err != nil {
 		return err
 	}
-	readFiles()
+	readData(commandName)
 
 	if flags.pickupID == "" && flags.pickupIDFile == "" {
 		return fmt.Errorf("A Pickup ID is required to pickup a certificate provided by -pickup-id OR -pickup-id-file options")
@@ -332,7 +332,7 @@ func validateRevokeFlags1(commandName string) error {
 	if err != nil {
 		return err
 	}
-	readFiles()
+	readData(commandName)
 	if flags.distinguishedName == "" && flags.thumbprint == "" {
 		return fmt.Errorf("Certificate DN or Thumbprint is required to revoke the certificate")
 	}
