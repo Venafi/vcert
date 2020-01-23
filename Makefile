@@ -42,7 +42,6 @@ test: get
 	go test -v -cover ./pkg/certificate
 	go test -v -cover ./pkg/endpoint
 	go test -v -cover ./pkg/venafi/fake
-	go test -v -cover ./cmd/vcert/output
 	go test -v -cover ./cmd/vcert
 
 tpp_test: get
