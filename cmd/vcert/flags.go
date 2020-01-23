@@ -449,6 +449,8 @@ var (
 		flagPickupID,
 		flagTestMode,
 		flagTestModeDelay,
+		flagTimeout,
+		flagZone,
 	)
 
 	revokeFlags1 = append(
