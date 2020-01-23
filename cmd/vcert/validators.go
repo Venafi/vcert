@@ -122,10 +122,42 @@ func validateEnrollFlags() error {
 }
 
 func validateGetcredFlags1() error {
-	err := validateConnectionFlags()
-	if err != nil {
-		return err
+	var err error
+
+	if flags.config != "" {
+		if flags.apiKey != "" ||
+			flags.tppUser != "" ||
+			flags.tppPassword != "" ||
+			flags.tppToken != "" ||
+			flags.url != "" ||
+			flags.testMode {
+			return fmt.Errorf("connection details cannot be specified with flags when -config is used")
+		}
+	} else {
+		if flags.profile != "" {
+			return fmt.Errorf("-profile option cannot be used without -config option")
+		}
+		if flags.testMode {
+			return fmt.Errorf("There is no test mode for getcred command")
+		}
+		if flags.tppUser == "" && flags.tppToken == "" && flags.clientP12 == "" {
+			return fmt.Errorf("either -username, -p12-file, or -t must be specified")
+		}
+
+		if flags.url == "" {
+			return fmt.Errorf("missing -u (URL) parameter")
+		}
+
+		if flags.noPrompt && flags.tppPassword == "" && flags.tppToken == "" {
+			return fmt.Errorf("An access token or password is required for communicating with Trust Protection Platform")
+		}
+
+		// mutual TLS with TPP service
+		if flags.clientP12 == "" && flags.clientP12PW != "" {
+			return fmt.Errorf("-client-pkcs12-pw can only be specified in combination with -client-pkcs12")
+		}
 	}
+
 	err = validateCommonFlags()
 	if err != nil {
 		return err
