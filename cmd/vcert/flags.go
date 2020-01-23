@@ -255,7 +255,7 @@ var (
 	flagCSRFile = &cli.StringFlag{
 		Name:        "csr-file",
 		Usage:       "Use to specify a file name and a location where the resulting CSR file should be written. Example: /tmp/newcsr.pem",
-		Destination: &flags.csrOption,
+		Destination: &flags.csrFile,
 	}
 
 	flagKeyPassword = &cli.StringFlag{
