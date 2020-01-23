@@ -387,6 +387,8 @@ func TestValidateFlagsMixedEnrollmentFileOutputs(t *testing.T) {
 	flags.chainFile = ""
 	flags.certFile = ""
 	flags.keyFile = ""
+	flags.noPrompt = true
+	flags.commonName = "example.com"
 	err = validateEnrollFlags(commandEnrollName)
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -430,6 +432,7 @@ func TestValidateFlagsMixedPickupFileOutputs(t *testing.T) {
 	flags.file = "file123"
 	flags.chainFile = ""
 	flags.certFile = ""
+	flags.pickupID = "pickup/id"
 	err = validatePickupFlags1(commandPickupName)
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -451,18 +454,10 @@ func TestGetcredFlagsTrustBundle(t *testing.T) {
 
 	var err error
 
-	err = getcredFlags.Set("t", "3rlybZwAdV1qo/KpNJ5FWg==")
-	if err != nil {
-		t.Fatalf("%s", err)
-	}
-	err = getcredFlags.Set("u", "https://tpp.example.com")
-	if err != nil {
-		t.Fatalf("%s", err)
-	}
-	err = getcredFlags.Set("trust-bundle", "/opt/venafi/bundle.pem")
-	if err != nil {
-		t.Fatalf("%s", err)
-	}
+	flags.tppToken = "3rlybZwAdV1qo/KpNJ5FWg=="
+	flags.url = "https://tpp.example.com"
+	flags.trustBundle = "/opt/venafi/bundle.pem"
+
 	err = validateGetcredFlags1(commandGetcredName)
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -474,14 +469,10 @@ func TestGetcredFlagsNoTrust(t *testing.T) {
 	flags = commandFlags{}
 
 	var err error
-	err = getcredFlags.Set("t", "3rlybZwAdV1qo/KpNJ5FWg==")
-	if err != nil {
-		t.Fatalf("%s", err)
-	}
-	err = getcredFlags.Set("u", "https://tpp.example.com")
-	if err != nil {
-		t.Fatalf("%s", err)
-	}
+
+	flags.tppToken = "3rlybZwAdV1qo/KpNJ5FWg=="
+	flags.url = "https://tpp.example.com"
+
 	err = validateGetcredFlags1(commandGetcredName)
 	if err != nil {
 		t.Fatalf("%s", err)
