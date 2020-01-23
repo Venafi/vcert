@@ -92,6 +92,11 @@ func validateEnrollFlags() error {
 	if err != nil {
 		return err
 	}
+
+	if err := readPasswordsFromInputFlags(commandEnroll, &flags); err != nil {
+		return fmt.Errorf(err.Error())
+	}
+
 	readFiles()
 	if strings.Index(flags.csrOption, "file:") == 0 {
 		if flags.commonName != "" {
@@ -130,6 +135,10 @@ func validateEnrollFlags() error {
 
 func validateGetcredFlags1() error {
 	var err error
+
+	if err := readPasswordsFromInputFlags(commandGetcred, &flags); err != nil {
+		return fmt.Errorf(err.Error())
+	}
 
 	if flags.config != "" {
 		if flags.apiKey != "" ||
@@ -194,6 +203,11 @@ func validateGenerateFlags1() error {
 }
 
 func validateRenewFlags1() error {
+
+	if err := readPasswordsFromInputFlags(commandRenew, &flags); err != nil {
+		return fmt.Errorf(err.Error())
+	}
+
 	err := validateConnectionFlags()
 	if err != nil {
 		return err
@@ -286,6 +300,11 @@ func validatePKCS12Flags() error {
 }
 
 func validatePickupFlags1() error {
+
+	if err := readPasswordsFromInputFlags(commandPickup, &flags); err != nil {
+		return fmt.Errorf(err.Error())
+	}
+
 	err := validateConnectionFlags()
 	if err != nil {
 		return err
@@ -316,6 +335,11 @@ func validatePickupFlags1() error {
 }
 
 func validateRevokeFlags1() error {
+
+	if err := readPasswordsFromInputFlags(commandRevoke, &flags); err != nil {
+		return fmt.Errorf(err.Error())
+	}
+
 	err := validateConnectionFlags()
 	if err != nil {
 		return err
