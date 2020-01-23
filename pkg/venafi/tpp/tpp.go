@@ -41,6 +41,11 @@ const defaultSignatureAlgorithm = x509.SHA256WithRSA
 const defaultClientID = "vcert-go"
 const defaultScope = "certificate:manage,revoke;"
 
+type customField struct {
+	Name   string
+	Values []string
+}
+
 type certificateRequest struct {
 	PolicyDN                string          `json:",omitempty"`
 	CADN                    string          `json:",omitempty"`
@@ -59,6 +64,7 @@ type certificateRequest struct {
 	KeyBitSize              int             `json:",omitempty"`
 	EllipticCurve           string          `json:",omitempty"`
 	DisableAutomaticRenewal bool            `json:",omitempty"`
+	CustomFields            []customField   `json:",omitempty"`
 }
 
 type certificateRetrieveRequest struct {

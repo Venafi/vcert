@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"github.com/Venafi/vcert/pkg/verror"
 	"net/http"
 	"regexp"
 	"strings"
@@ -558,7 +559,7 @@ func (c *Connector) getManagedCertificate(managedCertId string) (*managedCertifi
 func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certificate.ImportResponse, error) {
 	pBlock, _ := pem.Decode([]byte(req.CertificateData))
 	if pBlock == nil {
-		return nil, fmt.Errorf("can`t parse certificate")
+		return nil, fmt.Errorf("%w can`t parse certificate", verror.UserDataError)
 	}
 	zone := req.PolicyDN
 	if zone == "" {
@@ -588,7 +589,7 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 	url := c.getURL(urlResourceDiscovery)
 	statusCode, status, body, err := c.request("POST", url, request)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %v", verror.ServerTemporaryUnavailableError, err)
 	}
 	var r struct {
 		CreatedCertificates int
@@ -596,20 +597,27 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 		UpdatedCertificates int
 		UpdatedInstances    int
 	}
+	switch statusCode {
+	case http.StatusOK, http.StatusCreated, http.StatusAccepted:
+	case http.StatusBadRequest, http.StatusForbidden, http.StatusConflict:
+		return nil, fmt.Errorf("%w: certificate can`t be imported. %d %s %s", verror.ServerBadDataResponce, statusCode, status, string(body))
+	case http.StatusInternalServerError, http.StatusBadGateway, http.StatusServiceUnavailable:
+		return nil, verror.ServerTemporaryUnavailableError
+	default:
+		return nil, verror.ServerError
+	}
 	err = json.Unmarshal(body, &r)
-	if statusCode != http.StatusCreated {
-		return nil, fmt.Errorf("bad server status responce %d %s", statusCode, status)
-	} else if err != nil {
-		return nil, fmt.Errorf("can`t unmarshal json response %s", err)
+	if err != nil {
+		return nil, fmt.Errorf("%w: can`t unmarshal json response %s", verror.ServerError, err)
 	} else if !(r.CreatedCertificates == 1 || r.UpdatedCertificates == 1) {
-		return nil, fmt.Errorf("certificate was not imported on unknown reason")
+		return nil, fmt.Errorf("%w: certificate was not imported on unknown reason", verror.ServerBadDataResponce)
 	}
 	foundCert, err := c.searchCertificatesByFingerprint(fingerprint)
 	if err != nil {
 		return nil, err
 	}
 	if len(foundCert.Certificates) != 1 {
-		return nil, fmt.Errorf("certificate has been imported but could not be found on platform after that")
+		return nil, fmt.Errorf("%w certificate has been imported but could not be found on platform after that", verror.ServerError)
 	}
 	cert := foundCert.Certificates[0]
 	resp := &certificate.ImportResponse{CertificateDN: cert.CurrentCertificateData.SubjectCN[0], CertId: cert.Id}

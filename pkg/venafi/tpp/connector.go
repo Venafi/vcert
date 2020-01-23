@@ -256,26 +256,24 @@ func wrapAltNames(req *certificate.Request) (items []sanItem) {
 func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRequest, err error) {
 	switch req.CsrOrigin {
 	case certificate.LocalGeneratedCSR, certificate.UserProvidedCSR:
-		tppReq = certificateRequest{
-			PolicyDN:                getPolicyDN(zone),
-			CADN:                    req.CADN,
-			PKCS10:                  string(req.GetCSR()),
-			ObjectName:              req.FriendlyName,
-			DisableAutomaticRenewal: true}
-
+		tppReq.PKCS10 = string(req.GetCSR())
 	case certificate.ServiceGeneratedCSR:
-		tppReq = certificateRequest{
-			PolicyDN:                getPolicyDN(zone),
-			CADN:                    req.CADN,
-			ObjectName:              req.FriendlyName,
-			Subject:                 req.Subject.CommonName, // TODO: there is some problem because Subject is not only CN
-			SubjectAltNames:         wrapAltNames(req),
-			DisableAutomaticRenewal: true}
-
+		tppReq.Subject = req.Subject.CommonName // TODO: there is some problem because Subject is not only CN
+		tppReq.SubjectAltNames = wrapAltNames(req)
 	default:
 		return tppReq, fmt.Errorf("Unexpected option in PrivateKeyOrigin")
 	}
-
+	tppReq.PolicyDN = getPolicyDN(zone)
+	tppReq.CADN = req.CADN
+	tppReq.ObjectName = req.FriendlyName
+	tppReq.DisableAutomaticRenewal = true
+	customFieldsMap := make(map[string][]string)
+	for _, f := range req.CustomFields {
+		customFieldsMap[f.Name] = append(customFieldsMap[f.Name], f.Value)
+	}
+	for name, value := range customFieldsMap {
+		tppReq.CustomFields = append(tppReq.CustomFields, customField{name, value})
+	}
 	switch req.KeyType {
 	case certificate.KeyTypeRSA:
 		tppReq.KeyAlgorithm = "RSA"
@@ -528,27 +526,25 @@ func (c *Connector) ImportCertificate(r *certificate.ImportRequest) (*certificat
 
 	statusCode, _, body, err := c.request("POST", urlResourceCertificateImport, r)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %v", verror.ServerTemporaryUnavailableError, err)
 	}
 	switch statusCode {
 	case http.StatusOK:
-
 		var response = &certificate.ImportResponse{}
 		err := json.Unmarshal(body, response)
 		if err != nil {
-			return nil, fmt.Errorf("failed to decode import response message: %s", err)
+			return nil, fmt.Errorf("%w: failed to decode import response message: %s", verror.ServerError, err)
 		}
 		return response, nil
-
 	case http.StatusBadRequest:
 		var errorResponse = &struct{ Error string }{}
 		err := json.Unmarshal(body, errorResponse)
 		if err != nil {
-			return nil, fmt.Errorf("failed to decode error message: %s", err)
+			return nil, fmt.Errorf("%w: failed to decode error message: %s", verror.ServerBadDataResponce, err)
 		}
-		return nil, fmt.Errorf("%s", errorResponse.Error)
+		return nil, fmt.Errorf("%w: can't import certificate %s", verror.ServerBadDataResponce, errorResponse.Error)
 	default:
-		return nil, fmt.Errorf("unexpected response status %d: %s", statusCode, string(body))
+		return nil, fmt.Errorf("%w: unexpected response status %d: %s", verror.ServerTemporaryUnavailableError, statusCode, string(body))
 	}
 }
 
