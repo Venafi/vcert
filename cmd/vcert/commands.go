@@ -14,6 +14,7 @@ import (
 	"golang.org/x/crypto/pkcs12"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -23,18 +24,21 @@ var (
 	tlsConfig      tls.Config
 	connectionType endpoint.ConnectorType
 	commandEnroll1 = &cli.Command{
+		Before: runBeforeCommand,
 		Flags:  enrollFlags1,
 		Action: doCommandEnroll1,
 		Name:   commandEnrollName,
 		Usage:  "To enroll a certificate,",
 	}
 	commandGetcred1 = &cli.Command{
+		Before: runBeforeCommand,
 		Name:   commandGetcredName,
 		Flags:  getcredFlags1,
 		Action: doCommandGetcred1,
 		Usage:  "To obtain a new token for authentication",
 	}
 	commandGenCSR1 = &cli.Command{
+		Before: runBeforeCommand,
 		Name:   commandGenCSRName,
 		Flags:  genCsrFlags1,
 		Action: doCommandGenCSR1,
@@ -44,24 +48,49 @@ var (
 			"\tgencsr -cn <common name> -o <organization> -ou <organizational unit> -ou <organizational unit2> -c <country> -st <state> -l <locality> -key-file <key output file> -csr-file <csr output file>\n",
 	}
 	commandPickup1 = &cli.Command{
+		Before: runBeforeCommand,
 		Name:   commandPickupName,
 		Flags:  pickupFlags1,
 		Action: doCommandPickup1,
 		Usage:  "To retrieve a certificate",
 	}
 	commandRevoke1 = &cli.Command{
+		Before: runBeforeCommand,
 		Name:   commandRevokeName,
 		Flags:  revokeFlags1,
 		Action: doCommandRevoke1,
 		Usage:  "To revoke a certificate",
 	}
 	commandRenew1 = &cli.Command{
+		Before: runBeforeCommand,
 		Name:   commandRenewName,
 		Flags:  renewFlags1,
 		Action: doCommandRenew1,
 		Usage:  "To renew a certificate",
 	}
 )
+
+func runBeforeCommand(c *cli.Context) error {
+	//TODO: move all flag validations here
+	if len(c.StringSlice("ou")) > 0 {
+		flags.orgUnits = c.StringSlice("ou")
+	}
+	if len(c.StringSlice("san-dns")) > 0 {
+		flags.dnsSans = c.StringSlice("san-dns")
+	}
+	if len(c.StringSlice("san-email")) > 0 {
+		flags.emailSans = c.StringSlice("san-email")
+	}
+	if len(c.StringSlice("san-ip")) > 0 {
+		for _, stringIP := range c.StringSlice("san-ip") {
+			ip := net.ParseIP(stringIP)
+			flags.ipSans = append(flags.ipSans, ip)
+		}
+
+	}
+
+	return nil
+}
 
 func setTLSConfig() {
 	//Set RenegotiateFreelyAsClient in case of we're communicating with MTLS TPP server with only user\password

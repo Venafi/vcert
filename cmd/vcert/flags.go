@@ -80,7 +80,6 @@ var (
 		Hidden:      true,
 	}
 
-	//todo: problem
 	flagKeyCurve = &cli.StringFlag{
 		Name:        "key-curve",
 		Usage:       "Use to specify the ECDSA key curve. Options include: p256 (default) | p521 | p384",
@@ -88,7 +87,6 @@ var (
 		Destination: &flags.keyCurveString,
 	}
 
-	//todo: problem
 	flagKeyType = &cli.StringFlag{
 		Name:        "key-type",
 		Usage:       "Use to specify a key type. Options include: rsa (default) | ecdsa",
@@ -139,27 +137,23 @@ var (
 		Destination: &flags.locality,
 	}
 
-	//todo: need to set destination for slice
 	flagOrgUnits = &cli.StringSliceFlag{
 		Name:  "ou",
 		Usage: "Use to specify organization unit OU",
 		//Destination: &flags.orgUnits,
 	}
 
-	//todo: need to set destination for slice
 	flagDNSSans = &cli.StringSliceFlag{
 		Name:  "san-dns",
 		Usage: "Use to specify a DNS Subject Alternative Name. To specify more than one, use spaces like this: -san-dns test.abc.xyz -san-dns test1.abc.xyz etc.",
 	}
 
-	//todo: need to set destination for slice
 	flagIPSans = &cli.StringSliceFlag{
 		Name: "san-ip",
 		Usage: "Use to specify an IP Address Subject Alternative Name. " +
 			"This option can be repeated to specify more than one value, like this: -san-ip 1.1.1.1 -san-ip 2.2.2.2.",
 	}
 
-	//todo: need to set destination for slice
 	flagEmailSans = &cli.StringSliceFlag{
 		Name: "san-email",
 		Usage: "Use to specify an Email Subject Alternative Name. " +
