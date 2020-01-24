@@ -444,6 +444,7 @@ var (
 		flagCertFile,
 		flagChainFile,
 		flagChainOption,
+		flagFile,
 		flagKeyFile,
 		flagKeyPassword,
 		flagPickupID,
