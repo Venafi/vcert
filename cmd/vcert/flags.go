@@ -83,21 +83,18 @@ var (
 	flagKeyCurve = &cli.StringFlag{
 		Name:        "key-curve",
 		Usage:       "Use to specify the ECDSA key curve. Options include: p256 (default) | p521 | p384",
-		Value:       "p256",
 		Destination: &flags.keyCurveString,
 	}
 
 	flagKeyType = &cli.StringFlag{
 		Name:        "key-type",
 		Usage:       "Use to specify a key type. Options include: rsa (default) | ecdsa",
-		Value:       "rsa",
 		Destination: &flags.keyTypeString,
 	}
 
 	flagKeySize = &cli.IntFlag{
 		Name:        "key-size",
 		Usage:       "Use to specify a key size (default 2048).",
-		Value:       2048,
 		Destination: &flags.keySize,
 	}
 
