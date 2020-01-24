@@ -27,12 +27,12 @@ import (
 	"github.com/Venafi/vcert/pkg/endpoint"
 )
 
-func buildConfig(c *cli.Context, cf *commandFlags) (cfg vcert.Config, err error) {
-	cfg.LogVerbose = cf.verbose
+func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err error) {
+	cfg.LogVerbose = flags.verbose
 
-	if cf.config != "" {
+	if flags.config != "" {
 		// Loading configuration from file
-		cfg, err = vcert.LoadConfigFromFile(cf.config, cf.profile)
+		cfg, err = vcert.LoadConfigFromFile(flags.config, flags.profile)
 		if err != nil {
 			return cfg, err
 		}
@@ -41,36 +41,36 @@ func buildConfig(c *cli.Context, cf *commandFlags) (cfg vcert.Config, err error)
 		var connectorType endpoint.ConnectorType
 		var baseURL string
 		var auth = &endpoint.Authentication{}
-		if cf.testMode {
+		if flags.testMode {
 			connectorType = endpoint.ConnectorTypeFake
-			if cf.testModeDelay > 0 {
+			if flags.testModeDelay > 0 {
 				logger.Println("Running in -test-mode with emulating endpoint delay.")
-				var delay = rand.Intn(cf.testModeDelay)
+				var delay = rand.Intn(flags.testModeDelay)
 				for i := 0; i < delay; i++ {
 					time.Sleep(1 * time.Second)
 				}
 			}
-		} else if cf.tppUser != "" || cf.tppToken != "" || cf.clientP12 != "" {
+		} else if flags.tppUser != "" || flags.tppToken != "" || flags.clientP12 != "" {
 			connectorType = endpoint.ConnectorTypeTPP
-			baseURL = cf.url
-			if cf.tppToken == "" && cf.tppPassword == "" && cf.clientP12 == "" {
+			baseURL = flags.url
+			if flags.tppToken == "" && flags.tppPassword == "" && flags.clientP12 == "" {
 				logger.Panicf("A password is required to communicate with TPP")
 			}
 
-			if cf.tppToken != "" {
+			if flags.tppToken != "" {
 				if c.Command.Name == commandGetcredName {
-					auth.RefreshToken = cf.tppToken
+					auth.RefreshToken = flags.tppToken
 				} else {
-					auth.AccessToken = cf.tppToken
+					auth.AccessToken = flags.tppToken
 				}
 			} else {
-				auth.User = cf.tppUser
-				auth.Password = cf.tppPassword
+				auth.User = flags.tppUser
+				auth.Password = flags.tppPassword
 			}
 		} else {
 			connectorType = endpoint.ConnectorTypeCloud
-			baseURL = cf.url
-			auth.APIKey = cf.apiKey
+			baseURL = flags.url
+			auth.APIKey = flags.apiKey
 		}
 		cfg.ConnectorType = connectorType
 		cfg.Credentials = auth
@@ -78,12 +78,12 @@ func buildConfig(c *cli.Context, cf *commandFlags) (cfg vcert.Config, err error)
 	}
 
 	// trust bundle may be overridden by CLI flag
-	if cf.trustBundle != "" {
+	if flags.trustBundle != "" {
 		logger.Println("Detected trust bundle flag at CLI.")
 		if cfg.ConnectionTrust != "" {
 			logf("Overriding trust bundle based on command line flag.")
 		}
-		data, err := ioutil.ReadFile(cf.trustBundle)
+		data, err := ioutil.ReadFile(flags.trustBundle)
 		if err != nil {
 			logger.Panicf("Failed to read trust bundle: %s", err)
 		}
@@ -91,14 +91,14 @@ func buildConfig(c *cli.Context, cf *commandFlags) (cfg vcert.Config, err error)
 	}
 
 	// zone may be overridden by CLI flag
-	if cf.zone != "" {
+	if flags.zone != "" {
 		if cfg.Zone != "" {
 			logf("Overriding zone based on command line flag.")
 		}
-		cfg.Zone = cf.zone
+		cfg.Zone = flags.zone
 	}
 	if c.Command.Name == commandEnrollName || c.Command.Name == commandPickupName {
-		if cfg.Zone == "" && cfg.ConnectorType != endpoint.ConnectorTypeFake && !(cf.pickupID != "" || cf.pickupIDFile != "") {
+		if cfg.Zone == "" && cfg.ConnectorType != endpoint.ConnectorTypeFake && !(flags.pickupID != "" || flags.pickupIDFile != "") {
 			return cfg, fmt.Errorf("Zone cannot be empty. Use -z option")
 		}
 	}
