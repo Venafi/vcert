@@ -112,8 +112,32 @@ func validateEnrollFlags(commandName string) error {
 		return fmt.Errorf("The `-chain ignore` option cannot be used with -chain-file option")
 	}
 
-	if flags.zone == "" {
-		return fmt.Errorf("A zone is required for requesting a certificate from Venafi Cloud")
+	if !flags.testMode && flags.config == "" {
+		if flags.tppUser == "" && flags.tppToken == "" {
+			// should be SaaS endpoint
+			if flags.apiKey == "" {
+				return fmt.Errorf("An API key is required for enrollment with Venafi Cloud")
+			}
+			if flags.zone == "" {
+				return fmt.Errorf("A zone is required for requesting a certificate from Venafi Cloud")
+			}
+		} else {
+			// should be TPP service
+			if flags.tppUser == "" && flags.tppToken == "" {
+				return fmt.Errorf("An access token or username is required for communicating with Trust Protection Platform")
+			}
+			if flags.noPrompt && flags.tppPassword == "" && flags.tppToken == "" {
+				return fmt.Errorf("An access token or password is required for communicating with Trust Protection Platform")
+			}
+			if flags.zone == "" {
+				return fmt.Errorf("A zone is required for requesting a certificate from Trust Protection Platform")
+			}
+
+			// mutual TLS with TPP service
+			if flags.clientP12 == "" && flags.clientP12PW != "" {
+				return fmt.Errorf("-client-pkcs12-pw can only be specified in combination with -client-pkcs12")
+			}
+		}
 	}
 
 	if flags.csrOption == "file" && flags.keyFile != "" { // Do not specify -key-file with -csr file as VCert cannot access the private key
