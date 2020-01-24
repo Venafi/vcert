@@ -87,6 +87,39 @@ func validateConnectionFlags(commandName string) error {
 	return nil
 }
 
+func validatePKCS12Flags(commandName string) error {
+	if flags.format == "pkcs12" {
+		if commandName == commandEnrollName {
+			if flags.file == "" && flags.csrOption != "service" {
+				return fmt.Errorf("PKCS#12 format can only be used if all objects are written to one file (see -file option)")
+			}
+			if flags.certFile != "" || flags.chainFile != "" || flags.keyFile != "" {
+				return fmt.Errorf("The '-file' cannot be used used with any other -*-file flags. Either all data goes into one file or individual files must be specified using the appropriate flags")
+			}
+			if strings.Index(flags.csrOption, "file:") == 0 {
+				return fmt.Errorf(`PKCS#12 format is not allowed for the enroll or renew actions when -csr is "file"`)
+			}
+			if (flags.csrOption == "" || flags.csrOption == "local") && flags.noPickup {
+				return fmt.Errorf(`PKCS#12 format is not allowed for the enroll or renew actions when -csr is "local" and -no-pickup is specified`)
+			}
+		} else {
+			if flags.file == "" { // todo: for enroll it also checks  flags.csrOption != "service"
+				return fmt.Errorf("PKCS#12 format can only be used if all objects are written to one file (see -file option)")
+			}
+		}
+		if flags.certFile != "" || flags.chainFile != "" || flags.keyFile != "" {
+			return fmt.Errorf("The '-file' cannot be used used with any other -*-file flags. Either all data goes into one file or individual files must be specified using the appropriate flags")
+		}
+		if strings.HasPrefix(flags.csrOption, "file:") {
+			return fmt.Errorf(`PKCS#12 format is not allowed for the enroll or renew actions when -csr is "file"`)
+		}
+		if (flags.csrOption == "" || flags.csrOption == "local") && flags.noPickup {
+			return fmt.Errorf(`PKCS#12 format is not allowed for the enroll or renew actions when -csr is "local" and -no-pickup is specified`)
+		}
+	}
+	return nil
+}
+
 func validateEnrollFlags(commandName string) error {
 	err := validateConnectionFlags(commandName)
 	if err != nil {
@@ -205,6 +238,12 @@ func validateGetcredFlags1(commandName string) error {
 	if flags.tppToken == "" && flags.tppUser == "" && flags.clientP12 == "" {
 		return fmt.Errorf("either -username, -p12-file, or -t must be specified")
 	}
+
+	err = validatePKCS12Flags(commandName)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -300,24 +339,6 @@ func validateRenewFlags1(commandName string) error {
 	return nil
 }
 
-func validatePKCS12Flags(commandName string) error {
-	if flags.format == "pkcs12" {
-		if flags.file == "" { // todo: for enroll it also checks  flags.csrOption != "service"
-			return fmt.Errorf("PKCS#12 format can only be used if all objects are written to one file (see -file option)")
-		}
-		if flags.certFile != "" || flags.chainFile != "" || flags.keyFile != "" {
-			return fmt.Errorf("The '-file' cannot be used used with any other -*-file flags. Either all data goes into one file or individual files must be specified using the appropriate flags")
-		}
-		if strings.HasPrefix(flags.csrOption, "file:") {
-			return fmt.Errorf(`PKCS#12 format is not allowed for the enroll or renew actions when -csr is "file"`)
-		}
-		if (flags.csrOption == "" || flags.csrOption == "local") && flags.noPickup {
-			return fmt.Errorf(`PKCS#12 format is not allowed for the enroll or renew actions when -csr is "local" and -no-pickup is specified`)
-		}
-	}
-	return nil
-}
-
 func validatePickupFlags1(commandName string) error {
 
 	err := validateConnectionFlags(commandName)
@@ -337,13 +358,9 @@ func validatePickupFlags1(commandName string) error {
 		return fmt.Errorf("Both -pickup-id and -pickup-id-file options cannot be specified at the same time")
 	}
 
-	if flags.format == "pkcs12" {
-		if flags.file == "" {
-			return fmt.Errorf("PKCS#12 format can only be used if all objects are written to one file (see -file option)")
-		}
-		if flags.certFile != "" || flags.chainFile != "" || flags.keyFile != "" {
-			return fmt.Errorf("The '-file' cannot be used used with any other -*-file flags. Either all data goes into one file or individual files must be specified using the appropriate flags")
-		}
+	err = validatePKCS12Flags(commandName)
+	if err != nil {
+		return err
 	}
 
 	return nil
