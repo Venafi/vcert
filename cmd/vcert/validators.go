@@ -44,6 +44,28 @@ func validateCommonFlags(commandName string) error {
 		logger.Panicf("unexpected -csr option: %s", flags.csrOption)
 	}
 
+	switch flags.keyTypeString {
+	case "rsa":
+		flags.keyType = certificate.KeyTypeRSA
+	case "ecdsa":
+		flags.keyType = certificate.KeyTypeECDSA
+	case "":
+	default:
+		logger.Panicf("unknown key type: %s", flags.keyTypeString)
+	}
+
+	switch flags.keyCurveString {
+	case "p256":
+		flags.keyCurve = certificate.EllipticCurveP256
+	case "p384":
+		flags.keyCurve = certificate.EllipticCurveP384
+	case "p521":
+		flags.keyCurve = certificate.EllipticCurveP521
+	case "":
+	default:
+		logger.Panicf("unknown EC key curve: %s", flags.keyTypeString)
+
+	}
 	return nil
 }
 
