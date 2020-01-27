@@ -29,16 +29,6 @@ var (
 	exit   = os.Exit
 )
 
-func init() {
-	setupGenCsrCommandFlags()
-	setupEnrollCommandFlags()
-	setupRetrieveCommandFlags()
-	setupRevokeCommandFlags()
-	setupRenewCommandFlags()
-	setupGetcredCommandFlags()
-
-}
-
 func main() {
 	defer func() {
 		if r := recover(); r != nil {
@@ -53,10 +43,11 @@ func main() {
 	}()
 
 	app := &cli.App{
-		Usage:     UtilityName,
-		UsageText: "",
-		Version:   GetFormattedVersionString(), //todo: replace with plain version
-		Compiled:  time.Now(),                  //todo: replace with parsing vcert.versionBuildTimeStamp
+		Usage: UtilityName,
+		UsageText: `vcert command [command options]
+   for command help run: vcert command -h`,
+		Version:  GetFormattedVersionString(), //todo: replace with plain version
+		Compiled: time.Now(),                  //todo: replace with parsing vcert.versionBuildTimeStamp
 		Commands: []*cli.Command{
 			commandGetcred1,
 			commandGenCSR1,

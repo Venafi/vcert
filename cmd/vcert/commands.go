@@ -16,6 +16,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 )
@@ -42,8 +43,8 @@ var (
 		Name:   commandGenCSRName,
 		Flags:  genCsrFlags1,
 		Action: doCommandGenCSR1,
-		Usage: "To generate a certificate signing request (CSR)\n" +
-			"\tExamples:\n" +
+		Usage:  "To generate a certificate signing request (CSR)",
+		UsageText: "\tExamples:\n" +
 			"\tgencsr -cn <common name> -o <organization> -ou <organizational unit> -c <country> -st <state> -l <locality> -key-file <key output file> -csr-file <csr output file>\n" +
 			"\tgencsr -cn <common name> -o <organization> -ou <organizational unit> -ou <organizational unit2> -c <country> -st <state> -l <locality> -key-file <key output file> -csr-file <csr output file>\n",
 	}
@@ -625,4 +626,77 @@ func doCommandRenew1(c *cli.Context) error {
 		logger.Panicf("Failed to output the results: %s", err)
 	}
 	return nil
+}
+
+func generateCsrForCommandGenCsr(cf *commandFlags, privateKeyPass []byte) (privateKey []byte, csr []byte, err error) {
+	certReq := &certificate.Request{}
+	certReq.KeyType = cf.keyType
+	certReq.KeyLength = cf.keySize
+	certReq.KeyCurve = cf.keyCurve
+	err = certReq.GeneratePrivateKey()
+	if err != nil {
+		return
+	}
+
+	var pBlock *pem.Block
+	if len(privateKeyPass) == 0 {
+		pBlock, err = certificate.GetPrivateKeyPEMBock(certReq.PrivateKey)
+		if err != nil {
+			return
+		}
+		privateKey = pem.EncodeToMemory(pBlock)
+	} else {
+		pBlock, err = certificate.GetEncryptedPrivateKeyPEMBock(certReq.PrivateKey, privateKeyPass)
+		if err != nil {
+			return
+		}
+		privateKey = pem.EncodeToMemory(pBlock)
+	}
+	certReq = fillCertificateRequest(certReq, cf)
+	err = certReq.GenerateCSR()
+	if err != nil {
+		return
+	}
+	err = certReq.GeneratePrivateKey()
+	if err != nil {
+		return
+	}
+	csr = certReq.GetCSR()
+
+	return
+}
+
+func writeOutKeyAndCsr(cf *commandFlags, key []byte, csr []byte) (err error) {
+
+	if cf.file != "" {
+		writer := getFileWriter(cf.file)
+		f, ok := writer.(*os.File)
+		if ok {
+			defer f.Close()
+		}
+
+		_, err = writer.Write(key)
+		if err != nil {
+			return err
+		}
+		_, err = writer.Write(csr)
+		return
+	}
+
+	keyWriter := getFileWriter(cf.keyFile)
+	keyFile, ok := keyWriter.(*os.File)
+	if ok {
+		defer keyFile.Close()
+	}
+	_, err = keyWriter.Write(key)
+	if err != nil {
+		return err
+	}
+	csrWriter := getFileWriter(cf.csrFile)
+	csrFile, ok := csrWriter.(*os.File)
+	if ok {
+		defer csrFile.Close()
+	}
+	_, err = csrWriter.Write(csr)
+	return
 }

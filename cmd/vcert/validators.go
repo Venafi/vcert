@@ -8,6 +8,16 @@ import (
 	"strings"
 )
 
+// RevocationReasonOptions is an array of strings containing reasons for certificate revocation
+var RevocationReasonOptions = []string{
+	"none",
+	"key-compromise",
+	"ca-compromise",
+	"affiliation-changed",
+	"superseded",
+	"cessation-of-operation",
+}
+
 func readData(commandName string) {
 	if strings.HasPrefix(flags.distinguishedName, "file:") {
 		fileName := flags.distinguishedName[5:]
