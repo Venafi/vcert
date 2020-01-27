@@ -81,7 +81,7 @@ func AllSupportedCurves() []EllipticCurve {
 	return []EllipticCurve{EllipticCurveP521, EllipticCurveP256, EllipticCurveP384}
 }
 func AllSupportedKeySizes() []int {
-	return []int{512, 1024, 2048, 4096, 8192}
+	return []int{1024, 2048, 4096, 8192}
 }
 
 // KeyType represents the types of supported keys
@@ -296,6 +296,9 @@ func (request *Request) GeneratePrivateKey() error {
 	case KeyTypeRSA:
 		if request.KeyLength == 0 {
 			request.KeyLength = defaultRSAlength
+		}
+		if request.KeyLength < AllSupportedKeySizes()[0] {
+			return fmt.Errorf("key Size must be %d or greater. But it is %d", AllSupportedKeySizes()[0], request.KeyLength)
 		}
 		request.PrivateKey, err = GenerateRSAPrivateKey(request.KeyLength)
 	default:

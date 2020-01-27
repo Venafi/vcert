@@ -275,9 +275,6 @@ func validateGenerateFlags1(commandName string) error {
 		return err
 	}
 	readData(commandName)
-	if flags.keyType == certificate.KeyTypeRSA && flags.keySize < 1024 {
-		return fmt.Errorf("Key Size must be 1024 or greater")
-	}
 
 	if flags.commonName == "" && len(flags.dnsSans) == 0 {
 		return fmt.Errorf("A Common Name (cn) or Subject Alternative Name: DNS (san-dns) value is required")
