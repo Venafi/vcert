@@ -17,5 +17,5 @@ Feature: Showing usage text page
     When I run `vcert enroll -h`
     Then the output should contain:
       """
-      Enrollment Usage
+      vcert enroll - To enroll a certificate
       """
