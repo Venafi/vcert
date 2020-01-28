@@ -86,8 +86,8 @@ GLOBAL OPTIONS:
 COPYRIGHT:
    {{.Copyright}}
    {{end}}{{if .Version}}
-VERSION:
-   {{.Version}}
+SUPPORT:
+	opensource@venafi.com
    {{end}}
 `, vcert.GetFormattedVersionString(), vcert.GetFormatedBuildTimeStamp())
 

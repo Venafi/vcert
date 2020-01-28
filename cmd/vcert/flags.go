@@ -299,15 +299,25 @@ var (
 	}
 
 	flagClientP12 = &cli.StringFlag{
-		Name:        "client-pkcs12",
-		Aliases:     []string{"p12-file"},
+		Name:        "p12-file",
 		Usage:       "Use to specify a client PKCS#12 archive for mutual TLS (for 2FA, use the getcred action to authenticate with Venafi Platform using a client certificate).",
 		Destination: &flags.clientP12,
 	}
 
 	flagClientP12PW = &cli.StringFlag{
+		Name:        "p12-password",
+		Usage:       "Use to specify the password for a client PKCS#12 archive. Use in combination with -client-pkcs12 option.",
+		Destination: &flags.clientP12PW,
+	}
+
+	flagClientP12Deprecated = &cli.StringFlag{
+		Name:        "client-pkcs12",
+		Usage:       "Use to specify a client PKCS#12 archive for mutual TLS (for 2FA, use the getcred action to authenticate with Venafi Platform using a client certificate).",
+		Destination: &flags.clientP12,
+	}
+
+	flagClientP12PWDeprecated = &cli.StringFlag{
 		Name:        "client-pkcs12-pw",
-		Aliases:     []string{"p12-password"},
 		Usage:       "Use to specify the password for a client PKCS#12 archive. Use in combination with -client-pkcs12 option.",
 		Destination: &flags.clientP12PW,
 	}
@@ -369,6 +379,8 @@ var (
 		flagTPPUserDeprecated,
 		flagClientP12,
 		flagClientP12PW,
+		flagClientP12Deprecated,
+		flagClientP12PWDeprecated,
 		flagConfig,
 		flagProfile,
 		flagTrustBundle,
@@ -398,6 +410,7 @@ var (
 
 	enrollFlags1 = append(
 		credentialsFlags,
+		flagZone,
 		flagCADN,
 		flagCertFile,
 		flagChainFile,

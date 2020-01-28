@@ -28,9 +28,9 @@ import (
 func readPasswordsFromInputFlags(commandName string, cf *commandFlags) error {
 	lineIndex := 0
 
-	if (commandName == commandEnrollName && (cf.tppURL != "" || cf.url != "")) ||
-		(commandName == commandPickupName && (cf.tppURL != "" || cf.url != "")) ||
-		(commandName == commandGetcredName && (cf.tppURL != "" || cf.url != "")) {
+	if (commandName == commandEnrollName && cf.url != "") ||
+		(commandName == commandPickupName && cf.url != "") ||
+		(commandName == commandGetcredName && cf.url != "") {
 		if cf.clientP12 != "" && cf.clientP12PW == "" {
 			fmt.Printf("Enter password for %s:", cf.clientP12)
 			input, err := gopass.GetPasswdMasked()
@@ -62,7 +62,7 @@ func readPasswordsFromInputFlags(commandName string, cf *commandFlags) error {
 
 		keyPasswordNotNeeded = keyPasswordNotNeeded || (cf.csrOption == "service" && cf.noPickup)
 		keyPasswordNotNeeded = keyPasswordNotNeeded || (strings.Index(cf.csrOption, "file:") == 0)
-		keyPasswordNotNeeded = keyPasswordNotNeeded || (cf.csrOption == "service" && cf.tppURL == "")
+		keyPasswordNotNeeded = keyPasswordNotNeeded || (cf.csrOption == "service" && cf.url == "")
 
 		if !keyPasswordNotNeeded {
 			if cf.keyPassword == "" && !cf.noPrompt {
