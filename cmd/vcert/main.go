@@ -53,8 +53,8 @@ func main() {
 
 	app := &cli.App{
 		Usage: UtilityName,
-		UsageText: `vcert command [command options]
-   for command help run: vcert command -h`,
+		UsageText: `vcert action [action options]
+   for command help run: vcert action -h`,
 		Version:  vcert.GetFormattedVersionString(), //todo: replace with plain version
 		Compiled: time.Now(),                        //todo: replace with parsing vcert.versionBuildTimeStamp
 		Commands: []*cli.Command{
