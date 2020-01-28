@@ -18,12 +18,12 @@ var RevocationReasonOptions = []string{
 	"cessation-of-operation",
 }
 
-func readData(commandName string) {
+func readData(commandName string) error {
 	if strings.HasPrefix(flags.distinguishedName, "file:") {
 		fileName := flags.distinguishedName[5:]
 		bytes, err := ioutil.ReadFile(fileName)
 		if err != nil {
-			logger.Panicf("Failed to read Certificate DN: %s", err)
+			return fmt.Errorf("Failed to read Certificate DN: %s", err)
 		}
 		flags.distinguishedName = strings.TrimSpace(string(bytes))
 	}
@@ -32,13 +32,14 @@ func readData(commandName string) {
 		certFileName := flags.thumbprint[5:]
 		flags.thumbprint, err = readThumbprintFromFile(certFileName)
 		if err != nil {
-			logger.Panicf("Failed to read certificate fingerprint: %s", err)
+			return fmt.Errorf("Failed to read certificate fingerprint: %s", err)
 		}
 	}
 
 	if err = readPasswordsFromInputFlags(commandName, &flags); err != nil {
-		logger.Panicf("Failed to read password from input: %s", err)
+		return fmt.Errorf("Failed to read password from input: %s", err)
 	}
+	return nil
 }
 
 func validateCommonFlags(commandName string) error {
@@ -51,7 +52,7 @@ func validateCommonFlags(commandName string) error {
 
 	csrOptionRegex := regexp.MustCompile(`^file:.*$|^local$|^service$|^$`)
 	if !csrOptionRegex.MatchString(flags.csrOption) {
-		logger.Panicf("unexpected -csr option: %s", flags.csrOption)
+		return fmt.Errorf("unexpected -csr option: %s", flags.csrOption)
 	}
 
 	switch flags.keyTypeString {
@@ -61,7 +62,7 @@ func validateCommonFlags(commandName string) error {
 		flags.keyType = certificate.KeyTypeECDSA
 	case "":
 	default:
-		logger.Panicf("unknown key type: %s", flags.keyTypeString)
+		return fmt.Errorf("unknown key type: %s", flags.keyTypeString)
 	}
 
 	switch flags.keyCurveString {
@@ -73,7 +74,7 @@ func validateCommonFlags(commandName string) error {
 		flags.keyCurve = certificate.EllipticCurveP521
 	case "":
 	default:
-		logger.Panicf("unknown EC key curve: %s", flags.keyTypeString)
+		return fmt.Errorf("unknown EC key curve: %s", flags.keyTypeString)
 
 	}
 	return nil
@@ -162,7 +163,10 @@ func validateEnrollFlags(commandName string) error {
 		return err
 	}
 
-	readData(commandName)
+	err = readData(commandName)
+	if err != nil {
+		return err
+	}
 	if strings.Index(flags.csrOption, "file:") == 0 {
 		if flags.commonName != "" {
 			return fmt.Errorf("The '-cn' option cannot be used in -csr file: provided mode")
@@ -266,7 +270,10 @@ func validateGetcredFlags1(commandName string) error {
 	if err != nil {
 		return err
 	}
-	readData(commandName)
+	err = readData(commandName)
+	if err != nil {
+		return err
+	}
 	if flags.tppToken == "" && flags.tppUser == "" && flags.clientP12 == "" {
 		return fmt.Errorf("either -username, -p12-file, or -t must be specified")
 	}
@@ -284,7 +291,10 @@ func validateGenerateFlags1(commandName string) error {
 	if err != nil {
 		return err
 	}
-	readData(commandName)
+	err = readData(commandName)
+	if err != nil {
+		return err
+	}
 
 	if flags.commonName == "" && len(flags.dnsSans) == 0 {
 		return fmt.Errorf("A Common Name (cn) or Subject Alternative Name: DNS (san-dns) value is required")
@@ -303,7 +313,10 @@ func validateRenewFlags1(commandName string) error {
 	if err != nil {
 		return err
 	}
-	readData(commandName)
+	err = readData(commandName)
+	if err != nil {
+		return err
+	}
 
 	if flags.distinguishedName == "" && flags.thumbprint == "" {
 		return fmt.Errorf("-id or -thumbprint required to identify the certificate to renew")
@@ -378,7 +391,10 @@ func validatePickupFlags1(commandName string) error {
 	if err != nil {
 		return err
 	}
-	readData(commandName)
+	err = readData(commandName)
+	if err != nil {
+		return err
+	}
 
 	if flags.pickupID == "" && flags.pickupIDFile == "" {
 		return fmt.Errorf("A Pickup ID is required to pickup a certificate provided by -pickup-id OR -pickup-id-file options")
@@ -405,7 +421,10 @@ func validateRevokeFlags1(commandName string) error {
 	if err != nil {
 		return err
 	}
-	readData(commandName)
+	err = readData(commandName)
+	if err != nil {
+		return err
+	}
 	if flags.distinguishedName == "" && flags.thumbprint == "" {
 		return fmt.Errorf("Certificate DN or Thumbprint is required to revoke the certificate")
 	}

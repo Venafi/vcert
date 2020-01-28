@@ -93,7 +93,7 @@ func runBeforeCommand(c *cli.Context) error {
 	return nil
 }
 
-func setTLSConfig() {
+func setTLSConfig() error {
 	//Set RenegotiateFreelyAsClient in case of we're communicating with MTLS TPP server with only user\password
 	if flags.apiKey == "" {
 		tlsConfig.Renegotiation = tls.RenegotiateFreelyAsClient
@@ -107,12 +107,12 @@ func setTLSConfig() {
 		// Load client PKCS#12 archive
 		p12, err := ioutil.ReadFile(flags.clientP12)
 		if err != nil {
-			logger.Panicf("Error reading PKCS#12 archive file: %s", err)
+			return fmt.Errorf("Error reading PKCS#12 archive file: %s", err)
 		}
 
 		blocks, err := pkcs12.ToPEM(p12, flags.clientP12PW)
 		if err != nil {
-			logger.Panicf("Error converting PKCS#12 archive file to PEM blocks: %s", err)
+			return fmt.Errorf("Error converting PKCS#12 archive file to PEM blocks: %s", err)
 		}
 
 		var pemData []byte
@@ -123,7 +123,7 @@ func setTLSConfig() {
 		// Construct TLS certificate from PEM data
 		cert, err := tls.X509KeyPair(pemData, pemData)
 		if err != nil {
-			logger.Panicf("Error reading PEM data to build X.509 certificate: %s", err)
+			return fmt.Errorf("Error reading PEM data to build X.509 certificate: %s", err)
 		}
 
 		caCertPool := x509.NewCertPool()
@@ -137,6 +137,8 @@ func setTLSConfig() {
 
 	//Setting TLS configuration
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tlsConfig
+
+	return nil
 }
 
 func doCommandEnroll1(c *cli.Context) error {
@@ -144,8 +146,10 @@ func doCommandEnroll1(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	setTLSConfig()
-
+	err = setTLSConfig()
+	if err != nil {
+		return err
+	}
 	cfg, err := buildConfig(c, &flags)
 	if err != nil {
 		return fmt.Errorf("Failed to build vcert config: %s", err)
@@ -240,7 +244,10 @@ func doCommandGetcred1(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	setTLSConfig()
+	err = setTLSConfig()
+	if err != nil {
+		return err
+	}
 
 	cfg, err := buildConfig(c, &flags)
 	if err != nil {
@@ -362,7 +369,10 @@ func doCommandPickup1(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	setTLSConfig()
+	err = setTLSConfig()
+	if err != nil {
+		return err
+	}
 
 	cfg, err := buildConfig(c, &flags)
 	if err != nil {
@@ -427,7 +437,10 @@ func doCommandRevoke1(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	setTLSConfig()
+	err = setTLSConfig()
+	if err != nil {
+		return err
+	}
 
 	cfg, err := buildConfig(c, &flags)
 	if err != nil {
@@ -481,7 +494,11 @@ func doCommandRenew1(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	setTLSConfig()
+
+	err = setTLSConfig()
+	if err != nil {
+		return err
+	}
 
 	cfg, err := buildConfig(c, &flags)
 	if err != nil {
