@@ -363,14 +363,14 @@ var (
 
 	credentialsFlags = append(
 		commonFlags,
-		flagClientP12,
-		flagClientP12PW,
-		flagConfig,
 		flagKey,
-		flagProfile,
 		flagTPPPasswordDeprecated,
 		flagTPPToken,
 		flagTPPUserDeprecated,
+		flagClientP12,
+		flagClientP12PW,
+		flagConfig,
+		flagProfile,
 		flagTrustBundle,
 		flagUrl,
 		flagUrlDeprecated,
@@ -403,7 +403,6 @@ var (
 		flagChainFile,
 		flagChainOption,
 		flagCommonName,
-		flagCountry,
 		flagCSROption,
 		flagDistinguishedName,
 		flagDNSSans,
@@ -416,16 +415,11 @@ var (
 		flagKeyPassword,
 		flagKeySize,
 		flagKeyType,
-		flagLocality,
 		flagNoPickup,
-		flagOrg,
-		flagOrgUnits,
 		flagPickupIDFile,
-		flagState,
 		flagTestMode,
 		flagTestModeDelay,
 		flagTimeout,
-		flagZone,
 	)
 
 	pickupFlags1 = append(
