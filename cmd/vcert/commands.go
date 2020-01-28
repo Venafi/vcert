@@ -148,7 +148,7 @@ func doCommandEnroll1(c *cli.Context) error {
 
 	cfg, err := buildConfig(c, &flags)
 	if err != nil {
-		logger.Panicf("Failed to build vcert config: %s", err)
+		return fmt.Errorf("Failed to build vcert config: %s", err)
 	}
 
 	connector, err := vcert.NewClient(&cfg)
@@ -163,13 +163,13 @@ func doCommandEnroll1(c *cli.Context) error {
 	zoneConfig, err := connector.ReadZoneConfiguration()
 
 	if err != nil {
-		logger.Panicf("%s", err)
+		return fmt.Errorf("%s", err)
 	}
 	logf("Successfully read zone configuration for %s", flags.zone)
 	req = fillCertificateRequest(req, &flags)
 	err = connector.GenerateRequest(zoneConfig, req)
 	if err != nil {
-		logger.Panicf("%s", err)
+		return fmt.Errorf("%s", err)
 	}
 
 	var requestedFor string
@@ -182,14 +182,14 @@ func doCommandEnroll1(c *cli.Context) error {
 	logf("Successfully created request for %s", requestedFor)
 	flags.pickupID, err = connector.RequestCertificate(req)
 	if err != nil {
-		logger.Panicf("%s", err)
+		return fmt.Errorf("%s", err)
 	}
 	logf("Successfully posted request for %s, will pick up by %s", requestedFor, flags.pickupID)
 
 	if flags.noPickup {
 		pcc, err = certificate.NewPEMCollection(nil, req.PrivateKey, []byte(flags.keyPassword))
 		if err != nil {
-			logger.Panicf("%s", err)
+			return fmt.Errorf("%s", err)
 		}
 	} else {
 		req.PickupID = flags.pickupID
@@ -198,7 +198,7 @@ func doCommandEnroll1(c *cli.Context) error {
 
 		pcc, err = retrieveCertificate(connector, req, time.Duration(flags.timeout)*time.Second)
 		if err != nil {
-			logger.Panicf("%s", err)
+			return fmt.Errorf("%s", err)
 		}
 		logf("Successfully retrieved request for %s", flags.pickupID)
 
@@ -230,7 +230,7 @@ func doCommandEnroll1(c *cli.Context) error {
 	err = result.Flush()
 
 	if err != nil {
-		logger.Panicf("Failed to output the results: %s", err)
+		return fmt.Errorf("Failed to output the results: %s", err)
 	}
 	return nil
 }
@@ -244,7 +244,7 @@ func doCommandGetcred1(c *cli.Context) error {
 
 	cfg, err := buildConfig(c, &flags)
 	if err != nil {
-		logger.Panicf("Failed to build vcert config: %s", err)
+		return fmt.Errorf("Failed to build vcert config: %s", err)
 	}
 
 	//TODO: quick workaround to supress logs when output is in JSON.
@@ -261,12 +261,12 @@ func doCommandGetcred1(c *cli.Context) error {
 		logf("You specified a trust bundle.")
 		connectionTrustBundle = x509.NewCertPool()
 		if !connectionTrustBundle.AppendCertsFromPEM([]byte(cfg.ConnectionTrust)) {
-			logger.Panicf("Failed to parse PEM trust bundle")
+			return fmt.Errorf("Failed to parse PEM trust bundle")
 		}
 	}
 	tppConnector, err := tpp.NewConnector(cfg.BaseUrl, "", cfg.LogVerbose, connectionTrustBundle)
 	if err != nil {
-		logger.Panicf("could not create TPP connector: %s", err)
+		return fmt.Errorf("could not create TPP connector: %s", err)
 	}
 
 	if cfg.Credentials.RefreshToken != "" {
@@ -276,12 +276,12 @@ func doCommandGetcred1(c *cli.Context) error {
 			Scope:        flags.scope,
 		})
 		if err != nil {
-			logger.Panicf("%s", err)
+			return fmt.Errorf("%s", err)
 		}
 		if flags.format == "json" {
 			jsonData, err := json.MarshalIndent(resp, "", "    ")
 			if err != nil {
-				logger.Panicf("%s", err)
+				return fmt.Errorf("%s", err)
 			}
 			fmt.Println(string(jsonData))
 		} else {
@@ -297,12 +297,12 @@ func doCommandGetcred1(c *cli.Context) error {
 			Scope:    flags.scope,
 			ClientId: flags.clientId})
 		if err != nil {
-			logger.Panicf("%s", err)
+			return fmt.Errorf("%s", err)
 		}
 		if flags.format == "json" {
 			jsonData, err := json.MarshalIndent(resp, "", "    ")
 			if err != nil {
-				logger.Panicf("%s", err)
+				return fmt.Errorf("%s", err)
 			}
 			fmt.Println(string(jsonData))
 		} else {
@@ -318,12 +318,12 @@ func doCommandGetcred1(c *cli.Context) error {
 			Scope:        flags.scope,
 			ClientId:     flags.clientId})
 		if err != nil {
-			logger.Panicf("%s", err)
+			return fmt.Errorf("%s", err)
 		}
 		if flags.format == "json" {
 			jsonData, err := json.MarshalIndent(resp, "", "    ")
 			if err != nil {
-				logger.Panicf("%s", err)
+				return fmt.Errorf("%s", err)
 			}
 			fmt.Println(string(jsonData))
 		} else {
@@ -334,7 +334,7 @@ func doCommandGetcred1(c *cli.Context) error {
 
 		}
 	} else {
-		logger.Panicf("Failed to determine credentials set")
+		return fmt.Errorf("Failed to determine credentials set")
 	}
 
 	return nil
@@ -347,11 +347,11 @@ func doCommandGenCSR1(c *cli.Context) error {
 	}
 	key, csr, err := generateCsrForCommandGenCsr(&flags, []byte(flags.keyPassword))
 	if err != nil {
-		logger.Panicf("%s", err)
+		return fmt.Errorf("%s", err)
 	}
 	err = writeOutKeyAndCsr(&flags, key, csr)
 	if err != nil {
-		logger.Panicf("%s", err)
+		return fmt.Errorf("%s", err)
 	}
 
 	return nil
@@ -366,7 +366,7 @@ func doCommandPickup1(c *cli.Context) error {
 
 	cfg, err := buildConfig(c, &flags)
 	if err != nil {
-		logger.Panicf("Failed to build vcert config: %s", err)
+		return fmt.Errorf("Failed to build vcert config: %s", err)
 	}
 
 	connector, err := vcert.NewClient(&cfg) // Everything else requires an endpoint connection
@@ -379,7 +379,7 @@ func doCommandPickup1(c *cli.Context) error {
 	if flags.pickupIDFile != "" {
 		bytes, err := ioutil.ReadFile(flags.pickupIDFile)
 		if err != nil {
-			logger.Panicf("Failed to read Pickup ID value: %s", err)
+			return fmt.Errorf("Failed to read Pickup ID value: %s", err)
 		}
 		flags.pickupID = strings.TrimSpace(string(bytes))
 	}
@@ -395,7 +395,7 @@ func doCommandPickup1(c *cli.Context) error {
 	var pcc *certificate.PEMCollection
 	pcc, err = retrieveCertificate(connector, req, time.Duration(flags.timeout)*time.Second)
 	if err != nil {
-		logger.Panicf("Failed to retrieve certificate: %s", err)
+		return fmt.Errorf("Failed to retrieve certificate: %s", err)
 	}
 	logf("Successfully retrieved request for %s", flags.pickupID)
 
@@ -417,7 +417,7 @@ func doCommandPickup1(c *cli.Context) error {
 	err = result.Flush()
 
 	if err != nil {
-		logger.Panicf("Failed to output the results: %s", err)
+		return fmt.Errorf("Failed to output the results: %s", err)
 	}
 	return nil
 }
@@ -431,7 +431,7 @@ func doCommandRevoke1(c *cli.Context) error {
 
 	cfg, err := buildConfig(c, &flags)
 	if err != nil {
-		logger.Panicf("Failed to build vcert config: %s", err)
+		return fmt.Errorf("Failed to build vcert config: %s", err)
 	}
 
 	connector, err := vcert.NewClient(&cfg) // Everything else requires an endpoint connection
@@ -450,7 +450,7 @@ func doCommandRevoke1(c *cli.Context) error {
 		revReq.Thumbprint = flags.thumbprint
 		revReq.Disable = false
 	default:
-		logger.Panicf("Certificate DN or Thumbprint is required")
+		return fmt.Errorf("Certificate DN or Thumbprint is required")
 		return nil
 	}
 
@@ -469,7 +469,7 @@ func doCommandRevoke1(c *cli.Context) error {
 
 	err = connector.RevokeCertificate(revReq)
 	if err != nil {
-		logger.Panicf("Failed to revoke certificate: %s", err)
+		return fmt.Errorf("Failed to revoke certificate: %s", err)
 	}
 	logf("Successfully created revocation request for %s", requestedFor)
 
@@ -485,7 +485,7 @@ func doCommandRenew1(c *cli.Context) error {
 
 	cfg, err := buildConfig(c, &flags)
 	if err != nil {
-		logger.Panicf("Failed to build vcert config: %s", err)
+		return fmt.Errorf("Failed to build vcert config: %s", err)
 	}
 
 	connector, err := vcert.NewClient(&cfg) // Everything else requires an endpoint connection
@@ -506,15 +506,15 @@ func doCommandRenew1(c *cli.Context) error {
 	// here we fetch old cert anyway
 	oldPcc, err := connector.RetrieveCertificate(searchReq)
 	if err != nil {
-		logger.Panicf("Failed to fetch old certificate by id %s: %s", flags.distinguishedName, err)
+		return fmt.Errorf("Failed to fetch old certificate by id %s: %s", flags.distinguishedName, err)
 	}
 	oldCertBlock, _ := pem.Decode([]byte(oldPcc.Certificate))
 	if oldCertBlock == nil || oldCertBlock.Type != "CERTIFICATE" {
-		logger.Panicf("Failed to fetch old certificate by id %s: PEM parse error", flags.distinguishedName)
+		return fmt.Errorf("Failed to fetch old certificate by id %s: PEM parse error", flags.distinguishedName)
 	}
 	oldCert, err := x509.ParseCertificate([]byte(oldCertBlock.Bytes))
 	if err != nil {
-		logger.Panicf("Failed to fetch old certificate by id %s: %s", flags.distinguishedName, err)
+		return fmt.Errorf("Failed to fetch old certificate by id %s: %s", flags.distinguishedName, err)
 	}
 	// now we have old one
 	logf("Fetched the latest certificate. Serial: %x, NotAfter: %s", oldCert.SerialNumber, oldCert.NotAfter)
@@ -535,7 +535,7 @@ func doCommandRenew1(c *cli.Context) error {
 		req = fillCertificateRequest(req, &flags)
 
 	default:
-		logger.Panicf("unexpected -csr option: %s", flags.csrOption)
+		return fmt.Errorf("unexpected -csr option: %s", flags.csrOption)
 	}
 
 	// here we ignore zone for Renew action, however, API still needs it
@@ -543,7 +543,7 @@ func doCommandRenew1(c *cli.Context) error {
 
 	err = connector.GenerateRequest(zoneConfig, req)
 	if err != nil {
-		logger.Panicf("%s", err)
+		return fmt.Errorf("%s", err)
 	}
 
 	requestedFor := func() string {
@@ -563,14 +563,14 @@ func doCommandRenew1(c *cli.Context) error {
 	flags.pickupID, err = connector.RenewCertificate(renewReq)
 
 	if err != nil {
-		logger.Panicf("%s", err)
+		return fmt.Errorf("%s", err)
 	}
 	logf("Successfully posted renewal request for %s, will pick up by %s", requestedFor, flags.pickupID)
 
 	if flags.noPickup {
 		pcc, err = certificate.NewPEMCollection(nil, req.PrivateKey, []byte(flags.keyPassword))
 		if err != nil {
-			logger.Panicf("%s", err)
+			return fmt.Errorf("%s", err)
 		}
 	} else {
 		req.PickupID = flags.pickupID
@@ -579,7 +579,7 @@ func doCommandRenew1(c *cli.Context) error {
 
 		pcc, err = retrieveCertificate(connector, req, time.Duration(flags.timeout)*time.Second)
 		if err != nil {
-			logger.Panicf("%s", err)
+			return fmt.Errorf("%s", err)
 		}
 		logf("Successfully retrieved request for %s", flags.pickupID)
 
@@ -623,7 +623,7 @@ func doCommandRenew1(c *cli.Context) error {
 	err = result.Flush()
 
 	if err != nil {
-		logger.Panicf("Failed to output the results: %s", err)
+		return fmt.Errorf("Failed to output the results: %s", err)
 	}
 	return nil
 }

@@ -109,7 +109,9 @@ OPTIONS:
 `
 	err := app.Run(os.Args)
 	if err != nil {
-		log.Fatal(err)
+		//TODO: we need to make logger a global package
+		logger := log.New(os.Stderr, UtilityShortName+": ", log.LstdFlags)
+		logger.Panicf("%s", err)
 	}
 	return
 }

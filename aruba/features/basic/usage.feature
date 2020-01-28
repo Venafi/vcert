@@ -10,7 +10,7 @@ Feature: Showing usage text page
     When I run `vcert`
     Then the output should contain:
       """
-      vcert - Venafi Certificate Utility
+      Venafi Certificate Utility
       """
 
   Scenario: Enroll help text
