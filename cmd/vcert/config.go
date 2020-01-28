@@ -44,7 +44,7 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 		if flags.testMode {
 			connectorType = endpoint.ConnectorTypeFake
 			if flags.testModeDelay > 0 {
-				logger.Println("Running in -test-mode with emulating endpoint delay.")
+				logf("Running in -test-mode with emulating endpoint delay.")
 				var delay = rand.Intn(flags.testModeDelay)
 				for i := 0; i < delay; i++ {
 					time.Sleep(1 * time.Second)
@@ -54,7 +54,7 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 			connectorType = endpoint.ConnectorTypeTPP
 			baseURL = flags.url
 			if flags.tppToken == "" && flags.tppPassword == "" && flags.clientP12 == "" {
-				logger.Panicf("A password is required to communicate with TPP")
+				return cfg, fmt.Errorf("A password is required to communicate with TPP")
 			}
 
 			if flags.tppToken != "" {
@@ -79,13 +79,13 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 
 	// trust bundle may be overridden by CLI flag
 	if flags.trustBundle != "" {
-		logger.Println("Detected trust bundle flag at CLI.")
+		logf("Detected trust bundle flag at CLI.")
 		if cfg.ConnectionTrust != "" {
 			logf("Overriding trust bundle based on command line flag.")
 		}
 		data, err := ioutil.ReadFile(flags.trustBundle)
 		if err != nil {
-			logger.Panicf("Failed to read trust bundle: %s", err)
+			return cfg, fmt.Errorf("Failed to read trust bundle: %s", err)
 		}
 		cfg.ConnectionTrust = string(data)
 	}

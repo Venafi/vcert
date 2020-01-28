@@ -35,14 +35,14 @@ func readPasswordsFromInputFlags(commandName string, cf *commandFlags) error {
 			fmt.Printf("Enter password for %s:", cf.clientP12)
 			input, err := gopass.GetPasswdMasked()
 			if err != nil {
-				logger.Panicf("%s", err)
+				return err
 			}
 			cf.clientP12PW = string(input)
 		} else if cf.tppPassword == "" && !cf.noPrompt && cf.tppToken == "" && cf.tppUser != "" {
 			fmt.Printf("Enter password for %s:", cf.tppUser)
 			input, err := gopass.GetPasswdMasked()
 			if err != nil {
-				logger.Panicf("%s", err)
+				return err
 			}
 			cf.tppPassword = string(input)
 		} else {
@@ -69,15 +69,15 @@ func readPasswordsFromInputFlags(commandName string, cf *commandFlags) error {
 				fmt.Printf("Enter key pass phrase:")
 				input, err := gopass.GetPasswdMasked()
 				if err != nil {
-					logger.Panicf("%s", err)
+					return err
 				}
 				fmt.Printf("Verifying - Enter key pass phrase:")
 				verify, err := gopass.GetPasswdMasked()
 				if err != nil {
-					logger.Panicf("%s", err)
+					return err
 				}
 				if !doValuesMatch(input, verify) {
-					logger.Panicf("Pass phrases don't match")
+					return fmt.Errorf("Pass phrases don't match")
 				}
 				cf.keyPassword = string(input)
 			} else if cf.keyPassword == "" && cf.noPrompt && commandName == commandPickupName {
