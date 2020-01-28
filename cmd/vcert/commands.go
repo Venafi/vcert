@@ -24,21 +24,21 @@ import (
 var (
 	tlsConfig      tls.Config
 	connectionType endpoint.ConnectorType
-	commandEnroll1 = &cli.Command{
+	commandEnroll  = &cli.Command{
 		Before: runBeforeCommand,
 		Flags:  enrollFlags1,
 		Action: doCommandEnroll1,
 		Name:   commandEnrollName,
 		Usage:  "To enroll a certificate,",
 	}
-	commandGetcred1 = &cli.Command{
+	commandGetcred = &cli.Command{
 		Before: runBeforeCommand,
 		Name:   commandGetcredName,
 		Flags:  getcredFlags1,
 		Action: doCommandGetcred1,
 		Usage:  "To obtain a new token for authentication",
 	}
-	commandGenCSR1 = &cli.Command{
+	commandGenCSR = &cli.Command{
 		Before: runBeforeCommand,
 		Name:   commandGenCSRName,
 		Flags:  genCsrFlags1,
@@ -48,21 +48,21 @@ var (
 			"\tgencsr -cn <common name> -o <organization> -ou <organizational unit> -c <country> -st <state> -l <locality> -key-file <key output file> -csr-file <csr output file>\n" +
 			"\tgencsr -cn <common name> -o <organization> -ou <organizational unit> -ou <organizational unit2> -c <country> -st <state> -l <locality> -key-file <key output file> -csr-file <csr output file>\n",
 	}
-	commandPickup1 = &cli.Command{
+	commandPickup = &cli.Command{
 		Before: runBeforeCommand,
 		Name:   commandPickupName,
 		Flags:  pickupFlags1,
 		Action: doCommandPickup1,
 		Usage:  "To retrieve a certificate",
 	}
-	commandRevoke1 = &cli.Command{
+	commandRevoke = &cli.Command{
 		Before: runBeforeCommand,
 		Name:   commandRevokeName,
 		Flags:  revokeFlags1,
 		Action: doCommandRevoke1,
 		Usage:  "To revoke a certificate",
 	}
-	commandRenew1 = &cli.Command{
+	commandRenew = &cli.Command{
 		Before: runBeforeCommand,
 		Name:   commandRenewName,
 		Flags:  renewFlags1,

@@ -49,12 +49,12 @@ func main() {
 		Version:  GetFormattedVersionString(), //todo: replace with plain version
 		Compiled: time.Now(),                  //todo: replace with parsing vcert.versionBuildTimeStamp
 		Commands: []*cli.Command{
-			commandGetcred1,
-			commandGenCSR1,
-			commandEnroll1,
-			commandPickup1,
-			commandRenew1,
-			commandRevoke1,
+			commandGetcred,
+			commandGenCSR,
+			commandEnroll,
+			commandPickup,
+			commandRenew,
+			commandRevoke,
 		},
 	}
 	err := app.Run(os.Args)
