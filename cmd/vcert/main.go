@@ -17,9 +17,12 @@
 package main
 
 import (
+	"fmt"
+	"github.com/Venafi/vcert"
 	"github.com/urfave/cli/v2"
 	"log"
 	"os"
+	"sort"
 	"time"
 )
 
@@ -28,6 +31,12 @@ var (
 	logf   = logger.Printf
 	exit   = os.Exit
 )
+
+// UtilityName is the full name of the command-line utility
+const UtilityName string = "Venafi Certificate Utility"
+
+// UtilityShortName is the short name of the command-line utility
+const UtilityShortName string = "vCert"
 
 func main() {
 	defer func() {
@@ -46,8 +55,8 @@ func main() {
 		Usage: UtilityName,
 		UsageText: `vcert command [command options]
    for command help run: vcert command -h`,
-		Version:  GetFormattedVersionString(), //todo: replace with plain version
-		Compiled: time.Now(),                  //todo: replace with parsing vcert.versionBuildTimeStamp
+		Version:  vcert.GetFormattedVersionString(), //todo: replace with plain version
+		Compiled: time.Now(),                        //todo: replace with parsing vcert.versionBuildTimeStamp
 		Commands: []*cli.Command{
 			commandGetcred,
 			commandGenCSR,
@@ -57,6 +66,31 @@ func main() {
 			commandRevoke,
 		},
 	}
+
+	sort.Sort(cli.CommandsByName(app.Commands))
+
+	cli.AppHelpTemplate = fmt.Sprintf(`Venafi Certificate Utility
+   Version: %s
+   Build Timestamp: %s
+USAGE:
+   {{.HelpName}} {{if .VisibleFlags}}[global options]{{end}}{{if .Commands}} command [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}[arguments...]{{end}}
+   {{if len .Authors}}
+AUTHOR:
+   {{range .Authors}}{{ . }}{{end}}
+   {{end}}{{if .Commands}}
+ACTIONS:
+{{range .Commands}}{{if not .HideHelp}}   {{join .Names ", "}}{{ "\t"}}{{.Usage}}{{ "\n" }}{{end}}{{end}}{{end}}{{if .VisibleFlags}}
+GLOBAL OPTIONS:
+   {{range .VisibleFlags}}{{.}}
+   {{end}}{{end}}{{if .Copyright }}
+COPYRIGHT:
+   {{.Copyright}}
+   {{end}}{{if .Version}}
+VERSION:
+   {{.Version}}
+   {{end}}
+`, vcert.GetFormattedVersionString(), vcert.GetFormatedBuildTimeStamp())
+
 	err := app.Run(os.Args)
 	if err != nil {
 		log.Fatal(err)
