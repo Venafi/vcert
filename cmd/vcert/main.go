@@ -52,7 +52,8 @@ func main() {
 	}()
 
 	app := &cli.App{
-		Usage: UtilityName,
+		EnableBashCompletion: true, //todo: write BashComplete function for options
+		Usage:                UtilityName,
 		UsageText: `vcert action [action options]
    for command help run: vcert action -h`,
 		Version:  vcert.GetFormattedVersionString(), //todo: replace with plain version
