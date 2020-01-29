@@ -371,6 +371,7 @@ var (
 
 	commonFlags = []cli.Flag{flagInsecure, flagFormat, flagVerbose, flagNoPrompt}
 
+	//todo: restore showing of flags in order it was before refactoring
 	credentialsFlags = append(
 		commonFlags,
 		flagKey,

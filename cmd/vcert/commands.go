@@ -30,6 +30,14 @@ var (
 		Action: doCommandEnroll1,
 		Name:   commandEnrollName,
 		Usage:  "To enroll a certificate,",
+		UsageText: `vcert enroll <Required Venafi Cloud Config> OR <Required Trust Protection Platform Config> <Options>
+  vcert enroll -k <api key> -cn <common name> -z <zone>
+  vcert enroll -k <api key> -cn <common name> -z <zone> -key-type rsa -key-size 4096 -san-dns <alt common name> -san-dns <alt common name2>
+  vcert enroll -u <https://tpp.example.com> -t <tpp access token> -cn <common name> -z <zone>
+  vcert enroll -u <https://tpp.example.com> -t <tpp access token> -cn <common name> -z <zone> -key-size 4096 -san-dns <alt common name> -san-dns <alt common name2>
+  vcert enroll -u <https://tpp.example.com> -t <tpp access token> -cn <common name> -z <zone> -key-type ecdsa -key-curve p384 -san-dns <alt common name> -san-dns <alt common name2>
+  vcert enroll -u <https://tpp.example.com> -t <tpp access token> -cn <common name> -z <zone> -client-pkcs12 <client PKCS#12 archive> -client-pkcs12-pw <PKCS#12 archive password>
+`,
 	}
 	commandGetcred = &cli.Command{
 		Before: runBeforeCommand,
@@ -37,6 +45,11 @@ var (
 		Flags:  getcredFlags1,
 		Action: doCommandGetcred1,
 		Usage:  "To obtain a new token for authentication",
+		UsageText: `vcert getcred -u https://tpp.example.com -username <TPP user> -password <TPP user password>
+vcert getcred -u https://tpp.example.com -p12-file <PKCS#12 client certificate> -p12-password <PKCS#12 password> -trust-bundle /path-to/bundle.pem
+vcert getcred -u https://tpp.example.com -t <refresh token>
+vcert getcred -u https://tpp.example.com -t <refresh token> -scope <scopes and restrictions>
+`,
 	}
 	commandGenCSR = &cli.Command{
 		Before: runBeforeCommand,
@@ -44,9 +57,9 @@ var (
 		Flags:  genCsrFlags1,
 		Action: doCommandGenCSR1,
 		Usage:  "To generate a certificate signing request (CSR)",
-		UsageText: "\tExamples:\n" +
-			"\tgencsr -cn <common name> -o <organization> -ou <organizational unit> -c <country> -st <state> -l <locality> -key-file <key output file> -csr-file <csr output file>\n" +
-			"\tgencsr -cn <common name> -o <organization> -ou <organizational unit> -ou <organizational unit2> -c <country> -st <state> -l <locality> -key-file <key output file> -csr-file <csr output file>\n",
+		UsageText: `vcert gencsr -cn <common name> -o <organization> -ou <organizational unit> -c <country> -st <state> -l <locality> -key-file <key output file> -csr-file <csr output file>
+vcert gencsr -cn <common name> -o <organization> -ou <organizational unit> -ou <organizational unit2> -c <country> -st <state> -l <locality> -key-file <key output file> -csr-file <csr output file>
+`,
 	}
 	commandPickup = &cli.Command{
 		Before: runBeforeCommand,
@@ -54,6 +67,10 @@ var (
 		Flags:  pickupFlags1,
 		Action: doCommandPickup1,
 		Usage:  "To retrieve a certificate",
+		UsageText: `vcert pickup <Required Venafi Cloud Config> OR <Required Trust Protection Platform Config> <Options>
+vcert pickup -k <api key> -pickup-id <request id> OR -pickup-id-file <file with Pickup ID value>
+vcert pickup -u <https://tpp.example.com> -t <tpp access token> -pickup-id <request id>
+`,
 	}
 	commandRevoke = &cli.Command{
 		Before: runBeforeCommand,
@@ -61,6 +78,9 @@ var (
 		Flags:  revokeFlags1,
 		Action: doCommandRevoke1,
 		Usage:  "To revoke a certificate",
+		UsageText: `vcert revoke <Required Trust Protection Platform Config> <Options>
+vcert revoke -u <https://tpp.example.com> -t <tpp access token> -thumbprint <certificate thumbprint>
+vcert revoke -u <https://tpp.example.com> -t <tpp access token> -id <certificate DN>`,
 	}
 	commandRenew = &cli.Command{
 		Before: runBeforeCommand,
@@ -68,6 +88,10 @@ var (
 		Flags:  renewFlags1,
 		Action: doCommandRenew1,
 		Usage:  "To renew a certificate",
+		UsageText: `vcert renew <Required Venafi Cloud Config> OR <Required Trust Protection Platform Config> <Options>
+vcert renew -t <tpp access token> -id <certificate DN>
+vcert renew -k <api key> -thumbprint <certificate SHA1 fingerprint>
+`,
 	}
 )
 
