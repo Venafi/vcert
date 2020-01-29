@@ -52,8 +52,7 @@ func main() {
 	}()
 
 	app := &cli.App{
-		EnableBashCompletion: true, //todo: write BashComplete function for options
-		Usage:                UtilityName,
+		Usage: UtilityName,
 		UsageText: `vcert action [action options]
    for command help run: vcert action -h`,
 		Version:  vcert.GetFormattedVersionString(), //todo: replace with plain version
@@ -66,6 +65,10 @@ func main() {
 			commandRenew,
 			commandRevoke,
 		},
+		EnableBashCompletion: true, //todo: write BashComplete function for options
+		//HideHelp:             true,
+		Copyright: `2020 Venafi, Inc.
+	 Licensed under the Apache License, Version 2.0`,
 	}
 
 	sort.Sort(cli.CommandsByName(app.Commands))
@@ -73,6 +76,7 @@ func main() {
 	cli.AppHelpTemplate = fmt.Sprintf(`Venafi Certificate Utility
    Version: %s
    Build Timestamp: %s
+
 USAGE:
    {{.HelpName}} {{if .VisibleFlags}}[global options]{{end}}{{if .Commands}} command [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}[arguments...]{{end}}
    {{if len .Authors}}
@@ -80,10 +84,17 @@ AUTHOR:
    {{range .Authors}}{{ . }}{{end}}
    {{end}}{{if .Commands}}
 ACTIONS:
-{{range .Commands}}{{if not .HideHelp}}   {{join .Names ", "}}{{ "\t"}}{{.Usage}}{{ "\n" }}{{end}}{{end}}{{end}}{{if .VisibleFlags}}
-GLOBAL OPTIONS:
+   enroll   To enroll a certificate,
+   gencsr   To generate a certificate signing request (CSR)
+   getcred  To obtain a new token for authentication
+   pickup   To retrieve a certificate
+   renew    To renew a certificate
+   revoke   To revoke a certificate
+
+OPTIONS:
    {{range .VisibleFlags}}{{.}}
-   {{end}}{{end}}{{if .Copyright }}
+   {{end}}
+
 COPYRIGHT:
    {{.Copyright}}
    {{end}}{{if .Version}}
