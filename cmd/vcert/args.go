@@ -55,7 +55,6 @@ var (
 type commandFlags struct {
 	verbose            bool
 	url                string
-	tppURL             string //deprecated
 	tppUser            string
 	tppPassword        string
 	tppToken           string
