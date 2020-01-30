@@ -171,6 +171,7 @@ var (
 		Usage: "Use to specify a file name and a location where the resulting file should be written. " +
 			"If this option is used the key, certificate, and chain will be written to the same file. Example: /path-to/newcert.pem",
 		Destination: &flags.file,
+		TakesFile:   true,
 	}
 
 	flagKeyFile = &cli.StringFlag{
@@ -178,6 +179,7 @@ var (
 		Usage: "Use to specify a file name and a location where the resulting private key file should be written. " +
 			"Do not use in combination with -csr file. Example: /path-to/newkey.pem",
 		Destination: &flags.keyFile,
+		TakesFile:   true,
 	}
 
 	flagCertFile = &cli.StringFlag{
@@ -185,6 +187,7 @@ var (
 		Usage: "Use to specify a file name and a location where the resulting " +
 			"certificate file should be written. Example: /path-to/newcert.pem",
 		Destination: &flags.certFile,
+		TakesFile:   true,
 	}
 
 	flagChainFile = &cli.StringFlag{
@@ -248,6 +251,7 @@ var (
 		Name:        "csr-file",
 		Usage:       "Use to specify a file name and a location where the resulting CSR file should be written. Example: /tmp/newcsr.pem",
 		Destination: &flags.csrFile,
+		TakesFile:   true,
 	}
 
 	flagKeyPassword = &cli.StringFlag{
@@ -262,6 +266,7 @@ var (
 		Name:        "pickup-id-file",
 		Usage:       "Use to specify file name from where Pickup ID will be read. Either -pickup-id or -pickup-id-file is required.",
 		Destination: &flags.pickupIDFile,
+		TakesFile:   true,
 	}
 
 	flagPickupID = &cli.StringFlag{
@@ -291,6 +296,7 @@ var (
 			"\t\tFor Cloud: cloud_apikey, cloud_zone\n" +
 			"\t\tTPP & Cloud: trust_bundle, test_mode",
 		Destination: &flags.config,
+		TakesFile:   true,
 	}
 
 	flagProfile = &cli.StringFlag{
@@ -303,6 +309,7 @@ var (
 		Name:        "p12-file",
 		Usage:       "Use to specify a client PKCS#12 archive for mutual TLS (for 2FA, use the getcred action to authenticate with Venafi Platform using a client certificate).",
 		Destination: &flags.clientP12,
+		TakesFile:   true,
 	}
 
 	flagClientP12PW = &cli.StringFlag{
@@ -315,6 +322,7 @@ var (
 		Name:        "client-pkcs12",
 		Usage:       "Use to specify a client PKCS#12 archive for mutual TLS (for 2FA, use the getcred action to authenticate with Venafi Platform using a client certificate).",
 		Destination: &flags.clientP12,
+		TakesFile:   true,
 	}
 
 	flagClientP12PWDeprecated = &cli.StringFlag{
@@ -368,6 +376,10 @@ var (
 		Name:        "client-id",
 		Usage:       "Use to specify the application that will be using the token. \"vcert-cli\" is the default.",
 		Destination: &flags.clientId,
+	}
+	flagCustomField = &cli.StringSliceFlag{
+		Name:  "custom-field",
+		Usage: "Use to specify custom fields",
 	}
 
 	commonFlags = []cli.Flag{flagInsecure, flagFormat, flagVerbose, flagNoPrompt}
@@ -435,6 +447,7 @@ var (
 		flagTestMode,
 		flagTestModeDelay,
 		flagTimeout,
+		flagCustomField,
 	)
 
 	pickupFlags1 = append(
