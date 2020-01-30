@@ -114,31 +114,35 @@ var (
 	flagOrg = &cli.StringFlag{
 		Name:        "o",
 		Usage:       "Use to specify organization O",
+		Hidden:      true,
 		Destination: &flags.org,
 	}
 
 	flagState = &cli.StringFlag{
 		Name:        "st",
 		Usage:       "Use to specify state ST",
+		Hidden:      true,
 		Destination: &flags.state,
 	}
 
 	flagCountry = &cli.StringFlag{
 		Name:        "c",
 		Usage:       "Use to specify country C",
+		Hidden:      true,
 		Destination: &flags.country,
 	}
 
 	flagLocality = &cli.StringFlag{
 		Name:        "l",
 		Usage:       "Use to specify locality L",
+		Hidden:      true,
 		Destination: &flags.locality,
 	}
 
 	flagOrgUnits = &cli.StringSliceFlag{
-		Name:  "ou",
-		Usage: "Use to specify organization unit OU",
-		//Destination: &flags.orgUnits,
+		Name:   "ou",
+		Usage:  "Use to specify organization unit OU",
+		Hidden: true,
 	}
 
 	flagDNSSans = &cli.StringSliceFlag{
@@ -315,12 +319,14 @@ var (
 		Name:        "client-pkcs12",
 		Usage:       "Use to specify a client PKCS#12 archive for mutual TLS (for 2FA, use the getcred action to authenticate with Venafi Platform using a client certificate).",
 		Destination: &flags.clientP12,
+		Hidden:      true,
 	}
 
 	flagClientP12PWDeprecated = &cli.StringFlag{
 		Name:        "client-pkcs12-pw",
 		Usage:       "Use to specify the password for a client PKCS#12 archive. Use in combination with -client-pkcs12 option.",
 		Destination: &flags.clientP12PW,
+		Hidden:      true,
 	}
 
 	flagDistinguishedName = &cli.StringFlag{
@@ -370,26 +376,6 @@ var (
 		Destination: &flags.clientId,
 	}
 
-	commonFlags = []cli.Flag{flagInsecure, flagFormat, flagVerbose, flagNoPrompt}
-
-	//todo: restore showing of flags in order it was before refactoring
-	credentialsFlags = append(
-		commonFlags,
-		flagKey,
-		flagTPPPasswordDeprecated,
-		flagTPPToken,
-		flagTPPUserDeprecated,
-		flagClientP12,
-		flagClientP12PW,
-		flagClientP12Deprecated,
-		flagClientP12PWDeprecated,
-		flagConfig,
-		flagProfile,
-		flagTrustBundle,
-		flagUrl,
-		flagUrlDeprecated,
-	)
-
 	genCsrFlags1 = []cli.Flag{
 		flagCommonName,
 		flagCountry,
@@ -410,20 +396,40 @@ var (
 		flagVerbose,
 	}
 
-	enrollFlags1 = append(
-		credentialsFlags,
+	enrollFlags1 = []cli.Flag{
+		delimiter("-------------------------------------------------------------"),
+		delimiter("Required for both Venafi Cloud and Trust Protection Platform:"),
+		delimiter("-------------------------------------------------------------"),
 		flagZone,
+		delimiter("Required for Venafi Cloud:"),
+		delimiter("-------------------------------------------------------------"),
+		flagKey,
+		delimiter("Required for Trust Protection Platform:"),
+		delimiter("-------------------------------------------------------------"),
+		flagUrl,
+		flagTPPToken,
+		flagTPPPasswordDeprecated,
+		flagTPPUserDeprecated,
+		delimiter("Other flags:"),
+		delimiter("-------------------------------------------------------------"),
 		flagCADN,
 		flagCertFile,
 		flagChainFile,
 		flagChainOption,
+		flagClientP12,
+		flagClientP12Deprecated,
+		flagClientP12PW,
+		flagClientP12PWDeprecated,
 		flagCommonName,
+		flagConfig,
 		flagCSROption,
 		flagDistinguishedName,
 		flagDNSSans,
 		flagEmailSans,
 		flagFile,
+		flagFormat,
 		flagFriendlyName,
+		flagInsecure,
 		flagIPSans,
 		flagKeyCurve,
 		flagKeyFile,
@@ -431,14 +437,51 @@ var (
 		flagKeySize,
 		flagKeyType,
 		flagNoPickup,
+		flagNoPrompt,
 		flagPickupIDFile,
+		flagProfile,
 		flagTestMode,
 		flagTestModeDelay,
 		flagTimeout,
-	)
+		flagTrustBundle,
+		flagUrlDeprecated,
+		flagVerbose,
+		// -o, --ou, -l, -st, and -c options
+		flagCountry,
+		flagOrg,
+		flagOrgUnits,
+		flagLocality,
+		flagState,
+	}
 
-	pickupFlags1 = append(
-		credentialsFlags,
+	pickupFlags1 = []cli.Flag{
+		delimiter("-------------------------------------------------------------"),
+		delimiter("Required for both Venafi Cloud and Trust Protection Platform:"),
+		delimiter("-------------------------------------------------------------"),
+		flagZone,
+		delimiter("Required for Venafi Cloud:"),
+		delimiter("-------------------------------------------------------------"),
+		flagKey,
+		delimiter("Required for Trust Protection Platform:"),
+		delimiter("-------------------------------------------------------------"),
+		flagUrl,
+		flagTPPToken,
+		flagTPPPasswordDeprecated,
+		flagTPPUserDeprecated,
+		delimiter("Other flags:"),
+		delimiter("-------------------------------------------------------------"),
+		flagInsecure,
+		flagFormat,
+		flagVerbose,
+		flagNoPrompt,
+		flagClientP12,
+		flagClientP12PW,
+		flagClientP12Deprecated,
+		flagClientP12PWDeprecated,
+		flagConfig,
+		flagProfile,
+		flagTrustBundle,
+		flagUrlDeprecated,
 		flagCertFile,
 		flagChainFile,
 		flagChainOption,
@@ -450,28 +493,77 @@ var (
 		flagTestMode,
 		flagTestModeDelay,
 		flagTimeout,
-		flagZone,
-	)
+	}
 
-	revokeFlags1 = append(
-		credentialsFlags,
+	revokeFlags1 = []cli.Flag{
+		delimiter("-------------------------------------------------------------"),
+		delimiter("Required for both Venafi Cloud and Trust Protection Platform:"),
+		delimiter("-------------------------------------------------------------"),
+		flagZone,
+		delimiter("Required for Venafi Cloud:"),
+		delimiter("-------------------------------------------------------------"),
+		flagKey,
+		delimiter("Required for Trust Protection Platform:"),
+		delimiter("-------------------------------------------------------------"),
+		flagUrl,
+		flagTPPToken,
+		flagTPPPasswordDeprecated,
+		flagTPPUserDeprecated,
+		delimiter("Other flags:"),
+		delimiter("-------------------------------------------------------------"),
+		flagInsecure,
+		flagFormat,
+		flagVerbose,
+		flagNoPrompt,
+		flagClientP12,
+		flagClientP12PW,
+		flagClientP12Deprecated,
+		flagClientP12PWDeprecated,
+		flagConfig,
+		flagProfile,
+		flagTrustBundle,
+		flagUrlDeprecated,
 		flagDistinguishedName,
 		flagRevocationNoRetire,
 		flagRevocationReason,
 		flagTestMode,
 		flagTestModeDelay,
 		flagThumbprint,
-		flagZone,
-	)
+	}
 
-	renewFlags1 = append(
-		credentialsFlags,
+	renewFlags1 = []cli.Flag{
+		delimiter("-------------------------------------------------------------"),
+		delimiter("Required for both Venafi Cloud and Trust Protection Platform:"),
+		delimiter("-------------------------------------------------------------"),
+		flagZone,
+		delimiter("Required for Venafi Cloud:"),
+		delimiter("-------------------------------------------------------------"),
+		flagKey,
+		delimiter("Required for Trust Protection Platform:"),
+		delimiter("-------------------------------------------------------------"),
+		flagUrl,
+		flagTPPToken,
+		flagTPPPasswordDeprecated,
+		flagTPPUserDeprecated,
+		delimiter("Other flags:"),
+		delimiter("-------------------------------------------------------------"),
+		flagInsecure,
+		flagFormat,
+		flagVerbose,
+		flagNoPrompt,
+		flagClientP12,
+		flagClientP12PW,
+		flagClientP12Deprecated,
+		flagClientP12PWDeprecated,
+		flagConfig,
+		flagProfile,
+		flagTrustBundle,
+		flagUrlDeprecated,
 		flagCADN,
 		flagCertFile,
 		flagChainFile,
 		flagChainOption,
 		flagCommonName,
-		flagCountry,
 		flagCSROption,
 		flagDistinguishedName,
 		flagDNSSans,
@@ -483,33 +575,37 @@ var (
 		flagKeyPassword,
 		flagKeySize,
 		flagKeyType,
-		flagLocality,
 		flagNoPickup,
-		flagOrg,
-		flagOrgUnits,
 		flagPickupIDFile,
-		flagState,
 		flagTestMode,
 		flagTestModeDelay,
 		flagThumbprint,
 		flagTimeout,
-		flagZone,
-	)
+		// -o, --ou, -l, -st, and -c options
+		flagCountry,
+		flagOrg,
+		flagOrgUnits,
+		flagLocality,
+		flagState,
+	}
 
-	getcredFlags1 = append(
-		commonFlags,
-		flagClientP12,
-		flagClientP12PW,
-		flagConfig,
-		flagProfile,
+	getcredFlags1 = []cli.Flag{
+		flagUrl,
 		flagTPPPassword,
 		flagTPPToken,
 		flagTPPUser,
 		flagTrustBundle,
-		flagUrl,
+		flagInsecure,
+		flagFormat,
+		flagVerbose,
+		flagNoPrompt,
+		flagClientP12,
+		flagClientP12PW,
+		flagConfig,
+		flagProfile,
 		flagScope,
 		flagClientId,
-	)
+	}
 )
 
 var delimiterCounter int
