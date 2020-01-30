@@ -55,7 +55,7 @@ var (
 
 	flagTPPToken = &cli.StringFlag{
 		Name:        "t",
-		Usage:       "Your access or refresh token for Trust Protection Platform. Example: -t <tpp access token>",
+		Usage:       "Your access or refresh token for Trust Protection Platform. Example: -t <TPP token>",
 		Destination: &flags.tppToken,
 	}
 
@@ -83,20 +83,21 @@ var (
 
 	flagKeyCurve = &cli.StringFlag{
 		Name:        "key-curve",
-		Usage:       "Use to specify the ECDSA key curve. Options include: p256 (default) | p521 | p384",
+		Usage:       "Use to specify the ECDSA key curve. Options include: p256 | p521 | p384 (default: p256)",
 		Destination: &flags.keyCurveString,
 	}
 
 	flagKeyType = &cli.StringFlag{
 		Name:        "key-type",
-		Usage:       "Use to specify a key type. Options include: rsa (default) | ecdsa",
+		Usage:       "Use to specify a key type. Options include: rsa | ecdsa (default: rsa)",
 		Destination: &flags.keyTypeString,
 	}
 
 	flagKeySize = &cli.IntFlag{
 		Name:        "key-size",
-		Usage:       "Use to specify a key size (default 2048).",
+		Usage:       "Use to specify a key size.",
 		Destination: &flags.keySize,
+		DefaultText: "2048",
 	}
 
 	flagFriendlyName = &cli.StringFlag{
@@ -164,7 +165,7 @@ var (
 
 	flagFormat = &cli.StringFlag{
 		Name: "format",
-		Usage: "Use to specify the output format. PEM is the default format. Options include: pem | json | pkcs12." +
+		Usage: "Use to specify the output format. Options include: pem | json | pkcs12." +
 			" If PKCS#12 format is specified, then all objects should be written using -file option.",
 		Destination: &flags.format,
 		Value:       "pem",
@@ -201,7 +202,7 @@ var (
 	flagChainOption = &cli.StringFlag{
 		Name: "chain",
 		Usage: "Use to include the certificate chain in the output, and to specify where to place it in the file. " +
-			"By default, it is placed last. Options include: ignore | root-first | root-last",
+			"Options include: ignore | root-first | root-last",
 		Value:       "root-last",
 		Destination: &flags.chainOption,
 	}
@@ -228,13 +229,13 @@ var (
 	flagTestMode = &cli.BoolFlag{
 		Name: "test-mode",
 		Usage: "Use to test enrollment without a connection to a real endpoint." +
-			" Options include: true | false (default false uses a real connection for enrollment).",
+			" Options include: true | false .",
 		Destination: &flags.testMode,
 	}
 
 	flagTestModeDelay = &cli.IntFlag{
 		Name:        "test-mode-delay",
-		Usage:       "Use to specify the maximum, random seconds for a test-mode connection delay (default 15).",
+		Usage:       "Use to specify the maximum, random seconds for a test-mode connection delay.",
 		Value:       15,
 		Destination: &flags.testModeDelay,
 	}
@@ -277,7 +278,7 @@ var (
 	flagTimeout = &cli.IntFlag{
 		Name:        "timeout",
 		Value:       180,
-		Usage:       "Time to wait for certificate to be processed at the service side (default is 0 for `pickup` meaning just one retrieve attempt).",
+		Usage:       "Time to wait for certificate to be processed at the service side.",
 		Destination: &flags.timeout,
 	}
 
@@ -331,7 +332,7 @@ var (
 
 	flagDistinguishedName = &cli.StringFlag{
 		Name: "id",
-		Usage: "Use to specify the ID of the certificate to revoke. Required unless -thumbprint is specified. " +
+		Usage: "Use to specify the ID of the certificate. Required unless -thumbprint is specified. " +
 			"Marks the certificate as disabled and no new certificate will be enrolled to replace the revoked one. " +
 			"If a replacement certificate is necessary, also specify -no-retire=true.",
 		Destination: &flags.distinguishedName,
