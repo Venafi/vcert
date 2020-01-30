@@ -516,5 +516,5 @@ var delimiterCounter int
 
 func delimiter(text string) *cli.StringFlag {
 	delimiterCounter++
-	return &cli.StringFlag{Name: strings.Repeat("\u00A0", delimiterCounter), Usage: text + "`\r `"}
+	return &cli.StringFlag{Name: strings.Repeat("\u00A0", delimiterCounter), Usage: text + "`\r\t\t" + strings.Repeat(" ", 2+delimiterCounter) + " `"}
 }
