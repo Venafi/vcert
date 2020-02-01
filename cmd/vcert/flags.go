@@ -507,6 +507,7 @@ var (
 		flagThumbprint,
 		flagTimeout,
 		flagZone,
+		flagCustomField,
 	)
 
 	getcredFlags1 = append(
