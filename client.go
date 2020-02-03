@@ -24,6 +24,7 @@ import (
 	"github.com/Venafi/vcert/pkg/venafi/fake"
 	"github.com/Venafi/vcert/pkg/venafi/tpp"
 	"github.com/Venafi/vcert/pkg/verror"
+	"log"
 )
 
 // NewClient returns a connector for either Trust Protection Platform (TPP) or Venafi Cloud based on provided configuration.
@@ -33,11 +34,10 @@ import (
 func (cfg *Config) NewClient() (connector endpoint.Connector, err error) {
 	//TODO: make logger global so we can use it everywhere
 	const UtilityShortName string = "vCert"
-	var (
-		connectionTrustBundle *x509.CertPool
-	)
+	var connectionTrustBundle *x509.CertPool
 
 	if cfg.ConnectionTrust != "" {
+		log.Println(UtilityShortName+":", "You specified a trust bundle.")
 		connectionTrustBundle = x509.NewCertPool()
 		if !connectionTrustBundle.AppendCertsFromPEM([]byte(cfg.ConnectionTrust)) {
 			return nil, fmt.Errorf("%w: failed to parse PEM trust bundle", verror.UserDataError)
