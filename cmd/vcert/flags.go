@@ -8,7 +8,7 @@ import (
 var (
 	flagUrl = &cli.StringFlag{
 		Name:        "u",
-		Usage:       "The URL of the Trust Protection Platform WebSDK. Example: -u https://tpp.example.com",
+		Usage:       "REQUIRED/TPP. The `URL` of the Trust Protection Platform WebSDK. Example: -u https://tpp.example.com",
 		Destination: &flags.url,
 	}
 
@@ -22,7 +22,7 @@ var (
 
 	flagKey = &cli.StringFlag{
 		Name:        "k",
-		Usage:       "Your API Key for Venafi Cloud.  Example: -k xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+		Usage:       "REQUIRED/CLOUD. Your API `key` for Venafi Cloud.  Example: -k xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
 		Destination: &flags.apiKey,
 	}
 
@@ -48,30 +48,30 @@ var (
 
 	flagTPPPasswordDeprecated = &cli.StringFlag{
 		Name:        "tpp-password",
-		Usage:       "Use to specify the Trust Protection Platform user's password.",
+		Usage:       "",
 		Destination: &flags.tppPassword,
 		Hidden:      true,
 	}
 
 	flagTPPToken = &cli.StringFlag{
 		Name:        "t",
-		Usage:       "Your access or refresh token for Trust Protection Platform. Example: -t <tpp access token>",
+		Usage:       "REQUIRED/TPP Your access or refresh `token` for Trust Protection Platform. Example: -t <tpp access token>",
 		Destination: &flags.tppToken,
 	}
 
 	flagTrustBundle = &cli.StringFlag{
 		Name: "trust-bundle",
-		Usage: "Use to specify a PEM file name to be used " +
+		Usage: "Use to specify a PEM `file` name to be used " +
 			"as trust anchors when communicating with the remote server.",
 		Destination: &flags.trustBundle,
 	}
 	flagZone = &cli.StringFlag{
 		Name:        "z",
 		Destination: &flags.zone,
-		Usage: "The zone that defines the enrollment configuration. In Trust Protection Platform this is " +
-			"equivelant to the policy path where the certificate object will be stored. " + UtilityShortName +
-			" prepends \\VED\\Policy\\, so you only need to specify policy folders within the root Policy folder. " +
-			"Example: -z Corp\\Engineering",
+		Usage: "REQUIRED. The zone that defines the enrollment configuration. In Trust Protection Platform this is " +
+			"equivelant to the policy path where the certificate object will be stored. \n\t\t" + UtilityShortName +
+			" prepends \\VED\\Policy\\, so you only need to specify policy folders within the root Policy folder. \n" +
+			"\t\tExample: -z Corp\\Engineering",
 	}
 
 	flagCADN = &cli.StringFlag{
@@ -107,7 +107,7 @@ var (
 
 	flagCommonName = &cli.StringFlag{
 		Name:        "cn",
-		Usage:       "Use to specify the common name (CN). This is required for enrollment except when providing a CSR file.",
+		Usage:       "Use to specify the `common name` (CN). This is required for enrollment except when providing a CSR file.",
 		Destination: &flags.commonName,
 	}
 
@@ -260,7 +260,7 @@ var (
 
 	flagPickupIDFile = &cli.StringFlag{
 		Name:        "pickup-id-file",
-		Usage:       "Use to specify file name from where Pickup ID will be read. Either -pickup-id or -pickup-id-file is required.",
+		Usage:       "Use to specify file name from where Pickup ID will be read or write. Either -pickup-id or -pickup-id-file is required.",
 		Destination: &flags.pickupIDFile,
 	}
 
@@ -286,7 +286,7 @@ var (
 
 	flagConfig = &cli.StringFlag{
 		Name: "config",
-		Usage: "Use to specify INI configuration file containing connection details\n" +
+		Usage: "Use to specify INI configuration `file` containing connection details instead\n" +
 			"\t\tFor TPP: url, access_token, tpp_zone\n" +
 			"\t\tFor Cloud: cloud_apikey, cloud_zone\n" +
 			"\t\tTPP & Cloud: trust_bundle, test_mode",
@@ -313,14 +313,16 @@ var (
 
 	flagClientP12Deprecated = &cli.StringFlag{
 		Name:        "client-pkcs12",
-		Usage:       "Use to specify a client PKCS#12 archive for mutual TLS (for 2FA, use the getcred action to authenticate with Venafi Platform using a client certificate).",
+		Usage:       "Use p12-file",
 		Destination: &flags.clientP12,
+		Hidden:      true,
 	}
 
 	flagClientP12PWDeprecated = &cli.StringFlag{
 		Name:        "client-pkcs12-pw",
-		Usage:       "Use to specify the password for a client PKCS#12 archive. Use in combination with -client-pkcs12 option.",
+		Usage:       "Use p12-password",
 		Destination: &flags.clientP12PW,
+		Hidden:      true,
 	}
 
 	flagDistinguishedName = &cli.StringFlag{
@@ -370,74 +372,60 @@ var (
 		Destination: &flags.clientId,
 	}
 
-	commonFlags = []cli.Flag{flagInsecure, flagFormat, flagVerbose, flagNoPrompt}
+	commonFlags  = []cli.Flag{flagInsecure, flagFormat, flagVerbose, flagNoPrompt}
+	keyFlags     = []cli.Flag{flagKeyType, flagKeySize, flagKeyCurve, flagKeyFile, flagKeyPassword}
+	sansFlags    = []cli.Flag{flagDNSSans, flagEmailSans, flagIPSans}
+	subjectFlags = flagsApppend(flagCommonName, flagCountry, flagState, flagLocality, flagOrg, flagOrgUnits, sansFlags)
 
 	//todo: restore showing of flags in order it was before refactoring
-	credentialsFlags = append(
-		commonFlags,
+	credentialsFlags = []cli.Flag{
+		flagConfig,
+		flagProfile,
+		delimiter(" "),
 		flagKey,
-		flagTPPPasswordDeprecated,
 		flagTPPToken,
+		flagUrl,
+		flagUrlDeprecated,
 		flagTPPUserDeprecated,
+		flagTPPPasswordDeprecated,
 		flagClientP12,
 		flagClientP12PW,
 		flagClientP12Deprecated,
 		flagClientP12PWDeprecated,
-		flagConfig,
-		flagProfile,
 		flagTrustBundle,
-		flagUrl,
-		flagUrlDeprecated,
+		flagTestMode,
+		flagTestModeDelay,
+		delimiter(" "),
+	}
+	genCsrFlags1 = flagsApppend(
+		subjectFlags,
+		flagCSRFile,
+		keyFlags,
+		flagNoPrompt,
+		flagVerbose,
 	)
 
-	genCsrFlags1 = []cli.Flag{
+	enrollFlags1 = flagsApppend(
 		flagCommonName,
-		flagCountry,
-		flagCSRFile,
-		flagDNSSans,
-		flagEmailSans,
-		flagIPSans,
-		flagKeyCurve,
-		flagKeyFile,
-		flagKeyPassword,
-		flagKeySize,
-		flagKeyType,
-		flagLocality,
-		flagNoPrompt,
-		flagOrg,
-		flagOrgUnits,
-		flagState,
-		flagVerbose,
-	}
-
-	enrollFlags1 = append(
-		credentialsFlags,
 		flagZone,
+		credentialsFlags,
 		flagCADN,
 		flagCertFile,
 		flagChainFile,
 		flagChainOption,
-		flagCommonName,
 		flagCSROption,
 		flagDistinguishedName,
-		flagDNSSans,
-		flagEmailSans,
+		sansFlags,
 		flagFile,
 		flagFriendlyName,
-		flagIPSans,
-		flagKeyCurve,
-		flagKeyFile,
-		flagKeyPassword,
-		flagKeySize,
-		flagKeyType,
+		keyFlags,
 		flagNoPickup,
 		flagPickupIDFile,
-		flagTestMode,
-		flagTestModeDelay,
 		flagTimeout,
+		commonFlags,
 	)
 
-	pickupFlags1 = append(
+	pickupFlags1 = flagsApppend(
 		credentialsFlags,
 		flagCertFile,
 		flagChainFile,
@@ -447,57 +435,39 @@ var (
 		flagKeyPassword,
 		flagPickupID,
 		flagPickupIDFile,
-		flagTestMode,
-		flagTestModeDelay,
 		flagTimeout,
 		flagZone,
+		commonFlags,
 	)
 
-	revokeFlags1 = append(
+	revokeFlags1 = flagsApppend(
 		credentialsFlags,
 		flagDistinguishedName,
 		flagRevocationNoRetire,
 		flagRevocationReason,
-		flagTestMode,
-		flagTestModeDelay,
 		flagThumbprint,
 		flagZone,
+		commonFlags,
 	)
 
-	renewFlags1 = append(
+	renewFlags1 = flagsApppend(
+		flagDistinguishedName,
+		flagThumbprint,
+		delimiter(" "),
 		credentialsFlags,
 		flagCADN,
 		flagCertFile,
 		flagChainFile,
 		flagChainOption,
-		flagCommonName,
-		flagCountry,
 		flagCSROption,
-		flagDistinguishedName,
-		flagDNSSans,
-		flagEmailSans,
 		flagFriendlyName,
-		flagIPSans,
-		flagKeyCurve,
-		flagKeyFile,
-		flagKeyPassword,
-		flagKeySize,
-		flagKeyType,
-		flagLocality,
+		keyFlags,
 		flagNoPickup,
-		flagOrg,
-		flagOrgUnits,
-		flagPickupIDFile,
-		flagState,
-		flagTestMode,
-		flagTestModeDelay,
-		flagThumbprint,
 		flagTimeout,
-		flagZone,
+		commonFlags,
 	)
 
-	getcredFlags1 = append(
-		commonFlags,
+	getcredFlags1 = flagsApppend(
 		flagClientP12,
 		flagClientP12PW,
 		flagConfig,
@@ -509,6 +479,7 @@ var (
 		flagUrl,
 		flagScope,
 		flagClientId,
+		commonFlags,
 	)
 )
 
@@ -517,4 +488,17 @@ var delimiterCounter int
 func delimiter(text string) *cli.StringFlag {
 	delimiterCounter++
 	return &cli.StringFlag{Name: strings.Repeat("\u00A0", delimiterCounter), Usage: text + "`\r\t\t" + strings.Repeat(" ", 2+delimiterCounter) + " `"}
+}
+
+func flagsApppend(flags ...interface{}) []cli.Flag {
+	result := make([]cli.Flag, 0, 100)
+	for i := range flags {
+		switch flags[i].(type) {
+		case cli.Flag:
+			result = append(result, flags[i].(cli.Flag))
+		case []cli.Flag:
+			result = append(result, flags[i].([]cli.Flag)...)
+		}
+	}
+	return result
 }
