@@ -467,6 +467,7 @@ var (
 		flagThumbprint,
 		credentialsFlags,
 		sortedFlags(flagsApppend(
+			hiddenFlags(flagZone, true),
 			flagCADN,
 			flagCertFile,
 			flagChainFile,
@@ -522,4 +523,36 @@ func sortedFlags(a []cli.Flag) []cli.Flag {
 	copy(b, a)
 	sort.Sort(cli.FlagsByName(b))
 	return b
+}
+
+func hiddenFlags(fl interface{}, hidden bool) []cli.Flag {
+	var flags []cli.Flag
+	if f, ok := fl.(cli.Flag); ok {
+		flags = append(flags, f)
+	}
+	if _f, ok := fl.([]cli.Flag); ok {
+		flags = _f
+	}
+	r := make([]cli.Flag, len(flags))
+	for i, f := range flags {
+		switch v := f.(type) {
+		case *cli.StringFlag:
+			n := *v
+			n.Hidden = hidden
+			r[i] = &n
+		case *cli.BoolFlag:
+			n := *v
+			n.Hidden = hidden
+			r[i] = &n
+		case *cli.IntFlag:
+			n := *v
+			n.Hidden = hidden
+			r[i] = &n
+		case *cli.StringSliceFlag:
+			n := *v
+			n.Hidden = hidden
+			r[i] = &n
+		}
+	}
+	return r
 }
