@@ -146,25 +146,25 @@ var (
 
 	flagDNSSans = &cli.StringSliceFlag{
 		Name:  "san-dns",
-		Usage: "Use to specify a DNS Subject Alternative Name. To specify more than one, use spaces like this: -san-dns test.abc.xyz -san-dns test1.abc.xyz etc.",
+		Usage: "Use to specify a DNS Subject Alternative Name. To specify more than one, use spaces like this: --san-dns test.abc.xyz --san-dns test1.abc.xyz etc.",
 	}
 
 	flagIPSans = &cli.StringSliceFlag{
 		Name: "san-ip",
 		Usage: "Use to specify an IP Address Subject Alternative Name. " +
-			"This option can be repeated to specify more than one value, like this: -san-ip 1.1.1.1 -san-ip 2.2.2.2.",
+			"This option can be repeated to specify more than one value, like this: --san-ip 1.1.1.1 --san-ip 2.2.2.2.",
 	}
 
 	flagEmailSans = &cli.StringSliceFlag{
 		Name: "san-email",
 		Usage: "Use to specify an Email Subject Alternative Name. " +
-			"This option can be repeated to specify more than one value, like this: -san-email abc@abc.xyz -san-email def@abc.xyz etc.",
+			"This option can be repeated to specify more than one value, like this: --san-email abc@abc.xyz --san-email def@abc.xyz etc.",
 	}
 
 	flagFormat = &cli.StringFlag{
 		Name: "format",
 		Usage: "Use to specify the output format. Options include: pem | json | pkcs12." +
-			" If PKCS#12 format is specified, then all objects should be written using -file option.",
+			" If PKCS#12 format is specified, then all objects should be written using --file option.",
 		Destination: &flags.format,
 		Value:       "pem",
 	}
@@ -172,28 +172,30 @@ var (
 	flagFile = &cli.StringFlag{
 		Name: "file",
 		Usage: "Use to specify a file name and a location where the resulting file should be written. " +
-			"If this option is used the key, certificate, and chain will be written to the same file. Example: /path-to/newcert.pem",
+			"If this option is used the key, certificate, and chain will be written to the same file. " +
+			"Example: --file /path-to/newcert.pem",
 		Destination: &flags.file,
 	}
 
 	flagKeyFile = &cli.StringFlag{
 		Name: "key-file",
 		Usage: "Use to specify a file name and a location where the resulting private key file should be written. " +
-			"Do not use in combination with -csr file. Example: /path-to/newkey.pem",
+			"Do not use in combination with --csr file. Example: --key-file /path-to/newkey.pem",
 		Destination: &flags.keyFile,
 	}
 
 	flagCertFile = &cli.StringFlag{
 		Name: "cert-file",
 		Usage: "Use to specify a file name and a location where the resulting " +
-			"certificate file should be written. Example: /path-to/newcert.pem",
+			"certificate file should be written. Example: --cert-file /path-to/newcert.pem",
 		Destination: &flags.certFile,
 	}
 
 	flagChainFile = &cli.StringFlag{
 		Name: "chain-file",
 		Usage: "Use to specify a path and file name where the resulting chain file should be written, " +
-			"if no chain file is specified the chain will be stored in the same file as the certificate. Example: /path-to/chain.pem",
+			"if no chain file is specified the chain will be stored in the same file as the certificate. " +
+			"Example: --chain-file /path-to/chain.pem",
 		Destination: &flags.chainFile,
 	}
 
@@ -243,46 +245,48 @@ var (
 		Usage: "Use to specify the CSR and private key location. Options include: local | service | file.\n" +
 			"\t\tlocal:   The private key and CSR will be generated locally (default)\n" +
 			"\t\tservice: The private key and CSR will be generated at service side\n" +
-			"\t\tfile:    The CSR will be read from a file by name. Example: file:/path-to/csr.pem",
+			"\t\tfile:    The CSR will be read from a file by name. Example: --csr file:/path-to/csr.pem",
 		Destination: &flags.csrOption,
 	}
 
 	flagCSRFile = &cli.StringFlag{
 		Name:        "csr-file",
-		Usage:       "Use to specify a file name and a location where the resulting CSR file should be written. Example: /tmp/newcsr.pem",
+		Usage:       "Use to specify a file name and a location where the resulting CSR file should be written. " +
+			"Example: --csr-file /tmp/newcsr.pem",
 		Destination: &flags.csrFile,
 	}
 
 	flagKeyPassword = &cli.StringFlag{
 		Name: "key-password",
 		Usage: "Use to specify a password for encrypting the private key. " +
-			"For a non-encrypted private key, omit this option and instead specify -no-prompt. " +
-			"Example: -key-password file:/path-to/mypasswd.txt",
+			"For a non-encrypted private key, omit this option and instead specify --no-prompt. " +
+			"Example: --key-password file:/path-to/mypasswd.txt",
 		Destination: &flags.keyPassword,
 	}
 
 	flagPickupIDFile = &cli.StringFlag{
 		Name:        "pickup-id-file",
-		Usage:       "Use to specify file name from where Pickup ID will be read or write. Either -pickup-id or -pickup-id-file is required.",
+		Usage:       "Use to specify the file name from where to read or write the Pickup ID. " +
+			"Either --pickup-id or --pickup-id-file is required.",
 		Destination: &flags.pickupIDFile,
 	}
 
 	flagPickupID = &cli.StringFlag{
 		Name:        "pickup-id",
-		Usage:       "Use to specify the certificate ID of the certificate for retrieve.",
+		Usage:       "Use to specify the certificate ID of the certificate to retrieve.",
 		Destination: &flags.pickupID,
 	}
 
 	flagTimeout = &cli.IntFlag{
 		Name:        "timeout",
 		Value:       180,
-		Usage:       "Time to wait for certificate to be processed at the service side. If 0 - only one retrieve attempt.",
+		Usage:       "Time to wait for certificate to be processed at the service side. If 0 then only attempt one retrieval.",
 		Destination: &flags.timeout,
 	}
 
 	flagInsecure = &cli.BoolFlag{
 		Name:        "insecure",
-		Usage:       "Skip TLS verify. Only for testing",
+		Usage:       "Skip TLS verification. Only for testing.",
 		Hidden:      true,
 		Destination: &flags.insecure,
 	}
@@ -298,7 +302,7 @@ var (
 
 	flagProfile = &cli.StringFlag{
 		Name:        "profile",
-		Usage:       "Use to specify effective section in ini-configuration file specified by -config option.",
+		Usage:       "Use to specify effective section in INI configuration file specified by --config option.",
 		Destination: &flags.profile,
 	}
 
@@ -310,7 +314,7 @@ var (
 
 	flagClientP12PW = &cli.StringFlag{
 		Name:        "p12-password",
-		Usage:       "Use to specify the password for a client PKCS#12 archive. Use in combination with -client-pkcs12 option.",
+		Usage:       "Use to specify the password for a client PKCS#12 archive. Use in combination with --p12-file option.",
 		Destination: &flags.clientP12PW,
 	}
 
@@ -330,9 +334,9 @@ var (
 
 	flagDistinguishedName = &cli.StringFlag{
 		Name: "id",
-		Usage: "Use to specify the ID of the certificate. Required unless -thumbprint is specified. " +
-			"Marks the certificate as disabled and no new certificate will be enrolled to replace the revoked one. " +
-			"If a replacement certificate is necessary, also specify -no-retire=true.",
+		Usage: "Use to specify the ID of the certificate. Required unless --thumbprint is specified. For revocation," +
+			"marks the certificate as disabled so that no new certificate can be enrolled to replace it. " +
+			"If a replacement certificate will be enrolled, also specify --no-retire=true.",
 		Destination: &flags.distinguishedName,
 	}
 
@@ -340,7 +344,7 @@ var (
 		Name: "thumbprint",
 		Usage: "Use to specify the SHA1 thumbprint of the certificate to renew." +
 			" Value may be specified as a string or read from the certificate file using the file: prefix. " +
-			"Implies -no-retire=true",
+			"Implies --no-retire=true",
 		Destination: &flags.thumbprint,
 	}
 
@@ -359,7 +363,7 @@ var (
 
 	flagRevocationNoRetire = &cli.StringFlag{
 		Name:        "no-retire",
-		Usage:       "Do not disable certificate object. Works only with -id <certificate DN>)",
+		Usage:       "Do not disable certificate object. Works only with --id <certificate DN>",
 		Destination: &flags.revocationReason,
 	}
 
