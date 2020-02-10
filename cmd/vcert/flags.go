@@ -479,6 +479,7 @@ var (
 			flagTimeout,
 			commonFlags,
 			sortableCredentialsFlags,
+			flagPickupIDFile,
 		)),
 	)
 
