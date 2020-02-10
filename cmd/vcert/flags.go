@@ -23,7 +23,7 @@ var (
 
 	flagKey = &cli.StringFlag{
 		Name:        "k",
-		Usage:       "REQUIRED/CLOUD. Your API `key` for Venafi Cloud.  Example: -k xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+		Usage:       "REQUIRED/CLOUD. Your API `key` for Venafi Cloud.  Example: -k aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
 		Destination: &flags.apiKey,
 	}
 
@@ -56,7 +56,8 @@ var (
 
 	flagTPPToken = &cli.StringFlag{
 		Name:        "t",
-		Usage:       "REQUIRED/TPP Your access or refresh `token` for Trust Protection Platform. Example: -t <TPP token>",
+		Usage:       "REQUIRED/TPP. Your access token (or refresh token if getcred) for Trust Protection Platform. " +
+			"Example: -t Ab01Cd23Ef45Uv67Wx89Yz==",
 		Destination: &flags.tppToken,
 	}
 
@@ -70,9 +71,9 @@ var (
 		Name:        "z",
 		Destination: &flags.zone,
 		Usage: "REQUIRED. The zone that defines the enrollment configuration. In Trust Protection Platform this is " +
-			"equivelant to the policy path where the certificate object will be stored. \n\t\t" + UtilityShortName +
-			" prepends \\VED\\Policy\\, so you only need to specify policy folders within the root Policy folder. \n" +
-			"\t\tExample: -z Corp\\Engineering",
+			"equivalent to the policy folder path where the certificate object will be placed. " + UtilityShortName +
+			" prepends \\VED\\Policy\\, so you only need to specify child folders under the root Policy folder. " +
+			"Example: -z Corp\\Engineering",
 	}
 
 	flagCADN = &cli.StringFlag{
@@ -115,31 +116,31 @@ var (
 
 	flagOrg = &cli.StringFlag{
 		Name:        "o",
-		Usage:       "Use to specify organization O",
+		Usage:       "Use to specify organization (O)",
 		Destination: &flags.org,
 	}
 
 	flagState = &cli.StringFlag{
 		Name:        "st",
-		Usage:       "Use to specify state ST",
+		Usage:       "Use to specify state/province (ST)",
 		Destination: &flags.state,
 	}
 
 	flagCountry = &cli.StringFlag{
 		Name:        "c",
-		Usage:       "Use to specify country C",
+		Usage:       "Use to specify country (C)",
 		Destination: &flags.country,
 	}
 
 	flagLocality = &cli.StringFlag{
 		Name:        "l",
-		Usage:       "Use to specify locality L",
+		Usage:       "Use to specify city/locality (L)",
 		Destination: &flags.locality,
 	}
 
 	flagOrgUnits = &cli.StringSliceFlag{
 		Name:  "ou",
-		Usage: "Use to specify organization unit OU",
+		Usage: "Use to specify an organizational unit (OU)",
 		//Destination: &flags.orgUnits,
 	}
 
@@ -256,7 +257,7 @@ var (
 		Name: "key-password",
 		Usage: "Use to specify a password for encrypting the private key. " +
 			"For a non-encrypted private key, omit this option and instead specify -no-prompt. " +
-			"Example: -key-password file:/path-to/mypasswds.txt",
+			"Example: -key-password file:/path-to/mypasswd.txt",
 		Destination: &flags.keyPassword,
 	}
 
