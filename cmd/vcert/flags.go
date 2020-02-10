@@ -469,8 +469,8 @@ var (
 		flagThumbprint,
 		credentialsFlags,
 		sortedFlags(flagsApppend(
-			hiddenFlags(flagZone, true),       //todo: fix aruba tests and remove
-			hiddenFlags(flagCommonName, true), //todo: fix aruba tests and remove
+			hiddenFlags(flagZone, true),     //todo: fix aruba tests and remove
+			hiddenFlags(subjectFlags, true), //todo: fix aruba tests and remove
 			flagCADN,
 			flagCertFile,
 			flagChainFile,
