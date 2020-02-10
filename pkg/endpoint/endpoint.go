@@ -355,18 +355,17 @@ func curveInSlice(i certificate.EllipticCurve, s []certificate.EllipticCurve) bo
 	return false
 }
 
-func checkStringByRegexp(s string, regexs []string) (matched bool) {
-	var err error
+func checkStringByRegexp(s string, regexs []string) bool {
 	for _, r := range regexs {
-		matched, err = regexp.MatchString(r, s)
+		matched, err := regexp.MatchString(r, s)
 		if err == nil && matched {
 			return true
 		}
 	}
-	return
+	return false
 }
 
-func isComponentValid(ss []string, regexs []string, optional bool) (matched bool) {
+func isComponentValid(ss []string, regexs []string, optional bool) bool {
 	if optional && len(ss) == 0 {
 		return true
 	}
