@@ -377,7 +377,7 @@ var (
 	commonFlags              = []cli.Flag{flagInsecure, flagFormat, flagVerbose, flagNoPrompt}
 	keyFlags                 = []cli.Flag{flagKeyType, flagKeySize, flagKeyCurve, flagKeyFile, flagKeyPassword}
 	sansFlags                = []cli.Flag{flagDNSSans, flagEmailSans, flagIPSans}
-	subjectFlags             = flagsApppend(flagCommonName, flagCountry, flagState, flagLocality, flagOrg, flagOrgUnits, sansFlags)
+	subjectFlags             = flagsApppend(flagCommonName, flagCountry, flagState, flagLocality, flagOrg, flagOrgUnits)
 	sortableCredentialsFlags = []cli.Flag{
 		flagTestMode,
 		flagTestModeDelay,
@@ -402,6 +402,7 @@ var (
 
 	genCsrFlags = sortedFlags(flagsApppend(
 		subjectFlags,
+		sansFlags,
 		flagCSRFile,
 		keyFlags,
 		flagNoPrompt,
@@ -414,6 +415,7 @@ var (
 		credentialsFlags,
 		sortedFlags(flagsApppend(
 			sortableCredentialsFlags,
+			hiddenFlags(subjectFlags, true), // backward compatibility
 			commonFlags,
 			flagCADN,
 			flagCertFile,
@@ -467,7 +469,8 @@ var (
 		flagThumbprint,
 		credentialsFlags,
 		sortedFlags(flagsApppend(
-			hiddenFlags(flagZone, true),
+			hiddenFlags(flagZone, true),       //todo: fix aruba tests and remove
+			hiddenFlags(flagCommonName, true), //todo: fix aruba tests and remove
 			flagCADN,
 			flagCertFile,
 			flagChainFile,
