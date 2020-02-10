@@ -26,7 +26,7 @@ var (
 	connectionType endpoint.ConnectorType
 	commandEnroll  = &cli.Command{
 		Before: runBeforeCommand,
-		Flags:  enrollFlags1,
+		Flags:  enrollFlags,
 		Action: doCommandEnroll1,
 		Name:   commandEnrollName,
 		Usage:  "To enroll a certificate,",
@@ -42,7 +42,7 @@ var (
 	commandGetcred = &cli.Command{
 		Before: runBeforeCommand,
 		Name:   commandGetcredName,
-		Flags:  getcredFlags1,
+		Flags:  getcredFlags,
 		Action: doCommandGetcred1,
 		Usage:  "To obtain a new token for authentication",
 		UsageText: ` vcert getcred -u https://tpp.example.com -username <TPP user> -password <TPP user password>
@@ -54,7 +54,7 @@ var (
 	commandGenCSR = &cli.Command{
 		Before: runBeforeCommand,
 		Name:   commandGenCSRName,
-		Flags:  genCsrFlags1,
+		Flags:  genCsrFlags,
 		Action: doCommandGenCSR1,
 		Usage:  "To generate a certificate signing request (CSR)",
 		UsageText: ` vcert gencsr -cn <common name> -o <organization> -ou <organizational unit> -c <country> -st <state> -l <locality> -key-file <key output file> -csr-file <csr output file>
@@ -64,7 +64,7 @@ var (
 	commandPickup = &cli.Command{
 		Before: runBeforeCommand,
 		Name:   commandPickupName,
-		Flags:  pickupFlags1,
+		Flags:  pickupFlags,
 		Action: doCommandPickup1,
 		Usage:  "To retrieve a certificate",
 		UsageText: ` vcert pickup <Required Venafi Cloud Config> OR <Required Trust Protection Platform Config> <Options>
@@ -75,7 +75,7 @@ var (
 	commandRevoke = &cli.Command{
 		Before: runBeforeCommand,
 		Name:   commandRevokeName,
-		Flags:  revokeFlags1,
+		Flags:  revokeFlags,
 		Action: doCommandRevoke1,
 		Usage:  "To revoke a certificate",
 		UsageText: ` vcert revoke <Required Trust Protection Platform Config> <Options>
@@ -85,7 +85,7 @@ var (
 	commandRenew = &cli.Command{
 		Before: runBeforeCommand,
 		Name:   commandRenewName,
-		Flags:  renewFlags1,
+		Flags:  renewFlags,
 		Action: doCommandRenew1,
 		Usage:  "To renew a certificate",
 		UsageText: ` vcert renew <Required Venafi Cloud Config> OR <Required Trust Protection Platform Config> <Options>

@@ -480,16 +480,6 @@ func TestGetcredFlagsNoTrust(t *testing.T) {
 
 }
 
-func TestGetcredFlagsCloud(t *testing.T) {
-
-	var err error
-
-	err = getcredFlags.Set("k", "xxxxxxxxxxxxxxxxxxxxxxx")
-	if err == nil {
-		t.Fatalf("getcred have no -k flag")
-	}
-}
-
 func TestIPSliceString(t *testing.T) {
 	ips := ipSlice{net.ParseIP("1.1.1.1"), net.ParseIP("1.1.1.2"), net.ParseIP("1.1.1.3")}
 	ipString := ips.String()

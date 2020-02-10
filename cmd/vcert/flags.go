@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/urfave/cli/v2"
+	"sort"
 	"strings"
 )
 
@@ -55,7 +56,7 @@ var (
 
 	flagTPPToken = &cli.StringFlag{
 		Name:        "t",
-		Usage:       "REQUIRED/TPP Your access or refresh `token` for Trust Protection Platform. Example: -t <tpp access token>",
+		Usage:       "REQUIRED/TPP Your access or refresh `token` for Trust Protection Platform. Example: -t <TPP token>",
 		Destination: &flags.tppToken,
 	}
 
@@ -82,14 +83,14 @@ var (
 	}
 
 	flagKeyCurve = &cli.StringFlag{
-		Name:        "key-curve",
-		Usage:       "Use to specify the ECDSA key curve. Options include: p256 (default) | p521 | p384",
+		Name: "key-curve",
+		Usage: "Use to specify the ECDSA key curve. Options include: p256 | p521 | p384	 (Default: p256)",
 		Destination: &flags.keyCurveString,
 	}
 
 	flagKeyType = &cli.StringFlag{
 		Name:        "key-type",
-		Usage:       "Use to specify a key type. Options include: rsa (default) | ecdsa",
+		Usage:       "Use to specify a key type. Options include: rsa | ecdsa (Default: rsa)",
 		Destination: &flags.keyTypeString,
 	}
 
@@ -97,6 +98,7 @@ var (
 		Name:        "key-size",
 		Usage:       "Use to specify a key size (default 2048).",
 		Destination: &flags.keySize,
+		DefaultText: "2048",
 	}
 
 	flagFriendlyName = &cli.StringFlag{
@@ -160,7 +162,7 @@ var (
 
 	flagFormat = &cli.StringFlag{
 		Name: "format",
-		Usage: "Use to specify the output format. PEM is the default format. Options include: pem | json | pkcs12." +
+		Usage: "Use to specify the output format. Options include: pem | json | pkcs12." +
 			" If PKCS#12 format is specified, then all objects should be written using -file option.",
 		Destination: &flags.format,
 		Value:       "pem",
@@ -197,7 +199,7 @@ var (
 	flagChainOption = &cli.StringFlag{
 		Name: "chain",
 		Usage: "Use to include the certificate chain in the output, and to specify where to place it in the file. " +
-			"By default, it is placed last. Options include: ignore | root-first | root-last",
+			"Options include: ignore | root-first | root-last",
 		Value:       "root-last",
 		Destination: &flags.chainOption,
 	}
@@ -224,13 +226,13 @@ var (
 	flagTestMode = &cli.BoolFlag{
 		Name: "test-mode",
 		Usage: "Use to test enrollment without a connection to a real endpoint." +
-			" Options include: true | false (default false uses a real connection for enrollment).",
+			" Options include: true | false",
 		Destination: &flags.testMode,
 	}
 
 	flagTestModeDelay = &cli.IntFlag{
 		Name:        "test-mode-delay",
-		Usage:       "Use to specify the maximum, random seconds for a test-mode connection delay (default 15).",
+		Usage:       "Use to specify the maximum, random seconds for a test-mode connection delay.",
 		Value:       15,
 		Destination: &flags.testModeDelay,
 	}
@@ -273,7 +275,7 @@ var (
 	flagTimeout = &cli.IntFlag{
 		Name:        "timeout",
 		Value:       180,
-		Usage:       "Time to wait for certificate to be processed at the service side (default is 0 for `pickup` meaning just one retrieve attempt).",
+		Usage:       "Time to wait for certificate to be processed at the service side. If 0 - only one retrieve attempt.",
 		Destination: &flags.timeout,
 	}
 
@@ -327,7 +329,7 @@ var (
 
 	flagDistinguishedName = &cli.StringFlag{
 		Name: "id",
-		Usage: "Use to specify the ID of the certificate to revoke. Required unless -thumbprint is specified. " +
+		Usage: "Use to specify the ID of the certificate. Required unless -thumbprint is specified. " +
 			"Marks the certificate as disabled and no new certificate will be enrolled to replace the revoked one. " +
 			"If a replacement certificate is necessary, also specify -no-retire=true.",
 		Destination: &flags.distinguishedName,
@@ -372,19 +374,15 @@ var (
 		Destination: &flags.clientId,
 	}
 
-	commonFlags  = []cli.Flag{flagInsecure, flagFormat, flagVerbose, flagNoPrompt}
-	keyFlags     = []cli.Flag{flagKeyType, flagKeySize, flagKeyCurve, flagKeyFile, flagKeyPassword}
-	sansFlags    = []cli.Flag{flagDNSSans, flagEmailSans, flagIPSans}
-	subjectFlags = flagsApppend(flagCommonName, flagCountry, flagState, flagLocality, flagOrg, flagOrgUnits, sansFlags)
-
-	//todo: restore showing of flags in order it was before refactoring
-	credentialsFlags = []cli.Flag{
+	commonFlags              = []cli.Flag{flagInsecure, flagFormat, flagVerbose, flagNoPrompt}
+	keyFlags                 = []cli.Flag{flagKeyType, flagKeySize, flagKeyCurve, flagKeyFile, flagKeyPassword}
+	sansFlags                = []cli.Flag{flagDNSSans, flagEmailSans, flagIPSans}
+	subjectFlags             = flagsApppend(flagCommonName, flagCountry, flagState, flagLocality, flagOrg, flagOrgUnits, sansFlags)
+	sortableCredentialsFlags = []cli.Flag{
+		flagTestMode,
+		flagTestModeDelay,
 		flagConfig,
 		flagProfile,
-		delimiter(" "),
-		flagKey,
-		flagTPPToken,
-		flagUrl,
 		flagUrlDeprecated,
 		flagTPPUserDeprecated,
 		flagTPPPasswordDeprecated,
@@ -393,81 +391,97 @@ var (
 		flagClientP12Deprecated,
 		flagClientP12PWDeprecated,
 		flagTrustBundle,
-		flagTestMode,
-		flagTestModeDelay,
+	}
+
+	credentialsFlags = []cli.Flag{
+		flagKey,
+		flagTPPToken,
+		flagUrl,
 		delimiter(" "),
 	}
-	genCsrFlags1 = flagsApppend(
+
+	genCsrFlags = sortedFlags(flagsApppend(
 		subjectFlags,
 		flagCSRFile,
 		keyFlags,
 		flagNoPrompt,
 		flagVerbose,
-	)
+	))
 
-	enrollFlags1 = flagsApppend(
+	enrollFlags = flagsApppend(
 		flagCommonName,
 		flagZone,
 		credentialsFlags,
-		flagCADN,
-		flagCertFile,
-		flagChainFile,
-		flagChainOption,
-		flagCSROption,
-		flagDistinguishedName,
-		sansFlags,
-		flagFile,
-		flagFriendlyName,
-		keyFlags,
-		flagNoPickup,
-		flagPickupIDFile,
-		flagTimeout,
-		commonFlags,
+		sortedFlags(flagsApppend(
+			sortableCredentialsFlags,
+			commonFlags,
+			flagCADN,
+			flagCertFile,
+			flagChainFile,
+			flagChainOption,
+			flagCSROption,
+			flagDistinguishedName,
+			sansFlags,
+			flagFile,
+			flagFriendlyName,
+			keyFlags,
+			flagNoPickup,
+			flagPickupIDFile,
+			flagTimeout,
+		)),
 	)
 
-	pickupFlags1 = flagsApppend(
+	pickupFlags = flagsApppend(
 		credentialsFlags,
-		flagCertFile,
-		flagChainFile,
-		flagChainOption,
-		flagFile,
-		flagKeyFile,
-		flagKeyPassword,
-		flagPickupID,
-		flagPickupIDFile,
-		flagTimeout,
-		flagZone,
-		commonFlags,
+		sortedFlags(flagsApppend(
+			sortableCredentialsFlags,
+			flagCertFile,
+			flagChainFile,
+			flagChainOption,
+			flagFile,
+			flagKeyFile,
+			flagKeyPassword,
+			flagPickupID,
+			flagPickupIDFile,
+			flagTimeout,
+			flagZone,
+			commonFlags,
+		)),
 	)
 
-	revokeFlags1 = flagsApppend(
+	revokeFlags = flagsApppend(
 		credentialsFlags,
 		flagDistinguishedName,
-		flagRevocationNoRetire,
-		flagRevocationReason,
+		sortedFlags(flagsApppend(
+			flagRevocationNoRetire,
+			flagRevocationReason,
+			flagThumbprint,
+			flagZone,
+			commonFlags,
+			sortableCredentialsFlags,
+		)),
+	)
+
+	renewFlags = flagsApppend(
+		flagDistinguishedName,
 		flagThumbprint,
-		flagZone,
-		commonFlags,
-	)
-
-	renewFlags1 = flagsApppend(
-		flagDistinguishedName,
-		flagThumbprint,
-		delimiter(" "),
 		credentialsFlags,
-		flagCADN,
-		flagCertFile,
-		flagChainFile,
-		flagChainOption,
-		flagCSROption,
-		flagFriendlyName,
-		keyFlags,
-		flagNoPickup,
-		flagTimeout,
-		commonFlags,
+		sortedFlags(flagsApppend(
+			flagCADN,
+			flagCertFile,
+			flagChainFile,
+			flagChainOption,
+			flagCSROption,
+			flagFriendlyName,
+			keyFlags,
+			flagNoPickup,
+			flagTimeout,
+			commonFlags,
+			sortableCredentialsFlags,
+		)),
 	)
 
-	getcredFlags1 = flagsApppend(
+	getcredFlags = sortedFlags(flagsApppend(
 		flagClientP12,
 		flagClientP12PW,
 		flagConfig,
@@ -480,7 +494,7 @@ var (
 		flagScope,
 		flagClientId,
 		commonFlags,
-	)
+	))
 )
 
 var delimiterCounter int
@@ -501,4 +515,11 @@ func flagsApppend(flags ...interface{}) []cli.Flag {
 		}
 	}
 	return result
+}
+
+func sortedFlags(a []cli.Flag) []cli.Flag {
+	b := make([]cli.Flag, len(a))
+	copy(b, a)
+	sort.Sort(cli.FlagsByName(b))
+	return b
 }

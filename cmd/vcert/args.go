@@ -17,7 +17,6 @@
 package main
 
 import (
-	"flag"
 	"github.com/Venafi/vcert/pkg/certificate"
 )
 
@@ -31,24 +30,6 @@ const (
 )
 
 var (
-	genCsrFlags  = flag.NewFlagSet(commandGenCSRName, flag.PanicOnError)
-	genCsrParams commandFlags
-
-	enrollFlags  = flag.NewFlagSet(commandEnrollName, flag.PanicOnError)
-	enrollParams commandFlags
-
-	pickupFlags = flag.NewFlagSet(commandPickupName, flag.PanicOnError)
-	pickParams  commandFlags
-
-	revokeFlags  = flag.NewFlagSet(commandRevokeName, flag.PanicOnError)
-	revokeParams commandFlags
-
-	renewFlags  = flag.NewFlagSet(commandRenewName, flag.PanicOnError)
-	renewParams commandFlags
-
-	getcredFlags  = flag.NewFlagSet(commandGetcredName, flag.PanicOnError)
-	getcredParams commandFlags
-
 	flags commandFlags
 )
 
