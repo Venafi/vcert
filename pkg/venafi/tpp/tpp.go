@@ -277,6 +277,7 @@ func (c *Connector) request(method string, resource urlResource, data interface{
 	}
 
 	r, _ := http.NewRequest(method, url, payload)
+	r.Close = true
 	if c.accessToken != "" {
 		r.Header.Add("Authorization", fmt.Sprintf("Bearer %s", c.accessToken))
 	} else if c.apiKey != "" {

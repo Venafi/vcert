@@ -26,7 +26,7 @@ var (
 	connectionType endpoint.ConnectorType
 	commandEnroll  = &cli.Command{
 		Before: runBeforeCommand,
-		Flags:  enrollFlags1,
+		Flags:  enrollFlags,
 		Action: doCommandEnroll1,
 		Name:   commandEnrollName,
 		Usage:  "To enroll a certificate,",
@@ -37,121 +37,12 @@ var (
 		vcert enroll -u <https://tpp.example.com> -t <tpp access token> -cn <common name> -z <zone> -key-size 4096 -san-dns <alt common name> -san-dns <alt common name2>
 		vcert enroll -u <https://tpp.example.com> -t <tpp access token> -cn <common name> -z <zone> -key-type ecdsa -key-curve p384 -san-dns <alt common name> -san-dns <alt common name2>
 		vcert enroll -u <https://tpp.example.com> -t <tpp access token> -cn <common name> -z <zone> -client-pkcs12 <client PKCS#12 archive> -client-pkcs12-pw <PKCS#12 archive password>
-
-		Options required for both Venafi Cloud and Trust Protection Platform:
-		  -z
-			The zone that defines the enrollment configuration. In Trust Protection Platform
-			this is equivelant to the policy path where the certificate object will be
-			stored. vCert prepends \VED\Policy\, so you only need to specify policy folders
-			within the root Policy folder. Example: -z Corp\Engineering
-		
-		Required for Venafi Cloud:
-		  -k
-			Your API Key for Venafi Cloud.  Example: -k xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-		
-		Required for Trust Protection Platform:
-		  -t
-			Your access token for Trust Protection Platform. Example: -t <tpp access token>
-		  -u
-			The URL of the Trust Protection Platform WebSDK. Example: -u
-			https://tpp.example.com
-		
-		Options:
-		  -chain
-			Use to include the certificate chain in the output, and to specify where to
-			place it in the file. By default, it is placed last. Options include: ignore |
-			root-first | root-last
-		  -cn
-			Use to specify the common name (CN). This is required for enrollment except when
-			providing a CSR file.
-		  -nickname
-			Use to specify a name for the new certificate object that will be created and
-			placed in a policy (which you can specify using the -z option).
-		  -config
-			Use to specify INI configuration file containing connection details
-				For TPP: url, access_token, tpp_zone
-				For Cloud: cloud_apikey, cloud_zone
-				TPP & Cloud: trust_bundle, test_mode
-		  -file
-			Use to specify a file name and a location where the resulting file should be
-			written. If this option is used the key, certificate, and chain will be written
-			to the same file. Example: /path-to/newcert.pem
-		  -csr
-			Use to specify the CSR and private key location. Options include: local | service | file.
-				local:   The private key and CSR will be generated locally (default)
-				service: The private key and CSR will be generated at service side
-				file:    The CSR will be read from a file by name. Example: file:/path-to/csr.pem
-		  -cert-file
-			Use to specify a file name and a location where the resulting certificate file
-			should be written. Example: /path-to/newcert.pem
-		  -chain-file
-			Use to specify a path and file name where the resulting chain file should be
-			written, if no chain file is specified the chain will be stored in the same file
-			as the certificate. Example: /path-to/chain.pem
-		  -client-pkcs12
-			Use to specify a client PKCS#12 archive for mutual TLS (for 2FA, use the getcred
-			action to authenticate with Venafi Platform using a client certificate).
-		  -client-pkcs12-pw
-			Use to specify the password for a client PKCS#12 archive. Use in combination
-			with -client-pkcs12 option.
-		  -format
-			Use to specify the output format. PEM is the default format. Options include:
-			pem | json | pkcs12. If PKCS#12 format is specified, then all objects should be
-			written using -file option.
-		  -key-file
-			Use to specify a file name and a location where the resulting private key file
-			should be written. Do not use in combination with -csr file. Example:
-			/path-to/newkey.pem
-		  -key-password
-			Use to specify a password for encrypting the private key. For a non-encrypted
-			private key, omit this option and instead specify -no-prompt. Example:
-			-key-password file:/path-to/mypasswds.txt
-		  -key-size
-			Use to specify a key size (default 2048).
-		  -no-prompt
-			Use to bypass authentication and password prompts. Useful for scripting.
-		  -no-pickup
-			Use to not wait for the certificate to be issued.
-		  -pickup-id-file
-			Use to specify a file name where Pickup ID will be stored.
-		  -profile
-			Use to specify effective section in ini-configuration file specified by -config
-			option.
-		  -san-dns
-			Use to specify a DNS Subject Alternative Name. To specify more than one, use
-			spaces like this: -san-dns test.abc.xyz -san-dns test1.abc.xyz etc.
-		  -san-email
-			Use to specify an Email Subject Alternative Name. This option can be repeated to
-			specify more than one value, like this: -san-email abc@abc.xyz -san-email
-			def@abc.xyz etc.
-		  -san-ip
-			Use to specify an IP Address Subject Alternative Name. This option can be
-			repeated to specify more than one value, like this: -san-ip 1.1.1.1 -san-ip
-			2.2.2.2.
-		  -trust-bundle
-			Use to specify a PEM file name to be used as trust anchors when communicating
-			with the remote server.
-		  -test-mode
-			Use to test enrollment without a connection to a real endpoint. Options include:
-			true | false (default false uses a real connection for enrollment).
-		  -test-mode-delay
-			Use to specify the maximum, random seconds for a test-mode connection delay
-			(default 15).
-		  -verbose
-			Use to increase the level of logging detail, which is helpful when
-			troubleshooting issues.
-		  -timeout
-			Time to wait for certificate to be processed at the service side. In seconds
-			(default 180).
-		  -h
-			Use to show the help text.
-
 `,
 	}
 	commandGetcred = &cli.Command{
 		Before: runBeforeCommand,
 		Name:   commandGetcredName,
-		Flags:  getcredFlags1,
+		Flags:  getcredFlags,
 		Action: doCommandGetcred1,
 		Usage:  "To obtain a new token for authentication",
 		UsageText: ` vcert getcred -u https://tpp.example.com -username <TPP user> -password <TPP user password>
@@ -163,7 +54,7 @@ var (
 	commandGenCSR = &cli.Command{
 		Before: runBeforeCommand,
 		Name:   commandGenCSRName,
-		Flags:  genCsrFlags1,
+		Flags:  genCsrFlags,
 		Action: doCommandGenCSR1,
 		Usage:  "To generate a certificate signing request (CSR)",
 		UsageText: ` vcert gencsr -cn <common name> -o <organization> -ou <organizational unit> -c <country> -st <state> -l <locality> -key-file <key output file> -csr-file <csr output file>
@@ -173,7 +64,7 @@ var (
 	commandPickup = &cli.Command{
 		Before: runBeforeCommand,
 		Name:   commandPickupName,
-		Flags:  pickupFlags1,
+		Flags:  pickupFlags,
 		Action: doCommandPickup1,
 		Usage:  "To retrieve a certificate",
 		UsageText: ` vcert pickup <Required Venafi Cloud Config> OR <Required Trust Protection Platform Config> <Options>
@@ -184,7 +75,7 @@ var (
 	commandRevoke = &cli.Command{
 		Before: runBeforeCommand,
 		Name:   commandRevokeName,
-		Flags:  revokeFlags1,
+		Flags:  revokeFlags,
 		Action: doCommandRevoke1,
 		Usage:  "To revoke a certificate",
 		UsageText: ` vcert revoke <Required Trust Protection Platform Config> <Options>
@@ -194,7 +85,7 @@ var (
 	commandRenew = &cli.Command{
 		Before: runBeforeCommand,
 		Name:   commandRenewName,
-		Flags:  renewFlags1,
+		Flags:  renewFlags,
 		Action: doCommandRenew1,
 		Usage:  "To renew a certificate",
 		UsageText: ` vcert renew <Required Venafi Cloud Config> OR <Required Trust Protection Platform Config> <Options>

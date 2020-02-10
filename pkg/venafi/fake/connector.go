@@ -229,7 +229,10 @@ func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (er
 }
 
 func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration, err error) {
-	return endpoint.NewZoneConfiguration(), nil
+	config = endpoint.NewZoneConfiguration()
+	policy, err := c.ReadPolicyConfiguration()
+	config.Policy = *policy
+	return
 }
 
 // RenewCertificate attempts to renew the certificate
