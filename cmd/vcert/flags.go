@@ -415,7 +415,7 @@ var (
 		credentialsFlags,
 		sortedFlags(flagsApppend(
 			sortableCredentialsFlags,
-			hiddenFlags(subjectFlags, true), // backward compatibility
+			hiddenFlags(subjectFlags[1:], true), // backward compatibility
 			commonFlags,
 			flagCADN,
 			flagCertFile,
