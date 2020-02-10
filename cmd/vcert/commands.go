@@ -209,7 +209,7 @@ func runBeforeCommand(c *cli.Context) error {
 	flags.orgUnits = c.StringSlice("ou")
 	flags.dnsSans = c.StringSlice("san-dns")
 	flags.emailSans = c.StringSlice("san-email")
-	flags.customFields = c.StringSlice("custom-field")
+	flags.customFields = c.StringSlice("field")
 
 	for _, stringIP := range c.StringSlice("san-ip") {
 		ip := net.ParseIP(stringIP)
