@@ -422,7 +422,6 @@ var (
 			flagChainFile,
 			flagChainOption,
 			flagCSROption,
-			flagDistinguishedName,
 			sansFlags,
 			flagFile,
 			flagFriendlyName,
@@ -446,7 +445,7 @@ var (
 			flagPickupID,
 			flagPickupIDFile,
 			flagTimeout,
-			flagZone,
+			hiddenFlags(flagZone, true), //todo: fix aruba tests and remove
 			commonFlags,
 		)),
 	)
@@ -476,7 +475,6 @@ var (
 			flagChainFile,
 			flagChainOption,
 			flagCSROption,
-			flagFriendlyName,
 			keyFlags,
 			flagNoPickup,
 			flagTimeout,
