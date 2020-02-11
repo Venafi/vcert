@@ -17,62 +17,38 @@
 package main
 
 import (
-	"flag"
-	"fmt"
-	"io/ioutil"
-	"os"
-	"strings"
-
 	"github.com/Venafi/vcert/pkg/certificate"
 )
 
-type command int
-
 const (
-	commandUnused command = iota
-	commandGenCSR
-	commandEnroll
-	commandPickup
-	commandRevoke
-	commandRenew
-	commandGetcred
+	commandGenCSRName  = "gencsr"
+	commandEnrollName  = "enroll"
+	commandPickupName  = "pickup"
+	commandRevokeName  = "revoke"
+	commandRenewName   = "renew"
+	commandGetcredName = "getcred"
 )
 
 var (
-	genCsrFlags  = flag.NewFlagSet("gencsr", flag.PanicOnError)
-	genCsrParams commandFlags
-
-	enrollFlags  = flag.NewFlagSet("enroll", flag.PanicOnError)
-	enrollParams commandFlags
-
-	pickupFlags = flag.NewFlagSet("pickup", flag.PanicOnError)
-	pickParams  commandFlags
-
-	revokeFlags  = flag.NewFlagSet("revoke", flag.PanicOnError)
-	revokeParams commandFlags
-
-	renewFlags  = flag.NewFlagSet("renew", flag.PanicOnError)
-	renewParams commandFlags
-
-	getcredFlags  = flag.NewFlagSet("getcred", flag.PanicOnError)
-	getcredParams commandFlags
+	flags commandFlags
 )
 
 type commandFlags struct {
 	verbose            bool
 	url                string
-	tppURL             string
 	tppUser            string
 	tppPassword        string
 	tppToken           string
 	apiKey             string
-	cloudURL           string
+	cloudURL           string //deprecated
 	zone               string
 	caDN               string
 	csrOption          string
 	keyType            certificate.KeyType
+	keyTypeString      string
 	keySize            int
 	keyCurve           certificate.EllipticCurve
+	keyCurveString     string
 	keyPassword        string
 	friendlyName       string
 	commonName         string
@@ -110,135 +86,4 @@ type commandFlags struct {
 	clientP12PW        string
 	clientId           string
 	scope              string
-}
-
-func createFromCommandFlags(co command) *commandFlags {
-	var f commandFlags
-
-	switch co {
-	case commandGenCSR:
-		f = genCsrParams
-	case commandEnroll:
-		f = enrollParams
-	case commandPickup:
-		f = pickParams
-	case commandRevoke:
-		f = revokeParams
-	case commandRenew:
-		f = renewParams
-	case commandGetcred:
-		f = getcredParams
-	}
-
-	return &f
-}
-
-func validateFlags(c command) error {
-	switch c {
-	case commandGenCSR:
-		return validateGenerateFlags()
-	case commandEnroll:
-		return validateEnrollmentFlags()
-	case commandPickup:
-		return validatePickupFlags()
-	case commandRevoke:
-		return validateRevokeFlags()
-	case commandRenew:
-		return validateRenewFlags()
-	case commandGetcred:
-		return validateGetcredFlags()
-	}
-
-	return nil
-}
-
-func parseArgs() (co command, cf *commandFlags, err error) {
-	if len(os.Args) <= 1 {
-		showvcertUsage()
-		exit(0)
-	}
-
-	switch strings.ToLower(os.Args[1]) {
-	case "gencsr":
-		co = commandGenCSR
-		err = genCsrFlags.Parse(os.Args[2:])
-		if err != nil {
-			logger.Panicf("%s", err)
-		}
-	case "enroll":
-		co = commandEnroll
-		err = enrollFlags.Parse(os.Args[2:])
-		if err != nil {
-			fmt.Printf("%s", err)
-			logger.Panicf("%s", err)
-		}
-	case "pickup":
-		co = commandPickup
-		err = pickupFlags.Parse(os.Args[2:])
-		if err != nil {
-			logger.Panicf("%s", err)
-		}
-	case "revoke":
-		co = commandRevoke
-		err = revokeFlags.Parse(os.Args[2:])
-		if err != nil {
-			logger.Panicf("%s", err)
-		}
-	case "renew":
-		co = commandRenew
-		err = renewFlags.Parse(os.Args[2:])
-		if err != nil {
-			logger.Panicf("%s", err)
-		}
-	case "getcred":
-		co = commandGetcred
-		err = getcredFlags.Parse(os.Args[2:])
-		if err != nil {
-			logger.Panicf("%s", err)
-		}
-	case "-v", "--v", "-version", "version":
-		printVersion()
-		exit(0)
-
-	default:
-		showvcertUsage()
-		exit(0)
-	}
-
-	err = validateFlags(co)
-	if err != nil {
-		logger.Panicf("%s", err)
-	}
-	cf = createFromCommandFlags(co)
-
-	if 0 == strings.Index(cf.distinguishedName, "file:") {
-		fileName := cf.distinguishedName[5:]
-		bytes, err := ioutil.ReadFile(fileName)
-		if err != nil {
-			logger.Panicf("Failed to read Certificate DN: %s", err)
-		}
-		cf.distinguishedName = strings.TrimSpace(string(bytes))
-	}
-
-	if 0 == strings.Index(cf.thumbprint, "file:") {
-		certFileName := cf.thumbprint[5:]
-		cf.thumbprint, err = readThumbprintFromFile(certFileName)
-		if err != nil {
-			logger.Panicf("Failed to read certificate fingerprint: %s", err)
-		}
-	}
-
-	if cf.format != "" {
-		formats := map[string]bool{
-			"pem":    true,
-			"json":   true,
-			"pkcs12": true,
-		}
-
-		if _, ok := formats[cf.format]; !ok {
-			logger.Panicf("Unexpected output format: %s", cf.format)
-		}
-	}
-
-	return co, cf, nil
 }

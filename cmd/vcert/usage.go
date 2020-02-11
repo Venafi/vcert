@@ -19,7 +19,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"unicode"
 )
 
@@ -75,12 +74,10 @@ func wrapArgumentDescriptionText(text string) string {
 }
 
 func showvcertUsage() {
-	fmt.Printf("%s\n", GetFormattedVersionString())
 	fmt.Printf("\tTo obtain a new token for authentication, use the 'getcred' action.\n")
 	fmt.Printf("\tTo generate a certificate signing request (CSR), use the 'gencsr' action.\n")
 	fmt.Printf("\tTo enroll a certificate, use the 'enroll' action.\n")
 	fmt.Printf("\tTo retrieve a certificate, use the 'pickup' action.\n")
 	fmt.Printf("\tTo renew a certificate, use the 'renew' action.\n")
 	fmt.Printf("\tTo revoke a certificate, use the 'revoke' action.\n")
-	fmt.Printf("\tFor additional help run '%s <action> -h'\n\n", os.Args[0])
 }

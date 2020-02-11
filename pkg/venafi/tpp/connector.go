@@ -180,6 +180,10 @@ func (c *Connector) RefreshAccessToken(auth *endpoint.Authentication) (resp Oaut
 		return resp, fmt.Errorf("failed to authenticate: missing credentials")
 	}
 
+	if auth.ClientId == "" {
+		auth.ClientId = defaultClientID
+	}
+
 	if auth.RefreshToken != "" {
 		data := oauthRefreshAccessTokenRequest{Client_id: auth.ClientId, Refresh_token: auth.RefreshToken}
 		result, err := processAuthData(c, urlResourceRefreshAccessToken, data)

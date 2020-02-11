@@ -28,7 +28,7 @@ Feature: PKCS#12 format output
   Scenario: where it outputs error if PKCS#12 format is specified, but STDOUT output is used (default output)
     When I enroll random certificate in test-mode with -no-prompt -format pkcs12
       Then it should fail with "PKCS#12 format can only be used if all objects are written to one file (see -file option)"
-    When I retrieve the certificate in test-mode with -pickup-id xxx -no-prompt -format pkcs12
+    When I retrieve the certificate in test-mode with -pickup-id xxx -key-password xxx -format pkcs12
       Then it should fail with "PKCS#12 format can only be used if all objects are written to one file (see -file option)"
     When I renew the certificate in TPP with flags -id xxx -no-prompt -format pkcs12
       Then it should fail with "PKCS#12 format can only be used if all objects are written to one file (see -file option)"

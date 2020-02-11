@@ -29,7 +29,7 @@ func TestGenerateRequest(t *testing.T) {
 	req = certificate.Request{}
 	req.Subject.CommonName = "vcert.test.vfidev.com"
 	req.CsrOrigin = certificate.LocalGeneratedCSR
-	req.KeyLength = 512
+	req.KeyType = certificate.KeyTypeECDSA
 
 	err := fake.GenerateRequest(nil, &req)
 	if err != nil {

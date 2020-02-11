@@ -32,7 +32,7 @@ func TestRetrieveCertificate(t *testing.T) {
 	req.Subject.CommonName = fmt.Sprintf("vcert.test%d.venafi.example.com", time.Now().Nanosecond())
 	req.Subject.Organization = []string{"Venafi, Inc."}
 	req.Subject.OrganizationalUnit = []string{"Automated Tests"}
-	req.KeyLength = 512
+	req.KeyType = certificate.KeyTypeECDSA
 	err = conn.GenerateRequest(zoneConfig, req)
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -77,7 +77,7 @@ func TestRequestCertificate(t *testing.T) {
 	req := &certificate.Request{}
 	req.Subject.CommonName = "test-mode"
 	req.CsrOrigin = certificate.LocalGeneratedCSR
-	req.KeyLength = 512
+	req.KeyType = certificate.KeyTypeECDSA
 
 	err := connector.GenerateRequest(nil, req)
 	if err != nil {
