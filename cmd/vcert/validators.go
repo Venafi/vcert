@@ -27,6 +27,14 @@ func readData(commandName string) error {
 		}
 		flags.distinguishedName = strings.TrimSpace(string(bytes))
 	}
+	if strings.HasPrefix(flags.keyPassword, "file:") {
+		fileName := flags.keyPassword[5:]
+		bytes, err := ioutil.ReadFile(fileName)
+		if err != nil {
+			return fmt.Errorf("Failed to read password from file: %s", err)
+		}
+		flags.keyPassword = strings.TrimSpace(string(bytes))
+	}
 	var err error
 	if strings.HasPrefix(flags.thumbprint, "file:") {
 		certFileName := flags.thumbprint[5:]
