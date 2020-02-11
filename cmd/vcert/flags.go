@@ -439,6 +439,7 @@ var (
 			flagNoPickup,
 			flagPickupIDFile,
 			flagTimeout,
+			flagCustomField,
 		)),
 	)
 
@@ -489,6 +490,7 @@ var (
 			flagTimeout,
 			commonFlags,
 			sortableCredentialsFlags,
+			flagCustomField,
 		)),
 	)
 
