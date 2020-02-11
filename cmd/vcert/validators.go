@@ -226,6 +226,10 @@ func validateEnrollFlags(commandName string) error {
 		logf("Warning: User\\Password authentication is deprecated, please use access token instead.")
 	}
 
+	if flags.tlsAddress != "" && flags.instance == "" {
+		return fmt.Errorf("-tls-address can't be specified without -instance flag")
+	}
+
 	return nil
 }
 
