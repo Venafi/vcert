@@ -55,8 +55,8 @@ var (
 	}
 
 	flagTPPToken = &cli.StringFlag{
-		Name:        "t",
-		Usage:       "REQUIRED/TPP. Your access token (or refresh token if getcred) for Trust Protection Platform. " +
+		Name: "t",
+		Usage: "REQUIRED/TPP. Your access token (or refresh token if getcred) for Trust Protection Platform. " +
 			"Example: -t Ab01Cd23Ef45Uv67Wx89Yz==",
 		Destination: &flags.tppToken,
 	}
@@ -250,8 +250,8 @@ var (
 	}
 
 	flagCSRFile = &cli.StringFlag{
-		Name:        "csr-file",
-		Usage:       "Use to specify a file name and a location where the resulting CSR file should be written. " +
+		Name: "csr-file",
+		Usage: "Use to specify a file name and a location where the resulting CSR file should be written. " +
 			"Example: --csr-file /tmp/newcsr.pem",
 		Destination: &flags.csrFile,
 	}
@@ -265,8 +265,8 @@ var (
 	}
 
 	flagPickupIDFile = &cli.StringFlag{
-		Name:        "pickup-id-file",
-		Usage:       "Use to specify the file name from where to read or write the Pickup ID. " +
+		Name: "pickup-id-file",
+		Usage: "Use to specify the file name from where to read or write the Pickup ID. " +
 			"Either --pickup-id or --pickup-id-file is required.",
 		Destination: &flags.pickupIDFile,
 	}
