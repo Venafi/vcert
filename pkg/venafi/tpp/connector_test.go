@@ -894,14 +894,14 @@ func TestReadPolicyConfiguration(t *testing.T) {
 		{
 			os.Getenv("TPPZONE_RESTRICTED"),
 			endpoint.Policy{
-				[]string{`^[\p{L}\p{N}-*]+\.vfidev\.com$`, `^[\p{L}\p{N}-*]+\.vfidev\.net$`, `^[\p{L}\p{N}-*]+\.vfide\.org$`},
+				[]string{`^([\p{L}\p{N}-*]+\.)*vfidev\.com$`, `^([\p{L}\p{N}-*]+\.)*vfidev\.net$`, `^([\p{L}\p{N}-*]+\.)*vfide\.org$`},
 				[]string{`^Venafi Inc\.$`},
 				[]string{"^Integration$"},
 				[]string{"^Utah$"},
 				[]string{"^Salt Lake$"},
 				[]string{"^US$"},
 				[]endpoint.AllowedKeyConfiguration{{certificate.KeyTypeRSA, []int{2048, 4096, 8192}, nil}},
-				[]string{`^[\p{L}\p{N}-]+\.vfidev\.com$`, `^[\p{L}\p{N}-]+\.vfidev\.net$`, `^[\p{L}\p{N}-]+\.vfide\.org$`},
+				[]string{`^([\p{L}\p{N}-*]+\.)*vfidev\.com$`, `^([\p{L}\p{N}-*]+\.)*vfidev\.net$`, `^([\p{L}\p{N}-*]+\.)*vfide\.org$`},
 				[]string{".*"},
 				[]string{".*"},
 				[]string{".*"},

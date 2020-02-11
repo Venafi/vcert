@@ -582,9 +582,9 @@ func (sp serverPolicy) toPolicy() (p endpoint.Policy) {
 		p.SubjectCNRegexes = make([]string, len(sp.WhitelistedDomains))
 		for i, d := range sp.WhitelistedDomains {
 			if sp.WildcardsAllowed {
-				p.SubjectCNRegexes[i] = addStartEnd(`[\p{L}\p{N}-*]+` + regexp.QuoteMeta("."+d))
+				p.SubjectCNRegexes[i] = addStartEnd(`([\p{L}\p{N}-*]+\.)*` + regexp.QuoteMeta(d))
 			} else {
-				p.SubjectCNRegexes[i] = addStartEnd(`[\p{L}\p{N}-]+` + regexp.QuoteMeta("."+d))
+				p.SubjectCNRegexes[i] = addStartEnd(`([\p{L}\p{N}-]+\.)*` + regexp.QuoteMeta(d))
 			}
 		}
 	}
@@ -619,7 +619,11 @@ func (sp serverPolicy) toPolicy() (p endpoint.Policy) {
 		} else {
 			p.DnsSanRegExs = make([]string, len(sp.WhitelistedDomains))
 			for i, d := range sp.WhitelistedDomains {
-				p.DnsSanRegExs[i] = addStartEnd(`[\p{L}\p{N}-]+` + regexp.QuoteMeta("."+d))
+				if sp.WildcardsAllowed {
+					p.DnsSanRegExs[i] = addStartEnd(`([\p{L}\p{N}-*]+\.)*` + regexp.QuoteMeta(d))
+				} else {
+					p.DnsSanRegExs[i] = addStartEnd(`([\p{L}\p{N}-]+\.)*` + regexp.QuoteMeta(d))
+				}
 			}
 		}
 	} else {
