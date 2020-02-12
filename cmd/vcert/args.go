@@ -34,56 +34,59 @@ var (
 )
 
 type commandFlags struct {
-	verbose            bool
-	url                string
-	tppUser            string
-	tppPassword        string
-	tppToken           string
 	apiKey             string
-	cloudURL           string //deprecated
-	zone               string
+	appInfo            string
 	caDN               string
-	csrOption          string
-	keyType            certificate.KeyType
-	keyTypeString      string
-	keySize            int
-	keyCurve           certificate.EllipticCurve
-	keyCurveString     string
-	keyPassword        string
-	friendlyName       string
-	commonName         string
-	distinguishedName  string
-	thumbprint         string
-	org                string
-	country            string
-	state              string
-	locality           string
-	orgUnits           stringSlice
-	dnsSans            stringSlice
-	ipSans             ipSlice
-	emailSans          emailSlice
-	format             string
-	file               string
-	keyFile            string
-	csrFile            string
 	certFile           string
 	chainFile          string
 	chainOption        string
-	noPrompt           bool
-	pickupID           string
-	trustBundle        string
-	noPickup           bool
-	testMode           bool
-	testModeDelay      int
-	revocationReason   string
-	revocationNoRetire bool
-	pickupIDFile       string
-	timeout            int
-	insecure           bool
-	config             string
-	profile            string
+	clientId           string
 	clientP12          string
 	clientP12PW        string
-	clientId           string
+	cloudURL           string //deprecated
+	commonName         string
+	config             string
+	country            string
+	csrFile            string
+	csrOption          string
+	distinguishedName  string
+	dnsSans            stringSlice
+	emailSans          emailSlice
+	file               string
+	format             string
+	friendlyName       string
+	insecure           bool
+	instance           string
+	ipSans             ipSlice
+	keyCurve           certificate.EllipticCurve
+	keyCurveString     string
+	keyFile            string
+	keyPassword        string
+	keySize            int
+	keyType            certificate.KeyType
+	keyTypeString      string
+	locality           string
+	noPickup           bool
+	noPrompt           bool
+	org                string
+	orgUnits           stringSlice
+	pickupID           string
+	pickupIDFile       string
+	profile            string
+	revocationNoRetire bool
+	revocationReason   string
 	scope              string
+	state              string
+	testMode           bool
+	testModeDelay      int
+	thumbprint         string
+	timeout            int
+	tlsAddress         string
+	tppPassword        string
+	tppToken           string
+	tppUser            string
+	trustBundle        string
+	url                string
+	verbose            bool
+	zone               string
 }
