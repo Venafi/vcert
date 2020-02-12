@@ -151,6 +151,11 @@ type CustomField struct {
 	Value string
 }
 
+type Location struct {
+	Instance, Workload string
+	TLSAddress         *string
+}
+
 // Request contains data needed to generate a certificate request
 // CSR is a PEM-encoded Certificate Signing Request
 type Request struct {
@@ -181,6 +186,7 @@ type Request struct {
 	Thumbprint   string
 	Timeout      time.Duration
 	CustomFields []CustomField
+	Location     *Location
 }
 
 type RevocationRequest struct {
