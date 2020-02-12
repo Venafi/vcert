@@ -497,7 +497,6 @@ var (
 			flagTimeout,
 			commonFlags,
 			sortableCredentialsFlags,
-			flagCustomField,
 			flagPickupIDFile,
 		)),
 	)
