@@ -69,3 +69,7 @@ Feature: Enroll certificate
   Scenario: enroll with wrong csr option should return error
     Given I enroll a certificate in test-mode with -cn vfidev.example.com -csr sservice -no-prompt
     Then the exit status should not be 0
+
+  Scenario: enroll with custom field
+    Given I enroll random certificate using TPP with -no-prompt -field "custom=12121" -field "Server Names=some server"
+    Then the exit status should be 0

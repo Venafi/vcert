@@ -97,21 +97,14 @@ var (
 
 func runBeforeCommand(c *cli.Context) error {
 	//TODO: move all flag validations here
-	if len(c.StringSlice("ou")) > 0 {
-		flags.orgUnits = c.StringSlice("ou")
-	}
-	if len(c.StringSlice("san-dns")) > 0 {
-		flags.dnsSans = c.StringSlice("san-dns")
-	}
-	if len(c.StringSlice("san-email")) > 0 {
-		flags.emailSans = c.StringSlice("san-email")
-	}
-	if len(c.StringSlice("san-ip")) > 0 {
-		for _, stringIP := range c.StringSlice("san-ip") {
-			ip := net.ParseIP(stringIP)
-			flags.ipSans = append(flags.ipSans, ip)
-		}
+	flags.orgUnits = c.StringSlice("ou")
+	flags.dnsSans = c.StringSlice("san-dns")
+	flags.emailSans = c.StringSlice("san-email")
+	flags.customFields = c.StringSlice("field")
 
+	for _, stringIP := range c.StringSlice("san-ip") {
+		ip := net.ParseIP(stringIP)
+		flags.ipSans = append(flags.ipSans, ip)
 	}
 
 	return nil
@@ -482,7 +475,7 @@ func doCommandRevoke1(c *cli.Context) error {
 	switch true {
 	case flags.distinguishedName != "":
 		revReq.CertificateDN = flags.distinguishedName
-		revReq.Disable = !flags.revocationNoRetire
+		revReq.Disable = true
 	case flags.thumbprint != "":
 		revReq.Thumbprint = flags.thumbprint
 		revReq.Disable = false

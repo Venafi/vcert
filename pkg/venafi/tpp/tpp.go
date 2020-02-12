@@ -431,7 +431,7 @@ func parseRequestResult(httpStatusCode int, httpStatus string, body []byte) (str
 		}
 		return reqData.CertificateDN, nil
 	default:
-		return "", fmt.Errorf("Unexpected status code on TPP Certificate Request. Status: %s. Body: %s", httpStatus, body)
+		return "", fmt.Errorf("Unexpected status code on TPP Certificate Request.\n Status:\n %s. \n Body:\n %s\n", httpStatus, body)
 	}
 }
 

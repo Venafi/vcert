@@ -37,6 +37,7 @@ type commandFlags struct {
 	apiKey             string
 	appInfo            string
 	caDN               string
+	customFields       []string
 	certFile           string
 	chainFile          string
 	chainOption        string
