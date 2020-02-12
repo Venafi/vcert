@@ -153,8 +153,7 @@ type CustomField struct {
 }
 
 type Location struct {
-	Instance, Workload string
-	TLSAddress         *string
+	Instance, Workload, TLSAddress string
 }
 
 // Request contains data needed to generate a certificate request
