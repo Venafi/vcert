@@ -387,7 +387,7 @@ var (
 	}
 	flagCustomField = &cli.StringSliceFlag{
 		Name:  "field",
-		Usage: "Use to specify custom fields in format '`key=value`'. If many values for one key required, use syntax '-custom-field key1=value1 -custom-field key1=value2'",
+		Usage: "Use to specify custom fields in format 'key=value'. If many values for the same key are required, use syntax '--field key1=value1 --field key1=value2'",
 	}
 
 	commonFlags              = []cli.Flag{flagInsecure, flagFormat, flagVerbose, flagNoPrompt}

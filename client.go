@@ -37,6 +37,7 @@ func (cfg *Config) NewClient() (connector endpoint.Connector, err error) {
 	var connectionTrustBundle *x509.CertPool
 
 	if cfg.ConnectionTrust != "" {
+		log.SetPrefix("vCert: ")
 		log.Println(UtilityShortName+":", "You specified a trust bundle.")
 		connectionTrustBundle = x509.NewCertPool()
 		if !connectionTrustBundle.AppendCertsFromPEM([]byte(cfg.ConnectionTrust)) {
