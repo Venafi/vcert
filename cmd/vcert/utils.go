@@ -88,6 +88,17 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 		req.CustomFields = append(req.CustomFields, certificate.CustomField{Name: k, Value: v})
 	}
 
+	if len(cf.instance) > 0 {
+		req.Location.Instance = cf.instance
+		if len(cf.tlsAddress) > 0 {
+			req.Location.TLSAddress = cf.tlsAddress
+		}
+	}
+
+	if len(cf.appInfo) > 0 {
+		req.Location.Workload = cf.appInfo
+	}
+
 	switch true {
 	case 0 == strings.Index(cf.csrOption, "file:"):
 		var err error
