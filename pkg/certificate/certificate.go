@@ -143,6 +143,7 @@ type CustomFieldType int
 
 const (
 	CustomFieldPlain CustomFieldType = 0 + iota
+	CustomFieldAppInfo
 )
 
 type CustomField struct {
