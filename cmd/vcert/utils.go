@@ -89,6 +89,7 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 	}
 
 	if len(cf.instance) > 0 {
+		req.Location = &certificate.Location{}
 		instance := strings.Split(cf.instance, ":")
 		req.Location.Instance = instance[0]
 		if len(instance) > 1 {
