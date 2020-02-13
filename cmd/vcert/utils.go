@@ -33,6 +33,17 @@ import (
 	"github.com/Venafi/vcert/pkg/endpoint"
 )
 
+func parseCustomField(s string) (key, value string, err error) {
+	sl := strings.Split(s, "=")
+	if len(sl) < 2 {
+		err = fmt.Errorf("custom field should have format key=value")
+		return
+	}
+	key = strings.TrimSpace(sl[0])
+	value = strings.TrimSpace(strings.Join(sl[1:], "="))
+	return
+}
+
 // fillCertificateRequest populates the certificate request payload with values from command flags
 func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certificate.Request {
 	if cf.caDN != "" {
@@ -67,6 +78,14 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 	}
 	if len(cf.emailSans) > 0 {
 		req.EmailAddresses = cf.emailSans
+	}
+
+	for _, f := range cf.customFields {
+		k, v, err := parseCustomField(f)
+		if err != nil {
+			logger.Panic(err)
+		}
+		req.CustomFields = append(req.CustomFields, certificate.CustomField{Name: k, Value: v})
 	}
 
 	switch true {

@@ -303,7 +303,7 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 	}
 	requestID, err = parseRequestResult(statusCode, status, body)
 	if err != nil {
-		return "", fmt.Errorf("%s: %s", err, string(body)) //todo: remove body from error
+		return "", fmt.Errorf("%s", err)
 	}
 	req.PickupID = requestID
 	return requestID, nil
