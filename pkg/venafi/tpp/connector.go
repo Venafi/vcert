@@ -273,10 +273,39 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 	tppReq.DisableAutomaticRenewal = true
 	customFieldsMap := make(map[string][]string)
 	for _, f := range req.CustomFields {
-		customFieldsMap[f.Name] = append(customFieldsMap[f.Name], f.Value)
+		switch f.Type {
+		case certificate.CustomFieldPlain:
+			customFieldsMap[f.Name] = append(customFieldsMap[f.Name], f.Value)
+		case certificate.CustomFieldAppInfo:
+			tppReq.CASpecificAttributes = append(tppReq.CASpecificAttributes, nameValuePair{Name: f.Name, Value: f.Value})
+		}
+
 	}
 	for name, value := range customFieldsMap {
 		tppReq.CustomFields = append(tppReq.CustomFields, customField{name, value})
+	}
+	if req.Location != nil {
+		dev := device{
+			PolicyDN:   getPolicyDN(zone),
+			ObjectName: req.Location.Instance,
+			Host:       req.Location.Instance,
+			Applications: []application{
+				{
+					ObjectName: req.Location.Workload,
+					Class:      "Basic",
+					DriverName: "appbasic",
+				},
+			},
+		}
+		if req.Location.TLSAddress != "" {
+			host, port, err := parseHostPort(req.Location.TLSAddress)
+			if err != nil {
+				return tppReq, err
+			}
+			dev.Applications[0].ValidationHost = host
+			dev.Applications[0].ValidationPort = port
+		}
+		tppReq.Devices = append(tppReq.Devices, dev)
 	}
 	switch req.KeyType {
 	case certificate.KeyTypeRSA:
@@ -628,4 +657,15 @@ func (c *Connector) getCertsBatch(offset, limit int, withExpired bool) ([]certif
 		infos[i] = c.X509
 	}
 	return infos, nil
+}
+
+func parseHostPort(s string) (host string, port string, err error) {
+	slice := strings.Split(s, ":")
+	if len(slice) != 2 {
+		err = fmt.Errorf("%w: bad address %s.  should be host:port.", verror.UserDataError, s)
+		return
+	}
+	host = slice[0]
+	port = slice[1]
+	return
 }

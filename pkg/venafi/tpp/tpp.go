@@ -46,6 +46,21 @@ type customField struct {
 	Values []string
 }
 
+type application struct {
+	ObjectName     string
+	Class          string
+	DriverName     string
+	ValidationHost string `json:",omitempty"`
+	ValidationPort string `json:",omitempty"`
+}
+
+type device struct {
+	PolicyDN     string
+	ObjectName   string
+	Host         string
+	Applications []application
+}
+
 type certificateRequest struct {
 	PolicyDN                string          `json:",omitempty"`
 	CADN                    string          `json:",omitempty"`
@@ -65,6 +80,7 @@ type certificateRequest struct {
 	EllipticCurve           string          `json:",omitempty"`
 	DisableAutomaticRenewal bool            `json:",omitempty"`
 	CustomFields            []customField   `json:",omitempty"`
+	Devices                 []device        `json:",omitempty"`
 }
 
 type certificateRetrieveRequest struct {
