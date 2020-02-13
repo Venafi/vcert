@@ -106,7 +106,7 @@ func runBeforeCommand(c *cli.Context) error {
 	for _, f := range noDuplicatedFlags {
 		if len(c.StringSlice(f)) > 1 {
 			return fmt.Errorf("flag %s can not be duplicated", f)
-		} else {
+		} else if len(c.StringSlice(f)) == 1 {
 			switch f {
 			case "instance":
 				flags.instance = c.StringSlice(f)[0]
