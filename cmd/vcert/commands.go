@@ -107,7 +107,15 @@ func runBeforeCommand(c *cli.Context) error {
 		if len(c.StringSlice(f)) > 1 {
 			return fmt.Errorf("flag %s can not be duplicated", f)
 		} else {
-			flags.instance = c.StringSlice(f)[0]
+			switch f {
+			case "instance":
+				flags.instance = c.StringSlice(f)[0]
+			case "tls-address":
+				flags.tlsAddress = c.StringSlice(f)[0]
+			case "app-info":
+				flags.appInfo = c.StringSlice(f)[0]
+			}
+
 		}
 	}
 
