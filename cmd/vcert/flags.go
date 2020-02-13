@@ -355,22 +355,19 @@ var (
 		Destination: &flags.thumbprint,
 	}
 
-	flagInstance = &cli.StringFlag{
-		Name:        "instance",
-		Usage:       "Indicates the name/address of the hosting compute instance and an identifier for the workload using the certificate",
-		Destination: &flags.instance,
+	flagInstance = &cli.StringSliceFlag{
+		Name:  "instance",
+		Usage: "Indicates the name/address of the hosting compute instance and an identifier for the workload using the certificate",
 	}
 
-	flagTlsAddress = &cli.StringFlag{
-		Name:        "tls-address",
-		Usage:       "indicate the hostname, FQDN or IP address and TCP port where the certificate can be validated after issuance and installation",
-		Destination: &flags.tlsAddress,
+	flagTlsAddress = &cli.StringSliceFlag{
+		Name:  "tls-address",
+		Usage: "indicate the hostname, FQDN or IP address and TCP port where the certificate can be validated after issuance and installation",
 	}
 
-	flagAppInfo = &cli.StringFlag{
-		Name:        "app-info",
-		Usage:       "indicate the hostname, FQDN or IP address and TCP port where the certificate can be validated after issuance and installation",
-		Destination: &flags.appInfo,
+	flagAppInfo = &cli.StringSliceFlag{
+		Name:  "app-info",
+		Usage: "indicate the hostname, FQDN or IP address and TCP port where the certificate can be validated after issuance and installation",
 	}
 
 	//todo: make check agains RevocationReasonOptions[]string variable

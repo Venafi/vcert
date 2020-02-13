@@ -119,8 +119,6 @@ OPTIONS:
    {{range .VisibleFlags}}{{.}}
    {{end}}{{end}}
 `
-	noDuplicates := []string{"-instance", "tls-address", "-z"}
-	panicOnDuplicates(os.Args, noDuplicates)
 	err := app.Run(os.Args)
 	if err != nil {
 		//TODO: we need to make logger a global package
@@ -128,18 +126,4 @@ OPTIONS:
 		logger.Panicf("%s", err)
 	}
 	return
-}
-
-func panicOnDuplicates(osArgs []string, noDuplicates []string) {
-	encountered := map[string]bool{}
-	for v := range osArgs {
-		if encountered[osArgs[v]] == true {
-			if sliceContains(noDuplicates, osArgs[v]) {
-				log.Panicf("Flag %s can't be duplicated", osArgs[v])
-			}
-		} else {
-			encountered[osArgs[v]] = true
-		}
-	}
-
 }
