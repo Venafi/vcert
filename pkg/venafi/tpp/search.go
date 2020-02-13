@@ -27,9 +27,9 @@ type SearchRequest []string
 
 type CertificateDetailsResponse struct {
 	CustomFields []struct {
-		Name  string   `json:"Name"`
+		Name  string
 		Value []string `json:"Value"`
-	} `json:"CustomFields"`
+	}
 }
 
 type CertificateSearchResponse struct {
