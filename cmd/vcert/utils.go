@@ -89,14 +89,18 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 	}
 
 	if len(cf.instance) > 0 {
-		req.Location.Instance = cf.instance
+		instance := strings.Split(cf.instance, ":")
+		req.Location.Instance = instance[0]
+		if len(instance) > 1 {
+			req.Location.Workload = instance[1]
+		}
 		if len(cf.tlsAddress) > 0 {
 			req.Location.TLSAddress = cf.tlsAddress
 		}
 	}
 
 	if len(cf.appInfo) > 0 {
-		req.Location.Workload = cf.appInfo
+		req.CustomFields = append(req.CustomFields, certificate.CustomField{Value: cf.appInfo, Type: certificate.CustomFieldAppInfo})
 	}
 
 	switch true {

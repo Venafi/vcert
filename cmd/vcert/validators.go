@@ -238,6 +238,10 @@ func validateEnrollFlags(commandName string) error {
 		return fmt.Errorf("-tls-address can't be specified without -instance flag")
 	}
 
+	if (flags.appInfo != "" || flags.tlsAddress != "" || flags.instance != "") && flags.apiKey != "" {
+		return fmt.Errorf("-tls-address or -instance or -app-info can be used only with TPP and can not be used for the Cloud")
+	}
+
 	return nil
 }
 
