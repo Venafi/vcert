@@ -82,10 +82,10 @@ Feature: Enroll certificate
     Given I enroll random certificate using TPP with -no-prompt -instance kube-worker-1 -app-info vcert:1.9.1
     Then the exit status should be 0
 
-  Scenario: enroll with dublicated instance
+  Scenario: enroll with duplicated instance
     Given I enroll random certificate using TPP with -no-prompt -field "custom=12121" -field "Server Names=some server" -instance kube-worker-1:nginx_246 -instance kube-worker-1
     Then the exit status should be 1
 
-  Scenario: enroll with dublicated tls-address
+  Scenario: enroll with duplicated tls-address
     Given I enroll random certificate using TPP with -no-prompt -field "custom=12121" -field "Server Names=some server" -tls-address api-gw-myapp.example:8443 -tls-address api-gw-myapp.example
     Then the exit status should be 1
