@@ -254,7 +254,7 @@ func TestSearchDevice(t *testing.T) {
 
 	err = tpp.Authenticate(&endpoint.Authentication{
 		AccessToken: ctx.TPPaccessToken,
-		Scope:       "configuration",
+		Scope:       "configuration:read;",
 	})
 
 	if err != nil {
@@ -263,7 +263,7 @@ func TestSearchDevice(t *testing.T) {
 
 	req := ConfigReadDNRequest{
 		ObjectDN:      "\\VED\\Policy\\devops\\vcert\\kube-worker-1\\nginx_246",
-		AttributeName: "Consumers",
+		AttributeName: "Certificate",
 	}
 
 	resp, err := tpp.configReadDN(req)
