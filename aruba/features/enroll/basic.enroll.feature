@@ -74,16 +74,20 @@ Feature: Enroll certificate
     Given I enroll random certificate using TPP with -no-prompt -field "custom=12121" -field "Server Names=some server"
     Then the exit status should be 0
 
-  Scenario: enroll with instance and app-info
-    Given I enroll random certificate using TPP with -no-prompt -instance kube-worker-1:nginx_246 -tls-address api-gw-myapp.example:8443  -app-info vcert:1.9.1
+  Scenario: enroll with static instance and app-info
+    Given I enroll random certificate using TPP with -no-prompt -instance devops-instance:nginx_246 -tls-address api-gw-myapp.example:8443  -app-info vcert:1.9.1
+    Then the exit status should be 0
+
+  Scenario: enroll with random instance and app-info
+    Given I enroll random certificate using TPP with -no-prompt -instance devops-instance:nginx_246 -tls-address api-gw-myapp.example:8443  -app-info vcert:1.9.1
     Then the exit status should be 0
 
   Scenario: enroll with single instance and app-info
-    Given I enroll random certificate using TPP with -no-prompt -instance kube-worker-1 -app-info vcert:1.9.1
+    Given I enroll random certificate using TPP with -no-prompt -instance devops-instance -app-info vcert:1.9.1
     Then the exit status should be 0
 
   Scenario: enroll with duplicated instance
-    Given I enroll random certificate using TPP with -no-prompt -field "custom=12121" -field "Server Names=some server" -instance kube-worker-1:nginx_246 -instance kube-worker-1
+    Given I enroll random certificate using TPP with -no-prompt -field "custom=12121" -field "Server Names=some server" -instance devops-instance:nginx_246 -instance devops-instance
     Then the exit status should be 1
 
   Scenario: enroll with duplicated tls-address

@@ -245,6 +245,34 @@ func TestRequestAndSearchCertificate(t *testing.T) {
 	}
 }
 
+func TestSearchDevice(t *testing.T) {
+
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+
+	err = tpp.Authenticate(&endpoint.Authentication{
+		AccessToken: ctx.TPPaccessToken,
+		Scope:       "configuration",
+	})
+
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	req := ConfigReadDNRequest{
+		ObjectDN:      "\\VED\\Policy\\devops\\vcert\\kube-worker-1\\nginx_246",
+		AttributeName: "Consumers",
+	}
+
+	resp, err := tpp.configReadDN(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println(resp)
+}
+
 func calcThumbprint(cert string) string {
 	p, _ := pem.Decode([]byte(cert))
 	h := sha1.New()

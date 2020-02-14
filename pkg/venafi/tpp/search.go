@@ -25,6 +25,16 @@ import (
 
 type SearchRequest []string
 
+type ConfigReadDNRequest struct {
+	ObjectDN      string `json:",omitempty"`
+	AttributeName string `json:",omitempty"`
+}
+
+type ConfigReadDNResponse struct {
+	Result int      `json:",omitempty"`
+	Values []string `json:",omitempty"`
+}
+
 type CertificateDetailsResponse struct {
 	CustomFields []struct {
 		Name  string
@@ -55,6 +65,25 @@ func (c *Connector) searchCertificatesByFingerprint(fp string) (*CertificateSear
 	req = append(req, fmt.Sprintf("Thumbprint=%s", fp))
 
 	return c.searchCertificates(&req)
+}
+
+func (c *Connector) configReadDN(req ConfigReadDNRequest) (resp ConfigReadDNResponse, err error) {
+
+	statusCode, status, body, err := c.request("POST", "vedsdk/Config/ReadDn", req)
+	if err != nil {
+		return resp, err
+	}
+
+	if statusCode == http.StatusOK {
+		err = json.Unmarshal(body, &resp)
+		if err != nil {
+			return resp, err
+		}
+	} else {
+		return resp, fmt.Errorf("unexpected status code on TPP Authorize. Status: %s", status)
+	}
+
+	return resp, nil
 }
 
 func (c *Connector) searchCertificates(req *SearchRequest) (*CertificateSearchResponse, error) {
