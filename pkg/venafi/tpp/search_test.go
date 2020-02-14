@@ -178,6 +178,8 @@ func TestRequestAndSearchCertificate(t *testing.T) {
 	}
 
 	cn := test.RandCN()
+	workload := fmt.Sprintf("workload-%d", time.Now().Unix())
+	instance := "devops-instance"
 	cfValue := cn
 	req := &certificate.Request{Timeout: time.Second * 30}
 	req.Subject.CommonName = cn
@@ -191,13 +193,18 @@ func TestRequestAndSearchCertificate(t *testing.T) {
 	req.FriendlyName = cn
 	req.CustomFields = []certificate.CustomField{
 		{Name: "custom", Value: cfValue},
+		{Type: certificate.CustomFieldAppInfo, Value: "vcert test name"},
+	}
+	req.Location = &certificate.Location{
+		Instance:   instance,
+		Workload:   workload,
+		TLSAddress: "wwww.example.com:443",
 	}
 	err = tpp.GenerateRequest(config, req)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
 
-	t.Logf("getPolicyDN(ctx.TPPZone) = %s", getPolicyDN(ctx.TPPZone))
 	req.PickupID, err = tpp.RequestCertificate(req)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
@@ -232,6 +239,9 @@ func TestRequestAndSearchCertificate(t *testing.T) {
 
 	if details.CustomFields[0].Value[0] != cfValue {
 		t.Fatalf("mismtached custom field valud: want %s but got %s", details.CustomFields[0].Value[0], cfValue)
+	}
+	if !strings.HasSuffix(details.Consumers[0], instance+"\\"+workload) {
+		t.Fatalf("Consumer %s should end on %s", details.Consumers[0], instance+"\\"+workload)
 	}
 }
 
