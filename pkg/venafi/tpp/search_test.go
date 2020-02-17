@@ -254,7 +254,6 @@ func TestSearchDevice(t *testing.T) {
 
 	err = tpp.Authenticate(&endpoint.Authentication{
 		AccessToken: ctx.TPPaccessToken,
-		Scope:       "configuration:read;",
 	})
 
 	if err != nil {

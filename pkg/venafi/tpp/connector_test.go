@@ -54,7 +54,7 @@ func init() {
 
 	resp, err := tpp.GetRefreshToken(&endpoint.Authentication{
 		User: ctx.TPPuser, Password: ctx.TPPPassword,
-		Scope: "certificate:approve,delete,discover,manage,revoke;"})
+		Scope: "configuration:read;certificate:approve,delete,discover,manage,revoke;"})
 	if err != nil {
 		panic(err)
 	}
