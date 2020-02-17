@@ -40,6 +40,7 @@ const defaultKeySize = 2048
 const defaultSignatureAlgorithm = x509.SHA256WithRSA
 const defaultClientID = "vcert-go"
 const defaultScope = "certificate:manage,revoke;"
+const defaultWorkloadName = "Default"
 
 type customField struct {
 	Name   string
@@ -417,6 +418,14 @@ func getPolicyDN(zone string) string {
 		modified = "\\VED\\Policy" + modified
 	}
 	return modified
+}
+
+func getDeviceDN(zone string, location certificate.Location) string {
+	workload := location.Workload
+	if workload == "" {
+		workload = "Default"
+	}
+	return getPolicyDN(zone + "\\" + location.Instance + "\\" + workload)
 }
 
 func parseConfigResult(httpStatusCode int, httpStatus string, body []byte) (tppData tppPolicyData, err error) {

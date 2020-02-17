@@ -285,13 +285,20 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 		tppReq.CustomFields = append(tppReq.CustomFields, customField{name, value})
 	}
 	if req.Location != nil {
+		if req.Location.Instance == "" {
+			return tppReq, fmt.Errorf("%w: instance value for Location should not be empty", verror.UserDataError)
+		}
+		workload := req.Location.Workload
+		if workload == "" {
+			workload = defaultWorkloadName
+		}
 		dev := device{
 			PolicyDN:   getPolicyDN(zone),
 			ObjectName: req.Location.Instance,
 			Host:       req.Location.Instance,
 			Applications: []application{
 				{
-					ObjectName: req.Location.Workload,
+					ObjectName: workload,
 					Class:      "Basic",
 					DriverName: "appbasic",
 				},
@@ -321,7 +328,19 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 
 // RequestCertificate submits the CSR to TPP returning the DN of the requested Certificate
 func (c *Connector) RequestCertificate(req *certificate.Request) (requestID string, err error) {
+	if req.Location != nil {
+		c, err := c.configReadDN(ConfigReadDNRequest{ObjectDN: getDeviceDN(c.zone, *req.Location), AttributeName: "Certificate"})
+		if err != nil {
+			return "", err
+		}
+		if c.Result != 0 {
+			if req.Location.Recreate {
 
+			} else {
+				return "", fmt.Errorf("%w: device alreday exist. change name or set recreate attribute", verror.UserDataError)
+			}
+		}
+	}
 	tppCertificateRequest, err := prepareRequest(req, c.zone)
 	if err != nil {
 		return "", err
