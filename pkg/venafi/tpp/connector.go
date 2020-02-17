@@ -329,16 +329,18 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 // RequestCertificate submits the CSR to TPP returning the DN of the requested Certificate
 func (c *Connector) RequestCertificate(req *certificate.Request) (requestID string, err error) {
 	if req.Location != nil {
-		c, err := c.configReadDN(ConfigReadDNRequest{ObjectDN: getDeviceDN(c.zone, *req.Location), AttributeName: "Certificate"})
+		configDN, err := c.configReadDN(ConfigReadDNRequest{ObjectDN: getDeviceDN(c.zone, *req.Location), AttributeName: "Certificate"})
 		if err != nil {
 			return "", err
 		}
-		if c.Result != 0 {
-			if req.Location.Replace {
-
-			} else {
+		if configDN.Result == 1 {
+			if !req.Location.Replace {
 				return "", fmt.Errorf("%w: device alreday exist. change name or set recreate attribute", verror.UserDataError)
 			}
+			for _, cert := range configDN.Values {
+				c.dissociate(cert, getDeviceDN(c.zone, *req.Location))
+			}
+
 		}
 	}
 	tppCertificateRequest, err := prepareRequest(req, c.zone)
@@ -687,4 +689,24 @@ func parseHostPort(s string) (host string, port string, err error) {
 	host = slice[0]
 	port = slice[1]
 	return
+}
+
+func (c *Connector) dissociate(certDN, applicationDN string) error {
+	req := struct {
+		CertificateDN string
+		ApplicationDN []string
+		DeleteOrphans bool
+	}{
+		certDN,
+		[]string{applicationDN},
+		true,
+	}
+	statusCode, _, _, err := c.request("POST", "vedsdk/Certificates/Dissociate", req)
+	if err != nil {
+		return err
+	}
+	if statusCode != 200 {
+		return verror.ServerBadDataResponce
+	}
+	return nil
 }
