@@ -406,6 +406,13 @@ var (
 		Usage: "Use to specify custom fields in format 'key=value'. If many values for the same key are required, use syntax '--field key1=value1 --field key1=value2'",
 	}
 
+	flagReplace = &cli.BoolFlag{
+		Name:        "replace-instance",
+		Usage:       "Force replace device set in location if device already exists",
+		Value:       false,
+		Destination: &flags.replaceDevice,
+	}
+
 	commonFlags              = []cli.Flag{flagInsecure, flagFormat, flagVerbose, flagNoPrompt}
 	keyFlags                 = []cli.Flag{flagKeyType, flagKeySize, flagKeyCurve, flagKeyFile, flagKeyPassword}
 	sansFlags                = []cli.Flag{flagDNSSans, flagEmailSans, flagIPSans}
@@ -465,6 +472,7 @@ var (
 			flagTlsAddress,
 			flagAppInfo,
 			flagInstance,
+			flagReplace,
 		)),
 	)
 

@@ -98,6 +98,10 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 		if len(cf.tlsAddress) > 0 {
 			req.Location.TLSAddress = cf.tlsAddress
 		}
+
+		if cf.replaceDevice {
+			req.Location.Replace = true
+		}
 	}
 
 	if len(cf.appInfo) > 0 {

@@ -37,7 +37,6 @@ type commandFlags struct {
 	apiKey             string
 	appInfo            string
 	caDN               string
-	customFields       []string
 	certFile           string
 	chainFile          string
 	chainOption        string
@@ -50,6 +49,7 @@ type commandFlags struct {
 	country            string
 	csrFile            string
 	csrOption          string
+	customFields       []string
 	distinguishedName  string
 	dnsSans            stringSlice
 	emailSans          emailSlice
@@ -74,6 +74,7 @@ type commandFlags struct {
 	pickupID           string
 	pickupIDFile       string
 	profile            string
+	replaceDevice      bool
 	revocationNoRetire bool
 	revocationReason   string
 	scope              string
