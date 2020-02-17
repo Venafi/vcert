@@ -83,10 +83,6 @@ func (c *Connector) configReadDN(req ConfigReadDNRequest) (resp ConfigReadDNResp
 		return resp, fmt.Errorf("unexpected status code on TPP Authorize. Status: %s", status)
 	}
 
-	if resp.Result != 1 {
-		return resp, fmt.Errorf("unexpected result code on ReadDN. Result: %d", resp.Result)
-	}
-
 	return resp, nil
 }
 

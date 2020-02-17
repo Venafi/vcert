@@ -1188,3 +1188,68 @@ vOjeQhOnqrPdQINzUCKMSuqxqFGbQAJCAZs3Be1Pz6eeKHNLzr7mYQ2/pWSjfun4
 	}
 
 }
+
+func TestEnrollWithLocation(t *testing.T) {
+	conn, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = conn.Authenticate(&endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword})
+	if err != nil {
+		t.Fatal(err)
+	}
+	zoneConfig, err := conn.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatal(err)
+	}
+	req := certificate.Request{}
+	req.Subject.CommonName = test.RandCN()
+	req.Timeout = time.Second * 10
+	workload := fmt.Sprintf("workload-%v", time.Now().Unix())
+	req.Location = &certificate.Location{
+		Instance:   "instance",
+		Workload:   workload,
+		TLSAddress: "example.com:443",
+	}
+
+	err = conn.GenerateRequest(zoneConfig, &req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = conn.RequestCertificate(&req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Location = &certificate.Location{
+		Instance:   "instance",
+		Workload:   workload,
+		TLSAddress: "example.com:443",
+	}
+
+	err = conn.GenerateRequest(zoneConfig, &req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = conn.RequestCertificate(&req)
+	if err == nil {
+		t.Fatal("Should fail with devices conflict")
+	}
+
+	req.Location = &certificate.Location{
+		Instance:   "instance",
+		Workload:   workload,
+		TLSAddress: "example.com:443",
+		Replace:    true,
+	}
+
+	err = conn.GenerateRequest(zoneConfig, &req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = conn.RequestCertificate(&req)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
