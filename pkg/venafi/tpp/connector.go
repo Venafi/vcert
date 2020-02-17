@@ -334,7 +334,7 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 			return "", err
 		}
 		if c.Result != 0 {
-			if req.Location.Recreate {
+			if req.Location.Replace {
 
 			} else {
 				return "", fmt.Errorf("%w: device alreday exist. change name or set recreate attribute", verror.UserDataError)
