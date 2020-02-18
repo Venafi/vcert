@@ -339,6 +339,7 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 				return "", fmt.Errorf("%w: device alreday exist. change name or set recreate attribute", verror.UserDataError)
 			}
 			for _, cert := range configDN.Values {
+				//TODO: replace with logger
 				log.SetPrefix("vCert: ")
 				log.Println("Dissociating devices for certificate", cert)
 				err = c.dissociate(cert, getDeviceDN(c.zone, *req.Location))
