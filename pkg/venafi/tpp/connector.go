@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Venafi/vcert/pkg/verror"
+	"log"
 	"net/http"
 	neturl "net/url"
 	"regexp"
@@ -338,7 +339,12 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 				return "", fmt.Errorf("%w: device alreday exist. change name or set recreate attribute", verror.UserDataError)
 			}
 			for _, cert := range configDN.Values {
-				c.dissociate(cert, getDeviceDN(c.zone, *req.Location))
+				log.SetPrefix("vCert: ")
+				log.Println("Dissociating devices for certificate", cert)
+				err = c.dissociate(cert, getDeviceDN(c.zone, *req.Location))
+				if err != nil {
+					return "", err
+				}
 			}
 
 		}
@@ -701,6 +707,9 @@ func (c *Connector) dissociate(certDN, applicationDN string) error {
 		[]string{applicationDN},
 		true,
 	}
+	//TODO: replace with logger
+	log.SetPrefix("vCert: ")
+	log.Println("Dissociating device", applicationDN)
 	statusCode, _, _, err := c.request("POST", "vedsdk/Certificates/Dissociate", req)
 	if err != nil {
 		return err
