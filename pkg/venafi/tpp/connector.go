@@ -711,7 +711,7 @@ func (c *Connector) dissociate(certDN, applicationDN string) error {
 	//TODO: replace with logger
 	log.SetPrefix("vCert: ")
 	log.Println("Dissociating device", applicationDN)
-	statusCode, _, _, err := c.request("POST", "vedsdk/Certificates/Dissociate", req)
+	statusCode, _, _, err := c.request("POST", urlResourceCertificatesDissociate, req)
 	if err != nil {
 		return err
 	}
@@ -719,4 +719,8 @@ func (c *Connector) dissociate(certDN, applicationDN string) error {
 		return verror.ServerBadDataResponce
 	}
 	return nil
+}
+
+func (c *Connector) associate(certDN, applicationDN string) error {
+
 }

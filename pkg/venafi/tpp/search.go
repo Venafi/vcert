@@ -69,7 +69,7 @@ func (c *Connector) searchCertificatesByFingerprint(fp string) (*CertificateSear
 
 func (c *Connector) configReadDN(req ConfigReadDNRequest) (resp ConfigReadDNResponse, err error) {
 
-	statusCode, status, body, err := c.request("POST", "vedsdk/Config/ReadDn", req)
+	statusCode, status, body, err := c.request("POST", urlResourceConfigReadDn, req)
 	if err != nil {
 		return resp, err
 	}

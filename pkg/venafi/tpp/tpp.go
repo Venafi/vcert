@@ -212,19 +212,22 @@ type policyRequest struct {
 type urlResource string
 
 const (
-	urlResourceRefreshAccessToken   urlResource = "vedauth/authorize/token"
-	urlResourceAuthorizeOAuth       urlResource = "vedauth/authorize/oauth"
-	urlResourceAuthorizeCertificate urlResource = "vedauth/Authorize/Certificate"
-	urlResourceAuthorize            urlResource = "vedsdk/authorize/"
-	urlResourceCertificateRequest   urlResource = "vedsdk/certificates/request"
-	urlResourceCertificateRetrieve  urlResource = "vedsdk/certificates/retrieve"
-	urlResourceFindPolicy           urlResource = "vedsdk/config/findpolicy"
-	urlResourceCertificateRevoke    urlResource = "vedsdk/certificates/revoke"
-	urlResourceCertificateRenew     urlResource = "vedsdk/certificates/renew"
-	urlResourceCertificateSearch    urlResource = "vedsdk/certificates/"
-	urlResourceCertificateImport    urlResource = "vedsdk/certificates/import"
-	urlResourceCertificatePolicy    urlResource = "vedsdk/certificates/checkpolicy"
-	urlResourceCertificatesList     urlResource = "vedsdk/certificates/"
+	urlResourceAuthorize              urlResource = "vedsdk/authorize/"
+	urlResourceAuthorizeCertificate   urlResource = "vedauth/Authorize/Certificate"
+	urlResourceAuthorizeOAuth         urlResource = "vedauth/authorize/oauth"
+	urlResourceCertificateImport      urlResource = "vedsdk/certificates/import"
+	urlResourceCertificatePolicy      urlResource = "vedsdk/certificates/checkpolicy"
+	urlResourceCertificateRenew       urlResource = "vedsdk/certificates/renew"
+	urlResourceCertificateRequest     urlResource = "vedsdk/certificates/request"
+	urlResourceCertificateRetrieve    urlResource = "vedsdk/certificates/retrieve"
+	urlResourceCertificateRevoke      urlResource = "vedsdk/certificates/revoke"
+	urlResourceCertificatesAssociate  urlResource = "vedsdk/Certificates/Associate"
+	urlResourceCertificatesDissociate urlResource = "vedsdk/Certificates/Dissociate"
+	urlResourceCertificateSearch      urlResource = "vedsdk/certificates/"
+	urlResourceCertificatesList       urlResource = "vedsdk/certificates/"
+	urlResourceConfigReadDn           urlResource = "vedsdk/Config/ReadDn"
+	urlResourceFindPolicy             urlResource = "vedsdk/config/findpolicy"
+	urlResourceRefreshAccessToken     urlResource = "vedauth/authorize/token"
 )
 
 const (
