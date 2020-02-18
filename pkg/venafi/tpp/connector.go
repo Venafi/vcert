@@ -721,6 +721,25 @@ func (c *Connector) dissociate(certDN, applicationDN string) error {
 	return nil
 }
 
-func (c *Connector) associate(certDN, applicationDN string) error {
-
+func (c *Connector) associate(certDN, applicationDN string, pushToNew bool) error {
+	req := struct {
+		CertificateDN string
+		ApplicationDN []string
+		PushToNew     bool
+	}{
+		certDN,
+		[]string{applicationDN},
+		pushToNew,
+	}
+	//TODO: replace with logger
+	log.SetPrefix("vCert: ")
+	log.Println("Associating device", applicationDN)
+	statusCode, _, _, err := c.request("POST", urlResourceCertificatesAssociate, req)
+	if err != nil {
+		return err
+	}
+	if statusCode != 200 {
+		return verror.ServerBadDataResponce
+	}
+	return nil
 }
