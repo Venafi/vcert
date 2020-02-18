@@ -1202,10 +1202,12 @@ func TestEnrollWithLocation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	workload := fmt.Sprintf("workload-%v", time.Now().Unix())
+
 	req := certificate.Request{}
 	req.Subject.CommonName = test.RandCN()
 	req.Timeout = time.Second * 10
-	workload := fmt.Sprintf("workload-%v", time.Now().Unix())
 	req.Location = &certificate.Location{
 		Instance:   "instance",
 		Workload:   workload,
@@ -1220,7 +1222,9 @@ func TestEnrollWithLocation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
+	req = certificate.Request{}
+	req.Subject.CommonName = test.RandCN()
+	req.Timeout = time.Second * 10
 	req.Location = &certificate.Location{
 		Instance:   "instance",
 		Workload:   workload,
@@ -1235,7 +1239,9 @@ func TestEnrollWithLocation(t *testing.T) {
 	if err == nil {
 		t.Fatal("Should fail with devices conflict")
 	}
-
+	req = certificate.Request{}
+	req.Subject.CommonName = test.RandCN()
+	req.Timeout = time.Second * 10
 	req.Location = &certificate.Location{
 		Instance:   "instance",
 		Workload:   workload,
