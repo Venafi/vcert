@@ -330,26 +330,23 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 // RequestCertificate submits the CSR to TPP returning the DN of the requested Certificate
 func (c *Connector) RequestCertificate(req *certificate.Request) (requestID string, err error) {
 	if req.Location != nil {
-		configDN, err := c.configReadDN(ConfigReadDNRequest{ObjectDN: getDeviceDN(c.zone, *req.Location), AttributeName: "Certificate"})
-		if err != nil {
-			return "", err
-		}
-		if configDN.Result == 1 {
-			if !req.Location.Replace {
-				return "", fmt.Errorf("%w: device alreday exist. change name or set recreate attribute", verror.UserDataError)
+		if req.Location.ReplacePolicy == certificate.DeviceConflictPolicyDissasociate {
+			configDN, err := c.configReadDN(ConfigReadDNRequest{ObjectDN: getDeviceDN(c.zone, *req.Location), AttributeName: "Certificate"})
+			if err != nil {
+				return "", err
 			}
 			for _, cert := range configDN.Values {
-				//TODO: replace with logger
-				log.SetPrefix("vCert: ")
-				log.Println("Dissociating devices for certificate", cert)
+
+				log.Println("Disassociate devices for certificate", cert)
 				err = c.dissociate(cert, getDeviceDN(c.zone, *req.Location))
 				if err != nil {
 					return "", err
 				}
 			}
-
 		}
+
 	}
+
 	tppCertificateRequest, err := prepareRequest(req, c.zone)
 	if err != nil {
 		return "", err
@@ -362,6 +359,13 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 	if err != nil {
 		return "", fmt.Errorf("%s", err)
 	}
+
+	if req.Location != nil {
+		if req.Location.ReplacePolicy != certificate.DeviceConflictPolicyFail {
+			err = c.associate(requestID, getDeviceDN(c.zone, *req.Location), true)
+		}
+	}
+
 	req.PickupID = requestID
 	return requestID, nil
 }
@@ -708,8 +712,6 @@ func (c *Connector) dissociate(certDN, applicationDN string) error {
 		[]string{applicationDN},
 		true,
 	}
-	//TODO: replace with logger
-	log.SetPrefix("vCert: ")
 	log.Println("Dissociating device", applicationDN)
 	statusCode, _, _, err := c.request("POST", urlResourceCertificatesDissociate, req)
 	if err != nil {
@@ -731,8 +733,6 @@ func (c *Connector) associate(certDN, applicationDN string, pushToNew bool) erro
 		[]string{applicationDN},
 		pushToNew,
 	}
-	//TODO: replace with logger
-	log.SetPrefix("vCert: ")
 	log.Println("Associating device", applicationDN)
 	statusCode, _, _, err := c.request("POST", urlResourceCertificatesAssociate, req)
 	if err != nil {

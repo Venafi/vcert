@@ -140,10 +140,15 @@ const (
 )
 
 type CustomFieldType int
+type DeviceConflictPolicy string
 
 const (
 	CustomFieldPlain CustomFieldType = 0 + iota
 	CustomFieldAppInfo
+
+	DeviceConflictPolicyAssociate    DeviceConflictPolicy = "associate"
+	DeviceConflictPolicyFail         DeviceConflictPolicy = "fail"
+	DeviceConflictPolicyDissasociate DeviceConflictPolicy = "disassociate"
 )
 
 type CustomField struct {
@@ -154,7 +159,7 @@ type CustomField struct {
 
 type Location struct {
 	Instance, Workload, TLSAddress string
-	Replace                        bool
+	ReplacePolicy                  DeviceConflictPolicy
 }
 
 // Request contains data needed to generate a certificate request

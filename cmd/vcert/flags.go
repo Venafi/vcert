@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/urfave/cli/v2"
 	"sort"
 	"strings"
@@ -406,11 +408,10 @@ var (
 		Usage: "Use to specify custom fields in format 'key=value'. If many values for the same key are required, use syntax '--field key1=value1 --field key1=value2'",
 	}
 
-	flagReplace = &cli.BoolFlag{
-		Name:        "replace-instance",
-		Usage:       "Force replace device set in location if device already exists",
-		Value:       false,
-		Destination: &flags.replaceDevice,
+	flagReplace = &cli.StringFlag{
+		Name:        "device-conflict-policy",
+		Usage:       fmt.Sprintf("Force replace device set in location if device already exists. Values:%s, %s, %s", certificate.DeviceConflictPolicyDissasociate, certificate.DeviceConflictPolicyAssociate, certificate.DeviceConflictPolicyFail),
+		Destination: &flags.deviceConflictPolicy,
 	}
 
 	commonFlags              = []cli.Flag{flagInsecure, flagFormat, flagVerbose, flagNoPrompt}
