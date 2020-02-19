@@ -100,7 +100,6 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 		}
 
 		if cf.replaceInstance {
-			//TODO: convert string to certificate.DeviceConflictPolicy type
 			req.Location.Replace = true
 		}
 	}

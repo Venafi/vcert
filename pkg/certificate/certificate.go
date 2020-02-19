@@ -140,7 +140,6 @@ const (
 )
 
 type CustomFieldType int
-type DeviceConflictPolicy string
 
 const (
 	CustomFieldPlain CustomFieldType = 0 + iota

@@ -331,9 +331,10 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 func (c *Connector) RequestCertificate(req *certificate.Request) (requestID string, err error) {
 	if req.Location != nil {
 
+		certDN := getCertificateDN(c.zone, req.Subject.CommonName)
 		//Try to retrieve certificate
 		certReq := certificateRetrieveRequest{
-			CertificateDN:  req.PickupID,
+			CertificateDN:  certDN,
 			Format:         "base64",
 			RootFirstOrder: true,
 			IncludeChain:   false,
@@ -771,4 +772,27 @@ func (c *Connector) associate(certDN, applicationDN string, pushToNew bool) erro
 		return verror.ServerBadDataResponce
 	}
 	return nil
+}
+
+func (c *Connector) dnToGuid(objectDN string) (resp struct {
+	ClassName string `json:",omitempty"`
+	GUID      string `json:",omitempty"`
+	Revision  string `json:",omitempty"`
+	Result    int    `json:",omitempty"`
+}, err error) {
+	req := struct {
+		ObjectDN string
+	}{
+		objectDN,
+	}
+	log.Println("Getting guid by object DN for DN", objectDN)
+	statusCode, _, _, err := c.request("POST", urlResourceConfigDnToGuid, req)
+	if err != nil {
+		return resp, err
+	}
+	if statusCode != 200 {
+		return resp, verror.ServerBadDataResponce
+	}
+	return resp, nil
+
 }

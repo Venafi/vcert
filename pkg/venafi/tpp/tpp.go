@@ -225,6 +225,7 @@ const (
 	urlResourceCertificatesDissociate urlResource = "vedsdk/Certificates/Dissociate"
 	urlResourceCertificateSearch      urlResource = "vedsdk/certificates/"
 	urlResourceCertificatesList       urlResource = "vedsdk/certificates/"
+	urlResourceConfigDnToGuid         urlResource = "vedsdk/Config/DnToGuid"
 	urlResourceConfigReadDn           urlResource = "vedsdk/Config/ReadDn"
 	urlResourceFindPolicy             urlResource = "vedsdk/config/findpolicy"
 	urlResourceRefreshAccessToken     urlResource = "vedauth/authorize/token"
@@ -429,6 +430,10 @@ func getDeviceDN(zone string, location certificate.Location) string {
 		workload = "Default"
 	}
 	return getPolicyDN(zone + "\\" + location.Instance + "\\" + workload)
+}
+
+func getCertificateDN(zone, cn string) string {
+	return getPolicyDN(zone + "\\" + cn)
 }
 
 func parseConfigResult(httpStatusCode int, httpStatus string, body []byte) (tppData tppPolicyData, err error) {
