@@ -99,9 +99,9 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 			req.Location.TLSAddress = cf.tlsAddress
 		}
 
-		if cf.deviceConflictPolicy != "" {
+		if cf.replaceInstance {
 			//TODO: convert string to certificate.DeviceConflictPolicy type
-			req.Location.ReplacePolicy = certificate.DeviceConflictPolicyDissasociate
+			req.Location.Replace = true
 		}
 	}
 

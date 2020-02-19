@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/urfave/cli/v2"
 	"sort"
 	"strings"
@@ -372,6 +370,12 @@ var (
 		Usage: "indicate the hostname, FQDN or IP address and TCP port where the certificate can be validated after issuance and installation",
 	}
 
+	flagReplace = &cli.BoolFlag{
+		Name:        "replace-instance",
+		Usage:       "Force replace device set in location if device already exists.",
+		Destination: &flags.replaceInstance,
+	}
+
 	//todo: make check agains RevocationReasonOptions[]string variable
 	flagRevocationReason = &cli.StringFlag{
 		Name: "reason",
@@ -406,12 +410,6 @@ var (
 	flagCustomField = &cli.StringSliceFlag{
 		Name:  "field",
 		Usage: "Use to specify custom fields in format 'key=value'. If many values for the same key are required, use syntax '--field key1=value1 --field key1=value2'",
-	}
-
-	flagReplace = &cli.StringFlag{
-		Name:        "device-conflict-policy",
-		Usage:       fmt.Sprintf("Force replace device set in location if device already exists. Values:%s, %s, %s", certificate.DeviceConflictPolicyDissasociate, certificate.DeviceConflictPolicyAssociate, certificate.DeviceConflictPolicyFail),
-		Destination: &flags.deviceConflictPolicy,
 	}
 
 	commonFlags              = []cli.Flag{flagInsecure, flagFormat, flagVerbose, flagNoPrompt}

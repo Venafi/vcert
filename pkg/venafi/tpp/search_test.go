@@ -17,7 +17,6 @@
 package tpp
 
 import (
-	"crypto/sha1"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
@@ -270,15 +269,4 @@ func TestSearchDevice(t *testing.T) {
 		t.Fatal(err)
 	}
 	fmt.Println(resp)
-}
-
-func calcThumbprint(cert string) string {
-	p, _ := pem.Decode([]byte(cert))
-	h := sha1.New()
-	_, err := h.Write(p.Bytes)
-	if err != nil {
-		return fmt.Sprintf("Can't write: %s", err.Error())
-	}
-	buf := h.Sum(nil)
-	return strings.ToUpper(fmt.Sprintf("%x", buf))
 }

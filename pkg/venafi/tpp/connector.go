@@ -330,21 +330,56 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 // RequestCertificate submits the CSR to TPP returning the DN of the requested Certificate
 func (c *Connector) RequestCertificate(req *certificate.Request) (requestID string, err error) {
 	if req.Location != nil {
-		if req.Location.ReplacePolicy == certificate.DeviceConflictPolicyDissasociate {
-			configDN, err := c.configReadDN(ConfigReadDNRequest{ObjectDN: getDeviceDN(c.zone, *req.Location), AttributeName: "Certificate"})
-			if err != nil {
-				return "", err
-			}
-			for _, cert := range configDN.Values {
 
-				log.Println("Disassociate devices for certificate", cert)
-				err = c.dissociate(cert, getDeviceDN(c.zone, *req.Location))
-				if err != nil {
-					return "", err
-				}
-			}
+		//Try to retrieve certificate
+		certReq := certificateRetrieveRequest{
+			CertificateDN:  req.PickupID,
+			Format:         "base64",
+			RootFirstOrder: true,
+			IncludeChain:   false,
 		}
 
+		retrieveResponse, err := c.retrieveCertificateOnce(certReq)
+		if err != nil {
+			return requestID, fmt.Errorf("unable to retrieve certificate to check device status: %s", err)
+		}
+
+		if retrieveResponse.CertificateData != "" {
+			certificates, err := newPEMCollectionFromResponse(retrieveResponse.CertificateData, req.ChainOption)
+			if err != nil {
+				return requestID, fmt.Errorf("unable to retrieve certificate to check device status: %s", err)
+			}
+			thumbprint := calcThumbprint(certificates.Certificate)
+			searchResult, err := c.searchCertificatesByFingerprint(thumbprint)
+			if err != nil {
+				return requestID, err
+			}
+
+			guid := searchResult.Certificates[0].CertificateRequestGuid
+			details, err := c.searchCertificateDetails(guid)
+			if err != nil {
+				return requestID, err
+			}
+
+			if len(details.Consumers) > 0 {
+				if req.Location.Replace {
+					for _, cert := range details.Consumers {
+						err = c.dissociate(cert, getDeviceDN(c.zone, *req.Location))
+						if err != nil {
+							return requestID, err
+						}
+					}
+				} else {
+					return "", fmt.Errorf("%w: device alreday exist. change name or set recreate attribute", verror.UserDataError)
+				}
+			}
+		} else {
+			log.Println("Looks like that certificate doesn't exists so we won't check if it associated with any devices")
+		}
+
+		if err != nil {
+			return "", err
+		}
 	}
 
 	tppCertificateRequest, err := prepareRequest(req, c.zone)
@@ -358,12 +393,6 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 	requestID, err = parseRequestResult(statusCode, status, body)
 	if err != nil {
 		return "", fmt.Errorf("%s", err)
-	}
-
-	if req.Location != nil {
-		if req.Location.ReplacePolicy != certificate.DeviceConflictPolicyFail {
-			err = c.associate(requestID, getDeviceDN(c.zone, *req.Location), true)
-		}
 	}
 
 	req.PickupID = requestID

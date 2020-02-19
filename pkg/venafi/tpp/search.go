@@ -17,7 +17,9 @@
 package tpp
 
 import (
+	"crypto/sha1"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"net/http"
 	"strings"
@@ -147,4 +149,15 @@ func ParseCertificateSearchResponse(httpStatusCode int, body []byte) (searchResu
 			return nil, fmt.Errorf("Unexpected status code on certificate search. Status: %d", httpStatusCode)
 		}
 	}
+}
+
+func calcThumbprint(cert string) string {
+	p, _ := pem.Decode([]byte(cert))
+	h := sha1.New()
+	_, err := h.Write(p.Bytes)
+	if err != nil {
+		return fmt.Sprintf("Can't write: %s", err.Error())
+	}
+	buf := h.Sum(nil)
+	return strings.ToUpper(fmt.Sprintf("%x", buf))
 }
