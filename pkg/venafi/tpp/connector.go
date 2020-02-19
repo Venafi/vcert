@@ -332,47 +332,25 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 	if req.Location != nil {
 
 		certDN := getCertificateDN(c.zone, req.Subject.CommonName)
-		//Try to retrieve certificate
-		certReq := certificateRetrieveRequest{
-			CertificateDN:  certDN,
-			Format:         "base64",
-			RootFirstOrder: true,
-			IncludeChain:   false,
-		}
-
-		retrieveResponse, err := c.retrieveCertificateOnce(certReq)
+		guid, err := c.configDNToGuid(certDN)
 		if err != nil {
-			return requestID, fmt.Errorf("unable to retrieve certificate to check device status: %s", err)
+			return requestID, fmt.Errorf("unable to retrieve certificate guid: %s", err)
+		}
+		details, err := c.searchCertificateDetails(guid)
+		if err != nil {
+			return requestID, err
 		}
 
-		if retrieveResponse.CertificateData != "" {
-			certificates, err := newPEMCollectionFromResponse(retrieveResponse.CertificateData, req.ChainOption)
-			if err != nil {
-				return requestID, fmt.Errorf("unable to retrieve certificate to check device status: %s", err)
-			}
-			thumbprint := calcThumbprint(certificates.Certificate)
-			searchResult, err := c.searchCertificatesByFingerprint(thumbprint)
-			if err != nil {
-				return requestID, err
-			}
-
-			guid := searchResult.Certificates[0].CertificateRequestGuid
-			details, err := c.searchCertificateDetails(guid)
-			if err != nil {
-				return requestID, err
-			}
-
-			if len(details.Consumers) > 0 {
-				if req.Location.Replace {
-					for _, cert := range details.Consumers {
-						err = c.dissociate(cert, getDeviceDN(c.zone, *req.Location))
-						if err != nil {
-							return requestID, err
-						}
+		if len(details.Consumers) > 0 {
+			if req.Location.Replace {
+				for _, device := range details.Consumers {
+					err = c.dissociate(certDN, device)
+					if err != nil {
+						return requestID, err
 					}
-				} else {
-					return "", fmt.Errorf("%w: device alreday exist. change name or set recreate attribute", verror.UserDataError)
 				}
+			} else {
+				return "", fmt.Errorf("%w: device alreday exist. change name or set recreate attribute", verror.UserDataError)
 			}
 		} else {
 			log.Println("Looks like that certificate doesn't exists so we won't check if it associated with any devices")
@@ -743,11 +721,12 @@ func (c *Connector) dissociate(certDN, applicationDN string) error {
 		true,
 	}
 	log.Println("Dissociating device", applicationDN)
-	statusCode, _, _, err := c.request("POST", urlResourceCertificatesDissociate, req)
+	statusCode, status, body, err := c.request("POST", urlResourceCertificatesDissociate, req)
 	if err != nil {
 		return err
 	}
 	if statusCode != 200 {
+		log.Printf("We have problem with server response.\n  status: %s\n  body: %s\n", status, body)
 		return verror.ServerBadDataResponce
 	}
 	return nil
@@ -764,35 +743,48 @@ func (c *Connector) associate(certDN, applicationDN string, pushToNew bool) erro
 		pushToNew,
 	}
 	log.Println("Associating device", applicationDN)
-	statusCode, _, _, err := c.request("POST", urlResourceCertificatesAssociate, req)
+	statusCode, status, body, err := c.request("POST", urlResourceCertificatesAssociate, req)
 	if err != nil {
 		return err
 	}
 	if statusCode != 200 {
+		log.Printf("We have problem with server response.\n  status: %s\n  body: %s\n", status, body)
 		return verror.ServerBadDataResponce
 	}
 	return nil
 }
 
-func (c *Connector) dnToGuid(objectDN string) (resp struct {
-	ClassName string `json:",omitempty"`
-	GUID      string `json:",omitempty"`
-	Revision  string `json:",omitempty"`
-	Result    int    `json:",omitempty"`
-}, err error) {
+func (c *Connector) configDNToGuid(objectDN string) (guid string, err error) {
+
 	req := struct {
 		ObjectDN string
 	}{
 		objectDN,
 	}
+
+	var resp struct {
+		ClassName        string `json:",omitempty"`
+		GUID             string `json:",omitempty"`
+		HierarchicalGUID string `json:",omitempty"`
+		Revision         int    `json:",omitempty"`
+		Result           int    `json:",omitempty"`
+	}
+
 	log.Println("Getting guid by object DN for DN", objectDN)
-	statusCode, _, _, err := c.request("POST", urlResourceConfigDnToGuid, req)
-	if err != nil {
-		return resp, err
+	statusCode, status, body, err := c.request("POST", urlResourceConfigDnToGuid, req)
+
+	if statusCode == http.StatusOK {
+		err = json.Unmarshal(body, &resp)
+		if err != nil {
+			return guid, fmt.Errorf("failed to parse DNtoGuid results: %s, body: %s", err, body)
+		}
+	} else {
+		return guid, fmt.Errorf("request to %s failed: %s\n%s", urlResourceConfigDnToGuid, status, body)
 	}
+
 	if statusCode != 200 {
-		return resp, verror.ServerBadDataResponce
+		return "", verror.ServerBadDataResponce
 	}
-	return resp, nil
+	return resp.GUID, nil
 
 }
