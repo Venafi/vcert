@@ -726,8 +726,7 @@ func (c *Connector) dissociate(certDN, applicationDN string) error {
 		return err
 	}
 	if statusCode != 200 {
-		log.Printf("We have problem with server response.\n  status: %s\n  body: %s\n", status, body)
-		return verror.ServerBadDataResponce
+		return fmt.Errorf("%w: We have problem with server response.\n  status: %s\n  body: %s\n", verror.ServerBadDataResponce, status, body)
 	}
 	return nil
 }
