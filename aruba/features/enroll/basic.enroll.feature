@@ -74,12 +74,16 @@ Feature: Enroll certificate
     Given I enroll random certificate using TPP with -no-prompt -field "custom=12121" -field "Server Names=some server"
     Then the exit status should be 0
 
-  Scenario: enroll with static instance and app-info
-    Given I enroll random certificate using TPP with -no-prompt -instance devops-instance:nginx_246 -tls-address api-gw-myapp.example:8443  -app-info vcert:1.9.1
+  Scenario: enroll with static instance and certificate and replace-instance
+    Given I enroll certificate using TPP with  -cn devops-cert-with-instance.example.com -no-prompt -instance devops-instance:nginx_1234567890 -tls-address api-gw-myapp.example:8443  -app-info vcert:1.9.1 -replace-instance
     Then the exit status should be 0
 
   Scenario: enroll with random instance and app-info
-    Given I enroll random certificate using TPP with -no-prompt -instance devops-instance:nginx_246 -tls-address api-gw-myapp.example:8443  -app-info vcert:1.9.1
+    Given I enroll random certificate and_random_instance using TPP with -no-prompt -tls-address api-gw-myapp.example:8443  -app-info vcert:1.9.1
+    Then the exit status should be 0
+
+  Scenario: enroll with random instance and app-info and deprecated TPP
+    Given I enroll random certificate and_random_instance using TPPdeprecated with -no-prompt -tls-address api-gw-myapp.example:8443  -app-info vcert:1.9.1
     Then the exit status should be 0
 
   Scenario: enroll with single instance and app-info
