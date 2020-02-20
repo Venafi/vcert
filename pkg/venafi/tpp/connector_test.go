@@ -1165,7 +1165,12 @@ vOjeQhOnqrPdQINzUCKMSuqxqFGbQAJCAZs3Be1Pz6eeKHNLzr7mYQ2/pWSjfun4
 		t.Fatalf("valid certificates numbe (%v) should be less than all certificates number (%v)", len(validList), len(fullList))
 	}
 	req := certificate.Request{Subject: pkix.Name{CommonName: fmt.Sprintf("test%d%d.vfidev.com", time.Now().Unix(), time.Now().Nanosecond())}, KeyType: certificate.KeyTypeRSA, KeyLength: 2048}
-	tpp.GenerateRequest(nil, &req)
+
+	err = tpp.GenerateRequest(nil, &req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	req.PickupID, err = tpp.RequestCertificate(&req)
 	if err != nil {
 		t.Fatal(err)
