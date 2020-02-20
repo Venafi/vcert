@@ -350,7 +350,7 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 						}
 					}
 				} else {
-					return "", fmt.Errorf("%w: device alreday exist. change name or set recreate attribute", verror.UserDataError)
+					return "", fmt.Errorf("%w: device alreday exist. change name or set replace instance flag", verror.UserDataError)
 				}
 			} else {
 				log.Printf("there are no devices associated with certificate %s", certDN)
