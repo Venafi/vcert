@@ -341,7 +341,6 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 			if err != nil {
 				return requestID, err
 			}
-
 			if len(details.Consumers) > 0 {
 				if req.Location.Replace {
 					for _, device := range details.Consumers {
@@ -354,7 +353,7 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 					return "", fmt.Errorf("%w: device alreday exist. change name or set recreate attribute", verror.UserDataError)
 				}
 			} else {
-				log.Printf("there are now devices associated with certificate %s", certDN)
+				log.Printf("there are no devices associated with certificate %s", certDN)
 			}
 		} else {
 			log.Printf("certificate with DN %s doesn't exists so we won't check if it associated with any devices", certDN)
