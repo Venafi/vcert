@@ -245,14 +245,22 @@ func TestRequestAndSearchCertificate(t *testing.T) {
 }
 
 func TestSearchDevice(t *testing.T) {
+	t.Skip() //we don't use this method now, keep this test for future usage
 
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
 
+	authResp, err := tpp.GetRefreshToken(&endpoint.Authentication{
+		User: ctx.TPPuser, Password: ctx.TPPPassword,
+		Scope: "configuration:read"})
+	if err != nil {
+		panic(err)
+	}
+
 	err = tpp.Authenticate(&endpoint.Authentication{
-		AccessToken: ctx.TPPaccessToken,
+		AccessToken: authResp.Access_token,
 	})
 
 	if err != nil {
