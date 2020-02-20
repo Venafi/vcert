@@ -336,29 +336,30 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 		if err != nil {
 			return requestID, fmt.Errorf("unable to retrieve certificate guid: %s", err)
 		}
-		details, err := c.searchCertificateDetails(guid)
-		if err != nil {
-			return requestID, err
-		}
+		if guid != "" {
+			details, err := c.searchCertificateDetails(guid)
+			if err != nil {
+				return requestID, err
+			}
 
-		if len(details.Consumers) > 0 {
-			if req.Location.Replace {
-				for _, device := range details.Consumers {
-					err = c.dissociate(certDN, device)
-					if err != nil {
-						return requestID, err
+			if len(details.Consumers) > 0 {
+				if req.Location.Replace {
+					for _, device := range details.Consumers {
+						err = c.dissociate(certDN, device)
+						if err != nil {
+							return requestID, err
+						}
 					}
+				} else {
+					return "", fmt.Errorf("%w: device alreday exist. change name or set recreate attribute", verror.UserDataError)
 				}
 			} else {
-				return "", fmt.Errorf("%w: device alreday exist. change name or set recreate attribute", verror.UserDataError)
+				log.Printf("there are now devices associated with certificate %s", certDN)
 			}
 		} else {
-			log.Println("Looks like that certificate doesn't exists so we won't check if it associated with any devices")
+			log.Printf("certificate with DN %s doesn't exists so we won't check if it associated with any devices", certDN)
 		}
 
-		if err != nil {
-			return "", err
-		}
 	}
 
 	tppCertificateRequest, err := prepareRequest(req, c.zone)
@@ -772,6 +773,10 @@ func (c *Connector) configDNToGuid(objectDN string) (guid string, err error) {
 	log.Println("Getting guid by object DN for DN", objectDN)
 	statusCode, status, body, err := c.request("POST", urlResourceConfigDnToGuid, req)
 
+	if err != nil {
+		return guid, err
+	}
+
 	if statusCode == http.StatusOK {
 		err = json.Unmarshal(body, &resp)
 		if err != nil {
@@ -783,6 +788,15 @@ func (c *Connector) configDNToGuid(objectDN string) (guid string, err error) {
 
 	if statusCode != 200 {
 		return "", verror.ServerBadDataResponce
+	}
+
+	if resp.Result == 400 {
+		log.Printf("object with DN %s doesn't exists", objectDN)
+		return "", nil
+	}
+
+	if resp.Result != 1 {
+		return "", fmt.Errorf("result code %d is not success.", resp.Result)
 	}
 	return resp.GUID, nil
 
