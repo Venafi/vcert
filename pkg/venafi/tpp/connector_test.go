@@ -1195,15 +1195,20 @@ vOjeQhOnqrPdQINzUCKMSuqxqFGbQAJCAZs3Be1Pz6eeKHNLzr7mYQ2/pWSjfun4
 }
 
 func TestEnrollWithLocation(t *testing.T) {
-	conn, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
-	err = conn.Authenticate(&endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword})
-	if err != nil {
-		t.Fatal(err)
+
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
 	}
-	zoneConfig, err := conn.ReadZoneConfiguration()
+
+	cn := test.RandCN()
+	zoneConfig, err := tpp.ReadZoneConfiguration()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1211,7 +1216,7 @@ func TestEnrollWithLocation(t *testing.T) {
 	workload := fmt.Sprintf("workload-%v", time.Now().Unix())
 
 	req := certificate.Request{}
-	req.Subject.CommonName = test.RandCN()
+	req.Subject.CommonName = cn
 	req.Timeout = time.Second * 10
 	req.Location = &certificate.Location{
 		Instance:   "instance",
@@ -1219,16 +1224,16 @@ func TestEnrollWithLocation(t *testing.T) {
 		TLSAddress: "example.com:443",
 	}
 
-	err = conn.GenerateRequest(zoneConfig, &req)
+	err = tpp.GenerateRequest(zoneConfig, &req)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = conn.RequestCertificate(&req)
+	_, err = tpp.RequestCertificate(&req)
 	if err != nil {
 		t.Fatal(err)
 	}
 	req = certificate.Request{}
-	req.Subject.CommonName = test.RandCN()
+	req.Subject.CommonName = cn
 	req.Timeout = time.Second * 10
 	req.Location = &certificate.Location{
 		Instance:   "instance",
@@ -1236,16 +1241,16 @@ func TestEnrollWithLocation(t *testing.T) {
 		TLSAddress: "example.com:443",
 	}
 
-	err = conn.GenerateRequest(zoneConfig, &req)
+	err = tpp.GenerateRequest(zoneConfig, &req)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = conn.RequestCertificate(&req)
+	_, err = tpp.RequestCertificate(&req)
 	if err == nil {
 		t.Fatal("Should fail with devices conflict")
 	}
 	req = certificate.Request{}
-	req.Subject.CommonName = test.RandCN()
+	req.Subject.CommonName = cn
 	req.Timeout = time.Second * 10
 	req.Location = &certificate.Location{
 		Instance:   "instance",
@@ -1254,12 +1259,12 @@ func TestEnrollWithLocation(t *testing.T) {
 		Replace:    true,
 	}
 
-	err = conn.GenerateRequest(zoneConfig, &req)
+	err = tpp.GenerateRequest(zoneConfig, &req)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = conn.RequestCertificate(&req)
+	_, err = tpp.RequestCertificate(&req)
 	if err != nil {
 		t.Fatal(err)
 	}
