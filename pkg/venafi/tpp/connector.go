@@ -263,7 +263,9 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 		tppReq.PKCS10 = string(req.GetCSR())
 	case certificate.ServiceGeneratedCSR:
 		tppReq.Subject = req.Subject.CommonName // TODO: there is some problem because Subject is not only CN
-		tppReq.SubjectAltNames = wrapAltNames(req)
+		if !req.OmitSANs {
+			tppReq.SubjectAltNames = wrapAltNames(req)
+		}
 	default:
 		return tppReq, fmt.Errorf("Unexpected option in PrivateKeyOrigin")
 	}

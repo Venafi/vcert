@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/urfave/cli/v2"
 	"sort"
 	"strings"
@@ -389,6 +390,11 @@ var (
 		Name:  "field",
 		Usage: "Use to specify custom fields in format 'key=value'. If many values for the same key are required, use syntax '--field key1=value1 --field key1=value2'",
 	}
+	flagOmitSans = &cli.BoolFlag{
+		Name:        "omit-sans",
+		Usage:       fmt.Sprintf("Skip SANs value from any sources (like flag --%s, default values from Zone configuration, previous certificate on enrolling).", flagDNSSans.Name),
+		Destination: &flags.omitSans,
+	}
 
 	commonFlags              = []cli.Flag{flagInsecure, flagFormat, flagVerbose, flagNoPrompt}
 	keyFlags                 = []cli.Flag{flagKeyType, flagKeySize, flagKeyCurve, flagKeyFile, flagKeyPassword}
@@ -446,6 +452,7 @@ var (
 			flagPickupIDFile,
 			flagTimeout,
 			flagCustomField,
+			flagOmitSans,
 		)),
 	)
 
@@ -498,6 +505,7 @@ var (
 			commonFlags,
 			sortableCredentialsFlags,
 			flagPickupIDFile,
+			flagOmitSans,
 		)),
 	)
 

@@ -85,4 +85,5 @@ type commandFlags struct {
 	clientId          string
 	scope             string
 	customFields      []string
+	omitSans          bool
 }
