@@ -1188,3 +1188,71 @@ vOjeQhOnqrPdQINzUCKMSuqxqFGbQAJCAZs3Be1Pz6eeKHNLzr7mYQ2/pWSjfun4
 	}
 
 }
+
+func TestOmitSans(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+	zone, err := tpp.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatal(err)
+	}
+	cn := test.RandCN()
+
+	req := certificate.Request{
+		Subject: pkix.Name{
+			CommonName: cn,
+		},
+		KeyLength: 2048,
+		DNSNames:  []string{"www." + cn, cn},
+		OmitSANs:  true,
+		CsrOrigin: certificate.ServiceGeneratedCSR,
+		Timeout:   30 * time.Second,
+	}
+
+	tppReq, err := prepareRequest(&req, tpp.zone)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(tppReq.SubjectAltNames) > 0 {
+		t.Fatal("certificate should have 0 SANs")
+	}
+
+	req = certificate.Request{
+		Subject: pkix.Name{
+			CommonName: cn,
+		},
+		KeyLength: 2048,
+		DNSNames:  []string{"www." + cn, cn},
+		OmitSANs:  true,
+		CsrOrigin: certificate.LocalGeneratedCSR,
+		Timeout:   30 * time.Second,
+	}
+	err = tpp.GenerateRequest(zone, &req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, _ := pem.Decode(req.GetCSR())
+	csr, err := x509.ParseCertificateRequest(b.Bytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(csr.DNSNames) > 0 {
+		t.Fatal("certificate should have 0 SANs")
+	}
+	_, err = tpp.RequestCertificate(&req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = tpp.RetrieveCertificate(&req)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
