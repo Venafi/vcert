@@ -342,15 +342,23 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 				return requestID, err
 			}
 			if len(details.Consumers) > 0 {
+				log.Printf("debug: checking consumer devices from:\n %s", details.Consumers)
+				var device string
 				if req.Location.Replace {
-					for _, device := range details.Consumers {
+					for _, device = range details.Consumers {
 						err = c.dissociate(certDN, device)
 						if err != nil {
 							return requestID, err
 						}
 					}
 				} else {
-					return "", fmt.Errorf("%w: device alreday exist. change name or set replace instance flag", verror.UserDataError)
+					for _, device = range details.Consumers {
+						requested_device := getDeviceDN(c.zone, *req.Location)
+						log.Printf("debug: checking requested device %s against %s", requested_device, device)
+						if device == requested_device {
+							return "", fmt.Errorf("%w: device %s alreday exist. change name or set replace instance flag", verror.UserDataError, device)
+						}
+					}
 				}
 			} else {
 				log.Printf("there are no devices associated with certificate %s", certDN)
