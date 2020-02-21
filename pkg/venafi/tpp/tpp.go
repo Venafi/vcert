@@ -436,6 +436,14 @@ func getCertificateDN(zone, cn string) string {
 	return getPolicyDN(zone + "\\" + cn)
 }
 
+func stripBackSlashes(s string) string {
+
+	var r = regexp.MustCompile(`\\+`)
+
+	result := r.ReplaceAll([]byte(s), []byte("\\"))
+	return string(result)
+}
+
 func parseConfigResult(httpStatusCode int, httpStatus string, body []byte) (tppData tppPolicyData, err error) {
 	tppData = tppPolicyData{}
 	switch httpStatusCode {

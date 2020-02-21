@@ -214,6 +214,7 @@ var (
 		Name:        "verbose",
 		Usage:       "Use to increase the level of logging detail, which is helpful when troubleshooting issues",
 		Destination: &flags.verbose,
+		Value:       false,
 	}
 
 	flagNoPrompt = &cli.BoolFlag{
