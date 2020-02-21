@@ -1200,6 +1200,8 @@ func TestEnrollWithLocation(t *testing.T) {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
 
+	tpp.verbose = true
+
 	if tpp.apiKey == "" {
 		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
 		if err != nil {
@@ -1268,4 +1270,44 @@ func TestEnrollWithLocation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	//request same certificate with different workload but without replace
+	req.Location = &certificate.Location{
+		Instance:   "instance",
+		Workload:   workload + "-1",
+		TLSAddress: "example.com:443",
+		Replace:    false,
+	}
+
+	err = tpp.GenerateRequest(zoneConfig, &req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = tpp.RequestCertificate(&req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	//request same certificate with same workload and without replace
+	req.Location = &certificate.Location{
+		Instance:   "instance",
+		Workload:   workload + "-1",
+		TLSAddress: "example.com:443",
+		Replace:    false,
+	}
+
+	err = tpp.GenerateRequest(zoneConfig, &req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = tpp.RequestCertificate(&req)
+	if err == nil {
+		t.Fatal("There should be a error if we're trying to set same device twice in location")
+	}
+	if !strings.Contains(err.Error(), "vcert error: your data contains problems: device") {
+		t.Fatal("We should exit with error message 'vcert error: your data contains problems' if we're trying to set same device twice in location. But we vcert exited with error", err)
+	}
+
 }
