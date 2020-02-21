@@ -75,6 +75,7 @@ type certificateRequest struct {
 	SubjectAltNames         []sanItem       `json:",omitempty"`
 	Contact                 string          `json:",omitempty"`
 	CASpecificAttributes    []nameValuePair `json:",omitempty"`
+	Origin                  string          `json:",omitempty"`
 	PKCS10                  string          `json:",omitempty"`
 	KeyAlgorithm            string          `json:",omitempty"`
 	KeyBitSize              int             `json:",omitempty"`
