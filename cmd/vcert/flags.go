@@ -358,22 +358,22 @@ var (
 
 	flagInstance = &cli.StringSliceFlag{
 		Name:  "instance",
-		Usage: "Indicates the name/address of the hosting compute instance and an identifier for the workload using the certificate",
+		Usage: "Use to provide the name/address of the compute instance and an identifier for the workload using the certificate. Example: --instance node:workload",
 	}
 
 	flagTlsAddress = &cli.StringSliceFlag{
 		Name:  "tls-address",
-		Usage: "indicate the hostname, FQDN or IP address and TCP port where the certificate can be validated after issuance and installation",
+		Usage: "Use to specify the hostname, FQDN or IP address and TCP port where the certificate can be validated after issuance and installation. Example: --tls-address 10.20.30.40:443",
 	}
 
 	flagAppInfo = &cli.StringSliceFlag{
 		Name:  "app-info",
-		Usage: "indicate the hostname, FQDN or IP address and TCP port where the certificate can be validated after issuance and installation",
+		Usage: "Use to identify the application requesting the certificate with details like vendor name, application name, and application version.",
 	}
 
 	flagReplace = &cli.BoolFlag{
 		Name:        "replace-instance",
-		Usage:       "Force replace device set in location if device already exists.",
+		Usage:       "Force the specified instance to be recreated if it already exists and is associated with the requested certificate.",
 		Destination: &flags.replaceInstance,
 	}
 
