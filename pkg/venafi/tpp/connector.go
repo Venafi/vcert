@@ -345,7 +345,7 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 			if len(details.Consumers) > 0 {
 
 				if c.verbose {
-					log.Printf("checking consumer devices from:\n %s", details.Consumers)
+					log.Printf("checking associated instances from:\n %s", details.Consumers)
 				}
 
 				var device string
@@ -354,7 +354,7 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 				if req.Location.Replace {
 					for _, device = range details.Consumers {
 						if c.verbose {
-							log.Printf("checking consumer devices from:\n %s", details.Consumers)
+							log.Printf("checking associated instances from:\n %s", details.Consumers)
 						}
 						if device == requested_device {
 							err = c.dissociate(certDN, device)
@@ -367,19 +367,19 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 					for _, device = range details.Consumers {
 
 						if c.verbose {
-							log.Printf("checking requested device %s against %s", requested_device, device)
+							log.Printf("comparing requested instance %s to %s", requested_device, device)
 						}
 
 						if device == requested_device {
-							return "", fmt.Errorf("%w: device %s alreday exist. change name or set replace instance flag", verror.UserDataError, device)
+							return "", fmt.Errorf("%w: instance %s already exists, change the value or use --replace-instance", verror.UserDataError, device)
 						}
 					}
 				}
 			} else {
-				log.Printf("there are no devices associated with certificate %s", certDN)
+				log.Printf("there are no instances associated with certificate %s", certDN)
 			}
 		} else {
-			log.Printf("certificate with DN %s doesn't exists so we won't check if it associated with any devices", certDN)
+			log.Printf("certificate with DN %s doesn't exists so no need to check if it is associated with any instances", certDN)
 		}
 
 	}
