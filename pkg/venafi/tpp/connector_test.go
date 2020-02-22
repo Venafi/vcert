@@ -1310,4 +1310,11 @@ func TestEnrollWithLocation(t *testing.T) {
 		t.Fatal("We should exit with error message 'vcert error: your data contains problems' if we're trying to set same device twice in location. But we vcert exited with error", err)
 	}
 
+	//TODO: test that only instance from parameters is dissociated
+	//TODO: test app info with different kind of strings ???
+	//TODO: Check origin using config/read post request example:
+	//{
+	//   "ObjectDN":"\\VED\\Policy\\devops\\vcert\\1582237636-pgqlx.venafi.example.com",
+	//   "AttributeName":"Origin"
+	//}
 }

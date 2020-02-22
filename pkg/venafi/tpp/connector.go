@@ -278,8 +278,8 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 		case certificate.CustomFieldPlain:
 			customFieldsMap[f.Name] = append(customFieldsMap[f.Name], f.Value)
 		case certificate.CustomFieldAppInfo:
-			tppReq.CASpecificAttributes = append(tppReq.CASpecificAttributes, nameValuePair{Name: "Origin", Value: f.Name + " " + f.Value})
-			tppReq.Origin = f.Name + " " + f.Value
+			tppReq.CASpecificAttributes = append(tppReq.CASpecificAttributes, nameValuePair{Name: "Origin", Value: f.Value})
+			tppReq.Origin = f.Value
 		}
 
 	}
@@ -349,16 +349,22 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 				}
 
 				var device string
+				requested_device := getDeviceDN(stripBackSlashes(c.zone), *req.Location)
+
 				if req.Location.Replace {
 					for _, device = range details.Consumers {
-						err = c.dissociate(certDN, device)
-						if err != nil {
-							return requestID, err
+						if c.verbose {
+							log.Printf("checking consumer devices from:\n %s", details.Consumers)
+						}
+						if device == requested_device {
+							err = c.dissociate(certDN, device)
+							if err != nil {
+								return requestID, err
+							}
 						}
 					}
 				} else {
 					for _, device = range details.Consumers {
-						requested_device := getDeviceDN(stripBackSlashes(c.zone), *req.Location)
 
 						if c.verbose {
 							log.Printf("checking requested device %s against %s", requested_device, device)

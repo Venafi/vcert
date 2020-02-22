@@ -105,13 +105,7 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 	}
 
 	if len(cf.appInfo) > 0 {
-		appInfo := strings.Split(cf.appInfo, ":")
-
-		if len(appInfo) == 0 {
-			req.CustomFields = append(req.CustomFields, certificate.CustomField{Name: appInfo[0], Type: certificate.CustomFieldAppInfo})
-		} else {
-			req.CustomFields = append(req.CustomFields, certificate.CustomField{Name: appInfo[0], Value: appInfo[1], Type: certificate.CustomFieldAppInfo})
-		}
+		req.CustomFields = append(req.CustomFields, certificate.CustomField{Name: "Origin", Value: cf.appInfo, Type: certificate.CustomFieldAppInfo})
 	}
 
 	switch true {
