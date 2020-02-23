@@ -209,6 +209,77 @@ type policyRequest struct {
 	Class         string `json:",omitempty"`
 	AttributeName string `json:",omitempty"`
 }
+type metadataItem struct {
+	AllowedValues     []string `json:",omitempty"`
+	Classes           []string `json:",omitempty"`
+	ConfigAttribute   string   `json:",omitempty"`
+	DefaultValues     []string `json:",omitempty"`
+	DN                string   `json:",omitempty"`
+	ErrorMessage      string   `json:",omitempty"`
+	Guid              string   `json:",omitempty"`
+	Help              string   `json:",omitempty"`
+	Label             string   `json:",omitempty"`
+	Name              string   `json:",omitempty"`
+	Policyable        bool     `json:",omitempty"`
+	RegularExpression string   `json:",omitempty"`
+	RenderHidden      bool     `json:",omitempty"`
+	RenderReadOnly    bool     `json:",omitempty"`
+	Type              int      `json:",omitempty"`
+}
+type metadataResultCode int
+
+var MetadataResultCodesMap = map[string]metadataResultCode{
+	"":                         0,  //Empty is assumed success
+	"Success":                  0,  //(Indicates the API call was successful.)
+	"InvalidConfigObject":      1,  //Config object is invalid. + [Error].
+	"InvalidDN":                2,  //DN is invalid. + [Error].
+	"InvalidName":              3,  //Metadata object name is invalid.
+	"InvalidItem":              4,  //Item is invalid. + [Error].
+	"InvalidClass":             5,  //Class is invalid. + [Error].
+	"InvalidMetadataObject":    6,  //Metadata object is invalid.
+	"InvalidRights":            7,  //Object rights are invalid.+ [Error].
+	"ItemIsNull":               8,  //Item is missing or empty. + [Error].
+	"ItemAlreadyExists":        9,  //Duplicate item. + [Error].
+	"ItemTypeUnknown":          10, //Item type is unknown. + [Error].
+	"ConfigCreateFailed":       11, //Config object failed to create. + [Error].
+	"ConfigWriteFailed":        12, //Config object failed to write. + [Error].
+	"ConfigDeleteFailed":       13, //Config object failed to delete.
+	"MetadataInUse":            14, //Metadata item is in use. + [Error].
+	"NoAllowedValues":          15, //Metadata item has invalid values.
+	"AllowedValueDoesNotExist": 16, //The required object does not exist or you do not have rights to read it.
+	"ValueNotInAllowedList":    17, //Value is invalid.
+	"ItemNotValidForClass":     18, //Item is not valid for class. + [Error].
+	"NameTooLong":              19, //Metadata item name is too long. + [Error].
+	"TooManyContainers":        20, //Nesting is too deep. + [Error].
+	"ConfigDnNotContainer":     21, //DN is invalid.+ [Error].
+	"InvalidPolicyState":       22, //Policy state is invalid.
+	"ConfigLockFailed":         23, //Config lock failed.
+	"ConfigReadFailed":         24, //Config object failed to read.+ [Error].
+	"RemoteError":              25, //Remote request failed.
+}
+
+type metadataGetItemsRequest struct {
+	ObjectDN string `json:"DN"`
+}
+type metadataGetItemsResponse struct {
+	Items  []metadataItem     `json:",omitempty"`
+	Locked bool               `json:",omitempty"`
+	Result metadataResultCode `json:",omitempty"`
+}
+type guidData struct {
+	ItemGuid string   `json:",omitempty"`
+	List     []string `json:",omitempty"`
+}
+type metadataSetRequest struct {
+	DN           string     `json:"DN"`
+	GuidData     []guidData `json:"GuidData"`
+	KeepExisting bool       `json:"KeepExisting"`
+}
+type metadataSetResponse struct {
+	Locked bool               `json:",omitempty"`
+	Result metadataResultCode `json:",omitempty"`
+}
+type systemStatusVersionResponse string
 
 type urlResource string
 
@@ -231,6 +302,9 @@ const (
 	urlResourceConfigReadDn           urlResource = "vedsdk/Config/ReadDn"
 	urlResourceFindPolicy             urlResource = "vedsdk/config/findpolicy"
 	urlResourceRefreshAccessToken     urlResource = "vedauth/authorize/token"
+	urlResourceMetadataSet          urlResource = "vedsdk/metadata/set"
+	urlResourceMetadataGet          urlResource = "vedsdk/metadata/getitems"
+	urlResourceSystemStatusVersion  urlResource = "vedsdk/SystemStatus/Version"
 )
 
 const (
@@ -530,6 +604,19 @@ func parseRenewResult(httpStatusCode int, httpStatus string, body []byte) (resp 
 }
 
 func parseRenewData(b []byte) (data certificateRenewResponse, err error) {
+	err = json.Unmarshal(b, &data)
+	return
+}
+
+//SystemStatus/Version
+func parseSystemStatusVersionResult(httpStatusCode int, httpStatus string, body []byte) (resp systemStatusVersionResponse, err error) {
+	resp, err = parseSystemStatusVersionData(body)
+	if err != nil {
+		return resp, fmt.Errorf("failed to parse SystemStatus Version response. status: %s", httpStatus)
+	}
+	return resp, nil
+}
+func parseSystemStatusVersionData(b []byte) (data systemStatusVersionResponse, err error) {
 	err = json.Unmarshal(b, &data)
 	return
 }
