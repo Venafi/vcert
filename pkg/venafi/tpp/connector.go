@@ -20,12 +20,13 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"github.com/Venafi/vcert/pkg/verror"
 	"net/http"
 	neturl "net/url"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/Venafi/vcert/pkg/verror"
 
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
@@ -257,6 +258,95 @@ func wrapAltNames(req *certificate.Request) (items []sanItem) {
 	return items
 }
 
+func prepareLegacyMetadata(c *Connector, metaItems []customField, dn string) (items []guidData, err error) {
+	metadataItems, err := c.RequestAllMetadataItems(dn)
+	if nil != err {
+		return nil, err
+	}
+	customFieldsGUIDMap := make(map[string]string)
+	for _, item := range metadataItems {
+		customFieldsGUIDMap[item.Label] = item.Guid
+	}
+
+	requestGUIDData := []guidData{}
+	for _, item := range metaItems {
+		guid := customFieldsGUIDMap[item.Name]
+		if len(guid) > 0 {
+			requestGUIDData = append(requestGUIDData, guidData{guid, item.Values})
+		}
+	}
+	return requestGUIDData, nil
+}
+
+//RequestAllMetadataItems returns all possible metadata items for a DN
+func (c *Connector) RequestAllMetadataItems(dn string) (items []metadataItem, err error) {
+	statusCode, status, body, err := c.request("POST", urlResourceMetadataGet, metadataGetItemsRequest{dn})
+	if err != nil {
+		return nil, err
+	}
+	if statusCode != http.StatusOK {
+		return nil, fmt.Errorf("Unexpected http status code while fetching metadata items. %d-%s", statusCode, status)
+	}
+
+	response := metadataGetItemsResponse{}
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		return nil, fmt.Errorf("%s", err)
+	}
+	return response.Items, nil
+}
+
+//RequestSystemVersion returns the TPP system version of the connector context
+func (c *Connector) RequestSystemVersion() (ver string, err error) {
+	statusCode, status, body, err := c.request("GET", urlResourceSystemStatusVersion, "")
+	if err != nil {
+		return "", fmt.Errorf("%s", err)
+	}
+	//Put in hint for authentication scope 'configuration'
+	switch statusCode {
+	case 200:
+		break
+	case 401:
+		return "", fmt.Errorf("http status code '%s' was returned by the server. Hint: OAuth scope 'configuration' is required when using custom fields", status)
+	default:
+		return "", fmt.Errorf("Unexpected http status code while fetching TPP version. %s", status)
+	}
+	type responseType struct{ Version string }
+	response := responseType{}
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		return "", fmt.Errorf("%s", err)
+	}
+	return response.Version, nil
+}
+
+//SetCertificateMetadata submits the metadata to TPP for storage returning the lock status of the metadata stored
+func (c *Connector) SetCertificateMetadata(metadataRequest metadataSetRequest) (locked bool, err error) {
+	statusCode, status, body, err := c.request("POST", urlResourceMetadataSet, metadataRequest)
+	if err != nil {
+		return false, fmt.Errorf("%s", err)
+	}
+	if statusCode != http.StatusOK {
+		return false, fmt.Errorf("Unexpected http status code while setting metadata items. %d-%s", statusCode, status)
+	}
+
+	var result = metadataSetResponse{}
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return false, fmt.Errorf("%s", err)
+	}
+
+	switch result.Result {
+	case 0:
+		break
+	case 17:
+		return false, fmt.Errorf("custom field value not a valid list item. Server returned error %d", result.Result)
+	default:
+		return false, fmt.Errorf("return code %d was returned while adding metadata to %s. Please refer to the Metadata Result Codes in the TPP WebSDK API documentation to determine if further action is needed", result.Result, metadataRequest.DN)
+	}
+	return result.Locked, nil
+}
+
 func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRequest, err error) {
 	switch req.CsrOrigin {
 	case certificate.LocalGeneratedCSR, certificate.UserProvidedCSR:
@@ -304,6 +394,29 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 	requestID, err = parseRequestResult(statusCode, status, body)
 	if err != nil {
 		return "", fmt.Errorf("%s", err)
+	}
+
+	//Handle legacy TPP custom field API
+	if len(req.CustomFields) > 0 {
+		//Check to see if this is 19.2 or lower
+		tppVersion, err := c.RequestSystemVersion()
+		if err != nil {
+			return "", fmt.Errorf("%s", err)
+		}
+
+		if "19.2.999" > tppVersion {
+			//Create a metadata/set command with the metadata from tppCertificateRequest
+			guidItems, err := prepareLegacyMetadata(c, tppCertificateRequest.CustomFields, requestID)
+			if err != nil {
+				return "", fmt.Errorf("%s", err)
+			}
+			requestData := metadataSetRequest{requestID, guidItems, true}
+			//c.request with the metadata request
+			_, err = c.SetCertificateMetadata(requestData)
+			if err != nil {
+				return "", fmt.Errorf("%s", err)
+			}
+		}
 	}
 	req.PickupID = requestID
 	return requestID, nil
