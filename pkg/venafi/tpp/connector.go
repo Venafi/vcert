@@ -376,10 +376,12 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 					}
 				}
 			} else {
-				log.Printf("there are no instances associated with certificate %s", certDN)
+				log.Printf("There were no instances associated with certificate %s", certDN)
 			}
 		} else {
-			log.Printf("certificate with DN %s doesn't exists so no need to check if it is associated with any instances", certDN)
+			if c.verbose {
+				log.Printf("certificate with DN %s doesn't exists so no need to check if it is associated with any instances", certDN)
+			}
 		}
 
 	}
@@ -792,7 +794,7 @@ func (c *Connector) configDNToGuid(objectDN string) (guid string, err error) {
 		Result           int    `json:",omitempty"`
 	}
 
-	log.Println("Getting guid by object DN for DN", objectDN)
+	log.Println("Getting guid for object DN", objectDN)
 	statusCode, status, body, err := c.request("POST", urlResourceConfigDnToGuid, req)
 
 	if err != nil {
@@ -813,7 +815,7 @@ func (c *Connector) configDNToGuid(objectDN string) (guid string, err error) {
 	}
 
 	if resp.Result == 400 {
-		log.Printf("object with DN %s doesn't exists", objectDN)
+		log.Printf("object with DN %s doesn't exist", objectDN)
 		return "", nil
 	}
 
