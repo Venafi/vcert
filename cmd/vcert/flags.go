@@ -357,8 +357,9 @@ var (
 	}
 
 	flagInstance = &cli.StringSliceFlag{
-		Name:  "instance",
-		Usage: "Use to provide the name/address of the compute instance and an identifier for the workload using the certificate. Example: --instance node:workload",
+		Name:        "instance",
+		Usage:       "Use to provide the name/address of the compute instance and an identifier for the workload using the certificate. Example: --instance node:workload",
+		DefaultText: "",
 	}
 
 	flagTlsAddress = &cli.StringSliceFlag{
@@ -367,8 +368,9 @@ var (
 	}
 
 	flagAppInfo = &cli.StringSliceFlag{
-		Name:  "app-info",
-		Usage: "Use to identify the application requesting the certificate with details like vendor name, application name, and application version.",
+		Name:        "app-info",
+		Usage:       "Use to identify the application requesting the certificate with details like vendor name, application name, and application version.",
+		DefaultText: "",
 	}
 
 	flagReplace = &cli.BoolFlag{

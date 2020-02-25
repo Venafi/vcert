@@ -165,7 +165,13 @@ func TestRequestAndSearchCertificate(t *testing.T) {
 	}
 
 	if tpp.apiKey == "" {
-		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		resp, err := tpp.GetRefreshToken(&endpoint.Authentication{
+			User: ctx.TPPuser, Password: ctx.TPPPassword,
+			Scope: "configuration:read;certificate:approve,delete,discover,manage,revoke;"})
+		if err != nil {
+			panic(err)
+		}
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: resp.Access_token})
 		if err != nil {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
@@ -177,6 +183,7 @@ func TestRequestAndSearchCertificate(t *testing.T) {
 	}
 
 	cn := test.RandCN()
+	appInfo := "APP Info " + cn
 	workload := fmt.Sprintf("workload-%d", time.Now().Unix())
 	instance := "devops-instance"
 	cfValue := cn
@@ -192,7 +199,7 @@ func TestRequestAndSearchCertificate(t *testing.T) {
 	req.FriendlyName = cn
 	req.CustomFields = []certificate.CustomField{
 		{Name: "custom", Value: cfValue},
-		{Type: certificate.CustomFieldAppInfo, Value: "vcert test name"},
+		{Type: certificate.CustomFieldAppInfo, Value: appInfo},
 	}
 	req.Location = &certificate.Location{
 		Instance:   instance,
@@ -241,6 +248,19 @@ func TestRequestAndSearchCertificate(t *testing.T) {
 	}
 	if !strings.HasSuffix(details.Consumers[0], instance+"\\"+workload) {
 		t.Fatalf("Consumer %s should end on %s", details.Consumers[0], instance+"\\"+workload)
+	}
+
+	configReq := ConfigReadDNRequest{
+		ObjectDN:      getCertificateDN(ctx.TPPZone, cn),
+		AttributeName: "Origin",
+	}
+
+	configResp, err := tpp.configReadDN(configReq)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if configResp.Values[0] != appInfo {
+		t.Fatalf("Origin attribute value should be %s, but it is %s", appInfo, configResp.Values[0])
 	}
 }
 
