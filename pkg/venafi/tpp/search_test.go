@@ -243,9 +243,12 @@ func TestRequestAndSearchCertificate(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	//check custom fields
 	if details.CustomFields[0].Value[0] != cfValue {
 		t.Fatalf("mismtached custom field valud: want %s but got %s", details.CustomFields[0].Value[0], cfValue)
 	}
+
+	//check installed location device
 	if !strings.HasSuffix(details.Consumers[0], instance+"\\"+workload) {
 		t.Fatalf("Consumer %s should end on %s", details.Consumers[0], instance+"\\"+workload)
 	}
@@ -261,6 +264,80 @@ func TestRequestAndSearchCertificate(t *testing.T) {
 	}
 	if configResp.Values[0] != appInfo {
 		t.Fatalf("Origin attribute value should be %s, but it is %s", appInfo, configResp.Values[0])
+	}
+
+	//add one more device
+	req.Location = &certificate.Location{
+		Instance:   instance,
+		Workload:   workload + "-1",
+		TLSAddress: "wwww.example.com:443",
+	}
+
+	err = tpp.GenerateRequest(config, req)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	req.PickupID, err = tpp.RequestCertificate(req)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	//to wait until cert will be aprooved so we can check list of devices
+	_, err = tpp.RetrieveCertificate(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	details, err = tpp.searchCertificateDetails(guid)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(details.Consumers) < 1 {
+		t.Fatal("There should be at least two devices in consumers")
+	}
+	//check installed location device
+	if !strings.HasSuffix(details.Consumers[1], instance+"\\"+workload+"-1") {
+		t.Fatalf("Consumer %s should end on %s", details.Consumers[1], instance+"\\"+workload+"-1")
+	}
+
+	//replace first device, second must be kept
+	req.Location = &certificate.Location{
+		Instance:   instance,
+		Workload:   workload,
+		TLSAddress: "wwww.example.com:443",
+		Replace:    true,
+	}
+
+	err = tpp.GenerateRequest(config, req)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	req.PickupID, err = tpp.RequestCertificate(req)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	//to wait until cert will be aprooved so we can check list of devices
+	_, err = tpp.RetrieveCertificate(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	details, err = tpp.searchCertificateDetails(guid)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(details.Consumers) < 1 {
+		t.Fatal("There should be at least two devices in consumers")
+	}
+
+	//check installed location device
+	if !strings.HasSuffix(details.Consumers[0], instance+"\\"+workload+"-1") {
+		t.Fatalf("Consumer %s should end on %s", details.Consumers[0], instance+"\\"+workload+"-1")
 	}
 }
 
