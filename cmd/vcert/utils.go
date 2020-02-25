@@ -95,13 +95,9 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 		if len(instance) > 1 {
 			req.Location.Workload = instance[1]
 		}
-		if len(cf.tlsAddress) > 0 {
-			req.Location.TLSAddress = cf.tlsAddress
-		}
 
-		if cf.replaceInstance {
-			req.Location.Replace = true
-		}
+		req.Location.TLSAddress = cf.tlsAddress
+		req.Location.Replace = cf.replaceInstance
 	}
 
 	if len(cf.appInfo) > 0 {
