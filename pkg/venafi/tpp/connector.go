@@ -401,7 +401,32 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 	if renewReq.CertificateDN == "" {
 		return "", fmt.Errorf("failed to create renewal request: CertificateDN or Thumbprint required")
 	}
-
+	if renewReq.CertificateRequest != nil && renewReq.CertificateRequest.OmitSANs {
+		type field struct {
+			Name  string
+			Value *string
+		}
+		r := struct {
+			AttributeData []field
+		}{[]field{
+			{"X509 SubjectAltName DNS", nil},
+			{"X509 SubjectAltName IPAddress", nil},
+			{"X509 SubjectAltName RFC822", nil},
+			{"X509 SubjectAltName URI", nil},
+			{"X509 SubjectAltName OtherName UPN", nil},
+		}}
+		guid, err := c.configDNToGuid(renewReq.CertificateDN)
+		if err != nil {
+			return "", err
+		}
+		statusCode, _, _, err := c.request("PUT", urlResourceCertificate+urlResource(guid), r)
+		if err != nil {
+			return "", err
+		}
+		if statusCode != http.StatusOK {
+			return "", fmt.Error("can't clean SANs values for certificate on server side")
+		}
+	}
 	var r = certificateRenewRequest{}
 	r.CertificateDN = renewReq.CertificateDN
 	if renewReq.CertificateRequest != nil && len(renewReq.CertificateRequest.GetCSR()) != 0 {

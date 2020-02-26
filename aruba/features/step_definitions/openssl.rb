@@ -38,10 +38,15 @@ When(/^I decode certificate from file "([^"]+)"$/) do |filename|
   m = last_command_started.output.match /^SHA1 Fingerprint=(\S+)$/
   if m
     @certificate_fingerprint = m[1]
+  else
+    @certificate_fingerprint = ""
   end
+
   m2 =  last_command_started.output.match /X509v3 Subject Alternative Name:\s+([^\n]+)\n/m
   if m2
     @certififcate_sans = m2[1].split
+  else
+    @certififcate_sans = []
   end
 end
 

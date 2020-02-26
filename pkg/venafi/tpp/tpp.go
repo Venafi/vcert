@@ -204,10 +204,11 @@ const (
 	urlResourceFindPolicy           urlResource = "vedsdk/config/findpolicy"
 	urlResourceCertificateRevoke    urlResource = "vedsdk/certificates/revoke"
 	urlResourceCertificateRenew     urlResource = "vedsdk/certificates/renew"
-	urlResourceCertificateSearch    urlResource = "vedsdk/certificates/"
+	urlResourceCertificate          urlResource = "vedsdk/certificates/"
+	urlResourceCertificateSearch                = urlResourceCertificate
 	urlResourceCertificateImport    urlResource = "vedsdk/certificates/import"
 	urlResourceCertificatePolicy    urlResource = "vedsdk/certificates/checkpolicy"
-	urlResourceCertificatesList     urlResource = "vedsdk/certificates/"
+	urlResourceCertificatesList                 = urlResourceCertificate
 )
 
 const (
@@ -271,7 +272,7 @@ func (c *Connector) request(method string, resource urlResource, data interface{
 	}
 	var payload io.Reader
 	var b []byte
-	if method == "POST" {
+	if method == "POST" || method == "PUT" {
 		b, _ = json.Marshal(data)
 		payload = bytes.NewReader(b)
 	}
@@ -303,7 +304,7 @@ func (c *Connector) request(method string, resource urlResource, data interface{
 	if trace {
 		log.Println("#################")
 		log.Printf("Headers are:\n%s", r.Header)
-		if method == "POST" {
+		if method == "POST" || method == "PUT" {
 			log.Printf("JSON sent for %s\n%s\n", url, string(b))
 		} else {
 			log.Printf("%s request sent to %s\n", method, url)

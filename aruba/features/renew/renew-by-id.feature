@@ -60,7 +60,6 @@ Feature: renew by -id
     And it should retrieve certificate
     And it should write private key to the file "k1.pem"
     And it should write certificate to the file "c1.pem"
-    And certificate in "c.pem" and certificate in "c1.pem" should not have the same modulus
     And certificate in "c.pem" and certificate in "c1.pem" should not have the same serial
     And certificate in "c1.pem" should have 1 DNS SANs
     Examples:
