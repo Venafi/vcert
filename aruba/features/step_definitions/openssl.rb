@@ -35,7 +35,6 @@ When(/^I decode certificate from file "([^"]+)"$/) do |filename|
     And the exit status should be 0
   }
   @certificate_text = last_command_started.output.to_s
-  puts @certificate_text
   m = last_command_started.output.match /^SHA1 Fingerprint=(\S+)$/
   if m
     @certificate_fingerprint = m[1]
