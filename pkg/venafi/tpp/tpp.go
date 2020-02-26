@@ -208,9 +208,13 @@ type metadataItem struct {
 	RenderReadOnly    bool     `json:",omitempty"`
 	Type              int      `json:",omitempty"`
 }
+type metadataKeyValueSet struct {
+	Key   metadataItem `json:",omitempty"`
+	Value []string     `json:",omitempty"`
+}
 type metadataResultCode int
 
-var MetadataResultCodesMap = map[string]metadataResultCode{
+var metadataResultCodesMap = map[string]metadataResultCode{
 	"":                         0,  //Empty is assumed success
 	"Success":                  0,  //(Indicates the API call was successful.)
 	"InvalidConfigObject":      1,  //Config object is invalid. + [Error].
@@ -248,6 +252,11 @@ type metadataGetItemsResponse struct {
 	Locked bool               `json:",omitempty"`
 	Result metadataResultCode `json:",omitempty"`
 }
+type metadataGetResponse struct {
+	Data   []metadataKeyValueSet
+	Locked bool               `json:",omitempty"`
+	Result metadataResultCode `json:",omitempty"`
+}
 type guidData struct {
 	ItemGuid string   `json:",omitempty"`
 	List     []string `json:",omitempty"`
@@ -280,7 +289,8 @@ const (
 	urlResourceCertificatePolicy    urlResource = "vedsdk/certificates/checkpolicy"
 	urlResourceCertificatesList     urlResource = "vedsdk/certificates/"
 	urlResourceMetadataSet          urlResource = "vedsdk/metadata/set"
-	urlResourceMetadataGet          urlResource = "vedsdk/metadata/getitems"
+	urlResourceAllMetadataGet       urlResource = "vedsdk/metadata/getitems"
+	urlResourceMetadataGet          urlResource = "vedsdk/metadata/get"
 	urlResourceSystemStatusVersion  urlResource = "vedsdk/SystemStatus/Version"
 )
 
