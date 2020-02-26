@@ -259,7 +259,7 @@ func wrapAltNames(req *certificate.Request) (items []sanItem) {
 }
 
 func prepareLegacyMetadata(c *Connector, metaItems []customField, dn string) (items []guidData, err error) {
-	metadataItems, err := c.RequestAllMetadataItems(dn)
+	metadataItems, err := c.requestAllMetadataItems(dn)
 	if nil != err {
 		return nil, err
 	}
@@ -279,8 +279,8 @@ func prepareLegacyMetadata(c *Connector, metaItems []customField, dn string) (it
 }
 
 //RequestAllMetadataItems returns all possible metadata items for a DN
-func (c *Connector) RequestAllMetadataItems(dn string) (items []metadataItem, err error) {
-	statusCode, status, body, err := c.request("POST", urlResourceMetadataGet, metadataGetItemsRequest{dn})
+func (c *Connector) requestAllMetadataItems(dn string) (items []metadataItem, err error) {
+	statusCode, status, body, err := c.request("POST", urlResourceAllMetadataGet, metadataGetItemsRequest{dn})
 	if err != nil {
 		return nil, err
 	}
@@ -296,8 +296,26 @@ func (c *Connector) RequestAllMetadataItems(dn string) (items []metadataItem, er
 	return response.Items, nil
 }
 
+//RequestMetadataItems returns metadata items for a DN that have a value stored
+func (c *Connector) requestMetadataItems(dn string) (items []metadataKeyValueSet, err error) {
+	statusCode, status, body, err := c.request("POST", urlResourceMetadataGet, metadataGetItemsRequest{dn})
+	if err != nil {
+		return nil, err
+	}
+	if statusCode != http.StatusOK {
+		return nil, fmt.Errorf("Unexpected http status code while fetching certificate metadata items. %d-%s", statusCode, status)
+	}
+
+	response := metadataGetResponse{}
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		return nil, fmt.Errorf("%s", err)
+	}
+	return response.Data, nil
+}
+
 //RequestSystemVersion returns the TPP system version of the connector context
-func (c *Connector) RequestSystemVersion() (ver string, err error) {
+func (c *Connector) requestSystemVersion() (ver string, err error) {
 	statusCode, status, body, err := c.request("GET", urlResourceSystemStatusVersion, "")
 	if err != nil {
 		return "", fmt.Errorf("%s", err)
@@ -321,7 +339,14 @@ func (c *Connector) RequestSystemVersion() (ver string, err error) {
 }
 
 //SetCertificateMetadata submits the metadata to TPP for storage returning the lock status of the metadata stored
-func (c *Connector) SetCertificateMetadata(metadataRequest metadataSetRequest) (locked bool, err error) {
+func (c *Connector) setCertificateMetadata(metadataRequest metadataSetRequest) (locked bool, err error) {
+	if len(metadataRequest.DN) < 1 {
+		return false, fmt.Errorf("DN must be provided to setCertificateMetaData")
+	}
+	if len(metadataRequest.GuidData) < 1 && metadataRequest.KeepExisting {
+		return false, nil
+	} //Not an error, but there is nothing to do
+
 	statusCode, status, body, err := c.request("POST", urlResourceMetadataSet, metadataRequest)
 	if err != nil {
 		return false, fmt.Errorf("%s", err)
@@ -487,12 +512,13 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 	//Handle legacy TPP custom field API
 	if len(req.CustomFields) > 0 {
 		//Check to see if this is 19.2 or lower
-		tppVersion, err := c.RequestSystemVersion()
+		//If the call returns metatdata items then the system version must be 19.3 or above,
+		//if not, try to use the 19.2 metadata save method
+		metadataItems, err := c.requestMetadataItems(requestID)
 		if err != nil {
 			return "", fmt.Errorf("%s", err)
 		}
-
-		if "19.2.999" > tppVersion {
+		if len(metadataItems) < 1 {
 			//Create a metadata/set command with the metadata from tppCertificateRequest
 			guidItems, err := prepareLegacyMetadata(c, tppCertificateRequest.CustomFields, requestID)
 			if err != nil {
@@ -500,7 +526,7 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 			}
 			requestData := metadataSetRequest{requestID, guidItems, true}
 			//c.request with the metadata request
-			_, err = c.SetCertificateMetadata(requestData)
+			_, err = c.setCertificateMetadata(requestData)
 			if err != nil {
 				return "", fmt.Errorf("%s", err)
 			}

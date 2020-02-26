@@ -55,7 +55,7 @@ func init() {
 
 	resp, err := tpp.GetRefreshToken(&endpoint.Authentication{
 		User: ctx.TPPuser, Password: ctx.TPPPassword,
-		Scope: "certificate:approve,delete,discover,manage,revoke;configuration"})
+		Scope: "certificate:approve,delete,discover,manage,revoke;"})
 	if err != nil {
 		panic(err)
 	}
@@ -440,10 +440,6 @@ func TestRequestCertificateServiceGenerated(t *testing.T) {
 	req.CsrOrigin = certificate.ServiceGeneratedCSR
 	req.FetchPrivateKey = true
 	req.KeyPassword = "newPassw0rd!"
-	req.CustomFields = []certificate.CustomField{
-		certificate.CustomField{Type: certificate.CustomFieldPlain, Name: "TestField", Value: "Value 1"},
-		certificate.CustomField{Type: certificate.CustomFieldPlain, Name: "TestField2", Value: "TRUE"},
-	}
 	config.UpdateCertificateRequest(req)
 
 	pickupId, err := tpp.RequestCertificate(req)
