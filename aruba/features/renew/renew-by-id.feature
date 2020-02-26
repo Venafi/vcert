@@ -50,3 +50,19 @@ Feature: renew by -id
       | TPP       |
       | Cloud     |
 
+  Scenario Outline: TPP renew by CertificateDN with -omit-sans
+    Given I enroll a random certificate using <endpoint> with -no-prompt -key-file k.pem -cert-file c.pem -san-dns www1.example.com -san-dns www2.example.com
+    And it should write private key to the file "k.pem"
+    And it should write certificate to the file "c.pem"
+    And it should output Pickup ID
+    And certificate in "c.pem" should have 3 DNS SANs
+    Then I renew the certificate in <endpoint> using the same Pickup ID with flags -no-prompt -cert-file c1.pem -key-file k1.pem -omit-sans
+    And it should retrieve certificate
+    And it should write private key to the file "k1.pem"
+    And it should write certificate to the file "c1.pem"
+    And certificate in "c.pem" and certificate in "c1.pem" should not have the same modulus
+    And certificate in "c.pem" and certificate in "c1.pem" should not have the same serial
+    And certificate in "c1.pem" should have 1 DNS SANs
+    Examples:
+    | endpoint          |
+    | TPPdeprecated     |
