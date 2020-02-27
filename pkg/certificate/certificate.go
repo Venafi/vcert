@@ -143,12 +143,18 @@ type CustomFieldType int
 
 const (
 	CustomFieldPlain CustomFieldType = 0 + iota
+	CustomFieldAppInfo
 )
 
 type CustomField struct {
 	Type  CustomFieldType
 	Name  string
 	Value string
+}
+
+type Location struct {
+	Instance, Workload, TLSAddress string
+	Replace                        bool
 }
 
 // Request contains data needed to generate a certificate request
@@ -181,6 +187,7 @@ type Request struct {
 	Thumbprint   string
 	Timeout      time.Duration
 	CustomFields []CustomField
+	Location     *Location
 }
 
 type RevocationRequest struct {

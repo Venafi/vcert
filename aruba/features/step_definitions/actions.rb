@@ -9,11 +9,15 @@ When(/^I try to run `([^`]*)`$/)do |cmd|
   end
 end
 
-When(/^I enroll(?: a)?( random)? certificate (?:in|from|using) (\S+) with (.+)?$/) do |random, endpoint, flags|
+When(/^I enroll(?: a)?( random)? certificate (and_random_instance )?(?:in|from|using) (\S+) with (.+)?$/) do |random, random_instance, endpoint, flags|
   if random
     cn = " -cn " + random_cn
   end
-  cmd = "vcert enroll #{ENDPOINTS[endpoint]} #{cn} #{flags}"
+
+  if random_instance
+    instance = "-instance devops-instance:" + random_string
+  end
+  cmd = "vcert enroll #{ENDPOINTS[endpoint]} #{cn} #{flags} #{instance}"
   steps %{Then I try to run `#{cmd}`}
 
   m = last_command_started.output.match /^PickupID="(.+)"$/

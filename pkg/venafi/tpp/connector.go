@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Venafi/vcert/pkg/verror"
+	"log"
 	"net/http"
 	neturl "net/url"
 	"regexp"
@@ -275,10 +276,47 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 	tppReq.DisableAutomaticRenewal = true
 	customFieldsMap := make(map[string][]string)
 	for _, f := range req.CustomFields {
-		customFieldsMap[f.Name] = append(customFieldsMap[f.Name], f.Value)
+		switch f.Type {
+		case certificate.CustomFieldPlain:
+			customFieldsMap[f.Name] = append(customFieldsMap[f.Name], f.Value)
+		case certificate.CustomFieldAppInfo:
+			tppReq.CASpecificAttributes = append(tppReq.CASpecificAttributes, nameValuePair{Name: "Origin", Value: f.Value})
+			tppReq.Origin = f.Value
+		}
+
 	}
 	for name, value := range customFieldsMap {
 		tppReq.CustomFields = append(tppReq.CustomFields, customField{name, value})
+	}
+	if req.Location != nil {
+		if req.Location.Instance == "" {
+			return tppReq, fmt.Errorf("%w: instance value for Location should not be empty", verror.UserDataError)
+		}
+		workload := req.Location.Workload
+		if workload == "" {
+			workload = defaultWorkloadName
+		}
+		dev := device{
+			PolicyDN:   getPolicyDN(zone),
+			ObjectName: req.Location.Instance,
+			Host:       req.Location.Instance,
+			Applications: []application{
+				{
+					ObjectName: workload,
+					Class:      "Basic",
+					DriverName: "appbasic",
+				},
+			},
+		}
+		if req.Location.TLSAddress != "" {
+			host, port, err := parseHostPort(req.Location.TLSAddress)
+			if err != nil {
+				return tppReq, err
+			}
+			dev.Applications[0].ValidationHost = host
+			dev.Applications[0].ValidationPort = port
+		}
+		tppReq.Devices = append(tppReq.Devices, dev)
 	}
 	switch req.KeyType {
 	case certificate.KeyTypeRSA:
@@ -294,6 +332,61 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 
 // RequestCertificate submits the CSR to TPP returning the DN of the requested Certificate
 func (c *Connector) RequestCertificate(req *certificate.Request) (requestID string, err error) {
+	if req.Location != nil {
+
+		certDN := getCertificateDN(c.zone, req.Subject.CommonName)
+		guid, err := c.configDNToGuid(certDN)
+		if err != nil {
+			return requestID, fmt.Errorf("unable to retrieve certificate guid: %s", err)
+		}
+		if guid != "" {
+			details, err := c.searchCertificateDetails(guid)
+			if err != nil {
+				return requestID, err
+			}
+			if len(details.Consumers) > 0 {
+
+				if c.verbose {
+					log.Printf("checking associated instances from:\n %s", details.Consumers)
+				}
+
+				var device string
+				requestedDevice := getDeviceDN(stripBackSlashes(c.zone), *req.Location)
+
+				if req.Location.Replace {
+					for _, device = range details.Consumers {
+						if c.verbose {
+							log.Printf("checking associated instances from:\n %s", details.Consumers)
+						}
+						if device == requestedDevice {
+							err = c.dissociate(certDN, device)
+							if err != nil {
+								return requestID, err
+							}
+						}
+					}
+				} else {
+					for _, device = range details.Consumers {
+
+						if c.verbose {
+							log.Printf("comparing requested instance %s to %s", requestedDevice, device)
+						}
+
+						if device == requestedDevice {
+							return "", fmt.Errorf("%w: instance %s already exists, change the value or use --replace-instance", verror.UserDataError, device)
+						}
+					}
+				}
+			} else {
+				log.Printf("There were no instances associated with certificate %s", certDN)
+			}
+		} else {
+			if c.verbose {
+				log.Printf("certificate with DN %s doesn't exists so no need to check if it is associated with any instances", certDN)
+			}
+		}
+
+	}
 
 	tppCertificateRequest, err := prepareRequest(req, c.zone)
 	if err != nil {
@@ -307,6 +400,7 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 	if err != nil {
 		return "", fmt.Errorf("%s", err)
 	}
+
 	req.PickupID = requestID
 	return requestID, nil
 }
@@ -655,4 +749,106 @@ func (c *Connector) getCertsBatch(offset, limit int, withExpired bool) ([]certif
 		infos[i] = c.X509
 	}
 	return infos, nil
+}
+
+func parseHostPort(s string) (host string, port string, err error) {
+	slice := strings.Split(s, ":")
+	if len(slice) != 2 {
+		err = fmt.Errorf("%w: bad address %s.  should be host:port.", verror.UserDataError, s)
+		return
+	}
+	host = slice[0]
+	port = slice[1]
+	return
+}
+
+func (c *Connector) dissociate(certDN, applicationDN string) error {
+	req := struct {
+		CertificateDN string
+		ApplicationDN []string
+		DeleteOrphans bool
+	}{
+		certDN,
+		[]string{applicationDN},
+		true,
+	}
+	log.Println("Dissociating device", applicationDN)
+	statusCode, status, body, err := c.request("POST", urlResourceCertificatesDissociate, req)
+	if err != nil {
+		return err
+	}
+	if statusCode != 200 {
+		return fmt.Errorf("%w: We have problem with server response.\n  status: %s\n  body: %s\n", verror.ServerBadDataResponce, status, body)
+	}
+	return nil
+}
+
+func (c *Connector) associate(certDN, applicationDN string, pushToNew bool) error {
+	req := struct {
+		CertificateDN string
+		ApplicationDN []string
+		PushToNew     bool
+	}{
+		certDN,
+		[]string{applicationDN},
+		pushToNew,
+	}
+	log.Println("Associating device", applicationDN)
+	statusCode, status, body, err := c.request("POST", urlResourceCertificatesAssociate, req)
+	if err != nil {
+		return err
+	}
+	if statusCode != 200 {
+		log.Printf("We have problem with server response.\n  status: %s\n  body: %s\n", status, body)
+		return verror.ServerBadDataResponce
+	}
+	return nil
+}
+
+func (c *Connector) configDNToGuid(objectDN string) (guid string, err error) {
+
+	req := struct {
+		ObjectDN string
+	}{
+		objectDN,
+	}
+
+	var resp struct {
+		ClassName        string `json:",omitempty"`
+		GUID             string `json:",omitempty"`
+		HierarchicalGUID string `json:",omitempty"`
+		Revision         int    `json:",omitempty"`
+		Result           int    `json:",omitempty"`
+	}
+
+	log.Println("Getting guid for object DN", objectDN)
+	statusCode, status, body, err := c.request("POST", urlResourceConfigDnToGuid, req)
+
+	if err != nil {
+		return guid, err
+	}
+
+	if statusCode == http.StatusOK {
+		err = json.Unmarshal(body, &resp)
+		if err != nil {
+			return guid, fmt.Errorf("failed to parse DNtoGuid results: %s, body: %s", err, body)
+		}
+	} else {
+		return guid, fmt.Errorf("request to %s failed: %s\n%s", urlResourceConfigDnToGuid, status, body)
+	}
+
+	if statusCode != 200 {
+		return "", verror.ServerBadDataResponce
+	}
+
+	if resp.Result == 400 {
+		log.Printf("object with DN %s doesn't exist", objectDN)
+		return "", nil
+	}
+
+	if resp.Result != 1 {
+		return "", fmt.Errorf("result code %d is not success.", resp.Result)
+	}
+	return resp.GUID, nil
+
 }

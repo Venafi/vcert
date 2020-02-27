@@ -102,6 +102,23 @@ func runBeforeCommand(c *cli.Context) error {
 	flags.emailSans = c.StringSlice("san-email")
 	flags.customFields = c.StringSlice("field")
 
+	noDuplicatedFlags := []string{"instance", "tls-address", "app-info"}
+	for _, f := range noDuplicatedFlags {
+		if len(c.StringSlice(f)) > 1 {
+			return fmt.Errorf("flag %s can not be duplicated", f)
+		} else if len(c.StringSlice(f)) == 1 {
+			switch f {
+			case "instance":
+				flags.instance = c.StringSlice(f)[0]
+			case "tls-address":
+				flags.tlsAddress = c.StringSlice(f)[0]
+			case "app-info":
+				flags.appInfo = c.StringSlice(f)[0]
+			}
+
+		}
+	}
+
 	for _, stringIP := range c.StringSlice("san-ip") {
 		ip := net.ParseIP(stringIP)
 		flags.ipSans = append(flags.ipSans, ip)

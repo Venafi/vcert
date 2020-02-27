@@ -17,7 +17,6 @@
 package tpp
 
 import (
-	"crypto/sha1"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
@@ -166,7 +165,13 @@ func TestRequestAndSearchCertificate(t *testing.T) {
 	}
 
 	if tpp.apiKey == "" {
-		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		resp, err := tpp.GetRefreshToken(&endpoint.Authentication{
+			User: ctx.TPPuser, Password: ctx.TPPPassword,
+			Scope: "configuration:read;certificate:approve,delete,discover,manage,revoke;"})
+		if err != nil {
+			panic(err)
+		}
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: resp.Access_token})
 		if err != nil {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
@@ -178,6 +183,9 @@ func TestRequestAndSearchCertificate(t *testing.T) {
 	}
 
 	cn := test.RandCN()
+	appInfo := "APP Info " + cn
+	workload := fmt.Sprintf("workload-%d", time.Now().Unix())
+	instance := "devops-instance"
 	cfValue := cn
 	req := &certificate.Request{Timeout: time.Second * 30}
 	req.Subject.CommonName = cn
@@ -191,13 +199,18 @@ func TestRequestAndSearchCertificate(t *testing.T) {
 	req.FriendlyName = cn
 	req.CustomFields = []certificate.CustomField{
 		{Name: "custom", Value: cfValue},
+		{Type: certificate.CustomFieldAppInfo, Value: appInfo},
+	}
+	req.Location = &certificate.Location{
+		Instance:   instance,
+		Workload:   workload,
+		TLSAddress: "wwww.example.com:443",
 	}
 	err = tpp.GenerateRequest(config, req)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
 
-	t.Logf("getPolicyDN(ctx.TPPZone) = %s", getPolicyDN(ctx.TPPZone))
 	req.PickupID, err = tpp.RequestCertificate(req)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
@@ -230,18 +243,135 @@ func TestRequestAndSearchCertificate(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	//check custom fields
 	if details.CustomFields[0].Value[0] != cfValue {
 		t.Fatalf("mismtached custom field valud: want %s but got %s", details.CustomFields[0].Value[0], cfValue)
 	}
+
+	//check installed location device
+	if !strings.HasSuffix(details.Consumers[0], instance+"\\"+workload) {
+		t.Fatalf("Consumer %s should end on %s", details.Consumers[0], instance+"\\"+workload)
+	}
+
+	configReq := ConfigReadDNRequest{
+		ObjectDN:      getCertificateDN(ctx.TPPZone, cn),
+		AttributeName: "Origin",
+	}
+
+	configResp, err := tpp.configReadDN(configReq)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if configResp.Values[0] != appInfo {
+		t.Fatalf("Origin attribute value should be %s, but it is %s", appInfo, configResp.Values[0])
+	}
+
+	//add one more device
+	req.Location = &certificate.Location{
+		Instance:   instance,
+		Workload:   workload + "-1",
+		TLSAddress: "wwww.example.com:443",
+	}
+
+	err = tpp.GenerateRequest(config, req)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	req.PickupID, err = tpp.RequestCertificate(req)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	//to wait until cert will be aprooved so we can check list of devices
+	_, err = tpp.RetrieveCertificate(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	details, err = tpp.searchCertificateDetails(guid)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(details.Consumers) < 1 {
+		t.Fatal("There should be at least two devices in consumers")
+	}
+	//check installed location device
+	if !strings.HasSuffix(details.Consumers[1], instance+"\\"+workload+"-1") {
+		t.Fatalf("Consumer %s should end on %s", details.Consumers[1], instance+"\\"+workload+"-1")
+	}
+
+	//replace first device, second must be kept
+	req.Location = &certificate.Location{
+		Instance:   instance,
+		Workload:   workload,
+		TLSAddress: "wwww.example.com:443",
+		Replace:    true,
+	}
+
+	err = tpp.GenerateRequest(config, req)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	req.PickupID, err = tpp.RequestCertificate(req)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	//to wait until cert will be aprooved so we can check list of devices
+	_, err = tpp.RetrieveCertificate(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	details, err = tpp.searchCertificateDetails(guid)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(details.Consumers) < 1 {
+		t.Fatal("There should be at least two devices in consumers")
+	}
+
+	//check installed location device
+	if !strings.HasSuffix(details.Consumers[0], instance+"\\"+workload+"-1") {
+		t.Fatalf("Consumer %s should end on %s", details.Consumers[0], instance+"\\"+workload+"-1")
+	}
 }
 
-func calcThumbprint(cert string) string {
-	p, _ := pem.Decode([]byte(cert))
-	h := sha1.New()
-	_, err := h.Write(p.Bytes)
+func TestSearchDevice(t *testing.T) {
+	t.Skip() //we don't use this method now, keep this test for future usage
+
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
-		return fmt.Sprintf("Can't write: %s", err.Error())
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
-	buf := h.Sum(nil)
-	return strings.ToUpper(fmt.Sprintf("%x", buf))
+
+	authResp, err := tpp.GetRefreshToken(&endpoint.Authentication{
+		User: ctx.TPPuser, Password: ctx.TPPPassword,
+		Scope: "configuration:read"})
+	if err != nil {
+		panic(err)
+	}
+
+	err = tpp.Authenticate(&endpoint.Authentication{
+		AccessToken: authResp.Access_token,
+	})
+
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	req := ConfigReadDNRequest{
+		ObjectDN:      "\\VED\\Policy\\devops\\vcert\\kube-worker-1\\nginx_246",
+		AttributeName: "Certificate",
+	}
+
+	resp, err := tpp.configReadDN(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println(resp)
 }

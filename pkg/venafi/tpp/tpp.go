@@ -40,10 +40,26 @@ const defaultKeySize = 2048
 const defaultSignatureAlgorithm = x509.SHA256WithRSA
 const defaultClientID = "vcert-go"
 const defaultScope = "certificate:manage,revoke;"
+const defaultWorkloadName = "Default"
 
 type customField struct {
 	Name   string
 	Values []string
+}
+
+type application struct {
+	ObjectName     string
+	Class          string
+	DriverName     string
+	ValidationHost string `json:",omitempty"`
+	ValidationPort string `json:",omitempty"`
+}
+
+type device struct {
+	PolicyDN     string
+	ObjectName   string
+	Host         string
+	Applications []application
 }
 
 type certificateRequest struct {
@@ -59,12 +75,14 @@ type certificateRequest struct {
 	SubjectAltNames         []sanItem       `json:",omitempty"`
 	Contact                 string          `json:",omitempty"`
 	CASpecificAttributes    []nameValuePair `json:",omitempty"`
+	Origin                  string          `json:",omitempty"`
 	PKCS10                  string          `json:",omitempty"`
 	KeyAlgorithm            string          `json:",omitempty"`
 	KeyBitSize              int             `json:",omitempty"`
 	EllipticCurve           string          `json:",omitempty"`
 	DisableAutomaticRenewal bool            `json:",omitempty"`
 	CustomFields            []customField   `json:",omitempty"`
+	Devices                 []device        `json:",omitempty"`
 }
 
 type certificateRetrieveRequest struct {
@@ -195,20 +213,24 @@ type policyRequest struct {
 type urlResource string
 
 const (
-	urlResourceRefreshAccessToken   urlResource = "vedauth/authorize/token"
-	urlResourceAuthorizeOAuth       urlResource = "vedauth/authorize/oauth"
-	urlResourceAuthorizeCertificate urlResource = "vedauth/Authorize/Certificate"
-	urlResourceAuthorize            urlResource = "vedsdk/authorize/"
-	urlResourceCertificateRequest   urlResource = "vedsdk/certificates/request"
-	urlResourceCertificateRetrieve  urlResource = "vedsdk/certificates/retrieve"
-	urlResourceFindPolicy           urlResource = "vedsdk/config/findpolicy"
-	urlResourceCertificateRevoke    urlResource = "vedsdk/certificates/revoke"
-	urlResourceCertificateRenew     urlResource = "vedsdk/certificates/renew"
-	urlResourceCertificate          urlResource = "vedsdk/certificates/"
-	urlResourceCertificateSearch                = urlResourceCertificate
-	urlResourceCertificateImport    urlResource = "vedsdk/certificates/import"
-	urlResourceCertificatePolicy    urlResource = "vedsdk/certificates/checkpolicy"
-	urlResourceCertificatesList                 = urlResourceCertificate
+	urlResourceAuthorize              urlResource = "vedsdk/authorize/"
+	urlResourceAuthorizeCertificate   urlResource = "vedauth/Authorize/Certificate"
+	urlResourceAuthorizeOAuth         urlResource = "vedauth/authorize/oauth"
+	urlResourceCertificateImport      urlResource = "vedsdk/certificates/import"
+	urlResourceCertificatePolicy      urlResource = "vedsdk/certificates/checkpolicy"
+	urlResourceCertificateRenew       urlResource = "vedsdk/certificates/renew"
+	urlResourceCertificateRequest     urlResource = "vedsdk/certificates/request"
+	urlResourceCertificateRetrieve    urlResource = "vedsdk/certificates/retrieve"
+	urlResourceCertificateRevoke      urlResource = "vedsdk/certificates/revoke"
+	urlResourceCertificatesAssociate  urlResource = "vedsdk/Certificates/Associate"
+	urlResourceCertificatesDissociate urlResource = "vedsdk/Certificates/Dissociate"
+	urlResourceCertificate            urlResource = "vedsdk/certificates/"
+	urlResourceCertificateSearch                  = urlResourceCertificate
+	urlResourceCertificatesList                   = urlResourceCertificate
+	urlResourceConfigDnToGuid         urlResource = "vedsdk/Config/DnToGuid"
+	urlResourceConfigReadDn           urlResource = "vedsdk/Config/ReadDn"
+	urlResourceFindPolicy             urlResource = "vedsdk/config/findpolicy"
+	urlResourceRefreshAccessToken     urlResource = "vedauth/authorize/token"
 )
 
 const (
@@ -402,6 +424,26 @@ func getPolicyDN(zone string) string {
 		modified = "\\VED\\Policy" + modified
 	}
 	return modified
+}
+
+func getDeviceDN(zone string, location certificate.Location) string {
+	workload := location.Workload
+	if workload == "" {
+		workload = "Default"
+	}
+	return getPolicyDN(zone + "\\" + location.Instance + "\\" + workload)
+}
+
+func getCertificateDN(zone, cn string) string {
+	return getPolicyDN(zone + "\\" + cn)
+}
+
+func stripBackSlashes(s string) string {
+
+	var r = regexp.MustCompile(`\\+`)
+
+	result := r.ReplaceAll([]byte(s), []byte("\\"))
+	return string(result)
 }
 
 func parseConfigResult(httpStatusCode int, httpStatus string, body []byte) (tppData tppPolicyData, err error) {

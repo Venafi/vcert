@@ -1165,7 +1165,12 @@ vOjeQhOnqrPdQINzUCKMSuqxqFGbQAJCAZs3Be1Pz6eeKHNLzr7mYQ2/pWSjfun4
 		t.Fatalf("valid certificates numbe (%v) should be less than all certificates number (%v)", len(validList), len(fullList))
 	}
 	req := certificate.Request{Subject: pkix.Name{CommonName: fmt.Sprintf("test%d%d.vfidev.com", time.Now().Unix(), time.Now().Nanosecond())}, KeyType: certificate.KeyTypeRSA, KeyLength: 2048}
-	tpp.GenerateRequest(nil, &req)
+
+	err = tpp.GenerateRequest(nil, &req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	req.PickupID, err = tpp.RequestCertificate(&req)
 	if err != nil {
 		t.Fatal(err)
@@ -1187,6 +1192,132 @@ vOjeQhOnqrPdQINzUCKMSuqxqFGbQAJCAZs3Be1Pz6eeKHNLzr7mYQ2/pWSjfun4
 		t.Fatal("list should be longer")
 	}
 
+}
+
+func TestEnrollWithLocation(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+
+	tpp.verbose = true
+
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+
+	cn := test.RandCN()
+	zoneConfig, err := tpp.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	workload := fmt.Sprintf("workload-%v", time.Now().Unix())
+
+	req := certificate.Request{}
+	req.Subject.CommonName = cn
+	req.Timeout = time.Second * 10
+	req.Location = &certificate.Location{
+		Instance:   "instance",
+		Workload:   workload,
+		TLSAddress: "example.com:443",
+	}
+
+	err = tpp.GenerateRequest(zoneConfig, &req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = tpp.RequestCertificate(&req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req = certificate.Request{}
+	req.Subject.CommonName = cn
+	req.Timeout = time.Second * 10
+	req.Location = &certificate.Location{
+		Instance:   "instance",
+		Workload:   workload,
+		TLSAddress: "example.com:443",
+	}
+
+	err = tpp.GenerateRequest(zoneConfig, &req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = tpp.RequestCertificate(&req)
+	if err == nil {
+		t.Fatal("Should fail with devices conflict")
+	}
+	req = certificate.Request{}
+	req.Subject.CommonName = cn
+	req.Timeout = time.Second * 10
+	req.Location = &certificate.Location{
+		Instance:   "instance",
+		Workload:   workload,
+		TLSAddress: "example.com:443",
+		Replace:    true,
+	}
+
+	err = tpp.GenerateRequest(zoneConfig, &req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = tpp.RequestCertificate(&req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	//request same certificate with different workload but without replace
+	req.Location = &certificate.Location{
+		Instance:   "instance",
+		Workload:   workload + "-1",
+		TLSAddress: "example.com:443",
+		Replace:    false,
+	}
+
+	err = tpp.GenerateRequest(zoneConfig, &req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = tpp.RequestCertificate(&req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	//request same certificate with same workload and without replace
+	req.Location = &certificate.Location{
+		Instance:   "instance",
+		Workload:   workload + "-1",
+		TLSAddress: "example.com:443",
+		Replace:    false,
+	}
+
+	err = tpp.GenerateRequest(zoneConfig, &req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = tpp.RequestCertificate(&req)
+	if err == nil {
+		t.Fatal("There should be a error if we're trying to set same device twice in location")
+	}
+	expected_message := "vcert error: your data contains problems: instance"
+	if !strings.Contains(err.Error(), expected_message) {
+		t.Fatalf("We should exit with error message '%s' if we're trying to set same device twice in location. But we vcert exited with error: %s", expected_message, err)
+	}
+
+	//TODO: test that only instance from parameters is dissociated
+	//TODO: test app info with different kind of strings ???
+	//TODO: Check origin using config/read post request example:
+	//{
+	//   "ObjectDN":"\\VED\\Policy\\devops\\vcert\\1582237636-pgqlx.venafi.example.com",
+	//   "AttributeName":"Origin"
+	//}
 }
 
 func TestOmitSans(t *testing.T) {
