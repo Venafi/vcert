@@ -1306,8 +1306,9 @@ func TestEnrollWithLocation(t *testing.T) {
 	if err == nil {
 		t.Fatal("There should be a error if we're trying to set same device twice in location")
 	}
-	if !strings.Contains(err.Error(), "vcert error: your data contains problems: device") {
-		t.Fatal("We should exit with error message 'vcert error: your data contains problems' if we're trying to set same device twice in location. But we vcert exited with error", err)
+	expected_message := "vcert error: your data contains problems: instance"
+	if !strings.Contains(err.Error(), expected_message) {
+		t.Fatalf("We should exit with error message '%s' if we're trying to set same device twice in location. But we vcert exited with error: %s", expected_message, err)
 	}
 
 	//TODO: test that only instance from parameters is dissociated
