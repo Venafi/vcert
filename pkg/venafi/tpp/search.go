@@ -82,7 +82,7 @@ func (c *Connector) configReadDN(req ConfigReadDNRequest) (resp ConfigReadDNResp
 			return resp, err
 		}
 	} else {
-		return resp, fmt.Errorf("unexpected status code on TPP Authorize. Status: %s", status)
+		return resp, fmt.Errorf("unexpected status code on %s. Status: %s", urlResourceConfigReadDn, status)
 	}
 
 	return resp, nil
