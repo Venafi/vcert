@@ -349,14 +349,14 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 				}
 
 				var device string
-				requested_device := getDeviceDN(stripBackSlashes(c.zone), *req.Location)
+				requestedDevice := getDeviceDN(stripBackSlashes(c.zone), *req.Location)
 
 				if req.Location.Replace {
 					for _, device = range details.Consumers {
 						if c.verbose {
 							log.Printf("checking associated instances from:\n %s", details.Consumers)
 						}
-						if device == requested_device {
+						if device == requestedDevice {
 							err = c.dissociate(certDN, device)
 							if err != nil {
 								return requestID, err
@@ -367,10 +367,10 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 					for _, device = range details.Consumers {
 
 						if c.verbose {
-							log.Printf("comparing requested instance %s to %s", requested_device, device)
+							log.Printf("comparing requested instance %s to %s", requestedDevice, device)
 						}
 
-						if device == requested_device {
+						if device == requestedDevice {
 							return "", fmt.Errorf("%w: instance %s already exists, change the value or use --replace-instance", verror.UserDataError, device)
 						}
 					}
