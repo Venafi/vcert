@@ -23,6 +23,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"github.com/Venafi/vcert/pkg/certificate"
+	"log"
 	"net/http"
 	"regexp"
 	"sort"
@@ -40,6 +41,10 @@ const (
 	// ConnectorTypeTPP represents the TPP connector type
 	ConnectorTypeTPP
 )
+
+func init() {
+	log.SetPrefix("vCert: ")
+}
 
 func (t ConnectorType) String() string {
 	switch t {

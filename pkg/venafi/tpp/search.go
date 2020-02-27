@@ -17,7 +17,9 @@
 package tpp
 
 import (
+	"crypto/sha1"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"net/http"
 	"strings"
@@ -25,11 +27,22 @@ import (
 
 type SearchRequest []string
 
+type ConfigReadDNRequest struct {
+	ObjectDN      string `json:",omitempty"`
+	AttributeName string `json:",omitempty"`
+}
+
+type ConfigReadDNResponse struct {
+	Result int      `json:",omitempty"`
+	Values []string `json:",omitempty"`
+}
+
 type CertificateDetailsResponse struct {
 	CustomFields []struct {
-		Name  string   `json:"Name"`
-		Value []string `json:"Value"`
-	} `json:"CustomFields"`
+		Name  string
+		Value []string
+	}
+	Consumers []string
 }
 
 type CertificateSearchResponse struct {
@@ -54,6 +67,25 @@ func (c *Connector) searchCertificatesByFingerprint(fp string) (*CertificateSear
 	req = append(req, fmt.Sprintf("Thumbprint=%s", fp))
 
 	return c.searchCertificates(&req)
+}
+
+func (c *Connector) configReadDN(req ConfigReadDNRequest) (resp ConfigReadDNResponse, err error) {
+
+	statusCode, status, body, err := c.request("POST", urlResourceConfigReadDn, req)
+	if err != nil {
+		return resp, err
+	}
+
+	if statusCode == http.StatusOK {
+		err = json.Unmarshal(body, &resp)
+		if err != nil {
+			return resp, err
+		}
+	} else {
+		return resp, fmt.Errorf("unexpected status code on %s. Status: %s", urlResourceConfigReadDn, status)
+	}
+
+	return resp, nil
 }
 
 func (c *Connector) searchCertificates(req *SearchRequest) (*CertificateSearchResponse, error) {
@@ -117,4 +149,12 @@ func ParseCertificateSearchResponse(httpStatusCode int, body []byte) (searchResu
 			return nil, fmt.Errorf("Unexpected status code on certificate search. Status: %d", httpStatusCode)
 		}
 	}
+}
+
+func calcThumbprint(cert string) string {
+	p, _ := pem.Decode([]byte(cert))
+	h := sha1.New()
+	h.Write(p.Bytes)
+	buf := h.Sum(nil)
+	return strings.ToUpper(fmt.Sprintf("%x", buf))
 }

@@ -88,6 +88,22 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 		req.CustomFields = append(req.CustomFields, certificate.CustomField{Name: k, Value: v})
 	}
 
+	if len(cf.instance) > 0 {
+		req.Location = &certificate.Location{}
+		instance := strings.Split(cf.instance, ":")
+		req.Location.Instance = instance[0]
+		if len(instance) > 1 {
+			req.Location.Workload = instance[1]
+		}
+
+		req.Location.TLSAddress = cf.tlsAddress
+		req.Location.Replace = cf.replaceInstance
+	}
+
+	if len(cf.appInfo) > 0 {
+		req.CustomFields = append(req.CustomFields, certificate.CustomField{Name: "Origin", Value: cf.appInfo, Type: certificate.CustomFieldAppInfo})
+	}
+
 	switch true {
 	case 0 == strings.Index(cf.csrOption, "file:"):
 		var err error
@@ -263,4 +279,14 @@ func doValuesMatch(value1 []byte, value2 []byte) bool {
 func isValidEmailAddress(email string) bool {
 	reg := regexp.MustCompile(emailRegex)
 	return reg.FindStringIndex(email) != nil
+}
+
+func sliceContains(slice []string, item string) bool {
+	set := make(map[string]struct{}, len(slice))
+	for _, s := range slice {
+		set[s] = struct{}{}
+	}
+
+	_, ok := set[item]
+	return ok
 }

@@ -214,6 +214,7 @@ var (
 		Name:        "verbose",
 		Usage:       "Use to increase the level of logging detail, which is helpful when troubleshooting issues",
 		Destination: &flags.verbose,
+		Value:       false,
 	}
 
 	flagNoPrompt = &cli.BoolFlag{
@@ -355,6 +356,29 @@ var (
 		Destination: &flags.thumbprint,
 	}
 
+	flagInstance = &cli.StringSliceFlag{
+		Name:        "instance",
+		Usage:       "Use to provide the name/address of the compute instance and an identifier for the workload using the certificate. Example: --instance node:workload",
+		DefaultText: "",
+	}
+
+	flagTlsAddress = &cli.StringSliceFlag{
+		Name:  "tls-address",
+		Usage: "Use to specify the hostname, FQDN or IP address and TCP port where the certificate can be validated after issuance and installation. Example: --tls-address 10.20.30.40:443",
+	}
+
+	flagAppInfo = &cli.StringSliceFlag{
+		Name:        "app-info",
+		Usage:       "Use to identify the application requesting the certificate with details like vendor name, application name, and application version.",
+		DefaultText: "",
+	}
+
+	flagReplace = &cli.BoolFlag{
+		Name:        "replace-instance",
+		Usage:       "Force the specified instance to be recreated if it already exists and is associated with the requested certificate.",
+		Destination: &flags.replaceInstance,
+	}
+
 	//todo: make check agains RevocationReasonOptions[]string variable
 	flagRevocationReason = &cli.StringFlag{
 		Name: "reason",
@@ -385,6 +409,7 @@ var (
 		Usage:       "Use to specify the application that will be using the token. \"vcert-cli\" is the default.",
 		Destination: &flags.clientId,
 	}
+
 	flagCustomField = &cli.StringSliceFlag{
 		Name:  "field",
 		Usage: "Use to specify custom fields in format 'key=value'. If many values for the same key are required, use syntax '--field key1=value1 --field key1=value2'",
@@ -446,6 +471,10 @@ var (
 			flagPickupIDFile,
 			flagTimeout,
 			flagCustomField,
+			flagTlsAddress,
+			flagAppInfo,
+			flagInstance,
+			flagReplace,
 		)),
 	)
 
