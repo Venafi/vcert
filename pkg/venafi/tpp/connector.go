@@ -328,64 +328,58 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 	return tppReq, err
 }
 
+func (c *Connector) proccessLocation(req *certificate.Request) error {
+	certDN := getCertificateDN(c.zone, req.Subject.CommonName)
+	guid, err := c.configDNToGuid(certDN)
+	if err != nil {
+		return fmt.Errorf("unable to retrieve certificate guid: %s", err)
+	}
+	if guid == "" {
+		if c.verbose {
+			log.Printf("certificate with DN %s doesn't exists so no need to check if it is associated with any instances", certDN)
+		}
+		return nil
+	}
+	details, err := c.searchCertificateDetails(guid)
+	if err != nil {
+		return err
+	}
+	if len(details.Consumers) == 0 {
+		log.Printf("There were no instances associated with certificate %s", certDN)
+		return nil
+	}
+	if c.verbose {
+		log.Printf("checking associated instances from:\n %s", details.Consumers)
+	}
+	var device string
+	requestedDevice := getDeviceDN(stripBackSlashes(c.zone), *req.Location)
+
+	for _, device = range details.Consumers {
+		if c.verbose {
+			log.Printf("comparing requested instance %s to %s", requestedDevice, device)
+		}
+		if device == requestedDevice {
+			if req.Location.Replace {
+				err = c.dissociate(certDN, device)
+				if err != nil {
+					return err
+				}
+			} else {
+				return fmt.Errorf("%w: instance %s already exists, change the value or use --replace-instance", verror.UserDataError, device)
+			}
+		}
+	}
+	return nil
+}
+
 // RequestCertificate submits the CSR to TPP returning the DN of the requested Certificate
 func (c *Connector) RequestCertificate(req *certificate.Request) (requestID string, err error) {
 	if req.Location != nil {
-
-		certDN := getCertificateDN(c.zone, req.Subject.CommonName)
-		guid, err := c.configDNToGuid(certDN)
+		err = c.proccessLocation(req)
 		if err != nil {
-			return requestID, fmt.Errorf("unable to retrieve certificate guid: %s", err)
+			return
 		}
-		if guid != "" {
-			details, err := c.searchCertificateDetails(guid)
-			if err != nil {
-				return requestID, err
-			}
-			if len(details.Consumers) > 0 {
-
-				if c.verbose {
-					log.Printf("checking associated instances from:\n %s", details.Consumers)
-				}
-
-				var device string
-				requestedDevice := getDeviceDN(stripBackSlashes(c.zone), *req.Location)
-
-				if req.Location.Replace {
-					for _, device = range details.Consumers {
-						if c.verbose {
-							log.Printf("checking associated instances from:\n %s", details.Consumers)
-						}
-						if device == requestedDevice {
-							err = c.dissociate(certDN, device)
-							if err != nil {
-								return requestID, err
-							}
-						}
-					}
-				} else {
-					for _, device = range details.Consumers {
-
-						if c.verbose {
-							log.Printf("comparing requested instance %s to %s", requestedDevice, device)
-						}
-
-						if device == requestedDevice {
-							return "", fmt.Errorf("%w: instance %s already exists, change the value or use --replace-instance", verror.UserDataError, device)
-						}
-					}
-				}
-			} else {
-				log.Printf("There were no instances associated with certificate %s", certDN)
-			}
-		} else {
-			if c.verbose {
-				log.Printf("certificate with DN %s doesn't exists so no need to check if it is associated with any instances", certDN)
-			}
-		}
-
 	}
-
 	tppCertificateRequest, err := prepareRequest(req, c.zone)
 	if err != nil {
 		return "", err
