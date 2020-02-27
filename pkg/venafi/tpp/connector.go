@@ -518,7 +518,7 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 			return "", err
 		}
 		if statusCode != http.StatusOK {
-			return "", fmt.Error("can't clean SANs values for certificate on server side")
+			return "", fmt.Errorf("can't clean SANs values for certificate on server side")
 		}
 	}
 	var r = certificateRenewRequest{}
