@@ -418,7 +418,7 @@ var (
 
 	flagOmitSans = &cli.BoolFlag{
 		Name:        "omit-sans",
-		Usage:       fmt.Sprintf("Skip SANs value from any sources (like flag --%s, default values from Zone configuration, previous certificate on enrolling).", flagDNSSans.Name),
+		Usage:       "Ignore SANs in the previous certificate when preparing the renewal request. Workaround for CAs that forbid any SANs even when the SANs match those the CA automatically adds to the issued certificate.",
 		Destination: &flags.omitSans,
 	}
 
