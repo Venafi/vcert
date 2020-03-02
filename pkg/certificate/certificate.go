@@ -278,10 +278,10 @@ func (request *Request) GenerateCSR() error {
 	certificateRequest.Subject = request.Subject
 	if !request.OmitSANs {
 		certificateRequest.DNSNames = request.DNSNames
+		certificateRequest.EmailAddresses = request.EmailAddresses
+		certificateRequest.IPAddresses = request.IPAddresses
+		certificateRequest.URIs = request.URIs
 	}
-	certificateRequest.EmailAddresses = request.EmailAddresses
-	certificateRequest.IPAddresses = request.IPAddresses
-	certificateRequest.URIs = request.URIs
 	certificateRequest.Attributes = request.Attributes
 
 	csr, err := x509.CreateCertificateRequest(rand.Reader, &certificateRequest, request.PrivateKey)

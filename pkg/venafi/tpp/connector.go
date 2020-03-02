@@ -496,6 +496,8 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 		return "", fmt.Errorf("failed to create renewal request: CertificateDN or Thumbprint required")
 	}
 	if renewReq.CertificateRequest != nil && renewReq.CertificateRequest.OmitSANs {
+		// if OmitSANSs flag is presented we need to clean SANs values in TPP
+		// for preventing adding them to renew request on TPP side
 		type field struct {
 			Name  string
 			Value *string
