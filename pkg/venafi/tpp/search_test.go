@@ -199,7 +199,7 @@ func TestRequestAndSearchCertificate(t *testing.T) {
 	req.FriendlyName = cn
 	req.CustomFields = []certificate.CustomField{
 		{Name: "custom", Value: cfValue},
-		{Type: certificate.CustomFieldAppInfo, Value: appInfo},
+		{Type: certificate.CustomFieldOrigin, Value: appInfo},
 	}
 	req.Location = &certificate.Location{
 		Instance:   instance,

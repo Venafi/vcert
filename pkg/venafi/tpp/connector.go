@@ -279,7 +279,7 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 		switch f.Type {
 		case certificate.CustomFieldPlain:
 			customFieldsMap[f.Name] = append(customFieldsMap[f.Name], f.Value)
-		case certificate.CustomFieldAppInfo:
+		case certificate.CustomFieldOrigin:
 			tppReq.CASpecificAttributes = append(tppReq.CASpecificAttributes, nameValuePair{Name: "Origin", Value: f.Value})
 			tppReq.Origin = f.Value
 		}
