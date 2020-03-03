@@ -1,13 +1,24 @@
-# VCert
+![Venafi](Venafi_logo.png)
 
-<img src="https://www.venafi.com/sites/default/files/content/body/Light_background_logo.png" width="330px" height="69px"/>  
+[![Apache 2.0 License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+![Community Supported](https://img.shields.io/badge/Support%20Level-Community-brightgreen)
+![Compatible with TPP 17.3+ & Venafi Cloud](https://img.shields.io/badge/Compatibility-TPP%2017.3+%20%26%20Venafi%20Cloud-f9a90c)  
+_This open source project is community supported.  All bug reports must be submitted using the
+**[Issues](../../issues)** tab and include details of the proposed fix, if available.
+**[Pull Requests](../../pulls)** with actual bug fixes or proposed enhancements are welcome and appreciated._
+
+# VCert
 
 VCert is a Go library, SDK, and command line utility designed to simplify key generation and enrollment of machine identities
 (also known as SSL/TLS certificates and keys) that comply with enterprise security policy by using the
 [Venafi Platform](https://www.venafi.com/platform/trust-protection-platform) or [Venafi Cloud](https://pki.venafi.com/venafi-cloud/).
 
 #### Compatibility
-VCert releases are tested using the latest version of Trust Protection Platform.  The [latest VCert release](../../releases/latest) should be compatible with Trust Protection Platform 17.3 or higher based on the subset of API methods it consumes.
+
+VCert releases are tested using the latest version of Trust Protection Platform.  General functionality of the
+[latest VCert CLI release](../../releases/latest) should be compatible with Trust Protection Platform 17.3 or higher.
+Custom Fields require TPP 19.3 or higher, Instance Tracking requires TPP 18.2 or higher, and Token Authentication
+requires TPP 19.2 or higher.
 
 ## Installation
 
