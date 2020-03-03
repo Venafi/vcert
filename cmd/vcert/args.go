@@ -91,4 +91,5 @@ type commandFlags struct {
 	url                string
 	verbose            bool
 	zone               string
+	omitSans           bool
 }

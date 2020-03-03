@@ -163,6 +163,7 @@ type Request struct {
 	CADN               string
 	Subject            pkix.Name
 	DNSNames           []string
+	OmitSANs           bool
 	EmailAddresses     []string
 	IPAddresses        []net.IP
 	URIs               []*url.URL
@@ -172,11 +173,10 @@ type Request struct {
 	KeyType            KeyType
 	KeyLength          int
 	KeyCurve           EllipticCurve
-	//CSR                []byte // should be a PEM-encoded CSR
-	csr        []byte // should be a PEM-encoded CSR
-	PrivateKey crypto.Signer
-	CsrOrigin  CSrOriginOption
-	PickupID   string
+	csr                []byte // should be a PEM-encoded CSR
+	PrivateKey         crypto.Signer
+	CsrOrigin          CSrOriginOption
+	PickupID           string
 	//Cloud Certificate ID
 	CertID          string
 	ChainOption     ChainOption
@@ -276,10 +276,12 @@ func GenerateRequest(request *Request, privateKey crypto.Signer) error {
 func (request *Request) GenerateCSR() error {
 	certificateRequest := x509.CertificateRequest{}
 	certificateRequest.Subject = request.Subject
-	certificateRequest.DNSNames = request.DNSNames
-	certificateRequest.EmailAddresses = request.EmailAddresses
-	certificateRequest.IPAddresses = request.IPAddresses
-	certificateRequest.URIs = request.URIs
+	if !request.OmitSANs {
+		certificateRequest.DNSNames = request.DNSNames
+		certificateRequest.EmailAddresses = request.EmailAddresses
+		certificateRequest.IPAddresses = request.IPAddresses
+		certificateRequest.URIs = request.URIs
+	}
 	certificateRequest.Attributes = request.Attributes
 
 	csr, err := x509.CreateCertificateRequest(rand.Reader, &certificateRequest, request.PrivateKey)

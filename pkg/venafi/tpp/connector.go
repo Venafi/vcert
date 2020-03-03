@@ -264,7 +264,9 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 		tppReq.PKCS10 = string(req.GetCSR())
 	case certificate.ServiceGeneratedCSR:
 		tppReq.Subject = req.Subject.CommonName // TODO: there is some problem because Subject is not only CN
-		tppReq.SubjectAltNames = wrapAltNames(req)
+		if !req.OmitSANs {
+			tppReq.SubjectAltNames = wrapAltNames(req)
+		}
 	default:
 		return tppReq, fmt.Errorf("Unexpected option in PrivateKeyOrigin")
 	}
@@ -487,7 +489,34 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 	if renewReq.CertificateDN == "" {
 		return "", fmt.Errorf("failed to create renewal request: CertificateDN or Thumbprint required")
 	}
-
+	if renewReq.CertificateRequest != nil && renewReq.CertificateRequest.OmitSANs {
+		// if OmitSANSs flag is presented we need to clean SANs values in TPP
+		// for preventing adding them to renew request on TPP side
+		type field struct {
+			Name  string
+			Value *string
+		}
+		r := struct {
+			AttributeData []field
+		}{[]field{
+			{"X509 SubjectAltName DNS", nil},
+			{"X509 SubjectAltName IPAddress", nil},
+			{"X509 SubjectAltName RFC822", nil},
+			{"X509 SubjectAltName URI", nil},
+			{"X509 SubjectAltName OtherName UPN", nil},
+		}}
+		guid, err := c.configDNToGuid(renewReq.CertificateDN)
+		if err != nil {
+			return "", err
+		}
+		statusCode, _, _, err := c.request("PUT", urlResourceCertificate+urlResource(guid), r)
+		if err != nil {
+			return "", err
+		}
+		if statusCode != http.StatusOK {
+			return "", fmt.Errorf("can't clean SANs values for certificate on server side")
+		}
+	}
 	var r = certificateRenewRequest{}
 	r.CertificateDN = renewReq.CertificateDN
 	if renewReq.CertificateRequest != nil && len(renewReq.CertificateRequest.GetCSR()) != 0 {
