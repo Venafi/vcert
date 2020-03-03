@@ -230,37 +230,8 @@ type metadataKeyValueSet struct {
 	Key   metadataItem `json:",omitempty"`
 	Value []string     `json:",omitempty"`
 }
-type metadataResultCode int
 
-var metadataResultCodesMap = map[string]metadataResultCode{
-	"":                         0,  //Empty is assumed success
-	"Success":                  0,  //(Indicates the API call was successful.)
-	"InvalidConfigObject":      1,  //Config object is invalid. + [Error].
-	"InvalidDN":                2,  //DN is invalid. + [Error].
-	"InvalidName":              3,  //Metadata object name is invalid.
-	"InvalidItem":              4,  //Item is invalid. + [Error].
-	"InvalidClass":             5,  //Class is invalid. + [Error].
-	"InvalidMetadataObject":    6,  //Metadata object is invalid.
-	"InvalidRights":            7,  //Object rights are invalid.+ [Error].
-	"ItemIsNull":               8,  //Item is missing or empty. + [Error].
-	"ItemAlreadyExists":        9,  //Duplicate item. + [Error].
-	"ItemTypeUnknown":          10, //Item type is unknown. + [Error].
-	"ConfigCreateFailed":       11, //Config object failed to create. + [Error].
-	"ConfigWriteFailed":        12, //Config object failed to write. + [Error].
-	"ConfigDeleteFailed":       13, //Config object failed to delete.
-	"MetadataInUse":            14, //Metadata item is in use. + [Error].
-	"NoAllowedValues":          15, //Metadata item has invalid values.
-	"AllowedValueDoesNotExist": 16, //The required object does not exist or you do not have rights to read it.
-	"ValueNotInAllowedList":    17, //Value is invalid.
-	"ItemNotValidForClass":     18, //Item is not valid for class. + [Error].
-	"NameTooLong":              19, //Metadata item name is too long. + [Error].
-	"TooManyContainers":        20, //Nesting is too deep. + [Error].
-	"ConfigDnNotContainer":     21, //DN is invalid.+ [Error].
-	"InvalidPolicyState":       22, //Policy state is invalid.
-	"ConfigLockFailed":         23, //Config lock failed.
-	"ConfigReadFailed":         24, //Config object failed to read.+ [Error].
-	"RemoteError":              25, //Remote request failed.
-}
+type metadataResultCode int
 
 type metadataGetItemsRequest struct {
 	ObjectDN string `json:"DN"`
@@ -311,10 +282,10 @@ const (
 	urlResourceConfigReadDn           urlResource = "vedsdk/Config/ReadDn"
 	urlResourceFindPolicy             urlResource = "vedsdk/config/findpolicy"
 	urlResourceRefreshAccessToken     urlResource = "vedauth/authorize/token"
-	urlResourceMetadataSet          urlResource = "vedsdk/metadata/set"
-	urlResourceAllMetadataGet       urlResource = "vedsdk/metadata/getitems"
-	urlResourceMetadataGet          urlResource = "vedsdk/metadata/get"
-	urlResourceSystemStatusVersion  urlResource = "vedsdk/SystemStatus/Version"
+	urlResourceMetadataSet            urlResource = "vedsdk/metadata/set"
+	urlResourceAllMetadataGet         urlResource = "vedsdk/metadata/getitems"
+	urlResourceMetadataGet            urlResource = "vedsdk/metadata/get"
+	urlResourceSystemStatusVersion    urlResource = "vedsdk/SystemStatus/Version"
 )
 
 const (

@@ -20,7 +20,6 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"github.com/Venafi/vcert/pkg/verror"
 	"log"
 	"net/http"
 	neturl "net/url"
@@ -30,6 +29,7 @@ import (
 
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
+	"github.com/Venafi/vcert/pkg/verror"
 )
 
 // Connector contains the base data needed to communicate with a TPP Server
@@ -318,19 +318,18 @@ func (c *Connector) requestMetadataItems(dn string) (items []metadataKeyValueSet
 func (c *Connector) requestSystemVersion() (ver string, err error) {
 	statusCode, status, body, err := c.request("GET", urlResourceSystemStatusVersion, "")
 	if err != nil {
-		return "", fmt.Errorf("%s", err)
+		return "", err
 	}
 	//Put in hint for authentication scope 'configuration'
 	switch statusCode {
 	case 200:
-		break
 	case 401:
 		return "", fmt.Errorf("http status code '%s' was returned by the server. Hint: OAuth scope 'configuration' is required when using custom fields", status)
 	default:
 		return "", fmt.Errorf("Unexpected http status code while fetching TPP version. %s", status)
 	}
-	type responseType struct{ Version string }
-	response := responseType{}
+
+	var response struct{ Version string }
 	err = json.Unmarshal(body, &response)
 	if err != nil {
 		return "", fmt.Errorf("%s", err)
@@ -349,7 +348,7 @@ func (c *Connector) setCertificateMetadata(metadataRequest metadataSetRequest) (
 
 	statusCode, status, body, err := c.request("POST", urlResourceMetadataSet, metadataRequest)
 	if err != nil {
-		return false, fmt.Errorf("%s", err)
+		return false, err
 	}
 	if statusCode != http.StatusOK {
 		return false, fmt.Errorf("Unexpected http status code while setting metadata items. %d-%s", statusCode, status)
@@ -511,14 +510,43 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 
 	//Handle legacy TPP custom field API
 	if len(req.CustomFields) > 0 {
-		//Check to see if this is 19.2 or lower
-		//If the call returns metatdata items then the system version must be 19.3 or above,
-		//if not, try to use the 19.2 metadata save method
+		//Get the saved metadata for the current certificate, deep compare the
+		//saved metadata to the requested metadata. If all items match then no further
+		//changes need to be made. If they do not match, they try to update them using
+		//the 19.2 WebSDK calls
 		metadataItems, err := c.requestMetadataItems(requestID)
 		if err != nil {
 			return "", fmt.Errorf("%s", err)
 		}
-		if len(metadataItems) < 1 {
+
+		//Deep compare the request metadata to the fetched metadata
+		var allItemsFound = true
+	OUTER:
+		for _, cf := range tppCertificateRequest.CustomFields {
+			for idx := range metadataItems {
+				if metadataItems[idx].Key.Label == cf.Name {
+				VALUES:
+					for _, value := range cf.Values {
+						for i := range metadataItems[idx].Value {
+							if value == metadataItems[idx].Value[i] {
+								//Item matched
+								continue VALUES
+							}
+						}
+						//Found the field by name, but couldn't find one of the values
+						allItemsFound = false
+						break
+					}
+					continue OUTER
+				}
+			}
+			//Didn't find a matching custom field by name
+			allItemsFound = false
+			break
+		}
+
+		if allItemsFound == false {
+			log.Println("Saving metadata custom field using 19.2 method")
 			//Create a metadata/set command with the metadata from tppCertificateRequest
 			guidItems, err := prepareLegacyMetadata(c, tppCertificateRequest.CustomFields, requestID)
 			if err != nil {
