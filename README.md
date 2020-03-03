@@ -1,8 +1,7 @@
 ![Venafi](Venafi_logo.png)
-
 [![Apache 2.0 License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 ![Community Supported](https://img.shields.io/badge/Support%20Level-Community-brightgreen)
-![Compatible with TPP 17.3+ & Venafi Cloud](https://img.shields.io/badge/Compatibility-TPP%2017.3+%20%26%20Venafi%20Cloud-f9a90c)  
+![Compatible with TPP 17.3+ & Venafi Cloud](https://img.shields.io/badge/Compatibility-TPP%2017.3+%20%26%20Cloud-f9a90c)  
 _This open source project is community supported.  All bug reports must be submitted using the
 **[Issues](../../issues)** tab and include details of the proposed fix, if available.
 **[Pull Requests](../../pulls)** with actual bug fixes or proposed enhancements are welcome and appreciated._
