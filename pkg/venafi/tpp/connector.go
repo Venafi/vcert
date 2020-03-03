@@ -275,16 +275,18 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 	tppReq.ObjectName = req.FriendlyName
 	tppReq.DisableAutomaticRenewal = true
 	customFieldsMap := make(map[string][]string)
+	origin := endpoint.SDKName
 	for _, f := range req.CustomFields {
 		switch f.Type {
 		case certificate.CustomFieldPlain:
 			customFieldsMap[f.Name] = append(customFieldsMap[f.Name], f.Value)
 		case certificate.CustomFieldOrigin:
-			tppReq.CASpecificAttributes = append(tppReq.CASpecificAttributes, nameValuePair{Name: "Origin", Value: f.Value})
-			tppReq.Origin = f.Value
+			origin = f.Value
 		}
-
 	}
+	tppReq.CASpecificAttributes = append(tppReq.CASpecificAttributes, nameValuePair{Name: "Origin", Value: origin})
+	tppReq.Origin = origin
+
 	for name, value := range customFieldsMap {
 		tppReq.CustomFields = append(tppReq.CustomFields, customField{name, value})
 	}
