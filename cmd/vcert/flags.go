@@ -400,14 +400,16 @@ var (
 
 	flagScope = &cli.StringFlag{
 		Name:        "scope",
-		Usage:       "Use to request specific scopes and restrictions. \"certificate:manage,revoke;\" is the default.",
+		Usage:       "Use to request specific scopes and restrictions.",
 		Destination: &flags.scope,
+		Value:       "certificate:manage,revoke;",
 	}
 
 	flagClientId = &cli.StringFlag{
 		Name:        "client-id",
-		Usage:       "Use to specify the application that will be using the token. \"vcert-cli\" is the default.",
+		Usage:       "Use to specify the application that will be using the token.",
 		Destination: &flags.clientId,
+		Value:       "vcert-cli",
 	}
 
 	flagCustomField = &cli.StringSliceFlag{
