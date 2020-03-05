@@ -470,6 +470,18 @@ func (c *Connector) retrieveCertificateOnce(certReq certificateRetrieveRequest) 
 	return &retrieveResponse, nil
 }
 
+func (c *Connector) putCertificateInfo(dn string, info interface{}) error {
+	guid, err := c.configDNToGuid(dn)
+	if err != nil {
+		return err
+	}
+	statusCode, _, _, err := c.request("PUT", urlResourceCertificate+urlResource(guid), info)
+	if statusCode != http.StatusOK {
+		return fmt.Errorf("unexpected status code: %v", statusCode)
+	}
+	return nil
+}
+
 // RenewCertificate attempts to renew the certificate
 func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requestID string, err error) {
 
@@ -498,7 +510,7 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 			Name  string
 			Value *string
 		}
-		r := struct {
+		err = c.putCertificateInfo(renewReq.CertificateDN, struct {
 			AttributeData []field
 		}{[]field{
 			{"X509 SubjectAltName DNS", nil},
@@ -506,17 +518,9 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 			{"X509 SubjectAltName RFC822", nil},
 			{"X509 SubjectAltName URI", nil},
 			{"X509 SubjectAltName OtherName UPN", nil},
-		}}
-		guid, err := c.configDNToGuid(renewReq.CertificateDN)
+		}})
 		if err != nil {
-			return "", err
-		}
-		statusCode, _, _, err := c.request("PUT", urlResourceCertificate+urlResource(guid), r)
-		if err != nil {
-			return "", err
-		}
-		if statusCode != http.StatusOK {
-			return "", fmt.Errorf("can't clean SANs values for certificate on server side")
+			return "", fmt.Errorf("can't clean SANs values for certificate on server side: %v", err)
 		}
 	}
 	var r = certificateRenewRequest{}
