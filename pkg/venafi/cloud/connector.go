@@ -180,12 +180,8 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 	if c.user == nil || c.user.Company == nil {
 		return "", fmt.Errorf("Must be autheticated to request a certificate")
 	}
-	z, err := c.getZoneByTag(c.zone)
-	if err != nil {
-		return "", err
-	}
 
-	statusCode, status, body, err := c.request("POST", url, certificateRequest{ZoneID: z.ID, CSR: string(req.GetCSR())})
+	statusCode, status, body, err := c.request("POST", url, certificateRequest{ZoneID: c.zone, CSR: string(req.GetCSR())})
 
 	if err != nil {
 		return "", err
