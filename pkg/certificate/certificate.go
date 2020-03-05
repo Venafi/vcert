@@ -212,13 +212,13 @@ type RenewalRequest struct {
 }
 
 type ImportRequest struct {
-	PolicyDN             string            `json:",omitempty"`
-	ObjectName           string            `json:",omitempty"`
-	CertificateData      string            `json:",omitempty"`
-	PrivateKeyData       string            `json:",omitempty"`
-	Password             string            `json:",omitempty"`
-	Reconcile            bool              `json:",omitempty"`
-	CASpecificAttributes map[string]string `json:",omitempty"`
+	PolicyDN        string
+	ObjectName      string
+	CertificateData string
+	PrivateKeyData  string
+	Password        string
+	Reconcile       bool
+	CustomFields    []CustomField
 }
 
 type ImportResponse struct {

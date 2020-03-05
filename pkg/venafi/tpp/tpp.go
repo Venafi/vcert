@@ -152,9 +152,23 @@ type nameValuePair struct {
 	Value string `json:",omitempty"`
 }
 
+type nameSliceValuePair struct {
+	Name  string
+	Value []string
+}
+
 type certificateRequestResponse struct {
 	CertificateDN string `json:",omitempty"`
 	Error         string `json:",omitempty"`
+}
+
+type importRequest struct {
+	PolicyDN        string `json:",omitempty"`
+	ObjectName      string `json:",omitempty"`
+	CertificateData string `json:",omitempty"`
+	PrivateKeyData  string `json:",omitempty"`
+	Password        string `json:",omitempty"`
+	Reconcile       bool   `json:",omitempty"`
 }
 
 type authorizeResponse struct {

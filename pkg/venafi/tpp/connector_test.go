@@ -834,12 +834,11 @@ func TestImportCertificate(t *testing.T) {
 
 	importReq := &certificate.ImportRequest{
 		// PolicyDN should be like "\\VED\\Policy\\devops\\vcert", or empty (c.zone is used then)
-		PolicyDN:             getPolicyDN(ctx.TPPZone),
-		ObjectName:           "import.venafi.example.com",
-		CertificateData:      crt,
-		PrivateKeyData:       pk,
-		Reconcile:            false,
-		CASpecificAttributes: map[string]string{"a": "42"},
+		PolicyDN:        getPolicyDN(ctx.TPPZone),
+		ObjectName:      "import12348.venafi.example.com",
+		CertificateData: crt,
+		PrivateKeyData:  pk,
+		Reconcile:       false,
 	}
 
 	pp(importReq)
