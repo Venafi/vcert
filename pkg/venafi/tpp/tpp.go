@@ -38,8 +38,8 @@ import (
 
 const defaultKeySize = 2048
 const defaultSignatureAlgorithm = x509.SHA256WithRSA
-const defaultClientID = "vcert-go"
-const defaultScope = "certificate:manage,revoke;"
+const defaultClientID = "vcert-sdk"
+const defaultScope = "certificate:manage,revoke"
 const defaultWorkloadName = "Default"
 
 type customField struct {

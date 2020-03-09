@@ -54,7 +54,7 @@ func init() {
 
 	resp, err := tpp.GetRefreshToken(&endpoint.Authentication{
 		User: ctx.TPPuser, Password: ctx.TPPPassword,
-		Scope: "certificate:approve,delete,discover,manage,revoke;"})
+		Scope: "certificate:discover,manage,revoke;configuration"})
 	if err != nil {
 		panic(err)
 	}
@@ -98,7 +98,7 @@ func TestGetRefreshToken(t *testing.T) {
 
 	refreshToken, err := tpp.GetRefreshToken(&endpoint.Authentication{
 		User: ctx.TPPuser, Password: ctx.TPPPassword,
-		Scope: "certificate:approve,delete,discover,manage,revoke;", ClientId: "websdk"})
+		Scope: "certificate:discover,manage,revoke", ClientId: "vcert-sdk"})
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -153,8 +153,8 @@ func TestFailRefreshAccessToken(t *testing.T) {
 		t.Fatalf("err should not be nil, er")
 	}
 
-	if fmt.Sprintf("%s", err) != "unexpected status code on TPP Authorize. Status: 400 Bad Request" {
-		t.Fatalf("error text should be: unexpected status code on TPP Authorize. Status: 400 Bad Request. but it is: %s", err)
+	if !strings.Contains(err.Error(), "unexpected status code on TPP Authorize. Status: 400") {
+		t.Fatalf("error text should contain: 'unexpected status code on TPP Authorize. Status: 400'. but it is: '%s'", err)
 	}
 }
 
