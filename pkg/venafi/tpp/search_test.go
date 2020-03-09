@@ -165,13 +165,7 @@ func TestRequestAndSearchCertificate(t *testing.T) {
 	}
 
 	if tpp.apiKey == "" {
-		resp, err := tpp.GetRefreshToken(&endpoint.Authentication{
-			User: ctx.TPPuser, Password: ctx.TPPPassword,
-			Scope: "configuration:read;certificate:approve,delete,discover,manage,revoke;"})
-		if err != nil {
-			panic(err)
-		}
-		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: resp.Access_token})
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
 		if err != nil {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
