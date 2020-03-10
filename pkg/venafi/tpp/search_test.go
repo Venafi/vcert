@@ -200,6 +200,9 @@ func TestRequestAndSearchCertificate(t *testing.T) {
 		Workload:   workload,
 		TLSAddress: "wwww.example.com:443",
 	}
+
+	req.KeyType = certificate.KeyTypeECDSA
+
 	err = tpp.GenerateRequest(config, req)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
