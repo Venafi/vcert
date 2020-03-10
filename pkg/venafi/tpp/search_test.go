@@ -165,13 +165,7 @@ func TestRequestAndSearchCertificate(t *testing.T) {
 	}
 
 	if tpp.apiKey == "" {
-		resp, err := tpp.GetRefreshToken(&endpoint.Authentication{
-			User: ctx.TPPuser, Password: ctx.TPPPassword,
-			Scope: "configuration:read;certificate:approve,delete,discover,manage,revoke;"})
-		if err != nil {
-			panic(err)
-		}
-		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: resp.Access_token})
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
 		if err != nil {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
@@ -199,13 +193,16 @@ func TestRequestAndSearchCertificate(t *testing.T) {
 	req.FriendlyName = cn
 	req.CustomFields = []certificate.CustomField{
 		{Name: "custom", Value: cfValue},
-		{Type: certificate.CustomFieldAppInfo, Value: appInfo},
+		{Type: certificate.CustomFieldOrigin, Value: appInfo},
 	}
 	req.Location = &certificate.Location{
 		Instance:   instance,
 		Workload:   workload,
 		TLSAddress: "wwww.example.com:443",
 	}
+
+	req.KeyLength = 1024
+
 	err = tpp.GenerateRequest(config, req)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
