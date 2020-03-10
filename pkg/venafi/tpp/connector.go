@@ -669,7 +669,10 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 		if err != nil {
 			return nil, fmt.Errorf("%w: failed to decode import response message: %s", verror.ServerError, err)
 		}
-		c.putCertificateInfo(response.CertificateDN, []nameSliceValuePair{{Name: "Origin", Value: []string{origin}}})
+		err = c.putCertificateInfo(response.CertificateDN, []nameSliceValuePair{{Name: "Origin", Value: []string{origin}}})
+		if err != nil {
+			log.Println(err)
+		}
 		return response, nil
 	case http.StatusBadRequest:
 		var errorResponse = &struct{ Error string }{}
