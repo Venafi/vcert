@@ -378,16 +378,18 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 	tppReq.ObjectName = req.FriendlyName
 	tppReq.DisableAutomaticRenewal = true
 	customFieldsMap := make(map[string][]string)
+	origin := endpoint.SDKName
 	for _, f := range req.CustomFields {
 		switch f.Type {
 		case certificate.CustomFieldPlain:
 			customFieldsMap[f.Name] = append(customFieldsMap[f.Name], f.Value)
-		case certificate.CustomFieldAppInfo:
-			tppReq.CASpecificAttributes = append(tppReq.CASpecificAttributes, nameValuePair{Name: "Origin", Value: f.Value})
-			tppReq.Origin = f.Value
+		case certificate.CustomFieldOrigin:
+			origin = f.Value
 		}
-
 	}
+	tppReq.CASpecificAttributes = append(tppReq.CASpecificAttributes, nameValuePair{Name: "Origin", Value: origin})
+	tppReq.Origin = origin
+
 	for name, value := range customFieldsMap {
 		tppReq.CustomFields = append(tppReq.CustomFields, customField{name, value})
 	}
@@ -626,9 +628,20 @@ func (c *Connector) retrieveCertificateOnce(certReq certificateRetrieveRequest) 
 	return &retrieveResponse, nil
 }
 
+func (c *Connector) putCertificateInfo(dn string, attributes []nameSliceValuePair) error {
+	guid, err := c.configDNToGuid(dn)
+	if err != nil {
+		return err
+	}
+	statusCode, _, _, err := c.request("PUT", urlResourceCertificate+urlResource(guid), struct{ AttributeData []nameSliceValuePair }{attributes})
+	if statusCode != http.StatusOK {
+		return fmt.Errorf("unexpected status code: %v", statusCode)
+	}
+	return nil
+}
+
 // RenewCertificate attempts to renew the certificate
 func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requestID string, err error) {
-
 	if renewReq.Thumbprint != "" && renewReq.CertificateDN == "" {
 		// search by Thumbprint and fill *renewReq.CertificateDN
 		searchResult, err := c.searchCertificatesByFingerprint(renewReq.Thumbprint)
@@ -650,29 +663,15 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 	if renewReq.CertificateRequest != nil && renewReq.CertificateRequest.OmitSANs {
 		// if OmitSANSs flag is presented we need to clean SANs values in TPP
 		// for preventing adding them to renew request on TPP side
-		type field struct {
-			Name  string
-			Value *string
-		}
-		r := struct {
-			AttributeData []field
-		}{[]field{
+		err = c.putCertificateInfo(renewReq.CertificateDN, []nameSliceValuePair{
 			{"X509 SubjectAltName DNS", nil},
 			{"X509 SubjectAltName IPAddress", nil},
 			{"X509 SubjectAltName RFC822", nil},
 			{"X509 SubjectAltName URI", nil},
 			{"X509 SubjectAltName OtherName UPN", nil},
-		}}
-		guid, err := c.configDNToGuid(renewReq.CertificateDN)
+		})
 		if err != nil {
-			return "", err
-		}
-		statusCode, _, _, err := c.request("PUT", urlResourceCertificate+urlResource(guid), r)
-		if err != nil {
-			return "", err
-		}
-		if statusCode != http.StatusOK {
-			return "", fmt.Errorf("can't clean SANs values for certificate on server side")
+			return "", fmt.Errorf("can't clean SANs values for certificate on server side: %v", err)
 		}
 	}
 	var r = certificateRenewRequest{}
@@ -797,12 +796,26 @@ func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration,
 
 }
 
-func (c *Connector) ImportCertificate(r *certificate.ImportRequest) (*certificate.ImportResponse, error) {
+func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certificate.ImportResponse, error) {
+	r := importRequest{
+		PolicyDN:        req.PolicyDN,
+		ObjectName:      req.ObjectName,
+		CertificateData: req.CertificateData,
+		PrivateKeyData:  req.PrivateKeyData,
+		Password:        req.Password,
+		Reconcile:       req.Reconcile,
+	}
 
 	if r.PolicyDN == "" {
 		r.PolicyDN = getPolicyDN(c.zone)
 	}
 
+	origin := endpoint.SDKName + " (+)"
+	for _, f := range req.CustomFields {
+		if f.Type == certificate.CustomFieldOrigin {
+			origin = f.Value
+		}
+	}
 	statusCode, _, body, err := c.request("POST", urlResourceCertificateImport, r)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", verror.ServerTemporaryUnavailableError, err)
@@ -813,6 +826,10 @@ func (c *Connector) ImportCertificate(r *certificate.ImportRequest) (*certificat
 		err := json.Unmarshal(body, response)
 		if err != nil {
 			return nil, fmt.Errorf("%w: failed to decode import response message: %s", verror.ServerError, err)
+		}
+		err = c.putCertificateInfo(response.CertificateDN, []nameSliceValuePair{{Name: "Origin", Value: []string{origin}}})
+		if err != nil {
+			log.Println(err)
 		}
 		return response, nil
 	case http.StatusBadRequest:

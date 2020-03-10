@@ -29,6 +29,8 @@ import (
 	"sort"
 )
 
+const SDKName = "Venafi VCert-Go"
+
 // ConnectorType represents the available connectors
 type ConnectorType int
 

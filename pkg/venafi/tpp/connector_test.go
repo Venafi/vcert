@@ -55,7 +55,7 @@ func init() {
 
 	resp, err := tpp.GetRefreshToken(&endpoint.Authentication{
 		User: ctx.TPPuser, Password: ctx.TPPPassword,
-		Scope: "certificate:approve,delete,discover,manage,revoke;"})
+		Scope: "certificate:discover,manage,revoke;configuration"})
 	if err != nil {
 		panic(err)
 	}
@@ -99,7 +99,7 @@ func TestGetRefreshToken(t *testing.T) {
 
 	refreshToken, err := tpp.GetRefreshToken(&endpoint.Authentication{
 		User: ctx.TPPuser, Password: ctx.TPPPassword,
-		Scope: "certificate:approve,delete,discover,manage,revoke;", ClientId: "websdk"})
+		Scope: "certificate:discover,manage,revoke", ClientId: "vcert-sdk"})
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -154,8 +154,8 @@ func TestFailRefreshAccessToken(t *testing.T) {
 		t.Fatalf("err should not be nil, er")
 	}
 
-	if fmt.Sprintf("%s", err) != "unexpected status code on TPP Authorize. Status: 400 Bad Request" {
-		t.Fatalf("error text should be: unexpected status code on TPP Authorize. Status: 400 Bad Request. but it is: %s", err)
+	if !strings.Contains(err.Error(), "unexpected status code on TPP Authorize. Status: 400") {
+		t.Fatalf("error text should contain: 'unexpected status code on TPP Authorize. Status: 400'. but it is: '%s'", err)
 	}
 }
 
@@ -834,12 +834,11 @@ func TestImportCertificate(t *testing.T) {
 
 	importReq := &certificate.ImportRequest{
 		// PolicyDN should be like "\\VED\\Policy\\devops\\vcert", or empty (c.zone is used then)
-		PolicyDN:             getPolicyDN(ctx.TPPZone),
-		ObjectName:           "import.venafi.example.com",
-		CertificateData:      crt,
-		PrivateKeyData:       pk,
-		Reconcile:            false,
-		CASpecificAttributes: map[string]string{"a": "42"},
+		PolicyDN:        getPolicyDN(ctx.TPPZone),
+		ObjectName:      "import12348.venafi.example.com",
+		CertificateData: crt,
+		PrivateKeyData:  pk,
+		Reconcile:       false,
 	}
 
 	pp(importReq)
