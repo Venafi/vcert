@@ -38,8 +38,8 @@ const UtilityName string = "Venafi Certificate Utility"
 // UtilityShortName is the short name of the command-line utility
 const UtilityShortName string = "vCert"
 
-// UtilityName2 is the full name for adding to meta information to certificate request
-const UtilityName2 = "Venafi VCert CLI"
+// OriginName is the full name for adding to meta information to certificate request
+const OriginName = "Venafi VCert CLI"
 
 func main() {
 	defer func() {
