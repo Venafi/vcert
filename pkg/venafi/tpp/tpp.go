@@ -585,19 +585,6 @@ func parseRenewData(b []byte) (data certificateRenewResponse, err error) {
 	return
 }
 
-//SystemStatus/Version
-func parseSystemStatusVersionResult(httpStatusCode int, httpStatus string, body []byte) (resp systemStatusVersionResponse, err error) {
-	resp, err = parseSystemStatusVersionData(body)
-	if err != nil {
-		return resp, fmt.Errorf("failed to parse SystemStatus Version response. status: %s", httpStatus)
-	}
-	return resp, nil
-}
-func parseSystemStatusVersionData(b []byte) (data systemStatusVersionResponse, err error) {
-	err = json.Unmarshal(b, &data)
-	return
-}
-
 func newPEMCollectionFromResponse(base64Response string, chainOrder certificate.ChainOption) (*certificate.PEMCollection, error) {
 	if base64Response != "" {
 		certBytes, err := base64.StdEncoding.DecodeString(base64Response)
