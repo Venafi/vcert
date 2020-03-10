@@ -24,9 +24,6 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/pkg/certificate"
-	"github.com/Venafi/vcert/pkg/endpoint"
-	"github.com/Venafi/vcert/test"
 	"net/http"
 	"net/url"
 	"os"
@@ -34,6 +31,10 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/Venafi/vcert/pkg/certificate"
+	"github.com/Venafi/vcert/pkg/endpoint"
+	"github.com/Venafi/vcert/test"
 )
 
 var ctx *test.Context
@@ -439,7 +440,6 @@ func TestRequestCertificateServiceGenerated(t *testing.T) {
 	req.CsrOrigin = certificate.ServiceGeneratedCSR
 	req.FetchPrivateKey = true
 	req.KeyPassword = "newPassw0rd!"
-
 	config.UpdateCertificateRequest(req)
 
 	pickupId, err := tpp.RequestCertificate(req)

@@ -20,7 +20,6 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"github.com/Venafi/vcert/pkg/verror"
 	"log"
 	"net/http"
 	neturl "net/url"
@@ -30,6 +29,7 @@ import (
 
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
+	"github.com/Venafi/vcert/pkg/verror"
 )
 
 // Connector contains the base data needed to communicate with a TPP Server
@@ -258,6 +258,109 @@ func wrapAltNames(req *certificate.Request) (items []sanItem) {
 	return items
 }
 
+func prepareLegacyMetadata(c *Connector, metaItems []customField, dn string) ([]guidData, error) {
+	metadataItems, err := c.requestAllMetadataItems(dn)
+	if nil != err {
+		return nil, err
+	}
+	customFieldsGUIDMap := make(map[string]string)
+	for _, item := range metadataItems {
+		customFieldsGUIDMap[item.Label] = item.Guid
+	}
+
+	var requestGUIDData []guidData
+	for _, item := range metaItems {
+		guid, prs := customFieldsGUIDMap[item.Name]
+		if prs {
+			requestGUIDData = append(requestGUIDData, guidData{guid, item.Values})
+		}
+	}
+	return requestGUIDData, nil
+}
+
+//RequestAllMetadataItems returns all possible metadata items for a DN
+func (c *Connector) requestAllMetadataItems(dn string) ([]metadataItem, error) {
+	statusCode, status, body, err := c.request("POST", urlResourceAllMetadataGet, metadataGetItemsRequest{dn})
+	if err != nil {
+		return nil, err
+	}
+	if statusCode != http.StatusOK {
+		return nil, fmt.Errorf("Unexpected http status code while fetching metadata items. %d-%s", statusCode, status)
+	}
+
+	var response metadataGetItemsResponse
+	err = json.Unmarshal(body, &response)
+	return response.Items, err
+}
+
+//RequestMetadataItems returns metadata items for a DN that have a value stored
+func (c *Connector) requestMetadataItems(dn string) ([]metadataKeyValueSet, error) {
+	statusCode, status, body, err := c.request("POST", urlResourceMetadataGet, metadataGetItemsRequest{dn})
+	if err != nil {
+		return nil, err
+	}
+	if statusCode != http.StatusOK {
+		return nil, fmt.Errorf("Unexpected http status code while fetching certificate metadata items. %d-%s", statusCode, status)
+	}
+	var response metadataGetResponse
+	err = json.Unmarshal(body, &response)
+	return response.Data, err
+}
+
+//RequestSystemVersion returns the TPP system version of the connector context
+func (c *Connector) requestSystemVersion() (string, error) {
+	statusCode, status, body, err := c.request("GET", urlResourceSystemStatusVersion, "")
+	if err != nil {
+		return "", err
+	}
+	//Put in hint for authentication scope 'configuration'
+	switch statusCode {
+	case 200:
+	case 401:
+		return "", fmt.Errorf("http status code '%s' was returned by the server. Hint: OAuth scope 'configuration' is required when using custom fields", status)
+	default:
+		return "", fmt.Errorf("Unexpected http status code while fetching TPP version. %s", status)
+	}
+
+	var response struct{ Version string }
+	err = json.Unmarshal(body, &response)
+	return response.Version, err
+}
+
+//SetCertificateMetadata submits the metadata to TPP for storage returning the lock status of the metadata stored
+func (c *Connector) setCertificateMetadata(metadataRequest metadataSetRequest) (bool, error) {
+	if metadataRequest.DN == "" {
+		return false, fmt.Errorf("DN must be provided to setCertificateMetaData")
+	}
+	if len(metadataRequest.GuidData) == 0 && metadataRequest.KeepExisting {
+		return false, nil
+	} //Not an error, but there is nothing to do
+
+	statusCode, status, body, err := c.request("POST", urlResourceMetadataSet, metadataRequest)
+	if err != nil {
+		return false, err
+	}
+	if statusCode != http.StatusOK {
+		return false, fmt.Errorf("Unexpected http status code while setting metadata items. %d-%s", statusCode, status)
+	}
+
+	var result = metadataSetResponse{}
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return false, err
+	}
+
+	switch result.Result {
+	case 0:
+		break
+	case 17:
+		return false, fmt.Errorf("custom field value not a valid list item. Server returned error %v", result.Result)
+	default:
+		return false, fmt.Errorf("return code %v was returned while adding metadata to %v. Please refer to the Metadata Result Codes in the TPP WebSDK API documentation to determine if further action is needed", result.Result, metadataRequest.DN)
+	}
+	return result.Locked, nil
+}
+
 func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRequest, err error) {
 	switch req.CsrOrigin {
 	case certificate.LocalGeneratedCSR, certificate.UserProvidedCSR:
@@ -396,9 +499,64 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 	if err != nil {
 		return "", fmt.Errorf("%s", err)
 	}
-
 	req.PickupID = requestID
-	return requestID, nil
+
+	if len(req.CustomFields) == 0 {
+		return
+	}
+
+	// Handle legacy TPP custom field API
+	//Get the saved metadata for the current certificate, deep compare the
+	//saved metadata to the requested metadata. If all items match then no further
+	//changes need to be made. If they do not match, they try to update them using
+	//the 19.2 WebSDK calls
+	metadataItems, err := c.requestMetadataItems(requestID)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	//prepare struct for search
+	metadata := make(map[string]map[string]struct{})
+	for _, item := range metadataItems {
+		metadata[item.Key.Label] = make(map[string]struct{})
+		for _, v := range item.Value {
+			metadata[item.Key.Label][v] = struct{}{} //empty struct has zero size
+		}
+	}
+	//Deep compare the request metadata to the fetched metadata
+	var allItemsFound = true
+	for _, cf := range tppCertificateRequest.CustomFields {
+		values, prs := metadata[cf.Name]
+		if !prs {
+			allItemsFound = false
+			break
+		}
+		for _, value := range cf.Values {
+			_, prs := values[value]
+			if !prs {
+				//Found the field by name, but couldn't find one of the values
+				allItemsFound = false
+			}
+		}
+	}
+
+	if allItemsFound {
+		return
+	}
+	log.Println("Saving metadata custom field using 19.2 method")
+	//Create a metadata/set command with the metadata from tppCertificateRequest
+	guidItems, err := prepareLegacyMetadata(c, tppCertificateRequest.CustomFields, requestID)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	requestData := metadataSetRequest{requestID, guidItems, true}
+	//c.request with the metadata request
+	_, err = c.setCertificateMetadata(requestData)
+	if err != nil {
+		log.Println(err)
+	}
+	return
 }
 
 // RetrieveCertificate attempts to retrieve the requested certificate

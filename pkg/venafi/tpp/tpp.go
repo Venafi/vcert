@@ -223,6 +223,53 @@ type policyRequest struct {
 	Class         string `json:",omitempty"`
 	AttributeName string `json:",omitempty"`
 }
+type metadataItem struct {
+	AllowedValues     []string `json:",omitempty"`
+	Classes           []string `json:",omitempty"`
+	ConfigAttribute   string   `json:",omitempty"`
+	DefaultValues     []string `json:",omitempty"`
+	DN                string   `json:",omitempty"`
+	ErrorMessage      string   `json:",omitempty"`
+	Guid              string   `json:",omitempty"`
+	Help              string   `json:",omitempty"`
+	Label             string   `json:",omitempty"`
+	Name              string   `json:",omitempty"`
+	Policyable        bool     `json:",omitempty"`
+	RegularExpression string   `json:",omitempty"`
+	RenderHidden      bool     `json:",omitempty"`
+	RenderReadOnly    bool     `json:",omitempty"`
+	Type              int      `json:",omitempty"`
+}
+type metadataKeyValueSet struct {
+	Key   metadataItem `json:",omitempty"`
+	Value []string     `json:",omitempty"`
+}
+
+type metadataGetItemsRequest struct {
+	ObjectDN string `json:"DN"`
+}
+type metadataGetItemsResponse struct {
+	Items  []metadataItem `json:",omitempty"`
+	Locked bool           `json:",omitempty"`
+}
+type metadataGetResponse struct {
+	Data   []metadataKeyValueSet
+	Locked bool `json:",omitempty"`
+}
+type guidData struct {
+	ItemGuid string   `json:",omitempty"`
+	List     []string `json:",omitempty"`
+}
+type metadataSetRequest struct {
+	DN           string     `json:"DN"`
+	GuidData     []guidData `json:"GuidData"`
+	KeepExisting bool       `json:"KeepExisting"`
+}
+type metadataSetResponse struct {
+	Locked bool `json:",omitempty"`
+	Result int  `json:",omitempty"`
+}
+type systemStatusVersionResponse string
 
 type urlResource string
 
@@ -245,6 +292,10 @@ const (
 	urlResourceConfigReadDn           urlResource = "vedsdk/Config/ReadDn"
 	urlResourceFindPolicy             urlResource = "vedsdk/config/findpolicy"
 	urlResourceRefreshAccessToken     urlResource = "vedauth/authorize/token"
+	urlResourceMetadataSet            urlResource = "vedsdk/metadata/set"
+	urlResourceAllMetadataGet         urlResource = "vedsdk/metadata/getitems"
+	urlResourceMetadataGet            urlResource = "vedsdk/metadata/get"
+	urlResourceSystemStatusVersion    urlResource = "vedsdk/SystemStatus/Version"
 )
 
 const (
