@@ -100,7 +100,7 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 		req.Location.Replace = cf.replaceInstance
 	}
 
-	origin := UtilityName2
+	origin := OriginName
 	if len(cf.appInfo) > 0 {
 		origin = cf.appInfo
 	}
