@@ -201,7 +201,7 @@ func TestRequestAndSearchCertificate(t *testing.T) {
 		TLSAddress: "wwww.example.com:443",
 	}
 
-	req.KeyType = certificate.KeyTypeECDSA
+	req.KeyLength = 1024
 
 	err = tpp.GenerateRequest(config, req)
 	if err != nil {
