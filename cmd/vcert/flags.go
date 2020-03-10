@@ -402,7 +402,7 @@ var (
 		Name:        "scope",
 		Usage:       "Use to request specific scopes and restrictions.",
 		Destination: &flags.scope,
-		Value:       "certificate:manage,revoke;",
+		Value:       "certificate:manage,revoke",
 	}
 
 	flagClientId = &cli.StringFlag{
