@@ -231,20 +231,16 @@ type metadataKeyValueSet struct {
 	Value []string     `json:",omitempty"`
 }
 
-type metadataResultCode int
-
 type metadataGetItemsRequest struct {
 	ObjectDN string `json:"DN"`
 }
 type metadataGetItemsResponse struct {
-	Items  []metadataItem     `json:",omitempty"`
-	Locked bool               `json:",omitempty"`
-	Result metadataResultCode `json:",omitempty"`
+	Items  []metadataItem `json:",omitempty"`
+	Locked bool           `json:",omitempty"`
 }
 type metadataGetResponse struct {
 	Data   []metadataKeyValueSet
-	Locked bool               `json:",omitempty"`
-	Result metadataResultCode `json:",omitempty"`
+	Locked bool `json:",omitempty"`
 }
 type guidData struct {
 	ItemGuid string   `json:",omitempty"`
@@ -256,8 +252,8 @@ type metadataSetRequest struct {
 	KeepExisting bool       `json:"KeepExisting"`
 }
 type metadataSetResponse struct {
-	Locked bool               `json:",omitempty"`
-	Result metadataResultCode `json:",omitempty"`
+	Locked bool `json:",omitempty"`
+	Result int  `json:",omitempty"`
 }
 type systemStatusVersionResponse string
 
