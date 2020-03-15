@@ -45,6 +45,17 @@ Feature: Enroll certificate
       And it should not output private key
       And the file named "k.pem" should exist
 
+  Scenario: writing encrypted private key to file
+    When I enroll a certificate in test-mode with -cn vfidev.example.com -no-pickup -no-prompt -key-file k.pem -key-password 1234
+    Then it should post certificate request
+      And "k.pem" should be RSA private key with password "1234"
+
+  Scenario: writing encrypted private key to file with password readed from file
+    When I run `echo 1234 > password.txt`
+    And I enroll a certificate in test-mode with -cn vfidev.example.com -no-pickup -no-prompt -key-file k.pem -key-password file:password.txt
+    Then it should post certificate request
+      And "k.pem" should be RSA private key with password "1234"
+
   Scenario: request a certificate with 1024 key size
     Given I successfully run `vcert enroll -test-mode -test-mode-delay 0 -cn vfidev.example.com -no-prompt -cert-file c.pem -key-size 1024`
     Then "c.pem" should be a certificate with key size 1024 bits
