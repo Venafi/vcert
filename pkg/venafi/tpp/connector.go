@@ -19,6 +19,7 @@ package tpp
 import (
 	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"log"
 	"net/http"
@@ -638,6 +639,35 @@ func (c *Connector) putCertificateInfo(dn string, attributes []nameSliceValuePai
 		return fmt.Errorf("unexpected status code: %v", statusCode)
 	}
 	return nil
+}
+
+func (c *Connector) prepareRenewalRequest(renewReq *certificate.RenewalRequest) error {
+	if renewReq.CertificateRequest != nil && len(renewReq.CertificateRequest.GetCSR()) != 0 {
+		return nil
+	}
+
+	searchReq := &certificate.Request{
+		PickupID: renewReq.CertificateDN,
+	}
+
+	// here we fetch old cert anyway
+	oldPcc, err := c.RetrieveCertificate(searchReq)
+	if err != nil {
+		return fmt.Errorf("Failed to fetch old certificate by id %s: %s", renewReq.CertificateDN, err)
+	}
+	oldCertBlock, _ := pem.Decode([]byte(oldPcc.Certificate))
+	if oldCertBlock == nil || oldCertBlock.Type != "CERTIFICATE" {
+		return fmt.Errorf("Failed to fetch old certificate by id %s: PEM parse error", renewReq.CertificateDN)
+	}
+	oldCert, err := x509.ParseCertificate([]byte(oldCertBlock.Bytes))
+	if err != nil {
+		return fmt.Errorf("Failed to fetch old certificate by id %s: %s", renewReq.CertificateDN, err)
+	}
+	if renewReq.CertificateRequest == nil {
+		renewReq.CertificateRequest = certificate.NewRequest(oldCert)
+	}
+	err = c.GenerateRequest(&endpoint.ZoneConfiguration{}, renewReq.CertificateRequest)
+	return err
 }
 
 // RenewCertificate attempts to renew the certificate
