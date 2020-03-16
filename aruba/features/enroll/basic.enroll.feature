@@ -51,8 +51,8 @@ Feature: Enroll certificate
       And "k.pem" should be RSA private key with password "1234"
 
   Scenario: writing encrypted private key to file with password readed from file
-    When I run `echo 1234 > password.txt`
-    And I enroll a certificate in test-mode with -cn vfidev.example.com -no-pickup -no-prompt -key-file k.pem -key-password file:password.txt
+    Given a file named "password.txt" with "1234"
+    When I enroll a certificate in test-mode with -cn vfidev.example.com -no-pickup -no-prompt -key-file k.pem -key-password file:password.txt
     Then it should post certificate request
       And "k.pem" should be RSA private key with password "1234"
 
