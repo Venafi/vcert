@@ -497,7 +497,7 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 	}
 	requestID, err = parseRequestResult(statusCode, status, body)
 	if err != nil {
-		return "", fmt.Errorf("%s", err)
+		return "", err
 	}
 	req.PickupID = requestID
 

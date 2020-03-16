@@ -224,7 +224,7 @@ func (r *Result) Flush() error {
 		if r.Config.ChainFile != "" && len(r.Pcc.Chain) > 0 {
 			err = ioutil.WriteFile(r.Config.ChainFile, []byte(r.formatChain(r.Pcc.Chain)), 0600)
 			errors = append(errors, err)
-		} else {
+		} else if r.Config.CertFile == "" {
 			stdOut.Chain = r.Pcc.Chain
 		}
 	}

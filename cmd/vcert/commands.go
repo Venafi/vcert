@@ -201,13 +201,13 @@ func doCommandEnroll1(c *cli.Context) error {
 	zoneConfig, err := connector.ReadZoneConfiguration()
 
 	if err != nil {
-		return fmt.Errorf("%s", err)
+		return err
 	}
 	logf("Successfully read zone configuration for %s", flags.zone)
 	req = fillCertificateRequest(req, &flags)
 	err = connector.GenerateRequest(zoneConfig, req)
 	if err != nil {
-		return fmt.Errorf("%s", err)
+		return err
 	}
 
 	var requestedFor string
@@ -220,14 +220,14 @@ func doCommandEnroll1(c *cli.Context) error {
 	logf("Successfully created request for %s", requestedFor)
 	flags.pickupID, err = connector.RequestCertificate(req)
 	if err != nil {
-		return fmt.Errorf("%s", err)
+		return err
 	}
 	logf("Successfully posted request for %s, will pick up by %s", requestedFor, flags.pickupID)
 
 	if flags.noPickup {
 		pcc, err = certificate.NewPEMCollection(nil, req.PrivateKey, []byte(flags.keyPassword))
 		if err != nil {
-			return fmt.Errorf("%s", err)
+			return err
 		}
 	} else {
 		req.PickupID = flags.pickupID
@@ -236,7 +236,7 @@ func doCommandEnroll1(c *cli.Context) error {
 
 		pcc, err = retrieveCertificate(connector, req, time.Duration(flags.timeout)*time.Second)
 		if err != nil {
-			return fmt.Errorf("%s", err)
+			return err
 		}
 		logf("Successfully retrieved request for %s", flags.pickupID)
 
@@ -317,12 +317,12 @@ func doCommandGetcred1(c *cli.Context) error {
 			Scope:        flags.scope,
 		})
 		if err != nil {
-			return fmt.Errorf("%s", err)
+			return err
 		}
 		if flags.format == "json" {
 			jsonData, err := json.MarshalIndent(resp, "", "    ")
 			if err != nil {
-				return fmt.Errorf("%s", err)
+				return err
 			}
 			fmt.Println(string(jsonData))
 		} else {
@@ -338,12 +338,12 @@ func doCommandGetcred1(c *cli.Context) error {
 			Scope:    flags.scope,
 			ClientId: flags.clientId})
 		if err != nil {
-			return fmt.Errorf("%s", err)
+			return err
 		}
 		if flags.format == "json" {
 			jsonData, err := json.MarshalIndent(resp, "", "    ")
 			if err != nil {
-				return fmt.Errorf("%s", err)
+				return err
 			}
 			fmt.Println(string(jsonData))
 		} else {
@@ -359,12 +359,12 @@ func doCommandGetcred1(c *cli.Context) error {
 			Scope:        flags.scope,
 			ClientId:     flags.clientId})
 		if err != nil {
-			return fmt.Errorf("%s", err)
+			return err
 		}
 		if flags.format == "json" {
 			jsonData, err := json.MarshalIndent(resp, "", "    ")
 			if err != nil {
-				return fmt.Errorf("%s", err)
+				return err
 			}
 			fmt.Println(string(jsonData))
 		} else {
@@ -388,11 +388,11 @@ func doCommandGenCSR1(c *cli.Context) error {
 	}
 	key, csr, err := generateCsrForCommandGenCsr(&flags, []byte(flags.keyPassword))
 	if err != nil {
-		return fmt.Errorf("%s", err)
+		return err
 	}
 	err = writeOutKeyAndCsr(&flags, key, csr)
 	if err != nil {
-		return fmt.Errorf("%s", err)
+		return err
 	}
 
 	return nil
@@ -594,7 +594,7 @@ func doCommandRenew1(c *cli.Context) error {
 
 	err = connector.GenerateRequest(zoneConfig, req)
 	if err != nil {
-		return fmt.Errorf("%s", err)
+		return err
 	}
 
 	requestedFor := func() string {
@@ -614,14 +614,14 @@ func doCommandRenew1(c *cli.Context) error {
 	flags.pickupID, err = connector.RenewCertificate(renewReq)
 
 	if err != nil {
-		return fmt.Errorf("%s", err)
+		return err
 	}
 	logf("Successfully posted renewal request for %s, will pick up by %s", requestedFor, flags.pickupID)
 
 	if flags.noPickup {
 		pcc, err = certificate.NewPEMCollection(nil, req.PrivateKey, []byte(flags.keyPassword))
 		if err != nil {
-			return fmt.Errorf("%s", err)
+			return err
 		}
 	} else {
 		req.PickupID = flags.pickupID
@@ -630,7 +630,7 @@ func doCommandRenew1(c *cli.Context) error {
 
 		pcc, err = retrieveCertificate(connector, req, time.Duration(flags.timeout)*time.Second)
 		if err != nil {
-			return fmt.Errorf("%s", err)
+			return err
 		}
 		logf("Successfully retrieved request for %s", flags.pickupID)
 
