@@ -65,9 +65,11 @@ func validateCommonFlags(commandName string) error {
 
 	switch flags.keyTypeString {
 	case "rsa":
-		flags.keyType = certificate.KeyTypeRSA
+		kt := certificate.KeyTypeRSA
+		flags.keyType = &kt
 	case "ecdsa":
-		flags.keyType = certificate.KeyTypeECDSA
+		kt := certificate.KeyTypeECDSA
+		flags.keyType = &kt
 	case "":
 	default:
 		return fmt.Errorf("unknown key type: %s", flags.keyTypeString)

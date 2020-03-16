@@ -704,6 +704,10 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 			return "", fmt.Errorf("can't clean SANs values for certificate on server side: %v", err)
 		}
 	}
+	err = c.prepareRenewalRequest(renewReq)
+	if err != nil {
+		return "", err
+	}
 	var r = certificateRenewRequest{}
 	r.CertificateDN = renewReq.CertificateDN
 	if renewReq.CertificateRequest != nil && len(renewReq.CertificateRequest.GetCSR()) != 0 {
