@@ -85,9 +85,14 @@ func LoadConfigFromFile(path, section string) (cfg Config, err error) {
 	var connectorType endpoint.ConnectorType
 	var baseUrl string
 	var auth = &endpoint.Authentication{}
-	if m.has("tpp_url") {
+	if m.has("tpp_user") || m.has("access_token") {
 		connectorType = endpoint.ConnectorTypeTPP
-		baseUrl = m["tpp_url"]
+		if m["tpp_url"] != "" {
+			baseUrl = m["tpp_url"]
+		} else if m["url"] != "" {
+			baseUrl = m["url"]
+		}
+		auth.AccessToken = m["access_token"]
 		auth.User = m["tpp_user"]
 		auth.Password = m["tpp_password"]
 		if m.has("tpp_zone") {
@@ -98,8 +103,10 @@ func LoadConfigFromFile(path, section string) (cfg Config, err error) {
 		}
 	} else if m.has("cloud_apikey") {
 		connectorType = endpoint.ConnectorTypeCloud
-		if m.has("cloud_url") {
+		if m["cloud_url"] != "" {
 			baseUrl = m["cloud_url"]
+		} else if m["url"] != "" {
+			baseUrl = m["url"]
 		}
 		auth.APIKey = m["cloud_apikey"]
 		if m.has("cloud_zone") {
@@ -161,6 +168,8 @@ func (d set) has(key string) bool {
 
 func validateSection(s *ini.Section) error {
 	var TPPValidKeys set = map[string]bool{
+		"url":          true,
+		"access_token": true,
 		"tpp_url":      true,
 		"tpp_user":     true,
 		"tpp_password": true,
@@ -168,6 +177,7 @@ func validateSection(s *ini.Section) error {
 		"trust_bundle": true,
 	}
 	var CloudValidKeys set = map[string]bool{
+		"url":          true,
 		"trust_bundle": true,
 		"cloud_url":    true,
 		"cloud_apikey": true,
@@ -177,17 +187,23 @@ func validateSection(s *ini.Section) error {
 	log.Printf("Validating configuration section %s", s.Name())
 	var m dict = s.KeysHash()
 
-	if m.has("tpp_url") {
+	if m.has("access_token") && m.has("cloud_apikey") {
+		return fmt.Errorf("configuration issue in section %s: could not set both TPP token and cloud api key", s.Name())
+	}
+	if m.has("tpp_user") || m.has("access_token") || m.has("tpp_password") {
 		// looks like TPP config section
 		for k := range m {
 			if !TPPValidKeys.has(k) {
 				return fmt.Errorf("illegal key '%s' in TPP section %s", k, s.Name())
 			}
 		}
-		if !m.has("tpp_user") {
+		if m.has("tpp_user") && m.has("access_token") {
+			return fmt.Errorf("configuration issue in section %s: could not have both TPP user and access token", s.Name())
+		}
+		if !m.has("tpp_user") && !m.has("access_token") {
 			return fmt.Errorf("configuration issue in section %s: missing TPP user", s.Name())
 		}
-		if !m.has("tpp_password") {
+		if !m.has("tpp_password") && !m.has("access_token") {
 			return fmt.Errorf("configuration issue in section %s: missing TPP password", s.Name())
 		}
 	} else if m.has("cloud_apikey") {
@@ -199,6 +215,9 @@ func validateSection(s *ini.Section) error {
 		}
 	} else if m.has("test_mode") {
 		// it's ok
+
+	} else if m.has("url") {
+		return fmt.Errorf("could not determine connection endpoint with only url information in section %s", s.Name())
 	} else {
 		return fmt.Errorf("section %s looks empty", s.Name())
 	}

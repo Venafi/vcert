@@ -33,6 +33,17 @@ import (
 	"github.com/Venafi/vcert/pkg/endpoint"
 )
 
+func parseCustomField(s string) (key, value string, err error) {
+	sl := strings.Split(s, "=")
+	if len(sl) < 2 {
+		err = fmt.Errorf("custom field should have format key=value")
+		return
+	}
+	key = strings.TrimSpace(sl[0])
+	value = strings.TrimSpace(strings.Join(sl[1:], "="))
+	return
+}
+
 // fillCertificateRequest populates the certificate request payload with values from command flags
 func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certificate.Request {
 	if cf.caDN != "" {
@@ -68,6 +79,32 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 	if len(cf.emailSans) > 0 {
 		req.EmailAddresses = cf.emailSans
 	}
+	req.OmitSANs = cf.omitSans
+	for _, f := range cf.customFields {
+		k, v, err := parseCustomField(f)
+		if err != nil {
+			logger.Panic(err)
+		}
+		req.CustomFields = append(req.CustomFields, certificate.CustomField{Name: k, Value: v})
+	}
+
+	if len(cf.instance) > 0 {
+		req.Location = &certificate.Location{}
+		instance := strings.Split(cf.instance, ":")
+		req.Location.Instance = instance[0]
+		if len(instance) > 1 {
+			req.Location.Workload = instance[1]
+		}
+
+		req.Location.TLSAddress = cf.tlsAddress
+		req.Location.Replace = cf.replaceInstance
+	}
+
+	origin := OriginName
+	if len(cf.appInfo) > 0 {
+		origin = cf.appInfo
+	}
+	req.CustomFields = append(req.CustomFields, certificate.CustomField{Name: "Origin", Value: origin, Type: certificate.CustomFieldOrigin})
 
 	switch true {
 	case 0 == strings.Index(cf.csrOption, "file:"):
@@ -244,4 +281,14 @@ func doValuesMatch(value1 []byte, value2 []byte) bool {
 func isValidEmailAddress(email string) bool {
 	reg := regexp.MustCompile(emailRegex)
 	return reg.FindStringIndex(email) != nil
+}
+
+func sliceContains(slice []string, item string) bool {
+	set := make(map[string]struct{}, len(slice))
+	for _, s := range slice {
+		set[s] = struct{}{}
+	}
+
+	_, ok := set[item]
+	return ok
 }

@@ -65,7 +65,7 @@ func TestWriteOutKeyAndCsr(t *testing.T) {
 }
 
 func getCommandFlags() *commandFlags {
-	cf := genCsrParams
+	cf := flags
 
 	cf.commonName = "vcert.test.vfidev.com"
 	cf.org = "Venafi"

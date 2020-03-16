@@ -25,6 +25,8 @@ import (
 	"github.com/Venafi/vcert"
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
+	"github.com/Venafi/vcert/pkg/venafi/tpp"
+	"io/ioutil"
 	t "log"
 	"math/big"
 	"net"
@@ -41,7 +43,7 @@ func main() {
 	var commonName = os.Args[1]
 
 	//
-	// 0. get client instance based on connection config
+	// 0. Get client instance based on connection config
 	//
 	config := tppConfig
 	//config := cloudConfig
@@ -52,7 +54,7 @@ func main() {
 	}
 
 	//
-	// 1.1. compose request object
+	// 1.1. Compose request object
 	//
 	//Not all Venafi Cloud providers support IPAddress and EmailAddresses extensions.
 	var enrollReq = &certificate.Request{}
@@ -67,7 +69,8 @@ func main() {
 				Province:           []string{"Salt Lake"},
 				Country:            []string{"US"},
 			},
-			DNSNames:       []string{"www.client.venafi.example.com", "ww1.client.venafi.example.com"},
+			DNSNames: []string{"www.client.venafi.example.com", "ww1.client.venafi.example.com"},
+
 			EmailAddresses: []string{"e1@venafi.example.com", "e2@venafi.example.com"},
 			IPAddresses:    []net.IP{net.IPv4(127, 0, 0, 1), net.IPv4(127, 0, 0, 2)},
 			CsrOrigin:      certificate.LocalGeneratedCSR,
@@ -75,6 +78,10 @@ func main() {
 			KeyLength:      2048,
 			ChainOption:    certificate.ChainOptionRootLast,
 			KeyPassword:    "newPassw0rd!",
+			//Before setting custom field in request you need to configure custom field on TPP
+			CustomFields: []certificate.CustomField{
+				{Name: "custom", Value: "2019-12-10"},
+			},
 		}
 	case config.ConnectorType == endpoint.ConnectorTypeCloud:
 		enrollReq = &certificate.Request{
@@ -97,7 +104,7 @@ func main() {
 	}
 
 	//
-	// 1.2. generate private key and certificate request (CSR) based on request's options
+	// 1.2. Generate private key and certificate request (CSR) based on request's options
 	//
 	err = c.GenerateRequest(nil, enrollReq)
 	if err != nil {
@@ -105,7 +112,7 @@ func main() {
 	}
 
 	//
-	// 1.3. submit certificate request, get request ID as a response
+	// 1.3. Submit certificate request, get request ID as a response
 	//
 	requestID, err := c.RequestCertificate(enrollReq)
 	if err != nil {
@@ -114,7 +121,7 @@ func main() {
 	t.Printf("Successfully submitted certificate request. Will pickup certificate by ID %s", requestID)
 
 	//
-	// 1.4. retrieve certificate using request ID obtained on previous step, get PEM collection as a response
+	// 1.4. Retrieve certificate using request ID obtained on previous step, get PEM collection as a response
 	//
 	pickupReq := &certificate.Request{
 		PickupID: requestID,
@@ -126,7 +133,7 @@ func main() {
 	}
 
 	//
-	// 1.5. (optional) add certificate's private key to PEM collection
+	// 1.5. (optional) Add certificate's private key to PEM collection
 	//
 	_ = pcc.AddPrivateKey(enrollReq.PrivateKey, []byte(enrollReq.KeyPassword))
 
@@ -134,7 +141,7 @@ func main() {
 	pp(pcc)
 
 	//
-	// 2.1. compose renewal object
+	// 2.1. Compose renewal object
 	//
 	renewReq := &certificate.RenewalRequest{
 		// certificate is identified using DN
@@ -145,7 +152,7 @@ func main() {
 	}
 
 	//
-	// 2.2. submit renewal request
+	// 2.2. Submit renewal request
 	//
 	newRequestID, err := c.RenewCertificate(renewReq)
 	if err != nil {
@@ -154,7 +161,7 @@ func main() {
 	t.Printf("Successfully submitted certificate renewal request. Will pickup certificate by ID %s", newRequestID)
 
 	//
-	// 2.3. retrieve certificate using request ID obtained on previous step, get PEM collection as a response
+	// 2.3. Retrieve certificate using request ID obtained on previous step, get PEM collection as a response
 	//
 	renewRetrieveReq := &certificate.Request{
 		PickupID: newRequestID,
@@ -170,7 +177,7 @@ func main() {
 	t.Printf("New serial number %s", getSerial(pcc2.Certificate))
 
 	//
-	// 3.1. compose revocation object
+	// 3.1. Compose revocation object
 	//
 	revokeReq := &certificate.RevocationRequest{
 		CertificateDN: requestID,
@@ -180,7 +187,7 @@ func main() {
 	}
 
 	//
-	// 3.2. submit revocation request (not supported in Venafi Cloud)
+	// 3.2. Submit revocation request (not supported in Venafi Cloud)
 	//
 	if config.ConnectorType != endpoint.ConnectorTypeCloud {
 		err = c.RevokeCertificate(revokeReq)
@@ -190,7 +197,7 @@ func main() {
 		t.Printf("Successfully submitted revocation request for %s", requestID)
 	}
 	//
-	// 2. Import certificate to another object of the same Zone
+	// 4. Import certificate to another object of the same Zone
 	//
 	var importReq = &certificate.ImportRequest{}
 	switch {
@@ -223,7 +230,7 @@ func main() {
 	t.Printf("Successfully imported certificate to %s", importResp.CertificateDN)
 
 	//
-	// 3. retrieve certificate & key from new object
+	// 5. Retrieve certificate & key from new object
 	//
 	var importedRetriveReq = &certificate.Request{}
 	switch {
@@ -250,6 +257,62 @@ func main() {
 	}
 	t.Printf("Successfully retrieved imported certificate from %s", importResp.CertificateDN)
 	pp(pcc3)
+
+	//
+	// 6. Get refresh token and refresh access token
+	//
+	if config.ConnectorType == endpoint.ConnectorTypeTPP {
+		var connectionTrustBundle *x509.CertPool
+		trustBundleFilePath := os.Getenv("VCERT_TRUST_BUNDLE_PATH")
+		if trustBundleFilePath != "" {
+			buf, err := ioutil.ReadFile(trustBundleFilePath)
+			if err != nil {
+				panic(err)
+			}
+			connectionTrustBundle = x509.NewCertPool()
+			if !connectionTrustBundle.AppendCertsFromPEM(buf) {
+				panic("Failed to parse PEM trust bundle")
+			}
+		}
+		tppConnector, err := tpp.NewConnector(config.BaseUrl, "", false, connectionTrustBundle)
+		if err != nil {
+			t.Fatalf("could not create TPP connector: %s", err)
+		}
+
+		resp, err := tppConnector.GetRefreshToken(&endpoint.Authentication{
+			User:     os.Getenv("VCERT_TPP_USER"),
+			Password: os.Getenv("VCERT_TPP_PASSWORD"),
+			Scope:    "certificate:manage,revoke;", ClientId: "websdk"})
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("Refresh token is %s", resp.Refresh_token)
+
+		auth := &endpoint.Authentication{RefreshToken: resp.Refresh_token, ClientId: "websdk"}
+		err = tppConnector.Authenticate(auth)
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+
+	}
+
+	//
+	// 7. Audit certificates list in zone
+	//
+
+	_l := 10
+	certList, err := c.ListCertificates(endpoint.Filter{Limit: &_l})
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println("ID             Common Name              Expire")
+	for _, cert := range certList {
+		validTo := cert.ValidTo.String()
+		if cert.ValidTo.Before(time.Now()) {
+			validTo = fmt.Sprintf("\033[1;31m%s\033[0m", validTo)
+		}
+		fmt.Printf("%v    %v     %v\n", cert.ID, cert.CN, validTo)
+	}
 }
 
 func getSerial(crt string) *big.Int {
@@ -267,10 +330,7 @@ func getSerial(crt string) *big.Int {
 func calcThumbprint(cert string) string {
 	p, _ := pem.Decode([]byte(cert))
 	h := sha1.New()
-	_, err := h.Write(p.Bytes)
-	if err != nil {
-		return fmt.Sprintf("Can't write: %s", err.Error())
-	}
+	h.Write(p.Bytes)
 	buf := h.Sum(nil)
 	return strings.ToUpper(fmt.Sprintf("%x", buf))
 }

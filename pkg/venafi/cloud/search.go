@@ -19,7 +19,9 @@ package cloud
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Venafi/vcert/pkg/certificate"
 	"net/http"
+	"time"
 )
 
 type SearchRequest struct {
@@ -31,6 +33,7 @@ type SearchRequest struct {
 }
 
 type Expression struct {
+	Operator Operator  `json:"operator,omitempty"`
 	Operands []Operand `json:"operands,omitempty"`
 }
 
@@ -57,19 +60,56 @@ const (
 	LT    Operator = "LT"
 	LTE   Operator = "LTE"
 	MATCH Operator = "MATCH"
+	AND   Operator = "AND"
 )
 
 type CertificateSearchResponse struct {
 	Count        int           `json:"count"`
-	Certificates []Certificate `json:"certificates"`
+	Certificates []Certificate `json:"managedCertificates"`
 }
 
 type Certificate struct {
-	Id                   string   `json:"id"`
-	ManagedCertificateId string   `json:"managedCertificateId"`
-	CertificateRequestId string   `json:"certificateRequestId"`
-	SubjectCN            []string `json:"subjectCN"`
-	/* ... and many more fields ... */
+	Id                     string `json:"id"`
+	CurrentCertificateData struct {
+		ID                            string
+		ManagedCertificateId          string              `json:"managedCertificateId"`
+		CertificateRequestId          string              `json:"certificateRequestId"`
+		SubjectCN                     []string            `json:"subjectCN"`
+		SubjectAlternativeNamesByType map[string][]string `json:"subjectAlternativeNamesByType"`
+		SerialNumber                  string              `json:"serialNumber"`
+		Fingerprint                   string              `json:"fingerprint"`
+		ValidityStart                 string              `json:"validityStart"`
+		ValidityEnd                   string              `json:"validityEnd"`
+		/* ... and many more fields ... */
+	} `json:"currentCertificateData"`
+}
+
+func (c Certificate) ToCertificateInfo() certificate.CertificateInfo {
+	d := c.CurrentCertificateData
+	var cn string
+	if len(d.SubjectCN) > 0 {
+		cn = d.SubjectCN[0]
+	}
+	start, _ := time.Parse("2006-01-02T15:04:05-0700", d.ValidityStart)
+	end, _ := time.Parse("2006-01-02T15:04:05-0700", d.ValidityEnd)
+	ci := certificate.CertificateInfo{
+		ID: c.Id,
+		CN: cn,
+		SANS: struct {
+			DNS, Email, IP, URI, UPN []string
+		}{
+			d.SubjectAlternativeNamesByType["dNSName"],
+			d.SubjectAlternativeNamesByType["rfc822Name"],
+			d.SubjectAlternativeNamesByType["iPAddress"],
+			d.SubjectAlternativeNamesByType["uniformResourceIdentifier"],
+			[]string{}, // todo: find correct field
+		},
+		Serial:     d.SerialNumber,
+		Thumbprint: d.Fingerprint,
+		ValidFrom:  start,
+		ValidTo:    end,
+	}
+	return ci
 }
 
 func ParseCertificateSearchResponse(httpStatusCode int, body []byte) (searchResult *CertificateSearchResponse, err error) {

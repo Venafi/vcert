@@ -17,210 +17,79 @@
 package main
 
 import (
-	"flag"
-	"fmt"
-	"io/ioutil"
-	"os"
-	"strings"
-
 	"github.com/Venafi/vcert/pkg/certificate"
 )
 
-type command int
-
 const (
-	commandUnused command = iota
-	commandGenCSR
-	commandEnroll
-	commandPickup
-	commandRevoke
-	commandRenew
+	commandGenCSRName  = "gencsr"
+	commandEnrollName  = "enroll"
+	commandPickupName  = "pickup"
+	commandRevokeName  = "revoke"
+	commandRenewName   = "renew"
+	commandGetcredName = "getcred"
 )
 
 var (
-	genCsrFlags  = flag.NewFlagSet("gencsr", flag.PanicOnError)
-	genCsrParams commandFlags
-
-	enrollFlags  = flag.NewFlagSet("enroll", flag.PanicOnError)
-	enrollParams commandFlags
-
-	pickupFlags = flag.NewFlagSet("pickup", flag.PanicOnError)
-	pickParams  commandFlags
-
-	revokeFlags  = flag.NewFlagSet("revoke", flag.PanicOnError)
-	revokeParams commandFlags
-
-	renewFlags  = flag.NewFlagSet("renew", flag.PanicOnError)
-	renewParams commandFlags
+	flags commandFlags
 )
 
 type commandFlags struct {
-	verbose            bool
-	tppURL             string
-	tppUser            string
-	tppPassword        string
 	apiKey             string
-	cloudURL           string
-	zone               string
+	appInfo            string
 	caDN               string
-	csrOption          string
-	keyType            certificate.KeyType
-	keySize            int
-	keyCurve           certificate.EllipticCurve
-	keyPassword        string
-	friendlyName       string
-	commonName         string
-	distinguishedName  string
-	thumbprint         string
-	org                string
-	country            string
-	state              string
-	locality           string
-	orgUnits           stringSlice
-	dnsSans            stringSlice
-	ipSans             ipSlice
-	emailSans          emailSlice
-	format             string
-	file               string
-	keyFile            string
-	csrFile            string
 	certFile           string
 	chainFile          string
 	chainOption        string
-	noPrompt           bool
-	pickupID           string
-	trustBundle        string
-	noPickup           bool
-	testMode           bool
-	testModeDelay      int
-	revocationReason   string
-	revocationNoRetire bool
-	pickupIDFile       string
-	timeout            int
-	insecure           bool
-	config             string
-	profile            string
+	clientId           string
 	clientP12          string
 	clientP12PW        string
-}
-
-func createFromCommandFlags(co command) *commandFlags {
-	var f commandFlags
-
-	switch co {
-	case commandGenCSR:
-		f = genCsrParams
-	case commandEnroll:
-		f = enrollParams
-	case commandPickup:
-		f = pickParams
-	case commandRevoke:
-		f = revokeParams
-	case commandRenew:
-		f = renewParams
-	}
-
-	return &f
-}
-
-func validateFlags(c command) error {
-	switch c {
-	case commandGenCSR:
-		return validateGenerateFlags()
-	case commandEnroll:
-		return validateEnrollmentFlags()
-	case commandPickup:
-		return validatePickupFlags()
-	case commandRevoke:
-		return validateRevokeFlags()
-	case commandRenew:
-		return validateRenewFlags()
-	}
-
-	return nil
-}
-
-func parseArgs() (co command, cf *commandFlags, err error) {
-	if len(os.Args) <= 1 {
-		showvcertUsage()
-		exit(0)
-	}
-
-	switch strings.ToLower(os.Args[1]) {
-	case "gencsr":
-		co = commandGenCSR
-		err = genCsrFlags.Parse(os.Args[2:])
-		if err != nil {
-			logger.Panicf("%s", err)
-		}
-	case "enroll":
-		co = commandEnroll
-		err = enrollFlags.Parse(os.Args[2:])
-		if err != nil {
-			fmt.Printf("%s", err)
-			logger.Panicf("%s", err)
-		}
-	case "pickup":
-		co = commandPickup
-		err = pickupFlags.Parse(os.Args[2:])
-		if err != nil {
-			logger.Panicf("%s", err)
-		}
-	case "revoke":
-		co = commandRevoke
-		err = revokeFlags.Parse(os.Args[2:])
-		if err != nil {
-			logger.Panicf("%s", err)
-		}
-	case "renew":
-		co = commandRenew
-		err = renewFlags.Parse(os.Args[2:])
-		if err != nil {
-			logger.Panicf("%s", err)
-		}
-	case "-v", "--v", "-version", "version":
-		printVersion()
-		exit(0)
-
-	default:
-		showvcertUsage()
-		exit(0)
-	}
-
-	err = validateFlags(co)
-	if err != nil {
-		logger.Panicf("%s", err)
-	}
-	cf = createFromCommandFlags(co)
-
-	if 0 == strings.Index(cf.distinguishedName, "file:") {
-		fileName := cf.distinguishedName[5:]
-		bytes, err := ioutil.ReadFile(fileName)
-		if err != nil {
-			logger.Panicf("Failed to read Certificate DN: %s", err)
-		}
-		cf.distinguishedName = strings.TrimSpace(string(bytes))
-	}
-
-	if 0 == strings.Index(cf.thumbprint, "file:") {
-		certFileName := cf.thumbprint[5:]
-		cf.thumbprint, err = readThumbprintFromFile(certFileName)
-		if err != nil {
-			logger.Panicf("Failed to read certificate fingerprint: %s", err)
-		}
-	}
-
-	if cf.format != "" {
-		formats := map[string]bool{
-			"pem":    true,
-			"json":   true,
-			"pkcs12": true,
-		}
-
-		if _, ok := formats[cf.format]; !ok {
-			logger.Panicf("Unexpected output format: %s", cf.format)
-		}
-	}
-
-	return co, cf, nil
+	cloudURL           string //deprecated
+	commonName         string
+	config             string
+	country            string
+	csrFile            string
+	csrOption          string
+	customFields       []string
+	distinguishedName  string
+	dnsSans            stringSlice
+	emailSans          emailSlice
+	file               string
+	format             string
+	friendlyName       string
+	insecure           bool
+	instance           string
+	ipSans             ipSlice
+	keyCurve           certificate.EllipticCurve
+	keyCurveString     string
+	keyFile            string
+	keyPassword        string
+	keySize            int
+	keyType            certificate.KeyType
+	keyTypeString      string
+	locality           string
+	noPickup           bool
+	noPrompt           bool
+	org                string
+	orgUnits           stringSlice
+	pickupID           string
+	pickupIDFile       string
+	profile            string
+	replaceInstance    bool
+	revocationNoRetire bool
+	revocationReason   string
+	scope              string
+	state              string
+	testMode           bool
+	testModeDelay      int
+	thumbprint         string
+	timeout            int
+	tlsAddress         string
+	tppPassword        string
+	tppToken           string
+	tppUser            string
+	trustBundle        string
+	url                string
+	verbose            bool
+	zone               string
+	omitSans           bool
 }

@@ -14,6 +14,7 @@ get: gofmt
 
 build_quick: get
 	env GOOS=linux   GOARCH=amd64 go build $(GO_LDFLAGS) -o bin/linux/vcert         ./cmd/vcert
+	cp bin/linux/vcert aruba/bin/vcert
 
 build: get
 	env GOOS=linux   GOARCH=amd64 go build $(GO_LDFLAGS) -o bin/linux/vcert         ./cmd/vcert
@@ -41,21 +42,13 @@ test: get
 	go test -v -cover ./pkg/certificate
 	go test -v -cover ./pkg/endpoint
 	go test -v -cover ./pkg/venafi/fake
-	go test -v -cover ./cmd/vcert/output
 	go test -v -cover ./cmd/vcert
 
 tpp_test: get
-	go test -v $(GOFLAGS) ./pkg/venafi/tpp     \
-		-tpp-url       "${VCERT_TPP_URL}"      \
-		-tpp-user      "${VCERT_TPP_USER}"     \
-		-tpp-password  "${VCERT_TPP_PASSWORD}" \
-		-tpp-zone      "${VCERT_TPP_ZONE}"
+	go test -v $(GOFLAGS) ./pkg/venafi/tpp
 
 cloud_test: get
-	go test -v $(GOFLAGS) ./pkg/venafi/cloud   \
-		-cloud-url     "${VCERT_CLOUD_URL}"    \
-		-cloud-api-key "${VCERT_CLOUD_APIKEY}" \
-		-cloud-zone    "${VCERT_CLOUD_ZONE}"
+	go test -v $(GOFLAGS) ./pkg/venafi/cloud
 
 ifdef BUILD_NUMBER
 VERSION=`git describe --abbrev=0 --tags`+$(BUILD_NUMBER)

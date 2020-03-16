@@ -5,6 +5,7 @@ Feature: Enrolling certificates with -config option
   Background:
     Given the default aruba exit timeout is 180 seconds
     And I have file named "tpp.ini" with TPP connection details
+    And I have file named "tpp-deprecated.ini" with TPPdeprecated connection details
     And I have file named "test.ini" with test-mode connection details
     And I have file named "cloud.ini" with Cloud connection details
 
@@ -16,3 +17,4 @@ Feature: Enrolling certificates with -config option
       | test.ini    |
       | tpp.ini     |
       | cloud.ini   |
+      |tpp-deprecated.ini|

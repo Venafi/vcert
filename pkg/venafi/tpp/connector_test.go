@@ -20,31 +20,48 @@ import (
 	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
+	"crypto/x509/pkix"
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/pkg/certificate"
-	"github.com/Venafi/vcert/pkg/endpoint"
-	"github.com/Venafi/vcert/test"
 	"net/http"
+	"net/url"
 	"os"
 	"reflect"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/Venafi/vcert/pkg/certificate"
+	"github.com/Venafi/vcert/pkg/endpoint"
+	"github.com/Venafi/vcert/test"
 )
 
 var ctx *test.Context
 
 func init() {
-	ctx = test.GetContext()
-	//ctx = test.GetEnvContext()
+	ctx = test.GetEnvContext()
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	if ctx.TPPurl == "" {
 		fmt.Println("TPP URL cannot be empty. See Makefile")
 		os.Exit(1)
 	}
+
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		panic(err)
+	}
+
+	resp, err := tpp.GetRefreshToken(&endpoint.Authentication{
+		User: ctx.TPPuser, Password: ctx.TPPPassword,
+		Scope: "certificate:discover,manage,revoke;configuration"})
+	if err != nil {
+		panic(err)
+	}
+
+	ctx.TPPRefreshToken = resp.Refresh_token
+	ctx.TPPaccessToken = resp.Access_token
 }
 
 func getTestConnector(url string, zone string) (c *Connector, err error) {
@@ -72,6 +89,150 @@ func TestBadPingTPP(t *testing.T) {
 	if err == nil {
 		t.Fatalf("err should not be nil, URL does not exist")
 	}
+}
+
+func TestGetRefreshToken(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, "")
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+
+	refreshToken, err := tpp.GetRefreshToken(&endpoint.Authentication{
+		User: ctx.TPPuser, Password: ctx.TPPPassword,
+		Scope: "certificate:discover,manage,revoke", ClientId: "vcert-sdk"})
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	err = tpp.Authenticate(&endpoint.Authentication{AccessToken: refreshToken.Access_token})
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	tpp.SetZone(ctx.TPPZone)
+	_, err = tpp.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+}
+
+func TestGetRefreshTokenWithDefaultScope(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+
+	refreshToken, err := tpp.GetRefreshToken(&endpoint.Authentication{
+		User: ctx.TPPuser, Password: ctx.TPPPassword})
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	if refreshToken.Scope != defaultScope {
+		t.Fatalf("Scope from refresh roken %s is not as default scope %s;", refreshToken.Scope, defaultScope)
+	}
+	err = tpp.Authenticate(&endpoint.Authentication{AccessToken: refreshToken.Access_token})
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	tpp.SetZone(ctx.TPPZone)
+	_, err = tpp.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+}
+
+func TestFailRefreshAccessToken(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+	auth := &endpoint.Authentication{RefreshToken: "WRONGREFRESHTOKEN", ClientId: ctx.ClientID}
+	err = tpp.Authenticate(auth)
+	if err == nil {
+		t.Fatalf("err should not be nil, er")
+	}
+
+	if !strings.Contains(err.Error(), "unexpected status code on TPP Authorize. Status: 400") {
+		t.Fatalf("error text should contain: 'unexpected status code on TPP Authorize. Status: 400'. but it is: '%s'", err)
+	}
+}
+
+func TestRefreshAccessToken(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, "")
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+
+	auth := &endpoint.Authentication{RefreshToken: ctx.TPPRefreshToken, ClientId: ctx.ClientID}
+	err = tpp.Authenticate(auth)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	tpp.SetZone(ctx.TPPZone)
+	_, err = tpp.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	//Uppdate refresh token for further tests
+	ctx.TPPRefreshToken = auth.RefreshToken
+
+}
+
+func TestRefreshAccessTokenNoClientID(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+	auth := &endpoint.Authentication{RefreshToken: ctx.TPPRefreshToken}
+	err = tpp.Authenticate(auth)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	tpp.SetZone(ctx.TPPZone)
+	_, err = tpp.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	//Update tokens for further tests
+	ctx.TPPRefreshToken = auth.RefreshToken
+	ctx.TPPaccessToken = tpp.accessToken
+
+}
+
+func TestAuthenticationAccessToken(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+
+	err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	tpp.SetZone(ctx.TPPZone)
+	_, err = tpp.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	err = tpp.Authenticate(&endpoint.Authentication{AccessToken: "WRONGm3XPAT5nlWxd3iA=="})
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	tpp.SetZone(ctx.TPPZone)
+	_, err = tpp.ReadZoneConfiguration()
+	if err == nil {
+		t.Fatalf("Auth with wrong token should fail")
+	}
+
 }
 
 func TestAuthorizeToTPP(t *testing.T) {
@@ -104,7 +265,7 @@ func TestReadConfigData(t *testing.T) {
 	}
 
 	if tpp.apiKey == "" {
-		err = tpp.Authenticate(&endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword})
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
 		if err != nil {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
@@ -122,7 +283,7 @@ func TestReadConfigData(t *testing.T) {
 			HashAlgorithm:         x509.SHA256WithRSA,
 			CustomAttributeValues: make(map[string]string),
 		}},
-		{getPolicyDN(os.Getenv("TPPZONE_RESTRICTED")), endpoint.ZoneConfiguration{
+		{getPolicyDN(ctx.TPPZoneRestricted), endpoint.ZoneConfiguration{
 			Organization:          "Venafi Inc.",
 			OrganizationalUnit:    []string{"Integration"},
 			Country:               "US",
@@ -135,6 +296,9 @@ func TestReadConfigData(t *testing.T) {
 	for _, c := range testCases {
 		tpp.SetZone(c.zone)
 		zoneConfig, err := tpp.ReadZoneConfiguration()
+		if err != nil {
+			t.Fatalf("%s", err)
+		}
 		zoneConfig.Policy = endpoint.Policy{}
 		if err != nil {
 			t.Fatalf("%s", err)
@@ -157,7 +321,7 @@ func TestBadReadConfigData(t *testing.T) {
 	}
 
 	if tpp.apiKey == "" {
-		err = tpp.Authenticate(&endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword})
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
 		if err != nil {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
@@ -168,7 +332,7 @@ func TestBadReadConfigData(t *testing.T) {
 	}
 }
 
-func TestRequestCertificate(t *testing.T) {
+func TestRequestCertificateUserPassword(t *testing.T) {
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
@@ -180,35 +344,82 @@ func TestRequestCertificate(t *testing.T) {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
 	}
+	DoRequestCertificate(t, tpp)
+}
+
+func TestRequestCertificateToken(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+	DoRequestCertificate(t, tpp)
+}
+
+func DoRequestCertificate(t *testing.T, tpp *Connector) {
 	config, err := tpp.ReadZoneConfiguration()
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
 
 	cn := test.RandCN()
-	req := &certificate.Request{}
+	req := &certificate.Request{Timeout: time.Second * 30}
 	req.Subject.CommonName = cn
 	req.Subject.Organization = []string{"Venafi, Inc."}
 	req.Subject.OrganizationalUnit = []string{"Automated Tests"}
 	req.Subject.Locality = []string{"Las Vegas"}
 	req.Subject.Province = []string{"Nevada"}
 	req.Subject.Country = []string{"US"}
+	u := url.URL{Scheme: "https", Host: "example.com", Path: "/test"}
+	req.URIs = []*url.URL{&u}
 	req.FriendlyName = cn
+	req.CustomFields = []certificate.CustomField{
+		{Name: "custom", Value: "2019-10-10"},
+	}
 	err = tpp.GenerateRequest(config, req)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
 
 	t.Logf("getPolicyDN(ctx.TPPZone) = %s", getPolicyDN(ctx.TPPZone))
-	_, err = tpp.RequestCertificate(req)
+	req.PickupID, err = tpp.RequestCertificate(req)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
+	}
+	certCollections, err := tpp.RetrieveCertificate(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	p, _ := pem.Decode([]byte(certCollections.Certificate))
+	cert, err := x509.ParseCertificate(p.Bytes)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+	if cert.Subject.CommonName != cn {
+		t.Fatalf("mismatched common names: %v and %v", cn, cert.Subject.CommonName)
+	}
+	if cert.URIs[0].String() != u.String() {
+		t.Fatalf("mismatched URIs: %v and %v", u.String(), cert.URIs[0].String())
 	}
 }
 
 func TestRequestCertificateServiceGenerated(t *testing.T) {
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
-	tpp.Authenticate(&endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword})
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+
+	err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
 	config, err := tpp.ReadZoneConfiguration()
 	if err != nil {
 		t.Fatal("failed to read zone configuration")
@@ -229,7 +440,6 @@ func TestRequestCertificateServiceGenerated(t *testing.T) {
 	req.CsrOrigin = certificate.ServiceGeneratedCSR
 	req.FetchPrivateKey = true
 	req.KeyPassword = "newPassw0rd!"
-
 	config.UpdateCertificateRequest(req)
 
 	pickupId, err := tpp.RequestCertificate(req)
@@ -265,7 +475,7 @@ func TestRetrieveNonIssuedCertificate(t *testing.T) {
 	}
 
 	if tpp.apiKey == "" {
-		err = tpp.Authenticate(&endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword})
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
 		if err != nil {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
@@ -311,7 +521,7 @@ func TestRevokeCertificate(t *testing.T) {
 	}
 
 	if tpp.apiKey == "" {
-		err = tpp.Authenticate(&endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword})
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
 		if err != nil {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
@@ -374,7 +584,7 @@ func TestRevokeNonIssuedCertificate(t *testing.T) {
 	}
 
 	if tpp.apiKey == "" {
-		err = tpp.Authenticate(&endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword})
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
 		if err != nil {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
@@ -397,7 +607,7 @@ func TestRevokeAndDisableCertificate(t *testing.T) {
 	}
 
 	if tpp.apiKey == "" {
-		err = tpp.Authenticate(&endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword})
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
 		if err != nil {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
@@ -471,7 +681,7 @@ func TestRenewCertificate(t *testing.T) {
 	}
 
 	if tpp.apiKey == "" {
-		err = tpp.Authenticate(&endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword})
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
 		if err != nil {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
@@ -617,19 +827,18 @@ func TestImportCertificate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
-	err = tpp.Authenticate(&endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword})
+	err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
 
 	importReq := &certificate.ImportRequest{
 		// PolicyDN should be like "\\VED\\Policy\\devops\\vcert", or empty (c.zone is used then)
-		PolicyDN:             getPolicyDN(ctx.TPPZone),
-		ObjectName:           "import.venafi.example.com",
-		CertificateData:      crt,
-		PrivateKeyData:       pk,
-		Reconcile:            false,
-		CASpecificAttributes: map[string]string{"a": "42"},
+		PolicyDN:        getPolicyDN(ctx.TPPZone),
+		ObjectName:      "import12348.venafi.example.com",
+		CertificateData: crt,
+		PrivateKeyData:  pk,
+		Reconcile:       false,
 	}
 
 	pp(importReq)
@@ -650,7 +859,7 @@ func TestReadPolicyConfiguration(t *testing.T) {
 	}
 
 	if tpp.apiKey == "" {
-		err = tpp.Authenticate(&endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword})
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
 		if err != nil {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
@@ -660,7 +869,7 @@ func TestReadPolicyConfiguration(t *testing.T) {
 		policy endpoint.Policy
 	}{
 		{
-			"devops\\vcert",
+			"devops\\vcert", // todo: replace with env variable
 			endpoint.Policy{
 				[]string{".*"},
 				[]string{".*"},
@@ -684,14 +893,14 @@ func TestReadPolicyConfiguration(t *testing.T) {
 		{
 			os.Getenv("TPPZONE_RESTRICTED"),
 			endpoint.Policy{
-				[]string{`^[\p{L}\p{N}-*]+\.vfidev\.com$`, `^[\p{L}\p{N}-*]+\.vfidev\.net$`, `^[\p{L}\p{N}-*]+\.vfide\.org$`},
+				[]string{`^([\p{L}\p{N}-*]+\.)*vfidev\.com$`, `^([\p{L}\p{N}-*]+\.)*vfidev\.net$`, `^([\p{L}\p{N}-*]+\.)*vfide\.org$`},
 				[]string{`^Venafi Inc\.$`},
 				[]string{"^Integration$"},
 				[]string{"^Utah$"},
 				[]string{"^Salt Lake$"},
 				[]string{"^US$"},
 				[]endpoint.AllowedKeyConfiguration{{certificate.KeyTypeRSA, []int{2048, 4096, 8192}, nil}},
-				[]string{`^[\p{L}\p{N}-]+\.vfidev\.com$`, `^[\p{L}\p{N}-]+\.vfidev\.net$`, `^[\p{L}\p{N}-]+\.vfide\.org$`},
+				[]string{`^([\p{L}\p{N}-*]+\.)*vfidev\.com$`, `^([\p{L}\p{N}-*]+\.)*vfidev\.net$`, `^([\p{L}\p{N}-*]+\.)*vfide\.org$`},
 				[]string{".*"},
 				[]string{".*"},
 				[]string{".*"},
@@ -748,7 +957,7 @@ func Test_EnrollDoesntChange(t *testing.T) {
 	}
 
 	if tpp.apiKey == "" {
-		err = tpp.Authenticate(&endpoint.Authentication{User: ctx.TPPuser, Password: ctx.TPPPassword})
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
 		if err != nil {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
@@ -879,5 +1088,301 @@ func TestGetURL(t *testing.T) {
 	url, err = tpp.getURL(urlResourceAuthorize)
 	if err == nil {
 		t.Fatalf("Get URL did not return an error when the base url had not been set.")
+	}
+}
+
+func Test_GetCertificateList(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+	for _, count := range []int{10, 100, 101, 153, 200, 2000} {
+		l, err := tpp.ListCertificates(endpoint.Filter{Limit: &count})
+		if err != nil {
+			t.Fatal(err)
+		}
+		set := make(map[string]struct{})
+		for _, c := range l {
+			set[c.Thumbprint] = struct{}{}
+			if c.ValidTo.Before(time.Now()) {
+				t.Errorf("cert %s is expired: %v", c.Thumbprint, c.ValidTo)
+			}
+		}
+		if len(set) != count {
+			t.Errorf("mismatched certificates number: wait %d, got %d", count, len(set))
+		}
+	}
+}
+
+func Test_GetCertificateListFull(t *testing.T) {
+	const certPem = `-----BEGIN CERTIFICATE-----
+MIICZjCCAcegAwIBAgIIe1Dq0CjsAx8wCgYIKoZIzj0EAwQwEjEQMA4GA1UEAxMH
+VGVzdCBDQTAeFw0xOTExMjAxNDU3MDBaFw0xOTExMjYxNDUwMDBaMHoxCzAJBgNV
+BAYTAlVTMQ0wCwYDVQQIEwRVdGFoMRIwEAYDVQQHEwlTYWx0IExha2UxFDASBgNV
+BAoTC1ZlYW5maSBJbmMuMRQwEgYDVQQLEwtJbnRlZ3JhdGlvbjEcMBoGA1UEAxMT
+ZXhwaXJlZDEudmZpZGV2LmNvbTCBmzAQBgcqhkjOPQIBBgUrgQQAIwOBhgAEAWNR
+bh7m40QpJAMV9DQMFQA6ZwIwQpBZp470b4pWt5Ih+64oLHMgwDTOkjv701hCYWK0
+BdxNXYCpEGvnA3BahHprAaQHsDWxHygKJdtNeGW8ein7hN1CdMtm72aFp5DHI82U
+jDWQHczRatUpOEdzjB+9JwYtI1BIFTVA8xvpRrQwEqwio1wwWjAMBgNVHRMBAf8E
+AjAAMB0GA1UdDgQWBBSgTpxmCxUnyqB/xpXevPcQklFtxDALBgNVHQ8EBAMCBeAw
+HgYDVR0RBBcwFYITZXhwaXJlZDEudmZpZGV2LmNvbTAKBggqhkjOPQQDBAOBjAAw
+gYgCQgFrpA/sLEzrWumVicNJGLHFK2FhhMxOxOeC1Fk3HTJDiMfxHMe1QBP++wLp
+vOjeQhOnqrPdQINzUCKMSuqxqFGbQAJCAZs3Be1Pz6eeKHNLzr7mYQ2/pWSjfun4
+45nAry0Rb308mXI49fEprVJDQ0zyb3gM8Z8OA0wDyaQ+pcwloQkvOAM2
+-----END CERTIFICATE-----
+`
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZoneRestricted)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+	importReq := certificate.ImportRequest{CertificateData: certPem}
+	_, err = tpp.ImportCertificate(&importReq)
+	if err != nil {
+		t.Fatal(err)
+	}
+	validList, err := tpp.ListCertificates(endpoint.Filter{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	fullList, err := tpp.ListCertificates(endpoint.Filter{WithExpired: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(validList) >= len(fullList) {
+		t.Fatalf("valid certificates numbe (%v) should be less than all certificates number (%v)", len(validList), len(fullList))
+	}
+	req := certificate.Request{Subject: pkix.Name{CommonName: fmt.Sprintf("test%d%d.vfidev.com", time.Now().Unix(), time.Now().Nanosecond())}, KeyType: certificate.KeyTypeRSA, KeyLength: 2048}
+
+	err = tpp.GenerateRequest(nil, &req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.PickupID, err = tpp.RequestCertificate(&req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	time.Sleep(time.Second * 10) //todo: remove after fix bug VEN-54714
+	validList2, err := tpp.ListCertificates(endpoint.Filter{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	fullList2, err := tpp.ListCertificates(endpoint.Filter{WithExpired: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(fullList)+1 != len(fullList2) {
+		t.Fatal("list should be longer")
+	}
+
+	if len(validList)+1 != len(validList2) {
+		t.Fatal("list should be longer")
+	}
+
+}
+
+func TestEnrollWithLocation(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+
+	tpp.verbose = true
+
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+
+	cn := test.RandCN()
+	zoneConfig, err := tpp.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	workload := fmt.Sprintf("workload-%v", time.Now().Unix())
+
+	req := certificate.Request{}
+	req.Subject.CommonName = cn
+	req.Timeout = time.Second * 10
+	req.Location = &certificate.Location{
+		Instance:   "instance",
+		Workload:   workload,
+		TLSAddress: "example.com:443",
+	}
+
+	err = tpp.GenerateRequest(zoneConfig, &req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = tpp.RequestCertificate(&req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req = certificate.Request{}
+	req.Subject.CommonName = cn
+	req.Timeout = time.Second * 10
+	req.Location = &certificate.Location{
+		Instance:   "instance",
+		Workload:   workload,
+		TLSAddress: "example.com:443",
+	}
+
+	err = tpp.GenerateRequest(zoneConfig, &req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = tpp.RequestCertificate(&req)
+	if err == nil {
+		t.Fatal("Should fail with devices conflict")
+	}
+	req = certificate.Request{}
+	req.Subject.CommonName = cn
+	req.Timeout = time.Second * 10
+	req.Location = &certificate.Location{
+		Instance:   "instance",
+		Workload:   workload,
+		TLSAddress: "example.com:443",
+		Replace:    true,
+	}
+
+	err = tpp.GenerateRequest(zoneConfig, &req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = tpp.RequestCertificate(&req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	//request same certificate with different workload but without replace
+	req.Location = &certificate.Location{
+		Instance:   "instance",
+		Workload:   workload + "-1",
+		TLSAddress: "example.com:443",
+		Replace:    false,
+	}
+
+	err = tpp.GenerateRequest(zoneConfig, &req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = tpp.RequestCertificate(&req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	//request same certificate with same workload and without replace
+	req.Location = &certificate.Location{
+		Instance:   "instance",
+		Workload:   workload + "-1",
+		TLSAddress: "example.com:443",
+		Replace:    false,
+	}
+
+	err = tpp.GenerateRequest(zoneConfig, &req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = tpp.RequestCertificate(&req)
+	if err == nil {
+		t.Fatal("There should be a error if we're trying to set same device twice in location")
+	}
+	expected_message := "vcert error: your data contains problems: instance"
+	if !strings.Contains(err.Error(), expected_message) {
+		t.Fatalf("We should exit with error message '%s' if we're trying to set same device twice in location. But we vcert exited with error: %s", expected_message, err)
+	}
+
+	//TODO: test that only instance from parameters is dissociated
+	//TODO: test app info with different kind of strings ???
+	//TODO: Check origin using config/read post request example:
+	//{
+	//   "ObjectDN":"\\VED\\Policy\\devops\\vcert\\1582237636-pgqlx.venafi.example.com",
+	//   "AttributeName":"Origin"
+	//}
+}
+
+func TestOmitSans(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+	zone, err := tpp.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatal(err)
+	}
+	cn := test.RandCN()
+
+	req := certificate.Request{
+		Subject: pkix.Name{
+			CommonName: cn,
+		},
+		KeyLength: 2048,
+		DNSNames:  []string{"www." + cn, cn},
+		OmitSANs:  true,
+		CsrOrigin: certificate.ServiceGeneratedCSR,
+		Timeout:   30 * time.Second,
+	}
+
+	tppReq, err := prepareRequest(&req, tpp.zone)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(tppReq.SubjectAltNames) > 0 {
+		t.Fatal("certificate should have 0 SANs")
+	}
+
+	req = certificate.Request{
+		Subject: pkix.Name{
+			CommonName: cn,
+		},
+		KeyLength: 2048,
+		DNSNames:  []string{"www." + cn, cn},
+		OmitSANs:  true,
+		CsrOrigin: certificate.LocalGeneratedCSR,
+		Timeout:   30 * time.Second,
+	}
+	err = tpp.GenerateRequest(zone, &req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, _ := pem.Decode(req.GetCSR())
+	csr, err := x509.ParseCertificateRequest(b.Bytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(csr.DNSNames) > 0 {
+		t.Fatal("certificate should have 0 SANs")
+	}
+	_, err = tpp.RequestCertificate(&req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = tpp.RetrieveCertificate(&req)
+	if err != nil {
+		t.Fatal(err)
 	}
 }

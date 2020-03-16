@@ -35,10 +35,18 @@ When(/^I decode certificate from file "([^"]+)"$/) do |filename|
     And the exit status should be 0
   }
   @certificate_text = last_command_started.output.to_s
-
   m = last_command_started.output.match /^SHA1 Fingerprint=(\S+)$/
   if m
     @certificate_fingerprint = m[1]
+  else
+    @certificate_fingerprint = ""
+  end
+
+  m2 =  last_command_started.output.match /X509v3 Subject Alternative Name:\s+([^\n]+)\n/m
+  if m2
+    @certififcate_sans = m2[1].split
+  else
+    @certififcate_sans = []
   end
 end
 
@@ -113,7 +121,6 @@ When(/^"([^"]*)" should be PKCS#12 archive with password "([^"]*)"$/) do |filena
   steps %{
     Then I try to run `openssl pkcs12 -in "#{filename}" -passin pass:#{password} -noout`
     And the exit status should be 0
-    And the output should be 0 bytes long
   }
   # -nokeys           Don't output private keys
   # -nocerts          Don't output certificates
@@ -121,4 +128,19 @@ When(/^"([^"]*)" should be PKCS#12 archive with password "([^"]*)"$/) do |filena
   # -cacerts          Only output CA certificates
   # -noout            Don't output anything, just verify
   # -nodes            Don't encrypt private keys
+end
+
+When(/^"([^"]*)" should be RSA private key with password "([^"]*)"$/) do |filename, password|
+  steps %{
+    Then I try to run `openssl rsa -in "#{filename}" -passin pass:#{password} -noout`
+    And the exit status should be 0
+  }
+end
+
+
+When(/certificate in "([^"]*)" should have (\d+) DNS SANs/) do |filename, sans_number|
+  steps %{
+  Then I decode certificate from file "#{filename}"
+  }
+  expect(@certififcate_sans.length).to eq(sans_number.to_i)
 end

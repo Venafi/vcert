@@ -22,12 +22,14 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"github.com/Venafi/vcert/pkg/certificate"
+	"log"
 	"net/http"
 	"regexp"
 	"sort"
-
-	"github.com/Venafi/vcert/pkg/certificate"
 )
+
+const SDKName = "Venafi VCert-Go"
 
 // ConnectorType represents the available connectors
 type ConnectorType int
@@ -41,6 +43,10 @@ const (
 	// ConnectorTypeTPP represents the TPP connector type
 	ConnectorTypeTPP
 )
+
+func init() {
+	log.SetPrefix("vCert: ")
+}
 
 func (t ConnectorType) String() string {
 	switch t {
@@ -82,15 +88,28 @@ type Connector interface {
 	ImportCertificate(req *certificate.ImportRequest) (*certificate.ImportResponse, error)
 	// SetHTTPClient allows to set custom http.Client to this Connector.
 	SetHTTPClient(client *http.Client)
+	// ListCertificates
+	ListCertificates(filter Filter) ([]certificate.CertificateInfo, error)
+}
+
+type Filter struct {
+	Limit       *int
+	WithExpired bool
 }
 
 // Authentication provides a struct for authentication data. Either specify User and Password for Trust Platform or specify an APIKey for Cloud.
 type Authentication struct {
-	User     string
-	Password string
-	APIKey   string
+	User         string
+	Password     string
+	APIKey       string
+	RefreshToken string
+	Scope        string
+	ClientId     string
+	AccessToken  string
+	ClientPKCS12 bool
 }
 
+//todo: replace with verror
 // ErrRetrieveCertificateTimeout provides a common error structure for a timeout while retrieving a certificate
 type ErrRetrieveCertificateTimeout struct {
 	CertificateID string
@@ -100,6 +119,7 @@ func (err ErrRetrieveCertificateTimeout) Error() string {
 	return fmt.Sprintf("Operation timed out. You may try retrieving the certificate later using Pickup ID: %s", err.CertificateID)
 }
 
+//todo: replace with verror
 // ErrCertificatePending provides a common error structure for a timeout while retrieving a certificate
 type ErrCertificatePending struct {
 	CertificateID string
@@ -344,18 +364,17 @@ func curveInSlice(i certificate.EllipticCurve, s []certificate.EllipticCurve) bo
 	return false
 }
 
-func checkStringByRegexp(s string, regexs []string) (matched bool) {
-	var err error
+func checkStringByRegexp(s string, regexs []string) bool {
 	for _, r := range regexs {
-		matched, err = regexp.MatchString(r, s)
+		matched, err := regexp.MatchString(r, s)
 		if err == nil && matched {
 			return true
 		}
 	}
-	return
+	return false
 }
 
-func isComponentValid(ss []string, regexs []string, optional bool) (matched bool) {
+func isComponentValid(ss []string, regexs []string, optional bool) bool {
 	if optional && len(ss) == 0 {
 		return true
 	}
@@ -453,12 +472,4 @@ func (z *ZoneConfiguration) UpdateCertificateRequest(request *certificate.Reques
 			request.KeyLength = 2048
 		}
 	}
-}
-
-type VenafiError string
-
-const VenafiErrorZoneNotFound VenafiError = "Zone not found"
-
-func (e VenafiError) Error() string {
-	return string(e)
 }

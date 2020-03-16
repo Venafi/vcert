@@ -6,5 +6,5 @@ Feature: showing version
     When I run `vcert -version`
     Then the output should contain:
     """
-    Version:
+    vcert version
     """

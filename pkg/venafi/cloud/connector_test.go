@@ -21,9 +21,11 @@ import (
 	"crypto/x509"
 	"encoding/hex"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
+	"github.com/Venafi/vcert/pkg/verror"
 	"github.com/Venafi/vcert/test"
 	"os"
 	"reflect"
@@ -35,7 +37,7 @@ import (
 var ctx *test.Context
 
 func init() {
-	ctx = test.GetContext()
+	ctx = test.GetEnvContext()
 	// http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	if ctx.CloudAPIkey == "" {
@@ -75,7 +77,7 @@ func TestReadZoneConfiguration(t *testing.T) {
 
 	conn.SetZone("d686146b-799b-4836-8ac3-f4a2d3a38934")
 	_, err = conn.ReadZoneConfiguration()
-	if err != endpoint.VenafiErrorZoneNotFound {
+	if !errors.Is(err, verror.ZoneNotFoundError) {
 		t.Fatalf("Unknown zone should have resulted in an error")
 	}
 	testCases := []struct {
@@ -303,6 +305,7 @@ func TestGetCertificateStatus(t *testing.T) {
 }
 
 func TestRenewCertificate(t *testing.T) {
+	t.Skip() //todo: remove if condor team fix bug. check after 2020.04
 	conn := getTestConnector(ctx.CloudZone)
 	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
 	if err != nil {
@@ -394,7 +397,7 @@ func TestReadPolicyConfiguration(t *testing.T) {
 		t.Fatalf("%s", err)
 	}
 	expectedPolice := endpoint.Policy{
-		[]string{"^.*.example.com$", "^.*.example.org$", "^.*.example.net$", "^.*.invalid$", "^.*.local$", "^.*.localhost$", "^.*.test$"},
+		[]string{"^.*.example.com$", "^.*.example.org$", "^.*.example.net$", "^.*.invalid$", "^.*.local$", "^.*.localhost$", "^.*.test$", "^.*.vfidev.com$"},
 		[]string{"^.*$"},
 		[]string{"^.*$"},
 		[]string{"^.*$"},
@@ -533,5 +536,62 @@ func TestGetURL(t *testing.T) {
 	url = condor.getURL(urlResourceUserAccounts)
 	if url == "" {
 		t.Fatalf("Get URL did not return an error when the base url had not been set.")
+	}
+}
+
+func TestRetrieveCertificatesList(t *testing.T) {
+	conn := getTestConnector(ctx.CloudZone)
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	for _, count := range []int{10, 100, 101, 153} {
+		l, err := conn.ListCertificates(endpoint.Filter{Limit: &count})
+		if err != nil {
+			t.Fatal(err)
+		}
+		set := make(map[string]struct{})
+		for _, c := range l {
+			set[c.Thumbprint] = struct{}{}
+			if c.ValidTo.Before(time.Now()) {
+				t.Errorf("cert %s is expired: %v", c.Thumbprint, c.ValidTo)
+			}
+		}
+		if len(set) != count {
+			t.Errorf("mismatched certificates number: wait %d, got %d (%d)", count, len(set), len(l))
+		}
+	}
+}
+
+func TestSearchCertificate(t *testing.T) {
+	conn := getTestConnector(ctx.CloudZone)
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	if err != nil {
+		t.Fatal(err)
+	}
+	zoneConfig, err := conn.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatal(err)
+	}
+	req := certificate.Request{}
+	req.Subject.CommonName = test.RandCN()
+	req.Timeout = time.Second * 10
+	err = conn.GenerateRequest(zoneConfig, &req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.PickupID, err = conn.RequestCertificate(&req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cert, err := conn.RetrieveCertificate(&req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	p, _ := pem.Decode([]byte(cert.Certificate))
+	thumbprint := certThumprint(p.Bytes)
+	_, err = conn.searchCertificatesByFingerprint(thumbprint)
+	if err != nil {
+		t.Fatal(err)
 	}
 }

@@ -220,9 +220,9 @@ func (c *Connector) issueCertificateIntoMap(fakeRequest *fakeRequestID) (pcc *ce
 	var certBytes []byte
 	switch req.ChainOption {
 	case certificate.ChainOptionRootFirst:
-		certBytes = append([]byte(caCertPEM+"\n"), certPem...)
+		certBytes = append([]byte(CaCertPEM+"\n"), certPem...)
 	default:
-		certBytes = append(certPem, []byte(caCertPEM)...)
+		certBytes = append(certPem, []byte(CaCertPEM)...)
 	}
 	pcc, err = certificate.PEMCollectionFromBytes(certBytes, req.ChainOption)
 	if err != nil {
@@ -266,7 +266,10 @@ func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (er
 }
 
 func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration, err error) {
-	return endpoint.NewZoneConfiguration(), nil
+	config = endpoint.NewZoneConfiguration()
+	policy, err := c.ReadPolicyConfiguration()
+	config.Policy = *policy
+	return
 }
 
 // RenewCertificate attempts to renew the certificate
@@ -303,4 +306,8 @@ func (c *Connector) ReadPolicyConfiguration() (policy *endpoint.Policy, err erro
 
 func (c *Connector) SetHTTPClient(client *http.Client) {
 	return
+}
+
+func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.CertificateInfo, error) {
+	return nil, nil
 }
