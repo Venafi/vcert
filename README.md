@@ -99,18 +99,18 @@ make test
 Integration tests for Trust Protection Platform and Cloud products require endpoint connection variables (Venafi Cloud products display the API key and Zone values in the user interface):
 
 ```sh
-export VCERT_TPP_URL=https://tpp.venafi.example/vedsdk
-export VCERT_TPP_USER=tpp-user
-export VCERT_TPP_PASSWORD=tpp-password
-export VCERT_TPP_ZONE='some\policy'
+export TPP_URL=https://tpp.venafi.example/vedsdk
+export TPP_USER=tpp-user
+export TPP_PASSWORD=tpp-password
+export TPP_ZONE='some\policy'
 
 make tpp_test
 ```
 
 ```sh
-export VCERT_CLOUD_URL=https://api.venafi.cloud/v1
-export VCERT_CLOUD_APIKEY=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-export VCERT_CLOUD_ZONE=zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzzzzzz
+export CLOUD_URL=https://api.venafi.cloud/v1
+export CLOUD_APIKEY=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+export CLOUD_ZONE=zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzzzzzz
 
 make cloud_test
 ```

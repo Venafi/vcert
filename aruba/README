@@ -21,10 +21,10 @@
 
 	$ vi aruba/features/step_definitions/0.endpoints.rb
 
-		ENV['VCERT_TPP_URL']      = "https://tpp.venafi.example.com:5008/vedsdk"
-		ENV['VCERT_TPP_USER']     = "user"
-		ENV['VCERT_TPP_PASSWORD'] = "xxx"
-		ENV['VCERT_TPP_ZONE']     = 'some\zone'
-		ENV['VCERT_CLOUD_URL']    = "https://api.venafi.example.com/v1"
-		ENV['VCERT_CLOUD_APIKEY']    = "xxxxxxxx-b256-4c43-a4d4-15372ce2d548"
-		ENV['VCERT_CLOUD_ZONE']   = "Default"
+		ENV['TPP_URL']      = "https://tpp.venafi.example.com:5008/vedsdk"
+		ENV['TPP_USER']     = "user"
+		ENV['TPP_PASSWORD'] = "xxx"
+		ENV['TPP_ZONE']     = 'some\zone'
+		ENV['CLOUD_URL']    = "https://api.venafi.example.com/v1"
+		ENV['CLOUD_APIKEY']    = "xxxxxxxx-b256-4c43-a4d4-15372ce2d548"
+		ENV['CLOUD_ZONE']   = "Default"

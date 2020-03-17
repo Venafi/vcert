@@ -1,15 +1,15 @@
 #!/bin/bash
 echo "Using token $TPPACCESS_TOKEN"
 RUN_COMMAND="docker run -t --rm \
-          -e VCERT_TPP_URL \
-          -e VCERT_TPP_USER \
-          -e VCERT_TPP_PASSWORD \
-          -e TPPACCESS_TOKEN \
-          -e VCERT_TPP_ZONE \
-          -e TPPZONE_ECDSA \
-          -e VCERT_CLOUD_URL \
-          -e VCERT_CLOUD_APIKEY \
-          -e VCERT_CLOUD_ZONE vcert.auto cucumber --fail-fast --no-color -v"
+          -e TPP_URL \
+          -e TPP_USER \
+          -e TPP_PASSWORD \
+          -e TPP_ACCESS_TOKEN \
+          -e TPP_ZONE \
+          -e TPP_ZONE_ECDSA \
+          -e CLOUD_URL \
+          -e CLOUD_APIKEY \
+          -e CLOUD_ZONE vcert.auto cucumber --fail-fast --no-color -v"
 
 set -ex
 
