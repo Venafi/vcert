@@ -87,7 +87,7 @@ func TestReadZoneConfiguration(t *testing.T) {
 		{ctx.CloudZone, endpoint.ZoneConfiguration{
 			CustomAttributeValues: make(map[string]string),
 		}},
-		{os.Getenv("CLOUDZONE_RESTRICTED"), endpoint.ZoneConfiguration{
+		{ctx.CloudZoneRestricted, endpoint.ZoneConfiguration{
 			Organization:          "Venafi Inc.",
 			OrganizationalUnit:    []string{"Integrations", "Integration"},
 			Country:               "US",

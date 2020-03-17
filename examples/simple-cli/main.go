@@ -263,7 +263,7 @@ func main() {
 	//
 	if config.ConnectorType == endpoint.ConnectorTypeTPP {
 		var connectionTrustBundle *x509.CertPool
-		trustBundleFilePath := os.Getenv("VCERT_TRUST_BUNDLE_PATH")
+		trustBundleFilePath := os.Getenv("TRUST_BUNDLE_PATH")
 		if trustBundleFilePath != "" {
 			buf, err := ioutil.ReadFile(trustBundleFilePath)
 			if err != nil {
@@ -280,8 +280,8 @@ func main() {
 		}
 
 		resp, err := tppConnector.GetRefreshToken(&endpoint.Authentication{
-			User:     os.Getenv("VCERT_TPP_USER"),
-			Password: os.Getenv("VCERT_TPP_PASSWORD"),
+			User:     os.Getenv("TPP_USER"),
+			Password: os.Getenv("TPP_PASSWORD"),
 			Scope:    "certificate:manage,revoke;", ClientId: "websdk"})
 		if err != nil {
 			panic(err)

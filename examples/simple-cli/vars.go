@@ -35,20 +35,20 @@ func init() {
 
 	cloudConfig = &vcert.Config{
 		ConnectorType: endpoint.ConnectorTypeCloud,
-		BaseUrl:       os.Getenv("VCERT_CLOUD_URL"),
-		Credentials:   &endpoint.Authentication{APIKey: os.Getenv("VCERT_CLOUD_APIKEY")},
-		Zone:          os.Getenv("VCERT_CLOUD_ZONE"),
+		BaseUrl:       os.Getenv("CLOUD_URL"),
+		Credentials:   &endpoint.Authentication{APIKey: os.Getenv("CLOUD_APIKEY")},
+		Zone:          os.Getenv("CLOUD_ZONE"),
 	}
 
 	tppConfig = &vcert.Config{
 		ConnectorType: endpoint.ConnectorTypeTPP,
-		BaseUrl:       os.Getenv("VCERT_TPP_URL"),
+		BaseUrl:       os.Getenv("TPP_URL"),
 		Credentials: &endpoint.Authentication{
-			User:     os.Getenv("VCERT_TPP_USER"),
-			Password: os.Getenv("VCERT_TPP_PASSWORD")},
-		Zone: os.Getenv("VCERT_TPP_ZONE"),
+			User:     os.Getenv("TPP_USER"),
+			Password: os.Getenv("TPP_PASSWORD")},
+		Zone: os.Getenv("TPP_ZONE"),
 	}
-	trustBundleFilePath := os.Getenv("VCERT_TRUST_BUNDLE_PATH")
+	trustBundleFilePath := os.Getenv("TRUST_BUNDLE_PATH")
 	if trustBundleFilePath != "" {
 		buf, err := ioutil.ReadFile(trustBundleFilePath)
 		if err != nil {

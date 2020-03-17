@@ -21,35 +21,37 @@ import (
 )
 
 type Context struct {
-	TPPurl            string
-	TPPuser           string
-	TPPPassword       string
-	TPPaccessToken    string
-	TPPZone           string
-	TPPZoneRestricted string
-	TPPZoneECDSA      string
-	TPPRefreshToken   string
-	ClientID          string
-	CloudUrl          string
-	CloudAPIkey       string
-	CloudZone         string
+	TPPurl              string
+	TPPuser             string
+	TPPPassword         string
+	TPPaccessToken      string
+	TPPZone             string
+	TPPZoneRestricted   string
+	TPPZoneECDSA        string
+	TPPRefreshToken     string
+	ClientID            string
+	CloudUrl            string
+	CloudAPIkey         string
+	CloudZone           string
+	CloudZoneRestricted string
 }
 
 func GetEnvContext() *Context {
 	//TODO: should rewrite to our standart variable names, TPPURL, TPPUSER etc
 	c := &Context{}
 
-	c.TPPurl = os.Getenv("VCERT_TPP_URL")
-	c.TPPuser = os.Getenv("VCERT_TPP_USER")
-	c.TPPPassword = os.Getenv("VCERT_TPP_PASSWORD")
+	c.TPPurl = os.Getenv("TPP_URL")
+	c.TPPuser = os.Getenv("TPP_USER")
+	c.TPPPassword = os.Getenv("TPP_PASSWORD")
 	c.ClientID = os.Getenv("CLIENT_ID")
-	c.TPPZone = os.Getenv("VCERT_TPP_ZONE")
-	c.TPPZoneRestricted = os.Getenv("TPPZONE_RESTRICTED")
-	c.TPPZoneECDSA = os.Getenv("TPPZONE_ECDSA")
+	c.TPPZone = os.Getenv("TPP_ZONE")
+	c.TPPZoneRestricted = os.Getenv("TPP_ZONE_RESTRICTED")
+	c.TPPZoneECDSA = os.Getenv("TPP_ZONE_ECDSA")
 
-	c.CloudUrl = os.Getenv("VCERT_CLOUD_URL")
-	c.CloudAPIkey = os.Getenv("VCERT_CLOUD_APIKEY")
-	c.CloudZone = os.Getenv("VCERT_CLOUD_ZONE")
+	c.CloudUrl = os.Getenv("CLOUD_URL")
+	c.CloudAPIkey = os.Getenv("CLOUD_APIKEY")
+	c.CloudZone = os.Getenv("CLOUD_ZONE")
+	c.CloudZoneRestricted = os.Getenv("CLOUD_ZONE_RESTRICTED")
 
 	return c
 }
