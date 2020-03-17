@@ -681,7 +681,9 @@ func doCommandRenew1(c *cli.Context) error {
 
 func generateCsrForCommandGenCsr(cf *commandFlags, privateKeyPass []byte) (privateKey []byte, csr []byte, err error) {
 	certReq := &certificate.Request{}
-	certReq.KeyType = cf.keyType
+	if cf.keyType != nil {
+		certReq.KeyType = *cf.keyType
+	}
 	certReq.KeyLength = cf.keySize
 	certReq.KeyCurve = cf.keyCurve
 	err = certReq.GeneratePrivateKey()

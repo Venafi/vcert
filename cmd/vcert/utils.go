@@ -121,7 +121,9 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 		req.CsrOrigin = certificate.UserProvidedCSR
 
 	case "service" == cf.csrOption:
-		req.KeyType = cf.keyType
+		if cf.keyType != nil {
+			req.KeyType = *cf.keyType
+		}
 		if cf.keySize > 0 {
 			req.KeyLength = cf.keySize
 		} else if req.KeyLength == 0 {
@@ -131,7 +133,9 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 		req.CsrOrigin = certificate.ServiceGeneratedCSR
 
 	default: // "local" == cf.csrOption:
-		req.KeyType = cf.keyType
+		if cf.keyType != nil {
+			req.KeyType = *cf.keyType
+		}
 		if cf.keySize > 0 {
 			req.KeyLength = cf.keySize
 		} else if req.KeyLength == 0 {

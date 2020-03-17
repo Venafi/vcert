@@ -17,6 +17,7 @@
 package tpp
 
 import (
+	"crypto/ecdsa"
 	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
@@ -771,6 +772,86 @@ func TestRenewCertificate(t *testing.T) {
 	}
 }
 
+func TestRenewCertRestoringValues(t *testing.T) {
+	cn := test.RandCN()
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZoneECDSA)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+
+	req := &certificate.Request{}
+	req.Subject.CommonName = cn
+	req.Subject.Organization = []string{"Venafi, Inc."}
+	req.Subject.OrganizationalUnit = []string{"Automated Tests"}
+	req.Subject.Locality = []string{"Las Vegas"}
+	req.Subject.Province = []string{"Nevada"}
+	req.Subject.Country = []string{"US"}
+	req.KeyType = certificate.KeyTypeECDSA
+	req.KeyCurve = certificate.EllipticCurveP521
+	req.CsrOrigin = certificate.LocalGeneratedCSR
+	req.Timeout = time.Second * 10
+	err = tpp.GenerateRequest(&endpoint.ZoneConfiguration{}, req)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	_, err = tpp.RequestCertificate(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pcc, err := tpp.RetrieveCertificate(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	p, _ := pem.Decode([]byte(pcc.Certificate))
+	oldCert, err := x509.ParseCertificate(p.Bytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	oldKey, ok := oldCert.PublicKey.(*ecdsa.PublicKey)
+	if !ok {
+		t.Fatal("bad key type")
+	}
+	if oldKey.Curve.Params().Name != "P-521" {
+		t.Fatalf("bad curve %v", oldKey.Curve.Params().Name)
+	}
+	renewReq := certificate.RenewalRequest{
+		CertificateDN: req.PickupID,
+	}
+	pickupdID, err := tpp.RenewCertificate(&renewReq)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req = &certificate.Request{PickupID: pickupdID, Timeout: 30 * time.Second}
+	pcc, err = tpp.RetrieveCertificate(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	p, _ = pem.Decode([]byte(pcc.Certificate))
+	newCert, err := x509.ParseCertificate(p.Bytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	newKey, ok := newCert.PublicKey.(*ecdsa.PublicKey)
+	if !ok {
+		t.Fatal("bad key type")
+	}
+	if newKey.Curve.Params().Name != "P-521" {
+		t.Fatalf("bad curve %v", newKey.Curve.Params().Name)
+	}
+	//todo: uncomment after renew refactoring
+	//if string(oldKey.X.Bytes()) == string(newKey.X.Bytes()) || string(oldKey.Y.Bytes()) == string(newKey.Y.Bytes()) {
+	//	t.Fatal("key reuse")
+	//}
+}
+
 const crt = `-----BEGIN CERTIFICATE-----
 MIIDdjCCAl6gAwIBAgIRAPqSZQ04IjWgO2rwIDRcOY8wDQYJKoZIhvcNAQENBQAw
 gYAxCzAJBgNVBAYTAlVTMQ0wCwYDVQQIDARVdGFoMRcwFQYDVQQHDA5TYWx0IExh
@@ -869,7 +950,7 @@ func TestReadPolicyConfiguration(t *testing.T) {
 		policy endpoint.Policy
 	}{
 		{
-			"devops\\vcert", // todo: replace with env variable
+			ctx.TPPZone, // todo: replace with env variable
 			endpoint.Policy{
 				[]string{".*"},
 				[]string{".*"},
@@ -891,7 +972,7 @@ func TestReadPolicyConfiguration(t *testing.T) {
 			},
 		},
 		{
-			os.Getenv("TPPZONE_RESTRICTED"),
+			ctx.TPPZoneRestricted,
 			endpoint.Policy{
 				[]string{`^([\p{L}\p{N}-*]+\.)*vfidev\.com$`, `^([\p{L}\p{N}-*]+\.)*vfidev\.net$`, `^([\p{L}\p{N}-*]+\.)*vfide\.org$`},
 				[]string{`^Venafi Inc\.$`},
@@ -910,7 +991,7 @@ func TestReadPolicyConfiguration(t *testing.T) {
 			},
 		},
 		{
-			os.Getenv("TPPZONE_ECDSA"),
+			ctx.TPPZoneECDSA,
 			endpoint.Policy{
 				[]string{".*"},
 				[]string{".*"},

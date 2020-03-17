@@ -64,7 +64,7 @@ type commandFlags struct {
 	keyFile            string
 	keyPassword        string
 	keySize            int
-	keyType            certificate.KeyType
+	keyType            *certificate.KeyType
 	keyTypeString      string
 	locality           string
 	noPickup           bool

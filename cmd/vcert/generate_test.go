@@ -71,7 +71,8 @@ func getCommandFlags() *commandFlags {
 	cf.org = "Venafi"
 	cf.orgUnits = []string{"Engineering", "Unit Testing"}
 	cf.country = "US"
-	cf.keyType = certificate.KeyTypeECDSA
+	keyType := certificate.KeyTypeECDSA
+	cf.keyType = &keyType
 	cf.keyCurve = certificate.EllipticCurveP384
 
 	return &cf
