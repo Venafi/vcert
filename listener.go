@@ -108,9 +108,14 @@ func (ln *listener) Accept() (net.Conn, error) {
 	}
 	tcpConn := conn.(*net.TCPConn)
 
-	tcpConn.SetKeepAlive(true)
-	tcpConn.SetKeepAlivePeriod(3 * time.Minute)
-
+	err = tcpConn.SetKeepAlive(true)
+	if err != nil {
+		return nil, err
+	}
+	err = tcpConn.SetKeepAlivePeriod(3 * time.Minute)
+	if err != nil {
+		return nil, err
+	}
 	return tls.Server(tcpConn, ln.conf), nil
 }
 

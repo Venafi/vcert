@@ -268,7 +268,6 @@ func (c *Connector) ReadPolicyConfiguration() (policy *endpoint.Policy, err erro
 }
 
 func (c *Connector) SetHTTPClient(client *http.Client) {
-	return
 }
 
 func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.CertificateInfo, error) {

@@ -128,5 +128,4 @@ OPTIONS:
 		logger := log.New(os.Stderr, UtilityShortName+": ", log.LstdFlags)
 		logger.Panicf("%s", err)
 	}
-	return
 }
