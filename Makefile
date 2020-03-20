@@ -1,9 +1,11 @@
 GOFLAGS ?= $(GOFLAGS:)
+
 ifdef BUILD_NUMBER
-	VERSION=`git describe --abbrev=0 --tags`+$(BUILD_NUMBER)
+VERSION=`git describe --abbrev=0 --tags`+$(BUILD_NUMBER)
 else
-	VERSION=`git describe --abbrev=0 --tags`
+VERSION=`git describe --abbrev=0 --tags`
 endif
+
 
 #define version if release is set
 ifdef RELEASE_VERSION
@@ -58,12 +60,6 @@ tpp_test: get
 
 cloud_test: get
 	go test -v $(GOFLAGS) ./pkg/venafi/cloud
-
-ifdef BUILD_NUMBER
-VERSION=`git describe --abbrev=0 --tags`+$(BUILD_NUMBER)
-else
-VERSION=`git describe --abbrev=0 --tags`
-endif
 
 collect_artifacts:
 	rm -rf artifcats
