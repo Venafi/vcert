@@ -20,8 +20,7 @@ VCert is a Go library, SDK, and command line utility designed to simplify key ge
 
 VCert releases are tested using the latest version of Trust Protection Platform.  General functionality of the
 [latest VCert release](../../releases/latest) should be compatible with Trust Protection Platform 17.3 or higher.
-Custom Fields require TPP 19.3 or higher, Instance Tracking requires TPP 18.2 or higher, and Token Authentication
-requires TPP 19.2 or higher.
+Custom Fields and Instance Tracking require TPP 18.2 or higher, and Token Authentication requires TPP 19.2 or higher.
 
 ## Installation
 
