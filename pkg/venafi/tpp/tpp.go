@@ -291,7 +291,7 @@ const (
 	urlResourceConfigDnToGuid         urlResource = "vedsdk/Config/DnToGuid"
 	urlResourceConfigReadDn           urlResource = "vedsdk/Config/ReadDn"
 	urlResourceFindPolicy             urlResource = "vedsdk/config/findpolicy"
-	urlResourceRefreshAccessToken     urlResource = "vedauth/authorize/token"
+	urlResourceRefreshAccessToken     urlResource = "vedauth/authorize/token" // #nosec
 	urlResourceMetadataSet            urlResource = "vedsdk/metadata/set"
 	urlResourceAllMetadataGet         urlResource = "vedsdk/metadata/getitems"
 	urlResourceMetadataGet            urlResource = "vedsdk/metadata/get"

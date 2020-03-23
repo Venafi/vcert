@@ -8,6 +8,7 @@ linters:
     - varcheck
     - unused
   enable:
+    - gosec
 
 issues:
   exclude-rules:
@@ -17,3 +18,12 @@ issues:
     - text: "certificateRequest.Attributes"
       linters:
         - staticcheck
+    - text: "G505"
+      linters:
+        - gosec
+    - text: "G401"
+      linters:
+        - gosec
+    - text: "h.Write"
+      linters:
+        - errcheck

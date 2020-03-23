@@ -498,7 +498,6 @@ func doCommandRevoke1(c *cli.Context) error {
 		revReq.Disable = false
 	default:
 		return fmt.Errorf("Certificate DN or Thumbprint is required")
-		return nil
 	}
 
 	requestedFor := func() string {

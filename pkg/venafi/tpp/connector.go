@@ -635,6 +635,9 @@ func (c *Connector) putCertificateInfo(dn string, attributes []nameSliceValuePai
 		return err
 	}
 	statusCode, _, _, err := c.request("PUT", urlResourceCertificate+urlResource(guid), struct{ AttributeData []nameSliceValuePair }{attributes})
+	if err != nil {
+		return err
+	}
 	if statusCode != http.StatusOK {
 		return fmt.Errorf("unexpected status code: %v", statusCode)
 	}
