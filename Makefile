@@ -1,8 +1,19 @@
 GOFLAGS ?= $(GOFLAGS:)
+
 ifdef BUILD_NUMBER
-	VERSION=`git describe --abbrev=0 --tags`+$(BUILD_NUMBER)
+VERSION=`git describe --abbrev=0 --tags`+$(BUILD_NUMBER)
 else
-	VERSION=`git describe --abbrev=0 --tags`
+VERSION=`git describe --abbrev=0 --tags`
+endif
+
+
+#define version if release is set
+ifdef RELEASE_VERSION
+ifdef BUILD_NUMBER
+VERSION=$(RELEASE_VERSION)+$(BUILD_NUMBER)
+else
+VERSION=$(RELEASE_VERSION)
+endif
 endif
 
 GO_LDFLAGS=-ldflags "-X github.com/Venafi/vcert.versionString=$(VERSION) -X github.com/Venafi/vcert.versionBuildTimeStamp=`date -u +%Y%m%d.%H%M%S` -s -w"
@@ -50,12 +61,6 @@ tpp_test: get
 cloud_test: get
 	go test -v $(GOFLAGS) ./pkg/venafi/cloud
 
-ifdef BUILD_NUMBER
-VERSION=`git describe --abbrev=0 --tags`+$(BUILD_NUMBER)
-else
-VERSION=`git describe --abbrev=0 --tags`
-endif
-
 collect_artifacts:
 	rm -rf artifcats
 	mkdir -p artifcats
@@ -65,7 +70,12 @@ collect_artifacts:
 	mv bin/darwin/vcert artifcats/vcert-$(VERSION)_darwin
 	mv bin/windows/vcert.exe artifcats/vcert-$(VERSION)_windows.exe
 	mv bin/windows/vcert86.exe artifcats/vcert-$(VERSION)_windows86.exe
-	cd artifcats; sha1sum * > hashsums.sha1
+	cd artifcats; echo '```' > ../release.txt
+	cd artifcats; sha1sum * >> ../release.txt
+	cd artifcats; echo '```' >> ../release.txt
 
+release:
+	go get -u github.com/tcnksm/ghr
+	ghr -prerelease -n $$RELEASE_VERSION -body="$$(cat ./release.txt)" $$RELEASE_VERSION artifcats/
 linter:
 	golangci-lint run
