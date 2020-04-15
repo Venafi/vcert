@@ -75,7 +75,7 @@ func validateCommonFlags(commandName string) error {
 		return fmt.Errorf("unknown key type: %s", flags.keyTypeString)
 	}
 
-	switch flags.keyCurveString {
+	switch strings.ToLower(flags.keyCurveString) {
 	case "p256":
 		flags.keyCurve = certificate.EllipticCurveP256
 	case "p384":

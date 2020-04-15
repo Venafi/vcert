@@ -129,7 +129,9 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 		} else if req.KeyLength == 0 {
 			req.KeyLength = 2048
 		}
-		req.KeyCurve = cf.keyCurve
+		if cf.keyCurve != certificate.EllipticCurveNotSet {
+			req.KeyCurve = cf.keyCurve
+		}
 		req.CsrOrigin = certificate.ServiceGeneratedCSR
 
 	default: // "local" == cf.csrOption:
@@ -141,7 +143,9 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 		} else if req.KeyLength == 0 {
 			req.KeyLength = 2048
 		}
-		req.KeyCurve = cf.keyCurve
+		if cf.keyCurve != certificate.EllipticCurveNotSet {
+			req.KeyCurve = cf.keyCurve
+		}
 		req.CsrOrigin = certificate.LocalGeneratedCSR
 	}
 	return req
