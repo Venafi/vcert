@@ -424,9 +424,9 @@ func (z *ZoneConfiguration) UpdateCertificateRequest(request *certificate.Reques
 				foundMatch = true
 				switch request.KeyType {
 				case certificate.KeyTypeECDSA:
-					if len(keyConf.KeyCurves) != 0 {
+					if len(keyConf.KeyCurves) != 0 && request.KeyCurve == certificate.EllipticCurveNotSet {
 						request.KeyCurve = keyConf.KeyCurves[0]
-					} else {
+					} else if request.KeyCurve == certificate.EllipticCurveNotSet {
 						request.KeyCurve = certificate.EllipticCurveDefault
 					}
 				case certificate.KeyTypeRSA:

@@ -684,7 +684,9 @@ func generateCsrForCommandGenCsr(cf *commandFlags, privateKeyPass []byte) (priva
 		certReq.KeyType = *cf.keyType
 	}
 	certReq.KeyLength = cf.keySize
-	certReq.KeyCurve = cf.keyCurve
+	if cf.keyCurve != certificate.EllipticCurveNotSet {
+		certReq.KeyCurve = cf.keyCurve
+	}
 	err = certReq.GeneratePrivateKey()
 	if err != nil {
 		return
