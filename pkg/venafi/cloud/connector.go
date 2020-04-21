@@ -22,11 +22,12 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/pkg/verror"
 	"net/http"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/Venafi/vcert/pkg/verror"
 
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
@@ -688,4 +689,9 @@ func (c *Connector) getCertsBatch(page, pageSize int, withExpired bool) ([]certi
 		infos[i] = c.ToCertificateInfo()
 	}
 	return infos, nil
+}
+
+// ConfigWrite is not implemented
+func (c *Connector) ConfigWrite(req *endpoint.ConfigWriteRequest) (err error) {
+	return fmt.Errorf("not supported by endpoint")
 }

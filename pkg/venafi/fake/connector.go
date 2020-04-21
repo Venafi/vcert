@@ -273,3 +273,8 @@ func (c *Connector) SetHTTPClient(client *http.Client) {
 func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.CertificateInfo, error) {
 	return nil, nil
 }
+
+// ConfigWrite is not implemented
+func (c *Connector) ConfigWrite(req *endpoint.ConfigWriteRequest) (err error) {
+	return fmt.Errorf("not supported by endpoint")
+}

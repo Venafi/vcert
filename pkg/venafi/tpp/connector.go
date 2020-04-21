@@ -1060,3 +1060,8 @@ func (c *Connector) configDNToGuid(objectDN string) (guid string, err error) {
 	return resp.GUID, nil
 
 }
+
+// ConfigWrite is not implemented
+func (c *Connector) ConfigWrite(req *endpoint.ConfigWriteRequest) (err error) {
+	return fmt.Errorf("not supported by endpoint")
+}

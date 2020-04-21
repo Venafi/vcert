@@ -22,11 +22,12 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/pkg/certificate"
 	"log"
 	"net/http"
 	"regexp"
 	"sort"
+
+	"github.com/Venafi/vcert/pkg/certificate"
 )
 
 const SDKName = "Venafi VCert-Go"
@@ -90,6 +91,18 @@ type Connector interface {
 	SetHTTPClient(client *http.Client)
 	// ListCertificates
 	ListCertificates(filter Filter) ([]certificate.CertificateInfo, error)
+	// ConfigWrite
+	ConfigWrite(*ConfigWriteRequest) error
+}
+
+type Attribute struct {
+	Name  string
+	Value []string
+}
+
+type ConfigWriteRequest struct {
+	ObjectDN      string
+	AttributeData []Attribute
 }
 
 type Filter struct {
