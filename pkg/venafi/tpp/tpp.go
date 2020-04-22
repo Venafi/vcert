@@ -34,6 +34,7 @@ import (
 
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
+	"github.com/Venafi/vcert/pkg/verror"
 )
 
 const defaultKeySize = 2048
@@ -269,6 +270,17 @@ type metadataSetResponse struct {
 	Locked bool `json:",omitempty"`
 	Result int  `json:",omitempty"`
 }
+
+type ConfigAttribute struct {
+	Name  string
+	Value []string
+}
+
+type ConfigWriteRequest struct {
+	ObjectDN      string
+	AttributeData []ConfigAttribute
+}
+
 type systemStatusVersionResponse string
 
 type urlResource string
@@ -290,6 +302,7 @@ const (
 	urlResourceCertificatesList                   = urlResourceCertificate
 	urlResourceConfigDnToGuid         urlResource = "vedsdk/Config/DnToGuid"
 	urlResourceConfigReadDn           urlResource = "vedsdk/Config/ReadDn"
+	urlResourceConfigWrite            urlResource = "vedsdk/Config/Write"
 	urlResourceFindPolicy             urlResource = "vedsdk/config/findpolicy"
 	urlResourceRefreshAccessToken     urlResource = "vedauth/authorize/token" // #nosec
 	urlResourceMetadataSet            urlResource = "vedsdk/metadata/set"
@@ -476,6 +489,28 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 	case certificate.ServiceGeneratedCSR:
 	}
 	return nil
+}
+
+// ConfigWrite replaces all value instances of an attribute on an object, such
+// as a Certificate or Discovery objects, with one or more new values.
+func (c *Connector) ConfigWrite(req *ConfigWriteRequest) (err error) {
+	statusCode, _, body, err := c.request("POST", urlResourceConfigWrite, req)
+	if err != nil {
+		return fmt.Errorf("%w: %v", verror.ServerTemporaryUnavailableError, err)
+	}
+	switch statusCode {
+	case http.StatusOK:
+		return nil
+	case http.StatusBadRequest:
+		var errorResponse = &struct{ Error string }{}
+		err := json.Unmarshal(body, errorResponse)
+		if err != nil {
+			return fmt.Errorf("%w: failed to decode error message: %s", verror.ServerBadDataResponce, err)
+		}
+		return fmt.Errorf("%w: can't write config %s", verror.ServerBadDataResponce, errorResponse.Error)
+	default:
+		return fmt.Errorf("%w: unexpected response status %d: %s", verror.ServerTemporaryUnavailableError, statusCode, string(body))
+	}
 }
 
 func getPolicyDN(zone string) string {
