@@ -89,11 +89,12 @@ func TestReadZoneConfiguration(t *testing.T) {
 		}},
 		{ctx.CloudZoneRestricted, endpoint.ZoneConfiguration{
 			Organization:          "Venafi Inc.",
-			OrganizationalUnit:    []string{"Integrations", "Integration"},
+			OrganizationalUnit:    []string{"Integrations"},
 			Country:               "US",
 			Province:              "Utah",
 			Locality:              "Salt Lake",
 			CustomAttributeValues: make(map[string]string),
+			KeyConfiguration:      &endpoint.AllowedKeyConfiguration{KeyType: certificate.KeyTypeRSA, KeySizes: []int{4096}},
 		}},
 	}
 	for _, c := range testCases {

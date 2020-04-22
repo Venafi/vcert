@@ -661,6 +661,22 @@ func (sp serverPolicy) toZoneConfig(zc *endpoint.ZoneConfiguration) {
 	zc.OrganizationalUnit = sp.Subject.OrganizationalUnit.Values
 	zc.Province = sp.Subject.State.Value
 	zc.Locality = sp.Subject.City.Value
+	key := endpoint.AllowedKeyConfiguration{}
+	err := key.KeyType.Set(sp.KeyPair.KeyAlgorithm.Value)
+	if err != nil {
+		return
+	}
+	if sp.KeyPair.KeySize.Value != 0 {
+		key.KeySizes = []int{sp.KeyPair.KeySize.Value}
+	}
+	if sp.KeyPair.KeyAlgorithm.Value != "" {
+		curve := certificate.EllipticCurveNotSet
+		err = curve.Set(sp.KeyPair.KeyAlgorithm.Value)
+		if err == nil {
+			key.KeyCurves = append(key.KeyCurves, curve)
+		}
+	}
+	zc.KeyConfiguration = &key
 }
 
 func (sp serverPolicy) toPolicy() (p endpoint.Policy) {
