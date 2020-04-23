@@ -608,6 +608,7 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 	} else if !(r.CreatedCertificates == 1 || r.UpdatedCertificates == 1) {
 		return nil, fmt.Errorf("%w: certificate was not imported on unknown reason", verror.ServerBadDataResponce)
 	}
+	time.Sleep(time.Second)
 	foundCert, err := c.searchCertificatesByFingerprint(fingerprint)
 	if err != nil {
 		return nil, err
