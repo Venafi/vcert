@@ -669,9 +669,9 @@ func (sp serverPolicy) toZoneConfig(zc *endpoint.ZoneConfiguration) {
 	if sp.KeyPair.KeySize.Value != 0 {
 		key.KeySizes = []int{sp.KeyPair.KeySize.Value}
 	}
-	if sp.KeyPair.KeyAlgorithm.Value != "" {
+	if sp.KeyPair.EllipticCurve.Value != "" {
 		curve := certificate.EllipticCurveNotSet
-		err = curve.Set(sp.KeyPair.KeyAlgorithm.Value)
+		err = curve.Set(sp.KeyPair.EllipticCurve.Value)
 		if err == nil {
 			key.KeyCurves = append(key.KeyCurves, curve)
 		}

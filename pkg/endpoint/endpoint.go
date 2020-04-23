@@ -417,10 +417,10 @@ func (z *ZoneConfiguration) UpdateCertificateRequest(request *certificate.Reques
 
 	if z.KeyConfiguration != nil {
 		request.KeyType = z.KeyConfiguration.KeyType
-		if len(z.KeyConfiguration.KeySizes) != 0 {
+		if len(z.KeyConfiguration.KeySizes) != 0 && request.KeyLength == 0 {
 			request.KeyLength = z.KeyConfiguration.KeySizes[0]
 		}
-		if len(z.KeyConfiguration.KeyCurves) != 0 {
+		if len(z.KeyConfiguration.KeyCurves) != 0 && request.KeyCurve == certificate.EllipticCurveNotSet {
 			request.KeyCurve = z.KeyConfiguration.KeyCurves[0]
 		}
 	} else {
