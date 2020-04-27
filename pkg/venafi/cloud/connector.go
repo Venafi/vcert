@@ -638,7 +638,7 @@ func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.Cert
 		var b []certificate.CertificateInfo
 		var err error
 		b, err = c.getCertsBatch(page, batchSize, filter.WithExpired)
-		if limit < batchSize {
+		if limit < batchSize && len(b) > limit {
 			b = b[:limit]
 		}
 		if err != nil {
