@@ -58,7 +58,7 @@ func TestUpdateRequestSubject(t *testing.T) {
 		t.Fatalf("1 getRequestKeySize did not return the expected value of 4096 -- Actual value %d", ks)
 	}
 
-	z.AllowedKeyConfigurations = nil
+	z.KeyConfiguration = nil
 	req.KeyLength = 0
 	z.UpdateCertificateRequest(&req)
 	ks = req.KeyLength
@@ -66,7 +66,7 @@ func TestUpdateRequestSubject(t *testing.T) {
 		t.Fatalf("2 getRequestKeySize did not return the expected value of %d -- Actual value %d", 2048, ks)
 	}
 
-	z.AllowedKeyConfigurations = []AllowedKeyConfiguration{{KeyType: certificate.KeyTypeRSA, KeySizes: []int{2048, 4096}}}
+	z.KeyConfiguration = &AllowedKeyConfiguration{KeyType: certificate.KeyTypeRSA, KeySizes: []int{4096}}
 	req.KeyType = certificate.KeyTypeRSA
 	req.KeyLength = 2048
 	z.UpdateCertificateRequest(&req)
@@ -268,6 +268,7 @@ func getBaseZoneConfiguration() *ZoneConfiguration {
 	z.Province = "Utah"
 	z.Locality = "SLC"
 	z.AllowedKeyConfigurations = []AllowedKeyConfiguration{{KeyType: certificate.KeyTypeRSA, KeySizes: []int{2048, 4096}}}
+	z.KeyConfiguration = &AllowedKeyConfiguration{KeyType: certificate.KeyTypeRSA, KeySizes: []int{4096}}
 	z.HashAlgorithm = x509.SHA512WithRSA
 	return &z
 }

@@ -282,6 +282,7 @@ func TestReadConfigData(t *testing.T) {
 			Province:              "Utah",
 			Locality:              "Salt Lake",
 			HashAlgorithm:         x509.SHA256WithRSA,
+			KeyConfiguration:      &endpoint.AllowedKeyConfiguration{KeySizes: []int{2048}},
 			CustomAttributeValues: make(map[string]string),
 		}},
 		{getPolicyDN(ctx.TPPZoneRestricted), endpoint.ZoneConfiguration{
@@ -291,6 +292,7 @@ func TestReadConfigData(t *testing.T) {
 			Province:              "Utah",
 			Locality:              "Salt Lake",
 			HashAlgorithm:         x509.SHA256WithRSA,
+			KeyConfiguration:      &endpoint.AllowedKeyConfiguration{KeySizes: []int{2048}},
 			CustomAttributeValues: make(map[string]string),
 		}},
 	}

@@ -53,12 +53,14 @@ end
 
 # renewal via flags, no magic
 When(/^I renew(?: the)? certificate (?:from|in|using) (\S+) with(?: flags)?(.+)$/) do |endpoint, flags|
+  sleep 2
   cmd = "vcert renew #{ENDPOINTS[endpoint]}#{flags}"
   steps %{Then I try to run `#{cmd}`}
 end
 
 # renewal via memorized PickupId or thumbprint
 When(/^I renew(?: the)? certificate (?:from|in|using) (\S+) using the same (Pickup ID|Thumbprint)(?: with)?(?: flags)?(.+)?$/) do |endpoint, field, flags|
+  sleep 2
   if field == "Pickup ID"
     cmd = "vcert renew #{ENDPOINTS[endpoint]} -id '#{@pickup_id}' #{flags}"
   end

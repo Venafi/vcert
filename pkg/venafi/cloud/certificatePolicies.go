@@ -18,7 +18,6 @@ package cloud
 
 import (
 	"github.com/Venafi/vcert/pkg/endpoint"
-	"regexp"
 	"strings"
 	"time"
 )
@@ -51,6 +50,16 @@ type certificateTemplate struct {
 	SANRegexes             []string         `json:"sanRegexes,omitempty"`
 	KeyTypes               []allowedKeyType `json:"keyTypes,omitempty"`
 	KeyReuse               bool             `json:"keyReuse,omitempty"`
+	RecommendedSettings    struct {
+		SubjectOValue, SubjectOUValue,
+		SubjectSTValue, SubjectLValue,
+		SubjectCValue string
+		Key struct {
+			Type   string
+			Length int
+		}
+		keyReuse bool
+	}
 }
 type allowedKeyType struct {
 	KeyType    keyType
@@ -105,31 +114,25 @@ func (ct certificateTemplate) toPolicy() (p endpoint.Policy) {
 	return
 }
 
-func isNotRegexp(s string) bool {
-	matched, err := regexp.MatchString(`[a-zA-Z0-9 ]+`, s)
-	if !matched || err != nil {
-		return false
-	}
-	return true
-}
 func (ct certificateTemplate) toZoneConfig(zc *endpoint.ZoneConfiguration) {
-	if len(ct.SubjectCValues) > 0 && isNotRegexp(ct.SubjectCValues[0]) {
-		zc.Country = ct.SubjectCValues[0]
+	r := ct.RecommendedSettings
+	zc.Country = r.SubjectCValue
+	zc.Province = r.SubjectSTValue
+	zc.Locality = r.SubjectLValue
+	zc.Organization = r.SubjectOValue
+	if r.SubjectOUValue != "" {
+		zc.OrganizationalUnit = []string{r.SubjectOUValue}
 	}
-	if len(ct.SubjectORegexes) > 0 && isNotRegexp(ct.SubjectORegexes[0]) {
-		zc.Organization = ct.SubjectORegexes[0]
+	key := endpoint.AllowedKeyConfiguration{}
+	err := key.KeyType.Set(r.Key.Type)
+	if err != nil {
+		return
 	}
-	if len(ct.SubjectSTRegexes) > 0 && isNotRegexp(ct.SubjectSTRegexes[0]) {
-		zc.Province = ct.SubjectSTRegexes[0]
+	if r.Key.Length == 0 {
+		return
 	}
-	if len(ct.SubjectLRegexes) > 0 && isNotRegexp(ct.SubjectLRegexes[0]) {
-		zc.Locality = ct.SubjectLRegexes[0]
-	}
-	for _, ou := range ct.SubjectOURegexes {
-		if isNotRegexp(ou) {
-			zc.OrganizationalUnit = append(zc.OrganizationalUnit, ou)
-		}
-	}
+	key.KeySizes = []int{r.Key.Length}
+	zc.KeyConfiguration = &key
 }
 
 /*
