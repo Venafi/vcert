@@ -100,6 +100,12 @@ func (c *Connector) Ping() (err error) {
 
 // Authenticate authenticates the user to the TPP
 func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("%w: %s", verror.AuthError, err)
+		}
+	}()
+
 	if auth == nil {
 		return fmt.Errorf("failed to authenticate: missing credentials")
 	}
