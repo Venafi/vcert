@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"github.com/Venafi/vcert/pkg/certificate"
 	"log"
+	"net"
 	"net/http"
 	"regexp"
 )
@@ -429,4 +430,14 @@ func (z *ZoneConfiguration) UpdateCertificateRequest(request *certificate.Reques
 			request.KeyLength = 2048
 		}
 	}
+}
+
+func GetPrimaryNetAddr() (ip string, err error) {
+	conn, err := net.Dial("udp", "venafi.com:1")
+	if err != nil {
+		return "", fmt.Errorf("failed to get primary network address: %s", err)
+	}
+	defer conn.Close()
+	ip = conn.LocalAddr().(*net.UDPAddr).IP.String()
+	return
 }
