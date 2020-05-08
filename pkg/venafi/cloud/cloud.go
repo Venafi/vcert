@@ -109,23 +109,37 @@ type importRequestClientInfo struct {
 	Identifier string `json:"identifier"`
 }
 
+type importRequestInstanceInfo struct {
+	AppName            string `json:"appName,omitempty"`
+	NodeName           string `json:"nodeName,omitempty"`
+	AutomationMetadata string `json:"automationMetadata,omitempty"`
+}
+
 type importRequest struct {
-	Certificate          string                  `json:"certificate"`
-	ZoneId               string                  `json:"zoneId"`
-	CertificateName      string                  `json:"certificateName"`
-	ApiClientInformation importRequestClientInfo `json:"apiClientInformation"`
+	Certificate              string                      `json:"certificate"`
+	IssuerCertificates       []string                    `json:"issuerCertificates,omitempty"`
+	ZoneId                   string                      `json:"zoneId"`
+	CertificateName          string                      `json:"certificateName"`
+	ApiClientInformation     importRequestClientInfo     `json:"apiClientInformation,omitempty"`
+	CertificateUsageMetadata []importRequestInstanceInfo `json:"certificateUsageMetadata,omitempty"`
+}
+
+type importResponseClientInfo struct {
+	Type       string `json:"type"`
+	Identifier string `json:"identifier"`
 }
 
 type importResponseCertInfo struct {
-	Id                   string    `json:"id"`
-	ManagedCertificateId string    `json:"managedCertificateId"`
-	CompanyId            string    `json:"companyId"`
-	Fingerprint          string    `json:"fingerprint"`
-	CertificateSource    string    `json:"certificateSource"`
-	OwnerUserId          string    `json:"ownerUserId"`
-	IssuanceZoneId       string    `json:"issuanceZoneId"`
-	ValidityStartDate    time.Time `json:"validityStartDate"`
-	ValidityEndDate      time.Time `json:"validityEndDate"`
+	Id                   string                   `json:"id"`
+	ManagedCertificateId string                   `json:"managedCertificateId"`
+	CompanyId            string                   `json:"companyId"`
+	Fingerprint          string                   `json:"fingerprint"`
+	CertificateSource    string                   `json:"certificateSource"`
+	OwnerUserId          string                   `json:"ownerUserId"`
+	IssuanceZoneId       string                   `json:"issuanceZoneId"`
+	ValidityStartDate    time.Time                `json:"validityStartDate"`
+	ValidityEndDate      time.Time                `json:"validityEndDate"`
+	ApiClientInformation importResponseClientInfo `json:"apiClientInformation,omitempty"`
 }
 
 type importResponse struct {

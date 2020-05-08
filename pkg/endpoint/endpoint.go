@@ -31,6 +31,8 @@ import (
 
 const SDKName = "Venafi VCert-Go"
 
+var InstanceIP string
+
 // ConnectorType represents the available connectors
 type ConnectorType int
 
@@ -46,6 +48,7 @@ const (
 
 func init() {
 	log.SetPrefix("vCert: ")
+	InstanceIP = getPrimaryNetAddr()
 }
 
 func (t ConnectorType) String() string {
@@ -432,12 +435,11 @@ func (z *ZoneConfiguration) UpdateCertificateRequest(request *certificate.Reques
 	}
 }
 
-func GetPrimaryNetAddr() (ip string, err error) {
+func getPrimaryNetAddr() string {
 	conn, err := net.Dial("udp", "venafi.com:1")
 	if err != nil {
-		return "", fmt.Errorf("failed to get primary network address: %s", err)
+		return "0.0.0.0"
 	}
 	defer conn.Close()
-	ip = conn.LocalAddr().(*net.UDPAddr).IP.String()
-	return
+	return conn.LocalAddr().(*net.UDPAddr).IP.String()
 }

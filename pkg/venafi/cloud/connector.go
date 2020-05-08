@@ -181,10 +181,7 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 		return "", fmt.Errorf("Must be autheticated to request a certificate")
 	}
 
-	addr, err := endpoint.GetPrimaryNetAddr()
-	if err != nil {
-		return "", err
-	}
+	ipAddr := endpoint.InstanceIP
 	origin := endpoint.SDKName
 	for _, f := range req.CustomFields {
 		if f.Type == certificate.CustomFieldOrigin {
@@ -196,7 +193,7 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 		CSR:    string(req.GetCSR()),
 		ApiClientInformation: certificateRequestClientInfo{
 			Type:       origin,
-			Identifier: addr,
+			Identifier: ipAddr,
 		},
 	}
 
@@ -580,10 +577,7 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 	if zone == "" {
 		zone = c.zone
 	}
-	addr, err := endpoint.GetPrimaryNetAddr()
-	if err != nil {
-		return nil, err
-	}
+	ipAddr := endpoint.InstanceIP
 	origin := endpoint.SDKName
 	for _, f := range req.CustomFields {
 		if f.Type == certificate.CustomFieldOrigin {
@@ -598,9 +592,10 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 		CertificateName: req.ObjectName,
 		ApiClientInformation: importRequestClientInfo{
 			Type:       origin,
-			Identifier: addr,
+			Identifier: ipAddr,
 		},
 	}
+
 	url := c.getURL(urlResourceCertificateImport)
 	statusCode, status, body, err := c.request("POST", url, request)
 	if err != nil {
