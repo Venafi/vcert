@@ -847,10 +847,10 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 		r.PolicyDN = getPolicyDN(c.zone)
 	}
 
-	origin := endpoint.SDKName + " (+)"
+	origin := endpoint.SDKName + " (+)" // standard suffix needed to differentiate certificates imported from enrolled in TPP
 	for _, f := range req.CustomFields {
 		if f.Type == certificate.CustomFieldOrigin {
-			origin = f.Value
+			origin = f.Value + " (+)"
 		}
 	}
 	statusCode, _, body, err := c.request("POST", urlResourceCertificateImport, r)
