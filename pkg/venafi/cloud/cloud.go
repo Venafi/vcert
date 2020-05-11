@@ -22,7 +22,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/Venafi/vcert/pkg/verror"
 	"io"
 	"io/ioutil"
 	"log"
@@ -30,6 +29,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/Venafi/vcert/pkg/verror"
 
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
@@ -130,16 +131,18 @@ type importResponseClientInfo struct {
 }
 
 type importResponseCertInfo struct {
-	Id                   string                   `json:"id"`
-	ManagedCertificateId string                   `json:"managedCertificateId"`
-	CompanyId            string                   `json:"companyId"`
-	Fingerprint          string                   `json:"fingerprint"`
-	CertificateSource    string                   `json:"certificateSource"`
-	OwnerUserId          string                   `json:"ownerUserId"`
-	IssuanceZoneId       string                   `json:"issuanceZoneId"`
-	ValidityStartDate    time.Time                `json:"validityStartDate"`
-	ValidityEndDate      time.Time                `json:"validityEndDate"`
-	ApiClientInformation importResponseClientInfo `json:"apiClientInformation,omitempty"`
+	Id                      string                   `json:"id"`
+	ManagedCertificateId    string                   `json:"managedCertificateId"`
+	CompanyId               string                   `json:"companyId"`
+	Fingerprint             string                   `json:"fingerprint"`
+	CertificateSource       string                   `json:"certificateSource"`
+	OwnerUserId             string                   `json:"ownerUserId"`
+	IssuanceZoneId          string                   `json:"issuanceZoneId"`
+	ValidityStartDateString string                   `json:"validityStartDate"`
+	ValidityStartDate       time.Time                `json:"-"`
+	ValidityEndDateString   string                   `json:"validityEndDate"`
+	ValidityEndDate         time.Time                `json:"-"`
+	ApiClientInformation    importResponseClientInfo `json:"apiClientInformation,omitempty"`
 }
 
 type importResponse struct {
@@ -207,7 +210,7 @@ func (c *Connector) getHTTPClient() *http.Client {
 	}
 	netTransport.TLSClientConfig = tlsConfig
 	c.client = &http.Client{
-		Timeout:   time.Second * 10,
+		Timeout:   time.Second * 30,
 		Transport: netTransport,
 	}
 	return c.client

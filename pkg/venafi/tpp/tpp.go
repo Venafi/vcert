@@ -430,7 +430,7 @@ func (c *Connector) getHTTPClient() *http.Client {
 	}
 	netTransport.TLSClientConfig = tlsConfig
 	c.client = &http.Client{
-		Timeout:   time.Second * 10,
+		Timeout:   time.Second * 30,
 		Transport: netTransport,
 	}
 	return c.client
