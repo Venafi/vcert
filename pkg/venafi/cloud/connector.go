@@ -629,7 +629,7 @@ func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.Cert
 	if c.zone == "" {
 		return nil, fmt.Errorf("empty zone")
 	}
-	const batchSize = 100
+	const batchSize = 50
 	limit := 100000000
 	if filter.Limit != nil {
 		limit = *filter.Limit
