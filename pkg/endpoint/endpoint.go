@@ -22,13 +22,17 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/pkg/certificate"
 	"log"
+	"net"
 	"net/http"
 	"regexp"
+
+	"github.com/Venafi/vcert/pkg/certificate"
 )
 
 const SDKName = "Venafi VCert-Go"
+
+var LocalIP string
 
 // ConnectorType represents the available connectors
 type ConnectorType int
@@ -45,6 +49,7 @@ const (
 
 func init() {
 	log.SetPrefix("vCert: ")
+	LocalIP = getPrimaryNetAddr()
 }
 
 func (t ConnectorType) String() string {
@@ -429,4 +434,13 @@ func (z *ZoneConfiguration) UpdateCertificateRequest(request *certificate.Reques
 			request.KeyLength = 2048
 		}
 	}
+}
+
+func getPrimaryNetAddr() string {
+	conn, err := net.Dial("udp", "venafi.com:1")
+	if err != nil {
+		return "0.0.0.0"
+	}
+	defer conn.Close()
+	return conn.LocalAddr().(*net.UDPAddr).IP.String()
 }

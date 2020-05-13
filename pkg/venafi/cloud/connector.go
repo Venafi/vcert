@@ -22,11 +22,12 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/pkg/verror"
 	"net/http"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/Venafi/vcert/pkg/verror"
 
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
@@ -49,7 +50,7 @@ const (
 	urlResourceManagedCertificateSearch              = "managedcertificatesearch"
 	urlResourceManagedCertificates                   = "managedcertificates"
 	urlResourceManagedCertificateByID                = urlResourceManagedCertificates + "/%s"
-	urlResourceDiscovery                             = "discovery"
+	urlResourceCertificateImport                     = urlResourceCertificateRequests + "/externalissuance/certificates"
 	urlResourceTemplate                              = "certificateissuingtemplates/%s"
 )
 
@@ -181,7 +182,23 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 		return "", fmt.Errorf("Must be autheticated to request a certificate")
 	}
 
-	statusCode, status, body, err := c.request("POST", url, certificateRequest{ZoneID: c.zone, CSR: string(req.GetCSR())})
+	ipAddr := endpoint.LocalIP
+	origin := endpoint.SDKName
+	for _, f := range req.CustomFields {
+		if f.Type == certificate.CustomFieldOrigin {
+			origin = f.Value
+		}
+	}
+	cloudReq := certificateRequest{
+		ZoneID: c.zone,
+		CSR:    string(req.GetCSR()),
+		ApiClientInformation: certificateRequestClientInfo{
+			Type:       origin,
+			Identifier: ipAddr,
+		},
+	}
+
+	statusCode, status, body, err := c.request("POST", url, cloudReq)
 
 	if err != nil {
 		return "", err
@@ -561,38 +578,31 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 	if zone == "" {
 		zone = c.zone
 	}
+	ipAddr := endpoint.LocalIP
+	origin := endpoint.SDKName
+	for _, f := range req.CustomFields {
+		if f.Type == certificate.CustomFieldOrigin {
+			origin = f.Value
+		}
+	}
 	base64.StdEncoding.EncodeToString(pBlock.Bytes)
 	fingerprint := certThumprint(pBlock.Bytes)
-	e := importRequestEndpoint{
-		OCSP: 1,
-		Certificates: []importRequestEndpointCert{
-			{
-				Certificate: base64.StdEncoding.EncodeToString(pBlock.Bytes),
-				Fingerprint: fingerprint,
-			},
-		},
-		Protocols: []importRequestEndpointProtocol{
-			{
-				Certificates: []string{fingerprint},
-			},
-		},
-	}
 	request := importRequest{
-		ZoneName:  zone,
-		Endpoints: []importRequestEndpoint{e},
+		Certificate:     base64.StdEncoding.EncodeToString(pBlock.Bytes),
+		ZoneId:          zone,
+		CertificateName: req.ObjectName,
+		ApiClientInformation: importRequestClientInfo{
+			Type:       origin,
+			Identifier: ipAddr,
+		},
 	}
 
-	url := c.getURL(urlResourceDiscovery)
+	url := c.getURL(urlResourceCertificateImport)
 	statusCode, status, body, err := c.request("POST", url, request)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", verror.ServerTemporaryUnavailableError, err)
 	}
-	var r struct {
-		CreatedCertificates int
-		CreatedInstances    int
-		UpdatedCertificates int
-		UpdatedInstances    int
-	}
+	var r importResponse
 	switch statusCode {
 	case http.StatusOK, http.StatusCreated, http.StatusAccepted:
 	case http.StatusBadRequest, http.StatusForbidden, http.StatusConflict:
@@ -605,7 +615,7 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 	err = json.Unmarshal(body, &r)
 	if err != nil {
 		return nil, fmt.Errorf("%w: can`t unmarshal json response %s", verror.ServerError, err)
-	} else if !(r.CreatedCertificates == 1 || r.UpdatedCertificates == 1) {
+	} else if !(len(r.CertificateInformations) == 1) {
 		return nil, fmt.Errorf("%w: certificate was not imported on unknown reason", verror.ServerBadDataResponce)
 	}
 	time.Sleep(time.Second)

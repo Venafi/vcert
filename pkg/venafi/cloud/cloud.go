@@ -22,7 +22,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/Venafi/vcert/pkg/verror"
 	"io"
 	"io/ioutil"
 	"log"
@@ -30,6 +29,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/Venafi/vcert/pkg/verror"
 
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
@@ -72,13 +73,17 @@ type certificateRequestResponseData struct {
 	DER                    string    `json:"der,omitempty"`
 }
 
+type certificateRequestClientInfo struct {
+	Type       string `json:"type"`
+	Identifier string `json:"identifier"`
+}
+
 type certificateRequest struct {
-	//CompanyID      string `json:"companyId,omitempty"`
-	CSR                          string `json:"certificateSigningRequest,omitempty"`
-	ZoneID                       string `json:"zoneId,omitempty"`
-	ExistingManagedCertificateId string `json:"existingManagedCertificateId,omitempty"`
-	ReuseCSR                     bool   `json:"reuseCSR,omitempty"`
-	//DownloadFormat string `json:"downloadFormat,omitempty"`
+	CSR                          string                       `json:"certificateSigningRequest,omitempty"`
+	ZoneID                       string                       `json:"zoneId,omitempty"`
+	ExistingManagedCertificateId string                       `json:"existingManagedCertificateId,omitempty"`
+	ReuseCSR                     bool                         `json:"reuseCSR,omitempty"`
+	ApiClientInformation         certificateRequestClientInfo `json:"apiClientInformation,omitempty"`
 }
 
 type certificateStatus struct {
@@ -100,41 +105,48 @@ type CertificateStatusErrorInformation struct {
 	Args    []string `json:"args,omitempty"`
 }
 
-type importRequestEndpointCert struct {
-	Certificate string `json:"certificate"`
-	Fingerprint string `json:"fingerprint"`
+type importRequestClientInfo struct {
+	Type       string `json:"type"`
+	Identifier string `json:"identifier"`
 }
 
-type importRequestEndpointProtocol struct {
-	Certificates []string      `json:"certificates"`
-	Ciphers      []interface{} `json:"ciphers"` //todo: check type
-	Protocol     string        `json:"protocol"`
-}
-
-type importRequestEndpoint struct {
-	Alpn                bool                            `json:"alpn"`
-	Certificates        []importRequestEndpointCert     `json:"certificates"`
-	ClientRenegotiation bool                            `json:"clientRenegotiation"`
-	Drown               bool                            `json:"drown"`
-	Heartbleed          bool                            `json:"heartbleed"`
-	Host                string                          `json:"host"`
-	HSTS                bool                            `json:"hsts"`
-	IP                  string                          `json:"ip"`
-	LogJam              int                             `json:"logJam"`
-	Npn                 bool                            `json:"npn"`
-	OCSP                int                             `json:"ocsp"` //default 1
-	Poodle              bool                            `json:"poodle"`
-	PoodleTls           bool                            `json:"poodleTls"`
-	Port                int                             `json:"port"`
-	Protocols           []importRequestEndpointProtocol `json:"protocols"`
-	SecureRenegotiation bool                            `json:"secureRenegotiation"`
-	Sloth               bool                            `json:"sloth"`
+type importRequestInstanceInfo struct {
+	AppName            string `json:"appName,omitempty"`
+	NodeName           string `json:"nodeName,omitempty"`
+	AutomationMetadata string `json:"automationMetadata,omitempty"`
 }
 
 type importRequest struct {
-	ZoneName  string                  `json:"zoneName"`
-	NetworkID string                  `json:"networkId"`
-	Endpoints []importRequestEndpoint `json:"endpoints"`
+	Certificate              string                      `json:"certificate"`
+	IssuerCertificates       []string                    `json:"issuerCertificates,omitempty"`
+	ZoneId                   string                      `json:"zoneId"`
+	CertificateName          string                      `json:"certificateName"`
+	ApiClientInformation     importRequestClientInfo     `json:"apiClientInformation,omitempty"`
+	CertificateUsageMetadata []importRequestInstanceInfo `json:"certificateUsageMetadata,omitempty"`
+}
+
+type importResponseClientInfo struct {
+	Type       string `json:"type"`
+	Identifier string `json:"identifier"`
+}
+
+type importResponseCertInfo struct {
+	Id                      string                   `json:"id"`
+	ManagedCertificateId    string                   `json:"managedCertificateId"`
+	CompanyId               string                   `json:"companyId"`
+	Fingerprint             string                   `json:"fingerprint"`
+	CertificateSource       string                   `json:"certificateSource"`
+	OwnerUserId             string                   `json:"ownerUserId"`
+	IssuanceZoneId          string                   `json:"issuanceZoneId"`
+	ValidityStartDateString string                   `json:"validityStartDate"`
+	ValidityStartDate       time.Time                `json:"-"`
+	ValidityEndDateString   string                   `json:"validityEndDate"`
+	ValidityEndDate         time.Time                `json:"-"`
+	ApiClientInformation    importResponseClientInfo `json:"apiClientInformation,omitempty"`
+}
+
+type importResponse struct {
+	CertificateInformations []importResponseCertInfo `json:"certificateInformations"`
 }
 
 //GenerateRequest generates a CertificateRequest based on the zone configuration, and returns the request along with the private key.

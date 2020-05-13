@@ -237,11 +237,11 @@ func validateEnrollFlags(commandName string) error {
 	}
 
 	if flags.tlsAddress != "" && flags.instance == "" {
-		return fmt.Errorf("-tls-address can't be specified without -instance flag")
+		return fmt.Errorf("--tls-address cannot be used without --instance")
 	}
 
-	if (flags.appInfo != "" || flags.tlsAddress != "" || flags.instance != "") && flags.apiKey != "" {
-		return fmt.Errorf("-tls-address or -instance or -app-info can be used only with TPP and can not be used for the Cloud")
+	if (flags.tlsAddress != "" || flags.instance != "") && flags.apiKey != "" {
+		return fmt.Errorf("--instance and --tls-address are not applicable to Venafi Cloud")
 	}
 
 	return nil
