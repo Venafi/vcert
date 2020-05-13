@@ -22,11 +22,12 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/pkg/verror"
 	"net/http"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/Venafi/vcert/pkg/verror"
 
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
@@ -181,7 +182,7 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 		return "", fmt.Errorf("Must be autheticated to request a certificate")
 	}
 
-	ipAddr := endpoint.InstanceIP
+	ipAddr := endpoint.LocalIP
 	origin := endpoint.SDKName
 	for _, f := range req.CustomFields {
 		if f.Type == certificate.CustomFieldOrigin {
@@ -577,7 +578,7 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 	if zone == "" {
 		zone = c.zone
 	}
-	ipAddr := endpoint.InstanceIP
+	ipAddr := endpoint.LocalIP
 	origin := endpoint.SDKName
 	for _, f := range req.CustomFields {
 		if f.Type == certificate.CustomFieldOrigin {

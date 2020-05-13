@@ -22,16 +22,17 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/pkg/certificate"
 	"log"
 	"net"
 	"net/http"
 	"regexp"
+
+	"github.com/Venafi/vcert/pkg/certificate"
 )
 
 const SDKName = "Venafi VCert-Go"
 
-var InstanceIP string
+var LocalIP string
 
 // ConnectorType represents the available connectors
 type ConnectorType int
@@ -48,7 +49,7 @@ const (
 
 func init() {
 	log.SetPrefix("vCert: ")
-	InstanceIP = getPrimaryNetAddr()
+	LocalIP = getPrimaryNetAddr()
 }
 
 func (t ConnectorType) String() string {
