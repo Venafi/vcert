@@ -24,6 +24,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -35,6 +36,7 @@ import (
 
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
+	"github.com/Venafi/vcert/pkg/verror"
 	"github.com/Venafi/vcert/test"
 )
 
@@ -68,6 +70,66 @@ func init() {
 func getTestConnector(url string, zone string) (c *Connector, err error) {
 	c, err = NewConnector(url, zone, false, nil)
 	return c, err
+}
+
+func TestNewConnectorURLSuccess(t *testing.T) {
+	tests := map[string]string{
+		"http":                  "http://example.com",
+		"https":                 "https://example.com",
+		"host_path_only":        "example.com/vedsdk/",
+		"trailing_vedsdk":       "https://example.com/vedsdk",
+		"trailing_vedsdk_slash": "https://example.com/vedsdk/",
+		"upper_case":            "HTTPS://EXAMPLE.COM/VEDSDK/",
+		"mixed_case":            "https://EXAMPLE.com/vedsdk/",
+	}
+	for label, urlString := range tests {
+		t.Run(label, func(t *testing.T) {
+			c, err := NewConnector(urlString, "", false, nil)
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+			if c == nil {
+				t.Fatal("unexpected nil connector")
+			}
+			u, err := url.Parse(c.baseURL)
+			if err != nil {
+				t.Errorf("failed to parse baseURL: %v", err)
+			}
+			if u.Scheme != "https" {
+				t.Errorf("unexpected URL scheme: %v", u.Scheme)
+			}
+			if !strings.HasSuffix(u.Path, "/") {
+				t.Errorf("missing trailing slash: %v", u.Path)
+			}
+			if strings.HasSuffix(u.Path, "vedsdk/") {
+				t.Errorf("unstripped vedsdk: %v", u.Path)
+			}
+		})
+	}
+}
+
+func TestNewConnectorURLErrors(t *testing.T) {
+	tests := map[string]string{
+		"empty":          "",
+		"bad_scheme":     "ftp://example.com",
+		"schemaless":     "//example.com",
+		"trailing_other": "https://example.com/foo/",
+		"nested_vedsdk":  "https://example.com/foo/vedsdk",
+	}
+	for label, url := range tests {
+		t.Run(label, func(t *testing.T) {
+			c, err := NewConnector(url, "", false, nil)
+			if err == nil {
+				t.Error("expected an error")
+			}
+			if c != nil {
+				t.Error("expected nil connector")
+			}
+			if !errors.Is(err, verror.UserDataError) {
+				t.Errorf("expected a UserDataError, got: %v", err)
+			}
+		})
+	}
 }
 
 func TestPingTPP(t *testing.T) {
