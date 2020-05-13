@@ -345,18 +345,8 @@ func retrieveChainOptionFromString(order string) retrieveChainOption {
 	}
 }
 
-func (c *Connector) getURL(resource urlResource) (string, error) {
-	if c.baseURL == "" {
-		return "", fmt.Errorf("The Host URL has not been set")
-	}
-	return fmt.Sprintf("%s%s", c.baseURL, resource), nil
-}
-
 func (c *Connector) request(method string, resource urlResource, data interface{}) (statusCode int, statusText string, body []byte, err error) {
-	url, err := c.getURL(resource)
-	if err != nil {
-		return
-	}
+	url := c.baseURL + string(resource)
 	var payload io.Reader
 	var b []byte
 	if method == "POST" || method == "PUT" {

@@ -1202,40 +1202,6 @@ func TestNormalizeURL(t *testing.T) {
 	}
 }
 
-func TestGetURL(t *testing.T) {
-	var err error
-	tpp := Connector{}
-	url := "http://localhost/vedsdk/"
-	tpp.baseURL = ""
-	tpp.baseURL, err = normalizeURL(url)
-	if err != nil {
-		t.Fatalf("err is not nil, err: %s url: %s", err, url)
-	}
-	if !strings.EqualFold(tpp.baseURL, expectedURL) {
-		t.Fatalf("Base URL did not match expected value. Expected: %s Actual: %s", expectedURL, tpp.baseURL)
-	}
-
-	url, err = tpp.getURL(urlResourceAuthorize)
-	if !strings.EqualFold(url, fmt.Sprintf("%s%s", expectedURL, urlResourceAuthorize)) {
-		t.Fatalf("Get URL did not match expected value. Expected: %s Actual: %s", fmt.Sprintf("%s%s", expectedURL, urlResourceAuthorize), url)
-	}
-
-	url, err = tpp.getURL(urlResourceCertificateRequest)
-	if !strings.EqualFold(url, fmt.Sprintf("%s%s", expectedURL, urlResourceCertificateRequest)) {
-		t.Fatalf("Get URL did not match expected value. Expected: %s Actual: %s", fmt.Sprintf("%s%s", expectedURL, urlResourceCertificateRequest), url)
-	}
-
-	url, err = tpp.getURL(urlResourceCertificateRetrieve)
-	if !strings.EqualFold(url, fmt.Sprintf("%s%s", expectedURL, urlResourceCertificateRetrieve)) {
-		t.Fatalf("Get URL did not match expected value. Expected: %s Actual: %s", fmt.Sprintf("%s%s", expectedURL, urlResourceCertificateRetrieve), url)
-	}
-	tpp.baseURL = ""
-	url, err = tpp.getURL(urlResourceAuthorize)
-	if err == nil {
-		t.Fatalf("Get URL did not return an error when the base url had not been set.")
-	}
-}
-
 func Test_GetCertificateList(t *testing.T) {
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
