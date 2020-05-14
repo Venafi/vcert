@@ -24,6 +24,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -35,6 +36,7 @@ import (
 
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
+	"github.com/Venafi/vcert/pkg/verror"
 	"github.com/Venafi/vcert/test"
 )
 
@@ -68,6 +70,26 @@ func init() {
 func getTestConnector(url string, zone string) (c *Connector, err error) {
 	c, err = NewConnector(url, zone, false, nil)
 	return c, err
+}
+
+func TestAuthenticateAuthError(t *testing.T) {
+	// An attempt to Authenticate with invalid credentials results in an
+	// AuthError.
+	// TODO: Test that all Authenticate errors wrap verrors.AuthError
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, ctx.TPPurl)
+	}
+	err = tpp.Authenticate(&endpoint.Authentication{
+		User:     "invalid-user",
+		Password: "invalid-password",
+	})
+	if err == nil {
+		t.Fatalf("expected an error")
+	}
+	if !errors.Is(err, verror.AuthError) {
+		t.Errorf("expected AuthError, got %v", err)
+	}
 }
 
 func TestPingTPP(t *testing.T) {
