@@ -26,16 +26,17 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"github.com/Venafi/vcert/pkg/certificate"
-	"github.com/Venafi/vcert/pkg/endpoint"
-	"github.com/Venafi/vcert/pkg/verror"
-	"github.com/Venafi/vcert/test"
 	"math/big"
 	"os"
 	"reflect"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/Venafi/vcert/pkg/certificate"
+	"github.com/Venafi/vcert/pkg/endpoint"
+	"github.com/Venafi/vcert/pkg/verror"
+	"github.com/Venafi/vcert/test"
 )
 
 var ctx *test.Context
