@@ -50,7 +50,7 @@ func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (
 	var err error
 	c.baseURL, err = normalizeURL(url)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: failed to normalize URL: %v", verror.UserDataError, err)
 	}
 	return &c, nil
 }

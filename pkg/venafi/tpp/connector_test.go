@@ -72,6 +72,64 @@ func getTestConnector(url string, zone string) (c *Connector, err error) {
 	return c, err
 }
 
+func TestNewConnectorURLSuccess(t *testing.T) {
+	tests := map[string]string{
+		"http":                  "http://example.com",
+		"https":                 "https://example.com",
+		"host_path_only":        "example.com/vedsdk/",
+		"trailing_vedsdk":       "https://example.com/vedsdk",
+		"trailing_vedsdk_slash": "https://example.com/vedsdk/",
+		"upper_case":            "HTTPS://EXAMPLE.COM/VEDSDK/",
+		"mixed_case":            "https://EXAMPLE.com/vedsdk/",
+	}
+	for label, urlString := range tests {
+		t.Run(label, func(t *testing.T) {
+			c, err := NewConnector(urlString, "", false, nil)
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+			if c == nil {
+				t.Fatal("unexpected nil connector")
+			}
+			u, err := url.Parse(c.baseURL)
+			if err != nil {
+				t.Errorf("failed to parse baseURL: %v", err)
+			}
+			if u.Scheme != "https" {
+				t.Errorf("unexpected URL scheme: %v", u.Scheme)
+			}
+			if !strings.HasSuffix(u.Path, "/") {
+				t.Errorf("missing trailing slash: %v", u.Path)
+			}
+			if strings.HasSuffix(u.Path, "vedsdk/") {
+				t.Errorf("unstripped vedsdk: %v", u.Path)
+			}
+		})
+	}
+}
+
+func TestNewConnectorURLErrors(t *testing.T) {
+	tests := map[string]string{
+		"empty":          "",
+		"bad_scheme":     "ftp://example.com",
+		"schemaless":     "//example.com",
+		"trailing_other": "https://example.com/foo/",
+		"nested_vedsdk":  "https://example.com/foo/vedsdk",
+	}
+	for label, url := range tests {
+		t.Run(label, func(t *testing.T) {
+			c, err := NewConnector(url, "", false, nil)
+			if err == nil {
+				t.Error("expected an error")
+			}
+			if c != nil {
+				t.Error("expected nil connector")
+			}
+			if !errors.Is(err, verror.UserDataError) {
+				t.Errorf("expected a UserDataError, got: %v", err)
+			}
+		})
+
 func TestAuthenticateAuthError(t *testing.T) {
 	// An attempt to Authenticate with invalid credentials results in an
 	// AuthError.
@@ -1159,40 +1217,6 @@ func TestNormalizeURL(t *testing.T) {
 	}
 	if strings.EqualFold(modifiedURL, expectedURL) {
 		t.Fatalf("Base URL should not match expected value. Expected: %s Actual: %s", expectedURL, modifiedURL)
-	}
-}
-
-func TestGetURL(t *testing.T) {
-	var err error
-	tpp := Connector{}
-	url := "http://localhost/vedsdk/"
-	tpp.baseURL = ""
-	tpp.baseURL, err = normalizeURL(url)
-	if err != nil {
-		t.Fatalf("err is not nil, err: %s url: %s", err, url)
-	}
-	if !strings.EqualFold(tpp.baseURL, expectedURL) {
-		t.Fatalf("Base URL did not match expected value. Expected: %s Actual: %s", expectedURL, tpp.baseURL)
-	}
-
-	url, err = tpp.getURL(urlResourceAuthorize)
-	if !strings.EqualFold(url, fmt.Sprintf("%s%s", expectedURL, urlResourceAuthorize)) {
-		t.Fatalf("Get URL did not match expected value. Expected: %s Actual: %s", fmt.Sprintf("%s%s", expectedURL, urlResourceAuthorize), url)
-	}
-
-	url, err = tpp.getURL(urlResourceCertificateRequest)
-	if !strings.EqualFold(url, fmt.Sprintf("%s%s", expectedURL, urlResourceCertificateRequest)) {
-		t.Fatalf("Get URL did not match expected value. Expected: %s Actual: %s", fmt.Sprintf("%s%s", expectedURL, urlResourceCertificateRequest), url)
-	}
-
-	url, err = tpp.getURL(urlResourceCertificateRetrieve)
-	if !strings.EqualFold(url, fmt.Sprintf("%s%s", expectedURL, urlResourceCertificateRetrieve)) {
-		t.Fatalf("Get URL did not match expected value. Expected: %s Actual: %s", fmt.Sprintf("%s%s", expectedURL, urlResourceCertificateRetrieve), url)
-	}
-	tpp.baseURL = ""
-	url, err = tpp.getURL(urlResourceAuthorize)
-	if err == nil {
-		t.Fatalf("Get URL did not return an error when the base url had not been set.")
 	}
 }
 
