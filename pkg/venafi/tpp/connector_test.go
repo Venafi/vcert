@@ -128,7 +128,7 @@ func TestNewConnectorURLErrors(t *testing.T) {
 			if !errors.Is(err, verror.UserDataError) {
 				t.Errorf("expected a UserDataError, got: %v", err)
 			}
-		}
+		})
 	}
 }
 
