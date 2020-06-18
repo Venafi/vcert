@@ -560,6 +560,7 @@ func TestRetrieveCertificatesList(t *testing.T) {
 		t.Fatalf("%s", err)
 	}
 	for _, count := range []int{10, 100, 101, 153} {
+		timeStarted := time.Now()
 		l, err := conn.ListCertificates(endpoint.Filter{Limit: &count})
 		if err != nil {
 			t.Fatal(err)
@@ -567,7 +568,7 @@ func TestRetrieveCertificatesList(t *testing.T) {
 		set := make(map[string]struct{})
 		for _, c := range l {
 			set[c.Thumbprint] = struct{}{}
-			if c.ValidTo.Before(time.Now()) {
+			if c.ValidTo.Before(timeStarted) {
 				t.Errorf("cert %s is expired: %v", c.Thumbprint, c.ValidTo)
 			}
 		}
