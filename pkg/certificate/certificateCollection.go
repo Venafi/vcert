@@ -22,7 +22,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/pkg/verror"
+	"github.com/Venafi/vcert/v4/pkg/verror"
 	"strings"
 )
 

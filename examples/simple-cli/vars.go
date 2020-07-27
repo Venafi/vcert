@@ -19,8 +19,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Venafi/vcert"
-	"github.com/Venafi/vcert/pkg/endpoint"
+	"github.com/Venafi/vcert/v4"
+	"github.com/Venafi/vcert/v4/pkg/endpoint"
 	"io/ioutil"
 	"log"
 	"os"

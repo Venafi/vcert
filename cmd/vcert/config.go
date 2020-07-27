@@ -23,8 +23,8 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/Venafi/vcert"
-	"github.com/Venafi/vcert/pkg/endpoint"
+	"github.com/Venafi/vcert/v4"
+	"github.com/Venafi/vcert/v4/pkg/endpoint"
 )
 
 func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err error) {

@@ -18,8 +18,8 @@ package fake
 
 import (
 	"fmt"
-	"github.com/Venafi/vcert/pkg/certificate"
-	"github.com/Venafi/vcert/pkg/endpoint"
+	"github.com/Venafi/vcert/v4/pkg/certificate"
+	"github.com/Venafi/vcert/v4/pkg/endpoint"
 )
 
 //GenerateRequest creates a new certificate request, based on the zone/policy configuration and the user data

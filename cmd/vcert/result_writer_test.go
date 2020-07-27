@@ -19,7 +19,7 @@ package main
 import (
 	"testing"
 
-	"github.com/Venafi/vcert/pkg/certificate"
+	"github.com/Venafi/vcert/v4/pkg/certificate"
 )
 
 var (

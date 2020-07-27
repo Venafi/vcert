@@ -12,7 +12,7 @@
 	
 		Program: /usr/local/go/bin/go
 		Arguments: build -o bin/vcert ../cmd/vcert
-		Working directory: $GOPATH/src/github.com/Venafi/vcert/aruba
+		Working directory: $GOPATH/src/github.com/Venafi/vcert/v4/aruba
 	
 	OK -> OK -> Apply -> OK
 

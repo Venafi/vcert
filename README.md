@@ -9,8 +9,8 @@ We welcome and appreciate all contributions._
 
 # VCert
 
-[![GoDoc](https://godoc.org/github.com/Venafi/vcert?status.svg)](https://godoc.org/github.com/Venafi/vcert)  [![Go Report Card](https://goreportcard.com/badge/github.com/Venafi/vcert)](https://goreportcard.com/report/github.com/Venafi/vcert)
-[![Used By](https://sourcegraph.com/github.com/Venafi/vcert/-/badge.svg)](https://sourcegraph.com/github.com/Venafi/vcert?badge)
+[![GoDoc](https://godoc.org/github.com/Venafi/vcert/v4?status.svg)](https://godoc.org/github.com/Venafi/vcert/v4)  [![Go Report Card](https://goreportcard.com/badge/github.com/Venafi/vcert/v4)](https://goreportcard.com/report/github.com/Venafi/vcert/v4)
+[![Used By](https://sourcegraph.com/github.com/Venafi/vcert/v4/-/badge.svg)](https://sourcegraph.com/github.com/Venafi/vcert/v4?badge)
 
 VCert is a Go library, SDK, and command line utility designed to simplify key generation and enrollment of machine identities
 (also known as SSL/TLS certificates and keys) that comply with enterprise security policy by using the
@@ -29,13 +29,13 @@ Custom Fields and Instance Tracking require TPP 18.2 or higher, and Token Authen
 3. Download the source code:
 
 ```sh
-go get github.com/Venafi/vcert
+go get github.com/Venafi/vcert/v4
 ```
 
 or
 
 ```sh
-git clone https://github.com/Venafi/vcert.git $GOPATH/src/github.com/Venafi/vcert
+git clone https://github.com/Venafi/vcert/v4.git $GOPATH/src/github.com/Venafi/vcert/v4
 ```
 4. Build the command line utilities for Linux, MacOS, and Windows:
 
@@ -48,7 +48,7 @@ make build
 For code samples of programmatic use, please review the files in [/examples](/examples/).
 
 ### Common part
-1. In your main.go file, make the following import declarations:  `github.com/Venafi/vcert`, `github.com/Venafi/vcert/pkg/certificate`, and `github.com/Venafi/vcert/pkg/endpoint`.
+1. In your main.go file, make the following import declarations:  `github.com/Venafi/vcert/v4`, `github.com/Venafi/vcert/v4/pkg/certificate`, and `github.com/Venafi/vcert/v4/pkg/endpoint`.
 1. Create a configuration object of type `&vcert.Config` that specifies the Venafi connection details.  Solutions are typically designed to get those details from a secrets vault, .ini file, environment variables, or command line parameters.
 
 ### Enroll certificate
@@ -135,7 +135,7 @@ The completed test run will report on the number of test "scenarios" and "steps"
 
 Venafi welcomes contributions from the developer community.
 
-1. Fork it to your account (https://github.com/Venafi/vcert/fork)
+1. Fork it to your account (https://github.com/Venafi/vcert/v4/fork)
 2. Clone your fork (`git clone git@github.com:youracct/vcert.git`)
 3. Create a feature branch (`git checkout -b your-branch-name`)
 4. Implement and test your changes
