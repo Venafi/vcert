@@ -499,16 +499,16 @@ func TestIPSliceSetByString(t *testing.T) {
 	}
 }
 
-func TestEmailSliceString(t *testing.T) {
-	emails := emailSlice{"email@email1.com", "email@email2.com", "email@email3.com"}
+func TestRFC822NameSliceString(t *testing.T) {
+	emails := rfc822NameSlice{"email@email1.com", "email@email2.com", "email@email3.com"}
 	emailString := emails.String()
 	if !strings.Contains(emailString, "email@email1.com") || !strings.Contains(emailString, "email@email2.com") || !strings.Contains(emailString, "email@email3.com") {
 		t.Fatalf("Unexpected string value was returned.  Expected: %s\n%s\n%s\n Actual: %s", "email@email1.com", "email@email2.com", "email@email3.com", emailString)
 	}
 }
 
-func TestEmailSliceSetByString(t *testing.T) {
-	emails := emailSlice{}
+func TestRFC822NameSliceSetByString(t *testing.T) {
+	emails := rfc822NameSlice{}
 	data := []string{"email@email1.com", "email@email2.com", "email@email3.com", "barney.fife@venafi.com", "gpile@venafi.com", "andy@venafi.com", "some.other@anything.co.uk"}
 	for i, s := range data {
 		err := emails.Set(s)
@@ -526,12 +526,12 @@ func TestIsValidEmailAddress(t *testing.T) {
 	bad := []string{"bob@bob", "User@", "user@a", "user@a.b.c.d.e.f.g.h.j.k.l.", "user@.com", "domain.com", "1.2.3.4"}
 
 	for _, e := range good {
-		if !isValidEmailAddress(e) {
+		if !isValidRFC822Name(e) {
 			t.Fatalf("Email address %s failed validation", e)
 		}
 	}
 	for _, e := range bad {
-		if isValidEmailAddress(e) {
+		if isValidRFC822Name(e) {
 			t.Fatalf("Email address %s should have failed validation", e)
 		}
 	}
