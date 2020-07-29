@@ -109,7 +109,10 @@ func marshalSANs(dnsNames, emailAddresses []string, ipAddresses []net.IP, uris [
 				Name: upn,
 			},
 		})
-		asn1.Unmarshal(name, &raw)
+		_, err = asn1.Unmarshal(name, &raw)
+		if err != nil {
+			return nil, fmt.Errorf("could not parse otherName SAN: %v", err)
+		}
 		rawValues = append(rawValues, asn1.RawValue{Tag: nameTypeOther, Class: 2, IsCompound: true, Bytes: raw.Bytes})
 	}
 
