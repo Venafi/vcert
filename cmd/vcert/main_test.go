@@ -28,6 +28,7 @@ import (
 	"io/ioutil"
 	"math/big"
 	"net"
+	"net/url"
 	"os"
 	"strings"
 	"testing"
@@ -495,6 +496,30 @@ func TestIPSliceSetByString(t *testing.T) {
 		ips.Set(s)
 		if len(ips) != i+1 {
 			t.Fatalf("Unexpected count after adding to [].  Expected: %d Actual: %d", i+1, len(ips))
+		}
+	}
+}
+
+func TestURISliceString(t *testing.T) {
+	var uris uriSlice
+	data := []string{"https://www.abc.xyz", "ldaps://directory.abc.xyz", "spiffe://cluster.abc.xyz"}
+	for _, s := range data {
+		u, _ := url.Parse(s)
+		uris = append(uris, u)
+	}
+	uriString := uris.String()
+	if !strings.Contains(uriString, data[0]) || !strings.Contains(uriString, data[1]) || !strings.Contains(uriString, data[2]) {
+		t.Fatalf("Unexpected string value was returned.  Expected: %s\n%s\n%s\n Actual: %s", data[0], data[1], data[2], uriString)
+	}
+}
+
+func TestURISliceSetByString(t *testing.T) {
+	uris := uriSlice{}
+	data := []string{"https://www.abc.xyz", "ldaps://directory.abc.xyz", "spiffe://cluster.abc.xyz"}
+	for i, s := range data {
+		uris.Set(s)
+		if len(uris) != i+1 {
+			t.Fatalf("Unexpected count after adding to [].  Expected: %d Actual: %d", i+1, len(uris))
 		}
 	}
 }
