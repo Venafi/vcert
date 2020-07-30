@@ -350,8 +350,9 @@ func doCommandGetcred1(c *cli.Context) error {
 			tm := time.Unix(int64(resp.Expires), 0).UTC().Format(time.RFC3339)
 			fmt.Println("access_token: ", resp.Access_token)
 			fmt.Println("access_token_expires: ", tm)
-			fmt.Println("refresh_token: ", resp.Refresh_token)
-
+			if resp.Refresh_token != "" {
+				fmt.Println("refresh_token: ", resp.Refresh_token)
+			}
 		}
 	} else if clientP12 {
 		resp, err := tppConnector.GetRefreshToken(&endpoint.Authentication{
@@ -492,7 +493,7 @@ func doCommandRevoke1(c *cli.Context) error {
 	switch true {
 	case flags.distinguishedName != "":
 		revReq.CertificateDN = flags.distinguishedName
-		revReq.Disable = true
+		revReq.Disable = !flags.noRetire
 	case flags.thumbprint != "":
 		revReq.Thumbprint = flags.thumbprint
 		revReq.Disable = false
