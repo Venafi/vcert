@@ -184,6 +184,9 @@ func doCommandEnroll1(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
+
+	validateOverWritingEnviromentVariables()
+
 	cfg, err := buildConfig(c, &flags)
 	if err != nil {
 		return fmt.Errorf("Failed to build vcert config: %s", err)
@@ -278,6 +281,8 @@ func doCommandGetcred1(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
+	validateOverWritingEnviromentVariables()
+
 	err = setTLSConfig()
 	if err != nil {
 		return err
@@ -408,6 +413,8 @@ func doCommandPickup1(c *cli.Context) error {
 		return err
 	}
 
+	validateOverWritingEnviromentVariables()
+
 	cfg, err := buildConfig(c, &flags)
 	if err != nil {
 		return fmt.Errorf("Failed to build vcert config: %s", err)
@@ -476,6 +483,8 @@ func doCommandRevoke1(c *cli.Context) error {
 		return err
 	}
 
+	validateOverWritingEnviromentVariables()
+
 	cfg, err := buildConfig(c, &flags)
 	if err != nil {
 		return fmt.Errorf("Failed to build vcert config: %s", err)
@@ -533,6 +542,7 @@ func doCommandRenew1(c *cli.Context) error {
 		return err
 	}
 
+	validateOverWritingEnviromentVariables()
 	cfg, err := buildConfig(c, &flags)
 	if err != nil {
 		return fmt.Errorf("Failed to build vcert config: %s", err)
