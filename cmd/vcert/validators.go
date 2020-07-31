@@ -104,20 +104,26 @@ func validateConnectionFlags(commandName string) error {
 		if flags.profile != "" {
 			return fmt.Errorf("-profile option cannot be used without -config option")
 		}
+
+		tppToken := flags.tppToken
+		if tppToken == "" {
+			tppToken = getPropertyFromEnvironment(vCertToken)
+		}
+
 		if flags.testMode {
 			return nil
 		}
-		if flags.tppUser == "" && flags.tppToken == "" {
+		if flags.tppUser == "" && tppToken == "" {
 			// should be SaaS endpoint
-			if flags.apiKey == "" {
+			if flags.apiKey == "" && getPropertyFromEnvironment(vCertApiKey) == "" {
 				return fmt.Errorf("An API key is required for communicating with Venafi Cloud")
 			}
 		} else {
 			// should be TPP service
-			if flags.url == "" {
+			if flags.url == "" && getPropertyFromEnvironment(vCertURL) == "" {
 				return fmt.Errorf("missing -u (URL) parameter")
 			}
-			if flags.noPrompt && flags.tppPassword == "" && flags.tppToken == "" {
+			if flags.noPrompt && flags.tppPassword == "" && tppToken == "" {
 				return fmt.Errorf("An access token or password is required for communicating with Trust Protection Platform")
 			}
 
@@ -191,24 +197,41 @@ func validateEnrollFlags(commandName string) error {
 		return fmt.Errorf("The `-chain ignore` option cannot be used with -chain-file option")
 	}
 
+	apiKey := flags.apiKey
+	if apiKey == "" {
+		apiKey = getPropertyFromEnvironment(vCertApiKey)
+	}
+
 	if !flags.testMode && flags.config == "" {
-		if flags.tppUser == "" && flags.tppToken == "" {
+
+		tppToken := flags.tppToken
+		if tppToken == "" {
+			tppToken = getPropertyFromEnvironment(vCertToken)
+		}
+
+		zone := flags.zone
+		if zone == "" {
+			zone = getPropertyFromEnvironment(vCertZone)
+		}
+
+		if flags.tppUser == "" && tppToken == "" {
 			// should be SaaS endpoint
-			if flags.apiKey == "" {
+			if apiKey == "" {
 				return fmt.Errorf("An API key is required for enrollment with Venafi Cloud")
 			}
-			if flags.zone == "" {
+			if zone == "" {
 				return fmt.Errorf("A zone is required for requesting a certificate from Venafi Cloud")
 			}
 		} else {
 			// should be TPP service
-			if flags.tppUser == "" && flags.tppToken == "" {
+			if flags.tppUser == "" && tppToken == "" {
 				return fmt.Errorf("An access token or username is required for communicating with Trust Protection Platform")
 			}
-			if flags.noPrompt && flags.tppPassword == "" && flags.tppToken == "" {
+			if flags.noPrompt && flags.tppPassword == "" && tppToken == "" {
 				return fmt.Errorf("An access token or password is required for communicating with Trust Protection Platform")
 			}
-			if flags.zone == "" {
+
+			if zone == "" {
 				return fmt.Errorf("A zone is required for requesting a certificate from Trust Protection Platform")
 			}
 
@@ -240,7 +263,7 @@ func validateEnrollFlags(commandName string) error {
 		return fmt.Errorf("--tls-address cannot be used without --instance")
 	}
 
-	if (flags.tlsAddress != "" || flags.instance != "") && flags.apiKey != "" {
+	if (flags.tlsAddress != "" || flags.instance != "") && apiKey != "" {
 		return fmt.Errorf("--instance and --tls-address are not applicable to Venafi Cloud")
 	}
 
@@ -250,14 +273,19 @@ func validateEnrollFlags(commandName string) error {
 func validateGetcredFlags1(commandName string) error {
 	var err error
 
+	tppTokenS := flags.tppToken
+	if tppTokenS == "" {
+		tppTokenS = getPropertyFromEnvironment(vCertToken)
+	}
+
 	if flags.config != "" {
 		if flags.apiKey != "" ||
 			flags.tppUser != "" ||
 			flags.tppPassword != "" ||
-			flags.tppToken != "" ||
+			tppTokenS != "" ||
 			flags.url != "" ||
 			flags.testMode {
-			return fmt.Errorf("connection details cannot be specified with flags when -config is used")
+			return fmt.Errorf("connection details cannot be specified with flags or environment variables when -config is used")
 		}
 	} else {
 		if flags.profile != "" {
@@ -266,15 +294,15 @@ func validateGetcredFlags1(commandName string) error {
 		if flags.testMode {
 			return fmt.Errorf("There is no test mode for getcred command")
 		}
-		if flags.tppUser == "" && flags.tppToken == "" && flags.clientP12 == "" {
+		if flags.tppUser == "" && tppTokenS == "" && flags.clientP12 == "" {
 			return fmt.Errorf("either -username, -p12-file, or -t must be specified")
 		}
 
-		if flags.url == "" {
+		if flags.url == "" && getPropertyFromEnvironment(vCertURL) == "" {
 			return fmt.Errorf("missing -u (URL) parameter")
 		}
 
-		if flags.noPrompt && flags.tppPassword == "" && flags.tppToken == "" {
+		if flags.noPrompt && flags.tppPassword == "" && tppTokenS == "" {
 			return fmt.Errorf("An access token or password is required for communicating with Trust Protection Platform")
 		}
 
@@ -292,7 +320,7 @@ func validateGetcredFlags1(commandName string) error {
 	if err != nil {
 		return err
 	}
-	if flags.tppToken == "" && flags.tppUser == "" && flags.clientP12 == "" {
+	if tppTokenS == "" && flags.tppUser == "" && flags.clientP12 == "" {
 		return fmt.Errorf("either -username, -p12-file, or -t must be specified")
 	}
 
@@ -467,4 +495,45 @@ func validateRevokeFlags1(commandName string) error {
 	}
 
 	return nil
+}
+
+func validateOverWritingEnviromentVariables() {
+
+	colorYellow := "\033[33m"
+	colorReset := "\033[0m"
+
+	if getPropertyFromEnvironment(vCertURL) != "" {
+		if flags.url != "" {
+			logger.Println(colorYellow, "Warning Command line parameter -u has overridden environment variable VCERT_URL", colorReset)
+		}
+
+	}
+
+	if getPropertyFromEnvironment(vCertZone) != "" {
+		if flags.zone != "" {
+			logger.Println(colorYellow, "Warning: Command line parameter -z has overridden environment variable VCERT_ZONE", colorReset)
+		}
+
+	}
+
+	if getPropertyFromEnvironment(vCertToken) != "" {
+		if flags.tppToken != "" {
+			logger.Println(colorYellow, "Warning: Command line parameter -t has overridden environment variable VCERT_TOKEN", colorReset)
+		}
+	}
+
+	if getPropertyFromEnvironment(vCertApiKey) != "" {
+		if flags.apiKey != "" {
+			logger.Println(colorYellow, "Warning: Command line parameter -k has overridden environment variable VCERT_APIKEY", colorReset)
+		}
+
+	}
+
+	if getPropertyFromEnvironment(vCertTrustBundle) != "" {
+		if flags.trustBundle != "" {
+			logger.Println(colorYellow, "Warning: Command line parameter -trust-bundle has overridden environment variable VCERT_TRUST_BUNDLE", colorReset)
+		}
+
+	}
+
 }
