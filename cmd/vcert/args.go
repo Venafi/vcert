@@ -90,4 +90,5 @@ type commandFlags struct {
 	verbose           bool
 	zone              string
 	omitSans          bool
+	csrFormat         string
 }

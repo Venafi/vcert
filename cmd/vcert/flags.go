@@ -423,6 +423,15 @@ var (
 		Destination: &flags.omitSans,
 	}
 
+	flagGenCSRFormat = &cli.StringFlag{
+		Name: "format",
+		Usage: "Generates the Certificate Signing Request in the specified format. Options include: pem | json\n" +
+			"\t\tpem: Generates the CSR in classic pem format to be used as a file.\n" +
+			"\t\tjson: Generates the CSR in json format, suitable for rest api operations.",
+		Destination: &flags.csrFormat,
+		Value:       "pem",
+	}
+
 	commonFlags              = []cli.Flag{flagInsecure, flagFormat, flagVerbose, flagNoPrompt}
 	keyFlags                 = []cli.Flag{flagKeyType, flagKeySize, flagKeyCurve, flagKeyFile, flagKeyPassword}
 	sansFlags                = []cli.Flag{flagDNSSans, flagEmailSans, flagIPSans}
@@ -456,6 +465,8 @@ var (
 		keyFlags,
 		flagNoPrompt,
 		flagVerbose,
+		flagGenCSRFormat,
+		flagFile,
 	))
 
 	enrollFlags = flagsApppend(

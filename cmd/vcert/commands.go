@@ -16,7 +16,6 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 )
@@ -390,7 +389,7 @@ func doCommandGenCSR1(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	err = writeOutKeyAndCsr(&flags, key, csr)
+	err = writeOutKeyAndCsr(c.Command.Name, &flags, key, csr)
 	if err != nil {
 		return err
 	}
@@ -720,37 +719,27 @@ func generateCsrForCommandGenCsr(cf *commandFlags, privateKeyPass []byte) (priva
 	return
 }
 
-func writeOutKeyAndCsr(cf *commandFlags, key []byte, csr []byte) (err error) {
+func writeOutKeyAndCsr(commandName string, cf *commandFlags, key []byte, csr []byte) (err error) {
+	pcc := &certificate.PEMCollection{}
+	pcc.Certificate = string(csr[:])
+	pcc.PrivateKey = string(key[:])
 
-	if cf.file != "" {
-		writer := getFileWriter(cf.file)
-		f, ok := writer.(*os.File)
-		if ok {
-			defer f.Close()
-		}
-
-		_, err = writer.Write(key)
-		if err != nil {
-			return err
-		}
-		_, err = writer.Write(csr)
-		return
+	result := &Result{
+		Pcc:      pcc,
+		PickupId: "",
+		Config: &Config{
+			Command:      commandName,
+			Format:       cf.csrFormat,
+			ChainOption:  certificate.ChainOptionFromString(cf.chainOption),
+			AllFile:      cf.file,
+			KeyFile:      cf.keyFile,
+			CertFile:     cf.csrFile,
+			ChainFile:    "",
+			PickupIdFile: "",
+			KeyPassword:  cf.keyPassword,
+		},
 	}
 
-	keyWriter := getFileWriter(cf.keyFile)
-	keyFile, ok := keyWriter.(*os.File)
-	if ok {
-		defer keyFile.Close()
-	}
-	_, err = keyWriter.Write(key)
-	if err != nil {
-		return err
-	}
-	csrWriter := getFileWriter(cf.csrFile)
-	csrFile, ok := csrWriter.(*os.File)
-	if ok {
-		defer csrFile.Close()
-	}
-	_, err = csrWriter.Write(csr)
+	err = result.Flush()
 	return
 }
