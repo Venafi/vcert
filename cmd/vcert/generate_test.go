@@ -80,109 +80,55 @@ func getCommandFlags() *commandFlags {
 	return &cf
 }
 
-func TestGenerateCsrJsonFormat(t *testing.T) {
-	t.Skip()
-	//
-	//	flags := getCommandFlags()
-	//
-	//
-	//	flags.csrFile = "/Users/rvelamia/Desktop/vcertWorkingDir/cert.csr"
-	//	flags.keyFile = "/Users/rvelamia/Desktop/vcertWorkingDir/cert.key"
-	//	flags.csrFormat = "json"
-	//	flags.noPrompt = true
-	//	flags.commonName = "localhost"
-	//	flags.org = "venafi"
-	//	flags.orgUnits = stringSlice{"devops"}
-	//	flags.keyTypeString = "rsa"
-	//	kt := certificate.KeyTypeRSA
-	//	flags.keyType = &kt
-	//	flags.keySize = 4096
-	//	flags.locality = "Merida"
-	//	flags.state = "Yucatan"
-	//	flags.country = "Mx"
-	//
-	//	key, csr, err := generateCsrForCommandGenCsr(flags, []byte(flags.keyPassword))
-	//	if err != nil {
-	//		t.Fatalf("%s", err)
-	//	}
-	//	err = writeOutKeyAndCsr(commandGenCSRName, flags, key, csr)
-	//	if err != nil {
-	//		t.Fatalf("%s", err)
-	//	}
-	//
-	//	csrData, err := ioutil.ReadFile(flags.csrFile)
-	//	if err != nil {
-	//		t.Fatalf("%s", err)
-	//	}
-	//	keyData, err := ioutil.ReadFile(flags.keyFile)
-	//	if err != nil {
-	//		t.Fatalf("%s", err)
-	//	}
-	//
-	//	csrStr := byteToStr(csrData)
-	//	keyStr := byteToStr(keyData)
-	//
-	//	csrStr = strings.TrimLeft(csrStr, "{\"Certificate\":")
-	//	csrStr = strings.TrimRight(csrStr, "}")
-	//	keyStr = strings.TrimLeft(keyStr, "{\"PrivateKey\":")
-	//	keyStr = strings.TrimRight(keyStr, "}")
-	//
-	//	jsonBody := "{\n" +
-	//		"\"PolicyDN\" : \"rvela.test.venafi.example.com\",\n" +
-	//		"\"ObjectName\" : \"rvela.demoGo\",\n" +
-	//		"\"CertificateData\" : \"" + csrStr + ",\n" +
-	//		"\"PrivateKeyData\" : \"" + keyStr + ",\n" +
-	//		"\"Password\" : \"\",\n" +
-	//		"\"CASpecificAttributes\" : \"[]\",\n" +
-	//		"\"Reconcile\" : false\n" +
-	//		"}"
-	//
-	//	//Json client
-	//	client := resty.New()
-	//	apiResp, err := client.R().
-	//		SetHeader("Content-type", "application/json").
-	//		SetAuthToken(token).
-	//		SetBody(jsonBody).
-	//		Post(flags.url + "/vedsdk/certificates/import")
-	//
-	//	fmt.Println(apiResp.Header())
-}
-
 func TestGenerateCsrJson(t *testing.T) {
-	cf := getCommandFlags()
 
+	csrName := os.TempDir() + "csr.txt"
+	keyName := os.TempDir() + "key.txt"
+
+	cf := getCommandFlags()
 	cf.csrFormat = "json"
 	cf.noPrompt = true
+	cf.csrFile = csrName
+	cf.keyFile = keyName
 
-	key, csr := generateCsrJson(cf)
+	key, csr := generateCsr(cf)
 
-	jsonOutput := Output{}
-	err := json.Unmarshal(csr, jsonOutput)
+	err := writeOutKeyAndCsr(commandGenCSRName, cf, key, csr)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-	if jsonOutput.Certificate == "" {
-		t.Fatalf("CSR data is empty")
-	}
 
-	err = json.Unmarshal(key, jsonOutput)
+	//Reads the csr file to validate the json format
+	csrData, err := ioutil.ReadFile(csrName)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-	if jsonOutput.PrivateKey == "" {
-		t.Fatalf("CSR data is empty")
+	csrOutput := Output{}
+	err = json.Unmarshal(csrData, &csrOutput)
+	if err != nil {
+		t.Fatalf("%s", err)
 	}
-}
+	if csrOutput.Certificate == "" {
+		t.Fatalf("CSR data is not in expected format : JSON")
+	}
 
-func TestGenerateCsrJsonSingleFile(t *testing.T) {
+	//Reads the private key file to validate the json format
+	keyData, err := ioutil.ReadFile(keyName)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	keyOutput := Output{}
+	err = json.Unmarshal(keyData, &keyOutput)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	if keyOutput.PrivateKey == "" {
+		t.Fatalf("Private key data is not in expected format : JSON")
+	}
 	return
 }
 
-func TestGenerateCsrJsonMultipleFiles(t *testing.T) {
-	return
-}
-
-func generateCsrJson(cf *commandFlags) (key []byte, csr []byte) {
+func generateCsr(cf *commandFlags) (key []byte, csr []byte) {
 
 	key, csr, err := generateCsrForCommandGenCsr(cf, []byte(cf.keyPassword))
 	if err != nil {

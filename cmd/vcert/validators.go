@@ -54,7 +54,7 @@ func validateCommonFlags(commandName string) error {
 	if flags.format != "" && flags.format != "pem" && flags.format != "json" && flags.format != "pkcs12" {
 		return fmt.Errorf("Unexpected output format: %s", flags.format)
 	}
-	if flags.file != "" && (flags.certFile != "" || flags.chainFile != "" || flags.keyFile != "" || flags.csrFile != "") {
+	if flags.file != "" && (flags.certFile != "" || flags.chainFile != "" || flags.keyFile != "") {
 		return fmt.Errorf("The '-file' option cannot be used used with any other -*-file flags. Either all data goes into one file or individual files must be specified using the appropriate flags")
 	}
 
