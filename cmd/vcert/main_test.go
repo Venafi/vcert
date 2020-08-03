@@ -777,7 +777,6 @@ func TestConfigEnvironmentVariablesForTpp(t *testing.T) {
 	//execute the validations.
 	if err != nil {
 		t.Fatalf("Failed to build vcert config: %s", err)
-		unsetEnvironmentVariables()
 	}
 
 	if cfg.Zone == "" {
@@ -808,7 +807,6 @@ func TestConfigEnvironmentVariablesForCloud(t *testing.T) {
 	//execute the validations.
 	if err != nil {
 		t.Fatalf("Failed to build vcert config: %s", err)
-		unsetEnvironmentVariables()
 	}
 
 	//for cloud we only require a zone and an api, to be able
@@ -850,7 +848,6 @@ func TestValidatePrecedenceForFlagsTpp(t *testing.T) {
 	//execute the validations.
 	if err != nil {
 		t.Fatalf("Failed to build vcert config: %s", err)
-		unsetEnvironmentVariables()
 	}
 
 	if cfg.Zone != tppZoneTestFlagValue {
@@ -885,7 +882,6 @@ func TestValidatePrecedenceForFlagsCloud(t *testing.T) {
 	//execute the validations.
 	if err != nil {
 		t.Fatalf("Failed to build vcert config: %s", err)
-		unsetEnvironmentVariables()
 	}
 
 	if cfg.Zone != cloudZoneTestValue {

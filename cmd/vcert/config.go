@@ -43,22 +43,23 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 		var auth = &endpoint.Authentication{}
 
 		//case when access token can come from enviroment variable.
-		ttpTokenS := flags.tppToken
+		tppTokenS := flags.tppToken
 
-		if ttpTokenS == "" {
-			ttpTokenS = getPropertyFromEnvironment(vCertToken)
+		if tppTokenS == "" {
+			tppTokenS = getPropertyFromEnvironment(vCertToken)
 		}
 
 		if flags.testMode {
 			connectorType = endpoint.ConnectorTypeFake
 			if flags.testModeDelay > 0 {
 				logf("Running in -test-mode with emulating endpoint delay.")
+				/* #nosec */
 				var delay = rand.Intn(flags.testModeDelay)
 				for i := 0; i < delay; i++ {
 					time.Sleep(1 * time.Second)
 				}
 			}
-		} else if flags.tppUser != "" || ttpTokenS != "" || flags.clientP12 != "" {
+		} else if flags.tppUser != "" || tppTokenS != "" || flags.clientP12 != "" {
 			connectorType = endpoint.ConnectorTypeTPP
 
 			//add support for using enviroment variables begins
@@ -68,7 +69,7 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 			}
 			//add support for using enviroment variables ends
 
-			if ttpTokenS == "" && flags.tppPassword == "" && flags.clientP12 == "" {
+			if tppTokenS == "" && flags.tppPassword == "" && flags.clientP12 == "" {
 				return cfg, fmt.Errorf("A password is required to communicate with TPP")
 			}
 

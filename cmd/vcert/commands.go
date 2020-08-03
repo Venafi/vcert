@@ -166,6 +166,7 @@ func setTLSConfig() error {
 		// Setup HTTPS client
 		tlsConfig.Certificates = []tls.Certificate{cert}
 		tlsConfig.RootCAs = caCertPool
+		// nolint:staticcheck
 		tlsConfig.BuildNameToCertificate()
 	}
 
