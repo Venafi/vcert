@@ -531,7 +531,7 @@ func validateOverWritingEnviromentVariables() {
 
 	if getPropertyFromEnvironment(vCertTrustBundle) != "" {
 		if flags.trustBundle != "" {
-			logger.Println(colorYellow, "Warning: Command line parameter -trust-bundle has overridden environment variable VCERT_TRUST_BUNDLE", colorReset)
+			logger.Println(colorYellow, "Warning: Command line parameter --trust-bundle has overridden environment variable VCERT_TRUST_BUNDLE", colorReset)
 		}
 
 	}
