@@ -425,9 +425,9 @@ var (
 
 	flagCSRFormat = &cli.StringFlag{
 		Name: "format",
-		Usage: "Generates the Certificate Signing Request in the specified format. Options include: PEM | JSON\n" +
+		Usage: "Generates the Certificate Signing Request in the specified format. Options include: pem | json\n" +
 			"\tpem: Generates the CSR in classic PEM format to be used as a file.\n" +
-			"\tjson: Generates the CSR in JSON format, suitable for rest API operations.",
+			"\tjson: Generates the CSR in JSON format, suitable for REST API operations.",
 		Destination: &flags.csrFormat,
 		Value:       "pem",
 	}
