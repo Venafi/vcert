@@ -721,7 +721,7 @@ func generateCsrForCommandGenCsr(cf *commandFlags, privateKeyPass []byte) (priva
 
 func writeOutKeyAndCsr(commandName string, cf *commandFlags, key []byte, csr []byte) (err error) {
 	pcc := &certificate.PEMCollection{}
-	pcc.Certificate = string(csr[:])
+	pcc.CSR = string(csr[:])
 	pcc.PrivateKey = string(key[:])
 
 	result := &Result{
@@ -733,7 +733,7 @@ func writeOutKeyAndCsr(commandName string, cf *commandFlags, key []byte, csr []b
 			ChainOption:  certificate.ChainOptionFromString(cf.chainOption),
 			AllFile:      cf.file,
 			KeyFile:      cf.keyFile,
-			CertFile:     cf.csrFile,
+			CSRFile:      cf.csrFile,
 			ChainFile:    "",
 			PickupIdFile: "",
 			KeyPassword:  cf.keyPassword,

@@ -108,7 +108,7 @@ func TestGenerateCsrJson(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-	if csrOutput.Certificate == "" {
+	if csrOutput.CSR == "" {
 		t.Fatalf("CSR data is not in expected format : JSON")
 	}
 
