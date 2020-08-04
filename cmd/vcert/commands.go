@@ -99,6 +99,7 @@ func runBeforeCommand(c *cli.Context) error {
 	flags.orgUnits = c.StringSlice("ou")
 	flags.dnsSans = c.StringSlice("san-dns")
 	flags.emailSans = c.StringSlice("san-email")
+	flags.upnSans = c.StringSlice("san-upn")
 	flags.customFields = c.StringSlice("field")
 
 	noDuplicatedFlags := []string{"instance", "tls-address", "app-info"}
@@ -121,6 +122,10 @@ func runBeforeCommand(c *cli.Context) error {
 	for _, stringIP := range c.StringSlice("san-ip") {
 		ip := net.ParseIP(stringIP)
 		flags.ipSans = append(flags.ipSans, ip)
+	}
+	for _, stringURI := range c.StringSlice("san-uri") {
+		uri, _ := url.Parse(stringURI)
+		flags.uriSans = append(flags.uriSans, uri)
 	}
 
 	return nil

@@ -143,8 +143,8 @@ type certificateRenewResponse struct {
 }
 
 type sanItem struct {
-	Type int    `json:",omitempty"`
-	Name string `json:",omitempty"`
+	Type int    `json:""`
+	Name string `json:""`
 }
 
 type nameValuePair struct {

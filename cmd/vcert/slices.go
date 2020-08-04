@@ -19,6 +19,7 @@ package main
 import (
 	"fmt"
 	"net"
+	"net/url"
 )
 
 type stringSlice []string
@@ -36,24 +37,24 @@ func (ss *stringSlice) Set(value string) error {
 	return nil
 }
 
-const emailRegex = "[[:alnum:]][\\w\\.-]*[[:alnum:]]@[[:alnum:]][\\w\\.-]*[[:alnum:]]\\.[[:alpha:]][a-z\\.]*[[:alpha:]]$"
+const rfc822NameRegex = "[[:alnum:]][\\w\\.-]*[[:alnum:]]@[[:alnum:]][\\w\\.-]*[[:alnum:]]\\.[[:alpha:]][a-z\\.]*[[:alpha:]]$"
 
-type emailSlice []string
+type rfc822NameSlice []string
 
-func (es *emailSlice) String() string {
+func (rs *rfc822NameSlice) String() string {
 	var ret string
-	for _, s := range *es {
+	for _, s := range *rs {
 		ret += fmt.Sprintf("%s\n", s)
 	}
 	return ret
 }
 
-func (es *emailSlice) Set(value string) error {
-	if isValidEmailAddress(value) {
-		*es = append(*es, value)
+func (rs *rfc822NameSlice) Set(value string) error {
+	if isValidRFC822Name(value) {
+		*rs = append(*rs, value)
 		return nil
 	}
-	return fmt.Errorf("Failed to convert %s to an Email Address", value)
+	return fmt.Errorf("Failed to convert %s to an RFC 822 name (email or UPN)", value)
 }
 
 type ipSlice []net.IP
@@ -73,4 +74,23 @@ func (is *ipSlice) Set(value string) error {
 		return nil
 	}
 	return fmt.Errorf("Failed to convert %s to an IP Address", value)
+}
+
+type uriSlice []*url.URL
+
+func (us *uriSlice) String() string {
+	var ret string
+	for _, s := range *us {
+		ret += fmt.Sprintf("%s\n", s)
+	}
+	return ret
+}
+
+func (us *uriSlice) Set(value string) error {
+	temp, _ := url.Parse(value)
+	if temp != nil {
+		*us = append(*us, temp)
+		return nil
+	}
+	return fmt.Errorf("Failed to convert %s to a URI", value)
 }
