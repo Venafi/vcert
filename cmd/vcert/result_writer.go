@@ -128,16 +128,25 @@ func (o *Output) Format(c *Config) ([]byte, error) {
 
 	default: // pem
 		res := ""
+		certValue := ""
+		if o.Certificate == "" {
+			if o.CSR != "" {
+				certValue = o.CSR
+			}
+		} else {
+			certValue = o.Certificate
+		}
+
 		switch c.ChainOption {
 		case certificate.ChainOptionRootFirst:
 			res += strings.Join(o.Chain, "")
-			res += o.Certificate
+			res += certValue
 			res += o.PrivateKey
 		case certificate.ChainOptionIgnore:
-			res += o.Certificate
+			res += certValue
 			res += o.PrivateKey
 		default:
-			res += o.Certificate
+			res += certValue
 			res += o.PrivateKey
 			res += strings.Join(o.Chain, "")
 		}
