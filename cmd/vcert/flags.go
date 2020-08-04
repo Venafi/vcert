@@ -158,7 +158,21 @@ var (
 	flagEmailSans = &cli.StringSliceFlag{
 		Name: "san-email",
 		Usage: "Use to specify an Email Subject Alternative Name. " +
-			"This option can be repeated to specify more than one value, like this: --san-email abc@abc.xyz --san-email def@abc.xyz etc.",
+			"This option can be repeated to specify more than one value, like this: --san-email me@abc.xyz --san-email you@abc.xyz etc.",
+	}
+
+	flagURISans = &cli.StringSliceFlag{
+		Name: "san-uri",
+		Usage: "Use to specify a Uniform Resource Identifier (URI) Subject Alternative Name. " +
+			"This option can be repeated to specify more than one value, like this: --san-uri https://www.abc.xyz --san-uri spiffe://node.abc.xyz etc.",
+		Hidden: true,
+	}
+
+	flagUPNSans = &cli.StringSliceFlag{
+		Name: "san-upn",
+		Usage: "Use to specify a User Principal Name (UPN) Subject Alternative Name. " +
+			"This option can be repeated to specify more than one value, like this: --san-upn me@abc.xyz --san-upn you@abc.xyz etc.",
+		Hidden: true,
 	}
 
 	flagFormat = &cli.StringFlag{
@@ -423,9 +437,18 @@ var (
 		Destination: &flags.omitSans,
 	}
 
+	flagCSRFormat = &cli.StringFlag{
+		Name: "format",
+		Usage: "Generates the Certificate Signing Request in the specified format. Options include: pem | json\n" +
+			"\tpem: Generates the CSR in classic PEM format to be used as a file.\n" +
+			"\tjson: Generates the CSR in JSON format, suitable for REST API operations.",
+		Destination: &flags.csrFormat,
+		Value:       "pem",
+	}
+
 	commonFlags              = []cli.Flag{flagInsecure, flagFormat, flagVerbose, flagNoPrompt}
 	keyFlags                 = []cli.Flag{flagKeyType, flagKeySize, flagKeyCurve, flagKeyFile, flagKeyPassword}
-	sansFlags                = []cli.Flag{flagDNSSans, flagEmailSans, flagIPSans}
+	sansFlags                = []cli.Flag{flagDNSSans, flagEmailSans, flagIPSans, flagURISans, flagUPNSans}
 	subjectFlags             = flagsApppend(flagCommonName, flagCountry, flagState, flagLocality, flagOrg, flagOrgUnits)
 	sortableCredentialsFlags = []cli.Flag{
 		flagTestMode,
@@ -456,6 +479,7 @@ var (
 		keyFlags,
 		flagNoPrompt,
 		flagVerbose,
+		flagCSRFormat,
 	))
 
 	enrollFlags = flagsApppend(

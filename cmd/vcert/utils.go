@@ -90,6 +90,12 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 	if len(cf.emailSans) > 0 {
 		req.EmailAddresses = cf.emailSans
 	}
+	if len(cf.uriSans) > 0 {
+		req.URIs = cf.uriSans
+	}
+	if len(cf.upnSans) > 0 {
+		req.UPNs = cf.upnSans
+	}
 	req.OmitSANs = cf.omitSans
 	for _, f := range cf.customFields {
 		k, v, err := parseCustomField(f)
@@ -297,9 +303,9 @@ func doValuesMatch(value1 []byte, value2 []byte) bool {
 	return true
 }
 
-func isValidEmailAddress(email string) bool {
-	reg := regexp.MustCompile(emailRegex)
-	return reg.FindStringIndex(email) != nil
+func isValidRFC822Name(name string) bool {
+	reg := regexp.MustCompile(rfc822NameRegex)
+	return reg.FindStringIndex(name) != nil
 }
 
 func sliceContains(slice []string, item string) bool {

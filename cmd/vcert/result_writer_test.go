@@ -117,6 +117,7 @@ func TestPKCS12withEncPK(t *testing.T) {
 			"",
 			"",
 			"",
+			"",
 			"asdf",
 		},
 	}
@@ -145,6 +146,7 @@ func TestPKCS12withPlainPK(t *testing.T) {
 			"",
 			"",
 			"",
+			"",
 		},
 	}
 	err := result.Flush()
@@ -167,6 +169,7 @@ func TestPKCS12withPlainEcPK(t *testing.T) {
 			"pkcs12",
 			certificate.ChainOptionFromString(""),
 			"/tmp/TestPKCS12withPlainEcPK",
+			"",
 			"",
 			"",
 			"",

@@ -37,6 +37,7 @@ type Config struct {
 	AllFile      string
 	KeyFile      string
 	CertFile     string
+	CSRFile      string
 	ChainFile    string
 	PickupIdFile string
 
@@ -51,6 +52,7 @@ type Result struct {
 
 type Output struct {
 	Certificate string   `json:",omitempty"`
+	CSR         string   `json:",omitempty"`
 	PrivateKey  string   `json:",omitempty"`
 	Chain       []string `json:",omitempty"`
 	PickupId    string   `json:",omitempty"`
@@ -155,6 +157,7 @@ func (r *Result) format(x string) string {
 		return x
 	}
 }
+
 func (r *Result) formatChain(xs []string) string {
 	if strings.ToLower(r.Config.Format) == "json" {
 		b, _ := json.Marshal(xs)
@@ -183,6 +186,7 @@ func (r *Result) Flush() error {
 		allFileOutput.PrivateKey = r.Pcc.PrivateKey
 		allFileOutput.Certificate = r.Pcc.Certificate
 		allFileOutput.Chain = r.Pcc.Chain
+		allFileOutput.CSR = r.Pcc.CSR
 
 		var bytes []byte
 		if r.Config.Format == "pkcs12" {
@@ -199,30 +203,41 @@ func (r *Result) Flush() error {
 		err = ioutil.WriteFile(r.Config.AllFile, bytes, 0600)
 		errors = append(errors, err)
 	} else {
+
 		if r.Config.CertFile != "" && r.Pcc.Certificate != "" {
 			certFileOutput := &Output{}
 			certFileOutput.Certificate = r.Pcc.Certificate
 			if r.Config.ChainFile == "" {
 				certFileOutput.Chain = r.Pcc.Chain
 			}
-			bytes, err := certFileOutput.Format(r.Config)
-			if err != nil {
-				return err // something worse than file permission problem
-			} else {
-				err = ioutil.WriteFile(r.Config.CertFile, bytes, 0600)
-				errors = append(errors, err)
-			}
+			err = writeFile(certFileOutput, r.Config, r.Config.CertFile)
+			errors = append(errors, err)
 		} else {
 			stdOut.Certificate = r.Pcc.Certificate
 		}
+
+		if r.Config.CSRFile != "" && r.Pcc.CSR != "" {
+			csrFileOutput := &Output{}
+			csrFileOutput.CSR = r.Pcc.CSR
+			err = writeFile(csrFileOutput, r.Config, r.Config.CSRFile)
+			errors = append(errors, err)
+		} else {
+			stdOut.CSR = r.Pcc.CSR
+		}
+
 		if r.Config.KeyFile != "" && r.Pcc.PrivateKey != "" {
-			err = ioutil.WriteFile(r.Config.KeyFile, []byte(r.format(r.Pcc.PrivateKey)), 0600)
+			keyFileOutput := &Output{}
+			keyFileOutput.PrivateKey = r.Pcc.PrivateKey
+			err = writeFile(keyFileOutput, r.Config, r.Config.KeyFile)
 			errors = append(errors, err)
 		} else {
 			stdOut.PrivateKey = r.Pcc.PrivateKey
 		}
+
 		if r.Config.ChainFile != "" && len(r.Pcc.Chain) > 0 {
-			err = ioutil.WriteFile(r.Config.ChainFile, []byte(r.formatChain(r.Pcc.Chain)), 0600)
+			chainFileOutput := &Output{}
+			chainFileOutput.Chain = r.Pcc.Chain
+			err = writeFile(chainFileOutput, r.Config, r.Config.ChainFile)
 			errors = append(errors, err)
 		} else if r.Config.CertFile == "" {
 			stdOut.Chain = r.Pcc.Chain
@@ -231,7 +246,9 @@ func (r *Result) Flush() error {
 	// PickupId is special -- it wasn't supposed to be written to -file
 	if r.Config.Command == commandEnrollName || r.Config.Command == commandRenewName {
 		if r.Config.PickupIdFile != "" && r.PickupId != "" {
-			err = ioutil.WriteFile(r.Config.PickupIdFile, []byte(r.format(r.PickupId)+"\n"), 0600)
+			pickupFileOutput := &Output{}
+			pickupFileOutput.PickupId = r.PickupId
+			err = writeFile(pickupFileOutput, r.Config, r.Config.PickupIdFile)
 			errors = append(errors, err)
 		} else {
 			stdOut.PickupId = r.PickupId
@@ -243,7 +260,9 @@ func (r *Result) Flush() error {
 	if err != nil {
 		return err // something worse than file permission problem
 	}
-	fmt.Fprint(os.Stdout, string(bytes))
+	s := string(bytes)
+	s += "\n"
+	fmt.Fprint(os.Stdout, s)
 
 	var finalError error
 	for _, e := range errors {
@@ -255,4 +274,14 @@ func (r *Result) Flush() error {
 		}
 	}
 	return finalError
+}
+
+func writeFile(output *Output, config *Config, filePath string) (err error) {
+	bytes, err := output.Format(config)
+	if err != nil {
+		return // something worse than file permission problem
+	}
+	err = ioutil.WriteFile(filePath, bytes, 0600)
+
+	return
 }
