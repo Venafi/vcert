@@ -550,6 +550,7 @@ var (
 			hiddenFlags(flagZone, true),     //todo: fix aruba tests and remove
 			hiddenFlags(subjectFlags, true), //todo: fix aruba tests and remove
 			flagCADN,
+			flagFile,
 			flagCertFile,
 			flagChainFile,
 			flagChainOption,
