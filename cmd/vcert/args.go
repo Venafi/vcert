@@ -68,6 +68,7 @@ type commandFlags struct {
 	locality          string
 	noPickup          bool
 	noPrompt          bool
+	noRetire          bool
 	org               string
 	orgUnits          stringSlice
 	pickupID          string

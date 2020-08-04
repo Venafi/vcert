@@ -358,7 +358,7 @@ var (
 		Name: "id",
 		Usage: "Use to specify the ID of the certificate. Required unless --thumbprint is specified. For revocation," +
 			"marks the certificate as disabled so that no new certificate can be enrolled to replace it. " +
-			"If a replacement certificate will be enrolled, also specify --no-retire=true.",
+			"If a replacement certificate will be enrolled, also specify --no-retire.",
 		Destination: &flags.distinguishedName,
 	}
 
@@ -366,7 +366,7 @@ var (
 		Name: "thumbprint",
 		Usage: "Use to specify the SHA1 thumbprint of the certificate to renew." +
 			" Value may be specified as a string or read from the certificate file using the file: prefix. " +
-			"Implies --no-retire=true",
+			"Implies --no-retire.",
 		Destination: &flags.thumbprint,
 	}
 
@@ -406,10 +406,10 @@ var (
 		Destination: &flags.revocationReason,
 	}
 
-	flagRevocationNoRetire = &cli.StringFlag{
+	flagRevocationNoRetire = &cli.BoolFlag{
 		Name:        "no-retire",
 		Usage:       "Do not disable certificate object. Works only with --id <certificate DN>",
-		Destination: &flags.revocationReason,
+		Destination: &flags.noRetire,
 	}
 
 	flagScope = &cli.StringFlag{
