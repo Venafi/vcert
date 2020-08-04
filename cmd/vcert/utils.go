@@ -22,6 +22,7 @@ import (
 	"encoding/hex"
 	"encoding/pem"
 	"fmt"
+	"github.com/spf13/viper"
 	"io"
 	"io/ioutil"
 	"os"
@@ -31,6 +32,16 @@ import (
 
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
+)
+
+const (
+	vCertURL  = "VCERT_URL"
+	vCertZone = "VCERT_ZONE"
+	/* #nosec */
+	vCertToken = "VCERT_TOKEN"
+	/* #nosec */
+	vCertApiKey      = "VCERT_APIKEY"
+	vCertTrustBundle = "VCERT_TRUST_BUNDLE"
 )
 
 func parseCustomField(s string) (key, value string, err error) {
@@ -305,4 +316,21 @@ func sliceContains(slice []string, item string) bool {
 
 	_, ok := set[item]
 	return ok
+}
+
+func getPropertyFromEnvironment(s string) string {
+	viper.AutomaticEnv()
+
+	urlS := viper.Get(s)
+
+	if urlS == nil {
+
+		return ""
+
+	} else {
+
+		return fmt.Sprintf("%v", urlS)
+
+	}
+
 }

@@ -788,3 +788,134 @@ func TestWrapArgumentDescription(t *testing.T) {
 		t.Fatalf("Description was wrapped when not expected. Original: %s -- Wrapped: %s", desc, edited)
 	}
 }
+
+func TestConfigEnvironmentVariablesForTpp(t *testing.T) {
+
+	//create the environment variables.
+	setEnvironmentVariablesForTpp()
+
+	//create a context, thiw will be used on the build config function.
+	context := getCliContext()
+
+	cfg, err := buildConfig(context, &flags)
+
+	//execute the validations.
+	if err != nil {
+		t.Fatalf("Failed to build vcert config: %s", err)
+	}
+
+	if cfg.Zone == "" {
+		t.Fatalf("Zone is empty")
+	}
+
+	if cfg.BaseUrl == "" {
+		t.Fatalf("Base URL is empty")
+	}
+
+	if cfg.Credentials.AccessToken == "" {
+		t.Fatalf("Access token is empty")
+	}
+
+	unsetEnvironmentVariables()
+}
+
+func TestConfigEnvironmentVariablesForCloud(t *testing.T) {
+
+	//create the environment variables.
+	setEnvironmentVariablesForCloud()
+
+	//create a context, thiw will be used on the build config function.
+	context := getCliContext()
+
+	cfg, err := buildConfig(context, &flags)
+
+	//execute the validations.
+	if err != nil {
+		t.Fatalf("Failed to build vcert config: %s", err)
+	}
+
+	//for cloud we only require a zone and an api, to be able
+	//to do most of the operations.
+	if cfg.Zone == "" {
+		t.Fatalf("Zone is empty")
+	}
+
+	if cfg.Credentials.APIKey == "" {
+		t.Fatalf("API key is empty")
+	}
+
+	unsetEnvironmentVariables()
+}
+
+func TestEnvironmentVariableTrustBundleFileName(t *testing.T) {
+	setEnvironmentVariableForTrustBundle()
+
+	trustBundleFile := getPropertyFromEnvironment(vCertTrustBundle)
+
+	if trustBundleFile == "" {
+		t.Fatalf("Trust bundle is empty")
+	}
+
+	unsetEnvironmentVariables()
+}
+
+func TestValidatePrecedenceForFlagsTpp(t *testing.T) {
+
+	flags.tppToken = tppTokenTestFlagValue
+	flags.zone = tppZoneTestFlagValue
+	flags.url = tppURlTestFlagValue
+
+	setEnvironmentVariablesForTpp()
+
+	context := getCliContext()
+	cfg, err := buildConfig(context, &flags)
+
+	//execute the validations.
+	if err != nil {
+		t.Fatalf("Failed to build vcert config: %s", err)
+	}
+
+	if cfg.Zone != tppZoneTestFlagValue {
+		t.Fatalf("Zone flag was overwritten")
+	}
+
+	if cfg.BaseUrl != tppURlTestFlagValue {
+		t.Fatalf("Base URL flag was overwritten")
+	}
+
+	if cfg.Credentials.AccessToken != tppTokenTestFlagValue {
+		t.Fatalf("Access token flag was overwritten")
+	}
+
+	unsetEnvironmentVariables()
+	unsetFlags()
+}
+
+func TestValidatePrecedenceForFlagsCloud(t *testing.T) {
+
+	flags.apiKey = cloudApiKeyTestValue
+	flags.zone = cloudZoneTestValue
+
+	//create the environment variables.
+	setEnvironmentVariablesForCloud()
+
+	//create a context, thiw will be used on the build config function.
+	context := getCliContext()
+
+	cfg, err := buildConfig(context, &flags)
+
+	//execute the validations.
+	if err != nil {
+		t.Fatalf("Failed to build vcert config: %s", err)
+	}
+
+	if cfg.Zone != cloudZoneTestValue {
+		t.Fatalf("Zone is empty")
+	}
+
+	if cfg.Credentials.APIKey != cloudApiKeyTestValue {
+		t.Fatalf("API key is empty")
+	}
+	unsetEnvironmentVariables()
+	unsetFlags()
+}

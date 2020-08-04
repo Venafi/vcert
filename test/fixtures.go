@@ -30,6 +30,7 @@ func randRunes(n int) string {
 	var letterRunes = []rune("abcdefghijklmnopqrstuvwxyz")
 	b := make([]rune, n)
 	for i := range b {
+		/* #nosec */
 		b[i] = letterRunes[rand.Intn(len(letterRunes))]
 	}
 	return string(b)
