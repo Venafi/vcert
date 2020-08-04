@@ -29,9 +29,10 @@ import (
 	"time"
 )
 
-var effectiveConfig = tppConfig
+var effectiveConfig *vcert.Config
 
 func init() {
+	effectiveConfig = tppConfig
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 }
 
