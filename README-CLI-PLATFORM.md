@@ -1,4 +1,4 @@
-![Venafi](../Venafi_logo.png)
+![Venafi](Venafi_logo.png)
 
 # VCert CLI for Venafi Trust Protection Platform
 
