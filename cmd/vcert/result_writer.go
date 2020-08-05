@@ -261,9 +261,7 @@ func (r *Result) Flush() error {
 	if err != nil {
 		return err // something worse than file permission problem
 	}
-	s := string(bytes)
-	s += "\n"
-	fmt.Fprint(os.Stdout, s)
+	fmt.Fprint(os.Stdout, string(bytes))
 
 	var finalError error
 	for _, e := range errors {
