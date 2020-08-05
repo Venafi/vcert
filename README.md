@@ -16,13 +16,16 @@ VCert is a Go library, SDK, and command line utility designed to simplify key ge
 (also known as SSL/TLS certificates and keys) that comply with enterprise security policy by using the
 [Venafi Platform](https://www.venafi.com/platform/trust-protection-platform) or [Venafi Cloud](https://pki.venafi.com/venafi-cloud/).
 
+See [VCert CLI for Venafi Trust Protection Platform](README-CLI-PLATFORM.md) or
+[VCert CLI for Venafi Cloud](README-CLI-CLOUD.md) to get started with the command line utility.
+
 #### Compatibility
 
 VCert releases are tested using the latest version of Trust Protection Platform.  General functionality of the
 [latest VCert release](../../releases/latest) should be compatible with Trust Protection Platform 17.3 or higher.
 Custom Fields and Instance Tracking require TPP 18.2 or higher, and Token Authentication requires TPP 19.2 or higher.
 
-## Installation
+## Developer Setup
 
 1. Configure your Go environment according to https://golang.org/doc/install.
 2. Verify that GOPATH environment variable is set correctly
@@ -43,7 +46,7 @@ git clone https://github.com/Venafi/vcert.git $GOPATH/src/github.com/Venafi/vcer
 make build
 ```
 
-## Usage examples
+## Using VCert to integrate Venafi with your application
 
 For code samples of programmatic use, please review the files in [/examples](/examples/).
 
@@ -68,8 +71,6 @@ Samples are in a state where you can build/execute them using the following comm
 go build -o cli ./example
 go test -v ./example -run TestRequestCertificate
 ```
-
-For command line examples, please see the [Knowledge Base at support.venafi.com](https://support.venafi.com/hc/en-us/articles/217991528-Introducing-VCert-API-Abstraction-for-DevOpsSec).
 
 ## Prerequisites for using with Trust Protection Platform
 
