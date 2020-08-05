@@ -1,8 +1,15 @@
 ![Venafi](Venafi_logo.png)
+[![Apache 2.0 License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+![Community Supported](https://img.shields.io/badge/Support%20Level-Community-brightgreen)
+![Compatible with TPP 17.3+ & Cloud](https://img.shields.io/badge/Compatibility-TPP%2017.3+%20%26%20Cloud-f9a90c)  
+_This open source project is community-supported. To report a problem or share an idea, use the
+**[Issues](../../issues)** tab; and if you have a suggestion for fixing the issue, please include those details, too.
+In addition, use the **[Pull requests](../../pulls)** tab to contribute actual bug fixes or proposed enhancements.
+We welcome and appreciate all contributions._
 
 # VCert CLI for Venafi Cloud
 
-Venafi VCert is a command line utility designed to generate keys and simplify certificate acquisition by eliminating the need to write code to interact with the Venafi REST API. VCert is available in 32 and 64 bit versions for Linux, Windows, and macOS.
+Venafi VCert command line utility is designed to generate keys and simplify certificate acquisition by eliminating the need to write code to interact with the Venafi REST API. VCert is available in 32 and 64 bit versions for Linux, Windows, and macOS.
 
 The following content applies to the latest version of VCert CLI, click [here](https://github.com/Venafi/vcert/releases/latest) to download it from https://github.com/Venafi/vcert/releases/latest.
 
