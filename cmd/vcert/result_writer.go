@@ -279,9 +279,10 @@ func (r *Result) Flush() error {
 
 func writeFile(output *Output, result *Result, filePath string) (err error) {
 	if output.Certificate != "" || output.PrivateKey != "" || output.CSR != "" {
-		bytes, err := output.Format(result.Config)
+		var bytes []byte
+		bytes, err = output.Format(result.Config)
 		if err != nil {
-			return err // something worse than file permission problem
+			return // something worse than file permission problem
 		}
 		err = ioutil.WriteFile(filePath, bytes, 0600)
 
@@ -290,5 +291,5 @@ func writeFile(output *Output, result *Result, filePath string) (err error) {
 			err = ioutil.WriteFile(result.Config.PickupIdFile, []byte(result.format(result.PickupId)+"\n"), 0600)
 		}
 	}
-	return err
+	return
 }
