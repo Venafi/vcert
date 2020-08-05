@@ -278,7 +278,7 @@ func (r *Result) Flush() error {
 }
 
 func writeFile(output *Output, result *Result, filePath string) (err error) {
-	if output.Certificate != "" || output.PrivateKey != "" || output.CSR != "" {
+	if output.Certificate != "" || output.PrivateKey != "" || output.CSR != "" || len(output.Chain) > 0 {
 		var bytes []byte
 		bytes, err = output.Format(result.Config)
 		if err != nil {
