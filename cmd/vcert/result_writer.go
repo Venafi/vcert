@@ -138,6 +138,7 @@ func (o *Output) Format(c *Config) ([]byte, error) {
 			res += o.PrivateKey
 		default:
 			res += o.Certificate
+			res += o.CSR
 			res += o.PrivateKey
 			res += strings.Join(o.Chain, "")
 		}
