@@ -211,7 +211,7 @@ func (r *Result) Flush() error {
 			if r.Config.ChainFile == "" {
 				certFileOutput.Chain = r.Pcc.Chain
 			}
-			err = writeFile(certFileOutput, r.Config, r.Config.CertFile)
+			err = writeFile(certFileOutput, r, r.Config.CertFile)
 			errors = append(errors, err)
 		} else {
 			stdOut.Certificate = r.Pcc.Certificate
@@ -220,7 +220,7 @@ func (r *Result) Flush() error {
 		if r.Config.CSRFile != "" && r.Pcc.CSR != "" {
 			csrFileOutput := &Output{}
 			csrFileOutput.CSR = r.Pcc.CSR
-			err = writeFile(csrFileOutput, r.Config, r.Config.CSRFile)
+			err = writeFile(csrFileOutput, r, r.Config.CSRFile)
 			errors = append(errors, err)
 		} else {
 			stdOut.CSR = r.Pcc.CSR
@@ -229,7 +229,7 @@ func (r *Result) Flush() error {
 		if r.Config.KeyFile != "" && r.Pcc.PrivateKey != "" {
 			keyFileOutput := &Output{}
 			keyFileOutput.PrivateKey = r.Pcc.PrivateKey
-			err = writeFile(keyFileOutput, r.Config, r.Config.KeyFile)
+			err = writeFile(keyFileOutput, r, r.Config.KeyFile)
 			errors = append(errors, err)
 		} else {
 			stdOut.PrivateKey = r.Pcc.PrivateKey
@@ -238,7 +238,7 @@ func (r *Result) Flush() error {
 		if r.Config.ChainFile != "" && len(r.Pcc.Chain) > 0 {
 			chainFileOutput := &Output{}
 			chainFileOutput.Chain = r.Pcc.Chain
-			err = writeFile(chainFileOutput, r.Config, r.Config.ChainFile)
+			err = writeFile(chainFileOutput, r, r.Config.ChainFile)
 			errors = append(errors, err)
 		} else if r.Config.CertFile == "" {
 			stdOut.Chain = r.Pcc.Chain
@@ -249,7 +249,7 @@ func (r *Result) Flush() error {
 		if r.Config.PickupIdFile != "" && r.PickupId != "" {
 			pickupFileOutput := &Output{}
 			pickupFileOutput.PickupId = r.PickupId
-			err = writeFile(pickupFileOutput, r.Config, r.Config.PickupIdFile)
+			err = writeFile(pickupFileOutput, r, r.Config.PickupIdFile)
 			errors = append(errors, err)
 		} else {
 			stdOut.PickupId = r.PickupId
@@ -277,12 +277,18 @@ func (r *Result) Flush() error {
 	return finalError
 }
 
-func writeFile(output *Output, config *Config, filePath string) (err error) {
-	bytes, err := output.Format(config)
-	if err != nil {
-		return // something worse than file permission problem
-	}
-	err = ioutil.WriteFile(filePath, bytes, 0600)
+func writeFile(output *Output, result *Result, filePath string) (err error) {
+	if output.Certificate != "" || output.PrivateKey != "" || output.CSR != "" {
+		bytes, err := output.Format(result.Config)
+		if err != nil {
+			return err // something worse than file permission problem
+		}
+		err = ioutil.WriteFile(filePath, bytes, 0600)
 
-	return
+	} else {
+		if output.PickupId != "" {
+			err = ioutil.WriteFile(result.Config.PickupIdFile, []byte(result.format(result.PickupId)+"\n"), 0600)
+		}
+	}
+	return err
 }
