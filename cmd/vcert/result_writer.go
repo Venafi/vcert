@@ -286,7 +286,7 @@ func writeFile(output *Output, result *Result, filePath string) (err error) {
 
 	} else {
 		if output.PickupId != "" {
-			err = ioutil.WriteFile(result.Config.PickupIdFile, []byte(result.format(result.PickupId)+"\n"), 0600)
+			err = ioutil.WriteFile(result.Config.PickupIdFile, []byte(result.PickupId+"\n"), 0600)
 		}
 	}
 	return
