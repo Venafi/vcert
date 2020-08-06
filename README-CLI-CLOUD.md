@@ -27,15 +27,15 @@ The following content applies to the latest version of VCert CLI, click [here](h
 2. You have successfully registered for a Venafi Cloud account, have been granted at least the "DevOps" role, and know your API key.
 3. A CA Account and Issuing Template exist and have been configured with:
     1. Recommended Settings values for:
-      1. Organizational Unit (OU)
-      2. Organization (O)
-      3. City/Locality (L)
-      4. State/Province (ST)
-      5. Country (C)
+        1. Organizational Unit (OU)
+        2. Organization (O)
+        3. City/Locality (L)
+        4. State/Province (ST)
+        5. Country (C)
     2. Issuing Rules that:
-      1. (Recommended) Limits Common Name and Subject Alternative Name to domains that are allowed by your organization
-      2. (Recommended) Restricts the Key Length to 2048 or higher
-      3. (Recommended) Does not allow Private Key Reuse
+        1. (Recommended) Limits Common Name and Subject Alternative Name to domains that are allowed by your organization
+        2. (Recommended) Restricts the Key Length to 2048 or higher
+        3. (Recommended) Does not allow Private Key Reuse
 4. A DevOps Project exists to which you have been granted access.
 5. A Zone has exists within the Project that uses the Issuing Template, and you know the Zone ID.
 
