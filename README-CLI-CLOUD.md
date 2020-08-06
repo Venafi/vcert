@@ -46,12 +46,12 @@ The following options apply to the `enroll`, `pickup`, and `renew` actions:
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Command&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Description                                                  |
 | ------------------- | ------------------------------------------------------------ |
 | `--config`          | Use to specify INI configuration file containing connection details.  Available parameters: *cloud_apikey*, *cloud_zone*, *trust_bundle*, *test_mode* |
-| `--k`               | Use to specify your API key for Venafi Cloud.  Example: -k aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee |
+| `--k`               | Use to specify your API key for Venafi Cloud.<br/>Example: -k aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee |
 | `--no-prompt`       | Use to exclude password prompts.  If you enable the prompt and you enter incorrect information, an error is displayed.  This option is useful with scripting. |
 | `--test-mode`       | Use to test operations without connecting to Venafi Cloud.  This option is useful for integration tests where the test environment does not have access to Venafi Cloud.  Default is false. |
 | `--test-mode-delay` | Use to specify the maximum number of seconds for the random test-mode connection delay.  Default is 15 (seconds). |
 | `--timeout`         | Use to specify the maximum amount of time to wait in seconds for a certificate to be processed by Venafi Cloud. Default is 120 (seconds). |
-| `--trust-bundle`    | Use to specify a file with PEM formatted certificates to be used as trust anchors when communicating with Venafi Cloud.  Generally not needed because Venafi Cloud is secured by a publicly trusted certificate but it may be needed if your organization requires VCert to traverse a proxy server. VCert uses the trust store of your operating system for this purpose if not specified. Example: `--trust-bundle /path-to/bundle.pem` |
+| `--trust-bundle`    | Use to specify a file with PEM formatted certificates to be used as trust anchors when communicating with Venafi Cloud.  Generally not needed because Venafi Cloud is secured by a publicly trusted certificate but it may be needed if your organization requires VCert to traverse a proxy server. VCert uses the trust store of your operating system for this purpose if not specified.<br/>Example: `--trust-bundle /path-to/bundle.pem` |
 | `--verbose`         | Use to increase the level of logging detail, which is helpful when troubleshooting issues. |
 
 ### Environment Variables
@@ -66,21 +66,21 @@ Options:
 
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Command&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Description                                                  |
 | -------------------- | ------------------------------------------------------------ |
-| `--app-info`         | Use to identify the application requesting the certificate with details like vendor name and vendor product. Example: `--app-info "Venafi VCert CLI"` |
-| `--cert-file`        | Use to specify the name and location of an output file that will contain only the end-entity certificate. Example: `--cert-file /path-to/example.crt` |
-| `--chain`            | Use to include the certificate chain in the output, and to specify where to place it in the file. Options: `root-last` (default), `root-first`, `ignore` |
+| `--app-info`         | Use to identify the application requesting the certificate with details like vendor name and vendor product.<br/>Example: `--app-info "Venafi VCert CLI"` |
+| `--cert-file`        | Use to specify the name and location of an output file that will contain only the end-entity certificate.<br/>Example: `--cert-file /path-to/example.crt` |
+| `--chain`            | Use to include the certificate chain in the output, and to specify where to place it in the file.<br/>Options: `root-last` (default), `root-first`, `ignore` |
 | `--chain-file`       | Use to specify the name and location of an output file that will contain only the root and intermediate certificates applicable to the end-entity certificate. |
 | `--cn`               | Use to specify the common name (CN). This is required for Enrollment. |
 | `--csr`              | Use to specify the CSR and private key location. Options: `local` (default), `file`<br/>- local: private key and CSR will be generated locally<br/>- file: CSR will be read from a file by name<br/>Example: `--csr file:/path-to/example.req` |
-| `--file`             | Use to specify a name and location of an output file that will contain the private key and certificates when they are not written to their own files using `--key-file`, `--cert-file`, and/or `--chain-file`. Example: `--file /path-to/keycert.pem` |
-| `--format`           | Use to specify the output format.  PEM is the default format.  The `--file` option must be used with the PKCS#12 format to specify the keystore file. Options: `pem` (default), `json`, `pkcs12` |
-| `--key-file`         | Use to specify the name and location of an output file that will contain only the private key. Example: `--key-file /path-to/example.key` |
-| `--key-password`     | Use to specify a password for encrypting the private key. For a non-encrypted private key, specify `--no-prompt` without specifying this option. You can specify the password using one of three methods: at the command line, when prompted, or by using a password file. Example: `--key-password file:/path-to/passwd.txt` |
+| `--file`             | Use to specify a name and location of an output file that will contain the private key and certificates when they are not written to their own files using `--key-file`, `--cert-file`, and/or `--chain-file`.<br/>Example: `--file /path-to/keycert.pem` |
+| `--format`           | Use to specify the output format.  PEM is the default format.  The `--file` option must be used with the PKCS#12 format to specify the keystore file.<br/>Options: `pem` (default), `json`, `pkcs12` |
+| `--key-file`         | Use to specify the name and location of an output file that will contain only the private key.<br/>Example: `--key-file /path-to/example.key` |
+| `--key-password`     | Use to specify a password for encrypting the private key. For a non-encrypted private key, specify `--no-prompt` without specifying this option. You can specify the password using one of three methods: at the command line, when prompted, or by using a password file.<br/>Example: `--key-password file:/path-to/passwd.txt` |
 | `--key-size`         | Use to specify a key size for RSA keys.  Default is 2048. |
 | `--no-pickup`        | Use to disable the feature of VCert that repeatedly tries to retrieve the issued certificate.  When this is used you must run VCert again in pickup mode to retrieve the certificate that was requested. |
 | `--pickup-id-file`   | Use to specify a file name where the unique identifier for the certificate will be stored for subsequent use by pickup, renew, and revoke actions.  Default is to write the Pickup ID to STDOUT. |
-| `--san-dns`          | Use to specify a DNS Subject Alternative Name. To specify more than one, use spaces, like this: `--san-dns san1.example.com` `--san-dns san2.example.com` ... |
-| `-z`                 | Use to specify the DevOps Project Zone where the certificate will be located. Example: `-z vvvvvvvv-wwww-xxxx-yyyy-zzzzzzzzzzzz` |
+| `--san-dns`          | Use to specify a DNS Subject Alternative Name. To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-dns one.example.com` `--san-dns two.example.com` |
+| `-z`                 | Use to specify the DevOps Project Zone where the certificate will be located.<br/>Example: `-z vvvvvvvv-wwww-xxxx-yyyy-zzzzzzzzzzzz` |
 
 ## Certificate Retrieval Parameters
 ```
@@ -90,11 +90,11 @@ Options:
 
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Command&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Description                                                  |
 | ------------------ | ------------------------------------------------------------ |
-| `--cert-file`      | Use to specify the name and location of an output file that will contain only the end-entity certificate. Example: `--cert-file /path-to/example.crt` |
-| `--chain`          | Use to include the certificate chain in the output, and to specify where to place it in the file. Options:  `root-last` (default), `root-first`, `ignore` |
+| `--cert-file`      | Use to specify the name and location of an output file that will contain only the end-entity certificate.<br/>Example: `--cert-file /path-to/example.crt` |
+| `--chain`          | Use to include the certificate chain in the output, and to specify where to place it in the file.<br/>Options:  `root-last` (default), `root-first`, `ignore` |
 | `--chain-file`     | Use to specify the name and location of an output file that will contain only the root and intermediate certificates applicable to the end-entity certificate. |
-| `--file`           | Use to specify a name and location of an output file that will contain certificates when they are not written to their own files using `--cert-file` and/or `--chain-file`. Example: `--file /path-to/keycert.pem` |
-| `--format`         | Use to specify the output format.  The `--file` option must be used with the PKCS#12 format to specify the keystore file. Options: `pem` (default), `json`, `pkcs12` |
+| `--file`           | Use to specify a name and location of an output file that will contain certificates when they are not written to their own files using `--cert-file` and/or `--chain-file`.<br/>Example: `--file /path-to/keycert.pem` |
+| `--format`         | Use to specify the output format.  The `--file` option must be used with the PKCS#12 format to specify the keystore file.<br/>Options: `pem` (default), `json`, `pkcs12` |
 | `--pickup-id`      | Use to specify the unique identifier of the certificate returned by the enroll or renew actions if `--no-pickup` was used or a timeout occurred. Required when `--pickup-id-file` is not specified. |
 | `--pickup-id-file` | Use to specify a file name that contains the unique identifier of the certificate returned by the enroll or renew actions if --no-pickup was used or a timeout occurred. Required when `--pickup-id` is not specified. |
 
@@ -107,20 +107,20 @@ Options:
 
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Command&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Description                                                  |
 | ------------------ | ------------------------------------------------------------ |
-| `--cert-file`      | Use to specify the name and location of an output file that will contain only the end-entity certificate. Example: `--cert-file /path-to/example.crt` |
-| `--chain`          | Use to include the certificate chain in the output, and to specify where to place it in the file. Options: `root-last` (default), `root-first`, `ignore` |
+| `--cert-file`      | Use to specify the name and location of an output file that will contain only the end-entity certificate.<br/>Example: `--cert-file /path-to/example.crt` |
+| `--chain`          | Use to include the certificate chain in the output, and to specify where to place it in the file.<br/>Options: `root-last` (default), `root-first`, `ignore` |
 | `--chain-file`     | Use to specify the name and location of an output file that will contain only the root and intermediate certificates applicable to the end-entity certificate. |
 | `--cn`             | Use to specify the common name (CN). This is required for Enrollment. |
 | `--csr`            | Use to specify the CSR and private key location. Options: `local` (default), `file`<br />- local: private key and CSR will be generated locally<br />- file: CSR will be read from a file by name<br />Example: `--csr file:/path-to/example.req` |
-| `--file`           | Use to specify a name and location of an output file that will contain the private key and certificates when they are not written to their own files using `--key-file`, `--cert-file`, and/or `--chain-file`. Example: `--file /path-to/keycert.pem` |
-| `--format`         | The --file option must be used with the PKCS#12 format to specify the keystore file. Options: `pem` (default), `json`, `pkcs12` |
-| `--id`             | Use to specify the unique identifier of the certificate returned by the enroll or renew actions.  Value may be specified as a string or read from a file by using the file: prefix. Example: `--id file:cert_id.txt` |
-| `--key-file`       | Use to specify the name and location of an output file that will contain only the private key. Example: `--key-file /path-to/example.key` |
+| `--file`           | Use to specify a name and location of an output file that will contain the private key and certificates when they are not written to their own files using `--key-file`, `--cert-file`, and/or `--chain-file`.<br/>Example: `--file /path-to/keycert.pem` |
+| `--format`         | The --file option must be used with the PKCS#12 format to specify the keystore file.<br/>Options: `pem` (default), `json`, `pkcs12` |
+| `--id`             | Use to specify the unique identifier of the certificate returned by the enroll or renew actions.  Value may be specified as a string or read from a file by using the file: prefix.<br/>Example: `--id file:cert_id.txt` |
+| `--key-file`       | Use to specify the name and location of an output file that will contain only the private key.<br/>Example: `--key-file /path-to/example.key` |
 | `--key-password`   | Use to specify a password for encrypting the private key. For a non-encrypted private key, specify `--no-prompt` without specifying this option. You can specify the password using one of three methods: at the command line, when prompted, or by using a password file. |
 | `--key-size`       | Use to specify a key size for RSA keys. Default is 2048.     |
 | `--no-pickup`      | Use to disable the feature of VCert that repeatedly tries to retrieve the issued certificate.  When this is used you must run VCert again in pickup mode to retrieve the certificate that was requested. |
 | `--pickup-id-file` | Use to specify a file name where the unique identifier for the certificate will be stored for subsequent use by `pickup`, `renew`, and `revoke` actions.  By default it is written to STDOUT. |
-| `--san-dns`        | Use to specify a DNS Subject Alternative Name. To specify more than one, use spaces, like this: `--san-dns san1.example.com` `--san-dns san2.example.com` ... |
+| `--san-dns`          | Use to specify a DNS Subject Alternative Name. To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-dns one.example.com` `--san-dns two.example.com` |
 | `--thumbprint`     | Use to specify the SHA1 thumbprint of the certificate to renew. Value may be specified as a string or read from the certificate file using the `file:` prefix. |
 
 
@@ -194,18 +194,18 @@ Options:
 | ---------------- | ------------------------------------------------------------ |
 | `-c` | Use to specify the country (C) for the Subject DN. |
 | `--cn` | Use to specify the common name (CN). This is required for enrollment except when providing a CSR file. |
-| `--csr-file` | Use to specify a file name and a location where the resulting CSR file should be written. Example: `--csr-file /path-to/example.req` |
+| `--csr-file` | Use to specify a file name and a location where the resulting CSR file should be written.<br/>Example: `--csr-file /path-to/example.req` |
 | `--format` | Generates the Certificate Signing Request in the specified format. Options: `pem` (default), `json`<br />- pem: Generates the CSR in classic PEM format to be used as a file.<br />- json: Generates the CSR in JSON format, suitable for REST API operations. |
 | `--key-curve` | Use to specify the ECDSA key curve. Options: `p256` (default), `p384`, `p521` |
-| `--key-file` | Use to specify a file name and a location where the resulting private key file should be written. Do not use in combination with `--csr` file. Example: `--key-file /path-to/example.key` |
-| `--key-password` | Use to specify a password for encrypting the private key. For a non-encrypted private key, omit this option and instead specify `--no-prompt`. Example: `--key-password file:/path-to/passwd.txt` |
+| `--key-file` | Use to specify a file name and a location where the resulting private key file should be written. Do not use in combination with `--csr` file.<br/>Example: `--key-file /path-to/example.key` |
+| `--key-password` | Use to specify a password for encrypting the private key. For a non-encrypted private key, omit this option and instead specify `--no-prompt`.<br/>Example: `--key-password file:/path-to/passwd.txt` |
 | `--key-size` | Use to specify a key size.  Default is 2048. |
 | `--key-type` | Use to specify a key type. Options: `rsa` (default), `ecdsa` |
 | `-l` | Use to specify the city or locality (L) for the Subject DN. |
 | `--no-prompt` | Use to suppress the private key password prompt and not encrypt the private key. |
 | `-o` | Use to specify the organization (O) for the Subject DN. |
-| `--ou` | Use to specify an organizational unit (OU) for the Subject DN. To specify more than one, use spaces like this: `--ou "Engineering"` `--ou "Quality Assurance"` ... |
-| `--san-dns` | Use to specify a DNS Subject Alternative Name. To specify more than one, use spaces like this: `--san-dns test.abc.xyz` `--san-dns test1.abc.xyz` ... |
-| `--san-email` | Use to specify an Email Subject Alternative Name. This option can be repeated to specify more than one value, like this: `--san-email me@abc.xyz` `--san-email you@abc.xyz` ... |
-| `--san-ip` | Use to specify an IP Address Subject Alternative Name. This option can be repeated to specify more than one value, like this: `--san-ip 1.1.1.1` `--san-ip 2.2.2.2` ... |
+| `--ou` | Use to specify an organizational unit (OU) for the Subject DN. To specify more than one, simply repeat this parameter for each value.<br/>Example: `--ou "Engineering"` `--ou "Quality Assurance"` ... |
+| `--san-dns`          | Use to specify a DNS Subject Alternative Name. To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-dns one.example.com` `--san-dns two.example.com` |
+| `--san-email`        | Use to specify an Email Subject Alternative Name.  To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-email me@example.com` `--san-email you@example.com` |
+| `--san-ip`           | Use to specify an IP Address Subject Alternative Name.  To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-ip 10.20.30.40` `--san-ip 192.168.192.168` |
 | `--st` | Use to specify the state or province (ST) for the Subject DN. |
