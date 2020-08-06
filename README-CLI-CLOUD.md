@@ -112,7 +112,7 @@ Options:
 | `--chain-file`     | Use to specify the name and location of an output file that will contain only the root and intermediate certificates applicable to the end-entity certificate. |
 | `--cn`             | Use to specify the common name (CN). This is required for Enrollment. |
 | `--csr`            | Use to specify the CSR and private key location. Options: `local` (default), `file`<br />- local: private key and CSR will be generated locally<br />- file: CSR will be read from a file by name<br />Example: `--csr file:/path-to/example.req` |
-| `--file`           | Use to specify a name and location of an output file that will contain the private key and certificates when they are not written to their own files using --key-file, --cert-file, and/or --chain-file. Example: `--file /path-to/keycert.pem` |
+| `--file`           | Use to specify a name and location of an output file that will contain the private key and certificates when they are not written to their own files using `--key-file`, `--cert-file`, and/or `--chain-file`. Example: `--file /path-to/keycert.pem` |
 | `--format`         | The --file option must be used with the PKCS#12 format to specify the keystore file. Options: `pem` (default), `json`, `pkcs12` |
 | `--id`             | Use to specify the unique identifier of the certificate returned by the enroll or renew actions.  Value may be specified as a string or read from a file by using the file: prefix. Example: `--id file:cert_id.txt` |
 | `--key-file`       | Use to specify the name and location of an output file that will contain only the private key. Example: `--key-file /path-to/example.key` |
