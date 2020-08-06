@@ -73,7 +73,7 @@ Options:
 | `--cn`               | Use to specify the common name (CN). This is required for Enrollment. |
 | `--csr`              | Use to specify the CSR and private key location. Options: `local` (default), `file`<br/>- local: private key and CSR will be generated locally<br/>- file: CSR will be read from a file by name<br/>Example: `--csr file:/path-to/example.req` |
 | `--file`             | Use to specify a name and location of an output file that will contain the private key and certificates when they are not written to their own files using `--key-file`, `--cert-file`, and/or `--chain-file`.<br/>Example: `--file /path-to/keycert.pem` |
-| `--format`           | Use to specify the output format.  PEM is the default format.  The `--file` option must be used with the PKCS#12 format to specify the keystore file.<br/>Options: `pem` (default), `json`, `pkcs12` |
+| `--format`         | Use to specify the output format.  The `--file` option must be used with the PKCS#12 format to specify the keystore file.<br/>Options: `pem` (default), `json`, `pkcs12` |
 | `--key-file`         | Use to specify the name and location of an output file that will contain only the private key.<br/>Example: `--key-file /path-to/example.key` |
 | `--key-password`     | Use to specify a password for encrypting the private key. For a non-encrypted private key, specify `--no-prompt` without specifying this option. You can specify the password using one of three methods: at the command line, when prompted, or by using a password file.<br/>Example: `--key-password file:/path-to/passwd.txt` |
 | `--key-size`         | Use to specify a key size for RSA keys.  Default is 2048. |
@@ -94,7 +94,7 @@ Options:
 | `--chain`          | Use to include the certificate chain in the output, and to specify where to place it in the file.<br/>Options:  `root-last` (default), `root-first`, `ignore` |
 | `--chain-file`     | Use to specify the name and location of an output file that will contain only the root and intermediate certificates applicable to the end-entity certificate. |
 | `--file`           | Use to specify a name and location of an output file that will contain certificates when they are not written to their own files using `--cert-file` and/or `--chain-file`.<br/>Example: `--file /path-to/keycert.pem` |
-| `--format`         | Use to specify the output format.  The `--file` option must be used with the PKCS#12 format to specify the keystore file.<br/>Options: `pem` (default), `json`, `pkcs12` |
+| `--format`         | Use to specify the output format.<br/>Options: `pem` (default), `json` |
 | `--pickup-id`      | Use to specify the unique identifier of the certificate returned by the enroll or renew actions if `--no-pickup` was used or a timeout occurred. Required when `--pickup-id-file` is not specified. |
 | `--pickup-id-file` | Use to specify a file name that contains the unique identifier of the certificate returned by the enroll or renew actions if --no-pickup was used or a timeout occurred. Required when `--pickup-id` is not specified. |
 
@@ -113,7 +113,7 @@ Options:
 | `--cn`             | Use to specify the common name (CN). This is required for Enrollment. |
 | `--csr`            | Use to specify the CSR and private key location. Options: `local` (default), `file`<br />- local: private key and CSR will be generated locally<br />- file: CSR will be read from a file by name<br />Example: `--csr file:/path-to/example.req` |
 | `--file`           | Use to specify a name and location of an output file that will contain the private key and certificates when they are not written to their own files using `--key-file`, `--cert-file`, and/or `--chain-file`.<br/>Example: `--file /path-to/keycert.pem` |
-| `--format`         | The --file option must be used with the PKCS#12 format to specify the keystore file.<br/>Options: `pem` (default), `json`, `pkcs12` |
+| `--format`         | Use to specify the output format.  The `--file` option must be used with the PKCS#12 format to specify the keystore file.<br/>Options: `pem` (default), `json`, `pkcs12` |
 | `--id`             | Use to specify the unique identifier of the certificate returned by the enroll or renew actions.  Value may be specified as a string or read from a file by using the file: prefix.<br/>Example: `--id file:cert_id.txt` |
 | `--key-file`       | Use to specify the name and location of an output file that will contain only the private key.<br/>Example: `--key-file /path-to/example.key` |
 | `--key-password`   | Use to specify a password for encrypting the private key. For a non-encrypted private key, specify `--no-prompt` without specifying this option. You can specify the password using one of three methods: at the command line, when prompted, or by using a password file. |
