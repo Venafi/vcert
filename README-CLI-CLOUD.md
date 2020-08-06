@@ -77,7 +77,6 @@ Options:
 | `--key-file`         | Use to specify the name and location of an output file that will contain only the private key. Example: `--key-file /path-to/example.key` |
 | `--key-password`     | Use to specify a password for encrypting the private key. For a non-encrypted private key, specify `--no-prompt` without specifying this option. You can specify the password using one of three methods: at the command line, when prompted, or by using a password file. Example: `--key-password file:/path-to/passwd.txt` |
 | `--key-size`         | Use to specify a key size for RSA keys.  Default is 2048. |
-| `--nickname`         | Use to specify a friendly name for the new certificate that will be created in the DevOps Project Zone (which you specify using the `-z` option). |
 | `--no-pickup`        | Use to disable the feature of VCert that repeatedly tries to retrieve the issued certificate.  When this is used you must run VCert again in pickup mode to retrieve the certificate that was requested. |
 | `--pickup-id-file`   | Use to specify a file name where the unique identifier for the certificate will be stored for subsequent use by pickup, renew, and revoke actions.  Default is to write the Pickup ID to STDOUT. |
 | `--san-dns`          | Use to specify a DNS Subject Alternative Name. To specify more than one, use spaces, like this: `--san-dns san1.example.com` `--san-dns san2.example.com` ... |
@@ -147,7 +146,7 @@ VCert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z 126e4141-c299-4b45-bf4d-
 ```
 Submit a Venafi Cloud request for enrolling a certificate using an externally generated CSR:
 ```
-VCert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z 126e4141-c299-4b45-bf4d-ae28cd3e061b --nickname externally-generated-csr --csr file:/opt/pki/cert.req
+VCert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z 126e4141-c299-4b45-bf4d-ae28cd3e061b --csr file:/opt/pki/cert.req
 ```
 Submit a Venafi Cloud request for enrolling a certificate where the certificate and private key are output using JSON syntax to a file called json.txt:
 ```
@@ -156,12 +155,6 @@ VCert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z 126e4141-c299-4b45-bf4d-
 Submit a Venafi Cloud request for enrolling a certificate where only the certificate and private key are output, no chain certificates:
 ```
 VCert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z 126e4141-c299-4b45-bf4d-ae28cd3e061b --key-password Passw0rd --cn no-chain.venafi.example --chain ignore
-```
-Submit a Venafi Cloud request for enrolling two certificate that have the same common name but are to be represented by distinct objects in Venafi Cloud rather than having the first certificate be considered an older generation of the second:
-```
-VCert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z 126e4141-c299-4b45-bf4d-ae28cd3e061b --key-password Passw0rd --cn same-cn.venafi.example --nickname same-cn-separate-object-1
-
-VCert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z 126e4141-c299-4b45-bf4d-ae28cd3e061b --key-password Passw0rd --cn same-cn.venafi.example --nickname same-cn-separate-object-2
 ```
 Submit a Venafi Cloud request for enrolling a certificate with three DNS subject alternative names:
 ```
