@@ -92,9 +92,9 @@ Options:
 | `--no-pickup`        | Use to disable the feature of VCert that repeatedly tries to retrieve the issued certificate.  When this is used you must run VCert again in pickup mode to retrieve the certificate that was requested. |
 | `--pickup-id-file`   | Use to specify a file name where the unique identifier for the certificate will be stored for subsequent use by pickup, renew, and revoke actions.  Default is to write the Pickup ID to STDOUT. |
 | `--replace-instance` | Force the specified instance to be recreated if it already exists and is associated with the requested certificate.  Default is for the request to fail if the instance already exists. |
-| `--san-dns`          | Use to specify a DNS Subject Alternative Name. To specify more than one, use spaces, like this: `--san-dns san1.example.com` `--san-dns san2.example.com` ... |
-| `--san-email`        | Use to specify an Email Subject Alternative Name.  To specify more than one, use spaces, like this: `--san-email john@example.com` `--san-email jane@example.com` ... |
-| `--san-ip`           | Use to specify an IP Address Subject Alternative Name.  To specify more than one, use spaces, like this: `--san-ip 10.20.30.1` `--san-ip 10.20.30.2` ... |
+| `--san-dns`          | Use to specify a DNS Subject Alternative Name. To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-dns one.example.com` `--san-dns two.example.com` |
+| `--san-email`        | Use to specify an Email Subject Alternative Name.  To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-email me@example.com` `--san-email you@example.com` |
+| `--san-ip`           | Use to specify an IP Address Subject Alternative Name.  To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-ip 10.20.30.40` `--san-ip 192.168.192.168` |
 | `--tls-address`      | Use to specify the hostname, FQDN or IP address and TCP port where the certificate can be validated after issuance and installation. Only allowed when `--instance` is also specified. Example: `--tls-address 10.20.30.40:443` |
 | `-z`                 | Use to specify the folder path where the certificate object will be placed. VCert prepends \VED\Policy\, so you only need to specify child folders under the root Policy folder. Example: `-z DevOps\CorpApp` |
 
@@ -142,9 +142,9 @@ Options:
 | `--key-type`       | Use to specify the key algorithm. Options: `rsa` (default), `ecdsa` |
 | `--no-pickup`      | Use to disable the feature of VCert that repeatedly tries to retrieve the issued certificate.  When this is used you must run VCert again in pickup mode to retrieve the certificate that was requested. |
 | `--pickup-id-file` | Use to specify a file name where the unique identifier for the certificate will be stored for subsequent use by `pickup`, `renew`, and `revoke` actions.  By default it is written to STDOUT. |
-| `--san-dns`        | Use to specify a DNS Subject Alternative Name. To specify more than one, use spaces, like this: `--san-dns san1.example.com` `--san-dns san2.example.com` ... |
-| `--san-email`      | Use to specify an Email Subject Alternative Name.  To specify more than one, use spaces, like this: `--san-email john@example.com` `--san-email jane@example.com` ... |
-| `--san-ip`         | Use to specify an IP Address Subject Alternative Name.  To specify more than one, use spaces, like this: `--san-ip 10.20.30.1` `--san-ip 10.20.30.2` ... |
+| `--san-dns`          | Use to specify a DNS Subject Alternative Name. To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-dns one.example.com` `--san-dns two.example.com` |
+| `--san-email`        | Use to specify an Email Subject Alternative Name.  To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-email me@example.com` `--san-email you@example.com` |
+| `--san-ip`           | Use to specify an IP Address Subject Alternative Name.  To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-ip 10.20.30.40` `--san-ip 192.168.192.168` |
 | `--thumbprint`     | Use to specify the SHA1 thumbprint of the certificate to renew. Value may be specified as a string or read from the certificate file using the `file:` prefix. |
 
 ## Certificate Revocation Parameters
@@ -287,18 +287,18 @@ Options:
 | ---------------- | ------------------------------------------------------------ |
 | `-c` | Use to specify the country (C) for the Subject DN. |
 | `--cn` | Use to specify the common name (CN). This is required for enrollment except when providing a CSR file. |
-| `--csr-file` | Use to specify a file name and a location where the resulting CSR file should be written. Example: `--csr-file /path-to/example.req` |
+| `--csr-file` | Use to specify a file name and a location where the resulting CSR file should be written.<br/>Example: `--csr-file /path-to/example.req` |
 | `--format` | Generates the Certificate Signing Request in the specified format. Options: `pem` (default), `json`<br />- pem: Generates the CSR in classic PEM format to be used as a file.<br />- json: Generates the CSR in JSON format, suitable for REST API operations. |
 | `--key-curve` | Use to specify the ECDSA key curve. Options: `p256` (default), `p384`, `p521` |
-| `--key-file` | Use to specify a file name and a location where the resulting private key file should be written. Do not use in combination with `--csr` file. Example: `--key-file /path-to/example.key` |
-| `--key-password` | Use to specify a password for encrypting the private key. For a non-encrypted private key, omit this option and instead specify `--no-prompt`. Example: `--key-password file:/path-to/passwd.txt` |
+| `--key-file` | Use to specify a file name and a location where the resulting private key file should be written. Do not use in combination with `--csr` file.<br/>Example: `--key-file /path-to/example.key` |
+| `--key-password` | Use to specify a password for encrypting the private key. For a non-encrypted private key, omit this option and instead specify `--no-prompt`.<br/>Example: `--key-password file:/path-to/passwd.txt` |
 | `--key-size` | Use to specify a key size.  Default is 2048. |
 | `--key-type` | Use to specify a key type. Options: `rsa` (default), `ecdsa` |
 | `-l` | Use to specify the city or locality (L) for the Subject DN. |
 | `--no-prompt` | Use to suppress the private key password prompt and not encrypt the private key. |
 | `-o` | Use to specify the organization (O) for the Subject DN. |
-| `--ou` | Use to specify an organizational unit (OU) for the Subject DN. To specify more than one, use spaces like this: `--ou "Engineering"` `--ou "Quality Assurance"` ... |
-| `--san-dns` | Use to specify a DNS Subject Alternative Name. To specify more than one, use spaces like this: `--san-dns test.abc.xyz` `--san-dns test1.abc.xyz` ... |
-| `--san-email` | Use to specify an Email Subject Alternative Name. This option can be repeated to specify more than one value, like this: `--san-email me@abc.xyz` `--san-email you@abc.xyz` ... |
-| `--san-ip` | Use to specify an IP Address Subject Alternative Name. This option can be repeated to specify more than one value, like this: `--san-ip 1.1.1.1` `--san-ip 2.2.2.2` ... |
+| `--ou` | Use to specify an organizational unit (OU) for the Subject DN. To specify more than one, simply repeat this parameter for each value.<br/>Example: `--ou "Engineering"` `--ou "Quality Assurance"` ... |
+| `--san-dns`          | Use to specify a DNS Subject Alternative Name. To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-dns one.example.com` `--san-dns two.example.com` |
+| `--san-email`        | Use to specify an Email Subject Alternative Name.  To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-email me@example.com` `--san-email you@example.com` |
+| `--san-ip`           | Use to specify an IP Address Subject Alternative Name.  To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-ip 10.20.30.40` `--san-ip 192.168.192.168` |
 | `--st` | Use to specify the state or province (ST) for the Subject DN. |
