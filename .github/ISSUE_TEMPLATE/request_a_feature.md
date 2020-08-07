@@ -5,9 +5,10 @@ about: Tell us about your idea for improvement!
 ---
 
 <!-- 
-  If you are a current Venafi customer please submit your suggestion using our Ideas Portal
-  at https://ideas.venafi.com rather than here.  The Venafi Ideas Portal is actively managed by
-  Venafi Product Managers and new ideas are generally reviewed on a weekly basis.
+  If you are a current Venafi customer and know that your suggestion will require updates to
+  Trust Protection Platform and/or Venafi Cloud, please submit your suggestion using our Ideas
+  Portal at https://ideas.venafi.com rather than here.  If you are not a customer or don't 
+  know the scope of your suggestion, continue with this submission.
 -->
 
 **BUSINESS PROBLEM**
