@@ -19,12 +19,13 @@ package vcert
 import (
 	"crypto/x509"
 	"fmt"
+	"log"
+
 	"github.com/Venafi/vcert/pkg/endpoint"
 	"github.com/Venafi/vcert/pkg/venafi/cloud"
 	"github.com/Venafi/vcert/pkg/venafi/fake"
 	"github.com/Venafi/vcert/pkg/venafi/tpp"
 	"github.com/Venafi/vcert/pkg/verror"
-	"log"
 )
 
 // NewClient returns a connector for either Trust Protection Platform (TPP) or Venafi Cloud based on provided configuration.
@@ -58,6 +59,9 @@ func (cfg *Config) NewClient() (connector endpoint.Connector, err error) {
 
 	connector.SetZone(cfg.Zone)
 	connector.SetHTTPClient(cfg.Client)
+	if cfg.Logger != nil {
+		connector.SetLogger(cfg.Logger)
+	}
 
 	err = connector.Authenticate(cfg.Credentials)
 	return

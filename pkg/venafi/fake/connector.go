@@ -24,6 +24,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"log"
 	"math/big"
 	"net/http"
 	"strings"
@@ -265,7 +266,10 @@ func (c *Connector) ReadPolicyConfiguration() (policy *endpoint.Policy, err erro
 	return
 }
 
-func (c *Connector) SetHTTPClient(client *http.Client) {
+func (c *Connector) SetHTTPClient(_ *http.Client) {
+}
+
+func (c *Connector) SetLogger(_ *log.Logger) {
 }
 
 func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.CertificateInfo, error) {

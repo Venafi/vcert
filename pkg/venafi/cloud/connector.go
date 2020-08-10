@@ -22,7 +22,9 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -70,6 +72,7 @@ type Connector struct {
 	trust   *x509.CertPool
 	zone    string
 	client  *http.Client
+	log     *log.Logger
 }
 
 // NewConnector creates a new Venafi Cloud Connector object used to communicate with Venafi Cloud
@@ -80,6 +83,7 @@ func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (
 	if err != nil {
 		return nil, err
 	}
+	c.SetLogger(log.New(os.Stderr, "vcert: ", log.LstdFlags))
 	return &c, nil
 }
 
@@ -633,6 +637,10 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 
 func (c *Connector) SetHTTPClient(client *http.Client) {
 	c.client = client
+}
+
+func (c *Connector) SetLogger(logger *log.Logger) {
+	c.log = logger
 }
 
 func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.CertificateInfo, error) {

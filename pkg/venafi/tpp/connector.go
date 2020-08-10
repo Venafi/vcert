@@ -24,6 +24,7 @@ import (
 	"log"
 	"net/http"
 	neturl "net/url"
+	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -42,6 +43,7 @@ type Connector struct {
 	trust       *x509.CertPool
 	zone        string
 	client      *http.Client
+	log         *log.Logger
 }
 
 // NewConnector creates a new TPP Connector object used to communicate with TPP
@@ -52,6 +54,7 @@ func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (
 	if err != nil {
 		return nil, fmt.Errorf("%w: failed to normalize URL: %v", verror.UserDataError, err)
 	}
+	c.SetLogger(log.New(os.Stderr, "vcert: ", log.LstdFlags))
 	return &c, nil
 }
 
@@ -456,7 +459,7 @@ func (c *Connector) proccessLocation(req *certificate.Request) error {
 	}
 	if guid == "" {
 		if c.verbose {
-			log.Printf("certificate with DN %s doesn't exists so no need to check if it is associated with any instances", certDN)
+			c.log.Printf("certificate with DN %s doesn't exists so no need to check if it is associated with any instances", certDN)
 		}
 		return nil
 	}
@@ -465,18 +468,18 @@ func (c *Connector) proccessLocation(req *certificate.Request) error {
 		return err
 	}
 	if len(details.Consumers) == 0 {
-		log.Printf("There were no instances associated with certificate %s", certDN)
+		c.log.Printf("There were no instances associated with certificate %s", certDN)
 		return nil
 	}
 	if c.verbose {
-		log.Printf("checking associated instances from:\n %s", details.Consumers)
+		c.log.Printf("checking associated instances from:\n %s", details.Consumers)
 	}
 	var device string
 	requestedDevice := getDeviceDN(stripBackSlashes(c.zone), *req.Location)
 
 	for _, device = range details.Consumers {
 		if c.verbose {
-			log.Printf("comparing requested instance %s to %s", requestedDevice, device)
+			c.log.Printf("comparing requested instance %s to %s", requestedDevice, device)
 		}
 		if device == requestedDevice {
 			if req.Location.Replace {
@@ -525,7 +528,7 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 	//the 19.2 WebSDK calls
 	metadataItems, err := c.requestMetadataItems(requestID)
 	if err != nil {
-		log.Println(err)
+		c.log.Println(err)
 		return
 	}
 	//prepare struct for search
@@ -556,18 +559,18 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 	if allItemsFound {
 		return
 	}
-	log.Println("Saving metadata custom field using 19.2 method")
+	c.log.Println("Saving metadata custom field using 19.2 method")
 	//Create a metadata/set command with the metadata from tppCertificateRequest
 	guidItems, err := prepareLegacyMetadata(c, tppCertificateRequest.CustomFields, requestID)
 	if err != nil {
-		log.Println(err)
+		c.log.Println(err)
 		return
 	}
 	requestData := metadataSetRequest{requestID, guidItems, true}
 	//c.request with the metadata request
 	_, err = c.setCertificateMetadata(requestData)
 	if err != nil {
-		log.Println(err)
+		c.log.Println(err)
 	}
 	return
 }
@@ -878,7 +881,7 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 		}
 		err = c.putCertificateInfo(response.CertificateDN, []nameSliceValuePair{{Name: "Origin", Value: []string{origin}}})
 		if err != nil {
-			log.Println(err)
+			c.log.Println(err)
 		}
 		return response, nil
 	case http.StatusBadRequest:
@@ -895,6 +898,10 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 
 func (c *Connector) SetHTTPClient(client *http.Client) {
 	c.client = client
+}
+
+func (c *Connector) SetLogger(logger *log.Logger) {
+	c.log = logger
 }
 
 func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.CertificateInfo, error) {
@@ -992,7 +999,7 @@ func (c *Connector) dissociate(certDN, applicationDN string) error {
 		[]string{applicationDN},
 		true,
 	}
-	log.Println("Dissociating device", applicationDN)
+	c.log.Println("Dissociating device", applicationDN)
 	statusCode, status, body, err := c.request("POST", urlResourceCertificatesDissociate, req)
 	if err != nil {
 		return err
@@ -1013,13 +1020,13 @@ func (c *Connector) associate(certDN, applicationDN string, pushToNew bool) erro
 		[]string{applicationDN},
 		pushToNew,
 	}
-	log.Println("Associating device", applicationDN)
+	c.log.Println("Associating device", applicationDN)
 	statusCode, status, body, err := c.request("POST", urlResourceCertificatesAssociate, req)
 	if err != nil {
 		return err
 	}
 	if statusCode != 200 {
-		log.Printf("We have problem with server response.\n  status: %s\n  body: %s\n", status, body)
+		c.log.Printf("We have problem with server response.\n  status: %s\n  body: %s\n", status, body)
 		return verror.ServerBadDataResponce
 	}
 	return nil
@@ -1041,7 +1048,7 @@ func (c *Connector) configDNToGuid(objectDN string) (guid string, err error) {
 		Result           int    `json:",omitempty"`
 	}
 
-	log.Println("Getting guid for object DN", objectDN)
+	c.log.Println("Getting guid for object DN", objectDN)
 	statusCode, status, body, err := c.request("POST", urlResourceConfigDnToGuid, req)
 
 	if err != nil {
@@ -1062,7 +1069,7 @@ func (c *Connector) configDNToGuid(objectDN string) (guid string, err error) {
 	}
 
 	if resp.Result == 400 {
-		log.Printf("object with DN %s doesn't exist", objectDN)
+		c.log.Printf("object with DN %s doesn't exist", objectDN)
 		return "", nil
 	}
 

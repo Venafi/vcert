@@ -24,7 +24,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net"
 	"net/http"
 	"strings"
@@ -267,15 +266,15 @@ func (c *Connector) request(method string, url string, data interface{}, authNot
 	trace := false // IMPORTANT: sensitive information can be diclosured
 	// I hope you know what are you doing
 	if trace {
-		log.Println("#################")
+		c.log.Println("#################")
 		if method == "POST" {
-			log.Printf("JSON sent for %s\n%s\n", url, string(b))
+			c.log.Printf("JSON sent for %s\n%s\n", url, string(b))
 		} else {
-			log.Printf("%s request sent to %s\n", method, url)
+			c.log.Printf("%s request sent to %s\n", method, url)
 		}
-		log.Printf("Response:\n%s\n", string(body))
+		c.log.Printf("Response:\n%s\n", string(body))
 	} else if c.verbose {
-		log.Printf("Got %s status for %s %s\n", statusText, method, url)
+		c.log.Printf("Got %s status for %s %s\n", statusText, method, url)
 	}
 	return
 }
