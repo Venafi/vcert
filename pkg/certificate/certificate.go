@@ -175,6 +175,7 @@ type Request struct {
 	EmailAddresses     []string
 	IPAddresses        []net.IP
 	URIs               []*url.URL
+	UPNs               []string
 	Attributes         []pkix.AttributeTypeAndValueSET
 	SignatureAlgorithm x509.SignatureAlgorithm
 	FriendlyName       string
@@ -289,6 +290,10 @@ func (request *Request) GenerateCSR() error {
 		certificateRequest.EmailAddresses = request.EmailAddresses
 		certificateRequest.IPAddresses = request.IPAddresses
 		certificateRequest.URIs = request.URIs
+
+		if len(request.UPNs) > 0 {
+			addUserPrincipalNameSANs(&certificateRequest, request.UPNs)
+		}
 	}
 	certificateRequest.Attributes = request.Attributes
 
@@ -491,6 +496,9 @@ func NewRequest(cert *x509.Certificate) *Request {
 	req.DNSNames = cert.DNSNames
 	req.EmailAddresses = cert.EmailAddresses
 	req.IPAddresses = cert.IPAddresses
+	req.URIs = cert.URIs
+	req.UPNs, _ = getUserPrincipalNameSANs(cert)
+
 	req.SignatureAlgorithm = cert.SignatureAlgorithm
 	switch pub := cert.PublicKey.(type) {
 	case *rsa.PublicKey:

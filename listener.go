@@ -59,6 +59,7 @@ func (cfg *Config) NewListener(domains ...string) net.Listener {
 		port = "443"
 	}
 
+	/* #nosec */
 	l.conf = &tls.Config{
 		Certificates:      certs,
 		NameToCertificate: certsMap,

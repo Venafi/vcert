@@ -51,7 +51,7 @@ type commandFlags struct {
 	customFields      []string
 	distinguishedName string
 	dnsSans           stringSlice
-	emailSans         emailSlice
+	emailSans         rfc822NameSlice
 	file              string
 	format            string
 	friendlyName      string
@@ -68,6 +68,7 @@ type commandFlags struct {
 	locality          string
 	noPickup          bool
 	noPrompt          bool
+	noRetire          bool
 	org               string
 	orgUnits          stringSlice
 	pickupID          string
@@ -86,8 +87,11 @@ type commandFlags struct {
 	tppToken          string
 	tppUser           string
 	trustBundle       string
+	upnSans           rfc822NameSlice
+	uriSans           uriSlice
 	url               string
 	verbose           bool
 	zone              string
 	omitSans          bool
+	csrFormat         string
 }

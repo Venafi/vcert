@@ -22,6 +22,7 @@ import (
 	"encoding/hex"
 	"encoding/pem"
 	"fmt"
+	"github.com/spf13/viper"
 	"io"
 	"io/ioutil"
 	"os"
@@ -31,6 +32,16 @@ import (
 
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
+)
+
+const (
+	vCertURL  = "VCERT_URL"
+	vCertZone = "VCERT_ZONE"
+	/* #nosec */
+	vCertToken = "VCERT_TOKEN"
+	/* #nosec */
+	vCertApiKey      = "VCERT_APIKEY"
+	vCertTrustBundle = "VCERT_TRUST_BUNDLE"
 )
 
 func parseCustomField(s string) (key, value string, err error) {
@@ -78,6 +89,12 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 	}
 	if len(cf.emailSans) > 0 {
 		req.EmailAddresses = cf.emailSans
+	}
+	if len(cf.uriSans) > 0 {
+		req.URIs = cf.uriSans
+	}
+	if len(cf.upnSans) > 0 {
+		req.UPNs = cf.upnSans
 	}
 	req.OmitSANs = cf.omitSans
 	for _, f := range cf.customFields {
@@ -286,9 +303,9 @@ func doValuesMatch(value1 []byte, value2 []byte) bool {
 	return true
 }
 
-func isValidEmailAddress(email string) bool {
-	reg := regexp.MustCompile(emailRegex)
-	return reg.FindStringIndex(email) != nil
+func isValidRFC822Name(name string) bool {
+	reg := regexp.MustCompile(rfc822NameRegex)
+	return reg.FindStringIndex(name) != nil
 }
 
 func sliceContains(slice []string, item string) bool {
@@ -299,4 +316,21 @@ func sliceContains(slice []string, item string) bool {
 
 	_, ok := set[item]
 	return ok
+}
+
+func getPropertyFromEnvironment(s string) string {
+	viper.AutomaticEnv()
+
+	urlS := viper.Get(s)
+
+	if urlS == nil {
+
+		return ""
+
+	} else {
+
+		return fmt.Sprintf("%v", urlS)
+
+	}
+
 }

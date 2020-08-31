@@ -200,6 +200,7 @@ func (c *Connector) getHTTPClient() *http.Client {
 		ExpectContinueTimeout: 1 * time.Second,
 	}
 	tlsConfig := http.DefaultTransport.(*http.Transport).TLSClientConfig
+	/* #nosec */
 	if c.trust != nil {
 		if tlsConfig == nil {
 			tlsConfig = &tls.Config{}

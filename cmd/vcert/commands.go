@@ -16,7 +16,7 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"os"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -100,6 +100,7 @@ func runBeforeCommand(c *cli.Context) error {
 	flags.orgUnits = c.StringSlice("ou")
 	flags.dnsSans = c.StringSlice("san-dns")
 	flags.emailSans = c.StringSlice("san-email")
+	flags.upnSans = c.StringSlice("san-upn")
 	flags.customFields = c.StringSlice("field")
 
 	noDuplicatedFlags := []string{"instance", "tls-address", "app-info"}
@@ -122,6 +123,10 @@ func runBeforeCommand(c *cli.Context) error {
 	for _, stringIP := range c.StringSlice("san-ip") {
 		ip := net.ParseIP(stringIP)
 		flags.ipSans = append(flags.ipSans, ip)
+	}
+	for _, stringURI := range c.StringSlice("san-uri") {
+		uri, _ := url.Parse(stringURI)
+		flags.uriSans = append(flags.uriSans, uri)
 	}
 
 	return nil
@@ -166,6 +171,7 @@ func setTLSConfig() error {
 		// Setup HTTPS client
 		tlsConfig.Certificates = []tls.Certificate{cert}
 		tlsConfig.RootCAs = caCertPool
+		// nolint:staticcheck
 		tlsConfig.BuildNameToCertificate()
 	}
 
@@ -184,6 +190,9 @@ func doCommandEnroll1(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
+
+	validateOverWritingEnviromentVariables()
+
 	cfg, err := buildConfig(c, &flags)
 	if err != nil {
 		return fmt.Errorf("Failed to build vcert config: %s", err)
@@ -278,6 +287,8 @@ func doCommandGetcred1(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
+	validateOverWritingEnviromentVariables()
+
 	err = setTLSConfig()
 	if err != nil {
 		return err
@@ -350,8 +361,9 @@ func doCommandGetcred1(c *cli.Context) error {
 			tm := time.Unix(int64(resp.Expires), 0).UTC().Format(time.RFC3339)
 			fmt.Println("access_token: ", resp.Access_token)
 			fmt.Println("access_token_expires: ", tm)
-			fmt.Println("refresh_token: ", resp.Refresh_token)
-
+			if resp.Refresh_token != "" {
+				fmt.Println("refresh_token: ", resp.Refresh_token)
+			}
 		}
 	} else if clientP12 {
 		resp, err := tppConnector.GetRefreshToken(&endpoint.Authentication{
@@ -390,7 +402,7 @@ func doCommandGenCSR1(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	err = writeOutKeyAndCsr(&flags, key, csr)
+	err = writeOutKeyAndCsr(c.Command.Name, &flags, key, csr)
 	if err != nil {
 		return err
 	}
@@ -407,6 +419,8 @@ func doCommandPickup1(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
+
+	validateOverWritingEnviromentVariables()
 
 	cfg, err := buildConfig(c, &flags)
 	if err != nil {
@@ -476,6 +490,8 @@ func doCommandRevoke1(c *cli.Context) error {
 		return err
 	}
 
+	validateOverWritingEnviromentVariables()
+
 	cfg, err := buildConfig(c, &flags)
 	if err != nil {
 		return fmt.Errorf("Failed to build vcert config: %s", err)
@@ -492,7 +508,7 @@ func doCommandRevoke1(c *cli.Context) error {
 	switch true {
 	case flags.distinguishedName != "":
 		revReq.CertificateDN = flags.distinguishedName
-		revReq.Disable = true
+		revReq.Disable = !flags.noRetire
 	case flags.thumbprint != "":
 		revReq.Thumbprint = flags.thumbprint
 		revReq.Disable = false
@@ -533,6 +549,7 @@ func doCommandRenew1(c *cli.Context) error {
 		return err
 	}
 
+	validateOverWritingEnviromentVariables()
 	cfg, err := buildConfig(c, &flags)
 	if err != nil {
 		return fmt.Errorf("Failed to build vcert config: %s", err)
@@ -720,37 +737,27 @@ func generateCsrForCommandGenCsr(cf *commandFlags, privateKeyPass []byte) (priva
 	return
 }
 
-func writeOutKeyAndCsr(cf *commandFlags, key []byte, csr []byte) (err error) {
+func writeOutKeyAndCsr(commandName string, cf *commandFlags, key []byte, csr []byte) (err error) {
+	pcc := &certificate.PEMCollection{}
+	pcc.CSR = string(csr[:])
+	pcc.PrivateKey = string(key[:])
 
-	if cf.file != "" {
-		writer := getFileWriter(cf.file)
-		f, ok := writer.(*os.File)
-		if ok {
-			defer f.Close()
-		}
-
-		_, err = writer.Write(key)
-		if err != nil {
-			return err
-		}
-		_, err = writer.Write(csr)
-		return
+	result := &Result{
+		Pcc:      pcc,
+		PickupId: "",
+		Config: &Config{
+			Command:      commandName,
+			Format:       cf.csrFormat,
+			ChainOption:  certificate.ChainOptionFromString(cf.chainOption),
+			AllFile:      cf.file,
+			KeyFile:      cf.keyFile,
+			CSRFile:      cf.csrFile,
+			ChainFile:    "",
+			PickupIdFile: "",
+			KeyPassword:  cf.keyPassword,
+		},
 	}
 
-	keyWriter := getFileWriter(cf.keyFile)
-	keyFile, ok := keyWriter.(*os.File)
-	if ok {
-		defer keyFile.Close()
-	}
-	_, err = keyWriter.Write(key)
-	if err != nil {
-		return err
-	}
-	csrWriter := getFileWriter(cf.csrFile)
-	csrFile, ok := csrWriter.(*os.File)
-	if ok {
-		defer csrFile.Close()
-	}
-	_, err = csrWriter.Write(csr)
+	err = result.Flush()
 	return
 }

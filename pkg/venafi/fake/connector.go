@@ -121,10 +121,8 @@ func issueCertificate(csr *x509.CertificateRequest) ([]byte, error) {
 		SerialNumber: serial,
 	}
 	certRequest.Subject = csr.Subject
-	certRequest.DNSNames = csr.DNSNames
-	certRequest.EmailAddresses = csr.EmailAddresses
-	certRequest.IPAddresses = csr.IPAddresses
-	certRequest.SignatureAlgorithm = x509.SHA512WithRSA
+	certRequest.ExtraExtensions = csr.Extensions // this will include any SANs including UPN
+	certRequest.SignatureAlgorithm = x509.SHA256WithRSA
 	certRequest.PublicKeyAlgorithm = csr.PublicKeyAlgorithm
 	certRequest.ExtKeyUsage = []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth}
 	certRequest.NotBefore = time.Now().Add(-24 * time.Hour)

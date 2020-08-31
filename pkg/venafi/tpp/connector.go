@@ -262,6 +262,12 @@ func wrapAltNames(req *certificate.Request) (items []sanItem) {
 	for _, name := range req.IPAddresses {
 		items = append(items, sanItem{7, name.String()})
 	}
+	for _, name := range req.URIs {
+		items = append(items, sanItem{6, name.String()})
+	}
+	for _, name := range req.UPNs {
+		items = append(items, sanItem{0, name})
+	}
 	return items
 }
 

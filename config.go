@@ -49,6 +49,7 @@ type Config struct {
 func LoadConfigFromFile(path, section string) (cfg Config, err error) {
 
 	if section == "" {
+		// nolint:staticcheck
 		section = ini.DEFAULT_SECTION
 	}
 	log.Printf("Loading configuration from %s section %s", path, section)

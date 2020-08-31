@@ -55,6 +55,7 @@ type PEMCollection struct {
 	Certificate string   `json:",omitempty"`
 	PrivateKey  string   `json:",omitempty"`
 	Chain       []string `json:",omitempty"`
+	CSR         string   `json:",omitempty"`
 }
 
 //NewPEMCollection creates a PEMCollection based on the data being passed in

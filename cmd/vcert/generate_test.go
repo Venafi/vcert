@@ -17,8 +17,10 @@
 package main
 
 import (
-	"github.com/Venafi/vcert/v4/pkg/certificate"
+	"encoding/json"
+  "github.com/Venafi/vcert/v4/pkg/certificate"
 	"io/ioutil"
+	t "log"
 	"os"
 	"testing"
 )
@@ -58,7 +60,7 @@ func TestWriteOutKeyAndCsr(t *testing.T) {
 	fileName := temp.Name()
 	temp.Close()
 	cf.file = fileName
-	err = writeOutKeyAndCsr(cf, key, csr)
+	err = writeOutKeyAndCsr(commandGenCSRName, cf, key, csr)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -76,4 +78,67 @@ func getCommandFlags() *commandFlags {
 	cf.keyCurve = certificate.EllipticCurveP384
 
 	return &cf
+}
+
+func TestGenerateCsrJson(t *testing.T) {
+
+	csrName := os.TempDir() + "csr.txt"
+	keyName := os.TempDir() + "key.txt"
+
+	cf := getCommandFlags()
+	cf.csrFormat = "json"
+	cf.noPrompt = true
+	cf.csrFile = csrName
+	cf.keyFile = keyName
+
+	key, csr := generateCsr(cf)
+
+	err := writeOutKeyAndCsr(commandGenCSRName, cf, key, csr)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	//Reads the csr file to validate the json format
+	csrData, err := ioutil.ReadFile(csrName)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	csrOutput := Output{}
+	err = json.Unmarshal(csrData, &csrOutput)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	if csrOutput.CSR == "" {
+		t.Fatalf("CSR data is not in expected format : JSON")
+	}
+
+	//Reads the private key file to validate the json format
+	keyData, err := ioutil.ReadFile(keyName)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	keyOutput := Output{}
+	err = json.Unmarshal(keyData, &keyOutput)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	if keyOutput.PrivateKey == "" {
+		t.Fatalf("Private key data is not in expected format : JSON")
+	}
+	return
+}
+
+func generateCsr(cf *commandFlags) (key []byte, csr []byte) {
+
+	key, csr, err := generateCsrForCommandGenCsr(cf, []byte(cf.keyPassword))
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	if key == nil {
+		t.Fatalf("Key should not be nil")
+	}
+	if csr == nil {
+		t.Fatalf("CSR should not be nil")
+	}
+	return
 }

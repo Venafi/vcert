@@ -158,7 +158,21 @@ var (
 	flagEmailSans = &cli.StringSliceFlag{
 		Name: "san-email",
 		Usage: "Use to specify an Email Subject Alternative Name. " +
-			"This option can be repeated to specify more than one value, like this: --san-email abc@abc.xyz --san-email def@abc.xyz etc.",
+			"This option can be repeated to specify more than one value, like this: --san-email me@abc.xyz --san-email you@abc.xyz etc.",
+	}
+
+	flagURISans = &cli.StringSliceFlag{
+		Name: "san-uri",
+		Usage: "Use to specify a Uniform Resource Identifier (URI) Subject Alternative Name. " +
+			"This option can be repeated to specify more than one value, like this: --san-uri https://www.abc.xyz --san-uri spiffe://node.abc.xyz etc.",
+		Hidden: true,
+	}
+
+	flagUPNSans = &cli.StringSliceFlag{
+		Name: "san-upn",
+		Usage: "Use to specify a User Principal Name (UPN) Subject Alternative Name. " +
+			"This option can be repeated to specify more than one value, like this: --san-upn me@abc.xyz --san-upn you@abc.xyz etc.",
+		Hidden: true,
 	}
 
 	flagFormat = &cli.StringFlag{
@@ -344,7 +358,7 @@ var (
 		Name: "id",
 		Usage: "Use to specify the ID of the certificate. Required unless --thumbprint is specified. For revocation," +
 			"marks the certificate as disabled so that no new certificate can be enrolled to replace it. " +
-			"If a replacement certificate will be enrolled, also specify --no-retire=true.",
+			"If a replacement certificate will be enrolled, also specify --no-retire.",
 		Destination: &flags.distinguishedName,
 	}
 
@@ -352,7 +366,7 @@ var (
 		Name: "thumbprint",
 		Usage: "Use to specify the SHA1 thumbprint of the certificate to renew." +
 			" Value may be specified as a string or read from the certificate file using the file: prefix. " +
-			"Implies --no-retire=true",
+			"Implies --no-retire.",
 		Destination: &flags.thumbprint,
 	}
 
@@ -392,10 +406,10 @@ var (
 		Destination: &flags.revocationReason,
 	}
 
-	flagRevocationNoRetire = &cli.StringFlag{
+	flagRevocationNoRetire = &cli.BoolFlag{
 		Name:        "no-retire",
 		Usage:       "Do not disable certificate object. Works only with --id <certificate DN>",
-		Destination: &flags.revocationReason,
+		Destination: &flags.noRetire,
 	}
 
 	flagScope = &cli.StringFlag{
@@ -423,9 +437,18 @@ var (
 		Destination: &flags.omitSans,
 	}
 
+	flagCSRFormat = &cli.StringFlag{
+		Name: "format",
+		Usage: "Generates the Certificate Signing Request in the specified format. Options include: pem | json\n" +
+			"\tpem: Generates the CSR in classic PEM format to be used as a file.\n" +
+			"\tjson: Generates the CSR in JSON format, suitable for REST API operations.",
+		Destination: &flags.csrFormat,
+		Value:       "pem",
+	}
+
 	commonFlags              = []cli.Flag{flagInsecure, flagFormat, flagVerbose, flagNoPrompt}
 	keyFlags                 = []cli.Flag{flagKeyType, flagKeySize, flagKeyCurve, flagKeyFile, flagKeyPassword}
-	sansFlags                = []cli.Flag{flagDNSSans, flagEmailSans, flagIPSans}
+	sansFlags                = []cli.Flag{flagDNSSans, flagEmailSans, flagIPSans, flagURISans, flagUPNSans}
 	subjectFlags             = flagsApppend(flagCommonName, flagCountry, flagState, flagLocality, flagOrg, flagOrgUnits)
 	sortableCredentialsFlags = []cli.Flag{
 		flagTestMode,
@@ -456,6 +479,7 @@ var (
 		keyFlags,
 		flagNoPrompt,
 		flagVerbose,
+		flagCSRFormat,
 	))
 
 	enrollFlags = flagsApppend(
@@ -526,6 +550,7 @@ var (
 			hiddenFlags(flagZone, true),     //todo: fix aruba tests and remove
 			hiddenFlags(subjectFlags, true), //todo: fix aruba tests and remove
 			flagCADN,
+			flagFile,
 			flagCertFile,
 			flagChainFile,
 			flagChainOption,
