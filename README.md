@@ -9,8 +9,8 @@ We welcome and appreciate all contributions._
 
 # VCert
 
-[![GoDoc](https://godoc.org/github.com/Venafi/vcert/v4?status.svg)](https://godoc.org/github.com/Venafi/vcert/v4)  [![Go Report Card](https://goreportcard.com/badge/github.com/Venafi/vcert/v4)](https://goreportcard.com/report/github.com/Venafi/vcert/v4)
-[![Used By](https://sourcegraph.com/github.com/Venafi/vcert/v4/-/badge.svg)](https://sourcegraph.com/github.com/Venafi/vcert/v4?badge)
+[![GoDoc](https://godoc.org/github.com/Venafi/vcert?status.svg)](https://pkg.go.dev/github.com/Venafi/vcert)  [![Go Report Card](https://goreportcard.com/badge/github.com/Venafi/vcert)](https://goreportcard.com/report/github.com/Venafi/vcert)
+[![Used By](https://sourcegraph.com/github.com/Venafi/vcert/-/badge.svg)](https://sourcegraph.com/github.com/Venafi/vcert?badge)
 
 VCert is a Go library, SDK, and command line utility designed to simplify key generation and enrollment of machine identities
 (also known as SSL/TLS certificates and keys) that comply with enterprise security policy by using the
@@ -37,9 +37,16 @@ go get github.com/Venafi/vcert/v4
 
 or
 
+Pre Go 1.13
 ```sh
-git clone https://github.com/Venafi/vcert/v4.git $GOPATH/src/github.com/Venafi/vcert/v4
+git clone https://github.com/Venafi/vcert.git $GOPATH/src/github.com/Venafi/vcert/v4
 ```
+
+Go 1.11 with go modules enabled or go 1.13 and up make sure to clone outside of `$GOPATH/src`
+```sh
+git clone https://github.com/Venafi/vcert.git
+```
+
 4. Build the command line utilities for Linux, MacOS, and Windows:
 
 ```sh
@@ -136,7 +143,7 @@ The completed test run will report on the number of test "scenarios" and "steps"
 
 Venafi welcomes contributions from the developer community.
 
-1. Fork it to your account (https://github.com/Venafi/vcert/v4/fork)
+1. Fork it to your account (https://github.com/Venafi/vcert/fork)
 2. Clone your fork (`git clone git@github.com:youracct/vcert.git`)
 3. Create a feature branch (`git checkout -b your-branch-name`)
 4. Implement and test your changes
