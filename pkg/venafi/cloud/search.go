@@ -19,7 +19,7 @@ package cloud
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Venafi/vcert/pkg/certificate"
+	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"net/http"
 	"time"
 )

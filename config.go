@@ -24,7 +24,7 @@ import (
 	"os/user"
 	"path/filepath"
 
-	"github.com/Venafi/vcert/pkg/endpoint"
+	"github.com/Venafi/vcert/v4/pkg/endpoint"
 	"gopkg.in/ini.v1"
 )
 

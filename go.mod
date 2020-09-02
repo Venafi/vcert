@@ -1,4 +1,4 @@
-module github.com/Venafi/vcert
+module github.com/Venafi/vcert/v4
 
 require (
 	github.com/howeyc/gopass v0.0.0-20170109162249-bf9dde6d0d2c

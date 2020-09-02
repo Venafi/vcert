@@ -19,11 +19,11 @@ package vcert
 import (
 	"crypto/x509"
 	"fmt"
-	"github.com/Venafi/vcert/pkg/endpoint"
-	"github.com/Venafi/vcert/pkg/venafi/cloud"
-	"github.com/Venafi/vcert/pkg/venafi/fake"
-	"github.com/Venafi/vcert/pkg/venafi/tpp"
-	"github.com/Venafi/vcert/pkg/verror"
+	"github.com/Venafi/vcert/v4/pkg/endpoint"
+	"github.com/Venafi/vcert/v4/pkg/venafi/cloud"
+	"github.com/Venafi/vcert/v4/pkg/venafi/fake"
+	"github.com/Venafi/vcert/v4/pkg/venafi/tpp"
+	"github.com/Venafi/vcert/v4/pkg/verror"
 	"log"
 )
 
