@@ -44,7 +44,9 @@ var ctx *test.Context
 
 func init() {
 	ctx = test.GetEnvContext()
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{
+		Renegotiation:      tls.RenegotiateFreelyAsClient,
+		InsecureSkipVerify: true}
 
 	if ctx.TPPurl == "" {
 		fmt.Println("TPP URL cannot be empty. See Makefile")
