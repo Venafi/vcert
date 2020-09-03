@@ -26,7 +26,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/pkg/verror"
+	"github.com/Venafi/vcert/v4/pkg/verror"
 	"net"
 	"net/url"
 	"strings"

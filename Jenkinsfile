@@ -1,7 +1,7 @@
 #!/usr/bin/env groovy
 node("jnode-vcert") {
 
-    String goPath = "/go/src/github.com/Venafi/vcert"
+    String goPath = "/go/src/github.com/Venafi/vcert/v4"
 
     stage('Checkout') {
         checkout scm

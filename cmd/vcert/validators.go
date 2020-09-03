@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/Venafi/vcert/pkg/certificate"
+	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"io/ioutil"
 	"regexp"
 	"strings"

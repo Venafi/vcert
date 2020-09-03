@@ -18,7 +18,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/Venafi/vcert"
+	"github.com/Venafi/vcert/v4"
 	"github.com/urfave/cli/v2"
 	"log"
 	"os"

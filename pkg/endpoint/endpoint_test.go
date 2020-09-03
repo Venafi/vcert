@@ -18,7 +18,7 @@ package endpoint
 
 import (
 	"crypto/x509"
-	"github.com/Venafi/vcert/pkg/certificate"
+	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"sort"
 	"strings"
 	"testing"

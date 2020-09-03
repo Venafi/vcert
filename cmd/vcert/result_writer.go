@@ -22,7 +22,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/pkg/certificate"
+	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"io/ioutil"
 	"os"
 	"software.sslmate.com/src/go-pkcs12"

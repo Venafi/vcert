@@ -2,7 +2,7 @@ package endpoint
 
 import (
 	"crypto/x509/pkix"
-	"github.com/Venafi/vcert/pkg/certificate"
+	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"testing"
 )
 

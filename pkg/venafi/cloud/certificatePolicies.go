@@ -17,7 +17,7 @@
 package cloud
 
 import (
-	"github.com/Venafi/vcert/pkg/endpoint"
+	"github.com/Venafi/vcert/v4/pkg/endpoint"
 	"strings"
 	"time"
 )
