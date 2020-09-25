@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"io/ioutil"
 	"regexp"
 	"strings"
+
+	"github.com/Venafi/vcert/v4/pkg/certificate"
 )
 
 // RevocationReasonOptions is an array of strings containing reasons for certificate revocation
@@ -60,7 +61,7 @@ func validateCommonFlags(commandName string) error {
 
 	csrOptionRegex := regexp.MustCompile(`^file:.*$|^local$|^service$|^$`)
 	if !csrOptionRegex.MatchString(flags.csrOption) {
-		return fmt.Errorf("unexpected -csr option: %s", flags.csrOption)
+		return fmt.Errorf("unexpected -csr option provided: %s; specify one of the following options: %s, %s, or %s.", flags.csrOption, "'file:<filename>'", "'local'", "'service'")
 	}
 
 	switch flags.keyTypeString {
