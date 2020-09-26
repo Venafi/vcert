@@ -18,6 +18,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	t "log"
 	"os"
@@ -83,8 +84,8 @@ func getCommandFlags() *commandFlags {
 
 func TestGenerateCsrJson(t *testing.T) {
 
-	csrName := os.TempDir() + "/csr.txt"
-	keyName := os.TempDir() + "/key.txt"
+	csrName := os.TempDir() + fmt.Sprintf("%ccsr.txt", os.PathSeparator)
+	keyName := os.TempDir() + fmt.Sprintf("%ckey.txt", os.PathSeparator)
 
 	cf := getCommandFlags()
 	cf.csrFormat = "json"
