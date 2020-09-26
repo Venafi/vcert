@@ -110,6 +110,8 @@ export TPP_URL=https://tpp.venafi.example/vedsdk
 export TPP_USER=tpp-user
 export TPP_PASSWORD=tpp-password
 export TPP_ZONE='some\policy'
+export TPP_ZONE_RESTRICTED='some\policy'
+export TPP_ZONE_ECDSA='some\policy'
 
 make tpp_test
 ```
