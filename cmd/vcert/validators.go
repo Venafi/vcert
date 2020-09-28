@@ -61,13 +61,13 @@ func validateCommonFlags(commandName string) error {
 
 	csrOptionRegex := regexp.MustCompile(`(^file:).*$|^local$|^service$|^$`)
 	if !csrOptionRegex.MatchString(flags.csrOption) {
-		return fmt.Errorf("unexpected -csr option provided: %s; specify one of the following options: %s, %s, or %s", flags.csrOption, "'file:<filename>'", "'local'", "'service'")
+		return fmt.Errorf("unexpected --csr option provided: %s; specify one of the following options: %s, %s, or %s", flags.csrOption, "'file:<filename>'", "'local'", "'service'")
 	}
 
 	csrOptFlagResults := csrOptionRegex.FindStringSubmatch(flags.csrOption)
 
 	if csrOptFlagResults[1] != "" && (flags.keyTypeString != "" || flags.keyCurveString != "" || flags.keySize > 0) {
-		return fmt.Errorf("the '-keytype','-keycurve' and 'key-size' options cannot be used when '-csr file:' option is provided")
+		return fmt.Errorf("the '--keytype','--keycurve' and '--key-size' options cannot be used when '--csr file:' option is provided")
 	}
 
 	switch flags.keyTypeString {
