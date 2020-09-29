@@ -27,6 +27,7 @@ import (
 	"io/ioutil"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -165,6 +166,36 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 		}
 		req.CsrOrigin = certificate.LocalGeneratedCSR
 	}
+
+	if cf.validDays != "" {
+		validDays := cf.validDays
+
+		data := strings.Split(validDays, "#")
+		days, _ := strconv.ParseInt(data[0], 10, 64)
+		hours := days * 24
+
+		req.ValidityHours = int(hours)
+
+		issuerHint := "Specific End Date"
+		if len(data) > 1 { //means that issuer hint is set
+
+			option := strings.ToLower(data[1])
+
+			switch option {
+
+			case "m":
+				issuerHint = "MICROSOFT"
+			case "d":
+				issuerHint = "DIGICERT"
+			case "e":
+				issuerHint = "ENTRUST"
+
+			}
+		}
+
+		req.IssuesHint = issuerHint
+	}
+
 	return req
 }
 

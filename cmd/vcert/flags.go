@@ -446,6 +446,13 @@ var (
 		Value:       "pem",
 	}
 
+	flagValidDays = &cli.StringFlag{
+		Name: "valid-days",
+		Usage: "Specify the number of days a certificate will be valid, and also the Issuer hint, it will have this format number_of_days#issuer_hint\n" +
+			"\toptions	 for issuer hint will be D for DIGICERT, E for ENTRUST, and M for MICROSOFT, so a valid example would be 30#M\n",
+		Destination: &flags.validDays,
+	}
+
 	commonFlags              = []cli.Flag{flagInsecure, flagFormat, flagVerbose, flagNoPrompt}
 	keyFlags                 = []cli.Flag{flagKeyType, flagKeySize, flagKeyCurve, flagKeyFile, flagKeyPassword}
 	sansFlags                = []cli.Flag{flagDNSSans, flagEmailSans, flagIPSans, flagURISans, flagUPNSans}
@@ -508,6 +515,7 @@ var (
 			flagInstance,
 			flagReplace,
 			flagOmitSans,
+			flagValidDays,
 		)),
 	)
 
