@@ -174,7 +174,7 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 		days, _ := strconv.ParseInt(data[0], 10, 64)
 		hours := days * 24
 
-		req.ExpirationDateAttribute = int(hours)
+		req.ValidityHours = int(hours)
 
 		issuerHint := ""
 		if len(data) > 1 { //means that issuer hint is set

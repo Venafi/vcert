@@ -193,12 +193,12 @@ type Request struct {
 	FetchPrivateKey bool
 	/*	Thumbprint is here because *Request is used in RetrieveCertificate().
 		Code should be refactored so that RetrieveCertificate() uses some abstract search object, instead of *Request{PickupID} */
-	Thumbprint              string
-	Timeout                 time.Duration
-	CustomFields            []CustomField
-	Location                *Location
-	ExpirationDateAttribute int
-	IssuerHint              string
+	Thumbprint    string
+	Timeout       time.Duration
+	CustomFields  []CustomField
+	Location      *Location
+	ValidityHours int
+	IssuerHint    string
 }
 
 type RevocationRequest struct {

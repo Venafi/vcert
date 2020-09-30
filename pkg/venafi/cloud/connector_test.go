@@ -159,7 +159,7 @@ func TestRequestCertificateWithValidDays(t *testing.T) {
 	req.Subject.OrganizationalUnit = []string{"Automated Tests"}
 
 	validHours := 144
-	req.ExpirationDateAttribute = validHours
+	req.ValidityHours = validHours
 	req.IssuerHint = "MICROSOFT"
 
 	err = conn.GenerateRequest(zoneConfig, req)

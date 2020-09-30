@@ -486,7 +486,7 @@ func DoRequestCertificateWithValidHours(t *testing.T, tpp *Connector) {
 	}
 
 	validHours := 144
-	req.ExpirationDateAttribute = validHours
+	req.ValidityHours = validHours
 	req.IssuerHint = "MICROSOFT"
 
 	err = tpp.GenerateRequest(config, req)
