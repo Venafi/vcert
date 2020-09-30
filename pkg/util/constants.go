@@ -1,7 +1,7 @@
 package util
 
 const (
-	MicrosoftStr  = "MICROSOFT"
-	DigicertConst = "DIGICERT"
-	EntrustConst  = "ENTRUST"
+	IssuerHintMicrosoft = "MICROSOFT"
+	IssuerHintDigicert  = "DIGICERT"
+	IssuerHintEntrust   = "ENTRUST"
 )

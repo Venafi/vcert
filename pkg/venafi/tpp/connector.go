@@ -409,11 +409,11 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 		expirationDateAttribute := ""
 
 		switch req.IssuerHint {
-		case util.MicrosoftStr:
+		case util.IssuerHintMicrosoft:
 			expirationDateAttribute = "Microsoft CA:Specific End Date"
-		case util.DigicertConst:
+		case util.IssuerHintDigicert:
 			expirationDateAttribute = "DigiCert CA:Specific End Date"
-		case util.EntrustConst:
+		case util.IssuerHintEntrust:
 			expirationDateAttribute = "EntrustNET CA:Specific End Date"
 		default:
 			expirationDateAttribute = "Specific End Date"

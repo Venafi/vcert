@@ -185,11 +185,11 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 			switch option {
 
 			case "m":
-				issuerHint = util.MicrosoftStr
+				issuerHint = util.IssuerHintMicrosoft
 			case "d":
-				issuerHint = util.DigicertConst
+				issuerHint = util.IssuerHintDigicert
 			case "e":
-				issuerHint = util.EntrustConst
+				issuerHint = util.IssuerHintEntrust
 
 			}
 		}
