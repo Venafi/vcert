@@ -199,8 +199,8 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 		},
 	}
 
-	if req.ValidityHours > 0 {
-		hoursStr := strconv.Itoa(req.ValidityHours)
+	if req.ExpirationDateAttribute > 0 {
+		hoursStr := strconv.Itoa(req.ExpirationDateAttribute)
 		validityHoursStr := "PT" + hoursStr + "H"
 		cloudReq.ValidityPeriod = validityHoursStr
 	}

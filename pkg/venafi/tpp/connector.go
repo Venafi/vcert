@@ -403,11 +403,11 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 	tppReq.CASpecificAttributes = append(tppReq.CASpecificAttributes, nameValuePair{Name: "Origin", Value: origin})
 	tppReq.Origin = origin
 
-	if req.ValidityHours > 0 {
+	if req.ExpirationDateAttribute > 0 {
 
 		issuerHint := ""
 
-		switch req.IssuesHint {
+		switch req.IssuerHint {
 		case "MICROSOFT":
 			issuerHint = "Microsoft CA:Specific End Date"
 		case "DIGICERT":
@@ -421,7 +421,7 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 		loc, _ := time.LoadLocation("UTC")
 		utcNow := time.Now().In(loc)
 
-		expirationDate := utcNow.AddDate(0, 0, req.ValidityHours/24)
+		expirationDate := utcNow.AddDate(0, 0, req.ExpirationDateAttribute/24)
 
 		formattedExpirationDate := fmt.Sprintf("%d-%02d-%02d %02d:%02d:%02d",
 			expirationDate.Year(), expirationDate.Month(), expirationDate.Day(), expirationDate.Hour(), expirationDate.Minute(), expirationDate.Second())

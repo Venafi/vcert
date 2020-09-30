@@ -174,9 +174,9 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 		days, _ := strconv.ParseInt(data[0], 10, 64)
 		hours := days * 24
 
-		req.ValidityHours = int(hours)
+		req.ExpirationDateAttribute = int(hours)
 
-		issuerHint := "Specific End Date"
+		issuerHint := ""
 		if len(data) > 1 { //means that issuer hint is set
 
 			option := strings.ToLower(data[1])
@@ -193,7 +193,7 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 			}
 		}
 
-		req.IssuesHint = issuerHint
+		req.IssuerHint = issuerHint
 	}
 
 	return req

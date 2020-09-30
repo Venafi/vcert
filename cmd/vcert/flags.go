@@ -448,8 +448,8 @@ var (
 
 	flagValidDays = &cli.StringFlag{
 		Name: "valid-days",
-		Usage: "Specify the number of days a certificate will be valid, and also the Issuer hint, it will have this format number_of_days#issuer_hint\n" +
-			"\toptions	 for issuer hint will be D for DIGICERT, E for ENTRUST, and M for MICROSOFT, so a valid example would be 30#M\n",
+		Usage: "Specify the number of days a certificate needs to be valid. For TPP, optionally indicate the target issuer by\n" +
+			"\tappending #D for DigiCert, #E for Entrust, or #M for Microsoft. Example: --valid-days 90#M\n",
 		Destination: &flags.validDays,
 	}
 
