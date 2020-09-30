@@ -300,7 +300,7 @@ func doCommandGetcred1(c *cli.Context) error {
 	}
 
 	//TODO: quick workaround to supress logs when output is in JSON.
-	if flags.format != "json" {
+	if flags.credFormat != "json" {
 		logf("Getting credentials")
 	}
 
@@ -330,7 +330,7 @@ func doCommandGetcred1(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		if flags.format == "json" {
+		if flags.credFormat == "json" {
 			jsonData, err := json.MarshalIndent(resp, "", "    ")
 			if err != nil {
 				return err
@@ -351,7 +351,7 @@ func doCommandGetcred1(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		if flags.format == "json" {
+		if flags.credFormat == "json" {
 			jsonData, err := json.MarshalIndent(resp, "", "    ")
 			if err != nil {
 				return err
@@ -373,7 +373,7 @@ func doCommandGetcred1(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		if flags.format == "json" {
+		if flags.credFormat == "json" {
 			jsonData, err := json.MarshalIndent(resp, "", "    ")
 			if err != nil {
 				return err
