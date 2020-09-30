@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"github.com/Venafi/vcert/v4/pkg/util"
 	"log"
 	"net/http"
 	neturl "net/url"
@@ -408,11 +409,11 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 		expirationDateAttribute := ""
 
 		switch req.IssuerHint {
-		case "MICROSOFT":
+		case util.MicrosoftStr:
 			expirationDateAttribute = "Microsoft CA:Specific End Date"
-		case "DIGICERT":
+		case util.DigicertConst:
 			expirationDateAttribute = "DigiCert CA:Specific End Date"
-		case "ENTRUST":
+		case util.EntrustConst:
 			expirationDateAttribute = "EntrustNET CA:Specific End Date"
 		default:
 			expirationDateAttribute = "Specific End Date"

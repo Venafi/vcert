@@ -33,6 +33,7 @@ import (
 
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
+	"github.com/Venafi/vcert/v4/pkg/util"
 )
 
 const (
@@ -184,11 +185,11 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 			switch option {
 
 			case "m":
-				issuerHint = "MICROSOFT"
+				issuerHint = util.MicrosoftStr
 			case "d":
-				issuerHint = "DIGICERT"
+				issuerHint = util.DigicertConst
 			case "e":
-				issuerHint = "ENTRUST"
+				issuerHint = util.EntrustConst
 
 			}
 		}

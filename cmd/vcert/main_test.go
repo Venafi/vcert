@@ -920,7 +920,7 @@ func TestValidatePrecedenceForFlagsCloud(t *testing.T) {
 	unsetFlags()
 }
 
-func TestValidateValidDaysFlagWithValidValues(t *testing.T) {
+func TestValidateValidDaysFlag(t *testing.T) {
 
 	context := getCliEnrollContext()
 
@@ -935,7 +935,7 @@ func TestValidateValidDaysFlagWithValidValues(t *testing.T) {
 	unsetFlags()
 }
 
-func TestValidateValidDaysFlagWithInvalidValidValues(t *testing.T) {
+func TestValidateValidDaysFlagWithInvalidValues(t *testing.T) {
 
 	context := getCliEnrollContext()
 
