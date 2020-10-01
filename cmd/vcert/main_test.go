@@ -23,8 +23,6 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/certificate"
-	"github.com/Venafi/vcert/v4/pkg/endpoint"
 	"io/ioutil"
 	"math/big"
 	"net"
@@ -33,6 +31,9 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/Venafi/vcert/v4/pkg/certificate"
+	"github.com/Venafi/vcert/v4/pkg/endpoint"
 )
 
 var testEmail = "test@vcert.test"
@@ -918,6 +919,49 @@ func TestValidatePrecedenceForFlagsCloud(t *testing.T) {
 	}
 	unsetEnvironmentVariables()
 	unsetFlags()
+}
+
+func TestInvalidFileCSROptionFlagsTPP(t *testing.T) {
+
+	flags = commandFlags{}
+	var err error
+	flags.csrOption = "file:test.csr"
+	flags.keySize = 2048
+	flags.keyTypeString = "rsa"
+	flags.keyCurveString = "P521"
+
+	err = validateCommonFlags(commandEnrollName)
+	if err == nil {
+		t.Fatalf("Error was not expected to be nil.  The keySize, keyType and keyCurve options should not be allowed when csr option with file: is used")
+	}
+
+	flags.csrOption = "local"
+	flags.keySize = 2048
+	flags.keyTypeString = "rsa"
+	flags.keyCurveString = "P521"
+
+	err = validateCommonFlags(commandEnrollName)
+	if err != nil {
+		t.Fatalf("Error was expected to be nil; got %s. keySize, keyType and keyCurve are OK when local option is used", err)
+	}
+
+	flags.csrOption = "service"
+	flags.keySize = 2048
+	flags.keyTypeString = "rsa"
+	flags.keyCurveString = "P521"
+
+	err = validateCommonFlags(commandEnrollName)
+	if err != nil {
+		t.Fatalf("Error was expected to be nil; got %s. keySize, keyType and keyCurve are OK when service option is used", err)
+	}
+
+	flags.csrOption = "service"
+	flags.keySize = 2048
+
+	err = validateCommonFlags(commandEnrollName)
+	if err != nil {
+		t.Fatalf("Error was expected to be nil; got %s. keySize are OK when service option is used", err)
+  }
 }
 
 func TestValidateValidDaysFlag(t *testing.T) {

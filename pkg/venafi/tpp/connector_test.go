@@ -1323,7 +1323,7 @@ func Test_GetCertificateList(t *testing.T) {
 			}
 		}
 		if len(set) != count {
-			t.Errorf("mismatched certificates number: wait %d, got %d", count, len(set))
+			t.Errorf("mismatched certificates number: wait %d, got %d for zone %s", count, len(set), ctx.TPPZone)
 		}
 	}
 }

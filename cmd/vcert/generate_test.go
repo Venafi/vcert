@@ -18,11 +18,13 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/Venafi/vcert/v4/pkg/certificate"
+	"fmt"
 	"io/ioutil"
 	t "log"
 	"os"
 	"testing"
+
+	"github.com/Venafi/vcert/v4/pkg/certificate"
 )
 
 func TestGenerateCsrForCommandGenCsr(t *testing.T) {
@@ -82,8 +84,8 @@ func getCommandFlags() *commandFlags {
 
 func TestGenerateCsrJson(t *testing.T) {
 
-	csrName := os.TempDir() + "csr.txt"
-	keyName := os.TempDir() + "key.txt"
+	csrName := os.TempDir() + fmt.Sprintf("%ccsr.txt", os.PathSeparator)
+	keyName := os.TempDir() + fmt.Sprintf("%ckey.txt", os.PathSeparator)
 
 	cf := getCommandFlags()
 	cf.csrFormat = "json"
