@@ -446,6 +446,13 @@ var (
 		Value:       "pem",
 	}
 
+	flagValidDays = &cli.StringFlag{
+		Name: "valid-days",
+		Usage: "Specify the number of days a certificate needs to be valid. For TPP, optionally indicate the target issuer by\n" +
+			"\tappending #D for DigiCert, #E for Entrust, or #M for Microsoft. Example: --valid-days 90#M\n",
+		Destination: &flags.validDays,
+	}
+
 	commonFlags              = []cli.Flag{flagInsecure, flagFormat, flagVerbose, flagNoPrompt}
 	keyFlags                 = []cli.Flag{flagKeyType, flagKeySize, flagKeyCurve, flagKeyFile, flagKeyPassword}
 	sansFlags                = []cli.Flag{flagDNSSans, flagEmailSans, flagIPSans, flagURISans, flagUPNSans}
@@ -508,6 +515,7 @@ var (
 			flagInstance,
 			flagReplace,
 			flagOmitSans,
+			flagValidDays,
 		)),
 	)
 

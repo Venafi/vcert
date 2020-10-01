@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -196,6 +197,12 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 			Type:       origin,
 			Identifier: ipAddr,
 		},
+	}
+
+	if req.ValidityHours > 0 {
+		hoursStr := strconv.Itoa(req.ValidityHours)
+		validityHoursStr := "PT" + hoursStr + "H"
+		cloudReq.ValidityPeriod = validityHoursStr
 	}
 
 	statusCode, status, body, err := c.request("POST", url, cloudReq)

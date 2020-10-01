@@ -84,6 +84,7 @@ type certificateRequest struct {
 	ExistingManagedCertificateId string                       `json:"existingManagedCertificateId,omitempty"`
 	ReuseCSR                     bool                         `json:"reuseCSR,omitempty"`
 	ApiClientInformation         certificateRequestClientInfo `json:"apiClientInformation,omitempty"`
+	ValidityPeriod               string                       `json:"validityPeriod,omitempty"`
 }
 
 type certificateStatus struct {
