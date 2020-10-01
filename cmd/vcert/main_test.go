@@ -961,7 +961,7 @@ func TestInvalidFileCSROptionFlagsTPP(t *testing.T) {
 	err = validateCommonFlags(commandEnrollName)
 	if err != nil {
 		t.Fatalf("Error was expected to be nil; got %s. keySize are OK when service option is used", err)
-  }
+	}
 }
 
 func TestValidateValidDaysFlag(t *testing.T) {
