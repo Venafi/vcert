@@ -109,11 +109,9 @@ Integration tests for Trust Protection Platform and Cloud products require endpo
 export TPP_URL=https://tpp.venafi.example/vedsdk
 export TPP_USER=tpp-user
 export TPP_PASSWORD=tpp-password
-export TPP_ZONE='some\policy'
-export TPP_ZONE_RESTRICTED='some\policy'
-export TPP_ZONE_ECDSA='some\policy'
-
-make tpp_test
+export TPP_ZONE='some\suggested_policy'
+export TPP_ZONE_RESTRICTED='some\locked_policy'
+export TPP_ZONE_ECDSA='some\ecdsa_policy'
 ```
 
 ```sh
