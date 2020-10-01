@@ -27,11 +27,13 @@ import (
 	"io/ioutil"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
+	"github.com/Venafi/vcert/v4/pkg/util"
 )
 
 const (
@@ -165,6 +167,36 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 		}
 		req.CsrOrigin = certificate.LocalGeneratedCSR
 	}
+
+	if cf.validDays != "" {
+		validDays := cf.validDays
+
+		data := strings.Split(validDays, "#")
+		days, _ := strconv.ParseInt(data[0], 10, 64)
+		hours := days * 24
+
+		req.ValidityHours = int(hours)
+
+		issuerHint := ""
+		if len(data) > 1 { //means that issuer hint is set
+
+			option := strings.ToLower(data[1])
+
+			switch option {
+
+			case "m":
+				issuerHint = util.IssuerHintMicrosoft
+			case "d":
+				issuerHint = util.IssuerHintDigicert
+			case "e":
+				issuerHint = util.IssuerHintEntrust
+
+			}
+		}
+
+		req.IssuerHint = issuerHint
+	}
+
 	return req
 }
 

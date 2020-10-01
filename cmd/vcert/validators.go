@@ -247,6 +247,17 @@ func validateEnrollFlags(commandName string) error {
 				return fmt.Errorf("-client-pkcs12-pw can only be specified in combination with -client-pkcs12")
 			}
 		}
+
+		if flags.validDays != "" {
+
+			valid := validateValidDaysFlag(commandName)
+
+			if !valid {
+				return fmt.Errorf("--valid-days is set but, it have an invalid format/data")
+			}
+
+		}
+
 	}
 
 	if flags.csrOption == "file" && flags.keyFile != "" { // Do not specify -key-file with -csr file as VCert cannot access the private key
@@ -275,6 +286,24 @@ func validateEnrollFlags(commandName string) error {
 	}
 
 	return nil
+}
+
+func validateValidDaysFlag(cn string) bool {
+	if cn != "enroll" {
+		return false
+	}
+
+	if flags.validDays != "" {
+
+		validDays := flags.validDays
+
+		var regex = regexp.MustCompile("[1-9]+[0-9]*(#[DdEeMm])?")
+
+		return regex.MatchString(validDays)
+
+	}
+
+	return true
 }
 
 func validateGetcredFlags1(commandName string) error {
