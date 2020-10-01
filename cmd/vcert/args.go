@@ -94,5 +94,6 @@ type commandFlags struct {
 	zone              string
 	omitSans          bool
 	csrFormat         string
+	credFormat        string
 	validDays         string
 }

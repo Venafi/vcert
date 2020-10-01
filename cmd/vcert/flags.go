@@ -345,6 +345,7 @@ var (
 		Usage:       "Use p12-file",
 		Destination: &flags.clientP12,
 		TakesFile:   true,
+		Hidden:      true,
 	}
 
 	flagClientP12PWDeprecated = &cli.StringFlag{
@@ -397,12 +398,7 @@ var (
 	flagRevocationReason = &cli.StringFlag{
 		Name: "reason",
 		Usage: `The revocation reason. Options include: 
-	"none",
-	"key-compromise",
-	"ca-compromise",
-	"affiliation-changed",
-	"superseded",
-	"cessation-of-operation"`,
+	"none", "key-compromise", "ca-compromise", "affiliation-changed", "superseded", "cessation-of-operation"`,
 		Destination: &flags.revocationReason,
 	}
 
@@ -446,6 +442,12 @@ var (
 		Value:       "pem",
 	}
 
+	flagCredFormat = &cli.StringFlag{
+		Name:        "format",
+		Usage:       "Use to output credentials in an alternate format. Example: --format json",
+		Destination: &flags.credFormat,
+	}
+
 	flagValidDays = &cli.StringFlag{
 		Name: "valid-days",
 		Usage: "Specify the number of days a certificate needs to be valid. For TPP, optionally indicate the target issuer by\n" +
@@ -453,7 +455,7 @@ var (
 		Destination: &flags.validDays,
 	}
 
-	commonFlags              = []cli.Flag{flagInsecure, flagFormat, flagVerbose, flagNoPrompt}
+	commonFlags              = []cli.Flag{flagInsecure, flagVerbose, flagNoPrompt}
 	keyFlags                 = []cli.Flag{flagKeyType, flagKeySize, flagKeyCurve, flagKeyFile, flagKeyPassword}
 	sansFlags                = []cli.Flag{flagDNSSans, flagEmailSans, flagIPSans, flagURISans, flagUPNSans}
 	subjectFlags             = flagsApppend(flagCommonName, flagCountry, flagState, flagLocality, flagOrg, flagOrgUnits)
@@ -504,6 +506,7 @@ var (
 			flagCSROption,
 			sansFlags,
 			flagFile,
+			flagFormat,
 			flagFriendlyName,
 			keyFlags,
 			flagNoPickup,
@@ -527,6 +530,7 @@ var (
 			flagChainFile,
 			flagChainOption,
 			flagFile,
+			flagFormat,
 			flagKeyFile,
 			flagKeyPassword,
 			flagPickupID,
@@ -544,7 +548,6 @@ var (
 			flagRevocationNoRetire,
 			flagRevocationReason,
 			flagThumbprint,
-			flagZone,
 			commonFlags,
 			sortableCredentialsFlags,
 		)),
@@ -559,6 +562,7 @@ var (
 			hiddenFlags(subjectFlags, true), //todo: fix aruba tests and remove
 			flagCADN,
 			flagFile,
+			flagFormat,
 			flagCertFile,
 			flagChainFile,
 			flagChainOption,
@@ -577,6 +581,7 @@ var (
 		flagClientP12,
 		flagClientP12PW,
 		flagConfig,
+		flagCredFormat,
 		flagProfile,
 		flagTPPPassword,
 		flagTPPToken,
