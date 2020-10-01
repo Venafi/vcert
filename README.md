@@ -87,7 +87,7 @@ go test -v ./example -run TestRequestCertificate
     1. CA Template that Trust Protection Platform will use to enroll certificate requests submitted by VCert
     2. Subject DN values for Organizational Unit (OU), Organization (O), City (L), State (ST) and Country (C)
     3. Management Type not locked or locked to 'Enrollment'
-    4. Certificate Signing Request (CSR) Generation not locked or locked to 'Service Generated CSR'
+    4. Certificate Signing Request (CSR) Generation unlocked or not locked to 'Service Generated CSR'
     5. Generate Key/CSR on Application not locked or locked to 'No'
     6. (Recommended) Disable Automatic Renewal set to 'Yes'
     7. (Recommended) Key Bit Strength set to 2048 or higher
@@ -109,7 +109,9 @@ Integration tests for Trust Protection Platform and Cloud products require endpo
 export TPP_URL=https://tpp.venafi.example/vedsdk
 export TPP_USER=tpp-user
 export TPP_PASSWORD=tpp-password
-export TPP_ZONE='some\policy'
+export TPP_ZONE='some\suggested_policy'
+export TPP_ZONE_RESTRICTED='some\locked_policy'
+export TPP_ZONE_ECDSA='some\ecdsa_policy'
 
 make tpp_test
 ```
@@ -118,6 +120,7 @@ make tpp_test
 export CLOUD_URL=https://api.venafi.cloud/v1
 export CLOUD_APIKEY=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 export CLOUD_ZONE=zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzzzzzz
+export CLOUD_ZONE_RESTRICTED=yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy
 
 make cloud_test
 ```
