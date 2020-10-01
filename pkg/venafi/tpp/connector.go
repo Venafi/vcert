@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"github.com/Venafi/vcert/v4/pkg/util"
 	"log"
 	"net/http"
 	neturl "net/url"
@@ -402,6 +403,33 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 	}
 	tppReq.CASpecificAttributes = append(tppReq.CASpecificAttributes, nameValuePair{Name: "Origin", Value: origin})
 	tppReq.Origin = origin
+
+	if req.ValidityHours > 0 {
+
+		expirationDateAttribute := ""
+
+		switch req.IssuerHint {
+		case util.IssuerHintMicrosoft:
+			expirationDateAttribute = "Microsoft CA:Specific End Date"
+		case util.IssuerHintDigicert:
+			expirationDateAttribute = "DigiCert CA:Specific End Date"
+		case util.IssuerHintEntrust:
+			expirationDateAttribute = "EntrustNET CA:Specific End Date"
+		default:
+			expirationDateAttribute = "Specific End Date"
+		}
+
+		loc, _ := time.LoadLocation("UTC")
+		utcNow := time.Now().In(loc)
+
+		expirationDate := utcNow.AddDate(0, 0, req.ValidityHours/24)
+
+		formattedExpirationDate := fmt.Sprintf("%d-%02d-%02d %02d:%02d:%02d",
+			expirationDate.Year(), expirationDate.Month(), expirationDate.Day(), expirationDate.Hour(), expirationDate.Minute(), expirationDate.Second())
+
+		tppReq.CASpecificAttributes = append(tppReq.CASpecificAttributes, nameValuePair{Name: expirationDateAttribute, Value: formattedExpirationDate})
+
+	}
 
 	for name, value := range customFieldsMap {
 		tppReq.CustomFields = append(tppReq.CustomFields, customField{name, value})

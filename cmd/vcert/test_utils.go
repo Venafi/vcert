@@ -11,6 +11,8 @@ const (
 	tppURlTestFlagValue   = "www.test.venafile.com"
 	cloudApiKeyTestValue  = "apiKeyTest"
 	cloudZoneTestValue    = "cloudZoneTest"
+	validDaysData         = "20#M"
+	invalidDaysData       = "0#S"
 )
 
 func setEnvironmentVariablesForTpp() {
@@ -36,6 +38,15 @@ func getCliContext() *cli.Context {
 	return context
 }
 
+func getCliEnrollContext() *cli.Context {
+	context := &cli.Context{
+		Command: &cli.Command{
+			Name: "enroll",
+		},
+	}
+	return context
+}
+
 func setEnvironmentVariablesForCloud() {
 	os.Setenv(vCertZone, "devops")
 	os.Setenv(vCertApiKey, "abvcekjej3232ssss")
@@ -49,4 +60,5 @@ func unsetFlags() {
 	flags.tppToken = ""
 	flags.zone = ""
 	flags.url = ""
+	flags.validDays = ""
 }

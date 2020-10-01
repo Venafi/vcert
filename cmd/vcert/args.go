@@ -95,4 +95,5 @@ type commandFlags struct {
 	omitSans          bool
 	csrFormat         string
 	credFormat        string
+	validDays         string
 }

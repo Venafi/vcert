@@ -794,7 +794,7 @@ func TestConfigEnvironmentVariablesForTpp(t *testing.T) {
 	//create the environment variables.
 	setEnvironmentVariablesForTpp()
 
-	//create a context, thiw will be used on the build config function.
+	//create a context, this will be used on the build config function.
 	context := getCliContext()
 
 	cfg, err := buildConfig(context, &flags)
@@ -824,7 +824,7 @@ func TestConfigEnvironmentVariablesForCloud(t *testing.T) {
 	//create the environment variables.
 	setEnvironmentVariablesForCloud()
 
-	//create a context, thiw will be used on the build config function.
+	//create a context, this will be used on the build config function.
 	context := getCliContext()
 
 	cfg, err := buildConfig(context, &flags)
@@ -899,7 +899,7 @@ func TestValidatePrecedenceForFlagsCloud(t *testing.T) {
 	//create the environment variables.
 	setEnvironmentVariablesForCloud()
 
-	//create a context, thiw will be used on the build config function.
+	//create a context, this will be used on the build config function.
 	context := getCliContext()
 
 	cfg, err := buildConfig(context, &flags)
@@ -917,5 +917,35 @@ func TestValidatePrecedenceForFlagsCloud(t *testing.T) {
 		t.Fatalf("API key is empty")
 	}
 	unsetEnvironmentVariables()
+	unsetFlags()
+}
+
+func TestValidateValidDaysFlag(t *testing.T) {
+
+	context := getCliEnrollContext()
+
+	flags.validDays = validDaysData
+
+	valid := validateValidDaysFlag(context.Command.Name)
+
+	if !valid {
+		t.Fatal("--valid-days is set but, it have an invalid format/data")
+	}
+
+	unsetFlags()
+}
+
+func TestValidateValidDaysFlagWithInvalidValues(t *testing.T) {
+
+	context := getCliEnrollContext()
+
+	flags.validDays = invalidDaysData
+
+	valid := validateValidDaysFlag(context.Command.Name)
+
+	if valid {
+		t.Fatal("valid days Data format is invalid, then validation should not be valid")
+	}
+
 	unsetFlags()
 }
