@@ -46,7 +46,7 @@ When(/^it should write( encrypted)? private key to (?:a|the) file(?: named)? "([
 end
 
 And(/^show output$/) do
-  puts last_command_started.output.to_s
+  Kernel.puts last_command_started.output.to_s
 end
 
 And(/^it should( not)? output CSR$/) do |negated|
@@ -89,7 +89,7 @@ Then(/^it should( not)? output (access|refresh) token( in JSON)?$/) do |negated,
     fail(ArgumentError.new('@previous_command_output is nil'))
   end
 
-  puts("Checking output:\n"+@previous_command_output)
+  Kernel.puts("Checking output:\n"+@previous_command_output)
   unless json
     steps %{Then the output should#{negated} contain "access_token:"}
   end
