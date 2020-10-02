@@ -25,7 +25,7 @@ ZONE = {
 
     "TPPdeprecated" => "-z '#{ENV['TPP_ZONE']}'",
 
-    "TPPecdsa" => "-z '#{ENV['TPP_ZONE']}'", 
+    "TPPecdsa" => "-z '#{ENV['TPP_ZONE_ECDSA']}'", 
 
     "Cloud" => "-z '#{ENV['CLOUD_ZONE']}'"
 }
