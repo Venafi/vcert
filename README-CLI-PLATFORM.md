@@ -96,6 +96,7 @@ Options:
 | `--san-email`        | Use to specify an Email Subject Alternative Name.  To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-email me@example.com` `--san-email you@example.com` |
 | `--san-ip`           | Use to specify an IP Address Subject Alternative Name.  To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-ip 10.20.30.40` `--san-ip 192.168.192.168` |
 | `--tls-address`      | Use to specify the hostname, FQDN or IP address and TCP port where the certificate can be validated after issuance and installation. Only allowed when `--instance` is also specified.<br/>Example: `--tls-address 10.20.30.40:443` |
+| `--valid-days`       | Use to specify the number of days a certificate needs to be valid if supported/allowed by the CA template. Indicate the target issuer by appending #D for DigiCert, #E for Entrust, or #M for Microsoft.<br/>Example: `--valid-days 90#M` |
 | `-z`                 | Use to specify the folder path where the certificate object will be placed. VCert prepends \VED\Policy\, so you only need to specify child folders under the root Policy folder.<br/>Example: `-z DevOps\CorpApp` |
 
 ## Certificate Retrieval Parameters
