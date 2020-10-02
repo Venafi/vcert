@@ -80,6 +80,7 @@ Options:
 | `--no-pickup`        | Use to disable the feature of VCert that repeatedly tries to retrieve the issued certificate.  When this is used you must run VCert again in pickup mode to retrieve the certificate that was requested. |
 | `--pickup-id-file`   | Use to specify a file name where the unique identifier for the certificate will be stored for subsequent use by pickup, renew, and revoke actions.  Default is to write the Pickup ID to STDOUT. |
 | `--san-dns`          | Use to specify a DNS Subject Alternative Name. To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-dns one.example.com` `--san-dns two.example.com` |
+| `--valid-days`       | Use to specify the number of days a certificate needs to be valid. Example: --valid-days 30 |
 | `-z`                 | Use to specify the DevOps Project Zone where the certificate will be located.<br/>Example: `-z vvvvvvvv-wwww-xxxx-yyyy-zzzzzzzzzzzz` |
 
 ## Certificate Retrieval Parameters
