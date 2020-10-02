@@ -2,23 +2,32 @@
 ENDPOINTS = {
     "test-mode" => "-test-mode -test-mode-delay 0",
 
-    "TPP" => " -u      '#{ENV['TPP_URL']}'      " +
-             " -t     '#{ENV['TPP_ACCESS_TOKEN']}'     " +
-             " -z            '#{ENV['TPP_ZONE']}'     " +
+    "TPP" => " -u '#{ENV['TPP_URL']}'" +
+             " -t '#{ENV['TPP_ACCESS_TOKEN']}'" +
              " -insecure",
 
-    "TPPdeprecated" => " -tpp-url      '#{ENV['TPP_URL']}'      " +
-             " -tpp-user     '#{ENV['TPP_USER']}'     " +
-             " -tpp-password '#{ENV['TPP_PASSWORD']}' " +
-             " -z            '#{ENV['TPP_ZONE']}'     " +
+    "TPPdeprecated" => " -tpp-url '#{ENV['TPP_URL']}'" +
+             " -tpp-user '#{ENV['TPP_USER']}'" +
+             " -tpp-password '#{ENV['TPP_PASSWORD']}'" +
              " -insecure",
 
-    "TPPecdsa" => " -u      '#{ENV['TPP_URL']}'      " +
-             " -t     '#{ENV['TPP_ACCESS_TOKEN']}'     " +
-             " -z            '#{ENV['TPP_ZONE_ECDSA']}'     " +
+    "TPPecdsa" => " -u '#{ENV['TPP_URL']}'" +
+             " -t '#{ENV['TPP_ACCESS_TOKEN']}'" +
              " -insecure",
 
-    "Cloud" => "-u '#{ENV['CLOUD_URL']}' -k '#{ENV['CLOUD_APIKEY']}' -z '#{ENV['CLOUD_ZONE']}'"
+    "Cloud" => "-u '#{ENV['CLOUD_URL']}' -k '#{ENV['CLOUD_APIKEY']}'"
+}
+
+ZONE = {
+    "test-mode" => "-z Default",
+
+    "TPP" => "-z '#{ENV['TPP_ZONE']}'",
+
+    "TPPdeprecated" => "-z '#{ENV['TPP_ZONE']}'",
+
+    "TPPecdsa" => "-z '#{ENV['TPP_ZONE']}'", 
+
+    "Cloud" => "-z '#{ENV['CLOUD_ZONE']}'"
 }
 
 ENDPOINT_CONFIGS = {

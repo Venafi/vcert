@@ -1,11 +1,11 @@
 
 When(/^I try to run `([^`]*)`$/)do |cmd|
-  puts cmd
+  Kernel.puts cmd
   steps %{
     Then I run `#{cmd}`
   }
   if last_command_started.exit_status.to_i != 0
-    puts last_command_started.output.to_s
+    Kernel.puts last_command_started.output.to_s
   end
 end
 
@@ -17,7 +17,7 @@ When(/^I enroll(?: a)?( random)? certificate (and_random_instance )?(?:in|from|u
   if random_instance
     instance = "-instance devops-instance:" + random_string
   end
-  cmd = "vcert enroll #{ENDPOINTS[endpoint]} #{cn} #{flags} #{instance}"
+  cmd = "vcert enroll #{ENDPOINTS[endpoint]} #{ZONE[endpoint]} #{cn} #{flags} #{instance}"
   steps %{Then I try to run `#{cmd}`}
 
   m = last_command_started.output.match /^PickupID="(.+)"$/
@@ -82,7 +82,7 @@ end
 When(/^I( interactively)? get credentials from TPP(?: with)?(.+)?$/) do |interactively, flags|
   if flags === " PKSC12"
     if "#{ENV['PKCS12_FILE']}" === ""
-      puts "No PKCS12 file was specified. Skipping scenario"
+      Kernel.puts "No PKCS12 file was specified. Skipping scenario"
       skip_this_scenario
     else
       cmd = "vcert getcred -u '#{ENV['TPP_MTLS_URL']}' -p12-file '#{ENV['PKCS12_FILE']}' -p12-password "+
@@ -90,7 +90,7 @@ When(/^I( interactively)? get credentials from TPP(?: with)?(.+)?$/) do |interac
     end
   elsif flags === " PKSC12 and no password"
     if "#{ENV['PKCS12_FILE']}" === ""
-      puts "No PKCS12 file was specified. Skipping scenario"
+      Kernel.puts "No PKCS12 file was specified. Skipping scenario"
       skip_this_scenario
     else
       cmd = "vcert getcred -u '#{ENV['TPP_URL']}' -p12-file '#{ENV['PKCS12_FILE']}' -p12-password "+
@@ -104,7 +104,7 @@ When(/^I( interactively)? get credentials from TPP(?: with)?(.+)?$/) do |interac
   end
 
   if interactively
-    puts cmd
+    Kernel.puts cmd
     steps %{
       Then I run `#{cmd}` interactively
       And I type "#{ENV['TPP_PASSWORD']}"
