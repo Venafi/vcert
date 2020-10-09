@@ -423,11 +423,11 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 		utcNow := time.Now().In(loc)
 
 		//if the days have decimal parts then round it to next day.
-		validityDays := req.ValidityHours/24
+		validityDays := req.ValidityHours / 24
 
-		if(req.ValidityHours % 24 > 0){
+		if req.ValidityHours%24 > 0 {
 
-			validityDays = validityDays+1
+			validityDays = validityDays + 1
 
 		}
 
