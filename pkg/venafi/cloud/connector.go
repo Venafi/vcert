@@ -75,6 +75,15 @@ type Connector struct {
 	log     *log.Logger
 }
 
+// Pre allocated default logger
+var logger = log.New(os.Stderr, UtilityShortName+": ", log.LstdFlags)
+
+// UtilityName is the full name of the command-line utility
+const UtilityName string = "Venafi Certificate Utility"
+
+// UtilityShortName is the short name of the command-line utility
+const UtilityShortName string = "vCert"
+
 // NewConnector creates a new Venafi Cloud Connector object used to communicate with Venafi Cloud
 func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (*Connector, error) {
 	c := Connector{verbose: verbose, trust: trust, zone: zone}
@@ -83,7 +92,7 @@ func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (
 	if err != nil {
 		return nil, err
 	}
-	c.SetLogger(log.New(os.Stderr, "vcert: ", log.LstdFlags))
+	c.SetLogger(logger)
 	return &c, nil
 }
 

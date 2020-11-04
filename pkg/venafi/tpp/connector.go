@@ -46,6 +46,12 @@ type Connector struct {
 	log         *log.Logger
 }
 
+// Pre allocated default logger
+var logger = log.New(os.Stderr, UtilityShortName+": ", log.LstdFlags)
+
+// UtilityShortName is the short name of the command-line utility
+const UtilityShortName string = "vCert"
+
 // NewConnector creates a new TPP Connector object used to communicate with TPP
 func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (*Connector, error) {
 	c := Connector{verbose: verbose, trust: trust, zone: zone}
@@ -54,7 +60,7 @@ func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (
 	if err != nil {
 		return nil, fmt.Errorf("%w: failed to normalize URL: %v", verror.UserDataError, err)
 	}
-	c.SetLogger(log.New(os.Stderr, "vcert: ", log.LstdFlags))
+	c.SetLogger(logger)
 	return &c, nil
 }
 
