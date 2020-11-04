@@ -47,10 +47,10 @@ type Connector struct {
 }
 
 // Pre allocated default logger
-var logger = log.New(os.Stderr, UtilityShortName+": ", log.LstdFlags)
+var logger = log.New(os.Stderr, utilityShortName+": ", log.LstdFlags)
 
-// UtilityShortName is the short name of the command-line utility
-const UtilityShortName string = "vCert"
+// utilityShortName is the short name of the command-line utility
+const utilityShortName string = "vCert"
 
 // NewConnector creates a new TPP Connector object used to communicate with TPP
 func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (*Connector, error) {
