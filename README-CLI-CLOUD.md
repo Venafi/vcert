@@ -24,7 +24,7 @@ The following content applies to the latest version of VCert CLI, click [here](h
 
 ## Prerequisites
 
-1. The Venafi Cloud REST API is accessible at https://api.venafi.cloud from the system where VCert will be executed.
+1. The Venafi Cloud REST API is accessible at [https://api.venafi.cloud](https://api.venafi.cloud/swagger-ui.html) from the system where VCert will be executed.
 2. You have successfully registered for a Venafi Cloud account, have been granted at least the "DevOps" role, and know your API key.
 3. A CA Account and Issuing Template exist and have been configured with:
     1. Recommended Settings values for:
@@ -129,7 +129,7 @@ Options:
 
 ## Examples
 
-For the purposes of the following examples assume that the Venafi Cloud REST API is accessible at https://api.venafi.cloud, that a user has been registered and granted at least the "DevOps" role, and that the user has an API key of "3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4". Also assume that a CA Account and Issuing Template has been created and configured appropriately (organization, city, state, country, key length, allowed domains, etc.). Lastly, that a DevOps project has been created to which the user has been given access, and a zone has been created within the project that has an ID of "126e4141-c299-4b45-bf4d-ae28cd3e061b".
+For the purposes of the following examples assume that the Venafi Cloud REST API is accessible at [https://api.venafi.cloud](https://api.venafi.cloud/swagger-ui.html), that a user has been registered and granted at least the "DevOps" role, and that the user has an API key of "3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4". Also assume that a CA Account and Issuing Template has been created and configured appropriately (organization, city, state, country, key length, allowed domains, etc.). Lastly, that a DevOps project has been created to which the user has been given access, and a zone has been created within the project that has an ID of "126e4141-c299-4b45-bf4d-ae28cd3e061b".
 
 Use the help to view the command line syntax for enroll:
 ```
