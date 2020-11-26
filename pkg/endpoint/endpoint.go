@@ -437,7 +437,7 @@ func (z *ZoneConfiguration) UpdateCertificateRequest(request *certificate.Reques
 }
 
 func getPrimaryNetAddr() string {
-	conn, err := net.Dial("udp", "venafi.com:1")
+	conn, err := net.Dial("udp", "8.8.8.8:80")
 	if err != nil {
 		return "0.0.0.0"
 	}
