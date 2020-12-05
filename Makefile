@@ -1,9 +1,9 @@
 GOFLAGS ?= $(GOFLAGS:)
 
-ifdef BUILD_NUMBER
-VERSION=`git describe --abbrev=0 --tags`+$(BUILD_NUMBER)
-else
 VERSION=`git describe --abbrev=0 --tags`
+
+ifdef BUILD_NUMBER
+VERSION:=$(VERSION)+$(BUILD_NUMBER)
 endif
 
 ifdef RELEASE_VERSION
@@ -67,11 +67,11 @@ collect_artifacts:
 	zip -j "artifacts/vcert_$(VERSION)_darwin.zip" "bin/darwin/vcert" || exit 1
 	zip -j "artifacts/vcert_$(VERSION)_windows.zip" "bin/windows/vcert.exe" || exit 1
 	zip -j "artifacts/vcert_$(VERSION)_windows86.zip" "bin/windows/vcert86.exe" || exit 1
-	cd artifacts; echo '```' > ../release.txt
-	cd artifacts; sha1sum * >> ../release.txt
-	cd artifacts; echo '```' >> ../release.txt
 
 release:
+	echo '```' > release.txt
+	cd artifacts; sha1sum * >> ../release.txt
+	echo '```' >> release.txt
 	go get -u github.com/tcnksm/ghr
 	ghr -prerelease -n $$RELEASE_VERSION -body="$$(cat ./release.txt)" $$RELEASE_VERSION artifacts/
 
