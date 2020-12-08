@@ -1,17 +1,13 @@
 GOFLAGS ?= $(GOFLAGS:)
 
-ifdef BUILD_NUMBER
-VERSION=`git describe --abbrev=0 --tags`+$(BUILD_NUMBER)
-else
 VERSION=`git describe --abbrev=0 --tags`
+
+ifdef BUILD_NUMBER
+VERSION:=$(VERSION)+$(BUILD_NUMBER)
 endif
 
-
-#define version if release is set
 ifdef RELEASE_VERSION
-ifdef BUILD_NUMBER
-VERSION=$(RELEASE_VERSION)+$(BUILD_NUMBER)
-else
+ifneq ($(RELEASE_VERSION),none)
 VERSION=$(RELEASE_VERSION)
 endif
 endif
@@ -31,9 +27,8 @@ build: get
 	env GOOS=linux   GOARCH=amd64 go build $(GO_LDFLAGS) -o bin/linux/vcert         ./cmd/vcert
 	env GOOS=linux   GOARCH=386   go build $(GO_LDFLAGS) -o bin/linux/vcert86       ./cmd/vcert
 	env GOOS=darwin  GOARCH=amd64 go build $(GO_LDFLAGS) -o bin/darwin/vcert        ./cmd/vcert
-	env GOOS=darwin  GOARCH=386 go build $(GO_LDFLAGS) -o bin/darwin/vcert86       ./cmd/vcert
 	env GOOS=windows GOARCH=amd64 go build $(GO_LDFLAGS) -o bin/windows/vcert.exe   ./cmd/vcert
-	env  GOOS=windows GOARCH=386   go build $(GO_LDFLAGS) -o bin/windows/vcert86.exe ./cmd/vcert
+	env GOOS=windows GOARCH=386   go build $(GO_LDFLAGS) -o bin/windows/vcert86.exe ./cmd/vcert
 
 cucumber:
 	rm -rf ./aruba/bin/
@@ -65,20 +60,20 @@ cmd_test: get
 	go test -v $(GOFLAGS) ./cmd/vcert
 
 collect_artifacts:
-	rm -rf artifcats
-	mkdir -p artifcats
-	VERSION=`git describe --abbrev=0 --tags`
-	mv bin/linux/vcert artifcats/vcert-$(VERSION)_linux
-	mv bin/linux/vcert86 artifcats/vcert-$(VERSION)_linux86
-	mv bin/darwin/vcert artifcats/vcert-$(VERSION)_darwin
-	mv bin/windows/vcert.exe artifcats/vcert-$(VERSION)_windows.exe
-	mv bin/windows/vcert86.exe artifcats/vcert-$(VERSION)_windows86.exe
-	cd artifcats; echo '```' > ../release.txt
-	cd artifcats; sha1sum * >> ../release.txt
-	cd artifcats; echo '```' >> ../release.txt
+	rm -rf artifacts
+	mkdir -p artifacts
+	zip -j "artifacts/vcert_$(VERSION)_linux.zip" "bin/linux/vcert" || exit 1
+	zip -j "artifacts/vcert_$(VERSION)_linux86.zip" "bin/linux/vcert86" || exit 1
+	zip -j "artifacts/vcert_$(VERSION)_darwin.zip" "bin/darwin/vcert" || exit 1
+	zip -j "artifacts/vcert_$(VERSION)_windows.zip" "bin/windows/vcert.exe" || exit 1
+	zip -j "artifacts/vcert_$(VERSION)_windows86.zip" "bin/windows/vcert86.exe" || exit 1
 
 release:
+	echo '```' > release.txt
+	cd artifacts; sha1sum * >> ../release.txt
+	echo '```' >> release.txt
 	go get -u github.com/tcnksm/ghr
-	ghr -prerelease -n $$RELEASE_VERSION -body="$$(cat ./release.txt)" $$RELEASE_VERSION artifcats/
+	ghr -prerelease -n $$RELEASE_VERSION -body="$$(cat ./release.txt)" $$RELEASE_VERSION artifacts/
+
 linter:
 	golangci-lint run
