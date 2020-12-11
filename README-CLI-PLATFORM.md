@@ -62,7 +62,7 @@ The following options apply to the `enroll`, `pickup`, `renew`, and `revoke` act
 
 ### Environment Variables
 
-As an alternative to specifying token, trust bundle, url, and/or zone via the command line or in a config file, VCert supports supplying those values using environment variables `VCERT_APIKEY`, `VCERT_TRUST_BUNDLE`, `VCERT_URL`, and `VCERT_ZONE` respectively.
+As an alternative to specifying token, trust bundle, url, and/or zone via the command line or in a config file, VCert supports supplying those values using environment variables `VCERT_TOKEN`, `VCERT_TRUST_BUNDLE`, `VCERT_URL`, and `VCERT_ZONE` respectively.
 
 ## Certificate Request Parameters
 ```
