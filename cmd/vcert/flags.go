@@ -177,10 +177,26 @@ var (
 
 	flagFormat = &cli.StringFlag{
 		Name: "format",
-		Usage: "Use to specify the output format. Options include: pem | json | pkcs12." +
-			" If PKCS#12 format is specified, then all objects should be written using --file option.",
+		Usage: "Use to specify the output format. Options include: pem | json | pkcs12 | jks." +
+			" If PKCS#12 or JKS format is specified, then all objects should be written using --file option." +
+			" When JKS format is specified, it's mandatory to use the --jks-alias option and provide a password for the keystore(see --jks-password for details).",
 		Destination: &flags.format,
 		Value:       "pem",
+	}
+
+	flagJKSAlias = &cli.StringFlag{
+		Name:        "jks-alias",
+		Usage:       "Use to specify the jks-alias of the entry in the keystore. Only can be used when --format flag is specified and value is jks.",
+		Destination: &flags.jksAlias,
+		Value:       "",
+	}
+
+	flagJKSPassword = &cli.StringFlag{
+		Name: "jks-password",
+		Usage: "Use to specify a password of at least 6 characters which will be used to protect both, the keystore and the entry in the keystore. Only can be used when --format flag is specified and value is jks. " +
+			"If the --jks-password is not provided, then it will be used the value provided in --key-password or the pass phrase provided in the prompt.",
+		Destination: &flags.jksPassword,
+		Value:       "",
 	}
 
 	flagFile = &cli.StringFlag{
@@ -507,6 +523,8 @@ var (
 			sansFlags,
 			flagFile,
 			flagFormat,
+			flagJKSAlias,
+			flagJKSPassword,
 			flagFriendlyName,
 			keyFlags,
 			flagNoPickup,
@@ -531,6 +549,8 @@ var (
 			flagChainOption,
 			flagFile,
 			flagFormat,
+			flagJKSAlias,
+			flagJKSPassword,
 			flagKeyFile,
 			flagKeyPassword,
 			flagPickupID,
@@ -561,6 +581,8 @@ var (
 			flagCADN,
 			flagFile,
 			flagFormat,
+			flagJKSAlias,
+			flagJKSPassword,
 			flagCertFile,
 			flagChainFile,
 			flagChainOption,

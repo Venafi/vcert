@@ -17,21 +17,27 @@
 package main
 
 import (
+	"bytes"
 	"crypto/rand"
 	"crypto/x509"
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
 	"github.com/Venafi/vcert/v4/pkg/certificate"
+	"github.com/pavel-v-chernykh/keystore-go/v4"
 	"io/ioutil"
+	"log"
 	"os"
 	"software.sslmate.com/src/go-pkcs12"
 	"strings"
+	"time"
 )
 
 type Config struct {
 	Command     string
 	Format      string
+	JKSAlias    string
+	JKSPassword string
 	ChainOption certificate.ChainOption
 
 	AllFile      string
@@ -117,6 +123,82 @@ func (o *Output) AsPKCS12(c *Config) ([]byte, error) {
 	return bytes, nil
 }
 
+func (o *Output) AsJKS(c *Config) ([]byte, error) {
+
+	if len(o.Certificate) == 0 || len(o.PrivateKey) == 0 {
+		return nil, fmt.Errorf("at least certificate and private key are required")
+	}
+
+	//getting the certificate and adding its bytes to the chain of certificates in bytes
+	p, _ := pem.Decode([]byte(o.Certificate))
+	if p == nil || p.Type != "CERTIFICATE" {
+		return nil, fmt.Errorf("certificate parse error(1)")
+	}
+	var chainCertInBytes = p.Bytes
+
+	// getting each one of the certificates in the chain of certificates and adding their bytes to the chain of certificates in bytes
+	for _, chainCert := range o.Chain {
+		crt, _ := pem.Decode([]byte(chainCert))
+		chainCertInBytes = append(chainCertInBytes, crt.Bytes...)
+	}
+
+	// getting the bytes of the PK
+	p, _ = pem.Decode([]byte(o.PrivateKey))
+	if p == nil {
+		return nil, fmt.Errorf("missing private key PEM")
+	}
+	var privDER []byte
+	if x509.IsEncryptedPEMBlock(p) {
+		privDERDecrypted, err := x509.DecryptPEMBlock(p, []byte(c.KeyPassword))
+		if err != nil {
+			return nil, fmt.Errorf("private key PEM decryption error: %s", err)
+		}
+
+		privDER = privDERDecrypted
+	} else {
+		privDER = p.Bytes
+	}
+
+	//creating a JKS
+	keyStore := keystore.New()
+
+	//creating a PK entry
+	pkeIn := keystore.PrivateKeyEntry{
+		CreationTime: time.Now(),
+		PrivateKey:   privDER,
+		CertificateChain: []keystore.Certificate{
+			{
+				Type:    "X509",
+				Content: chainCertInBytes,
+			},
+		},
+	}
+
+	var jksPassword []byte
+
+	//setting as jksPassword the value in --jks-password (if it was provided) or the value from keyPassword( --key-password or pass phrase value)
+	if c.JKSPassword != "" {
+		jksPassword = []byte(c.JKSPassword)
+	} else {
+		jksPassword = []byte(c.KeyPassword)
+	}
+
+	//adding the PK entry to the JKS
+	if err := keyStore.SetPrivateKeyEntry(c.JKSAlias, pkeIn, jksPassword); err != nil {
+		log.Fatal(err) // nolint: gocritic
+	}
+
+	buffer := new(bytes.Buffer)
+
+	//storing the JKS to the buffer
+	err := keyStore.Store(buffer, jksPassword)
+	if err != nil {
+		log.Fatal(err) // nolint: gocritic
+	}
+
+	return buffer.Bytes(), nil
+}
+
 func (o *Output) Format(c *Config) ([]byte, error) {
 	switch strings.ToLower(c.Format) {
 	case "json":
@@ -194,6 +276,11 @@ func (r *Result) Flush() error {
 			bytes, err = allFileOutput.AsPKCS12(r.Config)
 			if err != nil {
 				return fmt.Errorf("failed to encode pkcs12: %s", err)
+			}
+		} else if r.Config.Format == "jks" {
+			bytes, err = allFileOutput.AsJKS(r.Config)
+			if err != nil {
+				return err
 			}
 		} else {
 			bytes, err = allFileOutput.Format(r.Config)

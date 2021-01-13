@@ -19,6 +19,9 @@ var RevocationReasonOptions = []string{
 	"cessation-of-operation",
 }
 
+//taken from keystore.minPasswordLen constant
+const JKSMinPasswordLen = 6
+
 func readData(commandName string) error {
 	if strings.HasPrefix(flags.distinguishedName, "file:") {
 		fileName := flags.distinguishedName[5:]
@@ -52,7 +55,7 @@ func readData(commandName string) error {
 }
 
 func validateCommonFlags(commandName string) error {
-	if flags.format != "" && flags.format != "pem" && flags.format != "json" && flags.format != "pkcs12" {
+	if flags.format != "" && flags.format != "pem" && flags.format != "json" && flags.format != "pkcs12" && flags.format != "jks" {
 		return fmt.Errorf("Unexpected output format: %s", flags.format)
 	}
 	if flags.file != "" && (flags.certFile != "" || flags.chainFile != "" || flags.keyFile != "") {
@@ -149,15 +152,6 @@ func validatePKCS12Flags(commandName string) error {
 			if flags.file == "" && flags.csrOption != "service" {
 				return fmt.Errorf("PKCS#12 format can only be used if all objects are written to one file (see -file option)")
 			}
-			if flags.certFile != "" || flags.chainFile != "" || flags.keyFile != "" {
-				return fmt.Errorf("The '-file' cannot be used used with any other -*-file flags. Either all data goes into one file or individual files must be specified using the appropriate flags")
-			}
-			if strings.Index(flags.csrOption, "file:") == 0 {
-				return fmt.Errorf(`PKCS#12 format is not allowed for the enroll or renew actions when -csr is "file"`)
-			}
-			if (flags.csrOption == "" || flags.csrOption == "local") && flags.noPickup {
-				return fmt.Errorf(`PKCS#12 format is not allowed for the enroll or renew actions when -csr is "local" and -no-pickup is specified`)
-			}
 		} else {
 			if flags.file == "" { // todo: for enroll it also checks  flags.csrOption != "service"
 				return fmt.Errorf("PKCS#12 format can only be used if all objects are written to one file (see -file option)")
@@ -173,6 +167,56 @@ func validatePKCS12Flags(commandName string) error {
 			return fmt.Errorf(`PKCS#12 format is not allowed for the enroll or renew actions when -csr is "local" and -no-pickup is specified`)
 		}
 	}
+	return nil
+}
+
+func validateJKSFlags(commandName string) error {
+	if flags.format == "jks" {
+
+		if flags.jksAlias == "" {
+			return fmt.Errorf("JKS format needs that the --jks-alias be specified (see --format option)")
+		}
+
+		if flags.jksPassword != "" {
+			if len(flags.jksPassword) < JKSMinPasswordLen {
+				return fmt.Errorf("Password for JKS format must be at least %d characters (see --jks-password)", JKSMinPasswordLen)
+			}
+		} else if flags.keyPassword != "" {
+			if len(flags.keyPassword) < JKSMinPasswordLen {
+				return fmt.Errorf("Password for JKS format must be at least %d characters (see --jks-password)", JKSMinPasswordLen)
+			}
+		} else if flags.noPrompt {
+			return fmt.Errorf("JKS format needs that a password be provided (see --jks-password)")
+		}
+
+		if commandName == commandEnrollName {
+			if flags.file == "" && flags.csrOption != "service" {
+				return fmt.Errorf("JKS format can only be used if all objects are written to one file (see -file option)")
+			}
+		} else {
+			if flags.file == "" { // todo: for enroll it also checks  flags.csrOption != "service"
+				return fmt.Errorf("JKS format can only be used if all objects are written to one file (see -file option)")
+			}
+		}
+		if flags.certFile != "" || flags.chainFile != "" || flags.keyFile != "" {
+			return fmt.Errorf("The '-file' cannot be used used with any other -*-file flags. Either all data goes into one file or individual files must be specified using the appropriate flags")
+		}
+		if strings.HasPrefix(flags.csrOption, "file:") {
+			return fmt.Errorf(`JKS format is not allowed for the enroll or renew actions when -csr is "file"`)
+		}
+		if (flags.csrOption == "" || flags.csrOption == "local") && flags.noPickup {
+			return fmt.Errorf(`JKS format is not allowed for the enroll or renew actions when -csr is "local" and -no-pickup is specified`)
+		}
+	} else {
+		if flags.jksAlias != "" {
+			return fmt.Errorf("The --jks-alias flag only can be used when the format is jks (see --jks-alias option)")
+		}
+
+		if flags.jksPassword != "" {
+			return fmt.Errorf("The --jks-password flag only can be used when the format is jks (see --jks-password option)")
+		}
+	}
+
 	return nil
 }
 
@@ -269,6 +313,11 @@ func validateEnrollFlags(commandName string) error {
 		}
 	}
 	err = validatePKCS12Flags(commandName)
+	if err != nil {
+		return err
+	}
+
+	err = validateJKSFlags(commandName)
 	if err != nil {
 		return err
 	}
@@ -460,6 +509,11 @@ func validateRenewFlags1(commandName string) error {
 		return err
 	}
 
+	err = validateJKSFlags(commandName)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -486,6 +540,11 @@ func validatePickupFlags1(commandName string) error {
 	}
 
 	err = validatePKCS12Flags(commandName)
+	if err != nil {
+		return err
+	}
+
+	err = validateJKSFlags(commandName)
 	if err != nil {
 		return err
 	}
