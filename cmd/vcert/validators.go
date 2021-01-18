@@ -173,22 +173,6 @@ func validatePKCS12Flags(commandName string) error {
 func validateJKSFlags(commandName string) error {
 	if flags.format == "jks" {
 
-		if flags.jksAlias == "" {
-			return fmt.Errorf("JKS format needs that the --jks-alias be specified (see --format option)")
-		}
-
-		if flags.jksPassword != "" {
-			if len(flags.jksPassword) < JKSMinPasswordLen {
-				return fmt.Errorf("Password for JKS format must be at least %d characters (see --jks-password)", JKSMinPasswordLen)
-			}
-		} else if flags.keyPassword != "" {
-			if len(flags.keyPassword) < JKSMinPasswordLen {
-				return fmt.Errorf("Password for JKS format must be at least %d characters (see --jks-password)", JKSMinPasswordLen)
-			}
-		} else if flags.noPrompt {
-			return fmt.Errorf("JKS format needs that a password be provided (see --jks-password)")
-		}
-
 		if commandName == commandEnrollName {
 			if flags.file == "" && flags.csrOption != "service" {
 				return fmt.Errorf("JKS format can only be used if all objects are written to one file (see -file option)")
@@ -207,13 +191,31 @@ func validateJKSFlags(commandName string) error {
 		if (flags.csrOption == "" || flags.csrOption == "local") && flags.noPickup {
 			return fmt.Errorf(`JKS format is not allowed for the enroll or renew actions when -csr is "local" and -no-pickup is specified`)
 		}
-	} else {
-		if flags.jksAlias != "" {
-			return fmt.Errorf("The --jks-alias flag only can be used when the format is jks (see --jks-alias option)")
+
+		if flags.jksPassword != "" {
+			if len(flags.jksPassword) < JKSMinPasswordLen {
+				return fmt.Errorf("Password for JKS format must be at least %d characters (see --jks-password)", JKSMinPasswordLen)
+			}
+		} else if flags.keyPassword != "" {
+			if len(flags.keyPassword) < JKSMinPasswordLen {
+				return fmt.Errorf("Password for JKS format must be at least %d characters (see --jks-password)", JKSMinPasswordLen)
+			}
+		} else if flags.noPrompt {
+			return fmt.Errorf("JKS format needs that a password be provided (see --jks-password)")
 		}
+
+		if flags.jksAlias == "" {
+			return fmt.Errorf("JKS format needs that the --jks-alias be specified (see --format option)")
+		}
+
+	} else {
 
 		if flags.jksPassword != "" {
 			return fmt.Errorf("The --jks-password flag only can be used when the format is jks (see --jks-password option)")
+		}
+
+		if flags.jksAlias != "" {
+			return fmt.Errorf("The --jks-alias flag only can be used when the format is jks (see --jks-alias option)")
 		}
 	}
 

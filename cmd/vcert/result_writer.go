@@ -26,7 +26,6 @@ import (
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/pavel-v-chernykh/keystore-go/v4"
 	"io/ioutil"
-	"log"
 	"os"
 	"software.sslmate.com/src/go-pkcs12"
 	"strings"
@@ -185,7 +184,7 @@ func (o *Output) AsJKS(c *Config) ([]byte, error) {
 
 	//adding the PK entry to the JKS
 	if err := keyStore.SetPrivateKeyEntry(c.JKSAlias, pkeIn, jksPassword); err != nil {
-		log.Fatal(err) // nolint: gocritic
+		return nil, fmt.Errorf("JKS private key error: %s", err) //log.Fatal(err) // nolint: gocritic
 	}
 
 	buffer := new(bytes.Buffer)
@@ -193,7 +192,7 @@ func (o *Output) AsJKS(c *Config) ([]byte, error) {
 	//storing the JKS to the buffer
 	err := keyStore.Store(buffer, jksPassword)
 	if err != nil {
-		log.Fatal(err) // nolint: gocritic
+		return nil, fmt.Errorf("JKS keystore error: %s", err) //log.Fatal(err) // nolint: gocritic
 	}
 
 	return buffer.Bytes(), nil
