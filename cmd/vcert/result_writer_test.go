@@ -65,15 +65,15 @@ ozO8ZQRvOf56AHRMUBmVR4ouRrP0ABOfxSGWjhTBqCgtqeI/+FNDwxpQP/4kiXoT
 
 	encPKForJKS = `-----BEGIN RSA PRIVATE KEY-----
 Proc-Type: 4,ENCRYPTED
-DEK-Info: AES-256-CBC,456539594CBC1F45250AD705DC305909
+DEK-Info: AES-256-CBC,8DCD95996B09B376940FDDF85C339EAB
 
-Y8r6qVo7iLT2jdFf5vAxdhI5y1vKQoN14zddkQL3QWd+W70G7BSujeYKXY3hTV1R
-GOvrI+D7bTf7NRVhlf2CxZlFEb8QU/EdFUH+14v47eF1whbUoPLisHLeqjHdE5mo
-xGGggEej0bLHzKQ8+qHKZ7/FOq+ebzpqaNAWvhoK6agokf0c6Z4ElEVRJViUcU4s
-TSOiNut3uCZV7KD1yrVdC7RjTPyLP4xtZKLGq8s6lPJIuYT6W6GxX3mta7nt6Pq+
-BjFUbaWb4ktj2pP1hZMZf2Iiw31/ZIphjGlpEg1v2BnW9eTQegrFilmplSoA39pU
-WV70bluSX4ZTjYoSv1AQ6yClGuZ9JWGHhU7qhwSwMpmWqxbH1IimtvLXUR+mq9w7
-qVr6Ld4SoWTyhdcZYTyYCwLTAIUbnsm3oZi3af8Gvo9CWYvzQuvYDZBkqmy8wasU
+3fOby1I1A5uKeSl2mrib6P8lh5cvZrbMDrKhzeDeOSZNa0ea+XLyJpyjwFX07STt
+ExAZUkqznVBdv4qhGBo1ubhsDDzc5+A/6cyo/MFyuT00wZpGqW9iq/EXXO9cIQ5c
+lE1CnJaNeH/IQIVMmJ5zchlxL136B1N0TrbxyLMSwYZz6vTDLXyX6+UCaUa6Jvkz
+6BbrY01LGYng4KkeTZRWLnY+srCWat3bKf8qT/cDmanspg6resBB7jJNYgms8Axu
+c44bb3ha8NmF8cJYxvXEjJgLqaKyY7ymtrnvDBjOddurN6Ksh3O2zDGg5yfN5Y9A
+oR2vBkvZgKipE75kh10j65DjkKrTQ8NPeDqCgwzOEdM3oQ4hiA0Wi7g9ea3sO8n7
+9oQr1O184Joo89+KHVShSDGDeCyMOpSOvtqDgnmaHUrR93XCH5YnEgaTw34McNpA
 -----END RSA PRIVATE KEY-----`
 
 	ec = `-----BEGIN EC PRIVATE KEY-----
@@ -223,7 +223,7 @@ func TestJKSWithEncPKWithoutJKSPass(t *testing.T) {
 			"",
 			"",
 			"",
-			"123456",
+			"password",
 		},
 	}
 	err := result.Flush()
@@ -237,7 +237,7 @@ func TestJKSWithEncPKAndJKSPass(t *testing.T) {
 	result := &Result{
 		&certificate.PEMCollection{
 			Certificate: cert,
-			PrivateKey:  encPK,
+			PrivateKey:  encPKForJKS,
 			Chain:       chain,
 		},
 		"==pickup-id==",
@@ -253,67 +253,7 @@ func TestJKSWithEncPKAndJKSPass(t *testing.T) {
 			"",
 			"",
 			"",
-			"asdf",
-		},
-	}
-	err := result.Flush()
-
-	if err != nil {
-		t.Fatal("Failed to output the results: ", err)
-	}
-}
-
-func TestJKSWithPlainPK(t *testing.T) {
-	result := &Result{
-		&certificate.PEMCollection{
-			Certificate: cert,
-			PrivateKey:  PK,
-			Chain:       chain,
-		},
-		"==pickup-id==",
-		&Config{
-			"enroll",
-			"jks",
-			"jksAlias",
-			"123456",
-			certificate.ChainOptionFromString(""),
-			"/tmp/TestJKSWithPlainPK",
-			"",
-			"",
-			"",
-			"",
-			"",
-			"",
-		},
-	}
-	err := result.Flush()
-
-	if err != nil {
-		t.Fatal("Failed to output the results: ", err)
-	}
-}
-
-func TestJKSWithPlainEcPK(t *testing.T) {
-	result := &Result{
-		&certificate.PEMCollection{
-			Certificate: cert,
-			PrivateKey:  ec,
-			Chain:       chain,
-		},
-		"==pickup-id==",
-		&Config{
-			"enroll",
-			"jks",
-			"jksAlias",
-			"123456",
-			certificate.ChainOptionFromString(""),
-			"/tmp/TestJKSWithPlainEcPK",
-			"",
-			"",
-			"",
-			"",
-			"",
-			"",
+			"password",
 		},
 	}
 	err := result.Flush()
