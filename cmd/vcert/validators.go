@@ -55,7 +55,7 @@ func readData(commandName string) error {
 }
 
 func validateCommonFlags(commandName string) error {
-	if flags.format != "" && flags.format != "pem" && flags.format != "json" && flags.format != "pkcs12" && flags.format != "jks" {
+	if flags.format != "" && flags.format != "pem" && flags.format != "json" && flags.format != "pkcs12" && flags.format != JKSFormat {
 		return fmt.Errorf("Unexpected output format: %s", flags.format)
 	}
 	if flags.file != "" && (flags.certFile != "" || flags.chainFile != "" || flags.keyFile != "") {
@@ -171,7 +171,7 @@ func validatePKCS12Flags(commandName string) error {
 }
 
 func validateJKSFlags(commandName string) error {
-	if flags.format == "jks" {
+	if flags.format == JKSFormat {
 
 		if commandName == commandEnrollName {
 			if flags.file == "" && flags.csrOption != "service" {
@@ -192,22 +192,17 @@ func validateJKSFlags(commandName string) error {
 			return fmt.Errorf(`The --csr "local" option may not be used with the enroll or renew actions when --format is "jks" and --no-pickup is specified`)
 		}
 
-		if flags.jksPassword != "" {
-			if len(flags.jksPassword) < JKSMinPasswordLen {
+		if flags.jksPassword == "" && flags.keyPassword == "" {
+			return fmt.Errorf("JKS format requires passwords that are at least %d characters long", JKSMinPasswordLen)
+		} else {
+			if (flags.jksPassword != "" && len(flags.jksPassword) < JKSMinPasswordLen) || (flags.keyPassword != "" && len(flags.keyPassword) < JKSMinPasswordLen) {
 				return fmt.Errorf("JKS format requires passwords that are at least %d characters long", JKSMinPasswordLen)
 			}
-		} else if flags.keyPassword != "" {
-			if len(flags.keyPassword) < JKSMinPasswordLen {
-				return fmt.Errorf("JKS format requires passwords that are at least %d characters long", JKSMinPasswordLen)
-			}
-		} else if flags.noPrompt {
-			return fmt.Errorf("JKS format requires a password; see --key-password and --jks-password")
 		}
 
 		if flags.jksAlias == "" {
 			return fmt.Errorf("The --jks-alias parameter is required with --format jks")
 		}
-
 	} else {
 
 		if flags.jksPassword != "" {

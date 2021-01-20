@@ -173,24 +173,33 @@ func (o *Output) AsJKS(c *Config) ([]byte, error) {
 		},
 	}
 
-	var jksPassword []byte
+	var keyPass []byte
 
-	//setting as jksPassword the value in --jks-password (if it was provided) or the value from keyPassword( --key-password or pass phrase value)
-	if c.JKSPassword != "" {
-		jksPassword = []byte(c.JKSPassword)
+	//setting as keyPass the value from keyPassword(--key-password or pass phrase value) or the value in --jks-password
+	if c.KeyPassword != "" {
+		keyPass = []byte(c.KeyPassword)
 	} else {
-		jksPassword = []byte(c.KeyPassword)
+		keyPass = []byte(c.JKSPassword)
+	}
+
+	var storePass []byte
+
+	//setting as storePass the value in --jks-password or the value from keyPassword( --key-password or pass phrase value)
+	if c.JKSPassword != "" {
+		storePass = []byte(c.JKSPassword)
+	} else {
+		storePass = []byte(c.KeyPassword)
 	}
 
 	//adding the PK entry to the JKS
-	if err := keyStore.SetPrivateKeyEntry(c.JKSAlias, pkeIn, jksPassword); err != nil {
+	if err := keyStore.SetPrivateKeyEntry(c.JKSAlias, pkeIn, keyPass); err != nil {
 		return nil, fmt.Errorf("JKS private key error: %s", err) //log.Fatal(err) // nolint: gocritic
 	}
 
 	buffer := new(bytes.Buffer)
 
 	//storing the JKS to the buffer
-	err := keyStore.Store(buffer, jksPassword)
+	err := keyStore.Store(buffer, storePass)
 	if err != nil {
 		return nil, fmt.Errorf("JKS keystore error: %s", err) //log.Fatal(err) // nolint: gocritic
 	}
@@ -276,7 +285,7 @@ func (r *Result) Flush() error {
 			if err != nil {
 				return fmt.Errorf("failed to encode pkcs12: %s", err)
 			}
-		} else if r.Config.Format == "jks" {
+		} else if r.Config.Format == JKSFormat {
 			bytes, err = allFileOutput.AsJKS(r.Config)
 			if err != nil {
 				return err

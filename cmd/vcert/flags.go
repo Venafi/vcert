@@ -194,6 +194,7 @@ var (
 	flagJKSPassword = &cli.StringFlag{
 		Name: "jks-password",
 		Usage: "Use to specify a password of at least 6 characters that will protect the Java keystore. Only applicable with --format jks. " +
+			"If --key-password (or password prompt) is not specified, the value specified by --jks-password will be used for the store and key passwords." +
 			"If --jks-password is not specified, the value specified by --key-password (or password prompt) will be used for the store and key passwords.",
 		Destination: &flags.jksPassword,
 		Value:       "",

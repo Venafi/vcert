@@ -37,14 +37,20 @@ Feature: JKS format output
       Then it should fail with "JKS format requires certificate, private key, and chain to be written to a single file; specify using --file"
 
   Scenario: where JKS format is specified, but a short password is used
-    When I enroll random certificate in test-mode with -no-prompt -format jks -key-password 1234 -file all.jks
+    When I enroll random certificate in test-mode with -no-prompt -format jks -key-password 1234 -jks-password 123456 -file all.jks
       Then it should fail with "JKS format requires passwords that are at least 6 characters long"
-    When I enroll random certificate in test-mode with -no-prompt -format jks -jks-password 1234 -file all.jks
+    When I enroll random certificate in test-mode with -no-prompt -format jks -key-password 123456 -jks-password 1234 -file all.jks
       Then it should fail with "JKS format requires passwords that are at least 6 characters long"
+    When I enroll random certificate in test-mode with -no-prompt -format jks -key-password 1234 -jks-password 1234 -file all.jks
+          Then it should fail with "JKS format requires passwords that are at least 6 characters long"
 
   Scenario: where JKS format is specified and a password is used but the jks alias is not provided
     When I enroll random certificate in test-mode with -no-prompt -format jks -key-password 123456 -file all.jks
       Then it should fail with "The --jks-alias parameter is required with --format jks"
+
+  Scenario: where JKS format is specified but a password is not provided
+      When I enroll random certificate in test-mode with -no-prompt -format jks -file all.jks -jks-alias alias
+        Then it should fail with "JKS format requires passwords that are at least 6 characters long"
 
   Scenario: where JKS format is not specified but the jks password is provided
     When I enroll random certificate in test-mode with -no-prompt -format pkcs12 -jks-password 123456 -file all.jks
@@ -75,7 +81,7 @@ Feature: JKS format output
        | Cloud     |
 
   Scenario Outline: where all objects are written to one JKS archive with key-password and providing the jks-password
-    When I enroll random certificate in <endpoint> with -format jks -file all.jks -key-password 123 -jks-password 123456 -jks-alias xxx
+    When I enroll random certificate in <endpoint> with -format jks -file all.jks -key-password 123abc -jks-password 123456 -jks-alias xxx
     Then the exit status should be 0
     And "all.jks" should be jks archive with password "123456"
     Examples:
