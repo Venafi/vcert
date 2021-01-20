@@ -30,29 +30,29 @@ Feature: JKS format output
 
   Scenario: where it outputs error if JKS format is specified, but STDOUT output is used (default output)
     When I enroll random certificate in test-mode with -no-prompt -format jks
-      Then it should fail with "JKS format can only be used if all objects are written to one file (see -file option)"
+      Then it should fail with "JKS format requires certificate, private key, and chain to be written to a single file; specify using --file"
     When I retrieve the certificate in test-mode with -pickup-id xxx -key-password xxx -format jks
-      Then it should fail with "JKS format can only be used if all objects are written to one file (see -file option)"
+      Then it should fail with "JKS format requires certificate, private key, and chain to be written to a single file; specify using --file"
     When I renew the certificate in TPP with flags -id xxx -no-prompt -format jks
-      Then it should fail with "JKS format can only be used if all objects are written to one file (see -file option)"
+      Then it should fail with "JKS format requires certificate, private key, and chain to be written to a single file; specify using --file"
 
   Scenario: where JKS format is specified, but a short password is used
     When I enroll random certificate in test-mode with -no-prompt -format jks -key-password 1234 -file all.jks
-      Then it should fail with "Password for JKS format must be at least 6 characters (see --jks-password)"
+      Then it should fail with "JKS format requires passwords that are at least 6 characters long"
     When I enroll random certificate in test-mode with -no-prompt -format jks -jks-password 1234 -file all.jks
-      Then it should fail with "Password for JKS format must be at least 6 characters (see --jks-password)"
+      Then it should fail with "JKS format requires passwords that are at least 6 characters long"
 
   Scenario: where JKS format is specified and a password is used but the jks alias is not provided
     When I enroll random certificate in test-mode with -no-prompt -format jks -key-password 123456 -file all.jks
-      Then it should fail with "JKS format needs that the --jks-alias be specified (see --format option)"
+      Then it should fail with "The --jks-alias parameter is required with --format jks"
 
   Scenario: where JKS format is not specified but the jks password is provided
     When I enroll random certificate in test-mode with -no-prompt -format pkcs12 -jks-password 123456 -file all.jks
-      Then it should fail with "The --jks-password flag only can be used when the format is jks (see --jks-password option)"
+      Then it should fail with "The --jks-password parameter may only be used with --format jks"
 
   Scenario: where JKS format is not specified but the jks alias is provided
     When I enroll random certificate in test-mode with -no-prompt -format pkcs12 -jks-alias alias -file all.jks
-      Then it should fail with "The --jks-alias flag only can be used when the format is jks (see --jks-alias option)"
+      Then it should fail with "The --jks-alias parameter may only be used with --format jks"
 
   Scenario: where all objects are written to one JKS archive
     When I enroll random certificate in test-mode with -no-prompt -format jks -file all.jks -jks-password 123456 -jks-alias xxx
@@ -97,7 +97,7 @@ Feature: JKS format output
   Scenario Outline: where it outputs error when trying to enroll certificate in -csr file: mode and output it in JKS format
     Given I generate random CSR with -no-prompt -csr-file csr.pem -key-file k.pem
     When I enroll certificate using <endpoint> with -no-prompt -csr file:csr.pem -file all.jks -format jks
-    And it should fail with "JKS format is not allowed for the enroll or renew actions when -csr is \"file\""
+    And it should fail with "The --csr \"file\" option may not be used with the enroll or renew actions when --format is \"jks\""
     Examples:
       | endpoint  |
       | test-mode |
@@ -106,7 +106,7 @@ Feature: JKS format output
 
   Scenario Outline: where it outputs error when trying to enroll certificate in -csr local (by default), -no-pickup and output it in JKS format
     When I enroll random certificate using <endpoint> with -no-prompt -file all.jks -format jks -no-pickup
-    And it should fail with "JKS format is not allowed for the enroll or renew actions when -csr is "local" and -no-pickup is specified"
+    And it should fail with "The --csr \"local\" option may not be used with the enroll or renew actions when --format is \"jks\" and --no-pickup is specified"
     Examples:
       | endpoint  |
       | test-mode |
@@ -115,7 +115,7 @@ Feature: JKS format output
 
   Scenario Outline: where it outputs error when trying to enroll certificate in -csr local (specified), -no-pickup and output it in JKS format
     When I enroll random certificate using <endpoint> with -no-prompt -file all.jks -format jks -no-pickup -csr local
-    And it should fail with "JKS format is not allowed for the enroll or renew actions when -csr is "local" and -no-pickup is specified"
+    And it should fail with "The --csr \"local\" option may not be used with the enroll or renew actions when --format is \"jks\" and --no-pickup is specified"
     Examples:
       | endpoint  |
       | test-mode |

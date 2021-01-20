@@ -27,11 +27,11 @@ Feature: PKCS#12 format output
 
   Scenario: where it outputs error if PKCS#12 format is specified, but STDOUT output is used (default output)
     When I enroll random certificate in test-mode with -no-prompt -format pkcs12
-      Then it should fail with "PKCS#12 format can only be used if all objects are written to one file (see -file option)"
+      Then it should fail with "PKCS#12 format requires certificate, private key, and chain to be written to a single file; specify using --file"
     When I retrieve the certificate in test-mode with -pickup-id xxx -key-password xxx -format pkcs12
-      Then it should fail with "PKCS#12 format can only be used if all objects are written to one file (see -file option)"
+      Then it should fail with "PKCS#12 format requires certificate, private key, and chain to be written to a single file; specify using --file"
     When I renew the certificate in TPP with flags -id xxx -no-prompt -format pkcs12
-      Then it should fail with "PKCS#12 format can only be used if all objects are written to one file (see -file option)"
+      Then it should fail with "PKCS#12 format requires certificate, private key, and chain to be written to a single file; specify using --file"
 
   Scenario: where all objects are written to one PKCS#12 archive
     When I enroll random certificate in test-mode with -no-prompt -format pkcs12 -file all.p12
@@ -66,7 +66,7 @@ Feature: PKCS#12 format output
   Scenario Outline: where it outputs error when trying to enroll certificate in -csr file: mode and output it in PKCS#12 format
     Given I generate random CSR with -no-prompt -csr-file csr.pem -key-file k.pem
     When I enroll certificate using <endpoint> with -no-prompt -csr file:csr.pem -file all.p12 -format pkcs12
-    And it should fail with "PKCS#12 format is not allowed for the enroll or renew actions when -csr is \"file\""
+    And it should fail with "The --csr \"file\" option may not be used with the enroll or renew actions when --format is \"pkcs12\""
     Examples:
       | endpoint  |
       | test-mode |
@@ -75,7 +75,7 @@ Feature: PKCS#12 format output
 
   Scenario Outline: where it outputs error when trying to enroll certificate in -csr local (by default), -no-pickup and output it in PKCS#12 format
     When I enroll random certificate using <endpoint> with -no-prompt -file all.p12 -format pkcs12 -no-pickup
-    And it should fail with "PKCS#12 format is not allowed for the enroll or renew actions when -csr is "local" and -no-pickup is specified"
+    And it should fail with "The --csr \"local\" option may not be used with the enroll or renew actions when --format is \"pkcs12\" and --no-pickup is specified"
     Examples:
       | endpoint  |
       | test-mode |
@@ -84,7 +84,7 @@ Feature: PKCS#12 format output
 
   Scenario Outline: where it outputs error when trying to enroll certificate in -csr local (specified), -no-pickup and output it in PKCS#12 format
     When I enroll random certificate using <endpoint> with -no-prompt -file all.p12 -format pkcs12 -no-pickup -csr local
-    And it should fail with "PKCS#12 format is not allowed for the enroll or renew actions when -csr is "local" and -no-pickup is specified"
+    And it should fail with "The --csr \"local\" option may not be used with the enroll or renew actions when --format is \"pkcs12\" and --no-pickup is specified"
     Examples:
       | endpoint  |
       | test-mode |

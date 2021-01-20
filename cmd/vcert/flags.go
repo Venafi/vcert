@@ -178,23 +178,23 @@ var (
 	flagFormat = &cli.StringFlag{
 		Name: "format",
 		Usage: "Use to specify the output format. Options include: pem | json | pkcs12 | jks." +
-			" If PKCS#12 or JKS format is specified, then all objects should be written using --file option." +
-			" When JKS format is specified, it's mandatory to use the --jks-alias option and provide a password for the keystore(see --jks-password for details).",
+			" If PKCS#12 or JKS formats are specified, the --file parameter is required." +
+			" For JKS format, the --jks-alias parameter is required and a password must be provided (see --key-password and --jks-password).",
 		Destination: &flags.format,
 		Value:       "pem",
 	}
 
 	flagJKSAlias = &cli.StringFlag{
 		Name:        "jks-alias",
-		Usage:       "Use to specify the jks-alias of the entry in the keystore. Only can be used when --format flag is specified and value is jks.",
+		Usage:       "Use to specify the alias of the entry in the Java keystore. Only applicable with --format jks.",
 		Destination: &flags.jksAlias,
 		Value:       "",
 	}
 
 	flagJKSPassword = &cli.StringFlag{
 		Name: "jks-password",
-		Usage: "Use to specify a password of at least 6 characters which will be used to protect both, the keystore and the entry in the keystore. Only can be used when --format flag is specified and value is jks. " +
-			"If the --jks-password is not provided, then it will be used the value provided in --key-password or the pass phrase provided in the prompt.",
+		Usage: "Use to specify a password of at least 6 characters that will protect the Java keystore. Only applicable with --format jks. " +
+			"If --jks-password is not specified, the value specified by --key-password (or password prompt) will be used for the store and key passwords.",
 		Destination: &flags.jksPassword,
 		Value:       "",
 	}
