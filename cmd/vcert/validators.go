@@ -192,7 +192,7 @@ func validateJKSFlags(commandName string) error {
 			return fmt.Errorf(`The --csr "local" option may not be used with the enroll or renew actions when --format is "jks" and --no-pickup is specified`)
 		}
 
-		if flags.jksPassword == "" && flags.keyPassword == "" {
+		if flags.keyPassword == "" {
 			return fmt.Errorf("JKS format requires passwords that are at least %d characters long", JKSMinPasswordLen)
 		} else {
 			if (flags.jksPassword != "" && len(flags.jksPassword) < JKSMinPasswordLen) || (flags.keyPassword != "" && len(flags.keyPassword) < JKSMinPasswordLen) {

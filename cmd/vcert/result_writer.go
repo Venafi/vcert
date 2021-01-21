@@ -128,17 +128,29 @@ func (o *Output) AsJKS(c *Config) ([]byte, error) {
 		return nil, fmt.Errorf("at least certificate and private key are required")
 	}
 
-	//getting the certificate and adding its bytes to the chain of certificates in bytes
+	var certificateChain []keystore.Certificate
+
+	//getting the certificate in bytes
 	p, _ := pem.Decode([]byte(o.Certificate))
 	if p == nil || p.Type != "CERTIFICATE" {
 		return nil, fmt.Errorf("certificate parse error(1)")
 	}
-	var chainCertInBytes = p.Bytes
+	var certInBytes = p.Bytes
 
-	// getting each one of the certificates in the chain of certificates and adding their bytes to the chain of certificates in bytes
+	//adding the certificates to the slice of Certificates
+	certificateChain = append(certificateChain, keystore.Certificate{
+		Type:    "X509",
+		Content: certInBytes,
+	})
+
+	// getting each one of the certificates in the chain of certificates and adding their bytes to the chain of certificates
 	for _, chainCert := range o.Chain {
 		crt, _ := pem.Decode([]byte(chainCert))
-		chainCertInBytes = append(chainCertInBytes, crt.Bytes...)
+		//chainCertInBytes = append(chainCertInBytes, crt.Bytes...)
+		certificateChain = append(certificateChain, keystore.Certificate{
+			Type:    "X509",
+			Content: crt.Bytes,
+		})
 	}
 
 	// getting the bytes of the PK
@@ -163,24 +175,17 @@ func (o *Output) AsJKS(c *Config) ([]byte, error) {
 
 	//creating a PK entry
 	pkeIn := keystore.PrivateKeyEntry{
-		CreationTime: time.Now(),
-		PrivateKey:   privDER,
-		CertificateChain: []keystore.Certificate{
-			{
-				Type:    "X509",
-				Content: chainCertInBytes,
-			},
-		},
+		CreationTime:     time.Now(),
+		PrivateKey:       privDER,
+		CertificateChain: certificateChain,
 	}
 
-	var keyPass []byte
-
-	//setting as keyPass the value from keyPassword(--key-password or pass phrase value) or the value in --jks-password
-	if c.KeyPassword != "" {
-		keyPass = []byte(c.KeyPassword)
-	} else {
-		keyPass = []byte(c.JKSPassword)
+	//adding the PK entry to the JKS. Setting as keyPass the value from keyPassword(--key-password or pass phrase value)
+	if err := keyStore.SetPrivateKeyEntry(c.JKSAlias, pkeIn, []byte(c.KeyPassword)); err != nil {
+		return nil, fmt.Errorf("JKS private key error: %s", err) //log.Fatal(err) // nolint: gocritic
 	}
+
+	buffer := new(bytes.Buffer)
 
 	var storePass []byte
 
@@ -190,13 +195,6 @@ func (o *Output) AsJKS(c *Config) ([]byte, error) {
 	} else {
 		storePass = []byte(c.KeyPassword)
 	}
-
-	//adding the PK entry to the JKS
-	if err := keyStore.SetPrivateKeyEntry(c.JKSAlias, pkeIn, keyPass); err != nil {
-		return nil, fmt.Errorf("JKS private key error: %s", err) //log.Fatal(err) // nolint: gocritic
-	}
-
-	buffer := new(bytes.Buffer)
 
 	//storing the JKS to the buffer
 	err := keyStore.Store(buffer, storePass)

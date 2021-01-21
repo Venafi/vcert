@@ -52,6 +52,10 @@ Feature: JKS format output
       When I enroll random certificate in test-mode with -no-prompt -format jks -file all.jks -jks-alias alias
         Then it should fail with "JKS format requires passwords that are at least 6 characters long"
 
+  Scenario: where JKS format is specified but a key-password is not provided
+      When I enroll random certificate in test-mode with -no-prompt -format jks -file all.jks -jks-password 123456 -jks-alias alias
+        Then it should fail with "JKS format requires passwords that are at least 6 characters long"
+
   Scenario: where JKS format is not specified but the jks password is provided
     When I enroll random certificate in test-mode with -no-prompt -format pkcs12 -jks-password 123456 -file all.jks
       Then it should fail with "The --jks-password parameter may only be used with --format jks"
@@ -61,27 +65,17 @@ Feature: JKS format output
       Then it should fail with "The --jks-alias parameter may only be used with --format jks"
 
   Scenario: where all objects are written to one JKS archive
-    When I enroll random certificate in test-mode with -no-prompt -format jks -file all.jks -jks-password 123456 -jks-alias xxx
+    When I enroll random certificate in test-mode with -no-prompt -format jks -file all.jks -key-password 123456 -jks-password 123456 -jks-alias abc
     Then the exit status should be 0
     And "all.jks" should be jks archive with password "123456"
 
   Scenario: where all objects are written to one JKS archive
-      When I enroll random certificate in test-mode with -no-prompt -format jks -file all.jks -jks-password 123456 -jks-alias xxx -key-type ecdsa
+      When I enroll random certificate in test-mode with -no-prompt -format jks -file all.jks -key-password 123456 -jks-password 123456 -jks-alias abc -key-type ecdsa
       Then the exit status should be 0
       And "all.jks" should be jks archive with password "123456"
 
-  Scenario Outline: where all objects are written to one JKS archive providing with key-password
-    When I enroll random certificate in <endpoint> with -format jks -file all.jks -key-password 123456 -jks-alias xxx
-    Then the exit status should be 0
-    And "all.jks" should be jks archive with password "123456"
-    Examples:
-       | endpoint  |
-       | test-mode |
-       | TPP       |
-       | Cloud     |
-
   Scenario Outline: where all objects are written to one JKS archive with key-password and providing the jks-password
-    When I enroll random certificate in <endpoint> with -format jks -file all.jks -key-password 123abc -jks-password 123456 -jks-alias xxx
+    When I enroll random certificate in <endpoint> with -format jks -file all.jks -key-password 123abc -jks-password 123456 -jks-alias abc
     Then the exit status should be 0
     And "all.jks" should be jks archive with password "123456"
     Examples:
@@ -130,7 +124,7 @@ Feature: JKS format output
 
   Scenario Outline: where it pickups up service-generated certificate and outputs it in JKS format
     When I enroll random certificate using <endpoint> with -no-prompt -no-pickup -csr service
-    And I retrieve the certificate using <endpoint> using the same Pickup ID with -timeout 180 -key-password newPassw0rd! -file all.jks -format jks -jks-alias xxx
+    And I retrieve the certificate using <endpoint> using the same Pickup ID with -timeout 180 -key-password newPassw0rd! -file all.jks -format jks -jks-alias abc
     And "all.jks" should be JKS archive with password "newPassw0rd!"
     Examples:
       | endpoint  |
@@ -140,7 +134,7 @@ Feature: JKS format output
 
 #  Scenario Outline: Pickup JKS with typing pass phrases
 #    When I enroll random certificate using <endpoint> with -no-prompt -no-pickup -csr service
-#    And I interactively retrieve the certificate using <endpoint> using the same Pickup ID with -timeout 99 -file all.jks -format jks -jks-alias xxx
+#    And I interactively retrieve the certificate using <endpoint> using the same Pickup ID with -timeout 99 -file all.jks -format jks -jks-alias abc
 #    And I type "newPassw0rd!"
 #    And I type "newPassw0rd!"
 #    Then the exit status should be 0
@@ -148,8 +142,8 @@ Feature: JKS format output
 #    Examples:
 #      | endpoint  |
 #      | test-mode |
-      # | TPP       |
-      # | Cloud     | # -csr service is not supported by Cloud
+#      | TPP       |
+#      | Cloud     | # -csr service is not supported by Cloud
 
 #  Scenario Outline: where it should enroll a JKS certificate with -csr service and without file option (VEN-48622)
 #    When I enroll random certificate using <endpoint> with -csr service -no-prompt -no-pickup -format pkcs12
