@@ -124,6 +124,8 @@ func (o *Output) AsPKCS12(c *Config) ([]byte, error) {
 
 func (o *Output) AsJKS(c *Config) ([]byte, error) {
 
+	var err interface{}
+
 	if len(o.Certificate) == 0 || len(o.PrivateKey) == 0 {
 		return nil, fmt.Errorf("at least certificate and private key are required")
 	}
@@ -146,7 +148,6 @@ func (o *Output) AsJKS(c *Config) ([]byte, error) {
 	// getting each one of the certificates in the chain of certificates and adding their bytes to the chain of certificates
 	for _, chainCert := range o.Chain {
 		crt, _ := pem.Decode([]byte(chainCert))
-		//chainCertInBytes = append(chainCertInBytes, crt.Bytes...)
 		certificateChain = append(certificateChain, keystore.Certificate{
 			Type:    "X509",
 			Content: crt.Bytes,
@@ -159,16 +160,32 @@ func (o *Output) AsJKS(c *Config) ([]byte, error) {
 		return nil, fmt.Errorf("missing private key PEM")
 	}
 	var privDER []byte
-	if x509.IsEncryptedPEMBlock(p) {
-		privDERDecrypted, err := x509.DecryptPEMBlock(p, []byte(c.KeyPassword))
-		if err != nil {
-			return nil, fmt.Errorf("private key PEM decryption error: %s", err)
-		}
 
-		privDER = privDERDecrypted
-	} else {
-		privDER = p.Bytes
+	//decrypting the PK because due the restriction that always will be requested the key password
+	//to the user(--key-password or pass phrase value from prompt) for jks format then the PK always
+	//will be encrypted with the key password provided
+	privDER, err = x509.DecryptPEMBlock(p, []byte(c.KeyPassword))
+	if err != nil {
+		return nil, fmt.Errorf("private key PEM decryption error: %s", err)
 	}
+
+	//Unmarshalling the PK
+	var privKey interface{}
+
+	switch p.Type {
+	case "EC PRIVATE KEY":
+		privKey, err = x509.ParseECPrivateKey(privDER)
+	case "RSA PRIVATE KEY":
+		privKey, err = x509.ParsePKCS1PrivateKey(privDER)
+	default:
+		return nil, fmt.Errorf("unexpected private key PEM type: %s", p.Type)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("private key error(3): %s", err)
+	}
+
+	//Marshalling the PK to PKCS8, which is mandatory for JKS format
+	pkcs8DER, _ := x509.MarshalPKCS8PrivateKey(privKey)
 
 	//creating a JKS
 	keyStore := keystore.New()
@@ -176,13 +193,13 @@ func (o *Output) AsJKS(c *Config) ([]byte, error) {
 	//creating a PK entry
 	pkeIn := keystore.PrivateKeyEntry{
 		CreationTime:     time.Now(),
-		PrivateKey:       privDER,
+		PrivateKey:       pkcs8DER,
 		CertificateChain: certificateChain,
 	}
 
 	//adding the PK entry to the JKS. Setting as keyPass the value from keyPassword(--key-password or pass phrase value)
 	if err := keyStore.SetPrivateKeyEntry(c.JKSAlias, pkeIn, []byte(c.KeyPassword)); err != nil {
-		return nil, fmt.Errorf("JKS private key error: %s", err) //log.Fatal(err) // nolint: gocritic
+		return nil, fmt.Errorf("JKS private key error: %s", err)
 	}
 
 	buffer := new(bytes.Buffer)
@@ -197,7 +214,7 @@ func (o *Output) AsJKS(c *Config) ([]byte, error) {
 	}
 
 	//storing the JKS to the buffer
-	err := keyStore.Store(buffer, storePass)
+	err = keyStore.Store(buffer, storePass)
 	if err != nil {
 		return nil, fmt.Errorf("JKS keystore error: %s", err) //log.Fatal(err) // nolint: gocritic
 	}

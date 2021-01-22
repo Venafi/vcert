@@ -84,6 +84,17 @@ Feature: JKS format output
        | TPP       |
        | Cloud     |
 
+  Scenario Outline: where all objects are written to one JKS archive with key-password and providing the jks-password and the key-type is ecdsa
+    When I enroll random certificate in <endpoint> with -format jks -file all.jks -key-password 123abc -jks-password 123456 -jks-alias abc key-type ecdsa
+    Then the exit status should be 0
+    And "all.jks" should be jks archive with password "123456"
+    Examples:
+       | endpoint  |
+       | test-mode |
+       | TPP       |
+       | Cloud     |
+
+
   Scenario Outline: where it outputs error when trying to pickup local-generated certificate and output it in JKS format
     When I enroll random certificate using <endpoint> with -no-prompt -no-pickup
     And I retrieve the certificate using <endpoint> using the same Pickup ID with -timeout 180 -no-prompt -file all.jks -format jks
