@@ -91,19 +91,19 @@ AUTHOR:
    {{end}}{{if .Commands}}
 ACTIONS:
 
-   checkcred  To check the validity of a token
-   enroll     To enroll a certificate
    gencsr     To generate a certificate signing request (CSR)
-   getcred    To obtain a new token for authentication
+   enroll     To enroll a certificate
    pickup     To retrieve a certificate
    renew      To renew a certificate
    revoke     To revoke a certificate
-   voidcred   To invalidate an authentication token
+
+   getcred    To obtain a new token for authentication
+   checkcred  To check the validity of a token and grant
+   voidcred   To invalidate an authentication grant
 
 OPTIONS:
    {{range .VisibleFlags}}{{.}}
    {{end}}
-
 COPYRIGHT:
    {{.Copyright}}
    {{end}}{{if .Version}}
