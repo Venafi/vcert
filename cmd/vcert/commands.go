@@ -259,6 +259,8 @@ func doCommandEnroll1(c *cli.Context) error {
 		Config: &Config{
 			Command:      c.Command.Name,
 			Format:       flags.format,
+			JKSAlias:     flags.jksAlias,
+			JKSPassword:  flags.jksPassword,
 			ChainOption:  certificate.ChainOptionFromString(flags.chainOption),
 			AllFile:      flags.file,
 			KeyFile:      flags.keyFile,
@@ -458,6 +460,8 @@ func doCommandPickup1(c *cli.Context) error {
 		Config: &Config{
 			Command:      c.Command.Name,
 			Format:       flags.format,
+			JKSAlias:     flags.jksAlias,
+			JKSPassword:  flags.jksPassword,
 			ChainOption:  certificate.ChainOptionFromString(flags.chainOption),
 			AllFile:      flags.file,
 			KeyFile:      flags.keyFile,
@@ -673,6 +677,8 @@ func doCommandRenew1(c *cli.Context) error {
 		Config: &Config{
 			Command:      c.Command.Name,
 			Format:       flags.format,
+			JKSAlias:     flags.jksAlias,
+			JKSPassword:  flags.jksPassword,
 			ChainOption:  certificate.ChainOptionFromString(flags.chainOption),
 			AllFile:      flags.file,
 			KeyFile:      flags.keyFile,

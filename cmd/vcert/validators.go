@@ -19,6 +19,9 @@ var RevocationReasonOptions = []string{
 	"cessation-of-operation",
 }
 
+//taken from keystore.minPasswordLen constant
+const JKSMinPasswordLen = 6
+
 func readData(commandName string) error {
 	if strings.HasPrefix(flags.distinguishedName, "file:") {
 		fileName := flags.distinguishedName[5:]
@@ -52,7 +55,7 @@ func readData(commandName string) error {
 }
 
 func validateCommonFlags(commandName string) error {
-	if flags.format != "" && flags.format != "pem" && flags.format != "json" && flags.format != "pkcs12" {
+	if flags.format != "" && flags.format != "pem" && flags.format != "json" && flags.format != "pkcs12" && flags.format != JKSFormat {
 		return fmt.Errorf("Unexpected output format: %s", flags.format)
 	}
 	if flags.file != "" && (flags.certFile != "" || flags.chainFile != "" || flags.keyFile != "") {
@@ -147,32 +150,70 @@ func validatePKCS12Flags(commandName string) error {
 	if flags.format == "pkcs12" {
 		if commandName == commandEnrollName {
 			if flags.file == "" && flags.csrOption != "service" {
-				return fmt.Errorf("PKCS#12 format can only be used if all objects are written to one file (see -file option)")
-			}
-			if flags.certFile != "" || flags.chainFile != "" || flags.keyFile != "" {
-				return fmt.Errorf("The '-file' cannot be used used with any other -*-file flags. Either all data goes into one file or individual files must be specified using the appropriate flags")
-			}
-			if strings.Index(flags.csrOption, "file:") == 0 {
-				return fmt.Errorf(`PKCS#12 format is not allowed for the enroll or renew actions when -csr is "file"`)
-			}
-			if (flags.csrOption == "" || flags.csrOption == "local") && flags.noPickup {
-				return fmt.Errorf(`PKCS#12 format is not allowed for the enroll or renew actions when -csr is "local" and -no-pickup is specified`)
+				return fmt.Errorf("PKCS#12 format requires certificate, private key, and chain to be written to a single file; specify using --file")
 			}
 		} else {
 			if flags.file == "" { // todo: for enroll it also checks  flags.csrOption != "service"
-				return fmt.Errorf("PKCS#12 format can only be used if all objects are written to one file (see -file option)")
+				return fmt.Errorf("PKCS#12 format requires certificate, private key, and chain to be written to a single file; specify using --file")
 			}
 		}
 		if flags.certFile != "" || flags.chainFile != "" || flags.keyFile != "" {
-			return fmt.Errorf("The '-file' cannot be used used with any other -*-file flags. Either all data goes into one file or individual files must be specified using the appropriate flags")
+			return fmt.Errorf(`The --file parameter may not be combined with the --cert-file, --key-file, or --chain-file parameters when --format is "pkcs12"`)
 		}
 		if strings.HasPrefix(flags.csrOption, "file:") {
-			return fmt.Errorf(`PKCS#12 format is not allowed for the enroll or renew actions when -csr is "file"`)
+			return fmt.Errorf(`The --csr "file" option may not be used with the enroll or renew actions when --format is "pkcs12"`)
 		}
 		if (flags.csrOption == "" || flags.csrOption == "local") && flags.noPickup {
-			return fmt.Errorf(`PKCS#12 format is not allowed for the enroll or renew actions when -csr is "local" and -no-pickup is specified`)
+			return fmt.Errorf(`The --csr "local" option may not be used with the enroll or renew actions when --format is "pkcs12" and --no-pickup is specified`)
 		}
 	}
+	return nil
+}
+
+func validateJKSFlags(commandName string) error {
+	if flags.format == JKSFormat {
+
+		if commandName == commandEnrollName {
+			if flags.file == "" && flags.csrOption != "service" {
+				return fmt.Errorf("JKS format requires certificate, private key, and chain to be written to a single file; specify using --file")
+			}
+		} else {
+			if flags.file == "" { // todo: for enroll it also checks  flags.csrOption != "service"
+				return fmt.Errorf("JKS format requires certificate, private key, and chain to be written to a single file; specify using --file")
+			}
+		}
+		if flags.certFile != "" || flags.chainFile != "" || flags.keyFile != "" {
+			return fmt.Errorf(`The --file parameter may not be combined with the --cert-file, --key-file, or --chain-file parameters when --format is "jks"`)
+		}
+		if strings.HasPrefix(flags.csrOption, "file:") {
+			return fmt.Errorf(`The --csr "file" option may not be used with the enroll or renew actions when --format is "jks"`)
+		}
+		if (flags.csrOption == "" || flags.csrOption == "local") && flags.noPickup {
+			return fmt.Errorf(`The --csr "local" option may not be used with the enroll or renew actions when --format is "jks" and --no-pickup is specified`)
+		}
+
+		if flags.keyPassword == "" {
+			return fmt.Errorf("JKS format requires passwords that are at least %d characters long", JKSMinPasswordLen)
+		} else {
+			if (flags.jksPassword != "" && len(flags.jksPassword) < JKSMinPasswordLen) || (flags.keyPassword != "" && len(flags.keyPassword) < JKSMinPasswordLen) {
+				return fmt.Errorf("JKS format requires passwords that are at least %d characters long", JKSMinPasswordLen)
+			}
+		}
+
+		if flags.jksAlias == "" {
+			return fmt.Errorf("The --jks-alias parameter is required with --format jks")
+		}
+	} else {
+
+		if flags.jksPassword != "" {
+			return fmt.Errorf("The --jks-password parameter may only be used with --format jks")
+		}
+
+		if flags.jksAlias != "" {
+			return fmt.Errorf("The --jks-alias parameter may only be used with --format jks")
+		}
+	}
+
 	return nil
 }
 
@@ -269,6 +310,11 @@ func validateEnrollFlags(commandName string) error {
 		}
 	}
 	err = validatePKCS12Flags(commandName)
+	if err != nil {
+		return err
+	}
+
+	err = validateJKSFlags(commandName)
 	if err != nil {
 		return err
 	}
@@ -460,6 +506,11 @@ func validateRenewFlags1(commandName string) error {
 		return err
 	}
 
+	err = validateJKSFlags(commandName)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -486,6 +537,11 @@ func validatePickupFlags1(commandName string) error {
 	}
 
 	err = validatePKCS12Flags(commandName)
+	if err != nil {
+		return err
+	}
+
+	err = validateJKSFlags(commandName)
 	if err != nil {
 		return err
 	}

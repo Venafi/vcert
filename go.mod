@@ -2,6 +2,7 @@ module github.com/Venafi/vcert/v4
 
 require (
 	github.com/howeyc/gopass v0.0.0-20170109162249-bf9dde6d0d2c
+	github.com/pavel-v-chernykh/keystore-go/v4 v4.1.0
 	github.com/spf13/viper v1.7.0
 	github.com/urfave/cli/v2 v2.1.1
 	golang.org/x/crypto v0.0.0-20190605123033-f99c8df09eb5

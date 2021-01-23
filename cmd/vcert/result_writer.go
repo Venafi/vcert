@@ -17,21 +17,26 @@
 package main
 
 import (
+	"bytes"
 	"crypto/rand"
 	"crypto/x509"
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
 	"github.com/Venafi/vcert/v4/pkg/certificate"
+	"github.com/pavel-v-chernykh/keystore-go/v4"
 	"io/ioutil"
 	"os"
 	"software.sslmate.com/src/go-pkcs12"
 	"strings"
+	"time"
 )
 
 type Config struct {
 	Command     string
 	Format      string
+	JKSAlias    string
+	JKSPassword string
 	ChainOption certificate.ChainOption
 
 	AllFile      string
@@ -117,6 +122,106 @@ func (o *Output) AsPKCS12(c *Config) ([]byte, error) {
 	return bytes, nil
 }
 
+func (o *Output) AsJKS(c *Config) ([]byte, error) {
+
+	var err interface{}
+
+	if len(o.Certificate) == 0 || len(o.PrivateKey) == 0 {
+		return nil, fmt.Errorf("at least certificate and private key are required")
+	}
+
+	var certificateChain []keystore.Certificate
+
+	//getting the certificate in bytes
+	p, _ := pem.Decode([]byte(o.Certificate))
+	if p == nil || p.Type != "CERTIFICATE" {
+		return nil, fmt.Errorf("certificate parse error(1)")
+	}
+	var certInBytes = p.Bytes
+
+	//adding the certificates to the slice of Certificates
+	certificateChain = append(certificateChain, keystore.Certificate{
+		Type:    "X509",
+		Content: certInBytes,
+	})
+
+	// getting each one of the certificates in the chain of certificates and adding their bytes to the chain of certificates
+	for _, chainCert := range o.Chain {
+		crt, _ := pem.Decode([]byte(chainCert))
+		certificateChain = append(certificateChain, keystore.Certificate{
+			Type:    "X509",
+			Content: crt.Bytes,
+		})
+	}
+
+	// getting the bytes of the PK
+	p, _ = pem.Decode([]byte(o.PrivateKey))
+	if p == nil {
+		return nil, fmt.Errorf("missing private key PEM")
+	}
+	var privDER []byte
+
+	//decrypting the PK because due the restriction that always will be requested the key password
+	//to the user(--key-password or pass phrase value from prompt) for jks format then the PK always
+	//will be encrypted with the key password provided
+	privDER, err = x509.DecryptPEMBlock(p, []byte(c.KeyPassword))
+	if err != nil {
+		return nil, fmt.Errorf("private key PEM decryption error: %s", err)
+	}
+
+	//Unmarshalling the PK
+	var privKey interface{}
+
+	switch p.Type {
+	case "EC PRIVATE KEY":
+		privKey, err = x509.ParseECPrivateKey(privDER)
+	case "RSA PRIVATE KEY":
+		privKey, err = x509.ParsePKCS1PrivateKey(privDER)
+	default:
+		return nil, fmt.Errorf("unexpected private key PEM type: %s", p.Type)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("private key error(3): %s", err)
+	}
+
+	//Marshalling the PK to PKCS8, which is mandatory for JKS format
+	pkcs8DER, _ := x509.MarshalPKCS8PrivateKey(privKey)
+
+	//creating a JKS
+	keyStore := keystore.New()
+
+	//creating a PK entry
+	pkeIn := keystore.PrivateKeyEntry{
+		CreationTime:     time.Now(),
+		PrivateKey:       pkcs8DER,
+		CertificateChain: certificateChain,
+	}
+
+	//adding the PK entry to the JKS. Setting as keyPass the value from keyPassword(--key-password or pass phrase value)
+	if err := keyStore.SetPrivateKeyEntry(c.JKSAlias, pkeIn, []byte(c.KeyPassword)); err != nil {
+		return nil, fmt.Errorf("JKS private key error: %s", err)
+	}
+
+	buffer := new(bytes.Buffer)
+
+	var storePass []byte
+
+	//setting as storePass the value in --jks-password or the value from keyPassword( --key-password or pass phrase value)
+	if c.JKSPassword != "" {
+		storePass = []byte(c.JKSPassword)
+	} else {
+		storePass = []byte(c.KeyPassword)
+	}
+
+	//storing the JKS to the buffer
+	err = keyStore.Store(buffer, storePass)
+	if err != nil {
+		return nil, fmt.Errorf("JKS keystore error: %s", err) //log.Fatal(err) // nolint: gocritic
+	}
+
+	return buffer.Bytes(), nil
+}
+
 func (o *Output) Format(c *Config) ([]byte, error) {
 	switch strings.ToLower(c.Format) {
 	case "json":
@@ -194,6 +299,11 @@ func (r *Result) Flush() error {
 			bytes, err = allFileOutput.AsPKCS12(r.Config)
 			if err != nil {
 				return fmt.Errorf("failed to encode pkcs12: %s", err)
+			}
+		} else if r.Config.Format == JKSFormat {
+			bytes, err = allFileOutput.AsJKS(r.Config)
+			if err != nil {
+				return err
 			}
 		} else {
 			bytes, err = allFileOutput.Format(r.Config)

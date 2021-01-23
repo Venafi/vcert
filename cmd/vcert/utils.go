@@ -44,6 +44,8 @@ const (
 	/* #nosec */
 	vCertApiKey      = "VCERT_APIKEY"
 	vCertTrustBundle = "VCERT_TRUST_BUNDLE"
+
+	JKSFormat = "jks"
 )
 
 func parseCustomField(s string) (key, value string, err error) {
