@@ -19,10 +19,11 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/howeyc/gopass"
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/howeyc/gopass"
 )
 
 func readPasswordsFromInputFlags(commandName string, cf *commandFlags) error {
@@ -30,7 +31,7 @@ func readPasswordsFromInputFlags(commandName string, cf *commandFlags) error {
 
 	if (commandName == commandEnrollName && cf.url != "") ||
 		(commandName == commandPickupName && cf.url != "") ||
-		(commandName == commandGetcredName && cf.url != "") {
+		(commandName == commandGetCredName && cf.url != "") {
 		if cf.clientP12 != "" && cf.clientP12PW == "" {
 			fmt.Printf("Enter password for %s:", cf.clientP12)
 			input, err := gopass.GetPasswdMasked()

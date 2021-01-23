@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Venafi, Inc.
+ * Copyright 2018-2021 Venafi, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,13 +21,14 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/util"
 	"log"
 	"net/http"
 	neturl "net/url"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/Venafi/vcert/v4/pkg/util"
 
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
@@ -142,7 +143,7 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 		c.accessToken = auth.AccessToken
 		return nil
 	}
-	return fmt.Errorf("failed to authenticate: can't determin valid credentials set")
+	return fmt.Errorf("failed to authenticate: can't determine valid credentials set")
 }
 
 // Get OAuth refresh and access token
@@ -204,6 +205,57 @@ func (c *Connector) RefreshAccessToken(auth *endpoint.Authentication) (resp Oaut
 	} else {
 		return resp, fmt.Errorf("failed to authenticate: missing refresh token")
 	}
+}
+
+// VerifyAccessToken - call to check whether token is valid and, if so, return its properties
+func (c *Connector) VerifyAccessToken(auth *endpoint.Authentication) (resp OauthVerifyTokenResponse, err error) {
+
+	if auth == nil {
+		return resp, fmt.Errorf("failed to authenticate: missing credentials")
+	}
+
+	if auth.AccessToken != "" {
+		c.accessToken = auth.AccessToken
+		statusCode, statusText, body, err := c.request("GET", urlResource(urlResourceAuthorizeVerify), nil)
+		if err != nil {
+			return resp, err
+		}
+
+		if statusCode == http.StatusOK {
+			var result = &OauthVerifyTokenResponse{}
+			err = json.Unmarshal(body, result)
+			if err != nil {
+				return resp, fmt.Errorf("failed to parse verify token response: %s, body: %s", err, body)
+			}
+			return *result, nil
+		}
+		return resp, fmt.Errorf("failed to verify token. Message: %s", statusText)
+	}
+
+	return resp, fmt.Errorf("failed to authenticate: missing access token")
+}
+
+// RevokeAccessToken - call to revoke token so that it can never be used again
+func (c *Connector) RevokeAccessToken(auth *endpoint.Authentication) (err error) {
+
+	if auth == nil {
+		return fmt.Errorf("failed to authenticate: missing credentials")
+	}
+
+	if auth.AccessToken != "" {
+		c.accessToken = auth.AccessToken
+		statusCode, statusText, _, err := c.request("GET", urlResource(urlResourceRevokeAccessToken), nil)
+		if err != nil {
+			return err
+		}
+
+		if statusCode == http.StatusOK {
+			return nil
+		}
+		return fmt.Errorf("failed to revoke token. Message: %s", statusText)
+	}
+
+	return fmt.Errorf("failed to authenticate: missing access token")
 }
 
 func processAuthData(c *Connector, url urlResource, data interface{}) (resp interface{}, err error) {

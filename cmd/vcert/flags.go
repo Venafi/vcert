@@ -1,15 +1,32 @@
+/*
+ * Copyright 2020-2021 Venafi, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package main
 
 import (
-	"github.com/urfave/cli/v2"
 	"sort"
 	"strings"
+
+	"github.com/urfave/cli/v2"
 )
 
 var (
 	flagUrl = &cli.StringFlag{
 		Name:        "u",
-		Usage:       "REQUIRED/TPP. The `URL` of the Trust Protection Platform WebSDK. Example: -u https://tpp.example.com",
+		Usage:       "REQUIRED/TPP. The URL of the Trust Protection Platform WebSDK. Example: -u https://tpp.example.com",
 		Destination: &flags.url,
 	}
 
@@ -23,7 +40,7 @@ var (
 
 	flagKey = &cli.StringFlag{
 		Name:        "k",
-		Usage:       "REQUIRED/CLOUD. Your API `key` for Venafi Cloud.  Example: -k aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+		Usage:       "REQUIRED/CLOUD. Your API key for Venafi Cloud.  Example: -k aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
 		Destination: &flags.apiKey,
 	}
 
@@ -56,15 +73,14 @@ var (
 
 	flagTPPToken = &cli.StringFlag{
 		Name: "t",
-		Usage: "REQUIRED/TPP. Your access token (or refresh token if getcred) for Trust Protection Platform. " +
+		Usage: "REQUIRED/TPP. Your access token (or refresh token for getcred) for Trust Protection Platform. " +
 			"Example: -t Ab01Cd23Ef45Uv67Wx89Yz==",
 		Destination: &flags.tppToken,
 	}
 
 	flagTrustBundle = &cli.StringFlag{
-		Name: "trust-bundle",
-		Usage: "Use to specify a PEM `file` name to be used " +
-			"as trust anchors when communicating with the remote server.",
+		Name:        "trust-bundle",
+		Usage:       "Use to specify a PEM file name to be used as trust anchors when communicating with the remote server.",
 		Destination: &flags.trustBundle,
 	}
 	flagZone = &cli.StringFlag{
@@ -84,20 +100,22 @@ var (
 	}
 
 	flagKeyCurve = &cli.StringFlag{
-		Name: "key-curve",
-		Usage: "Use to specify the ECDSA key curve. Options include: p256 | p521 | p384	 (Default: p256)",
+		Name:        "key-curve",
+		Usage:       "Use to specify the ECDSA key curve. Options include: p256 | p521 | p384",
 		Destination: &flags.keyCurveString,
+		DefaultText: "p256",
 	}
 
 	flagKeyType = &cli.StringFlag{
 		Name:        "key-type",
-		Usage:       "Use to specify a key type. Options include: rsa | ecdsa (Default: rsa)",
+		Usage:       "Use to specify a key type. Options include: rsa | ecdsa",
 		Destination: &flags.keyTypeString,
+		DefaultText: "rsa",
 	}
 
 	flagKeySize = &cli.IntFlag{
 		Name:        "key-size",
-		Usage:       "Use to specify a key size (default 2048).",
+		Usage:       "Use to specify a key size.",
 		Destination: &flags.keySize,
 		DefaultText: "2048",
 	}
@@ -145,33 +163,34 @@ var (
 	}
 
 	flagDNSSans = &cli.StringSliceFlag{
-		Name:  "san-dns",
-		Usage: "Use to specify a DNS Subject Alternative Name. To specify more than one, use spaces like this: --san-dns test.abc.xyz --san-dns test1.abc.xyz etc.",
+		Name: "san-dns",
+		Usage: "Use to specify a DNS Subject Alternative Name. " +
+			"This option can be repeated to specify more than one value like this: --san-dns test.abc.xyz --san-dns test1.abc.xyz etc.",
 	}
 
 	flagIPSans = &cli.StringSliceFlag{
 		Name: "san-ip",
 		Usage: "Use to specify an IP Address Subject Alternative Name. " +
-			"This option can be repeated to specify more than one value, like this: --san-ip 1.1.1.1 --san-ip 2.2.2.2.",
+			"This option can be repeated to specify more than one value like this: --san-ip 1.1.1.1 --san-ip 2.2.2.2 etc.",
 	}
 
 	flagEmailSans = &cli.StringSliceFlag{
 		Name: "san-email",
 		Usage: "Use to specify an Email Subject Alternative Name. " +
-			"This option can be repeated to specify more than one value, like this: --san-email me@abc.xyz --san-email you@abc.xyz etc.",
+			"This option can be repeated to specify more than one value like this: --san-email me@abc.xyz --san-email you@abc.xyz etc.",
 	}
 
 	flagURISans = &cli.StringSliceFlag{
 		Name: "san-uri",
 		Usage: "Use to specify a Uniform Resource Identifier (URI) Subject Alternative Name. " +
-			"This option can be repeated to specify more than one value, like this: --san-uri https://www.abc.xyz --san-uri spiffe://node.abc.xyz etc.",
+			"This option can be repeated to specify more than one value like this: --san-uri https://www.abc.xyz --san-uri spiffe://node.abc.xyz etc.",
 		Hidden: true,
 	}
 
 	flagUPNSans = &cli.StringSliceFlag{
 		Name: "san-upn",
 		Usage: "Use to specify a User Principal Name (UPN) Subject Alternative Name. " +
-			"This option can be repeated to specify more than one value, like this: --san-upn me@abc.xyz --san-upn you@abc.xyz etc.",
+			"This option can be repeated to specify more than one value like this: --san-upn me@abc.xyz --san-upn you@abc.xyz etc.",
 		Hidden: true,
 	}
 
@@ -249,7 +268,7 @@ var (
 
 	flagNoPrompt = &cli.BoolFlag{
 		Name: "no-prompt",
-		Usage: "Use to exclude the authentication prompt. If you enable the prompt and you enter incorrect information, " +
+		Usage: "Use to exclude credential and password prompts. If you enable the prompt and you enter incorrect information, " +
 			"an error is displayed. This is useful with scripting.",
 		Destination: &flags.noPrompt,
 	}
@@ -329,7 +348,7 @@ var (
 
 	flagConfig = &cli.StringFlag{
 		Name: "config",
-		Usage: "Use to specify INI configuration `file` containing connection details instead\n" +
+		Usage: "Use to specify INI configuration file containing connection details instead\n" +
 			"\t\tFor TPP: url, access_token, tpp_zone\n" +
 			"\t\tFor Cloud: cloud_apikey, cloud_zone\n" +
 			"\t\tTPP & Cloud: trust_bundle, test_mode",
@@ -597,19 +616,28 @@ var (
 		)),
 	)
 
-	getcredFlags = sortedFlags(flagsApppend(
+	commonCredFlags = []cli.Flag{flagConfig, flagProfile, flagUrl, flagTPPToken, flagTrustBundle}
+
+	getCredFlags = sortedFlags(flagsApppend(
+		commonCredFlags,
 		flagClientP12,
 		flagClientP12PW,
-		flagConfig,
 		flagCredFormat,
-		flagProfile,
 		flagTPPPassword,
-		flagTPPToken,
 		flagTPPUser,
-		flagTrustBundle,
-		flagUrl,
 		flagScope,
 		flagClientId,
+		commonFlags,
+	))
+
+	checkCredFlags = sortedFlags(flagsApppend(
+		commonCredFlags,
+		flagCredFormat,
+		commonFlags,
+	))
+
+	voidCredFlags = sortedFlags(flagsApppend(
+		commonCredFlags,
 		commonFlags,
 	))
 )

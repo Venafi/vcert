@@ -126,3 +126,22 @@ When(/^I refresh access token$/) do
       And it should output refresh token
   }
 end
+
+When(/^I check access token$/) do
+  cmd = "vcert checkcred -u '#{ENV['TPP_URL']}' -t #{@access_token} -insecure"
+  steps %{
+    Then I try to run `#{cmd}`
+      And I remember the output
+      And it should output application
+      And it should output expires
+      And it should output scope
+  }
+end
+
+When(/^I revoke access token$/) do
+  cmd = "vcert voidcred -u '#{ENV['TPP_URL']}' -t #{@access_token} -insecure"
+  steps %{
+    Then I try to run `#{cmd}`
+      And it should output revoked
+  }
+end

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Venafi, Inc.
+ * Copyright 2018-2021 Venafi, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -75,6 +75,8 @@ func wrapArgumentDescriptionText(text string) string {
 
 func showvcertUsage() {
 	fmt.Printf("\tTo obtain a new token for authentication, use the 'getcred' action.\n")
+	fmt.Printf("\tTo check whether an authentication token is valid, use the 'checkcred' action.\n")
+	fmt.Printf("\tTo invalidate an authentication token, use the 'voidcred' action.\n")
 	fmt.Printf("\tTo generate a certificate signing request (CSR), use the 'gencsr' action.\n")
 	fmt.Printf("\tTo enroll a certificate, use the 'enroll' action.\n")
 	fmt.Printf("\tTo retrieve a certificate, use the 'pickup' action.\n")
