@@ -126,7 +126,7 @@ Then(/^it should( not)? output (application|expires|scope)( in JSON)?$/) do |neg
 
   Kernel.puts("Checking output:\n"+@previous_command_output)
   unless json
-    steps %{Then the output should#{negated} contain "access_token:"}
+    steps %{Then the output should#{negated} contain "access_token_expires:"}
   end
 
   unless negated
@@ -159,5 +159,6 @@ Then(/^it should( not)? output (application|expires|scope)( in JSON)?$/) do |neg
 end
 
 Then(/^it should( not)? output revoked$/) do |negated|
-  steps %{Then the output should#{negated} contain "access token successfully revoked"}
+  Kernel.puts("Checking output:\n"+@previous_command_output)
+  steps %{Then the output should#{negated} contain "Access token grant successfully revoked"}
 end

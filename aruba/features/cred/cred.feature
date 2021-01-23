@@ -45,7 +45,7 @@ Feature: Managing credentials tokens from TPP
     When I get credentials from TPP
     And I remember the output
       And it should output access token
-    Then I check access token from TPP
+    Then I check access token
     And I remember the output
       And it should output application
       And it should output expires
@@ -55,16 +55,16 @@ Feature: Managing credentials tokens from TPP
     When I get credentials from TPP with -format json
     And I remember the output
       And it should output access token in JSON
-    Then I check access token from TPP with -format json
+    Then I check access token with -format json
     And I remember the output
       And it should output application in JSON
       And it should output expires in JSON
       And it should output scope in JSON
 
-  Scenario: revoke access token
+  Scenario: revoke access token grant
     When I get credentials from TPP
     And I remember the output
       And it should output access token
-    Then I revoke access token from TPP
+    Then I revoke access token grant
     And I remember the output
       And it should output revoked

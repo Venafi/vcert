@@ -526,7 +526,7 @@ func doCommandVoidCred1(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		logf("Access token successfully revoked")
+		logf("Access token grant successfully revoked")
 	} else {
 		return fmt.Errorf("Failed to determine credentials set")
 	}
