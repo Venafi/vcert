@@ -12,10 +12,10 @@ Feature: JKS format output
 
   - User always will be request for a password of at least 6 characters when he request a JKS file so it isn't possible to use the -no-prompt switch
 
-  - User specifies the password for the JKS file and the key entry, conformed by the private kye, the certificate and the chain certificates, using, preferable,
+  - User specifies the password for the JKS file and the key entry, conformed by the private key, the certificate and the chain certificates, using, preferable,
     the -jks-password or alternatively the -key-password switch
 
-  - User must use the -jks-alias switch to provide the alias for the jks entry that will conformed by the private kye, the certificate and the chain certificates
+  - User must use the -jks-alias switch to provide the alias for the jks entry that will be conformed by the private key, the certificate and the chain certificates
 
   - JKS format is not allowed for the enroll or renew actions when -csr is "file"
 
@@ -142,28 +142,4 @@ Feature: JKS format output
       | test-mode |
       | TPP       |
       # | Cloud     | # -csr service is not supported by Cloud
-
-#  Scenario Outline: Pickup JKS with typing pass phrases
-#    When I enroll random certificate using <endpoint> with -no-prompt -no-pickup -csr service
-#    And I interactively retrieve the certificate using <endpoint> using the same Pickup ID with -timeout 99 -file all.jks -format jks -jks-alias abc
-#    And I type "newPassw0rd!"
-#    And I type "newPassw0rd!"
-#    Then the exit status should be 0
-#    And "all.jks" should be JKS archive with password "newPassw0rd!"
-#    Examples:
-#      | endpoint  |
-#      | test-mode |
-#      | TPP       |
-#      | Cloud     | # -csr service is not supported by Cloud
-
-#  Scenario Outline: where it should enroll a JKS certificate with -csr service and without file option (VEN-48622)
-#    When I enroll random certificate using <endpoint> with -csr service -no-prompt -no-pickup -format pkcs12
-#     Then it should post certificate request
-#    Then I retrieve the certificate using <endpoint> using the same Pickup ID with -key-password newPassw0rd! -timeout 59
-#      And it should retrieve certificate
-#      And it should output encrypted private key
-#    Examples:
-#      | endpoint  |
-#      | test-mode |
-#      | TPP       |
 
