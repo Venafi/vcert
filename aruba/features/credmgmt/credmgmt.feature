@@ -1,7 +1,7 @@
 Feature: Managing credentials tokens from TPP
 
   As a user
-  I want to get, check, and revoke credentials tokens from TPP
+  I want to get, check, and void credentials (tokens) from TPP
 
   Background:
     Given the default aruba exit timeout is 180 seconds
@@ -61,10 +61,10 @@ Feature: Managing credentials tokens from TPP
       And it should output expires in JSON
       And it should output scope in JSON
 
-  Scenario: revoke access token grant
+  Scenario: void access token grant
     When I get credentials from TPP
     And I remember the output
       And it should output access token
-    Then I revoke access token grant
+    Then I void access token grant
     And I remember the output
       And it should output revoked

@@ -134,7 +134,7 @@ When(/^I check access token(?: with)?(.+)?$/) do |flags|
   }
 end
 
-When(/^I revoke access token grant$/) do
+When(/^I void access token grant$/) do
   cmd = "vcert voidcred -u '#{ENV['TPP_URL']}' -t #{@access_token} -insecure"
   steps %{
     Then I try to run `#{cmd}`
