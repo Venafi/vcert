@@ -101,7 +101,7 @@ var (
 
 	flagKeyCurve = &cli.StringFlag{
 		Name:        "key-curve",
-		Usage:       "Use to specify the ECDSA key curve. Options include: p256 | p521 | p384",
+		Usage:       "Use to specify the ECDSA key curve. Options include: p256 | p384 | p521",
 		Destination: &flags.keyCurveString,
 		DefaultText: "p256",
 	}
