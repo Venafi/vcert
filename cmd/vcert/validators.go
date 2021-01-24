@@ -392,7 +392,7 @@ func validateCredMgmtFlags1(commandName string) error {
 		if flags.testMode {
 			return fmt.Errorf("There is no test mode for %s command", commandName)
 		}
-		if commandName == "getcred" {
+		if commandName == commandGetCredName {
 			if flags.tppUser == "" && tppTokenS == "" && flags.clientP12 == "" {
 				return fmt.Errorf("either --username, --p12-file, or -t must be specified")
 			}

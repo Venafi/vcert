@@ -347,7 +347,7 @@ func doCommandCredMgmt1(c *cli.Context) error {
 	}
 
 	switch c.Command.Name {
-	case "getcred":
+	case commandGetCredName:
 		//TODO: quick workaround to supress logs when output is in JSON.
 		if flags.credFormat != "json" {
 			logf("Getting credentials...")
@@ -420,7 +420,7 @@ func doCommandCredMgmt1(c *cli.Context) error {
 		} else {
 			return fmt.Errorf("Failed to determine credentials set")
 		}
-	case "checkcred":
+	case commandCheckCredName:
 		//TODO: quick workaround to supress logs when output is in JSON.
 		if flags.credFormat != "json" {
 			logf("Checking credentials...")
@@ -453,7 +453,7 @@ func doCommandCredMgmt1(c *cli.Context) error {
 		} else {
 			return fmt.Errorf("Failed to determine credentials set")
 		}
-	case "voidcred":
+	case commandVoidCredName:
 		if cfg.Credentials.AccessToken != "" {
 			err := tppConnector.RevokeAccessToken(&endpoint.Authentication{
 				AccessToken: cfg.Credentials.AccessToken,
