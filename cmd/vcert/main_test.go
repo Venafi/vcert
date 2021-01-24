@@ -256,7 +256,7 @@ func TestGetCredFlagsNoUrl(t *testing.T) {
 
 	flags.tppToken = "3rlybZwAdV1qo/KpNJ5FWg=="
 
-	err := validateGetCredFlags1(commandGetCredName)
+	err := validateCredMgmtFlags1(commandGetCredName)
 	if err == nil {
 		t.Fatalf("-u must be specified")
 	}
@@ -460,7 +460,7 @@ func TestGetCredFlagsTrustBundle(t *testing.T) {
 	flags.url = "https://tpp.example.com"
 	flags.trustBundle = "/opt/venafi/bundle.pem"
 
-	err = validateGetCredFlags1(commandGetCredName)
+	err = validateCredMgmtFlags1(commandGetCredName)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -475,7 +475,7 @@ func TestGetCredFlagsNoTrust(t *testing.T) {
 	flags.tppToken = "3rlybZwAdV1qo/KpNJ5FWg=="
 	flags.url = "https://tpp.example.com"
 
-	err = validateGetCredFlags1(commandGetCredName)
+	err = validateCredMgmtFlags1(commandGetCredName)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
