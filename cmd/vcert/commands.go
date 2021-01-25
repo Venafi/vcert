@@ -363,11 +363,9 @@ func doCommandCredMgmt1(c *cli.Context) error {
 				return err
 			}
 			if flags.credFormat == "json" {
-				jsonData, err := json.MarshalIndent(resp, "", "    ")
-				if err != nil {
+				if err := outputJSON(resp); err != nil {
 					return err
 				}
-				fmt.Println(string(jsonData))
 			} else {
 				tm := time.Unix(int64(resp.Expires), 0).UTC().Format(time.RFC3339)
 				fmt.Println("access_token: ", resp.Access_token)
@@ -384,11 +382,9 @@ func doCommandCredMgmt1(c *cli.Context) error {
 				return err
 			}
 			if flags.credFormat == "json" {
-				jsonData, err := json.MarshalIndent(resp, "", "    ")
-				if err != nil {
+				if err := outputJSON(resp); err != nil {
 					return err
 				}
-				fmt.Println(string(jsonData))
 			} else {
 				tm := time.Unix(int64(resp.Expires), 0).UTC().Format(time.RFC3339)
 				fmt.Println("access_token: ", resp.Access_token)
@@ -406,11 +402,9 @@ func doCommandCredMgmt1(c *cli.Context) error {
 				return err
 			}
 			if flags.credFormat == "json" {
-				jsonData, err := json.MarshalIndent(resp, "", "    ")
-				if err != nil {
+				if err := outputJSON(resp); err != nil {
 					return err
 				}
-				fmt.Println(string(jsonData))
 			} else {
 				tm := time.Unix(int64(resp.Expires), 0).UTC().Format(time.RFC3339)
 				fmt.Println("access_token: ", resp.Access_token)
@@ -436,11 +430,9 @@ func doCommandCredMgmt1(c *cli.Context) error {
 				return err
 			}
 			if flags.credFormat == "json" {
-				jsonData, err := json.MarshalIndent(resp, "", "    ")
-				if err != nil {
+				if err := outputJSON(resp); err != nil {
 					return err
 				}
-				fmt.Println(string(jsonData))
 			} else {
 				iso8601fmt := "2006-01-02T15:04:05Z"
 				tm, _ := time.Parse(iso8601fmt, resp.AccessIssuedOn)
@@ -843,4 +835,12 @@ func writeOutKeyAndCsr(commandName string, cf *commandFlags, key []byte, csr []b
 
 	err = result.Flush()
 	return
+}
+
+func outputJSON(resp interface{}) error {
+	jsonData, err := json.MarshalIndent(resp, "", "    ")
+	if err == nil {
+		fmt.Println(string(jsonData))
+	}
+	return err
 }
