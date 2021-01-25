@@ -42,7 +42,7 @@ The following content applies to the latest version of VCert CLI, click [here](h
 
 ### Compatibility
 
-VCert is compatible with Trust Protection Platform 17.3 and higher. The Custom Fields and Instance Tracking features require 18.2 or higher. Token Authentication requires 19.2 or higher; for earlier versions, username/password authentication (deprecated) applies.
+VCert is compatible with Trust Protection Platform 17.3 and higher. The Custom Fields and Instance Tracking features require 18.2 or higher. Token Authentication requires 20.1 or higher; for earlier versions, username/password authentication (deprecated) applies.
 
 ## General Command Line Parameters
 

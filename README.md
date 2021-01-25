@@ -24,7 +24,7 @@ See [VCert CLI for Venafi Trust Protection Platform](README-CLI-PLATFORM.md) or
 
 VCert releases are tested using the latest version of Trust Protection Platform.  General functionality of the
 [latest VCert release](../../releases/latest) should be compatible with Trust Protection Platform 17.3 or higher.
-Custom Fields and Instance Tracking require TPP 18.2 or higher, and Token Authentication requires TPP 19.2 or higher.
+Custom Fields and Instance Tracking require TPP 18.2 or higher, and Token Authentication requires TPP 20.1 or higher.
 
 ## Developer Setup
 
