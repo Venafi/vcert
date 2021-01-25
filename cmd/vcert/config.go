@@ -18,10 +18,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/urfave/cli/v2"
 	"io/ioutil"
 	"math/rand"
 	"time"
+
+	"github.com/urfave/cli/v2"
 
 	"github.com/Venafi/vcert/v4"
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
@@ -74,7 +75,7 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 			}
 
 			if flags.tppToken != "" {
-				if c.Command.Name == commandGetcredName {
+				if c.Command.Name == commandGetCredName {
 					auth.RefreshToken = flags.tppToken
 				} else {
 					auth.AccessToken = flags.tppToken
@@ -85,7 +86,7 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 			} else {
 				tokenS := getPropertyFromEnvironment(vCertToken)
 				if tokenS != "" {
-					if c.Command.Name == commandGetcredName {
+					if c.Command.Name == commandGetCredName {
 						auth.RefreshToken = tokenS
 					} else {
 						auth.AccessToken = tokenS

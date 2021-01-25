@@ -1,3 +1,19 @@
+/*
+ * Copyright 2020-2021 Venafi, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package main
 
 import (
@@ -6,12 +22,6 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/v4"
-	"github.com/Venafi/vcert/v4/pkg/certificate"
-	"github.com/Venafi/vcert/v4/pkg/endpoint"
-	"github.com/Venafi/vcert/v4/pkg/venafi/tpp"
-	"github.com/urfave/cli/v2"
-	"golang.org/x/crypto/pkcs12"
 	"io/ioutil"
 	"log"
 	"net"
@@ -19,6 +29,13 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/Venafi/vcert/v4"
+	"github.com/Venafi/vcert/v4/pkg/certificate"
+	"github.com/Venafi/vcert/v4/pkg/endpoint"
+	"github.com/Venafi/vcert/v4/pkg/venafi/tpp"
+	"github.com/urfave/cli/v2"
+	"golang.org/x/crypto/pkcs12"
 )
 
 var (
@@ -38,16 +55,32 @@ var (
 		vcert enroll -u https://tpp.example.com -t <TPP access token> -z <zone> --cn <common name> --key-type ecdsa --key-curve p384 --san-dns <alt name> -san-dns <alt name2>
 		vcert enroll -u https://tpp.example.com -t <TPP access token> -z <zone> --p12-file <PKCS#12 client cert> --p12-password <PKCS#12 password> --cn <common name>`,
 	}
-	commandGetcred = &cli.Command{
+	commandGetCred = &cli.Command{
 		Before: runBeforeCommand,
-		Name:   commandGetcredName,
-		Flags:  getcredFlags,
-		Action: doCommandGetcred1,
+		Name:   commandGetCredName,
+		Flags:  getCredFlags,
+		Action: doCommandCredMgmt1,
 		Usage:  "To obtain a new credential (token) for authentication",
 		UsageText: ` vcert getcred -u https://tpp.example.com --username <TPP user> --password <TPP user password>
 		vcert getcred -u https://tpp.example.com --p12-file <PKCS#12 client cert> --p12-password <PKCS#12 password> --trust-bundle /path-to/bundle.pem
 		vcert getcred -u https://tpp.example.com -t <TPP refresh token>
 		vcert getcred -u https://tpp.example.com -t <TPP refresh token> --scope <scopes and restrictions>`,
+	}
+	commandCheckCred = &cli.Command{
+		Before:    runBeforeCommand,
+		Name:      commandCheckCredName,
+		Flags:     checkCredFlags,
+		Action:    doCommandCredMgmt1,
+		Usage:     "To verify whether a credential (token) is valid and view its attributes",
+		UsageText: " vcert checkcred -u https://tpp.example.com -t <TPP access token> --trust-bundle /path-to/bundle.pem",
+	}
+	commandVoidCred = &cli.Command{
+		Before:    runBeforeCommand,
+		Name:      commandVoidCredName,
+		Flags:     voidCredFlags,
+		Action:    doCommandCredMgmt1,
+		Usage:     "To invalidate an authentication credential (token)",
+		UsageText: " vcert voidcred -u https://tpp.example.com -t <TPP access token> --trust-bundle /path-to/bundle.pem",
 	}
 	commandGenCSR = &cli.Command{
 		Before: runBeforeCommand,
@@ -279,8 +312,8 @@ func doCommandEnroll1(c *cli.Context) error {
 	return nil
 }
 
-func doCommandGetcred1(c *cli.Context) error {
-	err := validateGetcredFlags1(c.Command.Name)
+func doCommandCredMgmt1(c *cli.Context) error {
+	err := validateCredMgmtFlags1(c.Command.Name)
 	if err != nil {
 		return err
 	}
@@ -294,11 +327,6 @@ func doCommandGetcred1(c *cli.Context) error {
 	cfg, err := buildConfig(c, &flags)
 	if err != nil {
 		return fmt.Errorf("Failed to build vcert config: %s", err)
-	}
-
-	//TODO: quick workaround to supress logs when output is in JSON.
-	if flags.credFormat != "json" {
-		logf("Getting credentials")
 	}
 
 	var clientP12 bool
@@ -318,73 +346,119 @@ func doCommandGetcred1(c *cli.Context) error {
 		return fmt.Errorf("could not create TPP connector: %s", err)
 	}
 
-	if cfg.Credentials.RefreshToken != "" {
-		resp, err := tppConnector.RefreshAccessToken(&endpoint.Authentication{
-			RefreshToken: cfg.Credentials.RefreshToken,
-			ClientId:     flags.clientId,
-			Scope:        flags.scope,
-		})
-		if err != nil {
-			return err
+	switch c.Command.Name {
+	case commandGetCredName:
+		//TODO: quick workaround to supress logs when output is in JSON.
+		if flags.credFormat != "json" {
+			logf("Getting credentials...")
 		}
-		if flags.credFormat == "json" {
-			jsonData, err := json.MarshalIndent(resp, "", "    ")
+
+		if cfg.Credentials.RefreshToken != "" {
+			resp, err := tppConnector.RefreshAccessToken(&endpoint.Authentication{
+				RefreshToken: cfg.Credentials.RefreshToken,
+				ClientId:     flags.clientId,
+				Scope:        flags.scope,
+			})
 			if err != nil {
 				return err
 			}
-			fmt.Println(string(jsonData))
-		} else {
-			tm := time.Unix(int64(resp.Expires), 0).UTC().Format(time.RFC3339)
-			fmt.Println("access_token: ", resp.Access_token)
-			fmt.Println("access_token_expires: ", tm)
-			fmt.Println("refresh_token: ", resp.Refresh_token)
-		}
-	} else if cfg.Credentials.User != "" && cfg.Credentials.Password != "" {
-		resp, err := tppConnector.GetRefreshToken(&endpoint.Authentication{
-			User:     cfg.Credentials.User,
-			Password: cfg.Credentials.Password,
-			Scope:    flags.scope,
-			ClientId: flags.clientId})
-		if err != nil {
-			return err
-		}
-		if flags.credFormat == "json" {
-			jsonData, err := json.MarshalIndent(resp, "", "    ")
-			if err != nil {
-				return err
-			}
-			fmt.Println(string(jsonData))
-		} else {
-			tm := time.Unix(int64(resp.Expires), 0).UTC().Format(time.RFC3339)
-			fmt.Println("access_token: ", resp.Access_token)
-			fmt.Println("access_token_expires: ", tm)
-			if resp.Refresh_token != "" {
+			if flags.credFormat == "json" {
+				if err := outputJSON(resp); err != nil {
+					return err
+				}
+			} else {
+				tm := time.Unix(int64(resp.Expires), 0).UTC().Format(time.RFC3339)
+				fmt.Println("access_token: ", resp.Access_token)
+				fmt.Println("access_token_expires: ", tm)
 				fmt.Println("refresh_token: ", resp.Refresh_token)
 			}
-		}
-	} else if clientP12 {
-		resp, err := tppConnector.GetRefreshToken(&endpoint.Authentication{
-			ClientPKCS12: clientP12,
-			Scope:        flags.scope,
-			ClientId:     flags.clientId})
-		if err != nil {
-			return err
-		}
-		if flags.credFormat == "json" {
-			jsonData, err := json.MarshalIndent(resp, "", "    ")
+		} else if cfg.Credentials.User != "" && cfg.Credentials.Password != "" {
+			resp, err := tppConnector.GetRefreshToken(&endpoint.Authentication{
+				User:     cfg.Credentials.User,
+				Password: cfg.Credentials.Password,
+				Scope:    flags.scope,
+				ClientId: flags.clientId})
 			if err != nil {
 				return err
 			}
-			fmt.Println(string(jsonData))
+			if flags.credFormat == "json" {
+				if err := outputJSON(resp); err != nil {
+					return err
+				}
+			} else {
+				tm := time.Unix(int64(resp.Expires), 0).UTC().Format(time.RFC3339)
+				fmt.Println("access_token: ", resp.Access_token)
+				fmt.Println("access_token_expires: ", tm)
+				if resp.Refresh_token != "" {
+					fmt.Println("refresh_token: ", resp.Refresh_token)
+				}
+			}
+		} else if clientP12 {
+			resp, err := tppConnector.GetRefreshToken(&endpoint.Authentication{
+				ClientPKCS12: clientP12,
+				Scope:        flags.scope,
+				ClientId:     flags.clientId})
+			if err != nil {
+				return err
+			}
+			if flags.credFormat == "json" {
+				if err := outputJSON(resp); err != nil {
+					return err
+				}
+			} else {
+				tm := time.Unix(int64(resp.Expires), 0).UTC().Format(time.RFC3339)
+				fmt.Println("access_token: ", resp.Access_token)
+				fmt.Println("access_token_expires: ", tm)
+				if resp.Refresh_token != "" {
+					fmt.Println("refresh_token: ", resp.Refresh_token)
+				}
+			}
 		} else {
-			tm := time.Unix(int64(resp.Expires), 0).UTC().Format(time.RFC3339)
-			fmt.Println("access_token: ", resp.Access_token)
-			fmt.Println("access_token_expires: ", tm)
-			fmt.Println("refresh_token: ", resp.Refresh_token)
-
+			return fmt.Errorf("Failed to determine credentials set")
 		}
-	} else {
-		return fmt.Errorf("Failed to determine credentials set")
+	case commandCheckCredName:
+		//TODO: quick workaround to supress logs when output is in JSON.
+		if flags.credFormat != "json" {
+			logf("Checking credentials...")
+		}
+
+		if cfg.Credentials.AccessToken != "" {
+			resp, err := tppConnector.VerifyAccessToken(&endpoint.Authentication{
+				AccessToken: cfg.Credentials.AccessToken,
+			})
+			if err != nil {
+				return err
+			}
+			if flags.credFormat == "json" {
+				if err := outputJSON(resp); err != nil {
+					return err
+				}
+			} else {
+				iso8601fmt := "2006-01-02T15:04:05Z"
+				tm, _ := time.Parse(iso8601fmt, resp.AccessIssuedOn)
+				accessExpires := tm.Add(time.Duration(resp.ValidFor) * time.Second).Format(iso8601fmt)
+				fmt.Println("access_token_expires: ", accessExpires)
+				fmt.Println("grant_expires: ", resp.Expires)
+				fmt.Println("client_id: ", resp.ClientID)
+				fmt.Println("scope: ", resp.Scope)
+			}
+		} else {
+			return fmt.Errorf("Failed to determine credentials set")
+		}
+	case commandVoidCredName:
+		if cfg.Credentials.AccessToken != "" {
+			err := tppConnector.RevokeAccessToken(&endpoint.Authentication{
+				AccessToken: cfg.Credentials.AccessToken,
+			})
+			if err != nil {
+				return err
+			}
+			logf("Access token grant successfully revoked")
+		} else {
+			return fmt.Errorf("Failed to determine credentials set")
+		}
+	default:
+		return fmt.Errorf("Unexpected credential operation %s", c.Command.Name)
 	}
 
 	return nil

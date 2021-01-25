@@ -126,3 +126,17 @@ When(/^I refresh access token$/) do
       And it should output refresh token
   }
 end
+
+When(/^I check access token(?: with)?(.+)?$/) do |flags|
+  cmd = "vcert checkcred -u '#{ENV['TPP_URL']}' -t #{@access_token} #{flags} -insecure"
+  steps %{
+    Then I try to run `#{cmd}`
+  }
+end
+
+When(/^I void access token grant$/) do
+  cmd = "vcert voidcred -u '#{ENV['TPP_URL']}' -t #{@access_token} -insecure"
+  steps %{
+    Then I try to run `#{cmd}`
+  }
+end

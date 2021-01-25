@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Venafi, Inc.
+ * Copyright 2018-2021 Venafi, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -400,4 +400,12 @@ func writeFile(output *Output, result *Result, filePath string) (err error) {
 		}
 	}
 	return
+}
+
+func outputJSON(resp interface{}) error {
+	jsonData, err := json.MarshalIndent(resp, "", "    ")
+	if err == nil {
+		fmt.Println(string(jsonData))
+	}
+	return err
 }

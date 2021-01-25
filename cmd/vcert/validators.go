@@ -1,3 +1,19 @@
+/*
+ * Copyright 2020-2021 Venafi, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package main
 
 import (
@@ -352,7 +368,7 @@ func validateValidDaysFlag(cn string) bool {
 	return true
 }
 
-func validateGetcredFlags1(commandName string) error {
+func validateCredMgmtFlags1(commandName string) error {
 	var err error
 
 	tppTokenS := flags.tppToken
@@ -367,17 +383,23 @@ func validateGetcredFlags1(commandName string) error {
 			tppTokenS != "" ||
 			flags.url != "" ||
 			flags.testMode {
-			return fmt.Errorf("connection details cannot be specified with flags or environment variables when -config is used")
+			return fmt.Errorf("connection details cannot be specified with flags or environment variables when --config is used")
 		}
 	} else {
 		if flags.profile != "" {
-			return fmt.Errorf("-profile option cannot be used without -config option")
+			return fmt.Errorf("--profile option cannot be used without --config option")
 		}
 		if flags.testMode {
-			return fmt.Errorf("There is no test mode for getcred command")
+			return fmt.Errorf("There is no test mode for %s command", commandName)
 		}
-		if flags.tppUser == "" && tppTokenS == "" && flags.clientP12 == "" {
-			return fmt.Errorf("either -username, -p12-file, or -t must be specified")
+		if commandName == commandGetCredName {
+			if flags.tppUser == "" && tppTokenS == "" && flags.clientP12 == "" {
+				return fmt.Errorf("either --username, --p12-file, or -t must be specified")
+			}
+		} else {
+			if tppTokenS == "" {
+				return fmt.Errorf("missing -t (access token) parameter")
+			}
 		}
 
 		if flags.url == "" && getPropertyFromEnvironment(vCertURL) == "" {
@@ -390,7 +412,7 @@ func validateGetcredFlags1(commandName string) error {
 
 		// mutual TLS with TPP service
 		if flags.clientP12 == "" && flags.clientP12PW != "" {
-			return fmt.Errorf("-client-pkcs12-pw can only be specified in combination with -client-pkcs12")
+			return fmt.Errorf("--client-pkcs12-pw can only be specified in combination with --client-pkcs12")
 		}
 	}
 
@@ -399,14 +421,6 @@ func validateGetcredFlags1(commandName string) error {
 		return err
 	}
 	err = readData(commandName)
-	if err != nil {
-		return err
-	}
-	if tppTokenS == "" && flags.tppUser == "" && flags.clientP12 == "" {
-		return fmt.Errorf("either -username, -p12-file, or -t must be specified")
-	}
-
-	err = validatePKCS12Flags(commandName)
 	if err != nil {
 		return err
 	}

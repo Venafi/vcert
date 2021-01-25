@@ -250,13 +250,13 @@ func TestValidateFlagsForEnrollmentMissingData(t *testing.T) {
 	}
 }
 
-func TestGetcredFlagsNoUrl(t *testing.T) {
+func TestGetCredFlagsNoUrl(t *testing.T) {
 
 	flags = commandFlags{}
 
 	flags.tppToken = "3rlybZwAdV1qo/KpNJ5FWg=="
 
-	err := validateGetcredFlags1(commandGetcredName)
+	err := validateCredMgmtFlags1(commandGetCredName)
 	if err == nil {
 		t.Fatalf("-u must be specified")
 	}
@@ -450,7 +450,7 @@ func TestValidateFlagsMixedPickupFileOutputs(t *testing.T) {
 	}
 }
 
-func TestGetcredFlagsTrustBundle(t *testing.T) {
+func TestGetCredFlagsTrustBundle(t *testing.T) {
 
 	flags = commandFlags{}
 
@@ -460,13 +460,13 @@ func TestGetcredFlagsTrustBundle(t *testing.T) {
 	flags.url = "https://tpp.example.com"
 	flags.trustBundle = "/opt/venafi/bundle.pem"
 
-	err = validateGetcredFlags1(commandGetcredName)
+	err = validateCredMgmtFlags1(commandGetCredName)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
 }
 
-func TestGetcredFlagsNoTrust(t *testing.T) {
+func TestGetCredFlagsNoTrust(t *testing.T) {
 
 	flags = commandFlags{}
 
@@ -475,7 +475,7 @@ func TestGetcredFlagsNoTrust(t *testing.T) {
 	flags.tppToken = "3rlybZwAdV1qo/KpNJ5FWg=="
 	flags.url = "https://tpp.example.com"
 
-	err = validateGetcredFlags1(commandGetcredName)
+	err = validateCredMgmtFlags1(commandGetCredName)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}

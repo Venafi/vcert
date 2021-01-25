@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Venafi, Inc.
+ * Copyright 2018-2021 Venafi, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/Venafi/vcert/v4"
-	"github.com/urfave/cli/v2"
 	"log"
 	"os"
 	"sort"
 	"time"
+
+	"github.com/Venafi/vcert/v4"
+	"github.com/urfave/cli/v2"
 )
 
 var (
@@ -61,7 +62,9 @@ func main() {
 		Version:  vcert.GetFormattedVersionString(), //todo: replace with plain version
 		Compiled: time.Now(),                        //todo: replace with parsing vcert.versionBuildTimeStamp
 		Commands: []*cli.Command{
-			commandGetcred,
+			commandGetCred,
+			commandCheckCred,
+			commandVoidCred,
 			commandGenCSR,
 			commandEnroll,
 			commandPickup,
@@ -70,7 +73,7 @@ func main() {
 		},
 		EnableBashCompletion: true, //todo: write BashComplete function for options
 		//HideHelp:             true,
-		Copyright: `2020 Venafi, Inc.
+		Copyright: `2018-2021 Venafi, Inc.
 	 Licensed under the Apache License, Version 2.0`,
 	}
 
@@ -87,22 +90,25 @@ AUTHOR:
    {{range .Authors}}{{ . }}{{end}}
    {{end}}{{if .Commands}}
 ACTIONS:
-   enroll   To enroll a certificate,
-   gencsr   To generate a certificate signing request (CSR)
-   getcred  To obtain a new token for authentication
-   pickup   To retrieve a certificate
-   renew    To renew a certificate
-   revoke   To revoke a certificate
+
+   gencsr     To generate a certificate signing request (CSR)
+   enroll     To enroll a certificate
+   pickup     To retrieve a certificate
+   renew      To renew a certificate
+   revoke     To revoke a certificate
+
+   getcred    To obtain a new token for authentication
+   checkcred  To check the validity of a token and grant
+   voidcred   To invalidate an authentication grant
 
 OPTIONS:
    {{range .VisibleFlags}}{{.}}
    {{end}}
-
 COPYRIGHT:
    {{.Copyright}}
    {{end}}{{if .Version}}
 SUPPORT:
-	opensource@venafi.com
+   opensource@venafi.com
    {{end}}
 `, vcert.GetFormattedVersionString(), vcert.GetFormatedBuildTimeStamp())
 

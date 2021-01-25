@@ -117,3 +117,48 @@ Then(/^it should( not)? output (access|refresh) token( in JSON)?$/) do |negated,
     end
   end
 end
+
+Then(/^it should( not)? output (application|expires|scope)( in JSON)?$/) do |negated, property, json|
+
+  if @previous_command_output.nil?
+    fail(ArgumentError.new('@previous_command_output is nil'))
+  end
+
+  Kernel.puts("Checking output:\n"+@previous_command_output)
+  unless json
+    steps %{Then the output should#{negated} contain "access_token_expires:"}
+  end
+
+  unless negated
+    if json then
+      JSON.parse(@previous_command_output)
+      if property === "application"
+        @application = unescape_text(normalize_json(@previous_command_output, "application")).tr('"', '')
+      elsif property === "expires"
+        @expires = unescape_text(normalize_json(@previous_command_output, "expires_ISO8601")).tr('"', '')
+      elsif property === "scope"
+        @scope = unescape_text(normalize_json(@previous_command_output, "scope")).tr('"', '')
+      else
+        fail(ArgumentError.new("Cant determine property type for #{property}"))
+      end
+    else
+      if property === "application"
+        m = @previous_command_output.match /^client_id:  (.+)$/
+        @application = m[1]
+      elsif property === "expires"
+        m = @previous_command_output.match /^access_token_expires:  (.+)$/
+        @expires = m[1]
+      elsif property === "scope"
+        m = @previous_command_output.match /^scope:  (.+)$/
+        @scope = m[1]
+      else
+        fail(ArgumentError.new("Cant determine property type for #{property}"))
+      end
+    end
+  end
+end
+
+Then(/^it should( not)? output revoked$/) do |negated|
+  Kernel.puts("Checking output:\n"+@previous_command_output)
+  steps %{Then the output should#{negated} contain "Access token grant successfully revoked"}
+end
