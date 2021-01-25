@@ -415,7 +415,9 @@ func doCommandCredMgmt1(c *cli.Context) error {
 				tm := time.Unix(int64(resp.Expires), 0).UTC().Format(time.RFC3339)
 				fmt.Println("access_token: ", resp.Access_token)
 				fmt.Println("access_token_expires: ", tm)
-				fmt.Println("refresh_token: ", resp.Refresh_token)
+				if resp.Refresh_token != "" {
+					fmt.Println("refresh_token: ", resp.Refresh_token)
+				}
 			}
 		} else {
 			return fmt.Errorf("Failed to determine credentials set")
@@ -443,9 +445,7 @@ func doCommandCredMgmt1(c *cli.Context) error {
 				iso8601fmt := "2006-01-02T15:04:05Z"
 				tm, _ := time.Parse(iso8601fmt, resp.AccessIssuedOn)
 				accessExpires := tm.Add(time.Duration(resp.ValidFor) * time.Second).Format(iso8601fmt)
-				fmt.Println("access_token_issued: ", resp.AccessIssuedOn)
 				fmt.Println("access_token_expires: ", accessExpires)
-				fmt.Println("grant_issued: ", resp.GrantIssuedOn)
 				fmt.Println("grant_expires: ", resp.Expires)
 				fmt.Println("client_id: ", resp.ClientID)
 				fmt.Println("scope: ", resp.Scope)
