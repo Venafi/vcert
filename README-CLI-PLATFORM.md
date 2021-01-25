@@ -279,7 +279,6 @@ Options:
 | `--trust-bundle` | Use to specify a PEM file name to be used as trust anchors when communicating with the Venafi Platform API server. |
 | `-u`             | Use to specify the URL of the Venafi Trust Protection Platform API server.<br/>Example: `-u https://tpp.example.com` |
 | `--username`     | Use to specify the username of a Venafi Platform user. Required if `--p12-file` or `--t` is not present and may not be combined with either. |
-| `--verbose`      | Use to increase the level of logging detail, which is helpful when troubleshooting issues. |
 
 ### Checking the validity of an Authorization Token
 ```
@@ -293,7 +292,6 @@ Options:
 | `-t`             | Use to specify an access token for a Venafi Platform user. |
 | `--trust-bundle` | Use to specify a PEM file name to be used as trust anchors when communicating with the Venafi Platform API server. |
 | `-u`             | Use to specify the URL of the Venafi Trust Protection Platform API server.<br/>Example: `-u https://tpp.example.com` |
-| `--verbose`      | Use to increase the level of logging detail, which is helpful when troubleshooting issues. |
 
 ### Invalidating an Authorization Token
 ```
@@ -306,7 +304,6 @@ Options:
 | `-t`             | Use to specify an access token for a Venafi Platform user. |
 | `--trust-bundle` | Use to specify a PEM file name to be used as trust anchors when communicating with the Venafi Platform API server. |
 | `-u`             | Use to specify the URL of the Venafi Trust Protection Platform API server.<br/>Example: `-u https://tpp.example.com` |
-| `--verbose`      | Use to increase the level of logging detail, which is helpful when troubleshooting issues. |
 
 ### Generating a new key pair and CSR
 ```
