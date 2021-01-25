@@ -836,11 +836,3 @@ func writeOutKeyAndCsr(commandName string, cf *commandFlags, key []byte, csr []b
 	err = result.Flush()
 	return
 }
-
-func outputJSON(resp interface{}) error {
-	jsonData, err := json.MarshalIndent(resp, "", "    ")
-	if err == nil {
-		fmt.Println(string(jsonData))
-	}
-	return err
-}
