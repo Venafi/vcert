@@ -22,6 +22,8 @@ The following content applies to the latest version of VCert CLI, click [here](h
 - [Options for revoking a certificate using the `revoke` action](#certificate-revocation-parameters)
 - [Options common to the `enroll`, `pickup`, `renew`, and `revoke` actions](#general-command-line-parameters)
 - [Options for obtaining a new authorization token using the `getcred` action](#obtaining-an-authorization-token)
+- [Options for checking the validity of an authorization token using the `checkcred` action](#checking-the-validity-of-an-authorization-token)
+- [Options for invalidating an authorization token using the `voidcred` action](#invalidating-an-authorization-token)
 - [Options for generating a new key pair and CSR using the `gencsr` action (for manual enrollment)](#generating-a-new-key-pair-and-csr)
 
 ## Prerequisites
@@ -277,7 +279,31 @@ Options:
 | `--trust-bundle` | Use to specify a PEM file name to be used as trust anchors when communicating with the Venafi Platform API server. |
 | `-u`             | Use to specify the URL of the Venafi Trust Protection Platform API server.<br/>Example: `-u https://tpp.example.com` |
 | `--username`     | Use to specify the username of a Venafi Platform user. Required if `--p12-file` or `--t` is not present and may not be combined with either. |
-| `--verbose`      | Use to increase the level of logging detail, which is helpful when troubleshooting issues. |
+
+### Checking the validity of an Authorization Token
+```
+VCert checkcred -u <tpp url> -t <access token>
+```
+Options:
+
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Command&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Description                                                  |
+| ---------------- | ------------------------------------------------------------ |
+| `--format`       | Specify "json" to get JSON formatted output instead of the plain text default. |
+| `-t`             | Use to specify an access token for a Venafi Platform user. |
+| `--trust-bundle` | Use to specify a PEM file name to be used as trust anchors when communicating with the Venafi Platform API server. |
+| `-u`             | Use to specify the URL of the Venafi Trust Protection Platform API server.<br/>Example: `-u https://tpp.example.com` |
+
+### Invalidating an Authorization Token
+```
+VCert voidcred -u <tpp url> -t <access token>
+```
+Options:
+
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Command&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Description                                                  |
+| ---------------- | ------------------------------------------------------------ |
+| `-t`             | Use to specify an access token for a Venafi Platform user. |
+| `--trust-bundle` | Use to specify a PEM file name to be used as trust anchors when communicating with the Venafi Platform API server. |
+| `-u`             | Use to specify the URL of the Venafi Trust Protection Platform API server.<br/>Example: `-u https://tpp.example.com` |
 
 ### Generating a new key pair and CSR
 ```
