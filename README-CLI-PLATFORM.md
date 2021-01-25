@@ -297,7 +297,7 @@ Options:
 
 ### Invalidating an Authorization Token
 ```
-VCert voidcred -u <tpp url> --username <tpp username> --password <tpp password>
+VCert voidcred -u <tpp url> -t <access token>
 ```
 Options:
 
