@@ -74,7 +74,9 @@ Options:
 | `--cn`               | Use to specify the common name (CN). This is required for Enrollment. |
 | `--csr`              | Use to specify the CSR and private key location. Options: `local` (default), `file`<br/>- local: private key and CSR will be generated locally<br/>- file: CSR will be read from a file by name<br/>Example: `--csr file:/path-to/example.req` |
 | `--file`             | Use to specify a name and location of an output file that will contain the private key and certificates when they are not written to their own files using `--key-file`, `--cert-file`, and/or `--chain-file`.<br/>Example: `--file /path-to/keycert.pem` |
-| `--format`         | Use to specify the output format.  The `--file` option must be used with the PKCS#12 format to specify the keystore file.<br/>Options: `pem` (default), `json`, `pkcs12` |
+| `--format`         | Use to specify the output format.  The `--file` option must be used with the PKCS#12 and JKS formats to specify the keystore file. JKS format also requires `--jks-alias` and at least one password (see `--key-password` and `--jks-password`) <br/>Options: `pem` (default), `json`, `pkcs12`, `jks` |
+| `--jks-alias`        | Use to specify the alias of the entry in the JKS file when `--format jks` is used |
+| `--jks-password`     | Use to specify the keystore password of the JKS file when `--format jks` is used.  If not specified, the `--key-password` value is used for both the key and store passwords |
 | `--key-file`         | Use to specify the name and location of an output file that will contain only the private key.<br/>Example: `--key-file /path-to/example.key` |
 | `--key-password`     | Use to specify a password for encrypting the private key. For a non-encrypted private key, specify `--no-prompt` without specifying this option. You can specify the password using one of three methods: at the command line, when prompted, or by using a password file.<br/>Example: `--key-password file:/path-to/passwd.txt` |
 | `--key-size`         | Use to specify a key size for RSA keys.  Default is 2048. |
@@ -115,8 +117,10 @@ Options:
 | `--cn`             | Use to specify the common name (CN). This is required for Enrollment. |
 | `--csr`            | Use to specify the CSR and private key location. Options: `local` (default), `file`<br />- local: private key and CSR will be generated locally<br />- file: CSR will be read from a file by name<br />Example: `--csr file:/path-to/example.req` |
 | `--file`           | Use to specify a name and location of an output file that will contain the private key and certificates when they are not written to their own files using `--key-file`, `--cert-file`, and/or `--chain-file`.<br/>Example: `--file /path-to/keycert.pem` |
-| `--format`         | Use to specify the output format.  The `--file` option must be used with the PKCS#12 format to specify the keystore file.<br/>Options: `pem` (default), `json`, `pkcs12` |
+| `--format`         | Use to specify the output format.  The `--file` option must be used with the PKCS#12 and JKS formats to specify the keystore file. JKS format also requires `--jks-alias` and at least one password (see `--key-password` and `--jks-password`) <br/>Options: `pem` (default), `json`, `pkcs12`, `jks` |
 | `--id`             | Use to specify the unique identifier of the certificate returned by the enroll or renew actions.  Value may be specified as a string or read from a file by using the file: prefix.<br/>Example: `--id file:cert_id.txt` |
+| `--jks-alias`        | Use to specify the alias of the entry in the JKS file when `--format jks` is used |
+| `--jks-password`     | Use to specify the keystore password of the JKS file when `--format jks` is used.  If not specified, the `--key-password` value is used for both the key and store passwords |
 | `--key-file`       | Use to specify the name and location of an output file that will contain only the private key.<br/>Example: `--key-file /path-to/example.key` |
 | `--key-password`   | Use to specify a password for encrypting the private key. For a non-encrypted private key, specify `--no-prompt` without specifying this option. You can specify the password using one of three methods: at the command line, when prompted, or by using a password file. |
 | `--key-size`       | Use to specify a key size for RSA keys. Default is 2048.     |
