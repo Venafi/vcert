@@ -19,6 +19,8 @@ package vcert
 import (
 	"crypto/x509"
 	"fmt"
+	"log"
+
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
 	"github.com/Venafi/vcert/v4/pkg/venafi/cloud"
 	"github.com/Venafi/vcert/v4/pkg/venafi/fake"
@@ -58,6 +60,9 @@ func (cfg *Config) NewClient() (connector endpoint.Connector, err error) {
 
 	connector.SetZone(cfg.Zone)
 	connector.SetHTTPClient(cfg.Client)
+	if cfg.Logger != nil {
+		connector.SetLogger(cfg.Logger)
+	}
 
 	err = connector.Authenticate(cfg.Credentials)
 	return
