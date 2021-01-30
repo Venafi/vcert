@@ -679,7 +679,7 @@ func TestSearchCertificate(t *testing.T) {
 		t.Fatal(err)
 	}
 	p, _ := pem.Decode([]byte(cert.Certificate))
-	thumbprint := certThumprint(p.Bytes)
+	thumbprint := certThumbprint(p.Bytes)
 	_, err = conn.searchCertificatesByFingerprint(thumbprint)
 	if err != nil {
 		t.Fatal(err)

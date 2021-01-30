@@ -60,17 +60,18 @@ type certificateRequestResponse struct {
 }
 
 type certificateRequestResponseData struct {
-	ID                     string    `json:"id,omitempty"`
-	ZoneID                 string    `json:"zoneId,omitempty"`
-	Status                 string    `json:"status,omitempty"`
-	SubjectDN              string    `json:"subjectDN,omitempty"`
-	GeneratedKey           bool      `json:"generatedKey,omitempty"`
-	DefaultKeyPassword     bool      `json:"defaultKeyPassword,omitempty"`
-	CertificateInstanceIDs []string  `json:"certificateInstanceIds,omitempty"`
-	CreationDateString     string    `json:"creationDate,omitempty"`
-	CreationDate           time.Time `json:"-"`
-	PEM                    string    `json:"pem,omitempty"`
-	DER                    string    `json:"der,omitempty"`
+	ID            string `json:"id,omitempty"`
+	ApplicationId string `json:"applicationId",omitempty`
+	TemplateId    string `json:"certificateIssuingTemplateId,omitempty"`
+	Status        string `json:"status,omitempty"`
+	SubjectDN     string `json:"subjectDN,omitempty"`
+	//GeneratedKey           bool      `json:"generatedKey,omitempty"`
+	//DefaultKeyPassword     bool      `json:"defaultKeyPassword,omitempty"`
+	//CertificateInstanceIDs []string  `json:"certificateInstanceIds,omitempty"`
+	CreationDateString string    `json:"creationDate,omitempty"`
+	CreationDate       time.Time `json:"-"`
+	//PEM                    string    `json:"pem,omitempty"`
+	//DER                    string    `json:"der,omitempty"`
 }
 
 type certificateRequestClientInfo struct {
@@ -78,19 +79,30 @@ type certificateRequestClientInfo struct {
 	Identifier string `json:"identifier"`
 }
 
+type certificateRequestMetadata struct {
+	AppName            string `json:"appName,omitempty"`
+	NodeName           string `json:"nodeName,omitempty"`
+	AutomationMetadata string `json:"automationMetadata,omitempty"`
+}
+
 type certificateRequest struct {
-	CSR                          string                       `json:"certificateSigningRequest,omitempty"`
-	ZoneID                       string                       `json:"zoneId,omitempty"`
-	ExistingManagedCertificateId string                       `json:"existingManagedCertificateId,omitempty"`
-	ReuseCSR                     bool                         `json:"reuseCSR,omitempty"`
-	ApiClientInformation         certificateRequestClientInfo `json:"apiClientInformation,omitempty"`
-	ValidityPeriod               string                       `json:"validityPeriod,omitempty"`
+	CSR                      string                       `json:"certificateSigningRequest,omitempty"`
+	ApplicationId            string                       `json:"applicationId,omitempty"`
+	TemplateId               string                       `json:"certificateIssuingTemplateId,omitempty"`
+	CertificateOwnerUserId   string                       `json:"certificateOwnerUserId,omitempty"`
+	ExistingCertificateId    string                       `json:"existingCertificateId,omitempty"`
+	ApiClientInformation     certificateRequestClientInfo `json:"apiClientInformation,omitempty"`
+	CertificateUsageMetadata certificateRequestMetadata   `json:"certificateUsageMetadata,omitempty"`
+	ReuseCSR                 bool                         `json:"reuseCSR,omitempty"`
+	ValidityPeriod           string                       `json:"validityPeriod,omitempty"`
 }
 
 type certificateStatus struct {
-	Id                        string                            `json:"Id,omitempty"`
-	ManagedCertificateId      string                            `json:"managedCertificateId,omitempty"`
-	ZoneId                    string                            `json:"zoneId,omitempty"`
+	Id string `json:"id,omitempty"`
+	//ManagedCertificateId      string                            `json:"managedCertificateId,omitempty"`
+	CertificateIdsList        []string                          `json:"certificateIds,omitempty"`
+	ApplicationId             string                            `json:"applicationId,omitempty"`
+	TemplateId                string                            `json:"certificateIssuingTemplateId,omitempty"`
 	Status                    string                            `json:"status,omitempty"`
 	ErrorInformation          CertificateStatusErrorInformation `json:"errorInformation,omitempty"`
 	CreationDate              string                            `json:"creationDate,omitempty"`
@@ -106,48 +118,51 @@ type CertificateStatusErrorInformation struct {
 	Args    []string `json:"args,omitempty"`
 }
 
-type importRequestClientInfo struct {
+type apiClientInformation struct {
 	Type       string `json:"type"`
 	Identifier string `json:"identifier"`
 }
 
-type importRequestInstanceInfo struct {
+type certificateUsageMetadata struct {
 	AppName            string `json:"appName,omitempty"`
 	NodeName           string `json:"nodeName,omitempty"`
 	AutomationMetadata string `json:"automationMetadata,omitempty"`
 }
 
 type importRequest struct {
-	Certificate              string                      `json:"certificate"`
-	IssuerCertificates       []string                    `json:"issuerCertificates,omitempty"`
-	ZoneId                   string                      `json:"zoneId"`
-	CertificateName          string                      `json:"certificateName"`
-	ApiClientInformation     importRequestClientInfo     `json:"apiClientInformation,omitempty"`
-	CertificateUsageMetadata []importRequestInstanceInfo `json:"certificateUsageMetadata,omitempty"`
+	Certificates []importRequestCertInfo `json:"certificates"`
 }
 
-type importResponseClientInfo struct {
-	Type       string `json:"type"`
-	Identifier string `json:"identifier"`
+type importRequestCertInfo struct {
+	Certificate              string                     `json:"certificate"`
+	IssuerCertificates       []string                   `json:"issuerCertificates,omitempty"`
+	ApplicationIds           []string                   `json:"applicationIds"`
+	ApiClientInformation     apiClientInformation       `json:"apiClientInformation,omitempty"`
+	CertificateUsageMetadata []certificateUsageMetadata `json:"certificateUsageMetadata,omitempty"`
 }
 
 type importResponseCertInfo struct {
-	Id                      string                   `json:"id"`
-	ManagedCertificateId    string                   `json:"managedCertificateId"`
-	CompanyId               string                   `json:"companyId"`
-	Fingerprint             string                   `json:"fingerprint"`
-	CertificateSource       string                   `json:"certificateSource"`
-	OwnerUserId             string                   `json:"ownerUserId"`
-	IssuanceZoneId          string                   `json:"issuanceZoneId"`
-	ValidityStartDateString string                   `json:"validityStartDate"`
-	ValidityStartDate       time.Time                `json:"-"`
-	ValidityEndDateString   string                   `json:"validityEndDate"`
-	ValidityEndDate         time.Time                `json:"-"`
-	ApiClientInformation    importResponseClientInfo `json:"apiClientInformation,omitempty"`
+	Id                      string               `json:"id"`
+	ManagedCertificateId    string               `json:"managedCertificateId"`
+	CompanyId               string               `json:"companyId"`
+	Fingerprint             string               `json:"fingerprint"`
+	CertificateSource       string               `json:"certificateSource"`
+	OwnerUserId             string               `json:"ownerUserId"`
+	IssuanceZoneId          string               `json:"issuanceZoneId"`
+	ValidityStartDateString string               `json:"validityStartDate"`
+	ValidityStartDate       time.Time            `json:"-"`
+	ValidityEndDateString   string               `json:"validityEndDate"`
+	ValidityEndDate         time.Time            `json:"-"`
+	ApiClientInformation    apiClientInformation `json:"apiClientInformation,omitempty"`
 }
 
 type importResponse struct {
 	CertificateInformations []importResponseCertInfo `json:"certificateInformations"`
+}
+
+type ApplicationDetails struct {
+	ApplicationId   string            `json:"id,omitempty"`
+	CitAliasToIdMap map[string]string `json:"certificateIssuingTemplateAliasIdMap,omitempty"`
 }
 
 //GenerateRequest generates a CertificateRequest based on the zone configuration, and returns the request along with the private key.
@@ -384,7 +399,55 @@ func newPEMCollectionFromResponse(data []byte, chainOrder certificate.ChainOptio
 	return certificate.PEMCollectionFromBytes(data, chainOrder)
 }
 
-func certThumprint(asn1 []byte) string {
+func certThumbprint(asn1 []byte) string {
 	h := sha1.Sum(asn1)
 	return strings.ToUpper(fmt.Sprintf("%x", h))
+}
+
+func parseApplicationDetailsResult(httpStatusCode int, httpStatus string, body []byte) (*ApplicationDetails, error) {
+	switch httpStatusCode {
+	case http.StatusOK:
+		return parseApplicationDetailsData(body)
+	case http.StatusBadRequest:
+		return nil, verror.ApplicationNotFoundError
+	default:
+		respErrors, err := parseResponseErrors(body)
+		if err != nil {
+			return nil, err
+		}
+
+		respError := fmt.Sprintf("Unexpected status code on Venafi Cloud application read. Status: %s\n", httpStatus)
+		for _, e := range respErrors {
+			if e.Code == 10051 {
+				return nil, verror.ApplicationNotFoundError
+			}
+			respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
+		}
+		return nil, fmt.Errorf("%w: %v", verror.ServerError, respError)
+	}
+}
+
+func parseApplicationDetailsData(b []byte) (*ApplicationDetails, error) {
+	var data ApplicationDetails
+	err := json.Unmarshal(b, &data)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %v", verror.ServerError, err)
+	}
+	return &data, nil
+}
+
+func (c *Connector) parseZone() error {
+	if c.zone == "" {
+		return fmt.Errorf("zone not specified")
+	}
+
+	segments := strings.Split(c.zone, "\\")
+	if len(segments) > 2 || len(segments) < 2 {
+		return fmt.Errorf("invalid zone format")
+	}
+
+	c.applicationName = segments[0]
+	c.templateAlias = segments[1]
+
+	return nil
 }

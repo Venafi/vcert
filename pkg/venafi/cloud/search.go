@@ -65,47 +65,43 @@ const (
 
 type CertificateSearchResponse struct {
 	Count        int           `json:"count"`
-	Certificates []Certificate `json:"managedCertificates"`
+	Certificates []Certificate `json:"certificates"`
 }
 
 type Certificate struct {
-	Id                     string `json:"id"`
-	CurrentCertificateData struct {
-		ID                            string
-		ManagedCertificateId          string              `json:"managedCertificateId"`
-		CertificateRequestId          string              `json:"certificateRequestId"`
-		SubjectCN                     []string            `json:"subjectCN"`
-		SubjectAlternativeNamesByType map[string][]string `json:"subjectAlternativeNamesByType"`
-		SerialNumber                  string              `json:"serialNumber"`
-		Fingerprint                   string              `json:"fingerprint"`
-		ValidityStart                 string              `json:"validityStart"`
-		ValidityEnd                   string              `json:"validityEnd"`
-		/* ... and many more fields ... */
-	} `json:"currentCertificateData"`
+	Id                            string              `json:"id"`
+	ManagedCertificateId          string              `json:"managedCertificateId"`
+	CertificateRequestId          string              `json:"certificateRequestId"`
+	SubjectCN                     []string            `json:"subjectCN"`
+	SubjectAlternativeNamesByType map[string][]string `json:"subjectAlternativeNamesByType"`
+	SerialNumber                  string              `json:"serialNumber"`
+	Fingerprint                   string              `json:"fingerprint"`
+	ValidityStart                 string              `json:"validityStart"`
+	ValidityEnd                   string              `json:"validityEnd"`
+	/* ... and many more fields ... */
 }
 
 func (c Certificate) ToCertificateInfo() certificate.CertificateInfo {
-	d := c.CurrentCertificateData
 	var cn string
-	if len(d.SubjectCN) > 0 {
-		cn = d.SubjectCN[0]
+	if len(c.SubjectCN) > 0 {
+		cn = c.SubjectCN[0]
 	}
-	start, _ := time.Parse("2006-01-02T15:04:05-0700", d.ValidityStart)
-	end, _ := time.Parse("2006-01-02T15:04:05-0700", d.ValidityEnd)
+	start, _ := time.Parse("2006-01-02T15:04:05-0700", c.ValidityStart)
+	end, _ := time.Parse("2006-01-02T15:04:05-0700", c.ValidityEnd)
 	ci := certificate.CertificateInfo{
 		ID: c.Id,
 		CN: cn,
 		SANS: struct {
 			DNS, Email, IP, URI, UPN []string
 		}{
-			d.SubjectAlternativeNamesByType["dNSName"],
-			d.SubjectAlternativeNamesByType["rfc822Name"],
-			d.SubjectAlternativeNamesByType["iPAddress"],
-			d.SubjectAlternativeNamesByType["uniformResourceIdentifier"],
+			c.SubjectAlternativeNamesByType["dNSName"],
+			c.SubjectAlternativeNamesByType["rfc822Name"],
+			c.SubjectAlternativeNamesByType["iPAddress"],
+			c.SubjectAlternativeNamesByType["uniformResourceIdentifier"],
 			[]string{}, // todo: find correct field
 		},
-		Serial:     d.SerialNumber,
-		Thumbprint: d.Fingerprint,
+		Serial:     c.SerialNumber,
+		Thumbprint: c.Fingerprint,
 		ValidFrom:  start,
 		ValidTo:    end,
 	}

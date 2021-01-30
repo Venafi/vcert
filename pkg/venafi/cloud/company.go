@@ -42,7 +42,7 @@ type zone struct {
 	CertificateIssuingTemplateId string    `json:"certificateIssuingTemplateId"`
 }
 
-func (z *zone) getZoneConfiguration(ud *userDetails, policy *certificateTemplate) (zoneConfig *endpoint.ZoneConfiguration) {
+func getZoneConfiguration(policy *certificateTemplate) (zoneConfig *endpoint.ZoneConfiguration) {
 	zoneConfig = endpoint.NewZoneConfiguration()
 	if policy == nil {
 		return

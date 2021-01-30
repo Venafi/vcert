@@ -23,6 +23,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"net/http"
+	netUrl "net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -34,25 +35,20 @@ import (
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
 )
 
-const apiURL = "api.venafi.cloud/v1/"
+const apiURL = "api.venafi.cloud/outagedetection/v1/"
 
 type urlResource string
 
 const (
-	urlResourceUserAccounts              urlResource = "useraccounts"
-	urlResourcePing                                  = "ping"
-	urlResourceZones                                 = "zones"
-	urlResourceZoneByTag                             = urlResourceZones + "/tag/%s"
-	urlResourceCertificateRequests                   = "certificaterequests"
-	urlResourceCertificateStatus                     = urlResourceCertificateRequests + "/%s"
-	urlResourceCertificateRetrieveViaCSR             = urlResourceCertificateRequests + "/%s/certificate"
-	urlResourceCertificateRetrieve                   = "certificates/%s"
-	urlResourceCertificateRetrievePem                = urlResourceCertificateRetrieve + "/encoded"
-	urlResourceManagedCertificateSearch              = "managedcertificatesearch"
-	urlResourceManagedCertificates                   = "managedcertificates"
-	urlResourceManagedCertificateByID                = urlResourceManagedCertificates + "/%s"
-	urlResourceCertificateImport                     = urlResourceCertificateRequests + "/externalissuance/certificates"
-	urlResourceTemplate                              = "certificateissuingtemplates/%s"
+	urlResourceUserAccounts           urlResource = "useraccounts"
+	urlResourceCertificateRequests                = "certificaterequests"
+	urlResourceCertificateStatus                  = urlResourceCertificateRequests + "/%s"
+	urlResourceCertificates                       = "certificates"
+	urlResourceCertificateByID                    = urlResourceCertificates + "/%s"
+	urlResourceCertificateRetrievePem             = urlResourceCertificates + "/%s/contents"
+	urlResourceCertificateSearch                  = "certificatesearch"
+	urlResourceTemplate                           = "applications/%s/certificateissuingtemplates/%s"
+	urlAppDetailsByName                           = "applications/name/%s"
 )
 
 type condorChainOption string
@@ -64,18 +60,21 @@ const (
 
 // Connector contains the base data needed to communicate with the Venafi Cloud servers
 type Connector struct {
-	baseURL string
-	apiKey  string
-	verbose bool
-	user    *userDetails
-	trust   *x509.CertPool
-	zone    string
-	client  *http.Client
+	baseURL         string
+	apiKey          string
+	verbose         bool
+	user            *userDetails
+	trust           *x509.CertPool
+	zone            string
+	applicationName string
+	templateAlias   string
+	client          *http.Client
 }
 
 // NewConnector creates a new Venafi Cloud Connector object used to communicate with Venafi Cloud
 func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (*Connector, error) {
 	c := Connector{verbose: verbose, trust: trust, zone: zone}
+	c.parseZone()
 	var err error
 	c.baseURL, err = normalizeURL(url)
 	if err != nil {
@@ -112,6 +111,7 @@ func normalizeURL(url string) (normalizedURL string, err error) {
 
 func (c *Connector) SetZone(z string) {
 	c.zone = z
+	c.parseZone()
 }
 
 func (c *Connector) GetType() endpoint.ConnectorType {
@@ -154,21 +154,11 @@ func (c *Connector) ReadPolicyConfiguration() (policy *endpoint.Policy, err erro
 
 // ReadZoneConfiguration reads the Zone information needed for generating and requesting a certificate from Venafi Cloud
 func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration, err error) {
-	if c.zone == "" {
-		return nil, fmt.Errorf("empty zone name")
-	}
-	z, err := c.getZoneByTag(c.zone)
-	if err != nil {
-		return nil, err
-	}
-	if z.CertificateIssuingTemplateId == "" {
-		return nil, fmt.Errorf("Empty certificateTemplateID in zone. May be it`s old type zone.")
-	}
-	t, err := c.getTemplateByID(z.CertificateIssuingTemplateId)
+	template, err := c.getTemplateByID()
 	if err != nil {
 		return
 	}
-	config = z.getZoneConfiguration(c.user, t)
+	config = getZoneConfiguration(template)
 	return config, nil
 }
 
@@ -180,7 +170,7 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 
 	url := c.getURL(urlResourceCertificateRequests)
 	if c.user == nil || c.user.Company == nil {
-		return "", fmt.Errorf("Must be autheticated to request a certificate")
+		return "", fmt.Errorf("must be autheticated to request a certificate")
 	}
 
 	ipAddr := endpoint.LocalIP
@@ -190,9 +180,17 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 			origin = f.Value
 		}
 	}
+
+	appDetails, err := c.getAppDetailsByName(c.applicationName)
+	if err != nil {
+		return "", err
+	}
+	templateId := appDetails.CitAliasToIdMap[c.templateAlias]
+
 	cloudReq := certificateRequest{
-		ZoneID: c.zone,
-		CSR:    string(req.GetCSR()),
+		CSR:           string(req.GetCSR()),
+		ApplicationId: appDetails.ApplicationId,
+		TemplateId:    templateId,
 		ApiClientInformation: certificateRequestClientInfo{
 			Type:       origin,
 			Identifier: ipAddr,
@@ -243,7 +241,7 @@ func (c *Connector) getCertificateStatus(requestID string) (certStatus *certific
 		return nil, fmt.Errorf(respError)
 	}
 
-	return nil, fmt.Errorf("Unexpected status code on Venafi Cloud certificate search. Status: %d", statusCode)
+	return nil, fmt.Errorf("unexpected status code on Venafi Cloud certificate search. Status: %d", statusCode)
 
 }
 
@@ -251,7 +249,7 @@ func (c *Connector) getCertificateStatus(requestID string) (certStatus *certific
 func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates *certificate.PEMCollection, err error) {
 
 	if req.FetchPrivateKey {
-		return nil, fmt.Errorf("Failed to retrieve private key from Venafi Cloud service: not supported")
+		return nil, fmt.Errorf("failed to retrieve private key from Venafi Cloud service: not supported")
 	}
 	if req.PickupID == "" && req.CertID == "" && req.Thumbprint != "" {
 		// search cert by Thumbprint and fill pickupID
@@ -264,18 +262,18 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 			return nil, fmt.Errorf("No certifiate found using fingerprint %s", req.Thumbprint)
 		}
 
-		reqIds := []string{}
+		var reqIds []string
 		isOnlyOneCertificateRequestId := true
 		for _, c := range searchResult.Certificates {
-			reqIds = append(reqIds, c.CurrentCertificateData.CertificateRequestId)
-			if certificateRequestId != "" && certificateRequestId != c.CurrentCertificateData.CertificateRequestId {
+			reqIds = append(reqIds, c.CertificateRequestId)
+			if certificateRequestId != "" && certificateRequestId != c.CertificateRequestId {
 				isOnlyOneCertificateRequestId = false
 			}
-			if c.CurrentCertificateData.CertificateRequestId != "" {
-				certificateRequestId = c.CurrentCertificateData.CertificateRequestId
+			if c.CertificateRequestId != "" {
+				certificateRequestId = c.CertificateRequestId
 			}
 			if c.Id != "" {
-				req.CertID = c.CurrentCertificateData.ID
+				req.CertID = c.Id
 			}
 		}
 		if !isOnlyOneCertificateRequestId {
@@ -331,7 +329,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 		}
 		return newPEMCollectionFromResponse(body, certificate.ChainOptionIgnore)
 	case req.PickupID != "":
-		url := c.getURL(urlResourceCertificateRetrieveViaCSR)
+		url := c.getURL(urlResourceCertificateRetrievePem)
 		url = fmt.Sprintf(url, req.PickupID)
 		url += "?chainOrder=%s&format=PEM"
 		switch req.ChainOption {
@@ -357,7 +355,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 			return nil, fmt.Errorf("Failed to retrieve certificate. StatusCode: %d -- Status: %s -- Server Data: %s", statusCode, status, body) //todo:remove body from err
 		}
 	}
-	return nil, fmt.Errorf("Couldn't retrieve certificate because both PickupID and CertId are empty")
+	return nil, fmt.Errorf("couldn't retrieve certificate because both PickupID and CertId are empty")
 }
 
 // RevokeCertificate attempts to revoke the certificate
@@ -381,17 +379,17 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 			return "", fmt.Errorf("No certifiate found using fingerprint %s", renewReq.Thumbprint)
 		}
 
-		reqIds := []string{}
+		var reqIds []string
 		isOnlyOneCertificateRequestId := true
 		for _, c := range searchResult.Certificates {
-			reqIds = append(reqIds, c.CurrentCertificateData.CertificateRequestId)
-			if certificateRequestId != "" && certificateRequestId != c.CurrentCertificateData.CertificateRequestId {
+			reqIds = append(reqIds, c.CertificateRequestId)
+			if certificateRequestId != "" && certificateRequestId != c.CertificateRequestId {
 				isOnlyOneCertificateRequestId = false
 			}
-			certificateRequestId = c.CurrentCertificateData.CertificateRequestId
+			certificateRequestId = c.CertificateRequestId
 		}
 		if !isOnlyOneCertificateRequestId {
-			return "", fmt.Errorf("Error: more than one CertificateRequestId was found with the same Fingerprint: %s", reqIds)
+			return "", fmt.Errorf("error: more than one CertificateRequestId was found with the same Fingerprint: %s", reqIds)
 		}
 	} else if renewReq.CertificateDN != "" {
 		// by CertificateDN (which is the same as CertificateRequestId for current implementation)
@@ -405,47 +403,56 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 	if err != nil {
 		return "", fmt.Errorf("certificate renew failed: %s", err)
 	}
-	var zoneId = previousRequest.ZoneId
-	var managedCertificateId = previousRequest.ManagedCertificateId
+	applicationId := previousRequest.ApplicationId
+	templateId := previousRequest.TemplateId
+	certificateId := previousRequest.CertificateIdsList[0]
 
-	if managedCertificateId == "" {
-		return "", fmt.Errorf("failed to submit renewal request for certificate: ManagedCertificateId is empty, certificate status is %s", previousRequest.Status)
+	emptyField := ""
+	if certificateId == "" {
+		emptyField = "certificateId"
+	} else if applicationId == "" {
+		emptyField = "applicationId"
+	} else if templateId == "" {
+		emptyField = "templateId"
+	}
+	if emptyField != "" {
+		return "", fmt.Errorf("failed to submit renewal request for certificate: %s is empty, certificate status is %s", emptyField, previousRequest.Status)
 	}
 
-	if zoneId == "" {
-		return "", fmt.Errorf("failed to submit renewal request for certificate: ZoneId is empty, certificate status is %s", previousRequest.Status)
-	}
-
-	/* 3rd step is to get ManagedCertificate Object by id
+	/* 3rd step is to get Certificate Object by id
 	   and check if latestCertificateRequestId there equals to certificateRequestId from 1st step */
-	managedCertificate, err := c.getManagedCertificate(managedCertificateId)
+	managedCertificate, err := c.getCertificate(certificateId)
 	if err != nil {
 		return "", fmt.Errorf("failed to renew certificate: %s", err)
 	}
-	if managedCertificate.LatestCertificateRequestId != certificateRequestId {
+	if managedCertificate.CertificateRequestId != certificateRequestId {
 		withThumbprint := ""
 		if renewReq.Thumbprint != "" {
 			withThumbprint = fmt.Sprintf("with thumbprint %s ", renewReq.Thumbprint)
 		}
 		return "", fmt.Errorf(
-			"Certificate under requestId %s "+withThumbprint+
-				"is not the latest under ManagedCertificateId %s. The latest request is %s. "+
-				"This error may happen when revoked certificate is requested to be renewed.",
-			certificateRequestId, managedCertificateId, managedCertificate.LatestCertificateRequestId)
+			"certificate under requestId %s %s is not the latest under CertificateId %s."+
+				"The latest request is %s. This error may happen when revoked certificate is requested to be renewed",
+			certificateRequestId, withThumbprint, certificateId, managedCertificate.CertificateRequestId)
 	}
 
 	/* 4th step is to send renewal request */
 	url := c.getURL(urlResourceCertificateRequests)
 	if c.user == nil || c.user.Company == nil {
-		return "", fmt.Errorf("Must be autheticated to request a certificate")
+		return "", fmt.Errorf("must be autheticated to request a certificate")
 	}
 
-	req := certificateRequest{ZoneID: zoneId, ExistingManagedCertificateId: managedCertificateId}
+	req := certificateRequest{
+		ExistingCertificateId: certificateId,
+		ApplicationId:         applicationId,
+		TemplateId:            templateId,
+	}
 	if renewReq.CertificateRequest != nil && len(renewReq.CertificateRequest.GetCSR()) != 0 {
 		req.CSR = string(renewReq.CertificateRequest.GetCSR())
 		req.ReuseCSR = false
 	} else {
 		req.ReuseCSR = true
+		return "", fmt.Errorf("reuseCSR option is not currently available for Renew Certificate operation. A new CSR must be provided in the request")
 	}
 	statusCode, status, body, err := c.request("POST", url, req)
 	if err != nil {
@@ -459,43 +466,11 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 	return cr.CertificateRequests[0].ID, nil
 }
 
-func (c *Connector) getZoneByTag(tag string) (*zone, error) {
-
-	url := c.getURL(urlResourceZoneByTag)
-	if c.user == nil {
-		return nil, fmt.Errorf("Must be autheticated to read the zone configuration")
-	}
-	url = fmt.Sprintf(url, tag)
-	statusCode, status, body, err := c.request("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	z, err := parseZoneConfigurationResult(statusCode, status, body)
-	if err != nil {
-		return nil, err
-	}
-	return z, nil
-}
-
-func (c *Connector) getTemplateByID(id string) (*certificateTemplate, error) {
-	if id == "" {
-		return nil, fmt.Errorf("Empty template id")
-	}
-	url := c.getURL(urlResourceTemplate)
-	url = fmt.Sprintf(url, id)
-	statusCode, status, body, err := c.request("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	t, err := parseCertificateTemplate(statusCode, status, body)
-	return t, err
-}
-
 func (c *Connector) searchCertificates(req *SearchRequest) (*CertificateSearchResponse, error) {
 
 	var err error
 
-	url := c.getURL(urlResourceManagedCertificateSearch)
+	url := c.getURL(urlResourceCertificateSearch)
 	statusCode, _, body, err := c.request("POST", url, req)
 	if err != nil {
 		return nil, err
@@ -537,16 +512,16 @@ func (c *Connector) searchCertificatesByFingerprint(fp string) (*CertificateSear
 
 */
 type managedCertificate struct {
-	Id                         string `json:"id"`
-	CompanyId                  string `json:"companyId"`
-	LatestCertificateRequestId string `json:"latestCertificateRequestId"`
-	CertificateName            string `json:"certificateName"`
+	Id                   string `json:"id"`
+	CompanyId            string `json:"companyId"`
+	CertificateRequestId string `json:"certificateRequestId"`
+	//CertificateName            string `json:"certificateName"`
 }
 
-func (c *Connector) getManagedCertificate(managedCertId string) (*managedCertificate, error) {
+func (c *Connector) getCertificate(certificateId string) (*managedCertificate, error) {
 	var err error
-	url := c.getURL(urlResourceManagedCertificateByID)
-	url = fmt.Sprintf(url, managedCertId)
+	url := c.getURL(urlResourceCertificateByID)
+	url = fmt.Sprintf(url, certificateId)
 	statusCode, _, body, err := c.request("GET", url, nil)
 	if err != nil {
 		return nil, err
@@ -573,7 +548,6 @@ func (c *Connector) getManagedCertificate(managedCertId string) (*managedCertifi
 		}
 		return nil, fmt.Errorf("Unexpected status code on Venafi Cloud certificate search. Status: %d", statusCode)
 	}
-
 }
 
 func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certificate.ImportResponse, error) {
@@ -583,7 +557,11 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 	}
 	zone := req.PolicyDN
 	if zone == "" {
-		zone = c.zone
+		appDetails, err := c.getAppDetailsByName(c.applicationName)
+		if err != nil {
+			return nil, err
+		}
+		zone = appDetails.ApplicationId
 	}
 	ipAddr := endpoint.LocalIP
 	origin := endpoint.SDKName
@@ -593,18 +571,21 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 		}
 	}
 	base64.StdEncoding.EncodeToString(pBlock.Bytes)
-	fingerprint := certThumprint(pBlock.Bytes)
+	fingerprint := certThumbprint(pBlock.Bytes)
 	request := importRequest{
-		Certificate:     base64.StdEncoding.EncodeToString(pBlock.Bytes),
-		ZoneId:          zone,
-		CertificateName: req.ObjectName,
-		ApiClientInformation: importRequestClientInfo{
-			Type:       origin,
-			Identifier: ipAddr,
+		Certificates: []importRequestCertInfo{
+			{
+				Certificate:    base64.StdEncoding.EncodeToString(pBlock.Bytes),
+				ApplicationIds: []string{zone},
+				ApiClientInformation: apiClientInformation{
+					Type:       origin,
+					Identifier: ipAddr,
+				},
+			},
 		},
 	}
 
-	url := c.getURL(urlResourceCertificateImport)
+	url := c.getURL(urlResourceCertificates)
 	statusCode, status, body, err := c.request("POST", url, request)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", verror.ServerTemporaryUnavailableError, err)
@@ -634,7 +615,7 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 		return nil, fmt.Errorf("%w certificate has been imported but could not be found on platform after that", verror.ServerError)
 	}
 	cert := foundCert.Certificates[0]
-	resp := &certificate.ImportResponse{CertificateDN: cert.CurrentCertificateData.SubjectCN[0], CertId: cert.Id}
+	resp := &certificate.ImportResponse{CertificateDN: cert.SubjectCN[0], CertId: cert.Id}
 	return resp, nil
 }
 
@@ -706,4 +687,34 @@ func (c *Connector) getCertsBatch(page, pageSize int, withExpired bool) ([]certi
 		infos[i] = c.ToCertificateInfo()
 	}
 	return infos, nil
+}
+
+func (c *Connector) getAppDetailsByName(appName string) (*ApplicationDetails, error) {
+	url := c.getURL(urlAppDetailsByName)
+	if c.user == nil {
+		return nil, fmt.Errorf("must be autheticated to read the zone configuration")
+	}
+	url = fmt.Sprintf(url, appName)
+	statusCode, status, body, err := c.request("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	details, err := parseApplicationDetailsResult(statusCode, status, body)
+	if err != nil {
+		return nil, err
+	}
+	return details, nil
+}
+
+func (c *Connector) getTemplateByID() (*certificateTemplate, error) {
+	url := c.getURL(urlResourceTemplate)
+	appNameEncoded := netUrl.PathEscape(c.applicationName)
+	citAliasEncoded := netUrl.PathEscape(c.templateAlias)
+	url = fmt.Sprintf(url, appNameEncoded, citAliasEncoded)
+	statusCode, status, body, err := c.request("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	t, err := parseCertificateTemplate(statusCode, status, body)
+	return t, err
 }
