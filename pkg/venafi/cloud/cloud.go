@@ -60,29 +60,18 @@ type certificateRequestResponse struct {
 }
 
 type certificateRequestResponseData struct {
-	ID            string `json:"id,omitempty"`
-	ApplicationId string `json:"applicationId",omitempty`
-	TemplateId    string `json:"certificateIssuingTemplateId,omitempty"`
-	Status        string `json:"status,omitempty"`
-	SubjectDN     string `json:"subjectDN,omitempty"`
-	//GeneratedKey           bool      `json:"generatedKey,omitempty"`
-	//DefaultKeyPassword     bool      `json:"defaultKeyPassword,omitempty"`
-	//CertificateInstanceIDs []string  `json:"certificateInstanceIds,omitempty"`
+	ID                 string    `json:"id,omitempty"`
+	ApplicationId      string    `json:"applicationId,omitempty"`
+	TemplateId         string    `json:"certificateIssuingTemplateId,omitempty"`
+	Status             string    `json:"status,omitempty"`
+	SubjectDN          string    `json:"subjectDN,omitempty"`
 	CreationDateString string    `json:"creationDate,omitempty"`
 	CreationDate       time.Time `json:"-"`
-	//PEM                    string    `json:"pem,omitempty"`
-	//DER                    string    `json:"der,omitempty"`
 }
 
 type certificateRequestClientInfo struct {
 	Type       string `json:"type"`
 	Identifier string `json:"identifier"`
-}
-
-type certificateRequestMetadata struct {
-	AppName            string `json:"appName,omitempty"`
-	NodeName           string `json:"nodeName,omitempty"`
-	AutomationMetadata string `json:"automationMetadata,omitempty"`
 }
 
 type certificateRequest struct {
@@ -92,7 +81,7 @@ type certificateRequest struct {
 	CertificateOwnerUserId   string                       `json:"certificateOwnerUserId,omitempty"`
 	ExistingCertificateId    string                       `json:"existingCertificateId,omitempty"`
 	ApiClientInformation     certificateRequestClientInfo `json:"apiClientInformation,omitempty"`
-	CertificateUsageMetadata certificateRequestMetadata   `json:"certificateUsageMetadata,omitempty"`
+	CertificateUsageMetadata []certificateUsageMetadata   `json:"certificateUsageMetadata,omitempty"`
 	ReuseCSR                 bool                         `json:"reuseCSR,omitempty"`
 	ValidityPeriod           string                       `json:"validityPeriod,omitempty"`
 }
@@ -350,16 +339,34 @@ func parseZoneConfigurationData(b []byte) (*zone, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", verror.ServerError, err)
 	}
-
 	return &data, nil
 }
 
-func parseCertificateTemplate(httpStatusCode int, httpStatus string, body []byte) (*certificateTemplate, error) {
-	ct := certificateTemplate{}
-	if httpStatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%w: unexpected status code on Venafi Cloud policy read. Status: %s\n", verror.ServerError, httpStatus)
+func parseCertificateTemplateResult(httpStatusCode int, httpStatus string, body []byte) (*certificateTemplate, error) {
+	switch httpStatusCode {
+	case http.StatusOK:
+		return parseCertificateTemplateData(body)
+	case http.StatusBadRequest:
+		return nil, verror.ZoneNotFoundError
+	default:
+		respErrors, err := parseResponseErrors(body)
+		if err != nil {
+			return nil, err
+		}
+
+		respError := fmt.Sprintf("Unexpected status code on Venafi Cloud zone read. Status: %s\n", httpStatus)
+		for _, e := range respErrors {
+			if e.Code == 10051 {
+				return nil, verror.ZoneNotFoundError
+			}
+			respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
+		}
+		return nil, fmt.Errorf("%w: %v", verror.ServerError, respError)
 	}
-	// todo: better error parsing
+}
+
+func parseCertificateTemplateData(body []byte) (*certificateTemplate, error) {
+	var ct certificateTemplate
 	err := json.Unmarshal(body, &ct)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", verror.ServerError, err)
@@ -443,6 +450,8 @@ func (c *Connector) parseZone() error {
 
 	segments := strings.Split(c.zone, "\\")
 	if len(segments) > 2 || len(segments) < 2 {
+		c.applicationName = ""
+		c.templateAlias = ""
 		return fmt.Errorf("invalid zone format")
 	}
 

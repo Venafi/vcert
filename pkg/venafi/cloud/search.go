@@ -114,7 +114,7 @@ func ParseCertificateSearchResponse(httpStatusCode int, body []byte) (searchResu
 		var searchResult = &CertificateSearchResponse{}
 		err = json.Unmarshal(body, searchResult)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to parse search results: %s, body: %s", err, body)
+			return nil, fmt.Errorf("failed to parse search results: %s, body: %s", err, body)
 		}
 		return searchResult, nil
 	default:
@@ -128,6 +128,6 @@ func ParseCertificateSearchResponse(httpStatusCode int, body []byte) (searchResu
 				return nil, fmt.Errorf(respError)
 			}
 		}
-		return nil, fmt.Errorf("Unexpected status code on Venafi Cloud certificate search. Status: %d", httpStatusCode)
+		return nil, fmt.Errorf("unexpected status code on Venafi Cloud certificate search. Status: %d", httpStatusCode)
 	}
 }

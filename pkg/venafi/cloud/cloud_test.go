@@ -75,11 +75,7 @@ func TestUpdateRequest(t *testing.T) {
 	req.Subject.Province = []string{"Nevada"}
 	req.Subject.Country = []string{"US"}
 
-	z, err := parseZoneConfigurationData(successGetZoneByTag)
-	if err != nil {
-		t.Fatalf("err is not nil, err: %s", err)
-	}
-	zoneConfig := z.getZoneConfiguration(nil, nil)
+	zoneConfig := getZoneConfiguration(nil)
 
 	zoneConfig.UpdateCertificateRequest(&req)
 }
@@ -93,16 +89,12 @@ func TestGenerateRequest(t *testing.T) {
 	req.Subject.Province = []string{"Nevada"}
 	req.Subject.Country = []string{"US"}
 
-	z, err := parseZoneConfigurationData(successGetZoneByTag)
-	if err != nil {
-		t.Fatalf("err is not nil, err: %s", err)
-	}
-	zoneConfig := z.getZoneConfiguration(nil, nil)
+	zoneConfig := getZoneConfiguration(nil)
 
 	zoneConfig.UpdateCertificateRequest(&req)
 
 	conn := Connector{}
-	err = conn.GenerateRequest(zoneConfig, &req)
+	err := conn.GenerateRequest(zoneConfig, &req)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
@@ -115,10 +107,7 @@ func TestGenerateRequest(t *testing.T) {
 	req.Subject.Province = []string{"Nevada"}
 	req.Subject.Country = []string{"US"}
 	req.KeyType = certificate.KeyTypeECDSA
-	z, err = parseZoneConfigurationData(successGetZoneByTag)
-	if err != nil {
-		t.Fatalf("err is not nil, err: %s", err)
-	}
+
 	zoneConfig.UpdateCertificateRequest(&req)
 	err = conn.GenerateRequest(zoneConfig, &req)
 	if err != nil {

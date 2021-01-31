@@ -141,6 +141,37 @@ func TestRequestCertificate(t *testing.T) {
 	}
 }
 
+func TestRequestCertificateWithUsageMetadata(t *testing.T) {
+	conn := getTestConnector(ctx.CloudZone)
+	conn.verbose = true
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	zoneConfig, err := conn.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	req := certificate.Request{}
+	req.Subject.CommonName = test.RandCN()
+	req.Subject.Organization = []string{"Venafi, Inc."}
+	req.Subject.OrganizationalUnit = []string{"Automated Tests"}
+
+	location := certificate.Location{
+		Instance: "vcert-sdk",
+	}
+	req.Location = &location
+
+	err = conn.GenerateRequest(zoneConfig, &req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	_, err = conn.RequestCertificate(&req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+}
+
 func TestRequestCertificateWithValidDays(t *testing.T) {
 	conn := getTestConnector(ctx.CloudZone)
 	conn.verbose = true
@@ -466,6 +497,97 @@ func TestRenewCertificate(t *testing.T) {
 
 }
 
+func TestRenewCertificateWithUsageMetadata(t *testing.T) {
+	t.Skip() //todo: remove if condor team fix bug. check after 2020.04
+	conn := getTestConnector(ctx.CloudZone)
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	zoneConfig, err := conn.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	req := &certificate.Request{}
+	req.Subject.CommonName = test.RandCN()
+	req.Subject.Organization = []string{"Venafi, Inc."}
+	req.Subject.OrganizationalUnit = []string{"Automated Tests"}
+
+	location := certificate.Location{
+		Instance: "vcert-sdk",
+	}
+	req.Location = &location
+
+	err = conn.GenerateRequest(zoneConfig, req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	pickupID, err := conn.RequestCertificate(req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	renewTooEarly := &certificate.RenewalRequest{CertificateDN: pickupID}
+	renewTooEarly.CertificateRequest.Location = &location
+
+	_, err = conn.RenewCertificate(renewTooEarly)
+	if err == nil {
+		t.Fatal("it should return error on attempt to renew a certificate that is not issued yet")
+	}
+
+	req.PickupID = pickupID
+	req.ChainOption = certificate.ChainOptionRootFirst
+	startTime := time.Now()
+	pcc, _ := certificate.NewPEMCollection(nil, nil, nil)
+	for {
+		pcc, err = conn.RetrieveCertificate(req)
+		if err != nil {
+			_, ok := err.(endpoint.ErrCertificatePending)
+			if ok {
+				if time.Now().After(startTime.Add(time.Duration(600) * time.Second)) {
+					err = endpoint.ErrRetrieveCertificateTimeout{CertificateID: pickupID}
+					break
+				}
+				time.Sleep(time.Duration(10) * time.Second)
+				continue
+			}
+			break
+		}
+		break
+	}
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	p, _ := pem.Decode([]byte(pcc.Certificate))
+	cert, err := x509.ParseCertificate(p.Bytes)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	fp := sha1.Sum(cert.Raw)
+	fingerprint := strings.ToUpper(hex.EncodeToString(fp[:]))
+	t.Logf("CERT: %s\n", pcc.Certificate)
+	t.Logf("FINGERPRINT: %s\n", fingerprint)
+
+	// time to renew
+	renewByFingerprint := &certificate.RenewalRequest{Thumbprint: strings.ToUpper(fingerprint)}
+	renewByFingerprint.CertificateRequest.Location = &location
+	reqId3, err := conn.RenewCertificate(renewByFingerprint)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("requested renewal for %s, will pickup by %s", fingerprint, reqId3)
+
+	renewByCertificateDN := &certificate.RenewalRequest{CertificateDN: reqId3}
+	renewByCertificateDN.CertificateRequest.Location = &location
+	reqId1, err := conn.RenewCertificate(renewByCertificateDN)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("requested renewal for %s, will pickup by %s", pickupID, reqId1)
+
+}
+
 func TestReadPolicyConfiguration(t *testing.T) {
 	//todo: add more zones
 	conn := getTestConnector(ctx.CloudZone)
@@ -478,20 +600,16 @@ func TestReadPolicyConfiguration(t *testing.T) {
 		t.Fatalf("%s", err)
 	}
 	expectedPolice := endpoint.Policy{
-		[]string{"^.*.example.com$", "^.*.example.org$", "^.*.example.net$", "^.*.invalid$", "^.*.local$", "^.*.localhost$", "^.*.test$", "^.*.vfidev.com$"},
-		[]string{"^.*$"},
-		[]string{"^.*$"},
-		[]string{"^.*$"},
-		[]string{"^.*$"},
-		[]string{"^.*$"},
-		[]endpoint.AllowedKeyConfiguration{{certificate.KeyTypeRSA, []int{2048, 4096}, nil}},
-		[]string{"^.*$"},
-		nil,
-		nil,
-		nil,
-		nil,
-		true,
-		true,
+		SubjectCNRegexes:         []string{"^.*.example.com$", "^.*.example.org$", "^.*.example.net$", "^.*.invalid$", "^.*.local$", "^.*.localhost$", "^.*.test$", "^.*.vfidev.com$"},
+		SubjectORegexes:          []string{"^.*$"},
+		SubjectOURegexes:         []string{"^.*$"},
+		SubjectSTRegexes:         []string{"^.*$"},
+		SubjectLRegexes:          []string{"^.*$"},
+		SubjectCRegexes:          []string{"^.*$"},
+		AllowedKeyConfigurations: []endpoint.AllowedKeyConfiguration{{certificate.KeyTypeRSA, []int{2048, 4096}, nil}},
+		DnsSanRegExs:             []string{"^.*$"},
+		AllowWildcards:           true,
+		AllowKeyReuse:            true,
 	}
 
 	if !reflect.DeepEqual(*policy, expectedPolice) {
@@ -537,7 +655,7 @@ func TestImportCertificate(t *testing.T) {
 		t.Fatalf("%s", err)
 	}
 	importReq := &certificate.ImportRequest{
-		PolicyDN:        ctx.CloudZone,
+		PolicyDN:        "",
 		ObjectName:      fmt.Sprintf("import%v.venafi.example.com", time.Now().Unix()),
 		CertificateData: crt,
 		PrivateKeyData:  "",
@@ -617,9 +735,9 @@ func TestGetURL(t *testing.T) {
 		t.Fatalf("Get URL did not match expected value. Expected: %s Actual: %s", fmt.Sprintf("%s%s", expectedURL, urlResourceCertificateRequests), url)
 	}
 
-	url = condor.getURL(urlResourceCertificateRetrieveViaCSR)
-	if !strings.EqualFold(url, fmt.Sprintf("%s%s", expectedURL, urlResourceCertificateRetrieveViaCSR)) {
-		t.Fatalf("Get URL did not match expected value. Expected: %s Actual: %s", fmt.Sprintf("%s%s", expectedURL, urlResourceCertificateRetrieveViaCSR), url)
+	url = condor.getURL(urlResourceCertificateRetrievePem)
+	if !strings.EqualFold(url, fmt.Sprintf("%s%s", expectedURL, urlResourceCertificateRetrievePem)) {
+		t.Fatalf("Get URL did not match expected value. Expected: %s Actual: %s", fmt.Sprintf("%s%s", expectedURL, urlResourceCertificateRetrievePem), url)
 	}
 	condor.baseURL = ""
 	url = condor.getURL(urlResourceUserAccounts)
