@@ -110,7 +110,10 @@ func normalizeURL(url string) (normalizedURL string, err error) {
 
 func (c *Connector) SetZone(z string) {
 	c.zone = z
-	c.parseZone()
+	err := c.parseZone()
+	if err != nil {
+		fmt.Sprintf(err.Error())
+	}
 }
 
 func (c *Connector) GetType() endpoint.ConnectorType {
