@@ -112,7 +112,7 @@ func (c *Connector) SetZone(z string) {
 	c.zone = z
 	err := c.parseZone()
 	if err != nil {
-		fmt.Sprintf(err.Error())
+		fmt.Print(err)
 	}
 }
 
