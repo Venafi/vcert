@@ -63,24 +63,21 @@ const (
 
 // Connector contains the base data needed to communicate with the Venafi Cloud servers
 type Connector struct {
-	baseURL         string
-	apiKey          string
-	verbose         bool
-	user            *userDetails
-	trust           *x509.CertPool
-	zone            string
-	applicationName string
-	templateAlias   string
-	client          *http.Client
+	baseURL string
+	apiKey  string
+	verbose bool
+	user    *userDetails
+	trust   *x509.CertPool
+	zone    cloudZone
+	client  *http.Client
 }
 
 // NewConnector creates a new Venafi Cloud Connector object used to communicate with Venafi Cloud
 func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (*Connector, error) {
-	c := Connector{verbose: verbose, trust: trust, zone: zone}
-	err := c.parseZone()
-	if err != nil {
-		return nil, err
-	}
+	cZone := cloudZone{zone: zone}
+	c := Connector{verbose: verbose, trust: trust, zone: cZone}
+
+	var err error
 	c.baseURL, err = normalizeURL(url)
 	if err != nil {
 		return nil, err
@@ -109,11 +106,8 @@ func normalizeURL(url string) (normalizedURL string, err error) {
 }
 
 func (c *Connector) SetZone(z string) {
-	c.zone = z
-	err := c.parseZone()
-	if err != nil {
-		fmt.Print(err)
-	}
+	cZone := cloudZone{zone: z}
+	c.zone = cZone
 }
 
 func (c *Connector) GetType() endpoint.ConnectorType {
@@ -183,11 +177,11 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 		}
 	}
 
-	appDetails, err := c.getAppDetailsByName(c.applicationName)
+	appDetails, err := c.getAppDetailsByName(c.zone.getApplicationName())
 	if err != nil {
 		return "", err
 	}
-	templateId := appDetails.CitAliasToIdMap[c.templateAlias]
+	templateId := appDetails.CitAliasToIdMap[c.zone.getTemplateAlias()]
 
 	cloudReq := certificateRequest{
 		CSR:           string(req.GetCSR()),
@@ -595,7 +589,7 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 	}
 	zone := req.PolicyDN
 	if zone == "" {
-		appDetails, err := c.getAppDetailsByName(c.applicationName)
+		appDetails, err := c.getAppDetailsByName(c.zone.getApplicationName())
 		if err != nil {
 			return nil, err
 		}
@@ -662,7 +656,7 @@ func (c *Connector) SetHTTPClient(client *http.Client) {
 }
 
 func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.CertificateInfo, error) {
-	if c.zone == "" {
+	if c.zone.String() == "" {
 		return nil, fmt.Errorf("empty zone")
 	}
 	const batchSize = 50
@@ -701,7 +695,7 @@ func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.Cert
 
 func (c *Connector) getCertsBatch(page, pageSize int, withExpired bool) ([]certificate.CertificateInfo, error) {
 
-	appDetails, err := c.getAppDetailsByName(c.applicationName)
+	appDetails, err := c.getAppDetailsByName(c.zone.getApplicationName())
 	if err != nil {
 		return nil, err
 	}
@@ -753,8 +747,8 @@ func (c *Connector) getAppDetailsByName(appName string) (*ApplicationDetails, er
 
 func (c *Connector) getTemplateByID() (*certificateTemplate, error) {
 	url := c.getURL(urlResourceTemplate)
-	appNameEncoded := netUrl.PathEscape(c.applicationName)
-	citAliasEncoded := netUrl.PathEscape(c.templateAlias)
+	appNameEncoded := netUrl.PathEscape(c.zone.getApplicationName())
+	citAliasEncoded := netUrl.PathEscape(c.zone.getTemplateAlias())
 	url = fmt.Sprintf(url, appNameEncoded, citAliasEncoded)
 	statusCode, status, body, err := c.request("GET", url, nil)
 	if err != nil {

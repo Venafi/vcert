@@ -443,20 +443,48 @@ func parseApplicationDetailsData(b []byte) (*ApplicationDetails, error) {
 	return &data, nil
 }
 
-func (c *Connector) parseZone() error {
-	if c.zone == "" {
+type cloudZone struct {
+	zone          string
+	appName       string
+	templateAlias string
+}
+
+func (z cloudZone) String() string {
+	return z.zone
+}
+
+func (z *cloudZone) getApplicationName() string {
+	if z.appName == "" {
+		err := z.parseZone()
+		if err != nil {
+			return ""
+		}
+	}
+	return z.appName
+}
+
+func (z *cloudZone) getTemplateAlias() string {
+	if z.templateAlias == "" {
+		err := z.parseZone()
+		if err != nil {
+			return ""
+		}
+	}
+	return z.templateAlias
+}
+
+func (z *cloudZone) parseZone() error {
+	if z.zone == "" {
 		return fmt.Errorf("zone not specified")
 	}
 
-	segments := strings.Split(c.zone, "\\")
+	segments := strings.Split(z.zone, "\\")
 	if len(segments) > 2 || len(segments) < 2 {
-		c.applicationName = ""
-		c.templateAlias = ""
 		return fmt.Errorf("invalid zone format")
 	}
 
-	c.applicationName = segments[0]
-	c.templateAlias = segments[1]
+	z.appName = segments[0]
+	z.templateAlias = segments[1]
 
 	return nil
 }
