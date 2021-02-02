@@ -286,7 +286,8 @@ Options:
 | `-u`             | Use to specify the URL of the Venafi Trust Protection Platform API server.<br/>Example: `-u https://tpp.example.com` |
 | `--username`     | Use to specify the username of a Venafi Platform user. Required if `--p12-file` or `--t` is not present and may not be combined with either. |
 
-### Checking the validity of an Authorization Token ![Minimum Patch Level: TPP 20.1.7+ and 20.2.2+](https://img.shields.io/badge/Minimum%20Patch%20Level-%20TPP%2020.1.7%20and%2020.2.2-f9a90c)
+### Checking the validity of an Authorization Token
+![Minimum Patch Level: TPP 20.1.7+ and 20.2.2+](https://img.shields.io/badge/Minimum%20Patch%20Level-%20TPP%2020.1.7%20and%2020.2.2-f9a90c)
 ```
 VCert checkcred -u <tpp url> -t <access token>
 ```
