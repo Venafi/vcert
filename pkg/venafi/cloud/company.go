@@ -42,7 +42,7 @@ type zone struct {
 	CertificateIssuingTemplateId string    `json:"certificateIssuingTemplateId"`
 }
 
-func (z *zone) getZoneConfiguration(ud *userDetails, policy *certificateTemplate) (zoneConfig *endpoint.ZoneConfiguration) {
+func getZoneConfiguration(policy *certificateTemplate) (zoneConfig *endpoint.ZoneConfiguration) {
 	zoneConfig = endpoint.NewZoneConfiguration()
 	if policy == nil {
 		return
@@ -52,6 +52,7 @@ func (z *zone) getZoneConfiguration(ud *userDetails, policy *certificateTemplate
 	return
 }
 
+/*
 const (
 	zoneKeyGeneratorDeviceKeyGeneration  = "DEVICE_KEY_GENERATION"
 	zoneKeyGeneratorCentralKeyGeneration = "CENTRAL_KEY_GENERATION"
@@ -67,7 +68,7 @@ const (
 	zoneEncryptionTypeRESERVED3  = "RESERVED3"
 	zoneEncryptionTypeUnknown    = "UNKNOWN"
 )
-
+*/
 const (
 	zoneHashAlgorithmMD5         = "MD5"
 	zoneHashAlgorithmSHA1        = "SHA1"
@@ -80,6 +81,7 @@ const (
 	zoneHashAlgorithmGOSTR341194 = "GOSTR3411_94"
 )
 
+/*
 const (
 	zoneValidityPeriodLTE90 = "LTE_90_DAYS"
 	zoneValidityPeriodGT90  = "GT_90_DAYS"
@@ -92,3 +94,4 @@ const (
 	zoneCertificateAuthorityTypePrivate    = "PRIVATE_CA"
 	zoneCertificateAuthorityTypeOther      = "OTHER"
 )
+*/

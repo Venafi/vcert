@@ -44,6 +44,7 @@ Feature: renew action with `-csr service` option
       And it should write certificate to the file "c1.pem"
       And private key in "k1.pem" and certificate in "c1.pem" should have the same modulus
 
+  @TODO # This scenario is not currently working due to reuse csr not being implemented yet in OutagePredict
   Scenario: renew certificate in Cloud with -csr=service which is working only if Zone's policy allows key reuse
     Given I enroll random certificate using Cloud with -no-prompt -key-file k.pem -cert-file c.pem -timeout 180
       And it should write private key to the file "k.pem"

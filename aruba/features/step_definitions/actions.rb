@@ -140,3 +140,7 @@ When(/^I void access token grant$/) do
     Then I try to run `#{cmd}`
   }
 end
+
+Before('@TODO') do  # will only run if the test has @TODO annotation
+  skip_this_scenario
+end
