@@ -52,12 +52,12 @@ The following options apply to the `enroll`, `pickup`, `renew`, and `revoke` act
 | ------------------- | ------------------------------------------------------------ |
 | `--config`          | Use to specify INI configuration file containing connection details.  Available parameters:  *tpp_url*, *tpp_user*, *tpp_password*, *tpp_zone*, *trust_bundle*, *test_mode* |
 | `--no-prompt`       | Use to exclude password prompts.  If you enable the prompt and you enter incorrect information, an error is displayed.  This option is useful with scripting. |
-| `--t`               | Use to specify the token required to authenticate with Venafi Platform 19.2 (and higher).  See the [Appendix](#obtaining-an-authorization-token) for help using VCert to obtain a new authorization token. |
+| `--t`               | Use to specify the token required to authenticate with Venafi Platform 20.1 (and higher).  See the [Appendix](#obtaining-an-authorization-token) for help using VCert to obtain a new authorization token. |
 | `--test-mode`       | Use to test operations without connecting to Venafi Platform.  This option is useful for integration tests where the test environment does not have access to Venafi Platform.  Default is false. |
 | `--test-mode-delay` | Use to specify the maximum number of seconds for the random test-mode connection delay.  Default is 15 (seconds). |
 | `--timeout`         | Use to specify the maximum amount of time to wait in seconds for a certificate to be processed by Venafi Platform. Default is 120 (seconds). |
-| `--tpp-password`    | **[DEPRECATED]** Use to specify the password required to authenticate with Venafi Platform.  Use `-t` instead for Venafi Platform 19.2 (and higher). |
-| `--tpp-user`        | **[DEPRECATED]** Use to specify the username required to authenticate with Venafi Platform.  Use `-t` instead for Venafi Platform 19.2 (and higher). |
+| `--tpp-password`    | **[DEPRECATED]** Use to specify the password required to authenticate with Venafi Platform.  Use `-t` instead for Venafi Platform 20.1 (and higher). |
+| `--tpp-user`        | **[DEPRECATED]** Use to specify the username required to authenticate with Venafi Platform.  Use `-t` instead for Venafi Platform 20.1 (and higher). |
 | `--trust-bundle`    | Use to specify a file with PEM formatted certificates to be used as trust anchors when communicating with Venafi Platform. VCert uses the trust store of your operating system for this purpose if not specified.<br/>Example: `--trust-bundle /path-to/bundle.pem` |
 | `-u`                | Use to specify the URL of the Venafi Trust Protection Platform API server.<br/>Example: `-u https://tpp.venafi.example` |
 | `--verbose`         | Use to increase the level of logging detail, which is helpful when troubleshooting issues. |
