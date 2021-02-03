@@ -87,8 +87,7 @@ type certificateRequest struct {
 }
 
 type certificateStatus struct {
-	Id string `json:"id,omitempty"`
-	//ManagedCertificateId      string                            `json:"managedCertificateId,omitempty"`
+	Id                        string                            `json:"id,omitempty"`
 	CertificateIdsList        []string                          `json:"certificateIds,omitempty"`
 	ApplicationId             string                            `json:"applicationId,omitempty"`
 	TemplateId                string                            `json:"certificateIssuingTemplateId,omitempty"`

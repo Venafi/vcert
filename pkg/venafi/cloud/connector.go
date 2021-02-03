@@ -547,7 +547,6 @@ type managedCertificate struct {
 	Id                   string `json:"id"`
 	CompanyId            string `json:"companyId"`
 	CertificateRequestId string `json:"certificateRequestId"`
-	//CertificateName            string `json:"certificateName"`
 }
 
 func (c *Connector) getCertificate(certificateId string) (*managedCertificate, error) {
