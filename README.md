@@ -104,7 +104,9 @@ Unit tests:
 make test
 ```
 
-Integration tests for Trust Protection Platform and Cloud products require endpoint connection variables (Venafi Cloud products display the API key and Zone values in the user interface):
+Integration tests for Trust Protection Platform and Venafi Cloud require access to those products. Environment 
+variables are used to specify required settings including credentials.  The Venafi Cloud API key and zone value
+fragments (i.e. `Application Name`\\`Issuing Template API Alias`) are readily available in the web interface.
 
 ```sh
 export TPP_URL=https://tpp.venafi.example/vedsdk
@@ -120,8 +122,8 @@ make tpp_test
 ```sh
 export CLOUD_URL=https://api.venafi.cloud/v1
 export CLOUD_APIKEY=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-export CLOUD_ZONE=zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzzzzzz
-export CLOUD_ZONE_RESTRICTED=yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy
+export CLOUD_ZONE='My Application\Permissive CIT'
+export CLOUD_ZONE_RESTRICTED='Your Application\Restrictive CIT'
 
 make cloud_test
 ```
