@@ -313,7 +313,7 @@ func parseZoneConfigurationResult(httpStatusCode int, httpStatus string, body []
 	switch httpStatusCode {
 	case http.StatusOK:
 		return parseZoneConfigurationData(body)
-	case http.StatusBadRequest:
+	case http.StatusBadRequest, http.StatusNotFound:
 		return nil, verror.ZoneNotFoundError
 	default:
 		respErrors, err := parseResponseErrors(body)
