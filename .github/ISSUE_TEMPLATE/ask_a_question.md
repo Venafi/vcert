@@ -1,5 +1,5 @@
 ---
-name: Ask a question
+name: "\U0001F4AC Ask a question"
 about: How can we help you?
 
 ---
