@@ -310,6 +310,10 @@ const (
 	urlResourceAllMetadataGet         urlResource = "vedsdk/metadata/getitems"
 	urlResourceMetadataGet            urlResource = "vedsdk/metadata/get"
 	urlResourceSystemStatusVersion    urlResource = "vedsdk/systemstatus/version"
+	urlResourceCreatePolicy           urlResource = "vedsdk/Config/Create"
+	urlResourceWritePolicy            urlResource = "vedsdk//Config/WritePolicy"
+	urlResourceIsValidPolicy          urlResource = "vedsdk//Config/isvalid"
+	urlResourceReadPolicy             urlResource = "vedsdk//Config/ReadPolicy"
 )
 
 const (

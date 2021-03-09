@@ -234,6 +234,9 @@ func (c *Connector) request(method string, url string, data interface{}, authNot
 	if method == "POST" {
 		b, _ = json.Marshal(data)
 		payload = bytes.NewReader(b)
+	}else if method == "PUT"{
+		b, _ = json.Marshal(data)
+		payload = bytes.NewReader(b)
 	}
 
 	r, err := http.NewRequest(method, url, payload)
@@ -245,6 +248,9 @@ func (c *Connector) request(method string, url string, data interface{}, authNot
 		r.Header.Add("tppl-api-key", c.apiKey)
 	}
 	if method == "POST" {
+		r.Header.Add("Accept", "application/json")
+		r.Header.Add("content-type", "application/json")
+	} else if method == "PUT"{
 		r.Header.Add("Accept", "application/json")
 		r.Header.Add("content-type", "application/json")
 	} else {

@@ -22,6 +22,8 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"github.com/Venafi/vcert/v4/pkg/policy"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
 	"net"
@@ -120,6 +122,28 @@ var (
 		UsageText: ` vcert renew <Required Venafi Cloud Config> OR <Required Trust Protection Platform Config> <Options>
 		vcert renew -u https://tpp.example.com -t <TPP access token> --id <ID value>
 		vcert renew -k <Venafi Cloud API key> --thumbprint <cert SHA1 fingerprint>`,
+	}
+
+	commandCreatePolicy = &cli.Command{
+		Before: runBeforeCommand,
+		Name:   commandCreatePolicyName,
+		Flags:  createPolicyFlgs,
+		Action: doCommandCreatePolicy1,
+		Usage:  "To create a new policy",
+		UsageText: ` vcert setpolicy <Required Venafi Cloud Config> OR <Required Trust Protection Platform Config> <Options>
+		vcert setpolicy -u https://tpp.example.com -t <TPP access token> --name my_policy --location policy_location
+		vcert setpolicy -k <Venafi Cloud API key> --name my_policy --location policy_location`,
+	}
+
+	commandGetPolicy = &cli.Command{
+		Before: runBeforeCommand,
+		Name:   commandGetePolicyName,
+		Flags:  getPolicyFlgs,
+		Action: doCommandGetPolicy1,
+		Usage:  "To get a policy details",
+		UsageText: ` vcert getpolicy <Required Venafi Cloud Config> OR <Required Trust Protection Platform Config> <Options>
+		vcert getpolicy -u https://tpp.example.com -t <TPP access token> --name my_policy --location policy_location
+		vcert getpolicy -k <Venafi Cloud API key> --name my_policy --location policy_location`,
 	}
 )
 
@@ -607,6 +631,83 @@ func doCommandRevoke1(c *cli.Context) error {
 		return fmt.Errorf("Failed to revoke certificate: %s", err)
 	}
 	logf("Successfully created revocation request for %s", requestedFor)
+
+	return nil
+}
+
+func doCommandCreatePolicy1(c *cli.Context) error {
+
+	policyName := flags.policyName
+	policySpecLocation := flags.policySpecLocation
+
+	logf("Loading policy specification %s", policyName)
+
+	file, bytes, err := getFileAndBytes(policySpecLocation)
+
+	if err != nil {
+		return err
+	}
+
+	logf("Policy specification file was successfully opened")
+
+	fileExt := policy.GetFileType(policySpecLocation)
+	fileExt = strings.ToLower(fileExt)
+
+	//based on the extention call the appropriate method to feed the policySpecification
+	//structure.
+	var policySpecification policy.PolicySpecification
+	if fileExt == policy.JsonExtention {
+		err = json.Unmarshal(bytes, &policySpecification)
+		if err != nil {
+			return err
+		}
+	} else if fileExt == policy.YamlExtention {
+		err = yaml.Unmarshal(bytes, &policySpecification)
+		if err != nil {
+			return err
+		}
+	} else {
+		return fmt.Errorf("the specified file is not supported")
+	}
+
+	cfg, err := buildConfig(c, &flags)
+
+	if err != nil {
+		return fmt.Errorf("failed to build vcert config: %s", err)
+	}
+	connector, err := vcert.NewClient(&cfg)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = connector.CreatePolicy(policyName, &policySpecification)
+
+	defer file.Close()
+
+	return err
+}
+
+func doCommandGetPolicy1(c *cli.Context) error {
+
+	policyName := flags.policyName
+	policySpecLocation := flags.policySpecLocation
+
+	cfg, err := buildConfig(c, &flags)
+
+	if err != nil {
+		return fmt.Errorf("failed to build vcert config: %s", err)
+	}
+	connector, err := vcert.NewClient(&cfg)
+
+	if err != nil {
+		return err
+	}
+
+	ps, err := connector.GetPolicy(policyName)
+
+	file, _ := json.MarshalIndent(ps, "", "")
+	ioutil.WriteFile(policySpecLocation, file, 0644)
 
 	return nil
 }

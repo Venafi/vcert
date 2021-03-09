@@ -21,10 +21,12 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"github.com/Venafi/vcert/v4/pkg/policy"
 	"log"
 	"net/http"
 	neturl "net/url"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -661,6 +663,438 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 	return
 }
 
+func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) {
+	var ps *policy.PolicySpecification
+	var tp policy.TppPolicy
+	//validate if the policy exists
+	if !c.ExistsPolicy(name) {
+		return nil, fmt.Errorf("the specified policy does not exists")
+	}
+	tp.Name = &name
+
+	// Contact
+	contact, _,  err := getPolicyAttibute(c, policy.TppContact, name)
+	if err != nil{
+		return nil, err
+	}
+	if contact != nil {
+		tp.Contact = contact
+	}
+
+	approver, _, err := getPolicyAttibute(c, policy.TppApprover, name)
+	if err != nil{
+		return nil, err
+	}
+	if approver != nil {
+		tp.Approver = approver
+	}
+
+	prohitedWildcard, _,  err := getPolicyAttibute(c, policy.TppPRProhibitWildcard, name)
+
+	if err != nil{
+		return nil, err
+	}
+
+	if prohitedWildcard != nil {
+		boolVal, err := strconv.ParseBool(prohitedWildcard[0])
+		if err != nil{
+			return nil, err
+		}
+		tp.ProhibitWildcard = &boolVal
+	}
+
+	domainSuffixWhitelist, _,  err := getPolicyAttibute(c, policy.TppDomainSuffixWhitelist, name)
+
+	if err != nil{
+		return nil, err
+	}
+
+	if domainSuffixWhitelist != nil {
+		tp.DomainSuffixWhitelist = domainSuffixWhitelist
+	}
+
+	//resolve Certificate authority
+	certAuthority, _,  err := getPolicyAttibute(c, policy.TppCertificateAuthority, name)
+
+	if err != nil{
+		return nil, err
+	}
+
+	if certAuthority != nil {
+		tp.CertificateAuthority = &certAuthority[0]
+	}
+
+	//Organization
+	organization, locked, err := getPolicyAttibute(c, policy.TppOrganization, name)
+
+	if err != nil{
+		return nil, err
+	}
+
+	if organization != nil {
+		tp.Organization = getLockedAttribute(&organization[0], locked)
+	}
+
+	//Org Unit
+	organizationalUnit, locked, err := getPolicyAttibute(c, policy.TppOrganizationalUnit, name)
+
+	if err != nil{
+		return nil, err
+	}
+
+	if organizationalUnit != nil {
+		tp.OrganizationalUnit = getLockedAttribute(&organizationalUnit[0], locked)
+	}
+
+
+	//City
+	city, locked, err := getPolicyAttibute(c, policy.TppCity, name)
+
+	if err != nil{
+		return nil, err
+	}
+
+	if city != nil {
+		tp.City = getLockedAttribute(&city[0], locked)
+	}
+
+	//State
+	state, locked, err := getPolicyAttibute(c, policy.TppState, name)
+
+	if err != nil{
+		return nil, err
+	}
+
+	if state != nil {
+		tp.State = getLockedAttribute(&state[0], locked)
+	}
+
+	//country
+	country, locked, err := getPolicyAttibute(c, policy.TppCountry, name)
+
+	if err != nil{
+		return nil, err
+	}
+
+	if city != nil {
+		tp.Country = getLockedAttribute(&country[0], locked)
+	}
+
+
+	//KeyAlgorithm
+	keyAlgorithm, locked, err := getPolicyAttibute(c, policy.TppKeyAlgorithm, name)
+
+	if err != nil{
+		return nil, err
+	}
+
+	if city != nil {
+		tp.KeyAlgorithm = getLockedAttribute(&keyAlgorithm[0], locked)
+	}
+
+	//Key Bit Strength
+	keyBitStrength, locked, err := getPolicyAttibute(c, policy.TppKeyBitStrength, name)
+
+	if err != nil{
+		return nil, err
+	}
+
+	if keyBitStrength != nil {
+		tp.KeyBitStrength = getLockedAttribute(&keyBitStrength[0], locked)
+	}
+
+	//Elliptic Curve
+	ellipticCurve, locked, err := getPolicyAttibute(c, policy.TppEllipticCurve, name)
+
+	if err != nil{
+		return nil, err
+	}
+
+	if ellipticCurve != nil {
+		tp.EllipticCurve = getLockedAttribute(&ellipticCurve[0], locked)
+	}
+
+	//Manual Csr
+	manualCsr, locked, err := getPolicyAttibute(c, policy.TppManualCsr, name)
+
+	if err != nil{
+		return nil, err
+	}
+
+	if manualCsr != nil {
+		tp.ManualCsr = getLockedAttribute(&manualCsr[0], locked)
+	}
+
+	//Prohibited SAN Types
+	prohibitedSANTypes, _,  err := getPolicyAttibute(c, policy.TppProhibitedSANTypes, name)
+
+	if err != nil{
+		return nil, err
+	}
+
+	if prohibitedSANTypes != nil {
+		tp.ProhibitedSANType = prohibitedSANTypes
+	}
+
+	//AllowPrivate Key Reuse
+	allowPrivateKeyReuse, _,  err := getPolicyAttibute(c, policy.TppAllowPrivateKeyReuse, name)
+
+	if err != nil{
+		return nil, err
+	}
+
+	if allowPrivateKeyReuse != nil {
+		boolVal, err := strconv.ParseBool(allowPrivateKeyReuse[0])
+		if err != nil{
+			return nil, err
+		}
+		tp.AllowPrivateKeyReuse = &boolVal
+	}
+
+
+	//TppWantRenewal
+	wantRenewal, _,  err := getPolicyAttibute(c, policy.TppWantRenewal, name)
+
+	if err != nil{
+		return nil, err
+	}
+
+	if wantRenewal != nil {
+		boolVal, err := strconv.ParseBool(wantRenewal[0])
+		if err != nil{
+			return nil, err
+		}
+		tp.WantRenewal = &boolVal
+	}
+
+	ps, err = policy.BuildPolicySpecification(tp)
+	if err != nil{
+		return nil, err
+	}
+
+	return ps, nil
+}
+
+func (c *Connector) ExistsPolicy(policyName string) bool {
+
+	req := policy.PolicyExistPaloadRequest{
+		ObjectDN: policyName,
+	}
+	_, _, body, _ := c.request("POST", urlResourceIsValidPolicy, req)
+
+	var response policy.PolicyIsValidResponse
+	json.Unmarshal(body, &response)
+
+	//if error is not null then the policy doesn't exists
+	if (response.Error != "") && (response.Result == 400) {
+		return false
+	}
+
+	return true
+}
+
+func (c *Connector) CreatePolicy(name string, ps *policy.PolicySpecification) (string, error) {
+	//	statusCode, status, body, err := c.request("POST", urlResourceCertificatePolicy, rq)
+
+	//validate policy specification and policy
+	err := policy.ValidateTppPolicySpecification(ps)
+
+	if err != nil {
+		return "", err
+	}
+
+	log.Printf("policy specification were correclty validated")
+
+	tppPolicy := policy.BuildTppPolicy(ps)
+
+
+	if !strings.HasPrefix(name, policy.RootPath) {
+		name = policy.RootPath + name
+
+	}
+
+	tppPolicy.Name = &name
+
+	var policyExists = false
+
+	//validate if the policy exists
+	if c.ExistsPolicy(name) {
+		policyExists = true
+		log.Printf("policy: %s exists", name)
+	}
+
+	//validate if the parent exist
+	parent := policy.GetParent(name)
+	if parent != policy.RootPath && !c.ExistsPolicy(parent) {
+
+		return "", fmt.Errorf("the policy's parent doesn't exists")
+
+	}
+	var status = ""
+
+	//step 1 create root policy folder.
+	if !policyExists {
+
+		log.Printf("creating policy: %s", name)
+
+		req := policy.PolicyPayloadRequest{
+			Class:    policy.PolicyClass,
+			ObjectDN: *(tppPolicy.Name),
+		}
+
+		_, status, _, err = c.request("POST", urlResourceCreatePolicy, req)
+
+		if err != nil {
+			return "", err
+		}
+	}
+	//step 2 create policy's attributes.
+
+	log.Printf("setting policy's attributes")
+
+
+	//create Contact
+	if tppPolicy.Contact != nil{
+		_, status, _, err = createPolicyAttribute(c, policy.TppContact, tppPolicy.Contact, *(tppPolicy.Name), true)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	//create Approver
+	if tppPolicy.Approver != nil{
+		_, status, _, err = createPolicyAttribute(c, policy.TppApprover, tppPolicy.Approver, *(tppPolicy.Name), true)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	//create Domain Suffix Whitelist
+	if tppPolicy.DomainSuffixWhitelist != nil {
+		_, status, _, err = createPolicyAttribute(c, policy.TppDomainSuffixWhitelist, tppPolicy.DomainSuffixWhitelist, *(tppPolicy.Name), true)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	//create Prohibit Wildcard
+	if tppPolicy.ProhibitWildcard != nil {
+		_, status, _, err = createPolicyAttribute(c, policy.TppPRProhibitWildcard, []string{strconv.FormatBool(*(tppPolicy.ProhibitWildcard))}, *(tppPolicy.Name), false)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	//create Certificate Authority
+	if tppPolicy.CertificateAuthority != nil {
+		_, status, _, err = createPolicyAttribute(c, policy.TppCertificateAuthority, []string{*(tppPolicy.CertificateAuthority)}, *(tppPolicy.Name), false)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	//create Organization attribute
+	if tppPolicy.Organization != nil {
+		_, status, _, err = createPolicyAttribute(c, policy.TppOrganization, []string{tppPolicy.Organization.Value}, *(tppPolicy.Name), tppPolicy.Organization.Locked)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	//create Organizational Unit attribute
+	if tppPolicy.OrganizationalUnit != nil {
+		_, status, _, err = createPolicyAttribute(c, policy.TppOrganizationalUnit, []string{tppPolicy.OrganizationalUnit.Value}, *(tppPolicy.Name), tppPolicy.OrganizationalUnit.Locked)
+		if err != nil {
+			return "", err
+		}
+	}
+	//create City attribute
+	if tppPolicy.City != nil {
+		_, status, _, err = createPolicyAttribute(c, policy.TppCity, []string{tppPolicy.City.Value}, *(tppPolicy.Name), tppPolicy.City.Locked)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	//create State attribute
+	if tppPolicy.State != nil {
+		_, status, _, err = createPolicyAttribute(c, policy.TppState, []string{tppPolicy.State.Value}, *(tppPolicy.Name), tppPolicy.State.Locked)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	//create Country attribute
+	if tppPolicy.Country != nil {
+		_, status, _, err = createPolicyAttribute(c, policy.TppCountry, []string{tppPolicy.Country.Value}, *(tppPolicy.Name), tppPolicy.Country.Locked)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	//create Key Algorithm attribute
+	if tppPolicy.KeyAlgorithm != nil {
+		_, status, _, err = createPolicyAttribute(c, policy.TppKeyAlgorithm, []string{tppPolicy.KeyAlgorithm.Value}, *(tppPolicy.Name), tppPolicy.KeyAlgorithm.Locked)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	//create Key Bit Strength
+	if tppPolicy.KeyBitStrength != nil {
+		_, status, _, err = createPolicyAttribute(c, policy.TppKeyBitStrength, []string{tppPolicy.KeyBitStrength.Value}, *(tppPolicy.Name), tppPolicy.KeyBitStrength.Locked)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	//create Elliptic Curve attribute
+	if tppPolicy.EllipticCurve != nil {
+		_, status, _, err = createPolicyAttribute(c, policy.TppEllipticCurve, []string{tppPolicy.EllipticCurve.Value}, *(tppPolicy.Name), tppPolicy.EllipticCurve.Locked)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	//create Manual Csr attribute
+	if tppPolicy.ManualCsr != nil {
+		_, status, _, err = createPolicyAttribute(c, policy.TppManualCsr, []string{tppPolicy.ManualCsr.Value}, *(tppPolicy.Name), tppPolicy.ManualCsr.Locked)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	if tppPolicy.ProhibitedSANType != nil {
+		_, status, _, err = createPolicyAttribute(c, policy.TppProhibitedSANTypes, tppPolicy.ProhibitedSANType, *(tppPolicy.Name), false)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	//Allow Private Key Reuse" & "Want Renewal
+	if tppPolicy.AllowPrivateKeyReuse != nil {
+		_, status, _, err = createPolicyAttribute(c, policy.TppAllowPrivateKeyReuse, []string{strconv.FormatBool(*(tppPolicy.AllowPrivateKeyReuse))}, *(tppPolicy.Name), false)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	if tppPolicy.WantRenewal != nil {
+		_, status, _, err = createPolicyAttribute(c, policy.TppWantRenewal, []string{strconv.FormatBool(*(tppPolicy.WantRenewal))}, *(tppPolicy.Name), false)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	if policyExists {
+		log.Printf("policy %s were updated correctly", name)
+	} else {
+		log.Printf("policy %s were created correctly", name)
+	}
+
+	return status, nil
+}
+
 // RetrieveCertificate attempts to retrieve the requested certificate
 func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates *certificate.PEMCollection, err error) {
 
@@ -1160,4 +1594,66 @@ func (c *Connector) configDNToGuid(objectDN string) (guid string, err error) {
 	}
 	return resp.GUID, nil
 
+}
+
+func createPolicyAttribute(c *Connector, at string, av []string, n string, l bool) (statusCode int, statusText string, body []byte, err error) {
+
+	request := policy.PolicySetAttributePayloadRequest{
+		Locked:        l,
+		ObjectDN:      n,
+		Class:         policy.PolicyAttributeClass,
+		AttributeName: at,
+		Values:        av,
+	}
+	// if is locked is a policy value
+	// if is not locked then is a default.
+
+	statusCode, statusText, body, err = c.request("POST", urlResourceWritePolicy, request)
+
+	var response policy.PolicySetAttributeResponse
+
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		return statusCode, statusText, body, err
+	}
+
+	if response.Error != "" {
+		err = fmt.Errorf(response.Error)
+		return statusCode, statusText, body, err
+	}
+
+	return statusCode, statusText, body, err
+}
+
+func getPolicyAttibute(c *Connector, at string, n string) (s []string, b *bool, err error) {
+
+	request := policy.PolicyGetAttributePayloadRequest{
+		ObjectDN:      n,
+		Class:         policy.PolicyAttributeClass,
+		AttributeName: at,
+		Values:        []string{"1"},
+	}
+	// if is locked is a policy value
+	// if is not locked then is a default.
+	_, _, body, err := c.request("POST", urlResourceReadPolicy, request)
+	if err != nil {
+		return nil,nil, err
+	}
+
+	var response policy.PolicyGetAttributeResponse
+	json.Unmarshal(body, &response)
+
+	if len(response.Values) > 0 {
+		return response.Values, &response.Locked, nil
+	}
+	//no value set and no error.
+	return nil, nil, nil
+}
+
+func getLockedAttribute(v *string, l *bool) *policy.LockedAttribute{
+	lockedAttr := policy.LockedAttribute{
+		Value:  *(v),
+		Locked: *(l),
+	}
+	return &lockedAttr
 }

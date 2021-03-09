@@ -61,6 +61,11 @@ type certificateTemplate struct {
 		keyReuse bool
 	}
 }
+
+type CertificateTemplates struct {
+	CertificateTemplates []certificateTemplate `json:"certificateIssuingTemplates"`
+}
+
 type allowedKeyType struct {
 	KeyType    keyType
 	KeyLengths []int

@@ -490,6 +490,18 @@ var (
 		Destination: &flags.validDays,
 	}
 
+	flagPolicyName = &cli.StringFlag{
+		Name:        "z",
+		Usage:       "Specify the name of the new policy that will be created",
+		Destination: &flags.policyName,
+	}
+
+	flagPolicyConfigFile = &cli.StringFlag{
+		Name:        "file",
+		Usage:       "Specify the location of the policy specification",
+		Destination: &flags.policySpecLocation,
+	}
+
 	commonFlags              = []cli.Flag{flagInsecure, flagVerbose, flagNoPrompt}
 	keyFlags                 = []cli.Flag{flagKeyType, flagKeySize, flagKeyCurve, flagKeyFile, flagKeyPassword}
 	sansFlags                = []cli.Flag{flagDNSSans, flagEmailSans, flagIPSans, flagURISans, flagUPNSans}
@@ -639,6 +651,22 @@ var (
 	voidCredFlags = sortedFlags(flagsApppend(
 		commonCredFlags,
 		commonFlags,
+	))
+
+	createPolicyFlgs = sortedFlags(flagsApppend(
+		flagKey,
+		commonCredFlags,
+		commonFlags,
+		flagPolicyName,
+		flagPolicyConfigFile,
+	))
+
+	getPolicyFlgs = sortedFlags(flagsApppend(
+		flagKey,
+		commonCredFlags,
+		commonFlags,
+		flagPolicyName,
+		flagPolicyConfigFile,
 	))
 )
 

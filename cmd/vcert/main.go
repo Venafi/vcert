@@ -70,6 +70,8 @@ func main() {
 			commandPickup,
 			commandRenew,
 			commandRevoke,
+			commandCreatePolicy,
+			commandGetPolicy,
 		},
 		EnableBashCompletion: true, //todo: write BashComplete function for options
 		//HideHelp:             true,

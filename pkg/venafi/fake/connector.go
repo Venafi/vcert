@@ -24,6 +24,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"github.com/Venafi/vcert/v4/pkg/policy"
 	"math/big"
 	"net/http"
 	"strings"
@@ -35,6 +36,18 @@ import (
 
 type Connector struct {
 	verbose bool
+}
+
+func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) {
+	panic("implement me")
+}
+
+func (c *Connector) ExistsPolicy(policyName string) bool {
+	panic("implement me")
+}
+
+func (c *Connector) CreatePolicy(name string, ps *policy.PolicySpecification) (string, error) {
+	panic("implement me")
 }
 
 func NewConnector(verbose bool, trust *x509.CertPool) *Connector {

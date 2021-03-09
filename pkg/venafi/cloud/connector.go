@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"github.com/Venafi/vcert/v4/pkg/policy"
 	"net/http"
 	netUrl "net/url"
 	"regexp"
@@ -50,6 +51,8 @@ const (
 	urlResourceCertificateSearch      urlResource = basePath + "certificatesearch"
 	urlResourceTemplate               urlResource = basePath + "applications/%s/certificateissuingtemplates/%s"
 	urlAppDetailsByName               urlResource = basePath + "applications/name/%s"
+	urlIssuingTemplate                urlResource = apiVersion + "certificateissuingtemplates"
+	urlAppRoot                        urlResource = basePath + "applications"
 
 	defaultAppName = "Default"
 )
@@ -70,6 +73,157 @@ type Connector struct {
 	trust   *x509.CertPool
 	zone    cloudZone
 	client  *http.Client
+}
+
+func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) {
+	panic("implement me")
+}
+
+func (c *Connector) ExistsPolicy(policyName string) bool {
+	c.zone.appName = policy.GetApplicationName(policyName)
+	c.zone.templateAlias = policy.GetZoneName(policyName)
+	_, err := c.getTemplateByID()
+	if err != nil {
+		return false
+	}
+	return true
+}
+
+func (c *Connector) CreatePolicy(name string, ps *policy.PolicySpecification) (string, error) {
+
+	err := policy.ValidateCloudPolicySpecification(ps)
+	if err != nil {
+		return "", err
+	}
+
+	//validate if zone name is set and if zone already exist on venafi cloud if not create it.
+
+	citName := policy.GetZoneName(name)
+
+	if citName == "" {
+		return "", fmt.Errorf("cit name is empty, please provide zome in the format: app_name\\cit_name")
+	}
+
+	req := policy.BuildCloudCit(ps)
+	req.Name = citName
+	fmt.Printf(req.Name)
+
+	url := c.getURL(urlIssuingTemplate)
+
+	cit, err := getCit(c, citName)
+
+	if cit != nil {
+		url = fmt.Sprint(url, "/",cit.ID)
+		statusCode, status, body, err := c.request("PUT", url, req)
+
+		if err != nil {
+			return "", err
+		}
+
+		fmt.Printf(strconv.Itoa(statusCode))
+		fmt.Printf(status)
+		fmt.Printf(string(body))
+	} else {
+		statusCode, status, body, err := c.request("POST", url, req)
+
+		if err != nil {
+			return "", err
+		}
+
+		var cits CertificateTemplates
+
+		err = json.Unmarshal(body, &cits)
+
+		if err != nil {
+			return "", err
+		}
+
+		cit = &cits.CertificateTemplates[0]
+
+		fmt.Printf(strconv.Itoa(statusCode))
+		fmt.Printf(status)
+		fmt.Printf(string(body))
+	}
+
+	//validate if appName is set and if app already exist on Venafi cloud if not create it
+	appName := policy.GetApplicationName(name)
+
+	if appName == "" {
+		return "", fmt.Errorf("application name is empty, please provide zome in the format: app_name\\cit_name")
+	}
+
+	appDetails, statusCode, err := c.getAppDetailsByName(appName)
+
+	if err != nil && statusCode == 404 { //means application was not found.
+
+		ownerId := policy.OwnerIdType{
+			OwnerId:   "4b6608d0-c203-11ea-b166-838bcf6999b0",
+			OwnerType: "USER",
+		}
+
+		var appIssuingTemplate map[string]string
+
+		appIssuingTemplate = make(map[string]string)
+
+		appIssuingTemplate[cit.Name] = cit.ID
+
+		//create application
+		//fmt.Println(details.ApplicationId)
+		appReq := policy.ApplicationCreateRequest{
+			OwnerIdsAndTypes:                     []policy.OwnerIdType{ownerId},
+			Name:                                 appName,
+			Description:                          "This app was created by Vcert CLI",
+			CertificateIssuingTemplateAliasIdMap: appIssuingTemplate,
+		}
+
+		url := c.getURL(urlAppRoot)
+
+		statusCode, status, body, err := c.request("POST", url, appReq)
+		if err != nil {
+			return "", err
+		}
+
+		fmt.Println(statusCode)
+		fmt.Println(status)
+		fmt.Printf(string(body))
+
+	} else {
+		//update the application and assign the cit tho the application
+		if !c.ExistsPolicy(name) {
+
+			//the relation between the app-cit doesn't exist so create it.
+			var appIssuingTemplate map[string]string
+			appIssuingTemplate = make(map[string]string)
+			appIssuingTemplate[cit.Name] = cit.ID
+
+			ownerId := policy.OwnerIdType{
+				OwnerId:   "4b6608d0-c203-11ea-b166-838bcf6999b0",
+				OwnerType: "USER",
+			}
+
+
+			appReq := policy.ApplicationCreateRequest{
+				Name: appName,
+				OwnerIdsAndTypes: []policy.OwnerIdType{ownerId},
+				CertificateIssuingTemplateAliasIdMap: appIssuingTemplate,
+			}
+
+			url := c.getURL(urlAppRoot)
+
+			url = fmt.Sprint(url,"/", appDetails.ApplicationId)
+
+				statusCode, status, body, err := c.request("PUT", url, appReq)
+			if err != nil {
+				return "", err
+			}
+
+			fmt.Println(statusCode)
+			fmt.Println(status)
+			fmt.Printf(string(body))
+		}
+	}
+
+	return "", nil
 }
 
 // NewConnector creates a new Venafi Cloud Connector object used to communicate with Venafi Cloud
@@ -177,7 +331,7 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 		}
 	}
 
-	appDetails, err := c.getAppDetailsByName(c.zone.getApplicationName())
+	appDetails, _, err := c.getAppDetailsByName(c.zone.getApplicationName())
 	if err != nil {
 		return "", err
 	}
@@ -588,7 +742,7 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 	}
 	zone := req.PolicyDN
 	if zone == "" {
-		appDetails, err := c.getAppDetailsByName(c.zone.getApplicationName())
+		appDetails, _, err := c.getAppDetailsByName(c.zone.getApplicationName())
 		if err != nil {
 			return nil, err
 		}
@@ -694,7 +848,7 @@ func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.Cert
 
 func (c *Connector) getCertsBatch(page, pageSize int, withExpired bool) ([]certificate.CertificateInfo, error) {
 
-	appDetails, err := c.getAppDetailsByName(c.zone.getApplicationName())
+	appDetails, _, err := c.getAppDetailsByName(c.zone.getApplicationName())
 	if err != nil {
 		return nil, err
 	}
@@ -726,22 +880,22 @@ func (c *Connector) getCertsBatch(page, pageSize int, withExpired bool) ([]certi
 	return infos, nil
 }
 
-func (c *Connector) getAppDetailsByName(appName string) (*ApplicationDetails, error) {
+func (c *Connector) getAppDetailsByName(appName string) (*ApplicationDetails, int, error) {
 	url := c.getURL(urlAppDetailsByName)
 	if c.user == nil {
-		return nil, fmt.Errorf("must be autheticated to read the zone configuration")
+		return nil, -1, fmt.Errorf("must be autheticated to read the zone configuration")
 	}
 	encodedAppName := netUrl.PathEscape(appName)
 	url = fmt.Sprintf(url, encodedAppName)
 	statusCode, status, body, err := c.request("GET", url, nil)
 	if err != nil {
-		return nil, err
+		return nil, statusCode, err
 	}
 	details, err := parseApplicationDetailsResult(statusCode, status, body)
 	if err != nil {
-		return nil, err
+		return nil, statusCode, err
 	}
-	return details, nil
+	return details, statusCode, nil
 }
 
 func (c *Connector) getTemplateByID() (*certificateTemplate, error) {
@@ -755,4 +909,31 @@ func (c *Connector) getTemplateByID() (*certificateTemplate, error) {
 	}
 	t, err := parseCertificateTemplateResult(statusCode, status, body)
 	return t, err
+}
+
+func getCit(c *Connector, citName string) (*certificateTemplate, error) {
+	url := c.getURL(urlIssuingTemplate)
+	_, _, body, err := c.request("GET", url, nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var cits CertificateTemplates
+
+	json.Unmarshal(body, &cits)
+
+	if len(cits.CertificateTemplates) > 0 {
+		citArr := cits.CertificateTemplates
+
+		for _, cit := range citArr {
+			if citName == cit.Name {
+				return &cit, nil
+			}
+		}
+
+	}
+
+	//no error but cit was not found.
+	return nil, nil
 }

@@ -368,3 +368,16 @@ func getPropertyFromEnvironment(s string) string {
 	}
 
 }
+
+func getFileAndBytes(p string) (*os.File, []byte, error) {
+	file, err := os.Open(p)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	bytes, err := ioutil.ReadAll(file)
+	if err != nil {
+		return nil, nil, err
+	}
+	return file, bytes, nil
+}
