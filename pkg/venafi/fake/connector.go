@@ -43,7 +43,7 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	caName := "\\VED\\Policy\\Certificate Authorities\\TEST CA\\QA Test CA - Server 90 Days"
 	validityHours := 120
 	wildcardAllowed := true
-    generationType := "1"
+	generationType := "1"
 	reuseAllowed := false
 	subjectAltNamesAllowed := true
 
@@ -54,9 +54,9 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	country := "US"
 
 	specification := policy.PolicySpecification{
-		Owners:     []string{"amoo"},
-		Users:      []string{"rvela", "malborno"},
-		Approvers:  []string{"rrodrig", "lpresuel"},
+		Owners:    []string{"amoo"},
+		Users:     []string{"rvela", "malborno"},
+		Approvers: []string{"rrodrig", "lpresuel"},
 		Policy: &policy.Policy{
 			CertificateAuthority: &caName,
 			Domains:              []string{"venafi.com"},
@@ -87,7 +87,7 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 		Default: &policy.Default{
 			Domain: &domain,
 			Subject: &policy.DefaultSubject{
-				Org:     &org,
+				Org:      &org,
 				OrgUnits: []string{"DevOps"},
 				Locality: &locality,
 				State:    &state,
@@ -103,7 +103,6 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	}
 	return &specification, nil
 }
-
 
 func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (string, error) {
 	return "OK", nil

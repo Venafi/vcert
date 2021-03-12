@@ -676,8 +676,8 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	tp.Name = &name
 
 	// Contact
-	contact, _,  err := getPolicyAttibute(c, policy.TppContact, name)
-	if err != nil{
+	contact, _, err := getPolicyAttibute(c, policy.TppContact, name)
+	if err != nil {
 		return nil, err
 	}
 	if contact != nil {
@@ -685,30 +685,30 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	}
 
 	approver, _, err := getPolicyAttibute(c, policy.TppApprover, name)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 	if approver != nil {
 		tp.Approver = approver
 	}
 
-	prohitedWildcard, _,  err := getPolicyAttibute(c, policy.TppProhibitWildcard, name)
+	prohitedWildcard, _, err := getPolicyAttibute(c, policy.TppProhibitWildcard, name)
 
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
 	if prohitedWildcard != nil {
 		boolVal, err := strconv.ParseBool(prohitedWildcard[0])
-		if err != nil{
+		if err != nil {
 			return nil, err
 		}
 		tp.ProhibitWildcard = &boolVal
 	}
 
-	domainSuffixWhitelist, _,  err := getPolicyAttibute(c, policy.TppDomainSuffixWhitelist, name)
+	domainSuffixWhitelist, _, err := getPolicyAttibute(c, policy.TppDomainSuffixWhitelist, name)
 
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
@@ -717,9 +717,9 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	}
 
 	//resolve Certificate authority
-	certAuthority, _,  err := getPolicyAttibute(c, policy.TppCertificateAuthority, name)
+	certAuthority, _, err := getPolicyAttibute(c, policy.TppCertificateAuthority, name)
 
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
@@ -730,7 +730,7 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	//Organization
 	organization, locked, err := getPolicyAttibute(c, policy.TppOrganization, name)
 
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
@@ -741,7 +741,7 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	//Org Unit
 	organizationalUnit, locked, err := getPolicyAttibute(c, policy.TppOrganizationalUnit, name)
 
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
@@ -749,11 +749,10 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 		tp.OrganizationalUnit = getLockedAttribute(&organizationalUnit[0], locked)
 	}
 
-
 	//City
 	city, locked, err := getPolicyAttibute(c, policy.TppCity, name)
 
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
@@ -764,7 +763,7 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	//State
 	state, locked, err := getPolicyAttibute(c, policy.TppState, name)
 
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
@@ -775,7 +774,7 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	//country
 	country, locked, err := getPolicyAttibute(c, policy.TppCountry, name)
 
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
@@ -783,11 +782,10 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 		tp.Country = getLockedAttribute(&country[0], locked)
 	}
 
-
 	//KeyAlgorithm
 	keyAlgorithm, locked, err := getPolicyAttibute(c, policy.TppKeyAlgorithm, name)
 
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
@@ -798,7 +796,7 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	//Key Bit Strength
 	keyBitStrength, locked, err := getPolicyAttibute(c, policy.TppKeyBitStrength, name)
 
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
@@ -809,7 +807,7 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	//Elliptic Curve
 	ellipticCurve, locked, err := getPolicyAttibute(c, policy.TppEllipticCurve, name)
 
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
@@ -820,7 +818,7 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	//Manual Csr
 	manualCsr, locked, err := getPolicyAttibute(c, policy.TppManualCsr, name)
 
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
@@ -829,9 +827,9 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	}
 
 	//Prohibited SAN Types
-	prohibitedSANTypes, _,  err := getPolicyAttibute(c, policy.TppProhibitedSANTypes, name)
+	prohibitedSANTypes, _, err := getPolicyAttibute(c, policy.TppProhibitedSANTypes, name)
 
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
@@ -840,31 +838,30 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	}
 
 	//AllowPrivate Key Reuse
-	allowPrivateKeyReuse, _,  err := getPolicyAttibute(c, policy.TppAllowPrivateKeyReuse, name)
+	allowPrivateKeyReuse, _, err := getPolicyAttibute(c, policy.TppAllowPrivateKeyReuse, name)
 
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
 	if allowPrivateKeyReuse != nil {
 		boolVal, err := strconv.ParseBool(allowPrivateKeyReuse[0])
-		if err != nil{
+		if err != nil {
 			return nil, err
 		}
 		tp.AllowPrivateKeyReuse = &boolVal
 	}
 
-
 	//TppWantRenewal
-	wantRenewal, _,  err := getPolicyAttibute(c, policy.TppWantRenewal, name)
+	wantRenewal, _, err := getPolicyAttibute(c, policy.TppWantRenewal, name)
 
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
 	if wantRenewal != nil {
 		boolVal, err := strconv.ParseBool(wantRenewal[0])
-		if err != nil{
+		if err != nil {
 			return nil, err
 		}
 		tp.WantRenewal = &boolVal
@@ -872,7 +869,7 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 
 	log.Println("Building policy")
 	ps, err = policy.BuildPolicySpecificationForTPP(tp)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
@@ -955,9 +952,8 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 
 	log.Printf("setting policy's attributes")
 
-
 	//create Contact
-	if tppPolicy.Contact != nil{
+	if tppPolicy.Contact != nil {
 		_, status, _, err = createPolicyAttribute(c, policy.TppContact, tppPolicy.Contact, *(tppPolicy.Name), true)
 		if err != nil {
 			return "", err
@@ -965,7 +961,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 	}
 
 	//create Approver
-	if tppPolicy.Approver != nil{
+	if tppPolicy.Approver != nil {
 		_, status, _, err = createPolicyAttribute(c, policy.TppApprover, tppPolicy.Approver, *(tppPolicy.Name), true)
 		if err != nil {
 			return "", err
@@ -1640,7 +1636,7 @@ func getPolicyAttibute(c *Connector, at string, n string) (s []string, b *bool, 
 	// if is not locked then is a default.
 	_, _, body, err := c.request("POST", urlResourceReadPolicy, request)
 	if err != nil {
-		return nil,nil, err
+		return nil, nil, err
 	}
 
 	var response policy.PolicyGetAttributeResponse
@@ -1653,7 +1649,7 @@ func getPolicyAttibute(c *Connector, at string, n string) (s []string, b *bool, 
 	return nil, nil, nil
 }
 
-func getLockedAttribute(v *string, l *bool) *policy.LockedAttribute{
+func getLockedAttribute(v *string, l *bool) *policy.LockedAttribute {
 	lockedAttr := policy.LockedAttribute{
 		Value:  *(v),
 		Locked: *(l),

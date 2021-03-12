@@ -523,7 +523,7 @@ func createAppUpdateRequest(applicationDetails *ApplicationDetails, cit *certifi
 		IpRanges:                             applicationDetails.IpRanges,
 		Ports:                                applicationDetails.Ports,
 		CertificateIssuingTemplateAliasIdMap: applicationDetails.CitAliasToIdMap,
-		OrganizationalUnitId: applicationDetails.OrganizationalUnitId,
+		OrganizationalUnitId:                 applicationDetails.OrganizationalUnitId,
 	}
 
 	//add new cit values to the map.
@@ -602,16 +602,16 @@ func buildPolicySpecification(cit *certificateTemplate) *policy.PolicySpecificat
 	//key pair
 	var keyPair policy.KeyPair
 	shouldCreateKeyPair := false
-	if len(cit.KeyTypes) > 0{
+	if len(cit.KeyTypes) > 0 {
 		var keyTypes []string
 		var keySizes []int
 
-		for _, allowedKT := range cit.KeyTypes{
+		for _, allowedKT := range cit.KeyTypes {
 			keyType := string(allowedKT.KeyType)
 			keyLengths := allowedKT.KeyLengths
 
 			keyTypes = append(keyTypes, keyType)
-			for _, curr := range keyLengths{
+			for _, curr := range keyLengths {
 				keySizes = append(keySizes, curr)
 			}
 		}
@@ -625,61 +625,59 @@ func buildPolicySpecification(cit *certificateTemplate) *policy.PolicySpecificat
 		pol.KeyPair.ReuseAllowed = &cit.KeyReuse
 	}
 
-		ps.Policy = &pol
-
+	ps.Policy = &pol
 
 	//build defaults.
 	var defaultSub policy.DefaultSubject
-	 shouldCreateDeFaultSub := false
-	if cit.RecommendedSettings.SubjectOValue != ""{
+	shouldCreateDeFaultSub := false
+	if cit.RecommendedSettings.SubjectOValue != "" {
 		defaultSub.Org = &cit.RecommendedSettings.SubjectOValue
 		shouldCreateDeFaultSub = true
 	}
 
-	if cit.RecommendedSettings.SubjectOUValue != ""{
+	if cit.RecommendedSettings.SubjectOUValue != "" {
 		defaultSub.OrgUnits = []string{cit.RecommendedSettings.SubjectOUValue}
 		shouldCreateDeFaultSub = true
 	}
 
-	if cit.RecommendedSettings.SubjectCValue != ""{
+	if cit.RecommendedSettings.SubjectCValue != "" {
 		defaultSub.Country = &cit.RecommendedSettings.SubjectCValue
 		shouldCreateDeFaultSub = true
 	}
 
-	if cit.RecommendedSettings.SubjectSTValue != ""{
+	if cit.RecommendedSettings.SubjectSTValue != "" {
 		defaultSub.State = &cit.RecommendedSettings.SubjectSTValue
 		shouldCreateDeFaultSub = true
 	}
 
-	if cit.RecommendedSettings.SubjectLValue != ""{
+	if cit.RecommendedSettings.SubjectLValue != "" {
 		defaultSub.Locality = &cit.RecommendedSettings.SubjectLValue
 		shouldCreateDeFaultSub = true
 	}
 
 	if shouldCreateDeFaultSub {
-		if ps.Default == nil{
+		if ps.Default == nil {
 			ps.Default = &policy.Default{}
 		}
 		ps.Default.Subject = &defaultSub
 	}
 
-
 	//default key type
 	var defaultKP policy.DefaultKeyPair
-	 shouldCreateDefaultKeyPAir := false
+	shouldCreateDefaultKeyPAir := false
 
-	if cit.RecommendedSettings.Key.Type != ""{
+	if cit.RecommendedSettings.Key.Type != "" {
 		defaultKP.KeyType = &cit.RecommendedSettings.Key.Type
 		shouldCreateDefaultKeyPAir = true
 	}
 
-	if cit.RecommendedSettings.Key.Length > 0{
+	if cit.RecommendedSettings.Key.Length > 0 {
 		defaultKP.RsaKeySize = &cit.RecommendedSettings.Key.Length
 		shouldCreateDefaultKeyPAir = true
 	}
 
 	if shouldCreateDefaultKeyPAir {
-		if ps.Default == nil{
+		if ps.Default == nil {
 			ps.Default = &policy.Default{}
 		}
 		ps.Default.KeyPair = &defaultKP

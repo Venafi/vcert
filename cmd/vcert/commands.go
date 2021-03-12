@@ -692,7 +692,7 @@ func doCommandGetPolicy1(c *cli.Context) error {
 
 	policyName := flags.policyName
 
-	if policyName == ""{
+	if policyName == "" {
 		return fmt.Errorf("policy name is empty")
 	}
 
@@ -731,7 +731,7 @@ func doCommandGetPolicy1(c *cli.Context) error {
 		ioutil.WriteFile(policySpecLocation, byte, 0644)
 		log.Printf("policy was written in: %s", policySpecLocation)
 
-	}else{
+	} else {
 		byte, _ = json.MarshalIndent(ps, "", "")
 		if err != nil {
 			return err

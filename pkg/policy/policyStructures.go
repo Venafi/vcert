@@ -71,11 +71,11 @@ type KeyTypes struct {
 
 type RecommendedSettings struct {
 	SubjectCNRegexes []string `json:"subjectCNRegexes"`
-	SubjectOValue    *string   `json:"subjectOValue"`
-	SubjectOUValue   *string   `json:"subjectOUValue"`
-	SubjectLValue    *string   `json:"subjectLValue"`
-	SubjectSTValue   *string   `json:"subjectSTValue"`
-	SubjectCValue    *string   `json:"subjectCValue"`
+	SubjectOValue    *string  `json:"subjectOValue"`
+	SubjectOUValue   *string  `json:"subjectOUValue"`
+	SubjectLValue    *string  `json:"subjectLValue"`
+	SubjectSTValue   *string  `json:"subjectSTValue"`
+	SubjectCValue    *string  `json:"subjectCValue"`
 	SanRegexes       []string `json:"sanRegexes"`
 	Key              Key      `json:"key"`
 	KeyReuse         *bool    `json:"keyReuse"`

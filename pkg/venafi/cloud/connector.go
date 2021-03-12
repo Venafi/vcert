@@ -131,24 +131,24 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 	//get certificate authority product option io
 	var certificateAuthorityProductOptionId string
 
-	if ps.Policy.CertificateAuthority != nil && *(ps.Policy.CertificateAuthority) != ""{
+	if ps.Policy.CertificateAuthority != nil && *(ps.Policy.CertificateAuthority) != "" {
 		certificateAuthorityProductOptionId, err = getCertificateAuthorityProductOptionId(*(ps.Policy.CertificateAuthority), c)
 
-		if err != nil{
+		if err != nil {
 			return "", err
 		}
 
-		if certificateAuthorityProductOptionId == ""{
+		if certificateAuthorityProductOptionId == "" {
 
 			return "", fmt.Errorf("specified CA doesn't exist")
 
 		}
-	}else{
+	} else {
 		return "", fmt.Errorf("please specify a CA name")
 	}
 
 	//at this moment we know that ps.Policy.CertificateAuthority is valid.
-	info, _ := policy.GetCertAuthorityInfo(*(ps.Policy.CertificateAuthority) )
+	info, _ := policy.GetCertAuthorityInfo(*(ps.Policy.CertificateAuthority))
 
 	req := policy.BuildCloudCit(ps, info)
 	req.Name = citName
@@ -198,7 +198,6 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 		return "", fmt.Errorf("application name is empty, please provide zome in the format: app_name\\cit_name")
 	}
 
-
 	userDetails, err := getUserDetails(c)
 	if err != nil {
 		return "", err
@@ -234,7 +233,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 
 	} else {
 		//update the application and assign the cit tho the application
-		if !PolicyExist(name, c) {// relation between app-cit doesn't exist so create it.
+		if !PolicyExist(name, c) { // relation between app-cit doesn't exist so create it.
 			log.Printf("updating application: %s", appName)
 
 			appReq := createAppUpdateRequest(appDetails, cit)
@@ -248,7 +247,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 				return "", err
 			}
 
-		}else{
+		} else {
 			//the relation exists don't link anything.
 			policyExists = true
 		}
