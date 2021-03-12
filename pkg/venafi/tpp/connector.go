@@ -663,11 +663,14 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 	return
 }
 
-func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) {
+func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecification, error) {
 	var ps *policy.PolicySpecification
 	var tp policy.TppPolicy
+
+	log.Println("Collecting policy attributes")
+
 	//validate if the policy exists
-	if !c.ExistsPolicy(name) {
+	if !PolicyExist(name, c) {
 		return nil, fmt.Errorf("the specified policy does not exists")
 	}
 	tp.Name = &name
@@ -689,7 +692,7 @@ func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) 
 		tp.Approver = approver
 	}
 
-	prohitedWildcard, _,  err := getPolicyAttibute(c, policy.TppPRProhibitWildcard, name)
+	prohitedWildcard, _,  err := getPolicyAttibute(c, policy.TppProhibitWildcard, name)
 
 	if err != nil{
 		return nil, err
@@ -776,7 +779,7 @@ func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) 
 		return nil, err
 	}
 
-	if city != nil {
+	if country != nil {
 		tp.Country = getLockedAttribute(&country[0], locked)
 	}
 
@@ -788,7 +791,7 @@ func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) 
 		return nil, err
 	}
 
-	if city != nil {
+	if keyAlgorithm != nil {
 		tp.KeyAlgorithm = getLockedAttribute(&keyAlgorithm[0], locked)
 	}
 
@@ -867,7 +870,8 @@ func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) 
 		tp.WantRenewal = &boolVal
 	}
 
-	ps, err = policy.BuildPolicySpecification(tp)
+	log.Println("Building policy")
+	ps, err = policy.BuildPolicySpecificationForTPP(tp)
 	if err != nil{
 		return nil, err
 	}
@@ -875,9 +879,9 @@ func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) 
 	return ps, nil
 }
 
-func (c *Connector) ExistsPolicy(policyName string) bool {
+func PolicyExist(policyName string, c *Connector) bool {
 
-	req := policy.PolicyExistPaloadRequest{
+	req := policy.PolicyExistPayloadRequest{
 		ObjectDN: policyName,
 	}
 	_, _, body, _ := c.request("POST", urlResourceIsValidPolicy, req)
@@ -893,7 +897,7 @@ func (c *Connector) ExistsPolicy(policyName string) bool {
 	return true
 }
 
-func (c *Connector) CreatePolicy(name string, ps *policy.PolicySpecification) (string, error) {
+func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (string, error) {
 	//	statusCode, status, body, err := c.request("POST", urlResourceCertificatePolicy, rq)
 
 	//validate policy specification and policy
@@ -903,10 +907,9 @@ func (c *Connector) CreatePolicy(name string, ps *policy.PolicySpecification) (s
 		return "", err
 	}
 
-	log.Printf("policy specification were correclty validated")
-
+	log.Printf("policy specification were correctly validated")
+	var status = ""
 	tppPolicy := policy.BuildTppPolicy(ps)
-
 
 	if !strings.HasPrefix(name, policy.RootPath) {
 		name = policy.RootPath + name
@@ -918,19 +921,19 @@ func (c *Connector) CreatePolicy(name string, ps *policy.PolicySpecification) (s
 	var policyExists = false
 
 	//validate if the policy exists
-	if c.ExistsPolicy(name) {
+	if PolicyExist(name, c) {
 		policyExists = true
 		log.Printf("policy: %s exists", name)
+	} else {
+
+		//validate if the parent exist
+		parent := policy.GetParent(name)
+		if parent != policy.RootPath && !PolicyExist(parent, c) {
+
+			return "", fmt.Errorf("the policy's parent doesn't exists")
+
+		}
 	}
-
-	//validate if the parent exist
-	parent := policy.GetParent(name)
-	if parent != policy.RootPath && !c.ExistsPolicy(parent) {
-
-		return "", fmt.Errorf("the policy's parent doesn't exists")
-
-	}
-	var status = ""
 
 	//step 1 create root policy folder.
 	if !policyExists {
@@ -979,7 +982,7 @@ func (c *Connector) CreatePolicy(name string, ps *policy.PolicySpecification) (s
 
 	//create Prohibit Wildcard
 	if tppPolicy.ProhibitWildcard != nil {
-		_, status, _, err = createPolicyAttribute(c, policy.TppPRProhibitWildcard, []string{strconv.FormatBool(*(tppPolicy.ProhibitWildcard))}, *(tppPolicy.Name), false)
+		_, status, _, err = createPolicyAttribute(c, policy.TppProhibitWildcard, []string{strconv.FormatBool(*(tppPolicy.ProhibitWildcard))}, *(tppPolicy.Name), false)
 		if err != nil {
 			return "", err
 		}

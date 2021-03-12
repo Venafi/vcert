@@ -653,7 +653,7 @@ func doCommandCreatePolicy1(c *cli.Context) error {
 	fileExt := policy.GetFileType(policySpecLocation)
 	fileExt = strings.ToLower(fileExt)
 
-	//based on the extention call the appropriate method to feed the policySpecification
+	//based on the extension call the appropriate method to feed the policySpecification
 	//structure.
 	var policySpecification policy.PolicySpecification
 	if fileExt == policy.JsonExtention {
@@ -681,7 +681,7 @@ func doCommandCreatePolicy1(c *cli.Context) error {
 		return err
 	}
 
-	_, err = connector.CreatePolicy(policyName, &policySpecification)
+	_, err = connector.SetPolicy(policyName, &policySpecification)
 
 	defer file.Close()
 
@@ -691,23 +691,54 @@ func doCommandCreatePolicy1(c *cli.Context) error {
 func doCommandGetPolicy1(c *cli.Context) error {
 
 	policyName := flags.policyName
+
+	if policyName == ""{
+		return fmt.Errorf("policy name is empty")
+	}
+
 	policySpecLocation := flags.policySpecLocation
 
 	cfg, err := buildConfig(c, &flags)
-
 	if err != nil {
 		return fmt.Errorf("failed to build vcert config: %s", err)
 	}
-	connector, err := vcert.NewClient(&cfg)
 
+	connector, err := vcert.NewClient(&cfg)
 	if err != nil {
 		return err
 	}
 
-	ps, err := connector.GetPolicy(policyName)
+	ps, err := connector.GetPolicySpecification(policyName)
+	var byte []byte
+	if policySpecLocation != "" {
 
-	file, _ := json.MarshalIndent(ps, "", "")
-	ioutil.WriteFile(policySpecLocation, file, 0644)
+		fileExt := policy.GetFileType(policySpecLocation)
+		fileExt = strings.ToLower(fileExt)
+		if fileExt == policy.JsonExtention {
+			byte, _ = json.MarshalIndent(ps, "", "")
+			if err != nil {
+				return err
+			}
+		} else if fileExt == policy.YamlExtention {
+			byte, _ = yaml.Marshal(ps)
+			if err != nil {
+				return err
+			}
+		} else {
+			return fmt.Errorf("the specified byte is not supported")
+		}
+
+		ioutil.WriteFile(policySpecLocation, byte, 0644)
+		log.Printf("policy was written in: %s", policySpecLocation)
+
+	}else{
+		byte, _ = json.MarshalIndent(ps, "", "")
+		if err != nil {
+			return err
+		}
+		log.Println("Policy is:")
+		fmt.Println(string(byte))
+	}
 
 	return nil
 }

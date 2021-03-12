@@ -60,6 +60,7 @@ type certificateTemplate struct {
 		}
 		keyReuse bool
 	}
+	ValidityPeriod string `json:"validityPeriod,omitempty"`
 }
 
 type CertificateTemplates struct {

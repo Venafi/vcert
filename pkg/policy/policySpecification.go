@@ -5,8 +5,8 @@ type PolicySpecification struct {
 	Users      []string `json:"users,omitempty" yaml:"users,omitempty"`
 	UserAccess string   `json:"userAccess,omitempty" yaml:"userAccess,omitempty"`
 	Approvers  []string `json:"approvers,omitempty" yaml:"approvers,omitempty"`
-	Policy     Policy   `json:"policy,omitempty" yaml:"policy,omitempty"`
-	Default    Default  `json:"default,omitempty" yaml:"default,omitempty"`
+	Policy     *Policy   `json:"policy,omitempty" yaml:"policy,omitempty"`
+	Default    *Default  `json:"default,omitempty" yaml:"default,omitempty"`
 }
 
 type Policy struct {
@@ -14,9 +14,9 @@ type Policy struct {
 	WildcardAllowed      *bool           `json:"wildcardAllowed,omitempty" yaml:"wildcardAllowed,omitempty"`
 	MaxValidDays         *int            `json:"maxValidDays,omitempty" yaml:"maxValidDays,omitempty"`
 	CertificateAuthority *string          `json:"certificateAuthority,omitempty" yaml:"certificateAuthority,omitempty"`
-	Subject              Subject         `json:"subject,omitempty" yaml:"subject,omitempty"`
-	KeyPair              KeyPair         `json:"keyPair,omitempty" yaml:"keyPair,omitempty"`
-	SubjectAltNames      SubjectAltNames `json:"subjectAltNames,omitempty" yaml:"subjectAltNames,omitempty"`
+	Subject              *Subject         `json:"subject,omitempty" yaml:"subject,omitempty"`
+	KeyPair              *KeyPair         `json:"keyPair,omitempty" yaml:"keyPair,omitempty"`
+	SubjectAltNames      *SubjectAltNames `json:"subjectAltNames,omitempty" yaml:"subjectAltNames,omitempty"`
 }
 
 type Subject struct {
@@ -45,8 +45,8 @@ type SubjectAltNames struct {
 
 type Default struct {
 	Domain  *string        `json:"domain,omitempty" yaml:"domain,omitempty"`
-	Subject DefaultSubject `json:"subject,omitempty" yaml:"subject,omitempty"`
-	KeyPair DefaultKeyPair `json:"keypPair,omitempty" yaml:"keypPair,omitempty"`
+	Subject *DefaultSubject `json:"subject,omitempty" yaml:"subject,omitempty"`
+	KeyPair *DefaultKeyPair `json:"keypPair,omitempty" yaml:"keypPair,omitempty"`
 }
 
 type DefaultSubject struct {
@@ -62,41 +62,4 @@ type DefaultKeyPair struct {
 	RsaKeySize     *int    `json:"rsaKeySize,omitempty" yaml:"rsaKeySize,omitempty"`
 	EllipticCurve  *string `json:"ellipticCurve,omitempty" yaml:"ellipticCurve,omitempty"`
 	GenerationType *string `json:"generationType,omitempty" yaml:"generationType,omitempty"`
-}
-
-type TppPolicy struct {
-	//general values
-	Name *string
-	//Owners []string "owners": string[],(permissions only)	prefixed name/universal
-	Contact []string
-	//Permissions string "userAccess": string,	(permissions)	prefixed name/universal
-	Approver []string
-
-
-
-	//policy's values
-	ProhibitWildcard      *bool
-	DomainSuffixWhitelist []string
-	ProhibitedSANType     []string
-	CertificateAuthority  *string
-
-	//subject attributes
-	Organization       *LockedAttribute
-	OrganizationalUnit *LockedAttribute
-	City               *LockedAttribute
-	State              *LockedAttribute
-	Country            *LockedAttribute
-
-	//keypair attributes
-	KeyAlgorithm         *LockedAttribute
-	KeyBitStrength       *LockedAttribute
-	EllipticCurve        *LockedAttribute
-	ManualCsr            *LockedAttribute
-	AllowPrivateKeyReuse *bool
-	WantRenewal          *bool
-}
-
-type LockedAttribute struct {
-	Value  string
-	Locked bool
 }

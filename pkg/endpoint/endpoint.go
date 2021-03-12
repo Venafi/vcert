@@ -95,9 +95,8 @@ type Connector interface {
 	SetHTTPClient(client *http.Client)
 	// ListCertificates
 	ListCertificates(filter Filter) ([]certificate.CertificateInfo, error)
-	CreatePolicy(name string, ps *policy.PolicySpecification) (string, error)
-	ExistsPolicy(policyName string) bool
-	GetPolicy(name string) (*policy.PolicySpecification, error)
+	SetPolicy(name string, ps *policy.PolicySpecification) (string, error)
+	GetPolicySpecification(name string) (*policy.PolicySpecification, error)
 }
 
 type Filter struct {

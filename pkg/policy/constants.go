@@ -6,11 +6,12 @@ const (
 	RootPath             = "\\VED\\Policy\\"
 	PolicyClass          = "Policy"
 	PolicyAttributeClass = "X509 Certificate"
-	//tpp attributes
+
+	//tpp policy attributes
 	TppContact               = "Contact"
 	TppApprover              = "Approver"
 	TppCertificateAuthority  = "Certificate Authority"
-	TppPRProhibitWildcard    = "Prohibit Wildcard"
+	TppProhibitWildcard      = "Prohibit Wildcard"
 	TppDomainSuffixWhitelist = "Domain Suffix Whitelist"
 	TppOrganization          = "Organization"
 	TppOrganizationalUnit    = "Organizational Unit"
@@ -25,9 +26,8 @@ const (
 	TppAllowPrivateKeyReuse  = "Allow Private Key Reuse"
 	TppWantRenewal           = "Want Renewal"
 	TppDnsAllowed            = "DNS"
-	TppIpAllowd              = "IP"
+	TppIpAllowed             = "IP"
 	TppEmailAllowed          = "Email"
-	TppUriAllowd             = "URI"
+	TppUriAllowed            = "URI"
 	TppUpnAllowed            = "UPN"
 )
-
