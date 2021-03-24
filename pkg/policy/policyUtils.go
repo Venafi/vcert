@@ -162,39 +162,40 @@ func validateDefaultSubject(ps *PolicySpecification) error {
 		if len(defaultSubject.OrgUnits) > 1 {
 			return fmt.Errorf("attribute default org units has more than one value")
 		}
-		if ps.Policy.Subject == nil {
+		if ps.Policy != nil && ps.Policy.Subject != nil {
+
+			policySubject := ps.Policy.Subject
+
+			if policySubject.Orgs != nil && policySubject.Orgs[0] != "" && defaultSubject.Org != nil && *(defaultSubject.Org) != "" {
+				if policySubject.Orgs[0] != *(defaultSubject.Org) {
+					return fmt.Errorf("policy default org doesn't match with policy's orgs value")
+				}
+			}
+
+			if policySubject.OrgUnits != nil && policySubject.OrgUnits[0] != "" && defaultSubject.OrgUnits != nil && defaultSubject.OrgUnits[0] != "" {
+				if policySubject.OrgUnits[0] != defaultSubject.OrgUnits[0] {
+					return fmt.Errorf("policy default orgUnits doesn't match with policy's orgUnits value")
+				}
+			}
+
+			if policySubject.Localities != nil && policySubject.Localities[0] != "" && defaultSubject.Locality != nil && *(defaultSubject.Locality) != "" {
+				if policySubject.Localities[0] != *(defaultSubject.Locality) {
+					return fmt.Errorf("policy default locality doesn't match with policy's localities value")
+				}
+			}
+			if policySubject.States != nil && policySubject.States[0] != "" && defaultSubject.State != nil && *(defaultSubject.State) != "" {
+				if policySubject.States[0] != *(defaultSubject.State) {
+					return fmt.Errorf("policy default state doesn't match with policy's states value")
+				}
+			}
+			if policySubject.Countries != nil && policySubject.Countries[0] != "" && defaultSubject.Country != nil && *(defaultSubject.Country) != "" {
+				if policySubject.Countries[0] != *(defaultSubject.Country) {
+					return fmt.Errorf("policy default country doesn't match with policy's countries value")
+				}
+			}
+		} else {
 			//there is nothing to validate
 			return nil
-		}
-
-		policySubject := ps.Policy.Subject
-
-		if policySubject.Orgs != nil && policySubject.Orgs[0] != "" && defaultSubject.Org != nil && *(defaultSubject.Org) != "" {
-			if policySubject.Orgs[0] != *(defaultSubject.Org) {
-				return fmt.Errorf("policy default org doesn't match with policy's orgs value")
-			}
-		}
-
-		if policySubject.OrgUnits != nil && policySubject.OrgUnits[0] != "" && defaultSubject.OrgUnits != nil && defaultSubject.OrgUnits[0] != "" {
-			if policySubject.OrgUnits[0] != defaultSubject.OrgUnits[0] {
-				return fmt.Errorf("policy default orgUnits doesn't match with policy's orgUnits value")
-			}
-		}
-
-		if policySubject.Localities != nil && policySubject.Localities[0] != "" && defaultSubject.Locality != nil && *(defaultSubject.Locality) != "" {
-			if policySubject.Localities[0] != *(defaultSubject.Locality) {
-				return fmt.Errorf("policy default locality doesn't match with policy's localities value")
-			}
-		}
-		if policySubject.States != nil && policySubject.States[0] != "" && defaultSubject.State != nil && *(defaultSubject.State) != "" {
-			if policySubject.States[0] != *(defaultSubject.State) {
-				return fmt.Errorf("policy default state doesn't match with policy's states value")
-			}
-		}
-		if policySubject.Countries != nil && policySubject.Countries[0] != "" && defaultSubject.Country != nil && *(defaultSubject.Country) != "" {
-			if policySubject.Countries[0] != *(defaultSubject.Country) {
-				return fmt.Errorf("policy default country doesn't match with policy's countries value")
-			}
 		}
 	}
 
@@ -202,7 +203,7 @@ func validateDefaultSubject(ps *PolicySpecification) error {
 }
 
 func validateDefaultKeyPair(ps *PolicySpecification) error {
-	if ps.Default == nil || ps.Default.KeyPair == nil || ps.Policy.KeyPair == nil {
+	if ps.Default == nil || ps.Default.KeyPair == nil || ps.Policy == nil || ps.Policy.KeyPair == nil {
 		return nil
 	}
 	defaultKeyPair := ps.Default.KeyPair
