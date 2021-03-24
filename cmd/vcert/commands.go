@@ -728,7 +728,10 @@ func doCommandGetPolicy1(c *cli.Context) error {
 			return fmt.Errorf("the specified byte is not supported")
 		}
 
-		ioutil.WriteFile(policySpecLocation, byte, 0644)
+		err = ioutil.WriteFile(policySpecLocation, byte, 0600)
+		if err != nil {
+			return err
+		}
 		log.Printf("policy was written in: %s", policySpecLocation)
 
 	} else {

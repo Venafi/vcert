@@ -30,8 +30,9 @@ type PolicyExistPayloadRequest struct {
 }
 
 type PolicyIsValidResponse struct {
-	Error  string `json:"Error"`
-	Result int    `json:"Result"`
+	Error        string       `json:"Error"`
+	Result       int          `json:"Result"`
+	PolicyObject PolicyObject `json:"Object"`
 }
 
 type PolicyGetAttributeResponse struct {
@@ -77,7 +78,7 @@ type RecommendedSettings struct {
 	SubjectSTValue   *string  `json:"subjectSTValue"`
 	SubjectCValue    *string  `json:"subjectCValue"`
 	SanRegexes       []string `json:"sanRegexes"`
-	Key              Key      `json:"key"`
+	Key              *Key     `json:"key"`
 	KeyReuse         *bool    `json:"keyReuse"`
 }
 
@@ -159,10 +160,22 @@ type AccountDetails struct {
 }
 
 type Account struct {
+	Id  string `json:"id"`
 	Key string `json:"Key"`
 }
 
 type ProductOption struct {
 	ProductName string `json:"productName"`
 	Id          string `json:"id"`
+}
+
+type PolicyObject struct {
+	AbsoluteGUID string `json:"AbsoluteGUID"`
+	DN           string `json:"DN"`
+	GUID         string `json:"GUID"`
+	Id           int    `json:"Id"`
+	Name         string `json:"Name"`
+	Parent       string `json:"Parent"`
+	Revision     int    `json:"Revision"`
+	TypeName     string `json:"TypeName"`
 }

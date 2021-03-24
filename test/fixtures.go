@@ -18,7 +18,9 @@ package test
 
 import (
 	"fmt"
+	"github.com/Venafi/vcert/v4/pkg/policy"
 	"math/rand"
+	"os"
 	"time"
 )
 
@@ -38,4 +40,186 @@ func randRunes(n int) string {
 
 func RandCN() string {
 	return fmt.Sprintf("t%d-%s.venafi.example.com", time.Now().Unix(), randRunes(4))
+}
+
+func RandAppName() string {
+	return fmt.Sprintf("t%d-%sAppOpenSource", time.Now().Unix(), randRunes(4))
+}
+
+func RandCitName() string {
+	return fmt.Sprintf("t%d-%sCitOpenSource", time.Now().Unix(), randRunes(4))
+}
+
+func RandTppPolicyName() string {
+	return fmt.Sprintf("t%d-%sPolicyOpenSource", time.Now().Unix(), randRunes(4))
+}
+
+func GetCloudPolicySpecification() *policy.PolicySpecification {
+	caName := os.Getenv("CLOUD_CA_NAME")
+	validityHours := 120
+	wildcardAllowed := true
+	generationType := "1"
+	reuseAllowed := false
+	subjectAltNamesAllowed := false
+
+	domain := "venafi.com"
+	org := "Venafi"
+	locality := "Salt Lake City"
+	state := "Utah"
+	country := "US"
+
+	defaultKeyType := "RSA"
+	defaultKeySize := 2048
+
+	specification := policy.PolicySpecification{
+		Policy: &policy.Policy{
+			CertificateAuthority: &caName,
+			Domains:              []string{"venafi.com"},
+			WildcardAllowed:      &wildcardAllowed,
+			MaxValidDays:         &validityHours,
+			Subject: &policy.Subject{
+				Orgs:       []string{"Venafi"},
+				OrgUnits:   []string{"DevOps"},
+				Localities: []string{"Salt Lake City"},
+				States:     []string{"Utah"},
+				Countries:  []string{"US"},
+			},
+			KeyPair: &policy.KeyPair{
+				KeyTypes:       []string{"RSA"},
+				RsaKeySizes:    []int{2048},
+				GenerationType: &generationType,
+				ReuseAllowed:   &reuseAllowed,
+				EllipticCurves: []string{"P384"},
+			},
+			SubjectAltNames: &policy.SubjectAltNames{
+				DnsAllowed:   &subjectAltNamesAllowed,
+				IpAllowed:    &subjectAltNamesAllowed,
+				EmailAllowed: &subjectAltNamesAllowed,
+				UriAllowed:   &subjectAltNamesAllowed,
+				UpnAllowed:   &subjectAltNamesAllowed,
+			},
+		},
+		Default: &policy.Default{
+			Domain: &domain,
+			Subject: &policy.DefaultSubject{
+				Org:      &org,
+				OrgUnits: []string{"DevOps"},
+				Locality: &locality,
+				State:    &state,
+				Country:  &country,
+			},
+			KeyPair: &policy.DefaultKeyPair{
+				KeyType:        &defaultKeyType,
+				RsaKeySize:     &defaultKeySize,
+				EllipticCurve:  nil,
+				GenerationType: nil,
+			},
+		},
+	}
+	return &specification
+}
+
+func GetTppPolicySpecification() *policy.PolicySpecification {
+
+	caName := os.Getenv("TPP_CA_NAME")
+	validityHours := 120
+	wildcardAllowed := true
+	generationType := "1"
+	reuseAllowed := false
+	subjectAltNamesAllowedTrue := true
+	subjectAltNamesAllowedFalse := false
+
+	domain := "venafi.com"
+	org := "Venafi"
+	locality := "Salt Lake City"
+	state := "Utah"
+	country := "US"
+
+	defaultKeyType := "RSA"
+	defaultKeySize := 3072
+
+	specification := policy.PolicySpecification{
+		Policy: &policy.Policy{
+			CertificateAuthority: &caName,
+			Domains:              []string{"venafi.com"},
+			WildcardAllowed:      &wildcardAllowed,
+			MaxValidDays:         &validityHours,
+			Subject: &policy.Subject{
+				Orgs:       []string{"Venafi"},
+				OrgUnits:   []string{"DevOps"},
+				Localities: []string{"Salt Lake City"},
+				States:     []string{"Utah"},
+				Countries:  []string{"US"},
+			},
+			KeyPair: &policy.KeyPair{
+				KeyTypes:       []string{"RSA"},
+				RsaKeySizes:    []int{3072},
+				GenerationType: &generationType,
+				ReuseAllowed:   &reuseAllowed,
+				EllipticCurves: []string{"P384"},
+			},
+			SubjectAltNames: &policy.SubjectAltNames{
+				DnsAllowed:   &subjectAltNamesAllowedTrue,
+				IpAllowed:    &subjectAltNamesAllowedTrue,
+				EmailAllowed: &subjectAltNamesAllowedFalse,
+				UriAllowed:   &subjectAltNamesAllowedFalse,
+				UpnAllowed:   &subjectAltNamesAllowedFalse,
+			},
+		},
+		Default: &policy.Default{
+			Domain: &domain,
+			Subject: &policy.DefaultSubject{
+				Org:      &org,
+				OrgUnits: []string{"DevOps"},
+				Locality: &locality,
+				State:    &state,
+				Country:  &country,
+			},
+			KeyPair: &policy.DefaultKeyPair{
+				KeyType:        &defaultKeyType,
+				RsaKeySize:     &defaultKeySize,
+				EllipticCurve:  nil,
+				GenerationType: nil,
+			},
+		},
+	}
+	return &specification
+}
+
+func IsArrayStringEqual(expectedValues, values []string) bool {
+
+	if len(expectedValues) != len(values) {
+		return false
+	}
+
+	for i, currentValue := range expectedValues {
+
+		if currentValue != values[i] {
+
+			return false
+
+		}
+
+	}
+
+	return true
+}
+
+func IsArrayIntEqual(expectedValues, values []int) bool {
+
+	if len(expectedValues) != len(values) {
+		return false
+	}
+
+	for i, currentValue := range expectedValues {
+
+		if currentValue != values[i] {
+
+			return false
+
+		}
+
+	}
+
+	return true
 }

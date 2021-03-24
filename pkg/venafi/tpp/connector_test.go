@@ -1594,3 +1594,213 @@ func TestOmitSans(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestSetZone(t *testing.T) {
+	policyName := os.Getenv("TPP_POLICY_MANAGEMENT_ROOT") + test.RandTppPolicyName()
+	ctx.CloudZone = policyName
+
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+
+	//
+	resp, err := tpp.GetRefreshToken(&endpoint.Authentication{
+		User: ctx.TPPuser, Password: ctx.TPPPassword,
+		Scope:    "configuration:manage",
+		ClientId: os.Getenv("TPP_POLICY_MANAGEMENT_CLIENT_ID"),
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	ctx.TPPRefreshToken = resp.Refresh_token
+	ctx.TPPaccessToken = resp.Access_token
+	//
+
+	tpp.verbose = true
+
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+
+	ps := test.GetTppPolicySpecification()
+
+	_, err = tpp.SetPolicy(policyName, ps)
+
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	//revert back to the certificate scope
+	resp, err = tpp.GetRefreshToken(&endpoint.Authentication{
+		User: ctx.TPPuser, Password: ctx.TPPPassword,
+		Scope: "certificate:discover,manage,revoke;configuration"})
+	if err != nil {
+		panic(err)
+	}
+
+	ctx.TPPRefreshToken = resp.Refresh_token
+	ctx.TPPaccessToken = resp.Access_token
+
+}
+
+func TestGetPolicy(t *testing.T) {
+
+	policyName := os.Getenv("TPP_POLICY_MANAGEMENT_SAMPLE")
+
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+
+	tpp.verbose = true
+
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+
+	specifiedPS := test.GetTppPolicySpecification()
+
+	ps, err := tpp.GetPolicySpecification(policyName)
+
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	//validate each attribute
+	//validate subject attributes
+
+	if ps == nil {
+		t.Fatalf("specified Policy wasn't found")
+	}
+
+	if ps.Policy.Domains != nil && specifiedPS.Policy.Domains != nil {
+		valid := test.IsArrayStringEqual(specifiedPS.Policy.Domains, ps.Policy.Domains)
+		if !valid {
+			t.Fatalf("specified domains are different")
+		}
+	}
+
+	//validate cert authority id.
+	if specifiedPS.Policy.CertificateAuthority != nil && *(specifiedPS.Policy.CertificateAuthority) != "" {
+		if ps.Policy.CertificateAuthority == nil || *(ps.Policy.CertificateAuthority) == "" {
+			t.Fatalf("venafi policy doesn't have a certificate authority")
+		}
+		if *(ps.Policy.CertificateAuthority) != *(specifiedPS.Policy.CertificateAuthority) {
+			t.Fatalf("certificate authority value doesn't match, get: %s but expected: %s", *(ps.Policy.CertificateAuthority), *(specifiedPS.Policy.CertificateAuthority))
+		}
+	}
+
+	if specifiedPS.Policy.Subject.Orgs != nil {
+
+		if ps.Policy.Subject.Orgs == nil {
+			t.Fatalf("specified policy orgs are not specified")
+		}
+
+		valid := test.IsArrayStringEqual(specifiedPS.Policy.Subject.Orgs, ps.Policy.Subject.Orgs)
+		if !valid {
+			t.Fatalf("specified policy orgs are different")
+		}
+
+	}
+
+	if specifiedPS.Policy.Subject.OrgUnits != nil {
+
+		if ps.Policy.Subject.OrgUnits == nil {
+			t.Fatalf("specified policy orgs units are not specified")
+		}
+
+		valid := test.IsArrayStringEqual(specifiedPS.Policy.Subject.OrgUnits, ps.Policy.Subject.OrgUnits)
+		if !valid {
+			t.Fatalf("specified policy orgs units are different")
+		}
+
+	}
+
+	if specifiedPS.Policy.Subject.Localities != nil {
+
+		if ps.Policy.Subject.Localities == nil {
+			t.Fatalf("specified policy localities are not specified")
+		}
+
+		valid := test.IsArrayStringEqual(specifiedPS.Policy.Subject.Localities, ps.Policy.Subject.Localities)
+		if !valid {
+			t.Fatalf("specified policy localities are different")
+		}
+
+	}
+
+	if specifiedPS.Policy.Subject.States != nil {
+
+		if ps.Policy.Subject.States == nil {
+			t.Fatalf("specified policy states are not specified")
+		}
+
+		valid := test.IsArrayStringEqual(specifiedPS.Policy.Subject.States, ps.Policy.Subject.States)
+		if !valid {
+			t.Fatalf("specified policy states are different")
+		}
+
+	}
+
+	if specifiedPS.Policy.Subject.Countries != nil {
+
+		if ps.Policy.Subject.Countries == nil {
+			t.Fatalf("specified policy countries are not specified")
+		}
+
+		valid := test.IsArrayStringEqual(specifiedPS.Policy.Subject.Countries, ps.Policy.Subject.Countries)
+		if !valid {
+			t.Fatalf("specified policy countries are different")
+		}
+
+	}
+
+	//validate key pair values.
+
+	if specifiedPS.Policy.KeyPair.KeyTypes != nil {
+
+		if ps.Policy.KeyPair.KeyTypes == nil {
+			t.Fatalf("specified policy key types are not specified")
+		}
+
+		valid := test.IsArrayStringEqual(specifiedPS.Policy.KeyPair.KeyTypes, ps.Policy.KeyPair.KeyTypes)
+		if !valid {
+			t.Fatalf("specified policy key types are different")
+		}
+
+	}
+
+	if specifiedPS.Policy.KeyPair.RsaKeySizes != nil {
+
+		if ps.Policy.KeyPair.RsaKeySizes == nil {
+			t.Fatalf("specified policy rsa key sizes are not specified")
+		}
+
+		valid := test.IsArrayIntEqual(specifiedPS.Policy.KeyPair.RsaKeySizes, ps.Policy.KeyPair.RsaKeySizes)
+		if !valid {
+			t.Fatalf("specified policy rsa key sizes are different")
+		}
+
+	}
+
+	if specifiedPS.Policy.KeyPair.ReuseAllowed != nil {
+
+		if ps.Policy.KeyPair.ReuseAllowed == nil {
+			t.Fatalf("specified policy rsa key sizes are not specified")
+		}
+
+		if *(ps.Policy.KeyPair.ReuseAllowed) != *(specifiedPS.Policy.KeyPair.ReuseAllowed) {
+			t.Fatalf("specified policy rsa key sizes are different")
+		}
+
+	}
+
+}

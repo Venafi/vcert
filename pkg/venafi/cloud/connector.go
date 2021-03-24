@@ -79,8 +79,18 @@ type Connector struct {
 
 func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecification, error) {
 
-	c.zone.appName = policy.GetApplicationName(name)
-	c.zone.templateAlias = policy.GetCitName(name)
+	appName := policy.GetApplicationName(name)
+	if appName != "" {
+		c.zone.appName = appName
+	} else {
+		return nil, fmt.Errorf("application name is not valid, please provice a valid zone name in the format: appName\\CitName")
+	}
+	citName := policy.GetCitName(name)
+	if citName != "" {
+		c.zone.templateAlias = citName
+	} else {
+		return nil, fmt.Errorf("cit name is not valid, please provice a valid zone name in the format: appName\\CitName")
+	}
 
 	log.Println("Getting CIT")
 	cit, err := c.getTemplateByID()
@@ -101,12 +111,7 @@ func PolicyExist(policyName string, c *Connector) bool {
 	c.zone.templateAlias = policy.GetCitName(policyName)
 
 	_, err := c.getTemplateByID()
-
-	if err != nil {
-		return false
-	}
-
-	return true
+	return err == nil
 }
 
 func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (string, error) {
@@ -131,7 +136,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 	//get certificate authority product option io
 	var certificateAuthorityProductOptionId string
 
-	if ps.Policy.CertificateAuthority != nil && *(ps.Policy.CertificateAuthority) != "" {
+	if ps.Policy != nil && ps.Policy.CertificateAuthority != nil && *(ps.Policy.CertificateAuthority) != "" {
 		certificateAuthorityProductOptionId, err = getCertificateAuthorityProductOptionId(*(ps.Policy.CertificateAuthority), c)
 
 		if err != nil {
@@ -148,9 +153,11 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 	}
 
 	//at this moment we know that ps.Policy.CertificateAuthority is valid.
-	info, _ := policy.GetCertAuthorityInfo(*(ps.Policy.CertificateAuthority))
 
-	req := policy.BuildCloudCit(ps, info)
+	req, err := policy.BuildCloudCitRequest(ps)
+	if err != nil {
+		return "", err
+	}
 	req.Name = citName
 	req.CertificateAuthorityProductOptionId = certificateAuthorityProductOptionId
 
@@ -158,35 +165,40 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 
 	cit, err := getCit(c, citName)
 
+	if err != nil {
+		return "", err
+	}
+
 	if cit != nil {
 		log.Printf("updating CIT: %s", citName)
 		//update cit using the new values
 		url = fmt.Sprint(url, "/", cit.ID)
-		_, status, _, err = c.request("PUT", url, req)
+		statusCode, status, body, err := c.request("PUT", url, req)
 
 		if err != nil {
 			return "", err
+		}
+
+		cit, err = parseCitResult(http.StatusOK, statusCode, status, body)
+
+		if err != nil {
+			return status, err
 		}
 
 	} else {
 		log.Printf("creating CIT: %s", citName)
-		var body []byte
-		_, status, body, err = c.request("POST", url, req)
+		//var body []byte
+		statusCode, status, body, err := c.request("POST", url, req)
 
 		if err != nil {
 			return "", err
 		}
 
-		var cits CertificateTemplates
-
-		err = json.Unmarshal(body, &cits)
+		cit, err = parseCitResult(http.StatusCreated, statusCode, status, body)
 
 		if err != nil {
-			return "", err
+			return status, err
 		}
-
-		//we just get the cit we created
-		cit = &cits.CertificateTemplates[0]
 
 	}
 
@@ -212,8 +224,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 			OwnerType: "USER",
 		}
 
-		var appIssuingTemplate map[string]string
-		appIssuingTemplate = make(map[string]string)
+		appIssuingTemplate := make(map[string]string)
 		appIssuingTemplate[cit.Name] = cit.ID
 
 		//create application
@@ -957,7 +968,10 @@ func getCit(c *Connector, citName string) (*certificateTemplate, error) {
 
 	var cits CertificateTemplates
 
-	json.Unmarshal(body, &cits)
+	err = json.Unmarshal(body, &cits)
+	if err != nil {
+		return nil, err
+	}
 
 	if len(cits.CertificateTemplates) > 0 {
 		citArr := cits.CertificateTemplates
@@ -991,9 +1005,28 @@ func getUserDetails(c *Connector) (*userDetails, error) {
 
 func getCertificateAuthorityProductOptionId(caName string, c *Connector) (string, error) {
 
-	info, err := policy.GetCertAuthorityInfo(caName)
+	accounts, info, err := getAccounts(caName, c)
 	if err != nil {
 		return "", err
+	}
+
+	for _, account := range accounts.Accounts {
+		if account.Account.Key == info.CAAccountKey {
+			for _, productOption := range account.ProductOption {
+				if productOption.ProductName == info.VendorProductName {
+					return productOption.Id, nil
+				}
+			}
+		}
+	}
+
+	return "", nil
+}
+
+func getAccounts(caName string, c *Connector) (*policy.Accounts, *policy.CertificateAuthorityInfo, error) {
+	info, err := policy.GetCertAuthorityInfo(caName)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	caType := netUrl.PathEscape(info.CAType)
@@ -1001,15 +1034,33 @@ func getCertificateAuthorityProductOptionId(caName string, c *Connector) (string
 	url = fmt.Sprintf(url, caType)
 	_, _, body, err := c.request("GET", url, nil)
 
+	if err != nil {
+		return nil, nil, err
+	}
+
 	var accounts policy.Accounts
 
-	json.Unmarshal(body, &accounts)
+	err = json.Unmarshal(body, &accounts)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return &accounts, info, nil
+}
+
+func getCertificateAuthorityAccountId(caName string, c *Connector) (string, error) {
+
+	accounts, info, err := getAccounts(caName, c)
+	if err != nil {
+		return "", err
+	}
 
 	for _, account := range accounts.Accounts {
 		if account.Account.Key == info.CAAccountKey {
 			for _, productOption := range account.ProductOption {
 				if productOption.ProductName == info.VendorProductName {
-					return productOption.Id, nil
+					return account.Account.Id, nil
 				}
 			}
 		}

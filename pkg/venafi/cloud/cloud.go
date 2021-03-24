@@ -611,9 +611,9 @@ func buildPolicySpecification(cit *certificateTemplate) *policy.PolicySpecificat
 			keyLengths := allowedKT.KeyLengths
 
 			keyTypes = append(keyTypes, keyType)
-			for _, curr := range keyLengths {
-				keySizes = append(keySizes, curr)
-			}
+
+			keySizes = append(keySizes, keyLengths...)
+
 		}
 		shouldCreateKeyPair = true
 		keyPair.KeyTypes = keyTypes
@@ -684,4 +684,44 @@ func buildPolicySpecification(cit *certificateTemplate) *policy.PolicySpecificat
 	}
 
 	return &ps
+}
+
+func parseCitResult(expectedStatusCode int, httpStatusCode int, httpStatus string, body []byte) (*certificateTemplate, error) {
+	if httpStatusCode == expectedStatusCode {
+		return parseCitDetailsData(body, httpStatusCode)
+	}
+	respErrors, err := parseResponseErrors(body)
+	if err != nil {
+		return nil, err // parseResponseErrors always return verror.ServerError
+	}
+	respError := fmt.Sprintf("unexpected status code on Venafi Cloud registration. Status: %s\n", httpStatus)
+	for _, e := range respErrors {
+		respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
+	}
+	return nil, fmt.Errorf("%w: %v", verror.ServerError, respError)
+}
+
+func parseCitDetailsData(b []byte, status int) (*certificateTemplate, error) {
+
+	var cits CertificateTemplates
+	var cit certificateTemplate
+
+	if status == http.StatusOK { //update case
+		err := json.Unmarshal(b, &cit)
+
+		if err != nil {
+			return nil, err
+		}
+	} else { //create case
+		err := json.Unmarshal(b, &cits)
+
+		if err != nil {
+			return nil, err
+		}
+
+		//we just get the cit we created/updated
+		cit = cits.CertificateTemplates[0]
+	}
+
+	return &cit, nil
 }

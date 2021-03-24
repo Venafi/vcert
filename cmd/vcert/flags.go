@@ -654,6 +654,8 @@ var (
 	))
 
 	createPolicyFlgs = sortedFlags(flagsApppend(
+		flagTPPPassword,
+		flagTPPUser,
 		flagKey,
 		commonCredFlags,
 		commonFlags,
@@ -662,6 +664,8 @@ var (
 	))
 
 	getPolicyFlgs = sortedFlags(flagsApppend(
+		flagTPPPassword,
+		flagTPPUser,
 		flagKey,
 		commonCredFlags,
 		commonFlags,

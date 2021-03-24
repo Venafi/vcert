@@ -33,17 +33,19 @@ func GetParent(p string) string {
 
 func ValidateTppPolicySpecification(ps *PolicySpecification) error {
 
-	err := validatePolicySubject(ps)
-	if err != nil {
-		return err
+	if ps.Policy != nil {
+		err := validatePolicySubject(ps)
+		if err != nil {
+			return err
+		}
+
+		err = validateKeyPair(ps)
+		if err != nil {
+			return err
+		}
 	}
 
-	err = validateKeyPair(ps)
-	if err != nil {
-		return err
-	}
-
-	err = validateDefaultSubject(ps)
+	err := validateDefaultSubject(ps)
 	if err != nil {
 		return err
 	}
@@ -64,19 +66,19 @@ func validatePolicySubject(ps *PolicySpecification) error {
 	subject := ps.Policy.Subject
 
 	if len(subject.Orgs) > 1 {
-		return fmt.Errorf("attirbute orgs have more than one value")
+		return fmt.Errorf("attribute orgs has more than one value")
 	}
 	if len(subject.OrgUnits) > 1 {
-		return fmt.Errorf("attirbute org units have more than one value")
+		return fmt.Errorf("attribute org units has more than one value")
 	}
 	if len(subject.Localities) > 1 {
-		return fmt.Errorf("attirbute localities have more than one value")
+		return fmt.Errorf("attribute localities has more than one value")
 	}
 	if len(subject.States) > 1 {
-		return fmt.Errorf("attirbute states have more than one value")
+		return fmt.Errorf("attribute states has more than one value")
 	}
 	if len(subject.Countries) > 1 {
-		return fmt.Errorf("attirbute countries have more than one value")
+		return fmt.Errorf("attribute countries has more than one value")
 	}
 
 	return nil
@@ -90,92 +92,109 @@ func validateKeyPair(ps *PolicySpecification) error {
 
 	//validate algorithm
 	if len(keyPair.KeyTypes) > 1 {
-		return fmt.Errorf("attirbute keyTypes have more than one value")
+		return fmt.Errorf("attribute keyTypes has more than one value")
 	}
 	if len(keyPair.KeyTypes) > 0 && !existStringInArray(keyPair.KeyTypes, TppKeyType) {
-		return fmt.Errorf("specified keyTypes doesn't match witn the supported ones")
+		return fmt.Errorf("specified keyTypes doesn't match with the supported ones")
 	}
 
 	//validate key bit strength
 	if len(keyPair.RsaKeySizes) > 1 {
-		return fmt.Errorf("attirbute rsaKeySizes have more than one value")
+		return fmt.Errorf("attribute rsaKeySizes has more than one value")
 	}
 	if len(keyPair.RsaKeySizes) > 0 && !existIntInArray(keyPair.RsaKeySizes, TppRsaKeySize) {
-		return fmt.Errorf("specified rsaKeySizes doesn't match witn the supported ones")
+		return fmt.Errorf("specified rsaKeySizes doesn't match with the supported ones")
 	}
 
 	//validate elliptic curve
 	if len(keyPair.EllipticCurves) > 1 {
-		return fmt.Errorf("attirbute ellipticCurves have more than one value")
+		return fmt.Errorf("attribute ellipticCurves has more than one value")
 	}
 	if len(keyPair.EllipticCurves) > 0 && !existStringInArray(keyPair.EllipticCurves, TppEllipticCurves) {
-		return fmt.Errorf("specified ellipticCurves doesn't match witn the supported ones")
+		return fmt.Errorf("specified ellipticCurves doesn't match with the supported ones")
 	}
 
 	//validate generationType
 	if (keyPair.GenerationType != nil) && (*(keyPair.GenerationType) != "0") && (*(keyPair.GenerationType) != "1") {
-		return fmt.Errorf("specified generationType doesn't match witn the supported ones")
+		return fmt.Errorf("specified generationType doesn't match with the supported ones")
 	}
 
 	return nil
 }
 
-func existStringInArray(userValue []string, supportedvalues []string) bool {
+func existStringInArray(userValue []string, supportedValues []string) bool {
 	for _, uv := range userValue {
-		for _, sv := range supportedvalues {
+		match := false
+		for _, sv := range supportedValues {
 			if uv == sv {
-				return true
+				match = true
 			}
 		}
+		if !match {
+			return false
+		}
 	}
-	return false
+	return true
 }
 
 func existIntInArray(userValue []int, supportedvalues []int) bool {
 	for _, uv := range userValue {
+		match := false
 		for _, sv := range supportedvalues {
 			if uv == sv {
-				return true
+				match = true
 			}
 		}
+		if !match {
+			return false
+		}
 	}
-	return false
+
+	return true
 }
 
 func validateDefaultSubject(ps *PolicySpecification) error {
 
-	if ps.Default == nil || ps.Default.Subject == nil || ps.Policy.Subject == nil {
-		//there is nothing to validate
-		return nil
-	}
-	defaultSubject := ps.Default.Subject
-	policySubject := ps.Policy.Subject
+	if ps.Default != nil && ps.Default.Subject != nil {
 
-	if policySubject.Orgs != nil && policySubject.Orgs[0] != "" && defaultSubject.Org != nil && *(defaultSubject.Org) != "" {
-		if policySubject.Orgs[0] != *(defaultSubject.Org) {
-			return fmt.Errorf("policy default org doesn't match with policy's org value")
-		}
-	}
+		defaultSubject := ps.Default.Subject
 
-	if policySubject.OrgUnits != nil && policySubject.OrgUnits[0] != "" && defaultSubject.OrgUnits != nil && defaultSubject.OrgUnits[0] != "" {
-		if policySubject.OrgUnits[0] != defaultSubject.OrgUnits[0] {
-			return fmt.Errorf("policy default orgUnits doesn't match with policy's orgUnits value")
+		if len(defaultSubject.OrgUnits) > 1 {
+			return fmt.Errorf("attribute default org units has more than one value")
 		}
-	}
+		if ps.Policy.Subject == nil {
+			//there is nothing to validate
+			return nil
+		}
 
-	if policySubject.Localities != nil && policySubject.Localities[0] != "" && defaultSubject.Locality != nil && *(defaultSubject.Locality) != "" {
-		if policySubject.Localities[0] != *(defaultSubject.Locality) {
-			return fmt.Errorf("policy default locality doesn't match with policy's locality value")
+		policySubject := ps.Policy.Subject
+
+		if policySubject.Orgs != nil && policySubject.Orgs[0] != "" && defaultSubject.Org != nil && *(defaultSubject.Org) != "" {
+			if policySubject.Orgs[0] != *(defaultSubject.Org) {
+				return fmt.Errorf("policy default org doesn't match with policy's orgs value")
+			}
 		}
-	}
-	if policySubject.States != nil && policySubject.States[0] != "" && defaultSubject.State != nil && *(defaultSubject.State) != "" {
-		if policySubject.States[0] != *(defaultSubject.State) {
-			return fmt.Errorf("policy default state doesn't match with policy's state value")
+
+		if policySubject.OrgUnits != nil && policySubject.OrgUnits[0] != "" && defaultSubject.OrgUnits != nil && defaultSubject.OrgUnits[0] != "" {
+			if policySubject.OrgUnits[0] != defaultSubject.OrgUnits[0] {
+				return fmt.Errorf("policy default orgUnits doesn't match with policy's orgUnits value")
+			}
 		}
-	}
-	if policySubject.Countries != nil && policySubject.Countries[0] != "" && defaultSubject.Country != nil && *(defaultSubject.Country) != "" {
-		if policySubject.Countries[0] != *(defaultSubject.Country) {
-			return fmt.Errorf("policy default country doesn't match with policy's country value")
+
+		if policySubject.Localities != nil && policySubject.Localities[0] != "" && defaultSubject.Locality != nil && *(defaultSubject.Locality) != "" {
+			if policySubject.Localities[0] != *(defaultSubject.Locality) {
+				return fmt.Errorf("policy default locality doesn't match with policy's localities value")
+			}
+		}
+		if policySubject.States != nil && policySubject.States[0] != "" && defaultSubject.State != nil && *(defaultSubject.State) != "" {
+			if policySubject.States[0] != *(defaultSubject.State) {
+				return fmt.Errorf("policy default state doesn't match with policy's states value")
+			}
+		}
+		if policySubject.Countries != nil && policySubject.Countries[0] != "" && defaultSubject.Country != nil && *(defaultSubject.Country) != "" {
+			if policySubject.Countries[0] != *(defaultSubject.Country) {
+				return fmt.Errorf("policy default country doesn't match with policy's countries value")
+			}
 		}
 	}
 
@@ -228,78 +247,80 @@ func BuildTppPolicy(ps *PolicySpecification) TppPolicy {
 	tppPolicy.Approver = ps.Approvers
 
 	//policy attributes
-	tppPolicy.DomainSuffixWhitelist = ps.Policy.Domains
+	if ps.Policy != nil {
+		tppPolicy.DomainSuffixWhitelist = ps.Policy.Domains
+	}
 
-	if ps.Policy.WildcardAllowed != nil {
+	if ps.Policy != nil && ps.Policy.WildcardAllowed != nil {
 		tppPolicy.ProhibitWildcard = ps.Policy.WildcardAllowed
 	}
 
-	if ps.Policy.CertificateAuthority != nil {
+	if ps.Policy != nil && ps.Policy.CertificateAuthority != nil {
 		tppPolicy.CertificateAuthority = ps.Policy.CertificateAuthority
 	}
 
 	//policy subject attributes
-	if ps.Policy.Subject != nil && len(ps.Policy.Subject.Orgs) > 0 {
+	if ps.Policy != nil && ps.Policy.Subject != nil && len(ps.Policy.Subject.Orgs) > 0 {
 		tppPolicy.Organization = createLockedAttribute(ps.Policy.Subject.Orgs[0], true)
 	} else if ps.Default != nil && ps.Default.Subject != nil && *(ps.Default.Subject.Org) != "" {
 		tppPolicy.Organization = createLockedAttribute(*(ps.Default.Subject.Org), false)
 	}
 
-	if ps.Policy.Subject != nil && len(ps.Policy.Subject.OrgUnits) > 0 {
+	if ps.Policy != nil && ps.Policy.Subject != nil && len(ps.Policy.Subject.OrgUnits) > 0 {
 		tppPolicy.OrganizationalUnit = createLockedAttribute(ps.Policy.Subject.OrgUnits[0], true)
 	} else if ps.Default != nil && ps.Default.Subject != nil && len(ps.Default.Subject.OrgUnits) > 0 {
 		tppPolicy.OrganizationalUnit = createLockedAttribute(ps.Default.Subject.OrgUnits[0], false)
 	}
 
-	if ps.Policy.Subject != nil && len(ps.Policy.Subject.Localities) > 0 {
+	if ps.Policy != nil && ps.Policy.Subject != nil && len(ps.Policy.Subject.Localities) > 0 {
 		tppPolicy.City = createLockedAttribute(ps.Policy.Subject.Localities[0], true)
 	} else if ps.Default != nil && ps.Default.Subject != nil && (ps.Default.Subject.Locality != nil) && (*(ps.Default.Subject.Locality) != "") {
 		tppPolicy.City = createLockedAttribute(*(ps.Default.Subject.Locality), false)
 	}
 
-	if ps.Policy.Subject != nil && len(ps.Policy.Subject.States) > 0 {
+	if ps.Policy != nil && ps.Policy.Subject != nil && len(ps.Policy.Subject.States) > 0 {
 		tppPolicy.State = createLockedAttribute(ps.Policy.Subject.States[0], true)
 	} else if ps.Default != nil && ps.Default.Subject != nil && (ps.Default.Subject.State != nil) && (*(ps.Default.Subject.State) != "") {
 		tppPolicy.State = createLockedAttribute(*(ps.Default.Subject.State), false)
 	}
 
-	if ps.Policy.Subject != nil && len(ps.Policy.Subject.Countries) > 0 {
+	if ps.Policy != nil && ps.Policy.Subject != nil && len(ps.Policy.Subject.Countries) > 0 {
 		tppPolicy.Country = createLockedAttribute(ps.Policy.Subject.Countries[0], true)
 	} else if ps.Default != nil && ps.Default.Subject != nil && (ps.Default.Subject.Country != nil) && (*(ps.Default.Subject.Country) != "") {
 		tppPolicy.Country = createLockedAttribute(*(ps.Default.Subject.Country), false)
 	}
 
-	if ps.Policy.KeyPair != nil && len(ps.Policy.KeyPair.KeyTypes) > 0 {
+	if ps.Policy != nil && ps.Policy.KeyPair != nil && len(ps.Policy.KeyPair.KeyTypes) > 0 {
 		tppPolicy.KeyAlgorithm = createLockedAttribute(ps.Policy.KeyPair.KeyTypes[0], true)
 	} else if ps.Default != nil && ps.Default.KeyPair != nil && (ps.Default.KeyPair.KeyType != nil) && (*(ps.Default.KeyPair.KeyType) != "") {
 		tppPolicy.KeyAlgorithm = createLockedAttribute(*(ps.Default.KeyPair.KeyType), false)
 	}
 
-	if ps.Policy.KeyPair != nil && len(ps.Policy.KeyPair.RsaKeySizes) > 0 {
+	if ps.Policy != nil && ps.Policy.KeyPair != nil && len(ps.Policy.KeyPair.RsaKeySizes) > 0 {
 		rsaKey := ps.Policy.KeyPair.RsaKeySizes[0]
 		tppPolicy.KeyBitStrength = createLockedAttribute(strconv.Itoa(rsaKey), true)
 	} else if ps.Default != nil && ps.Default.KeyPair != nil && (ps.Default.KeyPair.RsaKeySize != nil) && *(ps.Default.KeyPair.RsaKeySize) != 0 {
 		tppPolicy.KeyBitStrength = createLockedAttribute(strconv.Itoa(*(ps.Default.KeyPair.RsaKeySize)), false)
 	}
 
-	if ps.Policy.KeyPair != nil && len(ps.Policy.KeyPair.EllipticCurves) > 0 {
+	if ps.Policy != nil && ps.Policy.KeyPair != nil && len(ps.Policy.KeyPair.EllipticCurves) > 0 {
 		tppPolicy.EllipticCurve = createLockedAttribute(ps.Policy.KeyPair.EllipticCurves[0], true)
 	} else if ps.Default != nil && ps.Default.KeyPair != nil && (ps.Default.KeyPair.EllipticCurve != nil) && (*(ps.Default.KeyPair.EllipticCurve) != "") {
 		tppPolicy.EllipticCurve = createLockedAttribute(*(ps.Default.KeyPair.EllipticCurve), false)
 	}
 
-	if ps.Policy.KeyPair != nil && ps.Policy.KeyPair.GenerationType != nil {
+	if ps.Policy != nil && ps.Policy.KeyPair != nil && ps.Policy.KeyPair.GenerationType != nil {
 		tppPolicy.ManualCsr = createLockedAttribute(*(ps.Policy.KeyPair.GenerationType), true)
 	} else if ps.Default != nil && ps.Default.KeyPair != nil && (ps.Default.KeyPair.GenerationType != nil) && (*(ps.Default.KeyPair.GenerationType) != "") {
 		tppPolicy.ManualCsr = createLockedAttribute(*(ps.Default.KeyPair.GenerationType), false)
 	}
 
-	if ps.Policy.KeyPair != nil && ps.Policy.KeyPair.ReuseAllowed != nil {
+	if ps.Policy != nil && ps.Policy.KeyPair != nil && ps.Policy.KeyPair.ReuseAllowed != nil {
 		tppPolicy.AllowPrivateKeyReuse = ps.Policy.KeyPair.ReuseAllowed
 		tppPolicy.WantRenewal = ps.Policy.KeyPair.ReuseAllowed
 	}
 
-	if ps.Policy.SubjectAltNames != nil {
+	if ps.Policy != nil && ps.Policy.SubjectAltNames != nil {
 		prohibitedSANType := getProhibitedSanTypes(*(ps.Policy.SubjectAltNames))
 		if prohibitedSANType != nil {
 			tppPolicy.ProhibitedSANType = prohibitedSANType
@@ -579,87 +600,127 @@ func existValueInArray(array []string, value string) bool {
 
 //////////////////////---------------------Venafi Cloud policy management code-------------//////////////////////////////////////
 
+func validateDefaultStringCloudValues(array []string, value string) bool {
+	if len(array) == 1 {
+		if array[0] == AllowAll { // this means that we are allowing everything
+			return true
+		}
+	}
+	return existValueInArray(array, value)
+}
+
+func validateDefaultSubjectOrgsCloudValues(defaultValues []string, policyValues []string) bool {
+	if len(policyValues) == 1 {
+		if policyValues[0] == AllowAll { // this means that we are allowing everything
+			return true
+		}
+	}
+	return existStringInArray(defaultValues, policyValues)
+}
+
 func ValidateCloudPolicySpecification(ps *PolicySpecification) error {
 
 	//validate key type
-	if ps.Policy.KeyPair != nil {
-		if len(ps.Policy.KeyPair.KeyTypes) > 1 {
-			return fmt.Errorf("attirbute keyTypes have more than one value")
+	if ps.Policy != nil {
+		if ps.Policy.KeyPair != nil {
+			if len(ps.Policy.KeyPair.KeyTypes) > 1 {
+				return fmt.Errorf("attribute keyTypes has more than one value")
+			}
+
+			if ps.Policy.KeyPair.KeyTypes[0] != "RSA" {
+				return fmt.Errorf("specified attribute keyTypes value is not supported on Venafi cloud")
+			}
+
+			//validate key KeyTypes:keyLengths
+			if len(ps.Policy.KeyPair.RsaKeySizes) > 0 {
+				unSupported := getInvalidCloudRsaKeySizeValue(ps.Policy.KeyPair.RsaKeySizes)
+				if unSupported != nil {
+					return fmt.Errorf("specified attribute key lenght value: %s is not supported on Venafi cloud", strconv.Itoa(*(unSupported)))
+				}
+			}
 		}
 
-		if ps.Policy.KeyPair.KeyTypes[0] != "RSA" {
-			return fmt.Errorf("specified attirbute keyTypes value is not supported on Venafi cloud")
+		//validate subjectCNRegexes & sanRegexes
+		if ps.Policy.SubjectAltNames != nil {
+			subjectAltNames := getSubjectAltNames(*(ps.Policy.SubjectAltNames))
+			if len(subjectAltNames) > 0 {
+				for k, v := range subjectAltNames {
+					if v {
+						return fmt.Errorf("specified subjectAltNames: %s value is true, this value is not allowed ", k)
+					}
+				}
+			}
+		}
+
+		//if defaults are define validate that them matches with policy values
+		if ps.Policy.Subject != nil {
+			if ps.Default != nil && ps.Default.Subject != nil && ps.Default.Subject.Org != nil && len(ps.Policy.Subject.Orgs) > 0 {
+				exist := validateDefaultStringCloudValues(ps.Policy.Subject.Orgs, *(ps.Default.Subject.Org))
+				if !exist {
+					return fmt.Errorf("specified default org value: %s  doesn't match with specified policy org", *(ps.Default.Subject.Org))
+				}
+			}
+
+			if ps.Default != nil && ps.Default.Subject != nil && len(ps.Default.Subject.OrgUnits) > 0 && len(ps.Policy.Subject.OrgUnits) > 0 {
+				exist := validateDefaultSubjectOrgsCloudValues(ps.Default.Subject.OrgUnits, ps.Policy.Subject.OrgUnits)
+				if !exist {
+					return fmt.Errorf("specified default org unit value: %s  doesn't match with specified policy org unit", *(ps.Default.Subject.Org))
+				}
+			}
+
+			if ps.Default != nil && ps.Default.Subject != nil && ps.Default.Subject.Locality != nil && len(ps.Policy.Subject.Localities) > 0 {
+				exist := validateDefaultStringCloudValues(ps.Policy.Subject.Localities, *(ps.Default.Subject.Locality))
+				if !exist {
+					return fmt.Errorf("specified default locality value: %s  doesn't match with specified policy locality", *(ps.Default.Subject.Locality))
+				}
+			}
+
+			if ps.Default != nil && ps.Default.Subject != nil && ps.Default.Subject.State != nil && len(ps.Policy.Subject.States) > 0 {
+				exist := validateDefaultStringCloudValues(ps.Policy.Subject.States, *(ps.Default.Subject.State))
+				if !exist {
+					return fmt.Errorf("specified default state value: %s  doesn't match with specified policy state", *(ps.Default.Subject.State))
+				}
+			}
+
+			if ps.Default != nil && ps.Default.Subject != nil && ps.Default.Subject.Country != nil && len(ps.Policy.Subject.Countries) > 0 {
+				exist := validateDefaultStringCloudValues(ps.Policy.Subject.Countries, *(ps.Default.Subject.Country))
+				if !exist {
+					return fmt.Errorf("specified default country value: %s  doesn't match with specified policy country", *(ps.Default.Subject.Country))
+				}
+			}
+		}
+
+		if ps.Policy.KeyPair != nil {
+			if ps.Default != nil && ps.Default.KeyPair != nil && ps.Default.KeyPair.KeyType != nil && len(ps.Policy.KeyPair.KeyTypes) > 0 {
+				exist := existValueInArray(ps.Policy.KeyPair.KeyTypes, *(ps.Default.KeyPair.KeyType))
+				if !exist {
+					return fmt.Errorf("specified default key type value: %s  doesn't match with specified policy key type", *(ps.Default.KeyPair.KeyType))
+				}
+			}
+
+			if ps.Default != nil && ps.Default.KeyPair != nil && ps.Default.KeyPair.RsaKeySize != nil && len(ps.Policy.KeyPair.RsaKeySizes) > 0 {
+				exist := existIntInArray(ps.Policy.KeyPair.RsaKeySizes, []int{*(ps.Default.KeyPair.RsaKeySize)})
+				if !exist {
+					return fmt.Errorf("specified default rsa key size value: %s  doesn't match with specified policy rsa key size", *(ps.Default.KeyPair.KeyType))
+				}
+			}
+		}
+	}
+
+	//now in case that policy is empty but defaults key types and rsa sizes not, we need to validate them
+	if ps.Default != nil && ps.Default.KeyPair != nil {
+
+		if ps.Default.KeyPair.KeyType != nil && *(ps.Default.KeyPair.KeyType) != "" {
+			if *(ps.Default.KeyPair.KeyType) != "RSA" {
+				return fmt.Errorf("specified default attribute keyType value is not supported on Venafi cloud")
+			}
 		}
 
 		//validate key KeyTypes:keyLengths
-		if len(ps.Policy.KeyPair.RsaKeySizes) > 0 {
-			unSupported := getInvalidCloudRsaKeySizeValue(ps.Policy.KeyPair.RsaKeySizes)
+		if ps.Default.KeyPair.RsaKeySize != nil && *(ps.Default.KeyPair.RsaKeySize) != 0 {
+			unSupported := getInvalidCloudRsaKeySizeValue([]int{*(ps.Default.KeyPair.RsaKeySize)})
 			if unSupported != nil {
-				return fmt.Errorf("specified attirbute key lenght value: %s is not supported on Venafi cloud", strconv.Itoa(*(unSupported)))
-			}
-		}
-	}
-	//validate subjectCNRegexes & sanRegexes
-	subjectAltNames := getSubjectAltNames(*(ps.Policy.SubjectAltNames))
-	if len(subjectAltNames) > 0 {
-		for k, v := range subjectAltNames {
-			if v {
-				return fmt.Errorf("specified subjectAltNames: %s value is true, this value is not allowed ", k)
-			}
-		}
-	}
-	//if defaults are define validate that them matches with policy values
-
-	if ps.Policy.Subject != nil {
-		if ps.Default != nil && ps.Default.Subject != nil && ps.Default.Subject.Org != nil && len(ps.Policy.Subject.Orgs) > 0 {
-			exist := existValueInArray(ps.Policy.Subject.Orgs, *(ps.Default.Subject.Org))
-			if !exist {
-				return fmt.Errorf("specified default org value: %s  doesn't match with specified policy org", *(ps.Default.Subject.Org))
-			}
-		}
-
-		if ps.Default != nil && ps.Default.Subject != nil && len(ps.Default.Subject.OrgUnits) > 1 && len(ps.Policy.Subject.OrgUnits) > 0 {
-			//existStringInArray(userValue []string, supportedvalues []string)
-			exist := existStringInArray(ps.Default.Subject.OrgUnits, ps.Policy.Subject.OrgUnits)
-			if !exist {
-				return fmt.Errorf("specified default org unit value: %s  doesn't match with specified policy org unit", *(ps.Default.Subject.Org))
-			}
-		}
-
-		if ps.Default != nil && ps.Default.Subject != nil && ps.Default.Subject.Locality != nil && len(ps.Policy.Subject.Localities) > 0 {
-			exist := existValueInArray(ps.Policy.Subject.Localities, *(ps.Default.Subject.Locality))
-			if !exist {
-				return fmt.Errorf("specified default locality value: %s  doesn't match with specified policy locality", *(ps.Default.Subject.Locality))
-			}
-		}
-
-		if ps.Default != nil && ps.Default.Subject != nil && ps.Default.Subject.State != nil && len(ps.Policy.Subject.States) > 0 {
-			exist := existValueInArray(ps.Policy.Subject.States, *(ps.Default.Subject.State))
-			if !exist {
-				return fmt.Errorf("specified default state value: %s  doesn't match with specified policy state", *(ps.Default.Subject.State))
-			}
-		}
-
-		if ps.Default != nil && ps.Default.Subject != nil && ps.Default.Subject.Country != nil && len(ps.Policy.Subject.Countries) > 0 {
-			exist := existValueInArray(ps.Policy.Subject.Countries, *(ps.Default.Subject.Country))
-			if !exist {
-				return fmt.Errorf("specified default country value: %s  doesn't match with specified policy country", *(ps.Default.Subject.Country))
-			}
-		}
-	}
-
-	if ps.Policy.KeyPair != nil {
-		if ps.Default != nil && ps.Default.KeyPair != nil && ps.Default.KeyPair.KeyType != nil && len(ps.Policy.KeyPair.KeyTypes) > 0 {
-			exist := existValueInArray(ps.Policy.KeyPair.KeyTypes, *(ps.Default.KeyPair.KeyType))
-			if !exist {
-				return fmt.Errorf("specified default key type value: %s  doesn't match with specified policy key type", *(ps.Default.KeyPair.KeyType))
-			}
-		}
-
-		if ps.Default != nil && ps.Default.KeyPair != nil && ps.Default.KeyPair.RsaKeySize != nil && len(ps.Policy.KeyPair.RsaKeySizes) > 0 {
-			exist := existIntInArray(ps.Policy.KeyPair.RsaKeySizes, []int{*(ps.Default.KeyPair.RsaKeySize)})
-			if !exist {
-				return fmt.Errorf("specified default rsa key size value: %s  doesn't match with specified policy rsa key size", *(ps.Default.KeyPair.KeyType))
+				return fmt.Errorf("specified attribute key lenght value: %s is not supported on Venafi cloud", strconv.Itoa(*(unSupported)))
 			}
 		}
 	}
@@ -686,8 +747,7 @@ func getInvalidCloudRsaKeySizeValue(specifiedRSAKeys []int) *int {
 
 func getSubjectAltNames(names SubjectAltNames) map[string]bool {
 
-	var subjectAltNames map[string]bool
-	subjectAltNames = make(map[string]bool)
+	subjectAltNames := make(map[string]bool)
 
 	if names.DnsAllowed != nil {
 		subjectAltNames["dnsAllowed"] = *(names.UpnAllowed)
@@ -713,20 +773,33 @@ func getSubjectAltNames(names SubjectAltNames) map[string]bool {
 
 }
 
-func BuildCloudCit(ps *PolicySpecification, certAuth *CertificateAuthorityInfo) CloudPolicyRequest {
+func BuildCloudCitRequest(ps *PolicySpecification) (*CloudPolicyRequest, error) {
 	var cloudPolicyRequest CloudPolicyRequest
+	var certAuth *CertificateAuthorityInfo
+	var err error
+	var period int
+	if ps.Policy != nil && ps.Policy.CertificateAuthority != nil {
+		certAuth, err = GetCertAuthorityInfo(*(ps.Policy.CertificateAuthority))
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	cloudPolicyRequest.CertificateAuthority = certAuth.CAType
+
+	if ps.Policy != nil && ps.Policy.MaxValidDays != nil {
+		period = *(ps.Policy.MaxValidDays)
+	}
 
 	product := Product{
 		CertificateAuthority: certAuth.CAType,
 		ProductName:          certAuth.VendorProductName,
-		ValidityPeriod:       fmt.Sprint("P", strconv.Itoa(*(ps.Policy.MaxValidDays)), "D"),
+		ValidityPeriod:       fmt.Sprint("P", strconv.Itoa(period), "D"),
 	}
 	cloudPolicyRequest.Product = product
 
-	if len(ps.Policy.Domains) > 0 {
-		regexValues := convertToRegex(ps.Policy.Domains)
+	if ps.Policy != nil && len(ps.Policy.Domains) > 0 {
+		regexValues := ConvertToRegex(ps.Policy.Domains)
 		cloudPolicyRequest.SubjectCNRegexes = regexValues
 		cloudPolicyRequest.SanRegexes = regexValues //in cloud subject CN and SAN have the same values and we use domains as those values
 	} else {
@@ -734,44 +807,44 @@ func BuildCloudCit(ps *PolicySpecification, certAuth *CertificateAuthorityInfo) 
 		cloudPolicyRequest.SanRegexes = []string{".*"}
 	}
 
-	if ps.Policy.Subject != nil && len(ps.Policy.Subject.Orgs) > 0 {
+	if ps.Policy != nil && ps.Policy.Subject != nil && len(ps.Policy.Subject.Orgs) > 0 {
 		cloudPolicyRequest.SubjectORegexes = ps.Policy.Subject.Orgs
 	} else {
 		cloudPolicyRequest.SubjectORegexes = []string{".*"}
 	}
 
-	if ps.Policy.Subject != nil && len(ps.Policy.Subject.OrgUnits) > 0 {
+	if ps.Policy != nil && ps.Policy.Subject != nil && len(ps.Policy.Subject.OrgUnits) > 0 {
 		cloudPolicyRequest.SubjectOURegexes = ps.Policy.Subject.OrgUnits
 	} else {
 		cloudPolicyRequest.SubjectOURegexes = []string{".*"}
 	}
 
-	if ps.Policy.Subject != nil && len(ps.Policy.Subject.Localities) > 0 {
+	if ps.Policy != nil && ps.Policy.Subject != nil && len(ps.Policy.Subject.Localities) > 0 {
 		cloudPolicyRequest.SubjectLRegexes = ps.Policy.Subject.Localities
 	} else {
 		cloudPolicyRequest.SubjectLRegexes = []string{".*"}
 	}
 
-	if ps.Policy.Subject != nil && len(ps.Policy.Subject.States) > 0 {
+	if ps.Policy != nil && ps.Policy.Subject != nil && len(ps.Policy.Subject.States) > 0 {
 		cloudPolicyRequest.SubjectSTRegexes = ps.Policy.Subject.States
 	} else {
 		cloudPolicyRequest.SubjectSTRegexes = []string{".*"}
 	}
 
-	if ps.Policy.Subject != nil && len(ps.Policy.Subject.Countries) > 0 {
+	if ps.Policy != nil && ps.Policy.Subject != nil && len(ps.Policy.Subject.Countries) > 0 {
 		cloudPolicyRequest.SubjectCValues = ps.Policy.Subject.Countries
 	} else {
 		cloudPolicyRequest.SubjectCValues = []string{".*"}
 	}
 
 	var keyTypes KeyTypes
-	if ps.Policy.KeyPair != nil && len(ps.Policy.KeyPair.KeyTypes) > 0 {
+	if ps.Policy != nil && ps.Policy.KeyPair != nil && len(ps.Policy.KeyPair.KeyTypes) > 0 {
 		keyTypes.KeyType = ps.Policy.KeyPair.KeyTypes[0]
 	} else {
 		keyTypes.KeyType = "RSA"
 	}
 
-	if ps.Policy.KeyPair != nil && len(ps.Policy.KeyPair.RsaKeySizes) > 0 {
+	if ps.Policy != nil && ps.Policy.KeyPair != nil && len(ps.Policy.KeyPair.RsaKeySizes) > 0 {
 		keyTypes.KeyLengths = ps.Policy.KeyPair.RsaKeySizes
 	} else {
 		// on this case we need to look if there is a default if so then we can use it.
@@ -791,7 +864,7 @@ func BuildCloudCit(ps *PolicySpecification, certAuth *CertificateAuthorityInfo) 
 		cloudPolicyRequest.KeyTypes = keyTypesArr
 	}
 
-	if ps.Policy.KeyPair != nil && ps.Policy.KeyPair.ReuseAllowed != nil {
+	if ps.Policy != nil && ps.Policy.KeyPair != nil && ps.Policy.KeyPair.ReuseAllowed != nil {
 		cloudPolicyRequest.KeyReuse = ps.Policy.KeyPair.ReuseAllowed
 	} else {
 		falseValue := false
@@ -801,39 +874,41 @@ func BuildCloudCit(ps *PolicySpecification, certAuth *CertificateAuthorityInfo) 
 	//build recommended settings
 
 	var recommendedSettings RecommendedSettings
-	shouldCreateRS := false
+	shouldCreateSubjectRS := false
+	shouldCreateKPRS := false
 
 	/*if ps.Default.Domain != nil{ ignore for now
 		recommendedSettings.SubjectCNRegexes = []string{*(ps.Default.Domain)}//whan value should be put here.
-		shouldCreateRS = true
+		shouldCreateSubjectRS = true
 	}*/
 	if ps.Default != nil && ps.Default.Subject != nil {
 		if ps.Default.Subject.Org != nil {
 			recommendedSettings.SubjectOValue = ps.Default.Subject.Org
-			shouldCreateRS = true
+			shouldCreateSubjectRS = true
 		}
 		if ps.Default.Subject.OrgUnits != nil {
 			recommendedSettings.SubjectOUValue = &ps.Default.Subject.OrgUnits[0]
-			shouldCreateRS = true
+			shouldCreateSubjectRS = true
 		}
 		if ps.Default.Subject.Locality != nil {
 			recommendedSettings.SubjectLValue = ps.Default.Subject.Locality
-			shouldCreateRS = true
+			shouldCreateSubjectRS = true
 		}
 		if ps.Default.Subject.State != nil {
 			recommendedSettings.SubjectSTValue = ps.Default.Subject.State
-			shouldCreateRS = true
+			shouldCreateSubjectRS = true
 		}
 
 		if ps.Default.Subject.Country != nil {
 			recommendedSettings.SubjectCValue = ps.Default.Subject.Country
-			shouldCreateRS = true
+			shouldCreateSubjectRS = true
 		}
 	}
 
+	var key Key
 	if ps.Default != nil && ps.Default.KeyPair != nil {
 		if ps.Default.KeyPair.KeyType != nil {
-			var key Key
+
 			key.Type = *(ps.Default.KeyPair.KeyType)
 			if ps.Default.KeyPair.RsaKeySize != nil {
 				key.Length = *(ps.Default.KeyPair.RsaKeySize)
@@ -841,23 +916,26 @@ func BuildCloudCit(ps *PolicySpecification, certAuth *CertificateAuthorityInfo) 
 				//default
 				key.Length = 2048
 			}
-			recommendedSettings.Key = key
 
-			shouldCreateRS = true
+			shouldCreateKPRS = true
 		}
 	}
 	//SanRegexes is ignored now.
 
-	if shouldCreateRS {
+	if shouldCreateKPRS {
+		recommendedSettings.Key = &key
+	}
+
+	if shouldCreateKPRS || shouldCreateSubjectRS {
 		falseValue := false
 		recommendedSettings.KeyReuse = &falseValue
 		cloudPolicyRequest.RecommendedSettings = &recommendedSettings
 	}
 
-	return cloudPolicyRequest
+	return &cloudPolicyRequest, nil
 }
 
-func convertToRegex(values []string) []string {
+func ConvertToRegex(values []string) []string {
 	var regexVals []string
 	for _, current := range values {
 		currentRegex := strings.ReplaceAll(current, ".", "\\.")

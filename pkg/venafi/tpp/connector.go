@@ -670,13 +670,17 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	log.Println("Collecting policy attributes")
 
 	//validate if the policy exists
-	if !PolicyExist(name, c) {
+	policyExist, err := PolicyExist(name, c)
+	if err != nil {
+		return nil, err
+	}
+	if !policyExist {
 		return nil, fmt.Errorf("the specified policy does not exists")
 	}
 	tp.Name = &name
 
 	// Contact
-	contact, _, err := getPolicyAttibute(c, policy.TppContact, name)
+	contact, _, err := getPolicyAttribute(c, policy.TppContact, name)
 	if err != nil {
 		return nil, err
 	}
@@ -684,7 +688,7 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 		tp.Contact = contact
 	}
 
-	approver, _, err := getPolicyAttibute(c, policy.TppApprover, name)
+	approver, _, err := getPolicyAttribute(c, policy.TppApprover, name)
 	if err != nil {
 		return nil, err
 	}
@@ -692,7 +696,7 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 		tp.Approver = approver
 	}
 
-	prohitedWildcard, _, err := getPolicyAttibute(c, policy.TppProhibitWildcard, name)
+	prohitedWildcard, _, err := getPolicyAttribute(c, policy.TppProhibitWildcard, name)
 
 	if err != nil {
 		return nil, err
@@ -706,7 +710,7 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 		tp.ProhibitWildcard = &boolVal
 	}
 
-	domainSuffixWhitelist, _, err := getPolicyAttibute(c, policy.TppDomainSuffixWhitelist, name)
+	domainSuffixWhitelist, _, err := getPolicyAttribute(c, policy.TppDomainSuffixWhitelist, name)
 
 	if err != nil {
 		return nil, err
@@ -717,7 +721,7 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	}
 
 	//resolve Certificate authority
-	certAuthority, _, err := getPolicyAttibute(c, policy.TppCertificateAuthority, name)
+	certAuthority, _, err := getPolicyAttribute(c, policy.TppCertificateAuthority, name)
 
 	if err != nil {
 		return nil, err
@@ -728,7 +732,7 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	}
 
 	//Organization
-	organization, locked, err := getPolicyAttibute(c, policy.TppOrganization, name)
+	organization, locked, err := getPolicyAttribute(c, policy.TppOrganization, name)
 
 	if err != nil {
 		return nil, err
@@ -739,7 +743,7 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	}
 
 	//Org Unit
-	organizationalUnit, locked, err := getPolicyAttibute(c, policy.TppOrganizationalUnit, name)
+	organizationalUnit, locked, err := getPolicyAttribute(c, policy.TppOrganizationalUnit, name)
 
 	if err != nil {
 		return nil, err
@@ -750,7 +754,7 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	}
 
 	//City
-	city, locked, err := getPolicyAttibute(c, policy.TppCity, name)
+	city, locked, err := getPolicyAttribute(c, policy.TppCity, name)
 
 	if err != nil {
 		return nil, err
@@ -761,7 +765,7 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	}
 
 	//State
-	state, locked, err := getPolicyAttibute(c, policy.TppState, name)
+	state, locked, err := getPolicyAttribute(c, policy.TppState, name)
 
 	if err != nil {
 		return nil, err
@@ -772,7 +776,7 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	}
 
 	//country
-	country, locked, err := getPolicyAttibute(c, policy.TppCountry, name)
+	country, locked, err := getPolicyAttribute(c, policy.TppCountry, name)
 
 	if err != nil {
 		return nil, err
@@ -783,7 +787,7 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	}
 
 	//KeyAlgorithm
-	keyAlgorithm, locked, err := getPolicyAttibute(c, policy.TppKeyAlgorithm, name)
+	keyAlgorithm, locked, err := getPolicyAttribute(c, policy.TppKeyAlgorithm, name)
 
 	if err != nil {
 		return nil, err
@@ -794,7 +798,7 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	}
 
 	//Key Bit Strength
-	keyBitStrength, locked, err := getPolicyAttibute(c, policy.TppKeyBitStrength, name)
+	keyBitStrength, locked, err := getPolicyAttribute(c, policy.TppKeyBitStrength, name)
 
 	if err != nil {
 		return nil, err
@@ -805,7 +809,7 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	}
 
 	//Elliptic Curve
-	ellipticCurve, locked, err := getPolicyAttibute(c, policy.TppEllipticCurve, name)
+	ellipticCurve, locked, err := getPolicyAttribute(c, policy.TppEllipticCurve, name)
 
 	if err != nil {
 		return nil, err
@@ -816,7 +820,7 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	}
 
 	//Manual Csr
-	manualCsr, locked, err := getPolicyAttibute(c, policy.TppManualCsr, name)
+	manualCsr, locked, err := getPolicyAttribute(c, policy.TppManualCsr, name)
 
 	if err != nil {
 		return nil, err
@@ -827,7 +831,7 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	}
 
 	//Prohibited SAN Types
-	prohibitedSANTypes, _, err := getPolicyAttibute(c, policy.TppProhibitedSANTypes, name)
+	prohibitedSANTypes, _, err := getPolicyAttribute(c, policy.TppProhibitedSANTypes, name)
 
 	if err != nil {
 		return nil, err
@@ -838,7 +842,7 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	}
 
 	//AllowPrivate Key Reuse
-	allowPrivateKeyReuse, _, err := getPolicyAttibute(c, policy.TppAllowPrivateKeyReuse, name)
+	allowPrivateKeyReuse, _, err := getPolicyAttribute(c, policy.TppAllowPrivateKeyReuse, name)
 
 	if err != nil {
 		return nil, err
@@ -853,7 +857,7 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	}
 
 	//TppWantRenewal
-	wantRenewal, _, err := getPolicyAttibute(c, policy.TppWantRenewal, name)
+	wantRenewal, _, err := getPolicyAttribute(c, policy.TppWantRenewal, name)
 
 	if err != nil {
 		return nil, err
@@ -876,26 +880,35 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	return ps, nil
 }
 
-func PolicyExist(policyName string, c *Connector) bool {
+func PolicyExist(policyName string, c *Connector) (bool, error) {
 
 	req := policy.PolicyExistPayloadRequest{
 		ObjectDN: policyName,
 	}
-	_, _, body, _ := c.request("POST", urlResourceIsValidPolicy, req)
+	_, _, body, err := c.request("POST", urlResourceIsValidPolicy, req)
 
+	if err != nil {
+		return false, err
+	}
 	var response policy.PolicyIsValidResponse
-	json.Unmarshal(body, &response)
+	err = json.Unmarshal(body, &response)
 
-	//if error is not null then the policy doesn't exists
-	if (response.Error != "") && (response.Result == 400) {
-		return false
+	if err != nil {
+		return false, err
 	}
 
-	return true
+	//if error is not null then the policy doesn't exists
+	if response.Result == 1 && response.PolicyObject.DN != "" {
+		return true, nil
+	} else if (response.Error != "") && (response.Result == 400) {
+		return false, nil
+	} else {
+		return false, fmt.Errorf(response.Error)
+	}
+
 }
 
 func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (string, error) {
-	//	statusCode, status, body, err := c.request("POST", urlResourceCertificatePolicy, rq)
 
 	//validate policy specification and policy
 	err := policy.ValidateTppPolicySpecification(ps)
@@ -918,14 +931,25 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 	var policyExists = false
 
 	//validate if the policy exists
-	if PolicyExist(name, c) {
+	policyExist, err := PolicyExist(name, c)
+	if err != nil {
+		return "", err
+	}
+
+	if policyExist {
 		policyExists = true
 		log.Printf("policy: %s exists", name)
 	} else {
 
 		//validate if the parent exist
 		parent := policy.GetParent(name)
-		if parent != policy.RootPath && !PolicyExist(parent, c) {
+
+		parentExist, err := PolicyExist(parent, c)
+		if err != nil {
+			return "", err
+		}
+
+		if parent != policy.RootPath && !parentExist {
 
 			return "", fmt.Errorf("the policy's parent doesn't exists")
 
@@ -1072,14 +1096,14 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 
 	//Allow Private Key Reuse" & "Want Renewal
 	if tppPolicy.AllowPrivateKeyReuse != nil {
-		_, status, _, err = createPolicyAttribute(c, policy.TppAllowPrivateKeyReuse, []string{strconv.FormatBool(*(tppPolicy.AllowPrivateKeyReuse))}, *(tppPolicy.Name), false)
+		_, status, _, err = createPolicyAttribute(c, policy.TppAllowPrivateKeyReuse, []string{strconv.FormatBool(*(tppPolicy.AllowPrivateKeyReuse))}, *(tppPolicy.Name), true)
 		if err != nil {
 			return "", err
 		}
 	}
 
 	if tppPolicy.WantRenewal != nil {
-		_, status, _, err = createPolicyAttribute(c, policy.TppWantRenewal, []string{strconv.FormatBool(*(tppPolicy.WantRenewal))}, *(tppPolicy.Name), false)
+		_, status, _, err = createPolicyAttribute(c, policy.TppWantRenewal, []string{strconv.FormatBool(*(tppPolicy.WantRenewal))}, *(tppPolicy.Name), true)
 		if err != nil {
 			return "", err
 		}
@@ -1608,6 +1632,9 @@ func createPolicyAttribute(c *Connector, at string, av []string, n string, l boo
 	// if is not locked then is a default.
 
 	statusCode, statusText, body, err = c.request("POST", urlResourceWritePolicy, request)
+	if err != nil {
+		return statusCode, statusText, body, err
+	}
 
 	var response policy.PolicySetAttributeResponse
 
@@ -1624,7 +1651,7 @@ func createPolicyAttribute(c *Connector, at string, av []string, n string, l boo
 	return statusCode, statusText, body, err
 }
 
-func getPolicyAttibute(c *Connector, at string, n string) (s []string, b *bool, err error) {
+func getPolicyAttribute(c *Connector, at string, n string) (s []string, b *bool, err error) {
 
 	request := policy.PolicyGetAttributePayloadRequest{
 		ObjectDN:      n,
@@ -1640,7 +1667,11 @@ func getPolicyAttibute(c *Connector, at string, n string) (s []string, b *bool, 
 	}
 
 	var response policy.PolicyGetAttributeResponse
-	json.Unmarshal(body, &response)
+	err = json.Unmarshal(body, &response)
+
+	if err != nil {
+		return nil, nil, err
+	}
 
 	if len(response.Values) > 0 {
 		return response.Values, &response.Locked, nil

@@ -30,4 +30,5 @@ const (
 	TppEmailAllowed          = "Email"
 	TppUriAllowed            = "URI"
 	TppUpnAllowed            = "UPN"
+	AllowAll                 = ".*"
 )
