@@ -118,7 +118,7 @@ type TppPolicy struct {
 	Approver []string
 
 	//policy's values
-	ProhibitWildcard      *bool
+	ProhibitWildcard      *int
 	DomainSuffixWhitelist []string
 	ProhibitedSANType     []string
 	CertificateAuthority  *string
@@ -135,8 +135,8 @@ type TppPolicy struct {
 	KeyBitStrength       *LockedAttribute
 	EllipticCurve        *LockedAttribute
 	ManualCsr            *LockedAttribute
-	AllowPrivateKeyReuse *bool
-	WantRenewal          *bool
+	AllowPrivateKeyReuse *int
+	WantRenewal          *int
 }
 
 type LockedAttribute struct {

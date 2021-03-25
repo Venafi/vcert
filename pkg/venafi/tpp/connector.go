@@ -703,11 +703,13 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	}
 
 	if prohitedWildcard != nil {
-		boolVal, err := strconv.ParseBool(prohitedWildcard[0])
+		value, err := strconv.ParseInt(prohitedWildcard[0], 10, 32)
 		if err != nil {
 			return nil, err
 		}
-		tp.ProhibitWildcard = &boolVal
+
+		intVal := int(value)
+		tp.ProhibitWildcard = &intVal
 	}
 
 	domainSuffixWhitelist, _, err := getPolicyAttribute(c, policy.TppDomainSuffixWhitelist, name)
@@ -849,11 +851,12 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	}
 
 	if allowPrivateKeyReuse != nil {
-		boolVal, err := strconv.ParseBool(allowPrivateKeyReuse[0])
+		value, err := strconv.ParseInt(allowPrivateKeyReuse[0], 10, 32)
 		if err != nil {
 			return nil, err
 		}
-		tp.AllowPrivateKeyReuse = &boolVal
+		intVal := int(value)
+		tp.AllowPrivateKeyReuse = &intVal
 	}
 
 	//TppWantRenewal
@@ -864,11 +867,12 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	}
 
 	if wantRenewal != nil {
-		boolVal, err := strconv.ParseBool(wantRenewal[0])
+		value, err := strconv.ParseInt(wantRenewal[0], 10, 32)
 		if err != nil {
 			return nil, err
 		}
-		tp.WantRenewal = &boolVal
+		intVal := int(value)
+		tp.WantRenewal = &intVal
 	}
 
 	log.Println("Building policy")
@@ -1002,7 +1006,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 
 	//create Prohibit Wildcard
 	if tppPolicy.ProhibitWildcard != nil {
-		_, status, _, err = createPolicyAttribute(c, policy.TppProhibitWildcard, []string{strconv.FormatBool(*(tppPolicy.ProhibitWildcard))}, *(tppPolicy.Name), false)
+		_, status, _, err = createPolicyAttribute(c, policy.TppProhibitWildcard, []string{strconv.Itoa(*(tppPolicy.ProhibitWildcard))}, *(tppPolicy.Name), false)
 		if err != nil {
 			return "", err
 		}
@@ -1096,14 +1100,14 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 
 	//Allow Private Key Reuse" & "Want Renewal
 	if tppPolicy.AllowPrivateKeyReuse != nil {
-		_, status, _, err = createPolicyAttribute(c, policy.TppAllowPrivateKeyReuse, []string{strconv.FormatBool(*(tppPolicy.AllowPrivateKeyReuse))}, *(tppPolicy.Name), true)
+		_, status, _, err = createPolicyAttribute(c, policy.TppAllowPrivateKeyReuse, []string{strconv.Itoa(*(tppPolicy.AllowPrivateKeyReuse))}, *(tppPolicy.Name), true)
 		if err != nil {
 			return "", err
 		}
 	}
 
 	if tppPolicy.WantRenewal != nil {
-		_, status, _, err = createPolicyAttribute(c, policy.TppWantRenewal, []string{strconv.FormatBool(*(tppPolicy.WantRenewal))}, *(tppPolicy.Name), true)
+		_, status, _, err = createPolicyAttribute(c, policy.TppWantRenewal, []string{strconv.Itoa(*(tppPolicy.WantRenewal))}, *(tppPolicy.Name), true)
 		if err != nil {
 			return "", err
 		}
