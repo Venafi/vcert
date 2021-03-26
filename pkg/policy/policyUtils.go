@@ -243,7 +243,7 @@ func validateDefaultKeyPairWithPolicySubject(ps *PolicySpecification) error {
 
 func validateDefaultKeyPair(ps *PolicySpecification) error {
 
-	if ps.Default == nil{
+	if ps.Default == nil {
 		return nil
 	}
 
@@ -289,10 +289,10 @@ func BuildTppPolicy(ps *PolicySpecification) TppPolicy {
 
 	if ps.Policy != nil && ps.Policy.WildcardAllowed != nil {
 
-		if *(ps.Policy.WildcardAllowed){//this is true so we revert it to false(0)
+		if *(ps.Policy.WildcardAllowed) { //this is true so we revert it to false(0)
 			intValZero := 0
 			tppPolicy.ProhibitWildcard = &intValZero
-		}else{
+		} else {
 			intValOne := 1
 			tppPolicy.ProhibitWildcard = &intValOne
 		}
@@ -362,9 +362,9 @@ func BuildTppPolicy(ps *PolicySpecification) TppPolicy {
 	if ps.Policy != nil && ps.Policy.KeyPair != nil && ps.Policy.KeyPair.ReuseAllowed != nil {
 
 		var intVal int
-		if *(ps.Policy.KeyPair.ReuseAllowed){
+		if *(ps.Policy.KeyPair.ReuseAllowed) {
 			intVal = 1
-		}else {
+		} else {
 			intVal = 0
 		}
 
@@ -432,16 +432,15 @@ func BuildPolicySpecificationForTPP(tppPolicy TppPolicy) (*PolicySpecification, 
 	p.Domains = tppPolicy.DomainSuffixWhitelist
 	p.CertificateAuthority = tppPolicy.CertificateAuthority
 
-
-	if tppPolicy.ProhibitWildcard != nil{
+	if tppPolicy.ProhibitWildcard != nil {
 		val, err := getBooleanValueFromInt(*(tppPolicy.ProhibitWildcard))
-		if err != nil{
+		if err != nil {
 			return nil, err
 		}
-		if val{//we revert the values that comes from tpp.
+		if val { //we revert the values that comes from tpp.
 			boolFalse := false
 			p.WildcardAllowed = &boolFalse
-		}else{
+		} else {
 			boolTrue := true
 			p.WildcardAllowed = &boolTrue
 		}
@@ -572,14 +571,14 @@ func BuildPolicySpecificationForTPP(tppPolicy TppPolicy) (*PolicySpecification, 
 	if tppPolicy.AllowPrivateKeyReuse != nil {
 		shouldCreateKeyPair = true
 		boolVal, err := getBooleanValueFromInt(*(tppPolicy.AllowPrivateKeyReuse))
-		if err != nil{
+		if err != nil {
 			return nil, err
 		}
 		keyPair.ReuseAllowed = &boolVal
 	} else if tppPolicy.WantRenewal != nil {
 		shouldCreateKeyPair = true
 		boolVal, err := getBooleanValueFromInt(*(tppPolicy.WantRenewal))
-		if err != nil{
+		if err != nil {
 			return nil, err
 		}
 		keyPair.ReuseAllowed = &boolVal
@@ -951,7 +950,7 @@ func BuildCloudCitRequest(ps *PolicySpecification) (*CloudPolicyRequest, error) 
 	shouldCreateSubjectRS := false
 	shouldCreateKPRS := false
 
-	/*if ps.Default.Domain != nil{ ignore for now
+	/*if ps.Default.Domain != nil { ignore for now
 		recommendedSettings.SubjectCNRegexes = []string{*(ps.Default.Domain)}//whan value should be put here.
 		shouldCreateSubjectRS = true
 	}*/
@@ -1056,11 +1055,11 @@ func GetCertAuthorityInfo(certificateAuthority string) (*CertificateAuthorityInf
 	return &caInfo, nil
 }
 
-func getBooleanValueFromInt(v int) (bool, error){
-	if v == 0{
+func getBooleanValueFromInt(v int) (bool, error) {
+	if v == 0 {
 		return false, nil
 	}
-	if v == 1{
+	if v == 1 {
 		return true, nil
 	}
 

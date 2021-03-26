@@ -8,8 +8,8 @@ require (
 	golang.org/x/crypto v0.0.0-20190605123033-f99c8df09eb5
 	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c // indirect
 	gopkg.in/ini.v1 v1.51.0
-	software.sslmate.com/src/go-pkcs12 v0.0.0-20180114231543-2291e8f0f237
 	gopkg.in/yaml.v2 v2.4.0
+	software.sslmate.com/src/go-pkcs12 v0.0.0-20180114231543-2291e8f0f237
 )
 
 go 1.13

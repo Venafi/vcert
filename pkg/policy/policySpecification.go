@@ -46,7 +46,7 @@ type SubjectAltNames struct {
 type Default struct {
 	Domain  *string         `json:"domain,omitempty" yaml:"domain,omitempty"`
 	Subject *DefaultSubject `json:"subject,omitempty" yaml:"subject,omitempty"`
-	KeyPair *DefaultKeyPair `json:"keypPair,omitempty" yaml:"keypPair,omitempty"`
+	KeyPair *DefaultKeyPair `json:"keyPair,omitempty" yaml:"keyPair,omitempty"`
 }
 
 type DefaultSubject struct {
