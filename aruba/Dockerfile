@@ -6,6 +6,6 @@ COPY . /vcert/
 ENV PATH="/vcert/bin:${PATH}"
 
 WORKDIR /vcert/
-CMD ["cucumber", "--no-color"]
+ENTRYPOINT echo "${TPP_IP} ${TPP_CN}" >> /etc/hosts && cucumber --no-color
 
 

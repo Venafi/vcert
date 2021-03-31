@@ -9,7 +9,9 @@ RUN_COMMAND="docker run -t --rm \
           -e TPP_ZONE_ECDSA \
           -e CLOUD_URL \
           -e CLOUD_APIKEY \
-          -e CLOUD_ZONE vcert.auto cucumber --fail-fast --no-color -v"
+          -e CLOUD_ZONE \
+          -e TPP_IP \
+          -e TPP_CN vcert.auto cucumber --fail-fast --no-color -v"
 
 set -ex
 
