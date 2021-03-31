@@ -129,10 +129,10 @@ var (
 		Name:   commandCreatePolicyName,
 		Flags:  createPolicyFlgs,
 		Action: doCommandCreatePolicy1,
-		Usage:  "To create a new policy",
+		Usage:  "To apply a certificate policy specification to a zone",
 		UsageText: ` vcert setpolicy <Required Venafi Cloud Config> OR <Required Trust Protection Platform Config> <Options>
-		vcert setpolicy -u https://tpp.example.com -t <TPP access token> --name my_policy --location policy_location
-		vcert setpolicy -k <Venafi Cloud API key> --name my_policy --location policy_location`,
+		vcert setpolicy -u https://tpp.example.com -t <TPP access token> -z <zone> --file /path-to/policy.spec
+		vcert setpolicy -k <Venafi Cloud API key> -z <zone> --file /path-to/policy.spec`,
 	}
 
 	commandGetPolicy = &cli.Command{
@@ -140,10 +140,10 @@ var (
 		Name:   commandGetePolicyName,
 		Flags:  getPolicyFlgs,
 		Action: doCommandGetPolicy1,
-		Usage:  "To get a policy details",
+		Usage:  "To retrieve the certificate policy of a zone",
 		UsageText: ` vcert getpolicy <Required Venafi Cloud Config> OR <Required Trust Protection Platform Config> <Options>
-		vcert getpolicy -u https://tpp.example.com -t <TPP access token> --name my_policy --location policy_location
-		vcert getpolicy -k <Venafi Cloud API key> --name my_policy --location policy_location`,
+		vcert getpolicy -u https://tpp.example.com -t <TPP access token> -z <zone>
+		vcert getpolicy -k <Venafi Cloud API key> -z <zone>`,
 	}
 )
 
@@ -693,7 +693,7 @@ func doCommandGetPolicy1(c *cli.Context) error {
 	policyName := flags.policyName
 
 	if policyName == "" {
-		return fmt.Errorf("policy name is empty")
+		return fmt.Errorf("zone is required")
 	}
 
 	policySpecLocation := flags.policySpecLocation

@@ -491,14 +491,17 @@ var (
 	}
 
 	flagPolicyName = &cli.StringFlag{
-		Name:        "z",
-		Usage:       "Specify the name of the new policy that will be created",
+		Name: "z",
+		Usage: "REQUIRED. Use to specify target zone for applying or retrieving certificate policy. " +
+			"In Trust Protection Platform this is the path (DN) of a policy folder and in Venafi Cloud " +
+			"this is the name of an Application and Issuing Template separated by a backslash. " +
+			"Example: -z Engineering\\Internal Certs",
 		Destination: &flags.policyName,
 	}
 
 	flagPolicyConfigFile = &cli.StringFlag{
 		Name:        "file",
-		Usage:       "Specify the location of the policy specification",
+		Usage:       "Use to specify the location of a certificate policy specification. REQUIRED for the setpolicy action",
 		Destination: &flags.policySpecLocation,
 	}
 
