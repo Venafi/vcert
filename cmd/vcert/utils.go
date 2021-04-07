@@ -20,9 +20,12 @@ import (
 	"crypto/sha1"
 	"crypto/x509"
 	"encoding/hex"
+	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"github.com/Venafi/vcert/v4/pkg/policy"
 	"github.com/spf13/viper"
+	"gopkg.in/yaml.v2"
 	"io"
 	"io/ioutil"
 	"os"
@@ -380,4 +383,83 @@ func getFileAndBytes(p string) (*os.File, []byte, error) {
 		return nil, nil, err
 	}
 	return file, bytes, nil
+}
+
+func getEmptyPolicySpec() *policy.PolicySpecification {
+
+	emptyString := ""
+	intVal := 0
+	falseBool := false
+
+	specification := policy.PolicySpecification{
+		Owners:    []string{""},
+		Users:     []string{""},
+		Approvers: []string{""},
+		Policy: &policy.Policy{
+			CertificateAuthority: &emptyString,
+			Domains:              []string{""},
+			WildcardAllowed:      &falseBool,
+			MaxValidDays:         &intVal,
+			Subject: &policy.Subject{
+				Orgs:       []string{""},
+				OrgUnits:   []string{""},
+				Localities: []string{""},
+				States:     []string{""},
+				Countries:  []string{""},
+			},
+			KeyPair: &policy.KeyPair{
+				KeyTypes:         []string{""},
+				RsaKeySizes:      []int{0},
+				ServiceGenerated: &falseBool,
+				ReuseAllowed:     &falseBool,
+				EllipticCurves:   []string{""},
+			},
+			SubjectAltNames: &policy.SubjectAltNames{
+				DnsAllowed:   &falseBool,
+				IpAllowed:    &falseBool,
+				EmailAllowed: &falseBool,
+				UriAllowed:   &falseBool,
+				UpnAllowed:   &falseBool,
+			},
+		},
+		Default: &policy.Default{
+			Domain: &emptyString,
+			Subject: &policy.DefaultSubject{
+				Org:      &emptyString,
+				OrgUnits: []string{""},
+				Locality: &emptyString,
+				State:    &emptyString,
+				Country:  &emptyString,
+			},
+			KeyPair: &policy.DefaultKeyPair{
+				KeyType:          &emptyString,
+				RsaKeySize:       &intVal,
+				EllipticCurve:    &emptyString,
+				ServiceGenerated: &falseBool,
+			},
+		},
+	}
+	return &specification
+}
+
+func verifyPolicySpec(bytes []byte, fileExt string) error {
+
+	var err error
+	var policySpecification policy.PolicySpecification
+
+	if fileExt == policy.JsonExtention {
+		err = json.Unmarshal(bytes, &policySpecification)
+		if err != nil {
+			return err
+		}
+	} else if fileExt == policy.YamlExtention {
+		err = yaml.Unmarshal(bytes, &policySpecification)
+		if err != nil {
+			return err
+		}
+	} else {
+		return fmt.Errorf("the specified file is not supported")
+	}
+
+	return nil
 }

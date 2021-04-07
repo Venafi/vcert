@@ -553,6 +553,9 @@ func buildPolicySpecification(cit *certificateTemplate) *policy.PolicySpecificat
 	if len(cit.SubjectCNRegexes) > 0 {
 		pol.Domains = cit.SubjectCNRegexes
 	}
+	wildCard := isWildCard(cit.SubjectCNRegexes)
+	pol.WildcardAllowed = &wildCard
+
 	// ps.Policy.WildcardAllowed is pending.
 	if cit.ValidityPeriod != "" {
 		//they have the format P#D
@@ -724,4 +727,16 @@ func parseCitDetailsData(b []byte, status int) (*certificateTemplate, error) {
 	}
 
 	return &cit, nil
+}
+
+func isWildCard(cnRegex []string) bool {
+	if len(cnRegex) > 0 {
+		for _, val := range cnRegex {
+			if !(strings.HasPrefix(val, "^[*A") || strings.HasPrefix(val, "*")) {
+				return false
+			}
+		}
+		return true
+	}
+	return false
 }

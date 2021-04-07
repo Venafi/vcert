@@ -149,7 +149,23 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 
 		}
 	} else {
-		return "", fmt.Errorf("please specify a CA name")
+		if ps.Policy != nil {
+
+			defaultCA := policy.DefaultCA
+			ps.Policy.CertificateAuthority = &defaultCA
+
+			certificateAuthorityProductOptionId, err = getCertificateAuthorityProductOptionId(*(ps.Policy.CertificateAuthority), c)
+
+			if err != nil {
+				return "", err
+			}
+
+			if certificateAuthorityProductOptionId == "" {
+
+				return "", fmt.Errorf("specified CA doesn't exist")
+
+			}
+		}
 	}
 
 	//at this moment we know that ps.Policy.CertificateAuthority is valid.

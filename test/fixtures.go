@@ -58,7 +58,7 @@ func GetCloudPolicySpecification() *policy.PolicySpecification {
 	caName := os.Getenv("CLOUD_CA_NAME")
 	validityHours := 120
 	wildcardAllowed := true
-	generationType := "1"
+	serviceGenerated := true
 	reuseAllowed := false
 	subjectAltNamesAllowed := false
 
@@ -85,11 +85,11 @@ func GetCloudPolicySpecification() *policy.PolicySpecification {
 				Countries:  []string{"US"},
 			},
 			KeyPair: &policy.KeyPair{
-				KeyTypes:       []string{"RSA"},
-				RsaKeySizes:    []int{2048},
-				GenerationType: &generationType,
-				ReuseAllowed:   &reuseAllowed,
-				EllipticCurves: []string{"P384"},
+				KeyTypes:         []string{"RSA"},
+				RsaKeySizes:      []int{2048},
+				ServiceGenerated: &serviceGenerated,
+				ReuseAllowed:     &reuseAllowed,
+				EllipticCurves:   []string{"P384"},
 			},
 			SubjectAltNames: &policy.SubjectAltNames{
 				DnsAllowed:   &subjectAltNamesAllowed,
@@ -109,10 +109,10 @@ func GetCloudPolicySpecification() *policy.PolicySpecification {
 				Country:  &country,
 			},
 			KeyPair: &policy.DefaultKeyPair{
-				KeyType:        &defaultKeyType,
-				RsaKeySize:     &defaultKeySize,
-				EllipticCurve:  nil,
-				GenerationType: nil,
+				KeyType:          &defaultKeyType,
+				RsaKeySize:       &defaultKeySize,
+				EllipticCurve:    nil,
+				ServiceGenerated: nil,
 			},
 		},
 	}
@@ -124,7 +124,7 @@ func GetTppPolicySpecification() *policy.PolicySpecification {
 	caName := os.Getenv("TPP_CA_NAME")
 	validityHours := 120
 	wildcardAllowed := true
-	generationType := "1"
+	serviceGenerated := true
 	reuseAllowed := false
 	subjectAltNamesAllowedTrue := true
 	subjectAltNamesAllowedFalse := false
@@ -152,11 +152,11 @@ func GetTppPolicySpecification() *policy.PolicySpecification {
 				Countries:  []string{"US"},
 			},
 			KeyPair: &policy.KeyPair{
-				KeyTypes:       []string{"RSA"},
-				RsaKeySizes:    []int{3072},
-				GenerationType: &generationType,
-				ReuseAllowed:   &reuseAllowed,
-				EllipticCurves: []string{"P384"},
+				KeyTypes:         []string{"RSA"},
+				RsaKeySizes:      []int{3072},
+				ServiceGenerated: &serviceGenerated,
+				ReuseAllowed:     &reuseAllowed,
+				EllipticCurves:   []string{"P384"},
 			},
 			SubjectAltNames: &policy.SubjectAltNames{
 				DnsAllowed:   &subjectAltNamesAllowedTrue,
@@ -176,10 +176,10 @@ func GetTppPolicySpecification() *policy.PolicySpecification {
 				Country:  &country,
 			},
 			KeyPair: &policy.DefaultKeyPair{
-				KeyType:        &defaultKeyType,
-				RsaKeySize:     &defaultKeySize,
-				EllipticCurve:  nil,
-				GenerationType: nil,
+				KeyType:          &defaultKeyType,
+				RsaKeySize:       &defaultKeySize,
+				EllipticCurve:    nil,
+				ServiceGenerated: nil,
 			},
 		},
 	}

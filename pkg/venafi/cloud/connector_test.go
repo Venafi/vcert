@@ -855,7 +855,7 @@ func TestGetPolicy(t *testing.T) {
 	}
 
 	if ps.Policy.Domains != nil && specifiedPS.Policy.Domains != nil {
-		domains := policy.ConvertToRegex(specifiedPS.Policy.Domains)
+		domains := policy.ConvertToRegex(specifiedPS.Policy.Domains, policy.IsWildcardAllowed(*(specifiedPS)))
 		valid := test.IsArrayStringEqual(domains, ps.Policy.Domains)
 		if !valid {
 			t.Fatalf("specified domains are different")

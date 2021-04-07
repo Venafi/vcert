@@ -505,6 +505,18 @@ var (
 		Destination: &flags.policySpecLocation,
 	}
 
+	flagPolicyStarterConfigFile = &cli.BoolFlag{
+		Name:        "starter",
+		Usage:       "Use to generate an empty policy specification file, when using this flag credentials should be avoided",
+		Destination: &flags.policyConfigStarter,
+	}
+
+	flagPolicyVerifyConfigFile = &cli.BoolFlag{
+		Name:        "verify",
+		Usage:       "Use to verify if a policy specification is valid, when using this flag credentials should be avoided",
+		Destination: &flags.verifyPolicyConfig,
+	}
+
 	commonFlags              = []cli.Flag{flagInsecure, flagVerbose, flagNoPrompt}
 	keyFlags                 = []cli.Flag{flagKeyType, flagKeySize, flagKeyCurve, flagKeyFile, flagKeyPassword}
 	sansFlags                = []cli.Flag{flagDNSSans, flagEmailSans, flagIPSans, flagURISans, flagUPNSans}
@@ -656,7 +668,7 @@ var (
 		commonFlags,
 	))
 
-	createPolicyFlgs = sortedFlags(flagsApppend(
+	createPolicyFlags = sortedFlags(flagsApppend(
 		flagTPPPassword,
 		flagTPPUser,
 		flagKey,
@@ -664,9 +676,10 @@ var (
 		commonFlags,
 		flagPolicyName,
 		flagPolicyConfigFile,
+		flagPolicyVerifyConfigFile,
 	))
 
-	getPolicyFlgs = sortedFlags(flagsApppend(
+	getPolicyFlags = sortedFlags(flagsApppend(
 		flagTPPPassword,
 		flagTPPUser,
 		flagKey,
@@ -674,6 +687,7 @@ var (
 		commonFlags,
 		flagPolicyName,
 		flagPolicyConfigFile,
+		flagPolicyStarterConfigFile,
 	))
 )
 

@@ -43,7 +43,7 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	caName := "\\VED\\Policy\\Certificate Authorities\\TEST CA\\QA Test CA - Server 90 Days"
 	validityHours := 120
 	wildcardAllowed := true
-	generationType := "1"
+	serviceGenerated := true
 	reuseAllowed := false
 	subjectAltNamesAllowed := true
 
@@ -70,11 +70,11 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 				Countries:  []string{"US"},
 			},
 			KeyPair: &policy.KeyPair{
-				KeyTypes:       []string{"RSA"},
-				RsaKeySizes:    []int{3072},
-				GenerationType: &generationType,
-				ReuseAllowed:   &reuseAllowed,
-				EllipticCurves: []string{"P384"},
+				KeyTypes:         []string{"RSA"},
+				RsaKeySizes:      []int{3072},
+				ServiceGenerated: &serviceGenerated,
+				ReuseAllowed:     &reuseAllowed,
+				EllipticCurves:   []string{"P384"},
 			},
 			SubjectAltNames: &policy.SubjectAltNames{
 				DnsAllowed:   &subjectAltNamesAllowed,
@@ -94,10 +94,10 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 				Country:  &country,
 			},
 			KeyPair: &policy.DefaultKeyPair{
-				KeyType:        nil,
-				RsaKeySize:     nil,
-				EllipticCurve:  nil,
-				GenerationType: nil,
+				KeyType:          nil,
+				RsaKeySize:       nil,
+				EllipticCurve:    nil,
+				ServiceGenerated: nil,
 			},
 		},
 	}

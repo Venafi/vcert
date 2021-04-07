@@ -669,214 +669,35 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 
 	log.Println("Collecting policy attributes")
 
-	//validate if the policy exists
-	policyExist, err := PolicyExist(name, c)
-	if err != nil {
-		return nil, err
+	if !strings.HasPrefix(name, policy.RootPath) {
+		name = policy.RootPath + name
+
 	}
-	if !policyExist {
-		return nil, fmt.Errorf("the specified policy does not exists")
-	}
+
 	tp.Name = &name
 
-	// Contact
-	contact, _, err := getPolicyAttribute(c, policy.TppContact, name)
-	if err != nil {
-		return nil, err
-	}
-	if contact != nil {
-		tp.Contact = contact
-	}
+	var checkPolicyResponse policy.CheckPolicyResponse
 
-	approver, _, err := getPolicyAttribute(c, policy.TppApprover, name)
-	if err != nil {
-		return nil, err
+	req := policy.CheckPolicyRequest{
+		PolicyDN: name,
 	}
-	if approver != nil {
-		tp.Approver = approver
-	}
-
-	prohitedWildcard, _, err := getPolicyAttribute(c, policy.TppProhibitWildcard, name)
+	_, _, body, err := c.request("POST", urlResourceReadPolicy, req)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if prohitedWildcard != nil {
-		value, err := strconv.ParseInt(prohitedWildcard[0], 10, 32)
-		if err != nil {
-			return nil, err
-		}
-
-		intVal := int(value)
-		tp.ProhibitWildcard = &intVal
-	}
-
-	domainSuffixWhitelist, _, err := getPolicyAttribute(c, policy.TppDomainSuffixWhitelist, name)
-
+	err = json.Unmarshal(body, &checkPolicyResponse)
 	if err != nil {
 		return nil, err
 	}
 
-	if domainSuffixWhitelist != nil {
-		tp.DomainSuffixWhitelist = domainSuffixWhitelist
-	}
-
-	//resolve Certificate authority
-	certAuthority, _, err := getPolicyAttribute(c, policy.TppCertificateAuthority, name)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if certAuthority != nil {
-		tp.CertificateAuthority = &certAuthority[0]
-	}
-
-	//Organization
-	organization, locked, err := getPolicyAttribute(c, policy.TppOrganization, name)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if organization != nil {
-		tp.Organization = getLockedAttribute(&organization[0], locked)
-	}
-
-	//Org Unit
-	organizationalUnit, locked, err := getPolicyAttribute(c, policy.TppOrganizationalUnit, name)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if organizationalUnit != nil {
-		tp.OrganizationalUnit = getLockedAttribute(&organizationalUnit[0], locked)
-	}
-
-	//City
-	city, locked, err := getPolicyAttribute(c, policy.TppCity, name)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if city != nil {
-		tp.City = getLockedAttribute(&city[0], locked)
-	}
-
-	//State
-	state, locked, err := getPolicyAttribute(c, policy.TppState, name)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if state != nil {
-		tp.State = getLockedAttribute(&state[0], locked)
-	}
-
-	//country
-	country, locked, err := getPolicyAttribute(c, policy.TppCountry, name)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if country != nil {
-		tp.Country = getLockedAttribute(&country[0], locked)
-	}
-
-	//KeyAlgorithm
-	keyAlgorithm, locked, err := getPolicyAttribute(c, policy.TppKeyAlgorithm, name)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if keyAlgorithm != nil {
-		tp.KeyAlgorithm = getLockedAttribute(&keyAlgorithm[0], locked)
-	}
-
-	//Key Bit Strength
-	keyBitStrength, locked, err := getPolicyAttribute(c, policy.TppKeyBitStrength, name)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if keyBitStrength != nil {
-		tp.KeyBitStrength = getLockedAttribute(&keyBitStrength[0], locked)
-	}
-
-	//Elliptic Curve
-	ellipticCurve, locked, err := getPolicyAttribute(c, policy.TppEllipticCurve, name)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if ellipticCurve != nil {
-		tp.EllipticCurve = getLockedAttribute(&ellipticCurve[0], locked)
-	}
-
-	//Manual Csr
-	manualCsr, locked, err := getPolicyAttribute(c, policy.TppManualCsr, name)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if manualCsr != nil {
-		tp.ManualCsr = getLockedAttribute(&manualCsr[0], locked)
-	}
-
-	//Prohibited SAN Types
-	prohibitedSANTypes, _, err := getPolicyAttribute(c, policy.TppProhibitedSANTypes, name)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if prohibitedSANTypes != nil {
-		tp.ProhibitedSANType = prohibitedSANTypes
-	}
-
-	//AllowPrivate Key Reuse
-	allowPrivateKeyReuse, _, err := getPolicyAttribute(c, policy.TppAllowPrivateKeyReuse, name)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if allowPrivateKeyReuse != nil {
-		value, err := strconv.ParseInt(allowPrivateKeyReuse[0], 10, 32)
-		if err != nil {
-			return nil, err
-		}
-		intVal := int(value)
-		tp.AllowPrivateKeyReuse = &intVal
-	}
-
-	//TppWantRenewal
-	wantRenewal, _, err := getPolicyAttribute(c, policy.TppWantRenewal, name)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if wantRenewal != nil {
-		value, err := strconv.ParseInt(wantRenewal[0], 10, 32)
-		if err != nil {
-			return nil, err
-		}
-		intVal := int(value)
-		tp.WantRenewal = &intVal
+	if checkPolicyResponse.Error != "" {
+		return nil, fmt.Errorf(checkPolicyResponse.Error)
 	}
 
 	log.Println("Building policy")
-	ps, err = policy.BuildPolicySpecificationForTPP(tp)
+	ps, err = policy.BuildPolicySpecificationForTPP(checkPolicyResponse)
 	if err != nil {
 		return nil, err
 	}
@@ -1030,7 +851,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 
 	//create Organizational Unit attribute
 	if tppPolicy.OrganizationalUnit != nil {
-		_, status, _, err = createPolicyAttribute(c, policy.TppOrganizationalUnit, []string{tppPolicy.OrganizationalUnit.Value}, *(tppPolicy.Name), tppPolicy.OrganizationalUnit.Locked)
+		_, status, _, err = createPolicyAttribute(c, policy.TppOrganizationalUnit, tppPolicy.OrganizationalUnit.Value, *(tppPolicy.Name), tppPolicy.OrganizationalUnit.Locked)
 		if err != nil {
 			return "", err
 		}
@@ -1085,7 +906,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 
 	//create Manual Csr attribute
 	if tppPolicy.ManualCsr != nil {
-		_, status, _, err = createPolicyAttribute(c, policy.TppManualCsr, []string{tppPolicy.ManualCsr.Value}, *(tppPolicy.Name), tppPolicy.ManualCsr.Locked)
+		_, status, _, err = createPolicyAttribute(c, policy.ServiceGenerated, []string{tppPolicy.ManualCsr.Value}, *(tppPolicy.Name), tppPolicy.ManualCsr.Locked)
 		if err != nil {
 			return "", err
 		}

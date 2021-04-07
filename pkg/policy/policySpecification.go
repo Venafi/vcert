@@ -28,11 +28,11 @@ type Subject struct {
 }
 
 type KeyPair struct {
-	KeyTypes       []string `json:"keyTypes,omitempty" yaml:"keyTypes,omitempty"`
-	RsaKeySizes    []int    `json:"rsaKeySizes,omitempty" yaml:"rsaKeySizes,omitempty"`
-	EllipticCurves []string `json:"ellipticCurves,omitempty" yaml:"ellipticCurves,omitempty"`
-	GenerationType *string  `json:"generationType,omitempty" yaml:"generationType,omitempty"`
-	ReuseAllowed   *bool    `json:"reuseAllowed,omitempty" yaml:"reuseAllowed,omitempty"`
+	KeyTypes         []string `json:"keyTypes,omitempty" yaml:"keyTypes,omitempty"`
+	RsaKeySizes      []int    `json:"rsaKeySizes,omitempty" yaml:"rsaKeySizes,omitempty"`
+	EllipticCurves   []string `json:"ellipticCurves,omitempty" yaml:"ellipticCurves,omitempty"`
+	ServiceGenerated *bool    `json:"serviceGenerated,omitempty" yaml:"generationType,omitempty"`
+	ReuseAllowed     *bool    `json:"reuseAllowed,omitempty" yaml:"reuseAllowed,omitempty"`
 }
 
 type SubjectAltNames struct {
@@ -58,8 +58,8 @@ type DefaultSubject struct {
 }
 
 type DefaultKeyPair struct {
-	KeyType        *string `json:"keyType,omitempty" yaml:"keyType,omitempty"`
-	RsaKeySize     *int    `json:"rsaKeySize,omitempty" yaml:"rsaKeySize,omitempty"`
-	EllipticCurve  *string `json:"ellipticCurve,omitempty" yaml:"ellipticCurve,omitempty"`
-	GenerationType *string `json:"generationType,omitempty" yaml:"generationType,omitempty"`
+	KeyType          *string `json:"keyType,omitempty" yaml:"keyType,omitempty"`
+	RsaKeySize       *int    `json:"rsaKeySize,omitempty" yaml:"rsaKeySize,omitempty"`
+	EllipticCurve    *string `json:"ellipticCurve,omitempty" yaml:"ellipticCurve,omitempty"`
+	ServiceGenerated *bool   `json:"serviceGenerated,omitempty" yaml:"serviceGenerated,omitempty"`
 }

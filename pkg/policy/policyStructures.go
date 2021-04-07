@@ -125,7 +125,7 @@ type TppPolicy struct {
 
 	//subject attributes
 	Organization       *LockedAttribute
-	OrganizationalUnit *LockedAttribute
+	OrganizationalUnit *LockedArrayAttribute
 	City               *LockedAttribute
 	State              *LockedAttribute
 	Country            *LockedAttribute
@@ -141,6 +141,14 @@ type TppPolicy struct {
 
 type LockedAttribute struct {
 	Value  string
+	Locked bool
+}
+type LockedIntAttribute struct {
+	Value  int
+	Locked bool
+}
+type LockedArrayAttribute struct {
+	Value  []string `json:"Values"`
 	Locked bool
 }
 
@@ -178,4 +186,44 @@ type PolicyObject struct {
 	Parent       string `json:"Parent"`
 	Revision     int    `json:"Revision"`
 	TypeName     string `json:"TypeName"`
+}
+
+type CheckPolicyResponse struct {
+	Error  string          `json:"Error"`
+	Policy *PolicyResponse `json:"Policy"`
+}
+
+type PolicyResponse struct {
+	CertificateAuthority    LockedAttribute `json:"CertificateAuthority"`
+	CsrGeneration           LockedAttribute `json:"CsrGeneration"`
+	KeyGeneration           LockedAttribute `json:"KeyGeneration"`
+	KeyPairResponse         KeyPairResponse `json:"KeyPair"`
+	ManagementType          LockedAttribute `json:"ManagementType"`
+	PrivateKeyReuseAllowed  bool            `json:"PrivateKeyReuseAllowed"`
+	SubjAltNameDnsAllowed   bool            `json:"SubjAltNameDnsAllowed"`
+	SubjAltNameEmailAllowed bool            `json:"SubjAltNameEmailAllowed"`
+	SubjAltNameIpAllowed    bool            `json:"SubjAltNameIpAllowed"`
+	SubjAltNameUpnAllowed   bool            `json:"SubjAltNameUpnAllowed"`
+	SubjAltNameUriAllowed   bool            `json:"SubjAltNameUriAllowed"`
+	Subject                 SubjectResponse `json:"Subject"`
+	UniqueSubjectEnforced   bool            `json:"UniqueSubjectEnforced"`
+	WhitelistedDomains      []string        `json:"WhitelistedDomains"`
+	WildcardsAllowed        bool            `json:"WildcardsAllowed"`
+}
+
+type KeyPairResponse struct {
+	KeyAlgorithm LockedAttribute    `json:"KeyAlgorithm"`
+	KeySize      LockedIntAttribute `json:"KeySize"`
+}
+
+type SubjectResponse struct {
+	City               LockedAttribute      `json:"City"`
+	Country            LockedAttribute      `json:"Country"`
+	Organization       LockedAttribute      `json:"Organization"`
+	OrganizationalUnit LockedArrayAttribute `json:"OrganizationalUnit"`
+	State              LockedAttribute      `json:"State"`
+}
+
+type CheckPolicyRequest struct {
+	PolicyDN string `json:"PolicyDN"`
 }

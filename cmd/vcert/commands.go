@@ -127,7 +127,7 @@ var (
 	commandCreatePolicy = &cli.Command{
 		Before: runBeforeCommand,
 		Name:   commandCreatePolicyName,
-		Flags:  createPolicyFlgs,
+		Flags:  createPolicyFlags,
 		Action: doCommandCreatePolicy1,
 		Usage:  "To apply a certificate policy specification to a zone",
 		UsageText: ` vcert setpolicy <Required Venafi Cloud Config> OR <Required Trust Protection Platform Config> <Options>
@@ -138,7 +138,7 @@ var (
 	commandGetPolicy = &cli.Command{
 		Before: runBeforeCommand,
 		Name:   commandGetePolicyName,
-		Flags:  getPolicyFlgs,
+		Flags:  getPolicyFlags,
 		Action: doCommandGetPolicy1,
 		Usage:  "To retrieve the certificate policy of a zone",
 		UsageText: ` vcert getpolicy <Required Venafi Cloud Config> OR <Required Trust Protection Platform Config> <Options>
@@ -637,6 +637,12 @@ func doCommandRevoke1(c *cli.Context) error {
 
 func doCommandCreatePolicy1(c *cli.Context) error {
 
+	err := validateSetPolicyFlags1(c.Command.Name)
+
+	if err != nil {
+		return err
+	}
+
 	policyName := flags.policyName
 	policySpecLocation := flags.policySpecLocation
 
@@ -652,6 +658,17 @@ func doCommandCreatePolicy1(c *cli.Context) error {
 
 	fileExt := policy.GetFileType(policySpecLocation)
 	fileExt = strings.ToLower(fileExt)
+
+	if flags.verifyPolicyConfig {
+		err = verifyPolicySpec(bytes, fileExt)
+		if err != nil {
+			err = fmt.Errorf("policy specification file is not valid: %s", err)
+			return err
+		} else {
+			logf("policy specification %s is valid", policySpecLocation)
+			return nil
+		}
+	}
 
 	//based on the extension call the appropriate method to feed the policySpecification
 	//structure.
@@ -690,32 +707,53 @@ func doCommandCreatePolicy1(c *cli.Context) error {
 
 func doCommandGetPolicy1(c *cli.Context) error {
 
-	policyName := flags.policyName
+	err := validateGetPolicyFlags1(c.Command.Name)
 
-	if policyName == "" {
-		return fmt.Errorf("zone is required")
-	}
-
-	policySpecLocation := flags.policySpecLocation
-
-	cfg, err := buildConfig(c, &flags)
-	if err != nil {
-		return fmt.Errorf("failed to build vcert config: %s", err)
-	}
-
-	connector, err := vcert.NewClient(&cfg)
 	if err != nil {
 		return err
 	}
 
-	ps, err := connector.GetPolicySpecification(policyName)
+	policyName := flags.policyName
+
+	policySpecLocation := flags.policySpecLocation
+
+	var ps *policy.PolicySpecification
+
+	if !flags.policyConfigStarter {
+
+		cfg, err := buildConfig(c, &flags)
+		if err != nil {
+			return fmt.Errorf("failed to build vcert config: %s", err)
+		}
+
+		connector, err := vcert.NewClient(&cfg)
+
+		if err != nil {
+
+			return err
+
+		}
+
+		ps, err = connector.GetPolicySpecification(policyName)
+
+		if err != nil {
+			return err
+		}
+
+	} else {
+
+		ps = getEmptyPolicySpec()
+
+	}
+
 	var byte []byte
+
 	if policySpecLocation != "" {
 
 		fileExt := policy.GetFileType(policySpecLocation)
 		fileExt = strings.ToLower(fileExt)
 		if fileExt == policy.JsonExtention {
-			byte, _ = json.MarshalIndent(ps, "", "")
+			byte, _ = json.MarshalIndent(ps, "", "  ")
 			if err != nil {
 				return err
 			}
@@ -735,7 +773,9 @@ func doCommandGetPolicy1(c *cli.Context) error {
 		log.Printf("policy was written in: %s", policySpecLocation)
 
 	} else {
-		byte, _ = json.MarshalIndent(ps, "", "")
+
+		byte, _ = json.MarshalIndent(ps, "", "  ")
+
 		if err != nil {
 			return err
 		}

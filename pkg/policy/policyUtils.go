@@ -73,9 +73,6 @@ func validatePolicySubject(ps *PolicySpecification) error {
 	if len(subject.Orgs) > 1 {
 		return fmt.Errorf("attribute orgs has more than one value")
 	}
-	if len(subject.OrgUnits) > 1 {
-		return fmt.Errorf("attribute org units has more than one value")
-	}
 	if len(subject.Localities) > 1 {
 		return fmt.Errorf("attribute localities has more than one value")
 	}
@@ -84,6 +81,10 @@ func validatePolicySubject(ps *PolicySpecification) error {
 	}
 	if len(subject.Countries) > 1 {
 		return fmt.Errorf("attribute countries has more than one value")
+	}
+
+	if len(subject.Countries[0]) != 2 {
+		return fmt.Errorf("number of country's characters, doesn't match to two characters")
 	}
 
 	return nil
@@ -119,11 +120,6 @@ func validateKeyPair(ps *PolicySpecification) error {
 		return fmt.Errorf("specified ellipticCurves doesn't match with the supported ones")
 	}
 
-	//validate generationType
-	if (keyPair.GenerationType != nil) && (*(keyPair.GenerationType) != "0") && (*(keyPair.GenerationType) != "1") {
-		return fmt.Errorf("specified generationType doesn't match with the supported ones")
-	}
-
 	return nil
 }
 
@@ -142,10 +138,10 @@ func existStringInArray(userValue []string, supportedValues []string) bool {
 	return true
 }
 
-func existIntInArray(userValue []int, supportedvalues []int) bool {
+func existIntInArray(userValue []int, supportedValues []int) bool {
 	for _, uv := range userValue {
 		match := false
-		for _, sv := range supportedvalues {
+		for _, sv := range supportedValues {
 			if uv == sv {
 				match = true
 			}
@@ -164,9 +160,6 @@ func validateDefaultSubject(ps *PolicySpecification) error {
 
 		defaultSubject := ps.Default.Subject
 
-		if len(defaultSubject.OrgUnits) > 1 {
-			return fmt.Errorf("attribute default org units has more than one value")
-		}
 		if ps.Policy != nil && ps.Policy.Subject != nil {
 
 			policySubject := ps.Policy.Subject
@@ -177,8 +170,8 @@ func validateDefaultSubject(ps *PolicySpecification) error {
 				}
 			}
 
-			if policySubject.OrgUnits != nil && policySubject.OrgUnits[0] != "" && len(defaultSubject.OrgUnits) > 0 && defaultSubject.OrgUnits[0] != "" {
-				if policySubject.OrgUnits[0] != defaultSubject.OrgUnits[0] {
+			if len(policySubject.OrgUnits) > 0 && len(defaultSubject.OrgUnits) > 0 {
+				if !existStringInArray(defaultSubject.OrgUnits, policySubject.OrgUnits) {
 					return fmt.Errorf("policy default orgUnits doesn't match with policy's orgUnits value")
 				}
 			}
@@ -196,6 +189,11 @@ func validateDefaultSubject(ps *PolicySpecification) error {
 			if policySubject.Countries != nil && policySubject.Countries[0] != "" && defaultSubject.Country != nil && *(defaultSubject.Country) != "" {
 				if policySubject.Countries[0] != *(defaultSubject.Country) {
 					return fmt.Errorf("policy default country doesn't match with policy's countries value")
+				}
+			}
+			if defaultSubject.Country != nil && *(defaultSubject.Country) != "" {
+				if len(*(defaultSubject.Country)) != 2 {
+					return fmt.Errorf("number of defualt country's characters, doesn't match to two characters")
 				}
 			}
 		} else {
@@ -232,8 +230,8 @@ func validateDefaultKeyPairWithPolicySubject(ps *PolicySpecification) error {
 		}
 	}
 
-	if policyKeyPair.GenerationType != nil && *(policyKeyPair.GenerationType) != "" && defaultKeyPair.GenerationType != nil && *(defaultKeyPair.GenerationType) != "" {
-		if *(policyKeyPair.GenerationType) != *(defaultKeyPair.GenerationType) {
+	if policyKeyPair.ServiceGenerated != nil && defaultKeyPair.ServiceGenerated != nil {
+		if *(policyKeyPair.ServiceGenerated) != *(defaultKeyPair.ServiceGenerated) {
 			return fmt.Errorf("policy default generationType doesn't match with policy's generationType value")
 		}
 	}
@@ -261,11 +259,6 @@ func validateDefaultKeyPair(ps *PolicySpecification) error {
 	//validate elliptic curve
 	if keyPair.EllipticCurve != nil && *(keyPair.EllipticCurve) != "" && !existStringInArray([]string{*(keyPair.EllipticCurve)}, TppEllipticCurves) {
 		return fmt.Errorf("specified default ellipticCurve doesn't match with the supported ones")
-	}
-
-	//validate generationType
-	if (keyPair.GenerationType != nil) && (*(keyPair.GenerationType) != "") && (*(keyPair.GenerationType) != "0") && (*(keyPair.GenerationType) != "1") {
-		return fmt.Errorf("specified default generationType doesn't match with the supported ones")
 	}
 
 	return nil
@@ -311,9 +304,9 @@ func BuildTppPolicy(ps *PolicySpecification) TppPolicy {
 	}
 
 	if ps.Policy != nil && ps.Policy.Subject != nil && len(ps.Policy.Subject.OrgUnits) > 0 && ps.Policy.Subject.OrgUnits[0] != "" {
-		tppPolicy.OrganizationalUnit = createLockedAttribute(ps.Policy.Subject.OrgUnits[0], true)
+		tppPolicy.OrganizationalUnit = createLockedArrayAttribute(ps.Policy.Subject.OrgUnits, true)
 	} else if ps.Default != nil && ps.Default.Subject != nil && len(ps.Default.Subject.OrgUnits) > 0 && ps.Default.Subject.OrgUnits[0] != "" {
-		tppPolicy.OrganizationalUnit = createLockedAttribute(ps.Default.Subject.OrgUnits[0], false)
+		tppPolicy.OrganizationalUnit = createLockedArrayAttribute(ps.Default.Subject.OrgUnits, false)
 	}
 
 	if ps.Policy != nil && ps.Policy.Subject != nil && len(ps.Policy.Subject.Localities) > 0 && ps.Policy.Subject.Localities[0] != "" {
@@ -353,10 +346,18 @@ func BuildTppPolicy(ps *PolicySpecification) TppPolicy {
 		tppPolicy.EllipticCurve = createLockedAttribute(*(ps.Default.KeyPair.EllipticCurve), false)
 	}
 
-	if ps.Policy != nil && ps.Policy.KeyPair != nil && ps.Policy.KeyPair.GenerationType != nil && *(ps.Policy.KeyPair.GenerationType) != "" {
-		tppPolicy.ManualCsr = createLockedAttribute(*(ps.Policy.KeyPair.GenerationType), true)
-	} else if ps.Default != nil && ps.Default.KeyPair != nil && (ps.Default.KeyPair.GenerationType != nil) && (*(ps.Default.KeyPair.GenerationType) != "") {
-		tppPolicy.ManualCsr = createLockedAttribute(*(ps.Default.KeyPair.GenerationType), false)
+	if ps.Policy != nil && ps.Policy.KeyPair != nil && ps.Policy.KeyPair.ServiceGenerated != nil {
+		strVal := "1"
+		if *(ps.Policy.KeyPair.ServiceGenerated) {
+			strVal = "0"
+		}
+		tppPolicy.ManualCsr = createLockedAttribute(strVal, true)
+	} else if ps.Default != nil && ps.Default.KeyPair != nil && (ps.Default.KeyPair.ServiceGenerated != nil) {
+		strVal := "1"
+		if *(ps.Policy.KeyPair.ServiceGenerated) {
+			strVal = "0"
+		}
+		tppPolicy.ManualCsr = createLockedAttribute(strVal, false)
 	}
 
 	if ps.Policy != nil && ps.Policy.KeyPair != nil && ps.Policy.KeyPair.ReuseAllowed != nil {
@@ -383,11 +384,19 @@ func BuildTppPolicy(ps *PolicySpecification) TppPolicy {
 }
 
 func createLockedAttribute(value string, locked bool) *LockedAttribute {
-	lockecdAtr := LockedAttribute{
+	lockedAtr := LockedAttribute{
 		Value:  value,
 		Locked: locked,
 	}
-	return &lockecdAtr
+	return &lockedAtr
+}
+
+func createLockedArrayAttribute(value []string, locked bool) *LockedArrayAttribute {
+	lockedAtr := LockedArrayAttribute{
+		Value:  value,
+		Locked: locked,
+	}
+	return &lockedAtr
 }
 
 func getProhibitedSanTypes(sa SubjectAltNames) []string {
@@ -420,30 +429,26 @@ func getProhibitedSanTypes(sa SubjectAltNames) []string {
 	return prohibitedSanTypes
 }
 
-func BuildPolicySpecificationForTPP(tppPolicy TppPolicy) (*PolicySpecification, error) {
+func BuildPolicySpecificationForTPP(checkPolicyResp CheckPolicyResponse) (*PolicySpecification, error) {
 
+	if checkPolicyResp.Policy == nil {
+		return nil, fmt.Errorf("policy is nul")
+	}
+
+	policy := checkPolicyResp.Policy
 	var ps PolicySpecification
 
-	ps.Users = tppPolicy.Contact
-	ps.Approvers = tppPolicy.Approver
+	/*ps.Users = tppPolicy.Contact
+	ps.Approvers = tppPolicy.Approver*/
 
 	var p Policy
 
-	p.Domains = tppPolicy.DomainSuffixWhitelist
-	p.CertificateAuthority = tppPolicy.CertificateAuthority
+	if policy.WhitelistedDomains != nil {
+		p.Domains = policy.WhitelistedDomains
+	}
 
-	if tppPolicy.ProhibitWildcard != nil {
-		val, err := getBooleanValueFromInt(*(tppPolicy.ProhibitWildcard))
-		if err != nil {
-			return nil, err
-		}
-		if val { //we revert the values that comes from tpp.
-			boolFalse := false
-			p.WildcardAllowed = &boolFalse
-		} else {
-			boolTrue := true
-			p.WildcardAllowed = &boolTrue
-		}
+	if policy.CertificateAuthority.Value != "" {
+		p.CertificateAuthority = &policy.CertificateAuthority.Value
 	}
 
 	var subject Subject
@@ -456,96 +461,91 @@ func BuildPolicySpecificationForTPP(tppPolicy TppPolicy) (*PolicySpecification, 
 	var defaultKeyPair DefaultKeyPair
 	shouldCreateDefKeyPair := false
 
+	p.WildcardAllowed = &policy.WildcardsAllowed
+
 	//resolve subject's attributes
 
 	//resolve org
-	if tppPolicy.Organization != nil {
-		if tppPolicy.Organization.Locked {
+	if policy.Subject.Organization.Value != "" {
+		if policy.Subject.Organization.Locked {
 			shouldCreateSubject = true
-			subject.Orgs = []string{tppPolicy.Organization.Value}
+			subject.Orgs = []string{policy.Subject.Organization.Value}
 		} else {
 			shouldCreateDefSubject = true
-			defaultSubject.Org = &tppPolicy.Organization.Value
+			defaultSubject.Org = &policy.Subject.Organization.Value
 		}
 	}
 
 	//resolve orgUnit
-	if tppPolicy.OrganizationalUnit != nil {
-		if tppPolicy.OrganizationalUnit.Locked {
+
+	if len(policy.Subject.OrganizationalUnit.Value) > 0 {
+		if policy.Subject.OrganizationalUnit.Locked {
 			shouldCreateSubject = true
-			subject.OrgUnits = []string{tppPolicy.OrganizationalUnit.Value}
+			subject.OrgUnits = policy.Subject.OrganizationalUnit.Value
 		} else {
 			shouldCreateDefSubject = true
-			defaultSubject.OrgUnits = []string{tppPolicy.OrganizationalUnit.Value}
+			defaultSubject.OrgUnits = policy.Subject.OrganizationalUnit.Value
 		}
 	}
 
 	//resolve localities
-	if tppPolicy.City != nil {
-		if tppPolicy.City.Locked {
+	if policy.Subject.City.Value != "" {
+		if policy.Subject.City.Locked {
 			shouldCreateSubject = true
-			subject.Localities = []string{tppPolicy.City.Value}
+			subject.Localities = []string{policy.Subject.City.Value}
 		} else {
 			shouldCreateDefSubject = true
-			defaultSubject.Locality = &tppPolicy.City.Value
+			defaultSubject.Locality = &policy.Subject.City.Value
 		}
 	}
 
 	//resolve states
-	if tppPolicy.State != nil {
-		if tppPolicy.State.Locked {
+
+	if policy.Subject.State.Value != "" {
+		if policy.Subject.State.Locked {
 			shouldCreateSubject = true
-			subject.States = []string{tppPolicy.State.Value}
+			subject.States = []string{policy.Subject.State.Value}
 		} else {
 			shouldCreateDefSubject = true
-			defaultSubject.State = &tppPolicy.State.Value
+			defaultSubject.State = &policy.Subject.State.Value
 		}
 	}
 
 	//resolve countries
-	if tppPolicy.Country != nil {
-		if tppPolicy.Country.Locked {
+	if policy.Subject.Country.Value != "" {
+		if policy.Subject.Country.Locked {
 			shouldCreateSubject = true
-			subject.Countries = []string{tppPolicy.Country.Value}
+			subject.Countries = []string{policy.Subject.Country.Value}
 		} else {
 			shouldCreateDefSubject = true
-			defaultSubject.Country = &tppPolicy.Country.Value
+			defaultSubject.Country = &policy.Subject.Country.Value
 		}
 	}
 
 	//resolve key pair's attributes
 
 	//resolve keyTypes
-	if tppPolicy.KeyAlgorithm != nil {
-		if tppPolicy.KeyAlgorithm.Locked {
-			shouldCreateKeyPair = true
-			keyPair.KeyTypes = []string{tppPolicy.KeyAlgorithm.Value}
+	if policy.KeyPairResponse.KeyAlgorithm.Value != "" {
+		if policy.KeyPairResponse.KeyAlgorithm.Locked {
+			keyPair.KeyTypes = []string{policy.KeyPairResponse.KeyAlgorithm.Value}
 		} else {
 			shouldCreateDefKeyPair = true
-			defaultKeyPair.KeyType = &tppPolicy.KeyAlgorithm.Value
+			defaultKeyPair.KeyType = &policy.KeyPairResponse.KeyAlgorithm.Value
 		}
 	}
 
 	//resolve rsaKeySizes
-	if tppPolicy.KeyBitStrength != nil {
-		value := tppPolicy.KeyBitStrength.Value
-		intVal, err := strconv.Atoi(value)
 
-		if err != nil {
-			return nil, err
-		}
-
-		if tppPolicy.KeyBitStrength.Locked {
-			shouldCreateKeyPair = true
-			keyPair.RsaKeySizes = []int{intVal}
+	if policy.KeyPairResponse.KeySize.Value > 0 {
+		if policy.KeyPairResponse.KeySize.Locked {
+			keyPair.RsaKeySizes = []int{policy.KeyPairResponse.KeySize.Value}
 		} else {
 			shouldCreateDefKeyPair = true
-			defaultKeyPair.RsaKeySize = &intVal
+			defaultKeyPair.RsaKeySize = &policy.KeyPairResponse.KeySize.Value
 		}
 	}
-
 	//resolve ellipticCurves
-	if tppPolicy.EllipticCurve != nil {
+	/*if tppPolicy.EllipticCurve != nil {
 		if tppPolicy.EllipticCurve.Locked {
 			shouldCreateKeyPair = true
 			keyPair.EllipticCurves = []string{tppPolicy.EllipticCurve.Value}
@@ -553,36 +553,29 @@ func BuildPolicySpecificationForTPP(tppPolicy TppPolicy) (*PolicySpecification, 
 			shouldCreateDefKeyPair = true
 			defaultKeyPair.EllipticCurve = &tppPolicy.EllipticCurve.Value
 		}
-	}
+	}*/
 
 	//resolve generationType
-	if tppPolicy.ManualCsr != nil {
-		if tppPolicy.ManualCsr.Locked {
-			shouldCreateKeyPair = true
-			keyPair.GenerationType = &tppPolicy.ManualCsr.Value
+
+	value := policy.CsrGeneration.Value
+	if value != "" {
+		booleanValue := true
+
+		//this mean that is a generated csr so ServiceGenerated is false
+		if value == UserProvided {
+			booleanValue = false
+		}
+
+		if policy.CsrGeneration.Locked {
+			keyPair.ServiceGenerated = &booleanValue
 		} else {
 			shouldCreateDefKeyPair = true
-			defaultKeyPair.GenerationType = &tppPolicy.ManualCsr.Value
+			defaultKeyPair.ServiceGenerated = &booleanValue
 		}
 	}
 
-	//resolve reuseAllowed, as on tpp this value represents: Allow Private Key Reuse Want Renewal
-	//so if one of these two values is set then apply the value to  ReuseAllowed
-	if tppPolicy.AllowPrivateKeyReuse != nil {
-		shouldCreateKeyPair = true
-		boolVal, err := getBooleanValueFromInt(*(tppPolicy.AllowPrivateKeyReuse))
-		if err != nil {
-			return nil, err
-		}
-		keyPair.ReuseAllowed = &boolVal
-	} else if tppPolicy.WantRenewal != nil {
-		shouldCreateKeyPair = true
-		boolVal, err := getBooleanValueFromInt(*(tppPolicy.WantRenewal))
-		if err != nil {
-			return nil, err
-		}
-		keyPair.ReuseAllowed = &boolVal
-	}
+	keyPair.ReuseAllowed = &policy.PrivateKeyReuseAllowed
+	shouldCreateKeyPair = true
 
 	//assign policy's subject and key pair values
 	if shouldCreateSubject {
@@ -591,16 +584,14 @@ func BuildPolicySpecificationForTPP(tppPolicy TppPolicy) (*PolicySpecification, 
 	if shouldCreateKeyPair {
 		p.KeyPair = &keyPair
 	}
-	subjectAltNames := resolveSubjectAltNames(tppPolicy.ProhibitedSANType)
+	subjectAltNames := resolveSubjectAltNames((*policy))
 
 	if subjectAltNames != nil {
 		p.SubjectAltNames = subjectAltNames
 	}
 
 	//set policy and defaults to policy specification.
-	if shouldCreateKeyPair || shouldCreateSubject || subjectAltNames != nil {
-		ps.Policy = &p
-	}
+	ps.Policy = &p
 
 	var def Default
 	if shouldCreateDefSubject {
@@ -618,39 +609,37 @@ func BuildPolicySpecificationForTPP(tppPolicy TppPolicy) (*PolicySpecification, 
 
 }
 
-func resolveSubjectAltNames(prohibitedSanTypes []string) *SubjectAltNames {
-	if prohibitedSanTypes == nil {
-		return nil
-	}
+func resolveSubjectAltNames(policy PolicyResponse) *SubjectAltNames {
+
 	trueVal := true
 	falseVal := false
 	var subjectAltName SubjectAltNames
 
-	if !existValueInArray(prohibitedSanTypes, TppDnsAllowed) {
+	if policy.SubjAltNameDnsAllowed {
 		subjectAltName.DnsAllowed = &trueVal
 	} else {
 		subjectAltName.DnsAllowed = &falseVal
 	}
 
-	if !existValueInArray(prohibitedSanTypes, TppIpAllowed) {
+	if policy.SubjAltNameIpAllowed {
 		subjectAltName.IpAllowed = &trueVal
 	} else {
 		subjectAltName.IpAllowed = &falseVal
 	}
 
-	if !existValueInArray(prohibitedSanTypes, TppEmailAllowed) {
+	if policy.SubjAltNameEmailAllowed {
 		subjectAltName.EmailAllowed = &trueVal
 	} else {
 		subjectAltName.EmailAllowed = &falseVal
 	}
 
-	if !existValueInArray(prohibitedSanTypes, TppUriAllowed) {
+	if policy.SubjAltNameUriAllowed {
 		subjectAltName.UriAllowed = &trueVal
 	} else {
 		subjectAltName.UriAllowed = &falseVal
 	}
 
-	if !existValueInArray(prohibitedSanTypes, TppUpnAllowed) {
+	if policy.SubjAltNameUpnAllowed {
 		subjectAltName.UpnAllowed = &trueVal
 	} else {
 		subjectAltName.UpnAllowed = &falseVal
@@ -772,7 +761,7 @@ func ValidateCloudPolicySpecification(ps *PolicySpecification) error {
 			}
 
 			if ps.Default != nil && ps.Default.KeyPair != nil && ps.Default.KeyPair.RsaKeySize != nil && len(ps.Policy.KeyPair.RsaKeySizes) > 0 {
-				exist := existIntInArray(ps.Policy.KeyPair.RsaKeySizes, []int{*(ps.Default.KeyPair.RsaKeySize)})
+				exist := existIntInArray([]int{*(ps.Default.KeyPair.RsaKeySize)}, ps.Policy.KeyPair.RsaKeySizes)
 				if !exist {
 					return fmt.Errorf("specified default rsa key size value: %s  doesn't match with specified policy rsa key size", *(ps.Default.KeyPair.KeyType))
 				}
@@ -862,6 +851,11 @@ func BuildCloudCitRequest(ps *PolicySpecification) (*CloudPolicyRequest, error) 
 
 	if ps.Policy != nil && ps.Policy.MaxValidDays != nil {
 		period = *(ps.Policy.MaxValidDays)
+		if period == 0 {
+			period = 365
+		}
+	} else {
+		period = 365
 	}
 
 	product := Product{
@@ -872,9 +866,17 @@ func BuildCloudCitRequest(ps *PolicySpecification) (*CloudPolicyRequest, error) 
 	cloudPolicyRequest.Product = product
 
 	if ps.Policy != nil && len(ps.Policy.Domains) > 0 {
-		regexValues := ConvertToRegex(ps.Policy.Domains)
+		regexValues := ConvertToRegex(ps.Policy.Domains, IsWildcardAllowed(*(ps)))
 		cloudPolicyRequest.SubjectCNRegexes = regexValues
-		cloudPolicyRequest.SanRegexes = regexValues //in cloud subject CN and SAN have the same values and we use domains as those values
+		if ps.Policy.SubjectAltNames != nil && ps.Policy.SubjectAltNames.DnsAllowed != nil {
+			if *(ps.Policy.SubjectAltNames.DnsAllowed) {
+				cloudPolicyRequest.SanRegexes = regexValues //in cloud subject CN and SAN have the same values and we use domains as those values
+			} else {
+				cloudPolicyRequest.SanRegexes = nil
+			}
+		} else {
+			cloudPolicyRequest.SanRegexes = regexValues //in cloud subject CN and SAN have the same values and we use domains as those values
+		}
 	} else {
 		cloudPolicyRequest.SubjectCNRegexes = []string{".*"}
 		cloudPolicyRequest.SanRegexes = []string{".*"}
@@ -1008,11 +1010,15 @@ func BuildCloudCitRequest(ps *PolicySpecification) (*CloudPolicyRequest, error) 
 	return &cloudPolicyRequest, nil
 }
 
-func ConvertToRegex(values []string) []string {
+func ConvertToRegex(values []string, wildcardAllowed bool) []string {
 	var regexVals []string
 	for _, current := range values {
 		currentRegex := strings.ReplaceAll(current, ".", "\\.")
-		currentRegex = fmt.Sprint(".*\\.", currentRegex)
+		if wildcardAllowed {
+			currentRegex = fmt.Sprint("^[*A-Za-z]{1}[A-Za-z0-9.-]*\\.", currentRegex, "$")
+		} else {
+			currentRegex = fmt.Sprint("^[A-Za-z]{1}[A-Za-z0-9.-]*\\.", currentRegex, "$")
+		}
 		regexVals = append(regexVals, currentRegex)
 	}
 	if len(regexVals) > 0 {
@@ -1055,13 +1061,9 @@ func GetCertAuthorityInfo(certificateAuthority string) (*CertificateAuthorityInf
 	return &caInfo, nil
 }
 
-func getBooleanValueFromInt(v int) (bool, error) {
-	if v == 0 {
-		return false, nil
+func IsWildcardAllowed(ps PolicySpecification) bool {
+	if ps.Policy != nil && ps.Policy.WildcardAllowed != nil {
+		return *(ps.Policy.WildcardAllowed)
 	}
-	if v == 1 {
-		return true, nil
-	}
-
-	return false, fmt.Errorf("specified value is not a supported value")
+	return false
 }

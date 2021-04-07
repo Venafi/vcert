@@ -21,7 +21,7 @@ const (
 	TppKeyAlgorithm          = "Key Algorithm"
 	TppKeyBitStrength        = "Key Bit Strength"
 	TppEllipticCurve         = "Elliptic Curve"
-	TppManualCsr             = "Manual Csr"
+	ServiceGenerated         = "Manual Csr"
 	TppProhibitedSANTypes    = "Prohibited SAN Types"
 	TppAllowPrivateKeyReuse  = "Allow Private Key Reuse"
 	TppWantRenewal           = "Want Renewal"
@@ -31,4 +31,6 @@ const (
 	TppUriAllowed            = "URI"
 	TppUpnAllowed            = "UPN"
 	AllowAll                 = ".*"
+	UserProvided             = "UserProvided"
+	DefaultCA                = "BUILTIN\\Built-In CA\\Default Product"
 )

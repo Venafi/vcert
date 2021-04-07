@@ -313,7 +313,7 @@ const (
 	urlResourceCreatePolicy           urlResource = "vedsdk/Config/Create"
 	urlResourceWritePolicy            urlResource = "vedsdk/Config/WritePolicy"
 	urlResourceIsValidPolicy          urlResource = "vedsdk/Config/isvalid"
-	urlResourceReadPolicy             urlResource = "vedsdk/Config/ReadPolicy"
+	urlResourceReadPolicy             urlResource = "vedsdk/certificates/checkpolicy"
 )
 
 const (
