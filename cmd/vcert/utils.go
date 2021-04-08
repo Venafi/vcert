@@ -392,9 +392,6 @@ func getEmptyPolicySpec() *policy.PolicySpecification {
 	falseBool := false
 
 	specification := policy.PolicySpecification{
-		Owners:    []string{""},
-		Users:     []string{""},
-		Approvers: []string{""},
 		Policy: &policy.Policy{
 			CertificateAuthority: &emptyString,
 			Domains:              []string{""},

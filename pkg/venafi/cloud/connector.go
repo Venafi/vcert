@@ -130,7 +130,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 	citName := policy.GetCitName(name)
 
 	if citName == "" {
-		return "", fmt.Errorf("cit name is empty, please provide zome in the format: app_name\\cit_name")
+		return "", fmt.Errorf("cit name is empty, please provide zone in the format: app_name\\cit_name")
 	}
 
 	//get certificate authority product option io
@@ -223,7 +223,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 	appName := policy.GetApplicationName(name)
 
 	if appName == "" {
-		return "", fmt.Errorf("application name is empty, please provide zome in the format: app_name\\cit_name")
+		return "", fmt.Errorf("application name is empty, please provide zone in the format: app_name\\cit_name")
 	}
 
 	userDetails, err := getUserDetails(c)

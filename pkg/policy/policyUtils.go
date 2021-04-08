@@ -1015,9 +1015,9 @@ func ConvertToRegex(values []string, wildcardAllowed bool) []string {
 	for _, current := range values {
 		currentRegex := strings.ReplaceAll(current, ".", "\\.")
 		if wildcardAllowed {
-			currentRegex = fmt.Sprint("^[*A-Za-z]{1}[A-Za-z0-9.-]*\\.", currentRegex, "$")
+			currentRegex = fmt.Sprint("[*a-z]{1}[a-z0-9.-]*\\.", currentRegex)
 		} else {
-			currentRegex = fmt.Sprint("^[A-Za-z]{1}[A-Za-z0-9.-]*\\.", currentRegex, "$")
+			currentRegex = fmt.Sprint("[a-z]{1}[a-z0-9.-]*\\.", currentRegex)
 		}
 		regexVals = append(regexVals, currentRegex)
 	}
