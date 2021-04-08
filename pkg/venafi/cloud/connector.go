@@ -165,6 +165,19 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 				return "", fmt.Errorf("specified CA doesn't exist")
 
 			}
+		} else {
+			//policy is not specified so we get the default CA
+			certificateAuthorityProductOptionId, err = getCertificateAuthorityProductOptionId(policy.DefaultCA, c)
+
+			if err != nil {
+				return "", err
+			}
+
+			if certificateAuthorityProductOptionId == "" {
+
+				return "", fmt.Errorf("specified CA doesn't exist")
+
+			}
 		}
 	}
 

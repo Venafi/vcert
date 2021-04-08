@@ -840,8 +840,13 @@ func BuildCloudCitRequest(ps *PolicySpecification) (*CloudPolicyRequest, error) 
 	var certAuth *CertificateAuthorityInfo
 	var err error
 	var period int
-	if ps.Policy != nil && ps.Policy.CertificateAuthority != nil {
+	if ps.Policy != nil && ps.Policy.CertificateAuthority != nil && *(ps.Policy.CertificateAuthority) != "" {
 		certAuth, err = GetCertAuthorityInfo(*(ps.Policy.CertificateAuthority))
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		certAuth, err = GetCertAuthorityInfo(DefaultCA)
 		if err != nil {
 			return nil, err
 		}
