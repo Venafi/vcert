@@ -817,6 +817,24 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 		}
 	}
 
+	//if policy exists but on ps policy and default are nils then just clean the attributes
+	if policy.IsPolicyEmpty(ps) && policy.IsDefaultEmpty(ps) {
+		err := resetTPPAttributes(*(tppPolicy.Name), c)
+		if err != nil {
+			return "", err
+		}
+		log.Printf("policy: %s was cleaned correctly", name)
+		return "OK", nil
+	}
+
+	//create Domain Suffix Whitelist
+	if tppPolicy.ManagementType != nil {
+		_, status, _, err = createPolicyAttribute(c, policy.TppManagementType, []string{tppPolicy.ManagementType.Value}, *(tppPolicy.Name), tppPolicy.ManagementType.Locked)
+		if err != nil {
+			return "", err
+		}
+	}
+
 	//create Domain Suffix Whitelist
 	if tppPolicy.DomainSuffixWhitelist != nil {
 		_, status, _, err = createPolicyAttribute(c, policy.TppDomainSuffixWhitelist, tppPolicy.DomainSuffixWhitelist, *(tppPolicy.Name), true)
@@ -1505,10 +1523,131 @@ func getPolicyAttribute(c *Connector, at string, n string) (s []string, b *bool,
 	return nil, nil, nil
 }
 
-func getLockedAttribute(v *string, l *bool) *policy.LockedAttribute {
-	lockedAttr := policy.LockedAttribute{
-		Value:  *(v),
-		Locked: *(l),
+func resetTPPAttributes(zone string, c *Connector) error {
+
+	//reset Domain Suffix Whitelist
+	err := resetTPPAttribute(c, policy.TppDomainSuffixWhitelist, zone)
+	if err != nil {
+		return err
 	}
-	return &lockedAttr
+
+	//reset Prohibit Wildcard
+	err = resetTPPAttribute(c, policy.TppProhibitWildcard, zone)
+	if err != nil {
+		return err
+	}
+
+	//reset Certificate Authority
+	err = resetTPPAttribute(c, policy.TppCertificateAuthority, zone)
+	if err != nil {
+		return err
+	}
+
+	//reset Organization attribute
+	err = resetTPPAttribute(c, policy.TppOrganization, zone)
+	if err != nil {
+		return err
+	}
+
+	//reset Organizational Unit attribute
+	err = resetTPPAttribute(c, policy.TppOrganizationalUnit, zone)
+	if err != nil {
+		return err
+	}
+
+	//reset City attribute
+	err = resetTPPAttribute(c, policy.TppCity, zone)
+	if err != nil {
+		return err
+	}
+
+	//reset State attribute
+	err = resetTPPAttribute(c, policy.TppState, zone)
+	if err != nil {
+		return err
+	}
+
+	//reset Country attribute
+	err = resetTPPAttribute(c, policy.TppCountry, zone)
+	if err != nil {
+		return err
+	}
+
+	//reset Key Algorithm attribute
+	err = resetTPPAttribute(c, policy.TppKeyAlgorithm, zone)
+	if err != nil {
+		return err
+	}
+
+	//reset Key Bit Strength
+	err = resetTPPAttribute(c, policy.TppKeyBitStrength, zone)
+	if err != nil {
+		return err
+	}
+
+	//reset Elliptic Curve attribute
+	err = resetTPPAttribute(c, policy.TppEllipticCurve, zone)
+	if err != nil {
+		return err
+	}
+
+	//reset Manual Csr attribute
+	err = resetTPPAttribute(c, policy.ServiceGenerated, zone)
+	if err != nil {
+		return err
+	}
+
+	//reset Manual Csr attribute
+	err = resetTPPAttribute(c, policy.TppProhibitedSANTypes, zone)
+	if err != nil {
+		return err
+	}
+
+	//reset Allow Private Key Reuse" & "Want Renewal
+	err = resetTPPAttribute(c, policy.TppAllowPrivateKeyReuse, zone)
+	if err != nil {
+		return err
+	}
+
+	err = resetTPPAttribute(c, policy.TppWantRenewal, zone)
+	if err != nil {
+		return err
+	}
+
+	err = resetTPPAttribute(c, policy.TppManagementType, zone)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func resetTPPAttribute(c *Connector, at, zone string) error {
+
+	request := policy.ClearTTPAttributesRequest{
+		ObjectDN:      zone,
+		Class:         policy.PolicyAttributeClass,
+		AttributeName: at,
+	}
+	// if is locked is a policy value
+	// if is not locked then is a default.
+
+	_, _, body, err := c.request("POST", urlResourceCleanPolicy, request)
+	if err != nil {
+		return err
+	}
+
+	var response policy.PolicySetAttributeResponse
+
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		return err
+	}
+
+	if response.Error != "" {
+		err = fmt.Errorf(response.Error)
+		return err
+	}
+
+	return nil
 }

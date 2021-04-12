@@ -314,6 +314,7 @@ const (
 	urlResourceWritePolicy            urlResource = "vedsdk/Config/WritePolicy"
 	urlResourceIsValidPolicy          urlResource = "vedsdk/Config/isvalid"
 	urlResourceReadPolicy             urlResource = "vedsdk/certificates/checkpolicy"
+	urlResourceCleanPolicy            urlResource = "vedsdk/config/clearpolicyattribute"
 )
 
 const (

@@ -60,6 +60,12 @@ func ValidateTppPolicySpecification(ps *PolicySpecification) error {
 		return err
 	}
 
+	if ps.Default != nil && ps.Default.AutoInstalled != nil && ps.Policy != nil && ps.Policy.AutoInstalled != nil {
+		if *(ps.Default.AutoInstalled) != *(ps.Policy.AutoInstalled) {
+			return fmt.Errorf("default autoInstalled attribute value doesn't match with policy's autoInstalled attribute value")
+		}
+	}
+
 	return nil
 }
 
@@ -232,7 +238,7 @@ func validateDefaultKeyPairWithPolicySubject(ps *PolicySpecification) error {
 
 	if policyKeyPair.ServiceGenerated != nil && defaultKeyPair.ServiceGenerated != nil {
 		if *(policyKeyPair.ServiceGenerated) != *(defaultKeyPair.ServiceGenerated) {
-			return fmt.Errorf("policy default generationType doesn't match with policy's generationType value")
+			return fmt.Errorf("policy default serviceGenerated generated doesn't match with policy's serviceGenerated value")
 		}
 	}
 
@@ -242,6 +248,10 @@ func validateDefaultKeyPairWithPolicySubject(ps *PolicySpecification) error {
 func validateDefaultKeyPair(ps *PolicySpecification) error {
 
 	if ps.Default == nil {
+		return nil
+	}
+
+	if ps.Default.KeyPair == nil {
 		return nil
 	}
 
@@ -294,6 +304,21 @@ func BuildTppPolicy(ps *PolicySpecification) TppPolicy {
 
 	if ps.Policy != nil && ps.Policy.CertificateAuthority != nil {
 		tppPolicy.CertificateAuthority = ps.Policy.CertificateAuthority
+	}
+
+	managementType := TppManagementTypeEnrollment
+	if ps.Policy != nil && ps.Policy.AutoInstalled != nil {
+		if *(ps.Policy.AutoInstalled) {
+			managementType = TppManagementTypeProvisioning
+		}
+		tppPolicy.ManagementType = createLockedAttribute(managementType, true)
+	} else if ps.Default != nil && ps.Default.AutoInstalled != nil {
+		if *(ps.Default.AutoInstalled) {
+			managementType = TppManagementTypeProvisioning
+		}
+		tppPolicy.ManagementType = createLockedAttribute(managementType, false)
+	} else {
+		tppPolicy.ManagementType = createLockedAttribute(managementType, false)
 	}
 
 	//policy subject attributes
@@ -461,7 +486,21 @@ func BuildPolicySpecificationForTPP(checkPolicyResp CheckPolicyResponse) (*Polic
 	var defaultKeyPair DefaultKeyPair
 	shouldCreateDefKeyPair := false
 
+	var def Default
+
 	p.WildcardAllowed = &policy.WildcardsAllowed
+
+	if policy.ManagementType.Value != "" {
+		boolVal := false
+		if policy.ManagementType.Value == TppManagementTypeProvisioning {
+			boolVal = true
+		}
+		if policy.ManagementType.Locked {
+			p.AutoInstalled = &boolVal
+		} else {
+			def.AutoInstalled = &boolVal
+		}
+	}
 
 	//resolve subject's attributes
 
@@ -593,7 +632,6 @@ func BuildPolicySpecificationForTPP(checkPolicyResp CheckPolicyResponse) (*Polic
 	//set policy and defaults to policy specification.
 	ps.Policy = &p
 
-	var def Default
 	if shouldCreateDefSubject {
 		def.Subject = &defaultSubject
 	}
@@ -601,7 +639,7 @@ func BuildPolicySpecificationForTPP(checkPolicyResp CheckPolicyResponse) (*Polic
 		def.KeyPair = &defaultKeyPair
 	}
 
-	if shouldCreateDefSubject || shouldCreateDefKeyPair {
+	if shouldCreateDefSubject || shouldCreateDefKeyPair || def.AutoInstalled != nil {
 		ps.Default = &def
 	}
 
@@ -763,7 +801,7 @@ func ValidateCloudPolicySpecification(ps *PolicySpecification) error {
 			if ps.Default != nil && ps.Default.KeyPair != nil && ps.Default.KeyPair.RsaKeySize != nil && len(ps.Policy.KeyPair.RsaKeySizes) > 0 {
 				exist := existIntInArray([]int{*(ps.Default.KeyPair.RsaKeySize)}, ps.Policy.KeyPair.RsaKeySizes)
 				if !exist {
-					return fmt.Errorf("specified default rsa key size value: %s  doesn't match with specified policy rsa key size", *(ps.Default.KeyPair.KeyType))
+					return fmt.Errorf("specified default rsa key size value: %s  doesn't match with specified policy rsa key size", strconv.Itoa(*(ps.Default.KeyPair.RsaKeySize)))
 				}
 			}
 		}
@@ -1071,4 +1109,154 @@ func IsWildcardAllowed(ps PolicySpecification) bool {
 		return *(ps.Policy.WildcardAllowed)
 	}
 	return false
+}
+
+func IsPolicyEmpty(ps *PolicySpecification) bool {
+	if ps.Policy == nil {
+		return true
+	}
+
+	policy := ps.Policy
+
+	if policy.WildcardAllowed != nil {
+		return false
+	}
+	if policy.SubjectAltNames != nil {
+		san := policy.SubjectAltNames
+
+		if san.DnsAllowed != nil {
+			return false
+		}
+
+		if san.UriAllowed != nil {
+			return false
+		}
+
+		if san.EmailAllowed != nil {
+			return false
+		}
+
+		if san.IpAllowed != nil {
+			return false
+		}
+
+		if san.UpnAllowed != nil {
+			return false
+		}
+	}
+
+	if policy.CertificateAuthority != nil && *(policy.CertificateAuthority) != "" {
+		return false
+	}
+
+	if policy.MaxValidDays != nil {
+		return false
+	}
+
+	if len(policy.Domains) > 0 {
+		return false
+	}
+
+	if policy.Subject != nil {
+
+		subject := policy.Subject
+
+		if len(subject.OrgUnits) > 0 {
+			return false
+		}
+		if len(subject.Countries) > 0 {
+			return false
+		}
+		if len(subject.States) > 0 {
+			return false
+		}
+		if len(subject.Localities) > 0 {
+			return false
+		}
+		if len(subject.Orgs) > 0 {
+			return false
+		}
+
+	}
+
+	if policy.KeyPair != nil {
+		keyPair := policy.KeyPair
+		if keyPair.ReuseAllowed != nil {
+			return false
+		}
+		if len(keyPair.RsaKeySizes) > 0 {
+			return false
+		}
+		if len(keyPair.KeyTypes) > 0 {
+			return false
+		}
+		if len(keyPair.EllipticCurves) > 0 {
+			return false
+		}
+		if keyPair.ServiceGenerated != nil {
+			return false
+		}
+	}
+
+	return true
+}
+
+func IsDefaultEmpty(ps *PolicySpecification) bool {
+
+	if ps.Default == nil {
+		return true
+	}
+
+	def := ps.Default
+
+	if def.Domain != nil && *(def.Domain) != "" {
+		return false
+	}
+
+	if def.KeyPair != nil {
+		keyPair := def.KeyPair
+
+		if keyPair.ServiceGenerated != nil {
+			return false
+		}
+
+		if keyPair.EllipticCurve != nil && *(keyPair.EllipticCurve) != "" {
+			return false
+		}
+
+		if keyPair.RsaKeySize != nil {
+			return false
+		}
+		if keyPair.KeyType != nil && *(keyPair.KeyType) != "" {
+			return false
+		}
+
+	}
+
+	if def.Subject != nil {
+		subject := def.Subject
+
+		if len(subject.OrgUnits) > 0 {
+			return false
+		}
+
+		if subject.Org != nil && *(subject.Org) != "" {
+			return false
+		}
+
+		if subject.State != nil && *(subject.State) != "" {
+			return false
+		}
+
+		if subject.Country != nil && *(subject.Country) != "" {
+			return false
+		}
+
+		if subject.Locality != nil && *(subject.Locality) != "" {
+			return false
+		}
+
+	}
+
+	return true
 }

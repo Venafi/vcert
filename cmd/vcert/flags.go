@@ -669,22 +669,20 @@ var (
 	))
 
 	createPolicyFlags = sortedFlags(flagsApppend(
-		flagTPPPassword,
-		flagTPPUser,
 		flagKey,
-		commonCredFlags,
-		commonFlags,
+		flagUrl,
+		flagTPPToken,
+		flagVerbose,
 		flagPolicyName,
 		flagPolicyConfigFile,
 		flagPolicyVerifyConfigFile,
 	))
 
 	getPolicyFlags = sortedFlags(flagsApppend(
-		flagTPPPassword,
-		flagTPPUser,
 		flagKey,
-		commonCredFlags,
-		commonFlags,
+		flagUrl,
+		flagTPPToken,
+		flagVerbose,
 		flagPolicyName,
 		flagPolicyConfigFile,
 		flagPolicyStarterConfigFile,

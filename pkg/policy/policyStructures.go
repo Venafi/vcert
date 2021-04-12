@@ -122,6 +122,7 @@ type TppPolicy struct {
 	DomainSuffixWhitelist []string
 	ProhibitedSANType     []string
 	CertificateAuthority  *string
+	ManagementType        *LockedAttribute
 
 	//subject attributes
 	Organization       *LockedAttribute
@@ -226,4 +227,10 @@ type SubjectResponse struct {
 
 type CheckPolicyRequest struct {
 	PolicyDN string `json:"PolicyDN"`
+}
+
+type ClearTTPAttributesRequest struct {
+	ObjectDN      string `json:"ObjectDN"`
+	Class         string `json:"Class"`
+	AttributeName string `json:"AttributeName"`
 }

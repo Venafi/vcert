@@ -12,6 +12,7 @@ type PolicySpecification struct {
 type Policy struct {
 	Domains              []string         `json:"domains,omitempty" yaml:"domains,omitempty"`
 	WildcardAllowed      *bool            `json:"wildcardAllowed,omitempty" yaml:"wildcardAllowed,omitempty"`
+	AutoInstalled        *bool            `json:"autoInstalled,omitempty" yaml:"autoInstalled,omitempty"`
 	MaxValidDays         *int             `json:"maxValidDays,omitempty" yaml:"maxValidDays,omitempty"`
 	CertificateAuthority *string          `json:"certificateAuthority,omitempty" yaml:"certificateAuthority,omitempty"`
 	Subject              *Subject         `json:"subject,omitempty" yaml:"subject,omitempty"`
@@ -44,9 +45,10 @@ type SubjectAltNames struct {
 }
 
 type Default struct {
-	Domain  *string         `json:"domain,omitempty" yaml:"domain,omitempty"`
-	Subject *DefaultSubject `json:"subject,omitempty" yaml:"subject,omitempty"`
-	KeyPair *DefaultKeyPair `json:"keyPair,omitempty" yaml:"keyPair,omitempty"`
+	Domain        *string         `json:"domain,omitempty" yaml:"domain,omitempty"`
+	Subject       *DefaultSubject `json:"subject,omitempty" yaml:"subject,omitempty"`
+	KeyPair       *DefaultKeyPair `json:"keyPair,omitempty" yaml:"keyPair,omitempty"`
+	AutoInstalled *bool           `json:"autoInstalled,omitempty" yaml:"autoInstalled,omitempty"`
 }
 
 type DefaultSubject struct {
