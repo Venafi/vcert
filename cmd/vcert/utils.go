@@ -396,6 +396,7 @@ func getEmptyPolicySpec() *policy.PolicySpecification {
 			CertificateAuthority: &emptyString,
 			Domains:              []string{""},
 			WildcardAllowed:      &falseBool,
+			AutoInstalled:        &falseBool,
 			MaxValidDays:         &intVal,
 			Subject: &policy.Subject{
 				Orgs:       []string{""},
