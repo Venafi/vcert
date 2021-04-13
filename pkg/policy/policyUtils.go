@@ -317,8 +317,6 @@ func BuildTppPolicy(ps *PolicySpecification) TppPolicy {
 			managementType = TppManagementTypeProvisioning
 		}
 		tppPolicy.ManagementType = createLockedAttribute(managementType, false)
-	} else {
-		tppPolicy.ManagementType = createLockedAttribute(managementType, false)
 	}
 
 	//policy subject attributes

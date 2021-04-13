@@ -676,6 +676,7 @@ var (
 		flagPolicyName,
 		flagPolicyConfigFile,
 		flagPolicyVerifyConfigFile,
+		flagTrustBundle,
 	))
 
 	getPolicyFlags = sortedFlags(flagsApppend(
@@ -686,6 +687,7 @@ var (
 		flagPolicyName,
 		flagPolicyConfigFile,
 		flagPolicyStarterConfigFile,
+		flagTrustBundle,
 	))
 )
 

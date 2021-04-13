@@ -817,14 +817,9 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 		}
 	}
 
-	//if policy exists but on ps policy and default are nils then just clean the attributes
-	if policy.IsPolicyEmpty(ps) && policy.IsDefaultEmpty(ps) {
-		err := resetTPPAttributes(*(tppPolicy.Name), c)
-		if err != nil {
-			return "", err
-		}
-		log.Printf("policy: %s was cleaned correctly", name)
-		return "OK", nil
+	err = resetTPPAttributes(*(tppPolicy.Name), c)
+	if err != nil {
+		return "", err
 	}
 
 	//create Domain Suffix Whitelist
