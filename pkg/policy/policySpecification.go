@@ -6,7 +6,7 @@ type PolicySpecification struct {
 	UserAccess string   `json:"userAccess,omitempty" yaml:"userAccess,omitempty"`
 	Approvers  []string `json:"approvers,omitempty" yaml:"approvers,omitempty"`
 	Policy     *Policy  `json:"policy,omitempty" yaml:"policy,omitempty"`
-	Default    *Default `json:"default,omitempty" yaml:"default,omitempty"`
+	Default    *Default `json:"defaults,omitempty" yaml:"defaults,omitempty"`
 }
 
 type Policy struct {

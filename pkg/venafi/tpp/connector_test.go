@@ -26,10 +26,12 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"github.com/Venafi/vcert/v4/pkg/policy"
 	"net/http"
 	"net/url"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -1595,7 +1597,7 @@ func TestOmitSans(t *testing.T) {
 	}
 }
 
-func TestSetZone(t *testing.T) {
+func TestSetPolicy(t *testing.T) {
 	policyName := os.Getenv("TPP_POLICY_MANAGEMENT_ROOT") + test.RandTppPolicyName()
 	ctx.CloudZone = policyName
 
@@ -1605,17 +1607,7 @@ func TestSetZone(t *testing.T) {
 	}
 
 	//
-	resp, err := tpp.GetRefreshToken(&endpoint.Authentication{
-		User: ctx.TPPuser, Password: ctx.TPPPassword,
-		Scope:    "configuration:manage",
-		ClientId: os.Getenv("TPP_POLICY_MANAGEMENT_CLIENT_ID"),
-	})
-	if err != nil {
-		panic(err)
-	}
-
-	ctx.TPPRefreshToken = resp.Refresh_token
-	ctx.TPPaccessToken = resp.Access_token
+	createConfigurationCredentials(tpp)
 	//
 
 	tpp.verbose = true
@@ -1636,15 +1628,7 @@ func TestSetZone(t *testing.T) {
 	}
 
 	//revert back to the certificate scope
-	resp, err = tpp.GetRefreshToken(&endpoint.Authentication{
-		User: ctx.TPPuser, Password: ctx.TPPPassword,
-		Scope: "certificate:discover,manage,revoke;configuration"})
-	if err != nil {
-		panic(err)
-	}
-
-	ctx.TPPRefreshToken = resp.Refresh_token
-	ctx.TPPaccessToken = resp.Access_token
+	createCertificateCredentials(tpp)
 
 }
 
@@ -1803,4 +1787,156 @@ func TestGetPolicy(t *testing.T) {
 
 	}
 
+}
+
+func TestSetEmptyPolicy(t *testing.T) {
+	policyName := os.Getenv("TPP_POLICY_MANAGEMENT_ROOT") + test.RandTppPolicyName()
+	ctx.CloudZone = policyName
+
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	specification := policy.PolicySpecification{}
+
+	createConfigurationCredentials(tpp)
+
+	tpp.verbose = true
+
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+
+	_, err = tpp.SetPolicy(policyName, &specification)
+
+	if err != nil {
+		createCertificateCredentials(tpp)
+		t.Fatalf("%s", err)
+	}
+	//revert back to the certificate scope
+	createCertificateCredentials(tpp)
+
+}
+
+func TestSetDefaultPolicyValuesAndValidate(t *testing.T) {
+
+	specification := test.GetTppPolicySpecification()
+
+	specification.Policy = nil
+	ec := "P384"
+	serGenerated := true
+	specification.Default.KeyPair.EllipticCurve = &ec
+	specification.Default.KeyPair.ServiceGenerated = &serGenerated
+	policyName := os.Getenv("TPP_POLICY_MANAGEMENT_ROOT") + test.RandTppPolicyName()
+	ctx.CloudZone = policyName
+
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+
+	createConfigurationCredentials(tpp)
+
+	tpp.verbose = true
+
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+
+	_, err = tpp.SetPolicy(policyName, specification)
+
+	if err != nil {
+		createCertificateCredentials(tpp)
+		t.Fatalf("%s", err)
+	}
+
+	//get the created policy
+	ps, err := tpp.GetPolicySpecification(policyName)
+
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	if ps.Default == nil {
+		t.Fatalf("policy's defaults are nil")
+	}
+	localDefault := specification.Default
+	remoteDefault := ps.Default
+
+	if *(localDefault.AutoInstalled) != *(remoteDefault.AutoInstalled) {
+		t.Fatalf("policy's defaults are nil")
+	}
+	if remoteDefault.Subject == nil {
+		t.Fatalf("policy's default subject is nil")
+	}
+	if *(remoteDefault.Subject.Locality) != *(localDefault.Subject.Locality) {
+		t.Fatalf("policy's default locality is different expected: %s but get %s", *(localDefault.Subject.Locality), *(remoteDefault.Subject.Locality))
+	}
+
+	if *(remoteDefault.Subject.Country) != *(localDefault.Subject.Country) {
+		t.Fatalf("policy's default country is different expected: %s but get %s", *(localDefault.Subject.Country), *(remoteDefault.Subject.Country))
+	}
+
+	if *(remoteDefault.Subject.State) != *(localDefault.Subject.State) {
+		t.Fatalf("policy's default state is different expected: %s but get %s", *(localDefault.Subject.State), *(remoteDefault.Subject.State))
+	}
+
+	if *(remoteDefault.Subject.Org) != *(localDefault.Subject.Org) {
+		t.Fatalf("policy's default org is different expected: %s but get %s", *(localDefault.Subject.Org), *(remoteDefault.Subject.Org))
+	}
+
+	valid := test.IsArrayStringEqual(remoteDefault.Subject.OrgUnits, localDefault.Subject.OrgUnits)
+	if !valid {
+		t.Fatalf("policy's default orgUnits are different")
+	}
+
+	if remoteDefault.KeyPair == nil {
+		t.Fatalf("policy's default keyPair is nil")
+	}
+
+	if *(remoteDefault.KeyPair.KeyType) != *(localDefault.KeyPair.KeyType) {
+		t.Fatalf("policy's default keyType is different expected: %s but get %s", *(localDefault.KeyPair.KeyType), *(remoteDefault.KeyPair.KeyType))
+	}
+
+	/*if *(remoteDefault.KeyPair.EllipticCurve) != *(localDefault.KeyPair.EllipticCurve) {
+		t.Fatalf("policy's default ellipticCurve is different expected: %s but get %s", *(localDefault.KeyPair.KeyType), * (remoteDefault.KeyPair.KeyType))
+	}*/
+
+	if *(remoteDefault.KeyPair.ServiceGenerated) != *(localDefault.KeyPair.ServiceGenerated) {
+		t.Fatalf("policy's default serviceGenerated is different expected: %s but get %s", strconv.FormatBool(*(localDefault.KeyPair.ServiceGenerated)), strconv.FormatBool(*(remoteDefault.KeyPair.ServiceGenerated)))
+	}
+
+	if *(remoteDefault.KeyPair.RsaKeySize) != *(localDefault.KeyPair.RsaKeySize) {
+		t.Fatalf("policy's default serviceGenerated is different expected: %s but get %s", strconv.Itoa(*(localDefault.KeyPair.RsaKeySize)), strconv.Itoa(*(remoteDefault.KeyPair.RsaKeySize)))
+	}
+
+	//revert back to the certificate scope
+	createCertificateCredentials(tpp)
+
+}
+
+func createConfigurationCredentials(c *Connector) {
+	resp, err := c.GetRefreshToken(&endpoint.Authentication{
+		User: ctx.TPPuser, Password: ctx.TPPPassword,
+		Scope:    "certificate:manage;configuration:manage",
+		ClientId: os.Getenv("TPP_POLICY_MANAGEMENT_CLIENT_ID"),
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	ctx.TPPRefreshToken = resp.Refresh_token
+	ctx.TPPaccessToken = resp.Access_token
+}
+
+func createCertificateCredentials(c *Connector) {
+	resp, err := c.GetRefreshToken(&endpoint.Authentication{
+		User: ctx.TPPuser, Password: ctx.TPPPassword,
+		Scope: "certificate:discover,manage,revoke;configuration"})
+	if err != nil {
+		panic(err)
+	}
+
+	ctx.TPPRefreshToken = resp.Refresh_token
+	ctx.TPPaccessToken = resp.Access_token
 }

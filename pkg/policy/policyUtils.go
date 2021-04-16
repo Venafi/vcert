@@ -377,7 +377,7 @@ func BuildTppPolicy(ps *PolicySpecification) TppPolicy {
 		tppPolicy.ManualCsr = createLockedAttribute(strVal, true)
 	} else if ps.Default != nil && ps.Default.KeyPair != nil && (ps.Default.KeyPair.ServiceGenerated != nil) {
 		strVal := "1"
-		if *(ps.Policy.KeyPair.ServiceGenerated) {
+		if *(ps.Default.KeyPair.ServiceGenerated) {
 			strVal = "0"
 		}
 		tppPolicy.ManualCsr = createLockedAttribute(strVal, false)
@@ -871,9 +871,9 @@ func getSubjectAltNames(names SubjectAltNames) map[string]bool {
 
 }
 
-func BuildCloudCitRequest(ps *PolicySpecification) (*CloudPolicyRequest, error) {
+func BuildCloudCitRequest(ps *PolicySpecification, ca *CADetails) (*CloudPolicyRequest, error) {
 	var cloudPolicyRequest CloudPolicyRequest
-	var certAuth *CertificateAuthorityInfo
+	var certAuth CertificateAuthorityInfo
 	var err error
 	var period int
 	if ps.Policy != nil && ps.Policy.CertificateAuthority != nil && *(ps.Policy.CertificateAuthority) != "" {
@@ -889,6 +889,7 @@ func BuildCloudCitRequest(ps *PolicySpecification) (*CloudPolicyRequest, error) 
 	}
 
 	cloudPolicyRequest.CertificateAuthority = certAuth.CAType
+	cloudPolicyRequest.CertificateAuthorityProductOptionId = *(ca.CertificateAuthorityProductOptionId)
 
 	if ps.Policy != nil && ps.Policy.MaxValidDays != nil {
 		period = *(ps.Policy.MaxValidDays)
@@ -904,6 +905,25 @@ func BuildCloudCitRequest(ps *PolicySpecification) (*CloudPolicyRequest, error) 
 		ProductName:          certAuth.VendorProductName,
 		ValidityPeriod:       fmt.Sprint("P", strconv.Itoa(period), "D"),
 	}
+
+	if certAuth.CAType == CloudDigicertCA {
+		alg := "SHA256"
+		autoRen := false
+		product.HashAlgorithm = &alg
+		product.AutoRenew = &autoRen
+		product.OrganizationId = ca.CertificateAuthorityOrganizationId
+	}
+
+	if certAuth.CAType == CloudEntrustCA {
+		td := TrackingData{
+			CertificateAuthority: CloudEntrustCA,
+			RequesterName:        CloudRequesterName,
+			RequesterEmail:       CloudRequesterEmail,
+			RequesterPhone:       CloudRequesterPhone,
+		}
+		cloudPolicyRequest.TrackingData = &td
+	}
+
 	cloudPolicyRequest.Product = product
 
 	if ps.Policy != nil && len(ps.Policy.Domains) > 0 {
@@ -1085,21 +1105,22 @@ func GetCitName(zone string) string {
 	return ""
 }
 
-func GetCertAuthorityInfo(certificateAuthority string) (*CertificateAuthorityInfo, error) {
+func GetCertAuthorityInfo(certificateAuthority string) (CertificateAuthorityInfo, error) {
 
+	var caInfo CertificateAuthorityInfo
 	data := strings.Split(certificateAuthority, "\\")
 
 	if len(data) < 3 {
-		return nil, fmt.Errorf("certificate Authority is invalid, please provide a valid value with this structure: ca_type\\ca_account_key\\vendor_product_name")
+		return caInfo, fmt.Errorf("certificate Authority is invalid, please provide a valid value with this structure: ca_type\\ca_account_key\\vendor_product_name")
 	}
 
-	caInfo := CertificateAuthorityInfo{
+	caInfo = CertificateAuthorityInfo{
 		CAType:            data[0],
 		CAAccountKey:      data[1],
 		VendorProductName: data[2],
 	}
 
-	return &caInfo, nil
+	return caInfo, nil
 }
 
 func IsWildcardAllowed(ps PolicySpecification) bool {

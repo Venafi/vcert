@@ -36,4 +36,9 @@ const (
 	TppManagementType             = "Management Type"
 	TppManagementTypeEnrollment   = "Enrollment"
 	TppManagementTypeProvisioning = "Provisioning"
+	CloudEntrustCA                = "ENTRUST"
+	CloudDigicertCA               = "DIGICERT"
+	CloudRequesterName            = "Venafi Cloud Service"
+	CloudRequesterEmail           = "no-reply@venafi.cloud"
+	CloudRequesterPhone           = "801-555-0123"
 )

@@ -128,6 +128,7 @@ func GetTppPolicySpecification() *policy.PolicySpecification {
 	reuseAllowed := false
 	subjectAltNamesAllowedTrue := true
 	subjectAltNamesAllowedFalse := false
+	autoInstalled := true
 
 	domain := "venafi.com"
 	org := "Venafi"
@@ -167,7 +168,8 @@ func GetTppPolicySpecification() *policy.PolicySpecification {
 			},
 		},
 		Default: &policy.Default{
-			Domain: &domain,
+			Domain:        &domain,
+			AutoInstalled: &autoInstalled,
 			Subject: &policy.DefaultSubject{
 				Org:      &org,
 				OrgUnits: []string{"DevOps"},

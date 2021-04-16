@@ -46,7 +46,7 @@ type CloudPolicyRequest struct {
 	CertificateAuthority                string               `json:"certificateAuthority"`
 	CertificateAuthorityProductOptionId string               `json:"certificateAuthorityProductOptionId"`
 	Product                             Product              `json:"product"`
-	TrackingData                        *string              `json:"trackingData"`
+	TrackingData                        *TrackingData        `json:"trackingData"`
 	SubjectCNRegexes                    []string             `json:"subjectCNRegexes"`
 	SubjectORegexes                     []string             `json:"subjectORegexes"`
 	SubjectOURegexes                    []string             `json:"subjectOURegexes"`
@@ -60,14 +60,24 @@ type CloudPolicyRequest struct {
 }
 
 type Product struct {
-	CertificateAuthority string `json:"certificateAuthority"`
-	ProductName          string `json:"productName"`
-	ValidityPeriod       string `json:"validityPeriod"`
+	CertificateAuthority string  `json:"certificateAuthority"`
+	ProductName          string  `json:"productName"`
+	ValidityPeriod       string  `json:"validityPeriod"`
+	HashAlgorithm        *string `json:"hashAlgorithm,omitempty"`
+	AutoRenew            *bool   `json:"autoRenew,omitempty"`
+	OrganizationId       *int64  `json:"organizationId,omitempty"`
 }
 
 type KeyTypes struct {
 	KeyType    string `json:"keyType"`
 	KeyLengths []int  `json:"keyLengths"`
+}
+
+type TrackingData struct {
+	CertificateAuthority string `json:"certificateAuthority"`
+	RequesterName        string `json:"requesterName"`
+	RequesterEmail       string `json:"requesterEmail"`
+	RequesterPhone       string `json:"requesterPhone"`
 }
 
 type RecommendedSettings struct {
@@ -174,8 +184,17 @@ type Account struct {
 }
 
 type ProductOption struct {
-	ProductName string `json:"productName"`
-	Id          string `json:"id"`
+	ProductName    string         `json:"productName"`
+	Id             string         `json:"id"`
+	ProductDetails ProductDetails `json:"productDetails"`
+}
+
+type ProductDetails struct {
+	ProductTemplate ProductTemplate `json:"productTemplate"`
+}
+
+type ProductTemplate struct {
+	OrganizationId int64 `json:"organizationId"`
 }
 
 type PolicyObject struct {
@@ -233,4 +252,9 @@ type ClearTTPAttributesRequest struct {
 	ObjectDN      string `json:"ObjectDN"`
 	Class         string `json:"Class"`
 	AttributeName string `json:"AttributeName"`
+}
+
+type CADetails struct {
+	CertificateAuthorityProductOptionId *string
+	CertificateAuthorityOrganizationId  *int64
 }

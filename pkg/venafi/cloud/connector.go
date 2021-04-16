@@ -134,61 +134,45 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 	}
 
 	//get certificate authority product option io
-	var certificateAuthorityProductOptionId string
+	var caDetails *policy.CADetails
 
 	if ps.Policy != nil && ps.Policy.CertificateAuthority != nil && *(ps.Policy.CertificateAuthority) != "" {
-		certificateAuthorityProductOptionId, err = getCertificateAuthorityProductOptionId(*(ps.Policy.CertificateAuthority), c)
+		caDetails, err = getCertificateAuthorityDetails(*(ps.Policy.CertificateAuthority), c)
 
 		if err != nil {
 			return "", err
 		}
 
-		if certificateAuthorityProductOptionId == "" {
-
-			return "", fmt.Errorf("specified CA doesn't exist")
-
-		}
 	} else {
 		if ps.Policy != nil {
 
 			defaultCA := policy.DefaultCA
 			ps.Policy.CertificateAuthority = &defaultCA
 
-			certificateAuthorityProductOptionId, err = getCertificateAuthorityProductOptionId(*(ps.Policy.CertificateAuthority), c)
+			caDetails, err = getCertificateAuthorityDetails(*(ps.Policy.CertificateAuthority), c)
 
 			if err != nil {
 				return "", err
 			}
 
-			if certificateAuthorityProductOptionId == "" {
-
-				return "", fmt.Errorf("specified CA doesn't exist")
-
-			}
 		} else {
 			//policy is not specified so we get the default CA
-			certificateAuthorityProductOptionId, err = getCertificateAuthorityProductOptionId(policy.DefaultCA, c)
+			caDetails, err = getCertificateAuthorityDetails(policy.DefaultCA, c)
 
 			if err != nil {
 				return "", err
 			}
 
-			if certificateAuthorityProductOptionId == "" {
-
-				return "", fmt.Errorf("specified CA doesn't exist")
-
-			}
 		}
 	}
 
 	//at this moment we know that ps.Policy.CertificateAuthority is valid.
 
-	req, err := policy.BuildCloudCitRequest(ps)
+	req, err := policy.BuildCloudCitRequest(ps, caDetails)
 	if err != nil {
 		return "", err
 	}
 	req.Name = citName
-	req.CertificateAuthorityProductOptionId = certificateAuthorityProductOptionId
 
 	url := c.getURL(urlIssuingTemplate)
 
@@ -1075,7 +1059,7 @@ func getAccounts(caName string, c *Connector) (*policy.Accounts, *policy.Certifi
 		return nil, nil, err
 	}
 
-	return &accounts, info, nil
+	return &accounts, &info, nil
 }
 
 func getCertificateAuthorityAccountId(caName string, c *Connector) (string, error) {
@@ -1096,4 +1080,28 @@ func getCertificateAuthorityAccountId(caName string, c *Connector) (string, erro
 	}
 
 	return "", nil
+}
+
+func getCertificateAuthorityDetails(caName string, c *Connector) (*policy.CADetails, error) {
+
+	accounts, info, err := getAccounts(caName, c)
+	if err != nil {
+		return nil, err
+	}
+
+	var details policy.CADetails
+
+	for _, account := range accounts.Accounts {
+		if account.Account.Key == info.CAAccountKey {
+			for _, productOption := range account.ProductOption {
+				if productOption.ProductName == info.VendorProductName {
+					details.CertificateAuthorityOrganizationId = &productOption.ProductDetails.ProductTemplate.OrganizationId
+					details.CertificateAuthorityProductOptionId = &productOption.Id
+					return &details, nil
+				}
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("specified CA doesn't exist")
 }

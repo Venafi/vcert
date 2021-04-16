@@ -816,10 +816,11 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 			return "", err
 		}
 	}
-
-	err = resetTPPAttributes(*(tppPolicy.Name), c)
-	if err != nil {
-		return "", err
+	if policyExists {
+		err = resetTPPAttributes(*(tppPolicy.Name), c)
+		if err != nil {
+			return "", err
+		}
 	}
 
 	//create Domain Suffix Whitelist
