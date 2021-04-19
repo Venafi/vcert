@@ -541,7 +541,7 @@ func createAppUpdateRequest(applicationDetails *ApplicationDetails, cit *certifi
 	return request
 }
 
-func buildPolicySpecification(cit *certificateTemplate) *policy.PolicySpecification {
+func buildPolicySpecification(cit *certificateTemplate, info *policy.CertificateAuthorityInfo) *policy.PolicySpecification {
 	if cit == nil {
 		return nil
 	}
@@ -565,8 +565,9 @@ func buildPolicySpecification(cit *certificateTemplate) *policy.PolicySpecificat
 		intVal := int(intDays)
 		pol.MaxValidDays = &intVal
 	}
-	if cit.CertificateAuthorityAccountId != "" {
-		pol.CertificateAuthority = &cit.CertificateAuthorityAccountId
+	if info != nil {
+		ca := fmt.Sprint(info.CAType, "\\", info.CAAccountKey, "\\", info.VendorProductName)
+		pol.CertificateAuthority = &ca
 	}
 
 	//subject.

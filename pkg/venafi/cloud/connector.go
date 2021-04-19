@@ -55,6 +55,7 @@ const (
 	urlIssuingTemplate                urlResource = apiVersion + "certificateissuingtemplates"
 	urlAppRoot                        urlResource = basePath + "applications"
 	urlCAAccounts                     urlResource = apiVersion + "certificateauthorities/%s/accounts"
+	urlCAAccountDetails               urlResource = urlCAAccounts + "/%s"
 
 	defaultAppName = "Default"
 )
@@ -99,8 +100,14 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 		return nil, err
 	}
 
+	info, err := getCertificateAuthorityInfoFromCloud(cit.CertificateAuthority, cit.CertificateAuthorityAccountId, cit.CertificateAuthorityProductOptionId, c)
+
+	if err != nil {
+		return nil, err
+	}
+
 	log.Println("Building policy")
-	ps := buildPolicySpecification(cit)
+	ps := buildPolicySpecification(cit, info)
 
 	return ps, nil
 }
@@ -1104,4 +1111,49 @@ func getCertificateAuthorityDetails(caName string, c *Connector) (*policy.CADeta
 	}
 
 	return nil, fmt.Errorf("specified CA doesn't exist")
+}
+
+func getCertificateAuthorityInfoFromCloud(caName, caAccountId, caProductOptionId string, c *Connector) (*policy.CertificateAuthorityInfo, error) {
+
+	caName = netUrl.PathEscape(caName)
+	url := c.getURL(urlCAAccountDetails)
+	url = fmt.Sprintf(url, caName, caAccountId)
+	_, _, body, err := c.request("GET", url, nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var accountDetails policy.AccountDetails
+
+	err = json.Unmarshal(body, &accountDetails)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var info policy.CertificateAuthorityInfo
+
+	if accountDetails.Account.CertificateAuthority == "" {
+		return nil, fmt.Errorf("CertificateAuthority is empty")
+	}
+	info.CAType = accountDetails.Account.CertificateAuthority
+
+	if accountDetails.Account.Key == "" {
+		return nil, fmt.Errorf("Key is empty")
+	}
+
+	info.CAAccountKey = accountDetails.Account.Key
+
+	for _, productOption := range accountDetails.ProductOption {
+		if productOption.Id == caProductOptionId {
+			info.VendorProductName = productOption.ProductName
+		}
+	}
+
+	if info.VendorProductName == "" {
+		return nil, fmt.Errorf("ProductName is empty")
+	}
+
+	return &info, nil
 }

@@ -805,7 +805,7 @@ func TestSearchCertificate(t *testing.T) {
 	}
 }
 
-func TestSetZone(t *testing.T) {
+func TestSetPolicy(t *testing.T) {
 
 	policyName := test.RandAppName() + "\\" + test.RandCitName()
 	conn := getTestConnector(ctx.CloudZone)
@@ -867,19 +867,11 @@ func TestGetPolicy(t *testing.T) {
 	}
 
 	//validate cert authority id.
-	certAuth, err := getCertificateAuthorityAccountId(*(specifiedPS.Policy.CertificateAuthority), conn)
-
-	if err != nil {
-		t.Fatalf("%s", err)
+	if ps.Policy.CertificateAuthority == nil || *(ps.Policy.CertificateAuthority) == "" {
+		t.Fatalf("venafi policy doesn't have a certificate authority")
 	}
-
-	if certAuth != "" {
-		if ps.Policy.CertificateAuthority == nil || *(ps.Policy.CertificateAuthority) == "" {
-			t.Fatalf("venafi policy doesn't have a certificate authority")
-		}
-		if *(ps.Policy.CertificateAuthority) != certAuth {
-			t.Fatalf("certificate authority value doesn't match, get: %s but expected: %s", *(ps.Policy.CertificateAuthority), certAuth)
-		}
+	if *(ps.Policy.CertificateAuthority) != *(specifiedPS.Policy.CertificateAuthority) {
+		t.Fatalf("certificate authority value doesn't match, get: %s but expected: %s", *(ps.Policy.CertificateAuthority), *(specifiedPS.Policy.CertificateAuthority))
 	}
 
 	if specifiedPS.Policy.Subject.Orgs != nil {
@@ -1054,6 +1046,28 @@ func TestGetPolicy(t *testing.T) {
 		if *(ps.Default.KeyPair.RsaKeySize) != *(specifiedPS.Default.KeyPair.RsaKeySize) {
 			t.Fatalf("specified policy default rsa key size is different")
 		}
+	}
+
+}
+
+func TestSetEmptyPolicy(t *testing.T) {
+
+	policyName := test.RandAppName() + "\\" + test.RandCitName()
+	conn := getTestConnector(ctx.CloudZone)
+	conn.verbose = true
+
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	specification := policy.PolicySpecification{}
+
+	_, err = conn.SetPolicy(policyName, &specification)
+
+	if err != nil {
+		t.Fatalf("%s", err)
 	}
 
 }

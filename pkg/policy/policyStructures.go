@@ -179,8 +179,9 @@ type AccountDetails struct {
 }
 
 type Account struct {
-	Id  string `json:"id"`
-	Key string `json:"Key"`
+	Id                   string `json:"id"`
+	Key                  string `json:"Key"`
+	CertificateAuthority string `json:"certificateAuthority"`
 }
 
 type ProductOption struct {
