@@ -742,7 +742,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 		return "", err
 	}
 
-	log.Printf("policy specification were correctly validated")
+	log.Printf("policy specification is valid")
 	var status = ""
 	tppPolicy := policy.BuildTppPolicy(ps)
 
@@ -763,7 +763,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 
 	if policyExist {
 		policyExists = true
-		log.Printf("policy: %s exists", name)
+		log.Printf("found existing policy folder: %s", name)
 	} else {
 
 		//validate if the parent exist
@@ -784,7 +784,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 	//step 1 create root policy folder.
 	if !policyExists {
 
-		log.Printf("creating policy: %s", name)
+		log.Printf("creating policy folder: %s", name)
 
 		req := policy.PolicyPayloadRequest{
 			Class:    policy.PolicyClass,
@@ -799,7 +799,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 	}
 	//step 2 create policy's attributes.
 
-	log.Printf("setting policy's attributes")
+	log.Printf("updating certificate policy attributes")
 
 	//create Contact
 	if tppPolicy.Contact != nil {
@@ -948,11 +948,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 		}
 	}
 
-	if policyExists {
-		log.Printf("policy %s were updated correctly", name)
-	} else {
-		log.Printf("policy %s were created correctly", name)
-	}
+	log.Printf("policy successfully applied to %s", name)
 
 	return status, nil
 }

@@ -30,6 +30,7 @@ import (
 	"math/big"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -866,7 +867,7 @@ func TestGetPolicy(t *testing.T) {
 		t.Fatalf("specified validity period is different")
 	}
 
-	//validate cert authority id.
+	//validate cert authority
 	if ps.Policy.CertificateAuthority == nil || *(ps.Policy.CertificateAuthority) == "" {
 		t.Fatalf("venafi policy doesn't have a certificate authority")
 	}
@@ -1070,4 +1071,236 @@ func TestSetEmptyPolicy(t *testing.T) {
 		t.Fatalf("%s", err)
 	}
 
+}
+
+func TestSetDefaultPolicyValuesAndValidate(t *testing.T) {
+
+	policyName := test.RandAppName() + "\\" + test.RandCitName()
+	conn := getTestConnector(ctx.CloudZone)
+	conn.verbose = true
+
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	specification := test.GetCloudPolicySpecification()
+
+	specification.Policy = nil
+	ec := "P384"
+	serGenerated := true
+	specification.Default.KeyPair.EllipticCurve = &ec
+	specification.Default.KeyPair.ServiceGenerated = &serGenerated
+	ctx.CloudZone = policyName
+
+	_, err = conn.SetPolicy(policyName, specification)
+
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	//get the created policy
+	ps, err := conn.GetPolicySpecification(policyName)
+
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	if ps.Default == nil {
+		t.Fatalf("policy's defaults are nil")
+	}
+	localDefault := specification.Default
+	remoteDefault := ps.Default
+
+	if remoteDefault.Subject == nil {
+		t.Fatalf("policy's default subject is nil")
+	}
+	if *(remoteDefault.Subject.Locality) != *(localDefault.Subject.Locality) {
+		t.Fatalf("policy's default locality is different expected: %s but get %s", *(localDefault.Subject.Locality), *(remoteDefault.Subject.Locality))
+	}
+
+	if *(remoteDefault.Subject.Country) != *(localDefault.Subject.Country) {
+		t.Fatalf("policy's default country is different expected: %s but get %s", *(localDefault.Subject.Country), *(remoteDefault.Subject.Country))
+	}
+
+	if *(remoteDefault.Subject.State) != *(localDefault.Subject.State) {
+		t.Fatalf("policy's default state is different expected: %s but get %s", *(localDefault.Subject.State), *(remoteDefault.Subject.State))
+	}
+
+	if *(remoteDefault.Subject.Org) != *(localDefault.Subject.Org) {
+		t.Fatalf("policy's default org is different expected: %s but get %s", *(localDefault.Subject.Org), *(remoteDefault.Subject.Org))
+	}
+
+	valid := test.IsArrayStringEqual(remoteDefault.Subject.OrgUnits, localDefault.Subject.OrgUnits)
+	if !valid {
+		t.Fatalf("policy's default orgUnits are different")
+	}
+
+	if remoteDefault.KeyPair == nil {
+		t.Fatalf("policy's default keyPair is nil")
+	}
+
+	if *(remoteDefault.KeyPair.KeyType) != *(localDefault.KeyPair.KeyType) {
+		t.Fatalf("policy's default keyType is different expected: %s but get %s", *(localDefault.KeyPair.KeyType), *(remoteDefault.KeyPair.KeyType))
+	}
+
+	if *(remoteDefault.KeyPair.RsaKeySize) != *(localDefault.KeyPair.RsaKeySize) {
+		t.Fatalf("policy's default RsaKeySize is different expected: %s but get %s", strconv.Itoa(*(localDefault.KeyPair.RsaKeySize)), strconv.Itoa(*(remoteDefault.KeyPair.RsaKeySize)))
+	}
+
+}
+
+func TestSetPolicyValuesAndValidate(t *testing.T) {
+
+	policyName := test.RandAppName() + "\\" + test.RandCitName()
+	conn := getTestConnector(ctx.CloudZone)
+	conn.verbose = true
+
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	specification := test.GetCloudPolicySpecification()
+
+	specification.Default = nil
+	ctx.CloudZone = policyName
+
+	_, err = conn.SetPolicy(policyName, specification)
+
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	//get the created policy
+	ps, err := conn.GetPolicySpecification(policyName)
+
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	if ps.Policy == nil {
+		t.Fatalf("policy is nil")
+	}
+	localPolicy := specification.Policy
+	remotePolicy := ps.Policy
+
+	if remotePolicy.Subject == nil {
+		t.Fatalf("policy's subject is nil")
+	}
+
+	valid := test.IsArrayStringEqual(remotePolicy.Subject.Localities, localPolicy.Subject.Localities)
+	if !valid {
+		t.Fatalf("policy's localities are different expected: %+q but get  %+q ", localPolicy.Subject.Localities, remotePolicy.Subject.Localities)
+	}
+
+	valid = test.IsArrayStringEqual(remotePolicy.Subject.Countries, localPolicy.Subject.Countries)
+	if !valid {
+		t.Fatalf("policy's countries are different expected: %+q but get  %+q", localPolicy.Subject.Countries, remotePolicy.Subject.Countries)
+	}
+
+	valid = test.IsArrayStringEqual(remotePolicy.Subject.States, localPolicy.Subject.States)
+	if !valid {
+		t.Fatalf("policy's states are different expected: %+q but get  %+q", localPolicy.Subject.States, remotePolicy.Subject.States)
+	}
+
+	valid = test.IsArrayStringEqual(remotePolicy.Subject.Orgs, localPolicy.Subject.Orgs)
+	if !valid {
+		t.Fatalf("policy's default org are different expected: %+q but get  %+q", localPolicy.Subject.Orgs, remotePolicy.Subject.Orgs)
+	}
+
+	valid = test.IsArrayStringEqual(remotePolicy.Subject.OrgUnits, localPolicy.Subject.OrgUnits)
+	if !valid {
+		t.Fatalf("policy's org units are different expected: %+q but get  %+q", localPolicy.Subject.OrgUnits, remotePolicy.Subject.OrgUnits)
+	}
+
+	if remotePolicy.KeyPair == nil {
+		t.Fatalf("policy's keyPair is nil")
+	}
+
+	valid = test.IsArrayStringEqual(remotePolicy.KeyPair.KeyTypes, localPolicy.KeyPair.KeyTypes)
+	if !valid {
+		t.Fatalf("policy's keyTypes are different expected: %+q but get  %+q", localPolicy.KeyPair.KeyTypes, remotePolicy.KeyPair.KeyTypes)
+	}
+
+	valid = test.IsArrayIntEqual(remotePolicy.KeyPair.RsaKeySizes, localPolicy.KeyPair.RsaKeySizes)
+	if !valid {
+		t.Fatalf("policy's RsaKeySizes are different expected:  %+q but get  %+q", localPolicy.KeyPair.RsaKeySizes, remotePolicy.KeyPair.RsaKeySizes)
+	}
+
+}
+
+/**
+This test is just for verifying that a policy can be created using ENTRUST CA.
+*/
+func TestSetPolicyEntrust(t *testing.T) {
+
+	policyName := test.RandAppName() + "\\" + test.RandCitName()
+	conn := getTestConnector(ctx.CloudZone)
+	conn.verbose = true
+
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	specification := test.GetCloudPolicySpecification()
+	//change default CA to Entrust
+	caName := os.Getenv("CLOUD_ENTRUST_CA_NAME")
+	specification.Policy.CertificateAuthority = &caName
+
+	_, err = conn.SetPolicy(policyName, specification)
+
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	ps, err := conn.GetPolicySpecification(policyName)
+
+	if ps.Policy.CertificateAuthority == nil || *(ps.Policy.CertificateAuthority) == "" {
+		t.Fatalf("venafi policy doesn't have a certificate authority")
+	}
+	if *(ps.Policy.CertificateAuthority) != *(specification.Policy.CertificateAuthority) {
+		t.Fatalf("certificate authority value doesn't match, get: %s but expected: %s", *(ps.Policy.CertificateAuthority), *(specification.Policy.CertificateAuthority))
+	}
+
+}
+
+/**
+This test is just for verifying that a policy can be created using DIGICERT	 CA.
+*/
+func TestSetPolicyDigicert(t *testing.T) {
+
+	policyName := test.RandAppName() + "\\" + test.RandCitName()
+	conn := getTestConnector(ctx.CloudZone)
+	conn.verbose = true
+
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	specification := test.GetCloudPolicySpecification()
+
+	//change default CA to Digiert
+	caName := os.Getenv("CLOUD_DIGICERT_CA_NAME")
+	specification.Policy.CertificateAuthority = &caName
+	_, err = conn.SetPolicy(policyName, specification)
+
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	ps, err := conn.GetPolicySpecification(policyName)
+
+	if ps.Policy.CertificateAuthority == nil || *(ps.Policy.CertificateAuthority) == "" {
+		t.Fatalf("venafi policy doesn't have a certificate authority")
+	}
+	if *(ps.Policy.CertificateAuthority) != *(specification.Policy.CertificateAuthority) {
+		t.Fatalf("certificate authority value doesn't match, get: %s but expected: %s", *(ps.Policy.CertificateAuthority), *(specification.Policy.CertificateAuthority))
+	}
 }

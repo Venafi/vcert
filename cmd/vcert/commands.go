@@ -646,7 +646,7 @@ func doCommandCreatePolicy1(c *cli.Context) error {
 	policyName := flags.policyName
 	policySpecLocation := flags.policySpecLocation
 
-	logf("Loading policy specification %s", policyName)
+	logf("Loading policy specification from %s", policySpecLocation)
 
 	file, bytes, err := getFileAndBytes(policySpecLocation)
 
@@ -654,7 +654,9 @@ func doCommandCreatePolicy1(c *cli.Context) error {
 		return err
 	}
 
-	logf("Policy specification file was successfully opened")
+	if flags.verbose {
+		logf("Policy specification file was successfully opened")
+	}
 
 	fileExt := policy.GetFileType(policySpecLocation)
 	fileExt = strings.ToLower(fileExt)

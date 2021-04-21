@@ -145,6 +145,7 @@ func GetTppPolicySpecification() *policy.PolicySpecification {
 			Domains:              []string{"venafi.com"},
 			WildcardAllowed:      &wildcardAllowed,
 			MaxValidDays:         &validityHours,
+			AutoInstalled:        &autoInstalled,
 			Subject: &policy.Subject{
 				Orgs:       []string{"Venafi"},
 				OrgUnits:   []string{"DevOps"},

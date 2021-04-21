@@ -733,7 +733,7 @@ func parseCitDetailsData(b []byte, status int) (*certificateTemplate, error) {
 func isWildCard(cnRegex []string) bool {
 	if len(cnRegex) > 0 {
 		for _, val := range cnRegex {
-			if !(strings.HasPrefix(val, "^[*A") || strings.HasPrefix(val, "*")) {
+			if !(strings.HasPrefix(val, "[*a")) {
 				return false
 			}
 		}

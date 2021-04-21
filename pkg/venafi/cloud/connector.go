@@ -128,10 +128,9 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 		return "", err
 	}
 
-	log.Printf("policy specification were correctly validated")
+	log.Printf("policy specification is valid")
 
 	var status string
-	var policyExists = false
 
 	//validate if zone name is set and if zone already exist on Venafi cloud if not create it.
 	citName := policy.GetCitName(name)
@@ -190,7 +189,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 	}
 
 	if cit != nil {
-		log.Printf("updating CIT: %s", citName)
+		log.Printf("updating issuing template: %s", citName)
 		//update cit using the new values
 		url = fmt.Sprint(url, "/", cit.ID)
 		statusCode, status, body, err := c.request("PUT", url, req)
@@ -206,7 +205,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 		}
 
 	} else {
-		log.Printf("creating CIT: %s", citName)
+		log.Printf("creating issuing template: %s", citName)
 		//var body []byte
 		statusCode, status, body, err := c.request("POST", url, req)
 
@@ -278,17 +277,10 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 				return "", err
 			}
 
-		} else {
-			//the relation exists don't link anything.
-			policyExists = true
 		}
 	}
 
-	if policyExists {
-		log.Printf("policy %s were updated correctly", name)
-	} else {
-		log.Printf("policy %s were created correctly", name)
-	}
+	log.Printf("policy successfully applied to %s", name)
 
 	return status, nil
 }
