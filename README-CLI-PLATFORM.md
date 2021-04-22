@@ -198,8 +198,8 @@ Notes:
 - The `maxValidDays` policy does not apply as validity in Trust Protection Platform is governed by the CA template.
 - Although the `orgs`, `localities`, `states`, and `countries` policy (`subject`) are arrays, only a single value is allowed by Trust Protection Platform.
 - Although the `keyTypes`, `rsaKeySizes`, and `ellipticCurves` policy (`keyPair`) are arrays, only a single value is allowed by Trust Protection Platform.
-- The `autoInstalled` policy and defaults controls the certificate policy _Management Type_ (i.e. `true`: Provisioning, `false`: Enrollment)
-- The `serviceGenerated` policy and defaults controls the certificate policy _CSR Generation_ (i.e. `true`: TPP generated, `false`: user provided)
+- The `autoInstalled` policy/default sets the _Management Type_ (i.e. `true`&#8594;Provisioning; `false`&#8594;Enrollment)
+- The `serviceGenerated` policy/default sets the _CSR Generation_ (i.e. `true`&#8594;TPP generated; `false`&#8594;user provided)
 - If undefined key/value pairs are included in the policy specification, they will be silently ignored by this action.  This would include keys that are misspelled.
 
 
