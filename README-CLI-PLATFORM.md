@@ -193,6 +193,7 @@ Notes:
 - Policy and defaults revert to their default state if they are not present in a policy specification applied by this action.
 - Policy and defaults will not override policy that is locked by a parent folder.
 - If the policy folder specified by the `-z` zone parameter does not exist, this action will attempt to create it.
+- This action can be used to simply create a new policy folder by indicating its name with the `-z` zone parameter and applying a file that contains an empty policy (i.e. `{}`).
 - The syntax for the `certificateAuthority` policy value is the full object DN of an existing CA template (e.g. "\\VED\\Policy\\Certificate Authorities\\Entrust Advantage").
 - The `maxValidDays` policy does not apply as validity in Trust Protection Platform is governed by the CA template.
 - Although the `orgs`, `localities`, `states`, and `countries` policy (`subject`) are arrays, only a single value is allowed by Trust Protection Platform.
