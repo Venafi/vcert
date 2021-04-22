@@ -150,6 +150,7 @@ Notes:
 - The PKI Administrator role is required to apply certificate policy.
 - Policy (Issuing Template rules) and defaults (Issuing Template recommended settings) revert to their default state if they are not present in a policy specification applied by this action.
 - If the application or issuing template specified by the `-z` zone parameter do not exist, this action will attempt to create them with the calling user as the application owner.
+- This action can be used to simply create a new application and/or default issuing template by indicating those names with the `-z` zone parameter and applying a file that contains an empty policy (i.e. `{}`).
 - If the issuing template specified by the `-z` zone parameter is not already assigned to the application, this action will attempt to make that assignment.
 - The syntax for the `certificateAuthority` policy value is _"CA Account Type\\CA Account Name\\CA Product Name"_ (e.g. "DIGICERT\\DigiCert SSL Plus\\ssl_plus").
 When not present in the policy specification, `certificateAuthority` defaults to "BUILTIN\\Built-In CA\\Default Product".
