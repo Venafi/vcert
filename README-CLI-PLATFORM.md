@@ -185,7 +185,7 @@ Options:
 
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Command&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Description |
 | ------------------ | ------------------------------------------------------------ |
-| `--file`           | REQUIRED. Use to specify the location of a certificate policy specification file in JSON or YAML format. |
+| `--file`           | Use to specify the location of the required file containing the certificate policy specification in JSON or YAML format. |
 | `--verify`         | Use to verify that a policy specification is valid. `-k` and `-z` are ignored with this option. |
 
 Notes:
