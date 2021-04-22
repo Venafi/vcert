@@ -153,6 +153,7 @@ Notes:
 - If the issuing template specified by the `-z` zone parameter is not already assigned to the application, this action will attempt to make that assignment.
 - The syntax for the `certificateAuthority` policy value is _"CA Account Type\\CA Account Name\\CA Product Name"_ (e.g. "DIGICERT\\DigiCert SSL Plus\\ssl_plus").
 When not present in the policy specification, `certificateAuthority` defaults to "BUILTIN\\Built-In CA\\Default Product".
+- The `autoInstalled` policy/defaults does not apply as automated installation of certificates by Venafi Cloud is not yet supported.
 - The `ellipticCurves` and `serviceGenerated` policy/defaults (`keyPair`) do not apply as ECC and central key generation are not yet supported by Venafi Cloud.
 - The `ipAllowed`, `emailAllowed`, `uriAllowed`, and `upnAllowed` policy (`subjectAltNames`) do not apply as those SAN types are not yet supported by Venafi Cloud.
 - If undefined key/value pairs are included in the policy specification, they will be silently ignored by this action.  This would include keys that are misspelled.
