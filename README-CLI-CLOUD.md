@@ -168,7 +168,7 @@ Options:
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Command&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Description |
 | ------------------ | ------------------------------------------------------------ |
 | `--file`           | Use to write the retrieved certificate policy to a file in JSON format. If not specified, policy is written to STDOUT. |
-| `--starter`        | Use to generate a template policy specification to help get started. `-k` and `-z` are ignored with this option. |
+| `--starter`        | Use to generate a template policy specification to help with  getting started. `-k` and `-z` are ignored with this option. |
 
 
 ## Examples
