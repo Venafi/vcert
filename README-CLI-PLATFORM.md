@@ -10,11 +10,14 @@ We welcome and appreciate all contributions. Got questions or want to discuss so
 
 # VCert CLI for Venafi Trust Protection Platform
 
-Venafi VCert command line utility is designed to generate keys and simplify certificate acquisition by eliminating the need to write code to interact with the Venafi REST API. VCert is available in 32 and 64 bit versions for Linux, Windows, and macOS.
+Venafi VCert is a command line tool designed to generate keys and simplify certificate acquisition, eliminating the need to write code that's required to interact with the Venafi REST API. VCert is available in 32- and 64-bit versions for Linux, Windows, and macOS.
 
-The following content applies to the latest version of VCert CLI, click [here](https://github.com/Venafi/vcert/releases/latest) to download it from https://github.com/Venafi/vcert/releases/latest.
+This article applies to the latest version of VCert CLI, which you can [download here](https://github.com/Venafi/vcert/releases/latest).
 
 ## Quick Links
+
+Use these to quickly jump to a relevant section lower on this page:
+
 - [Detailed usage examples](#examples)
 - [Options for requesting a certificate using the `enroll` action](#certificate-request-parameters)
 - [Options for downloading a certificate using the `pickup` action](#certificate-retrieval-parameters)
@@ -30,21 +33,23 @@ The following content applies to the latest version of VCert CLI, click [here](h
 
 ## Prerequisites
 
+Review these prerequistes to get started. You'll need: 
+
 1. A user account that has an authentication token with "certificate:manage,revoke" scope (i.e. access to the "Venafi VCert CLI" API Application as of 20.1) or has been granted WebSDK Access
-2. A folder where the user has been granted the following permissions: View, Read, Write, Create, Revoke (for the revoke action), and Private Key Read (for the pickup action when CSR is service generated)
-3. A policy applied to the folder which specifies:
+2. A folder where the user has been granted the following permissions: View, Read, Write, Create, Revoke (for the revoke action), and Private Key Read; this is for the pickup action when the certificate signing request (CSR) is service-generated.
+3. A policy applied to the folder that specifies the following:
     1. Subject DN values for Organizational Unit (OU), Organization (O), City/Locality (L), State/Province (ST) and Country (C)
     2. CA Template that Trust Protection Platform will use to enroll certificate requests submitted by VCert
-    3. Management Type not locked or locked to 'Enrollment'
-    4. Certificate Signing Request (CSR) Generation not locked or locked to Service Generated CSR
-    5. Generate Key/CSR on Application not locked or locked to 'No'
-    6. (Recommended) Disable Automatic Renewal set to 'Yes'
+    3. Management Type not locked, or locked to _Enrollment_
+    4. CSR Generation not locked, or locked to _Service Generated CSR_
+    5. Generate Key/CSR on Application not locked, or locked to _No_
+    6. (Recommended) Disable Automatic Renewal set to _Yes_
     7. (Recommended) Key Bit Strength set to 2048 or higher
-    8. (Recommended) Domain Whitelisting policy appropriately assigned
+    8. (Recommended) Domain Whitelisting policy assigned appropriately
 
 ### Compatibility
 
-VCert is compatible with Trust Protection Platform 17.3 and higher. The Custom Fields and Instance Tracking features require 18.2 or higher. Token Authentication requires 20.1 or higher; for earlier versions, username/password authentication (deprecated) applies.
+VCert is compatible with Trust Protection Platform 17.3 or later. The Custom Fields and Instance Tracking features require 18.2 or later. Token Authentication requires 20.1 or later; for earlier versions, username/password authentication (deprecated) applies.
 
 ## General Command Line Parameters
 
@@ -66,7 +71,7 @@ The following options apply to the `enroll`, `pickup`, `renew`, and `revoke` act
 
 ### Environment Variables
 
-As an alternative to specifying token, trust bundle, url, and/or zone via the command line or in a config file, VCert supports supplying those values using environment variables `VCERT_TOKEN`, `VCERT_TRUST_BUNDLE`, `VCERT_URL`, and `VCERT_ZONE` respectively.
+As an alternative to specifying a token, trust bundle, url, and/or zone via the command line or in a config file, VCert supports supplying those values using environment variables `VCERT_TOKEN`, `VCERT_TRUST_BUNDLE`, `VCERT_URL`, and `VCERT_ZONE` respectively.
 
 ## Certificate Request Parameters
 ```
@@ -217,9 +222,14 @@ Options:
 
 ## Examples
 
-For the purposes of the following examples assume that the Trust Protection Platform REST API is available at https://tpp.venafi.example/vedsdk, and that a user account named "DevOps" has been created with an authentication token of "ql8AEpCtGSv61XGfAknXIA==" that has "certificate:manage,revoke" scope, a password of "Passw0rd", and has been granted "WebSDK Access". Also assume that a folder has been created at the root of the Policy Tree called "DevOps Certificates" and the DevOps user has been granted View, Read, Write, Create, Revoke, and Private Key Read permissions to it.  Lastly, assume that a CA Template has been created and assigned to the DevOps Certificates folder along with other typical policy settings (organization, city, state, country, key size, whitelisted domains, etc.).
+For the purposes of the following examples, assume the following:
 
-Use the help to view the command line syntax for enroll:
+- The Trust Protection Platform REST API is available at https://tpp.venafi.example/vedsdk 
+- A user account named _DevOps_ has been created with an authentication token of "ql8AEpCtGSv61XGfAknXIA==", with a scope of "certificate:manage,revoke", a password of "Passw0rd", and has been granted "WebSDK Access". 
+- A folder has been created at the root of the Policy Tree called _DevOps Certificates_ and the DevOps user has been granted View, Read, Write, Create, Revoke, and Private Key Read permissions to that folder.  
+- A CA Template has been created and assigned to the DevOps Certificates folder along with other typical policy settings (such as, organization, city, state, country, key size, whitelisted domains, etc.).
+
+Use the Help to view the command line syntax for enroll:
 ```
 VCert enroll -h
 ```
