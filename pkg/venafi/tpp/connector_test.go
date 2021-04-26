@@ -1311,7 +1311,7 @@ func Test_GetCertificateList(t *testing.T) {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
 	}
-	for _, count := range []int{10, 100, 101, 153, 200, 2000} {
+	for _, count := range []int{10, 100, 101, 153, 200, 500} {
 		timeStarted := time.Now()
 		l, err := tpp.ListCertificates(endpoint.Filter{Limit: &count})
 		if err != nil {
