@@ -24,6 +24,8 @@ The following content applies to the latest version of VCert CLI, click [here](h
 - [Options for obtaining a new authorization token using the `getcred` action](#obtaining-an-authorization-token)
 - [Options for checking the validity of an authorization token using the `checkcred` action](#checking-the-validity-of-an-authorization-token)
 - [Options for invalidating an authorization token using the `voidcred` action](#invalidating-an-authorization-token)
+- [Options for applying certificate policy using the `setpolicy` action](#parameters-for-applying-certificate-policy)
+- [Options for viewing certificate policy using the `getpolicy` action](#parameters-for-viewing-certificate-policy)
 - [Options for generating a new key pair and CSR using the `gencsr` action (for manual enrollment)](#generating-a-new-key-pair-and-csr)
 
 ## Prerequisites
@@ -158,6 +160,7 @@ Options:
 | `--san-ip`           | Use to specify an IP Address Subject Alternative Name.  To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-ip 10.20.30.40` `--san-ip 192.168.192.168` |
 | `--thumbprint`     | Use to specify the SHA1 thumbprint of the certificate to renew. Value may be specified as a string or read from the certificate file using the `file:` prefix. |
 
+
 ## Certificate Revocation Parameters
 ```
 VCert revoke -u <tpp url> -t <auth token> [--id <request id> | --thumbprint <sha1 thumb>]
@@ -172,6 +175,44 @@ Options:
 | `--no-retire`  | Do not disable certificate. Use this option if you intend to enroll a new version of the certificate later.  Works only with `--id` |
 | `--reason`     | Use to specify the revocation reason.<br/>Options: `none` (default), `key-compromise`, `ca-compromise`, `affiliation-changed`, `superseded`, `cessation-of-operation` |
 | `--thumbprint` | Use to specify the SHA1 thumbprint of the certificate to revoke. Value may be specified as a string or read from the certificate file using the `file:` prefix. |
+
+
+## Parameters for Applying Certificate Policy
+```
+VCert setpolicy -u <tpp url> -t <auth token> -z <policy folder dn> --file <policy specification file>
+```
+Options:
+
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Command&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Description |
+| ------------------ | ------------------------------------------------------------ |
+| `--file`           | Use to specify the location of the required file containing the certificate policy specification in JSON or YAML format. |
+| `--verify`         | Use to verify that a policy specification is valid. `-k` and `-z` are ignored with this option. |
+
+Notes:
+- The `configuration:manage` scope (token auth) and `Manage Policy` permission are required to apply certificate policy.
+- Policy and defaults revert to their default state if they are not present in a policy specification applied by this action.
+- Policy and defaults will not override policy that is locked by a parent folder.
+- If the policy folder specified by the `-z` zone parameter does not exist, this action will attempt to create it.
+- This action can be used to simply create a new policy folder by indicating its name with the `-z` zone parameter and applying a file that contains an empty policy (i.e. `{}`).
+- The syntax for the `certificateAuthority` policy value is the full object DN of an existing CA template (e.g. "\\VED\\Policy\\Certificate Authorities\\Entrust Advantage").
+- The `maxValidDays` policy does not apply as validity in Trust Protection Platform is governed by the CA template.
+- Although the `orgs`, `localities`, `states`, and `countries` policy (`subject`) are arrays, only a single value is allowed by Trust Protection Platform.
+- Although the `keyTypes`, `rsaKeySizes`, and `ellipticCurves` policy (`keyPair`) are arrays, only a single value is allowed by Trust Protection Platform.
+- The `autoInstalled` policy/default sets the _Management Type_ (i.e. `true`&#8594;Provisioning; `false`&#8594;Enrollment)
+- The `serviceGenerated` policy/default sets the _CSR Generation_ (i.e. `true`&#8594;TPP generated; `false`&#8594;user provided)
+- If undefined key/value pairs are included in the policy specification, they will be silently ignored by this action.  This would include keys that are misspelled.
+
+
+## Parameters for Viewing Certificate Policy
+```
+VCert getpolicy -u <tpp url> -t <auth token> -z <policy folder dn> [--file <policy specification file>]
+```
+Options:
+
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Command&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Description |
+| ------------------ | ------------------------------------------------------------ |
+| `--file`           | Use to write the retrieved certificate policy to a file in JSON format. If not specified, policy is written to STDOUT. |
+| `--starter`        | Use to generate a template policy specification to help with getting started. `-k` and `-z` are ignored with this option. |
 
 
 ## Examples

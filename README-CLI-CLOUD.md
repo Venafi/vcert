@@ -20,6 +20,8 @@ The following content applies to the latest version of VCert CLI, click [here](h
 - [Options for downloading a certificate using the `pickup` action](#certificate-retrieval-parameters)
 - [Options for renewing a certificate using the `renew` action](#certificate-renewal-parameters)
 - [Options common to the `enroll`, `pickup`, and `renew` actions](#general-command-line-parameters)
+- [Options for applying certificate policy using the `setpolicy` action](#parameters-for-applying-certificate-policy)
+- [Options for viewing certificate policy using the `getpolicy` action](#parameters-for-viewing-certificate-policy)
 - [Options for generating a new key pair and CSR using the `gencsr` action (for manual enrollment)](#generating-a-new-key-pair-and-csr)
 
 ## Prerequisites
@@ -131,6 +133,43 @@ Options:
 | `--pickup-id-file` | Use to specify a file name where the unique identifier for the certificate will be stored for subsequent use by `pickup`, `renew`, and `revoke` actions.  By default it is written to STDOUT. |
 | `--san-dns`          | Use to specify a DNS Subject Alternative Name. To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-dns one.example.com` `--san-dns two.example.com` |
 | `--thumbprint`     | Use to specify the SHA1 thumbprint of the certificate to renew. Value may be specified as a string or read from the certificate file using the `file:` prefix. |
+
+
+## Parameters for Applying Certificate Policy
+```
+VCert setpolicy -k <api key> -z <application name\issuing template alias> --file <policy specification file>
+```
+Options:
+
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Command&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Description |
+| ------------------ | ------------------------------------------------------------ |
+| `--file`           | Use to specify the location of the required file that contains a JSON or YAML certificate policy specification. |
+| `--verify`         | Use to verify that a policy specification is valid. `-k` and `-z` are ignored with this option. |
+
+Notes:
+- The PKI Administrator role is required to apply certificate policy.
+- Policy (Issuing Template rules) and defaults (Issuing Template recommended settings) revert to their default state if they are not present in a policy specification applied by this action.
+- If the application or issuing template specified by the `-z` zone parameter do not exist, this action will attempt to create them with the calling user as the application owner.
+- This action can be used to simply create a new application and/or default issuing template by indicating those names with the `-z` zone parameter and applying a file that contains an empty policy (i.e. `{}`).
+- If the issuing template specified by the `-z` zone parameter is not already assigned to the application, this action will attempt to make that assignment.
+- The syntax for the `certificateAuthority` policy value is _"CA Account Type\\CA Account Name\\CA Product Name"_ (e.g. "DIGICERT\\DigiCert SSL Plus\\ssl_plus").
+When not present in the policy specification, `certificateAuthority` defaults to "BUILTIN\\Built-In CA\\Default Product".
+- The `autoInstalled` policy/defaults does not apply as automated installation of certificates by Venafi Cloud is not yet supported.
+- The `ellipticCurves` and `serviceGenerated` policy/defaults (`keyPair`) do not apply as ECC and central key generation are not yet supported by Venafi Cloud.
+- The `ipAllowed`, `emailAllowed`, `uriAllowed`, and `upnAllowed` policy (`subjectAltNames`) do not apply as those SAN types are not yet supported by Venafi Cloud.
+- If undefined key/value pairs are included in the policy specification, they will be silently ignored by this action.  This would include keys that are misspelled.
+
+
+## Parameters for Viewing Certificate Policy
+```
+VCert getpolicy -k <api key> -z <application name\issuing template alias> [--file <policy specification file>]
+```
+Options:
+
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Command&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Description |
+| ------------------ | ------------------------------------------------------------ |
+| `--file`           | Use to write the retrieved certificate policy to a file in JSON format. If not specified, policy is written to STDOUT. |
+| `--starter`        | Use to generate a template policy specification to help with  getting started. `-k` and `-z` are ignored with this option. |
 
 
 ## Examples
