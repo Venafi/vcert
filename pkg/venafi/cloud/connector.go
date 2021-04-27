@@ -84,13 +84,13 @@ func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecifica
 	if appName != "" {
 		c.zone.appName = appName
 	} else {
-		return nil, fmt.Errorf("application name is not valid, please provice a valid zone name in the format: appName\\CitName")
+		return nil, fmt.Errorf("application name is not valid, please provide a valid zone name in the format: appName\\CitName")
 	}
 	citName := policy.GetCitName(name)
 	if citName != "" {
 		c.zone.templateAlias = citName
 	} else {
-		return nil, fmt.Errorf("cit name is not valid, please provice a valid zone name in the format: appName\\CitName")
+		return nil, fmt.Errorf("cit name is not valid, please provide a valid zone name in the format: appName\\CitName")
 	}
 
 	log.Println("Getting CIT")

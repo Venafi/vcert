@@ -445,12 +445,12 @@ func verifyPolicySpec(bytes []byte, fileExt string) error {
 	var err error
 	var policySpecification policy.PolicySpecification
 
-	if fileExt == policy.JsonExtention {
+	if fileExt == policy.JsonExtension {
 		err = json.Unmarshal(bytes, &policySpecification)
 		if err != nil {
 			return err
 		}
-	} else if fileExt == policy.YamlExtention {
+	} else if fileExt == policy.YamlExtension {
 		err = yaml.Unmarshal(bytes, &policySpecification)
 		if err != nil {
 			return err

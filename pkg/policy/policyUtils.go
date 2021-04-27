@@ -18,8 +18,9 @@ func GetFileType(f string) string {
 	extension := filepath.Ext(f)
 
 	//As yaml extension could be yaml or yml then convert it to just .yaml
+	extension = strings.ToLower(extension)
 	if extension == ".yml" {
-		extension = YamlExtention
+		extension = YamlExtension
 	}
 
 	return extension
@@ -743,7 +744,7 @@ func ValidateCloudPolicySpecification(ps *PolicySpecification) error {
 			subjectAltNames := getSubjectAltNames(*(ps.Policy.SubjectAltNames))
 			if len(subjectAltNames) > 0 {
 				for k, v := range subjectAltNames {
-					if v {
+					if k != "DnsAllowed" && v {
 						return fmt.Errorf("specified subjectAltNames: %s value is true, this value is not allowed ", k)
 					}
 				}
@@ -848,7 +849,7 @@ func getSubjectAltNames(names SubjectAltNames) map[string]bool {
 	subjectAltNames := make(map[string]bool)
 
 	if names.DnsAllowed != nil {
-		subjectAltNames["dnsAllowed"] = *(names.UpnAllowed)
+		subjectAltNames["dnsAllowed"] = *(names.DnsAllowed)
 	}
 
 	if names.IpAllowed != nil {

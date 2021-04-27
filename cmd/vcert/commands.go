@@ -128,7 +128,7 @@ var (
 		Before: runBeforeCommand,
 		Name:   commandCreatePolicyName,
 		Flags:  createPolicyFlags,
-		Action: doCommandCreatePolicy1,
+		Action: doCommandCreatePolicy,
 		Usage:  "To apply a certificate policy specification to a zone",
 		UsageText: ` vcert setpolicy <Required Venafi Cloud Config> OR <Required Trust Protection Platform Config> <Options>
 		vcert setpolicy -u https://tpp.example.com -t <TPP access token> -z <zone> --file /path-to/policy.spec
@@ -139,7 +139,7 @@ var (
 		Before: runBeforeCommand,
 		Name:   commandGetePolicyName,
 		Flags:  getPolicyFlags,
-		Action: doCommandGetPolicy1,
+		Action: doCommandGetPolicy,
 		Usage:  "To retrieve the certificate policy of a zone",
 		UsageText: ` vcert getpolicy <Required Venafi Cloud Config> OR <Required Trust Protection Platform Config> <Options>
 		vcert getpolicy -u https://tpp.example.com -t <TPP access token> -z <zone>
@@ -635,9 +635,9 @@ func doCommandRevoke1(c *cli.Context) error {
 	return nil
 }
 
-func doCommandCreatePolicy1(c *cli.Context) error {
+func doCommandCreatePolicy(c *cli.Context) error {
 
-	err := validateSetPolicyFlags1(c.Command.Name)
+	err := validateSetPolicyFlags(c.Command.Name)
 
 	if err != nil {
 		return err
@@ -675,12 +675,12 @@ func doCommandCreatePolicy1(c *cli.Context) error {
 	//based on the extension call the appropriate method to feed the policySpecification
 	//structure.
 	var policySpecification policy.PolicySpecification
-	if fileExt == policy.JsonExtention {
+	if fileExt == policy.JsonExtension {
 		err = json.Unmarshal(bytes, &policySpecification)
 		if err != nil {
 			return err
 		}
-	} else if fileExt == policy.YamlExtention {
+	} else if fileExt == policy.YamlExtension {
 		err = yaml.Unmarshal(bytes, &policySpecification)
 		if err != nil {
 			return err
@@ -707,9 +707,9 @@ func doCommandCreatePolicy1(c *cli.Context) error {
 	return err
 }
 
-func doCommandGetPolicy1(c *cli.Context) error {
+func doCommandGetPolicy(c *cli.Context) error {
 
-	err := validateGetPolicyFlags1(c.Command.Name)
+	err := validateGetPolicyFlags(c.Command.Name)
 
 	if err != nil {
 		return err
@@ -754,12 +754,12 @@ func doCommandGetPolicy1(c *cli.Context) error {
 
 		fileExt := policy.GetFileType(policySpecLocation)
 		fileExt = strings.ToLower(fileExt)
-		if fileExt == policy.JsonExtention {
+		if fileExt == policy.JsonExtension {
 			byte, _ = json.MarshalIndent(ps, "", "  ")
 			if err != nil {
 				return err
 			}
-		} else if fileExt == policy.YamlExtention {
+		} else if fileExt == policy.YamlExtension {
 			byte, _ = yaml.Marshal(ps)
 			if err != nil {
 				return err

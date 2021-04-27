@@ -644,7 +644,7 @@ func validateOverWritingEnviromentVariables() {
 
 }
 
-func validateGetPolicyFlags1(commandName string) error {
+func validateGetPolicyFlags(commandName string) error {
 	isPolicyConfigStarter := flags.policyConfigStarter
 	if isPolicyConfigStarter {
 		if flags.tppUser != "" || flags.tppPassword != "" || flags.tppToken != "" || flags.apiKey != "" {
@@ -663,7 +663,7 @@ func validateGetPolicyFlags1(commandName string) error {
 	return nil
 }
 
-func validateSetPolicyFlags1(commandName string) error {
+func validateSetPolicyFlags(commandName string) error {
 
 	isVerifyPolicy := flags.verifyPolicyConfig
 
