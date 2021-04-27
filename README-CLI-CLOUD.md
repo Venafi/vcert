@@ -10,11 +10,14 @@ We welcome and appreciate all contributions. Got questions or want to discuss so
 
 # VCert CLI for Venafi Cloud
 
-Venafi VCert command line utility is designed to generate keys and simplify certificate acquisition by eliminating the need to write code to interact with the Venafi REST API. VCert is available in 32 and 64 bit versions for Linux, Windows, and macOS.
+Venafi VCert is a command line tool designed to generate keys and simplify certificate acquisition, eliminating the need to write code that's required to interact with the Venafi REST API. VCert is available in 32- and 64-bit versions for Linux, Windows, and macOS.
 
-The following content applies to the latest version of VCert CLI, click [here](https://github.com/Venafi/vcert/releases/latest) to download it from https://github.com/Venafi/vcert/releases/latest.
+This article applies to the latest version of VCert CLI, which you can [download here](https://github.com/Venafi/vcert/releases/latest).
 
 ## Quick Links
+
+Use these links to quickly jump to a relevant section lower on this page:
+
 - [Detailed usage examples](#examples)
 - [Options for requesting a certificate using the `enroll` action](#certificate-request-parameters)
 - [Options for downloading a certificate using the `pickup` action](#certificate-retrieval-parameters)
@@ -26,8 +29,10 @@ The following content applies to the latest version of VCert CLI, click [here](h
 
 ## Prerequisites
 
-1. The Venafi Cloud REST API is accessible at [https://api.venafi.cloud](https://api.venafi.cloud/swagger-ui.html)
-from the system where VCert will be executed.
+Review these prerequistes to get started. You'll need the following:
+
+1. Verify that the Venafi Cloud REST API at [https://api.venafi.cloud](https://api.venafi.cloud/swagger-ui.html)
+is accessible from the system where VCert will be run.
 2. You have successfully registered for a Venafi Cloud account, have been granted at least the
 OutagePREDICT "Resource Owner" role, and know your API key.
 3. A CA Account and Issuing Template exist and have been configured with:
@@ -174,7 +179,12 @@ Options:
 
 ## Examples
 
-For the purposes of the following examples assume that the Venafi Cloud REST API is accessible at [https://api.venafi.cloud](https://api.venafi.cloud/swagger-ui.html), that a user has been registered and granted at least the "OP Resource Owner" role, and that the user has an API key of "3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4". Also assume that a CA Account and Issuing Template has been created and configured appropriately (organization, city, state, country, key length, allowed domains, etc.). Lastly, that an Application has been created with a name of "Storefront" to which the user has been given access, and the Issuing Template has been assigned to the Application with an API Alias of "Public Trust".
+For the purposes of the following examples, assume the following:
+
+- The Venafi Cloud REST API is accessible at [https://api.venafi.cloud](https://api.venafi.cloud/swagger-ui.html)
+- A user has been registered and granted at least the _OP Resource Owner_ role and has an API key of "3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4". 
+- A CA Account and Issuing Template have been created and configured appropriately (organization, city, state, country, key length, allowed domains, etc.). 
+- An Application has been created with a name of _Storefront_ to which the user has been given access, and the Issuing Template has been assigned to the Application with an API Alias of _Public Trust_.
 
 Use the help to view the command line syntax for enroll:
 ```
