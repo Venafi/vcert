@@ -21,14 +21,16 @@ import (
 )
 
 const (
-	commandGenCSRName    = "gencsr"
-	commandEnrollName    = "enroll"
-	commandPickupName    = "pickup"
-	commandRevokeName    = "revoke"
-	commandRenewName     = "renew"
-	commandGetCredName   = "getcred"
-	commandCheckCredName = "checkcred"
-	commandVoidCredName  = "voidcred"
+	commandGenCSRName       = "gencsr"
+	commandEnrollName       = "enroll"
+	commandPickupName       = "pickup"
+	commandRevokeName       = "revoke"
+	commandRenewName        = "renew"
+	commandGetCredName      = "getcred"
+	commandCheckCredName    = "checkcred"
+	commandVoidCredName     = "voidcred"
+	commandCreatePolicyName = "setpolicy"
+	commandGetePolicyName   = "getpolicy"
 )
 
 var (
@@ -36,68 +38,72 @@ var (
 )
 
 type commandFlags struct {
-	apiKey            string
-	appInfo           string
-	caDN              string
-	certFile          string
-	chainFile         string
-	chainOption       string
-	clientId          string
-	clientP12         string
-	clientP12PW       string
-	commonName        string
-	config            string
-	country           string
-	csrFile           string
-	csrOption         string
-	customFields      []string
-	distinguishedName string
-	dnsSans           stringSlice
-	emailSans         rfc822NameSlice
-	file              string
-	format            string
-	friendlyName      string
-	insecure          bool
-	instance          string
-	ipSans            ipSlice
-	jksAlias          string
-	jksPassword       string
-	keyCurve          certificate.EllipticCurve
-	keyCurveString    string
-	keyFile           string
-	keyPassword       string
-	keySize           int
-	keyType           *certificate.KeyType
-	keyTypeString     string
-	locality          string
-	noPickup          bool
-	noPrompt          bool
-	noRetire          bool
-	org               string
-	orgUnits          stringSlice
-	pickupID          string
-	pickupIDFile      string
-	profile           string
-	replaceInstance   bool
-	revocationReason  string
-	scope             string
-	state             string
-	testMode          bool
-	testModeDelay     int
-	thumbprint        string
-	timeout           int
-	tlsAddress        string
-	tppPassword       string
-	tppToken          string
-	tppUser           string
-	trustBundle       string
-	upnSans           rfc822NameSlice
-	uriSans           uriSlice
-	url               string
-	verbose           bool
-	zone              string
-	omitSans          bool
-	csrFormat         string
-	credFormat        string
-	validDays         string
+	apiKey              string
+	appInfo             string
+	caDN                string
+	certFile            string
+	chainFile           string
+	chainOption         string
+	clientId            string
+	clientP12           string
+	clientP12PW         string
+	commonName          string
+	config              string
+	country             string
+	csrFile             string
+	csrOption           string
+	customFields        []string
+	distinguishedName   string
+	dnsSans             stringSlice
+	emailSans           rfc822NameSlice
+	file                string
+	format              string
+	friendlyName        string
+	insecure            bool
+	instance            string
+	ipSans              ipSlice
+	jksAlias            string
+	jksPassword         string
+	keyCurve            certificate.EllipticCurve
+	keyCurveString      string
+	keyFile             string
+	keyPassword         string
+	keySize             int
+	keyType             *certificate.KeyType
+	keyTypeString       string
+	locality            string
+	noPickup            bool
+	noPrompt            bool
+	noRetire            bool
+	org                 string
+	orgUnits            stringSlice
+	pickupID            string
+	pickupIDFile        string
+	profile             string
+	replaceInstance     bool
+	revocationReason    string
+	scope               string
+	state               string
+	testMode            bool
+	testModeDelay       int
+	thumbprint          string
+	timeout             int
+	tlsAddress          string
+	tppPassword         string
+	tppToken            string
+	tppUser             string
+	trustBundle         string
+	upnSans             rfc822NameSlice
+	uriSans             uriSlice
+	url                 string
+	verbose             bool
+	zone                string
+	omitSans            bool
+	csrFormat           string
+	credFormat          string
+	validDays           string
+	policyName          string
+	policySpecLocation  string
+	policyConfigStarter bool
+	verifyPolicyConfig  bool
 }

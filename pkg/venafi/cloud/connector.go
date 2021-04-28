@@ -22,6 +22,8 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"github.com/Venafi/vcert/v4/pkg/policy"
+	"log"
 	"net/http"
 	netUrl "net/url"
 	"regexp"
@@ -50,6 +52,10 @@ const (
 	urlResourceCertificateSearch      urlResource = basePath + "certificatesearch"
 	urlResourceTemplate               urlResource = basePath + "applications/%s/certificateissuingtemplates/%s"
 	urlAppDetailsByName               urlResource = basePath + "applications/name/%s"
+	urlIssuingTemplate                urlResource = apiVersion + "certificateissuingtemplates"
+	urlAppRoot                        urlResource = basePath + "applications"
+	urlCAAccounts                     urlResource = apiVersion + "certificateauthorities/%s/accounts"
+	urlCAAccountDetails               urlResource = urlCAAccounts + "/%s"
 
 	defaultAppName = "Default"
 )
@@ -70,6 +76,213 @@ type Connector struct {
 	trust   *x509.CertPool
 	zone    cloudZone
 	client  *http.Client
+}
+
+func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecification, error) {
+
+	appName := policy.GetApplicationName(name)
+	if appName != "" {
+		c.zone.appName = appName
+	} else {
+		return nil, fmt.Errorf("application name is not valid, please provide a valid zone name in the format: appName\\CitName")
+	}
+	citName := policy.GetCitName(name)
+	if citName != "" {
+		c.zone.templateAlias = citName
+	} else {
+		return nil, fmt.Errorf("cit name is not valid, please provide a valid zone name in the format: appName\\CitName")
+	}
+
+	log.Println("Getting CIT")
+	cit, err := c.getTemplateByID()
+
+	if err != nil {
+		return nil, err
+	}
+
+	info, err := getCertificateAuthorityInfoFromCloud(cit.CertificateAuthority, cit.CertificateAuthorityAccountId, cit.CertificateAuthorityProductOptionId, c)
+
+	if err != nil {
+		return nil, err
+	}
+
+	log.Println("Building policy")
+	ps := buildPolicySpecification(cit, info)
+
+	return ps, nil
+}
+
+func PolicyExist(policyName string, c *Connector) bool {
+
+	c.zone.appName = policy.GetApplicationName(policyName)
+	c.zone.templateAlias = policy.GetCitName(policyName)
+
+	_, err := c.getTemplateByID()
+	return err == nil
+}
+
+func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (string, error) {
+
+	err := policy.ValidateCloudPolicySpecification(ps)
+	if err != nil {
+		return "", err
+	}
+
+	log.Printf("policy specification is valid")
+
+	var status string
+
+	//validate if zone name is set and if zone already exist on Venafi cloud if not create it.
+	citName := policy.GetCitName(name)
+
+	if citName == "" {
+		return "", fmt.Errorf("cit name is empty, please provide zone in the format: app_name\\cit_name")
+	}
+
+	//get certificate authority product option io
+	var caDetails *policy.CADetails
+
+	if ps.Policy != nil && ps.Policy.CertificateAuthority != nil && *(ps.Policy.CertificateAuthority) != "" {
+		caDetails, err = getCertificateAuthorityDetails(*(ps.Policy.CertificateAuthority), c)
+
+		if err != nil {
+			return "", err
+		}
+
+	} else {
+		if ps.Policy != nil {
+
+			defaultCA := policy.DefaultCA
+			ps.Policy.CertificateAuthority = &defaultCA
+
+			caDetails, err = getCertificateAuthorityDetails(*(ps.Policy.CertificateAuthority), c)
+
+			if err != nil {
+				return "", err
+			}
+
+		} else {
+			//policy is not specified so we get the default CA
+			caDetails, err = getCertificateAuthorityDetails(policy.DefaultCA, c)
+
+			if err != nil {
+				return "", err
+			}
+
+		}
+	}
+
+	//at this moment we know that ps.Policy.CertificateAuthority is valid.
+
+	req, err := policy.BuildCloudCitRequest(ps, caDetails)
+	if err != nil {
+		return "", err
+	}
+	req.Name = citName
+
+	url := c.getURL(urlIssuingTemplate)
+
+	cit, err := getCit(c, citName)
+
+	if err != nil {
+		return "", err
+	}
+
+	if cit != nil {
+		log.Printf("updating issuing template: %s", citName)
+		//update cit using the new values
+		url = fmt.Sprint(url, "/", cit.ID)
+		statusCode, status, body, err := c.request("PUT", url, req)
+
+		if err != nil {
+			return "", err
+		}
+
+		cit, err = parseCitResult(http.StatusOK, statusCode, status, body)
+
+		if err != nil {
+			return status, err
+		}
+
+	} else {
+		log.Printf("creating issuing template: %s", citName)
+		//var body []byte
+		statusCode, status, body, err := c.request("POST", url, req)
+
+		if err != nil {
+			return "", err
+		}
+
+		cit, err = parseCitResult(http.StatusCreated, statusCode, status, body)
+
+		if err != nil {
+			return status, err
+		}
+
+	}
+
+	//validate if appName is set and if app already exist on Venafi cloud if not create it
+	//and as final steps link the app with the cit.
+	appName := policy.GetApplicationName(name)
+
+	if appName == "" {
+		return "", fmt.Errorf("application name is empty, please provide zone in the format: app_name\\cit_name")
+	}
+
+	userDetails, err := getUserDetails(c)
+	if err != nil {
+		return "", err
+	}
+
+	appDetails, statusCode, err := c.getAppDetailsByName(appName)
+
+	if err != nil && statusCode == 404 { //means application was not found.
+		log.Printf("creating application: %s", appName)
+		ownerId := policy.OwnerIdType{
+			OwnerId:   userDetails.User.ID,
+			OwnerType: "USER",
+		}
+
+		appIssuingTemplate := make(map[string]string)
+		appIssuingTemplate[cit.Name] = cit.ID
+
+		//create application
+		//fmt.Println(details.ApplicationId)
+		appReq := policy.ApplicationCreateRequest{
+			OwnerIdsAndTypes:                     []policy.OwnerIdType{ownerId},
+			Name:                                 appName,
+			CertificateIssuingTemplateAliasIdMap: appIssuingTemplate,
+		}
+
+		url := c.getURL(urlAppRoot)
+
+		_, status, _, err = c.request("POST", url, appReq)
+		if err != nil {
+			return "", err
+		}
+
+	} else {
+		//update the application and assign the cit tho the application
+		if !PolicyExist(name, c) { // relation between app-cit doesn't exist so create it.
+			log.Printf("updating application: %s", appName)
+
+			appReq := createAppUpdateRequest(appDetails, cit)
+
+			url := c.getURL(urlAppRoot)
+
+			url = fmt.Sprint(url, "/", appDetails.ApplicationId)
+
+			_, status, _, err = c.request("PUT", url, appReq)
+			if err != nil {
+				return "", err
+			}
+
+		}
+	}
+
+	log.Printf("policy successfully applied to %s", name)
+
+	return status, nil
 }
 
 // NewConnector creates a new Venafi Cloud Connector object used to communicate with Venafi Cloud
@@ -177,7 +390,7 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 		}
 	}
 
-	appDetails, err := c.getAppDetailsByName(c.zone.getApplicationName())
+	appDetails, _, err := c.getAppDetailsByName(c.zone.getApplicationName())
 	if err != nil {
 		return "", err
 	}
@@ -588,7 +801,7 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 	}
 	zone := req.PolicyDN
 	if zone == "" {
-		appDetails, err := c.getAppDetailsByName(c.zone.getApplicationName())
+		appDetails, _, err := c.getAppDetailsByName(c.zone.getApplicationName())
 		if err != nil {
 			return nil, err
 		}
@@ -694,7 +907,7 @@ func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.Cert
 
 func (c *Connector) getCertsBatch(page, pageSize int, withExpired bool) ([]certificate.CertificateInfo, error) {
 
-	appDetails, err := c.getAppDetailsByName(c.zone.getApplicationName())
+	appDetails, _, err := c.getAppDetailsByName(c.zone.getApplicationName())
 	if err != nil {
 		return nil, err
 	}
@@ -726,22 +939,22 @@ func (c *Connector) getCertsBatch(page, pageSize int, withExpired bool) ([]certi
 	return infos, nil
 }
 
-func (c *Connector) getAppDetailsByName(appName string) (*ApplicationDetails, error) {
+func (c *Connector) getAppDetailsByName(appName string) (*ApplicationDetails, int, error) {
 	url := c.getURL(urlAppDetailsByName)
 	if c.user == nil {
-		return nil, fmt.Errorf("must be autheticated to read the zone configuration")
+		return nil, -1, fmt.Errorf("must be autheticated to read the zone configuration")
 	}
 	encodedAppName := netUrl.PathEscape(appName)
 	url = fmt.Sprintf(url, encodedAppName)
 	statusCode, status, body, err := c.request("GET", url, nil)
 	if err != nil {
-		return nil, err
+		return nil, statusCode, err
 	}
 	details, err := parseApplicationDetailsResult(statusCode, status, body)
 	if err != nil {
-		return nil, err
+		return nil, statusCode, err
 	}
-	return details, nil
+	return details, statusCode, nil
 }
 
 func (c *Connector) getTemplateByID() (*certificateTemplate, error) {
@@ -755,4 +968,184 @@ func (c *Connector) getTemplateByID() (*certificateTemplate, error) {
 	}
 	t, err := parseCertificateTemplateResult(statusCode, status, body)
 	return t, err
+}
+
+func getCit(c *Connector, citName string) (*certificateTemplate, error) {
+	url := c.getURL(urlIssuingTemplate)
+	_, _, body, err := c.request("GET", url, nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var cits CertificateTemplates
+
+	err = json.Unmarshal(body, &cits)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(cits.CertificateTemplates) > 0 {
+		citArr := cits.CertificateTemplates
+
+		for _, cit := range citArr {
+			if citName == cit.Name {
+				return &cit, nil
+			}
+		}
+
+	}
+
+	//no error but cit was not found.
+	return nil, nil
+}
+
+func getUserDetails(c *Connector) (*userDetails, error) {
+
+	url := c.getURL(urlResourceUserAccounts)
+	statusCode, status, body, err := c.request("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	ud, err := parseUserDetailsResult(http.StatusOK, statusCode, status, body)
+	if err != nil {
+		return nil, err
+	}
+	c.user = ud
+	return ud, nil
+}
+
+func getCertificateAuthorityProductOptionId(caName string, c *Connector) (string, error) {
+
+	accounts, info, err := getAccounts(caName, c)
+	if err != nil {
+		return "", err
+	}
+
+	for _, account := range accounts.Accounts {
+		if account.Account.Key == info.CAAccountKey {
+			for _, productOption := range account.ProductOption {
+				if productOption.ProductName == info.VendorProductName {
+					return productOption.Id, nil
+				}
+			}
+		}
+	}
+
+	return "", nil
+}
+
+func getAccounts(caName string, c *Connector) (*policy.Accounts, *policy.CertificateAuthorityInfo, error) {
+	info, err := policy.GetCertAuthorityInfo(caName)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	caType := netUrl.PathEscape(info.CAType)
+	url := c.getURL(urlCAAccounts)
+	url = fmt.Sprintf(url, caType)
+	_, _, body, err := c.request("GET", url, nil)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var accounts policy.Accounts
+
+	err = json.Unmarshal(body, &accounts)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return &accounts, &info, nil
+}
+
+func getCertificateAuthorityAccountId(caName string, c *Connector) (string, error) {
+
+	accounts, info, err := getAccounts(caName, c)
+	if err != nil {
+		return "", err
+	}
+
+	for _, account := range accounts.Accounts {
+		if account.Account.Key == info.CAAccountKey {
+			for _, productOption := range account.ProductOption {
+				if productOption.ProductName == info.VendorProductName {
+					return account.Account.Id, nil
+				}
+			}
+		}
+	}
+
+	return "", nil
+}
+
+func getCertificateAuthorityDetails(caName string, c *Connector) (*policy.CADetails, error) {
+
+	accounts, info, err := getAccounts(caName, c)
+	if err != nil {
+		return nil, err
+	}
+
+	var details policy.CADetails
+
+	for _, account := range accounts.Accounts {
+		if account.Account.Key == info.CAAccountKey {
+			for _, productOption := range account.ProductOption {
+				if productOption.ProductName == info.VendorProductName {
+					details.CertificateAuthorityOrganizationId = &productOption.ProductDetails.ProductTemplate.OrganizationId
+					details.CertificateAuthorityProductOptionId = &productOption.Id
+					return &details, nil
+				}
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("specified CA doesn't exist")
+}
+
+func getCertificateAuthorityInfoFromCloud(caName, caAccountId, caProductOptionId string, c *Connector) (*policy.CertificateAuthorityInfo, error) {
+
+	caName = netUrl.PathEscape(caName)
+	url := c.getURL(urlCAAccountDetails)
+	url = fmt.Sprintf(url, caName, caAccountId)
+	_, _, body, err := c.request("GET", url, nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var accountDetails policy.AccountDetails
+
+	err = json.Unmarshal(body, &accountDetails)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var info policy.CertificateAuthorityInfo
+
+	if accountDetails.Account.CertificateAuthority == "" {
+		return nil, fmt.Errorf("CertificateAuthority is empty")
+	}
+	info.CAType = accountDetails.Account.CertificateAuthority
+
+	if accountDetails.Account.Key == "" {
+		return nil, fmt.Errorf("Key is empty")
+	}
+
+	info.CAAccountKey = accountDetails.Account.Key
+
+	for _, productOption := range accountDetails.ProductOption {
+		if productOption.Id == caProductOptionId {
+			info.VendorProductName = productOption.ProductName
+		}
+	}
+
+	if info.VendorProductName == "" {
+		return nil, fmt.Errorf("ProductName is empty")
+	}
+
+	return &info, nil
 }

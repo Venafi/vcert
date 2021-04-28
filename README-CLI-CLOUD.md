@@ -10,22 +10,29 @@ We welcome and appreciate all contributions. Got questions or want to discuss so
 
 # VCert CLI for Venafi Cloud
 
-Venafi VCert command line utility is designed to generate keys and simplify certificate acquisition by eliminating the need to write code to interact with the Venafi REST API. VCert is available in 32 and 64 bit versions for Linux, Windows, and macOS.
+Venafi VCert is a command line tool designed to generate keys and simplify certificate acquisition, eliminating the need to write code that's required to interact with the Venafi REST API. VCert is available in 32- and 64-bit versions for Linux, Windows, and macOS.
 
-The following content applies to the latest version of VCert CLI, click [here](https://github.com/Venafi/vcert/releases/latest) to download it from https://github.com/Venafi/vcert/releases/latest.
+This article applies to the latest version of VCert CLI, which you can [download here](https://github.com/Venafi/vcert/releases/latest).
 
 ## Quick Links
+
+Use these links to quickly jump to a relevant section lower on this page:
+
 - [Detailed usage examples](#examples)
 - [Options for requesting a certificate using the `enroll` action](#certificate-request-parameters)
 - [Options for downloading a certificate using the `pickup` action](#certificate-retrieval-parameters)
 - [Options for renewing a certificate using the `renew` action](#certificate-renewal-parameters)
 - [Options common to the `enroll`, `pickup`, and `renew` actions](#general-command-line-parameters)
+- [Options for applying certificate policy using the `setpolicy` action](#parameters-for-applying-certificate-policy)
+- [Options for viewing certificate policy using the `getpolicy` action](#parameters-for-viewing-certificate-policy)
 - [Options for generating a new key pair and CSR using the `gencsr` action (for manual enrollment)](#generating-a-new-key-pair-and-csr)
 
 ## Prerequisites
 
-1. The Venafi Cloud REST API is accessible at [https://api.venafi.cloud](https://api.venafi.cloud/swagger-ui.html)
-from the system where VCert will be executed.
+Review these prerequistes to get started. You'll need the following:
+
+1. Verify that the Venafi Cloud REST API at [https://api.venafi.cloud](https://api.venafi.cloud/swagger-ui.html)
+is accessible from the system where VCert will be run.
 2. You have successfully registered for a Venafi Cloud account, have been granted at least the
 OutagePREDICT "Resource Owner" role, and know your API key.
 3. A CA Account and Issuing Template exist and have been configured with:
@@ -133,9 +140,51 @@ Options:
 | `--thumbprint`     | Use to specify the SHA1 thumbprint of the certificate to renew. Value may be specified as a string or read from the certificate file using the `file:` prefix. |
 
 
+## Parameters for Applying Certificate Policy
+```
+VCert setpolicy -k <api key> -z <application name\issuing template alias> --file <policy specification file>
+```
+Options:
+
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Command&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Description |
+| ------------------ | ------------------------------------------------------------ |
+| `--file`           | Use to specify the location of the required file that contains a JSON or YAML certificate policy specification. |
+| `--verify`         | Use to verify that a policy specification is valid. `-k` and `-z` are ignored with this option. |
+
+Notes:
+- The PKI Administrator role is required to apply certificate policy.
+- Policy (Issuing Template rules) and defaults (Issuing Template recommended settings) revert to their default state if they are not present in a policy specification applied by this action.
+- If the application or issuing template specified by the `-z` zone parameter do not exist, this action will attempt to create them with the calling user as the application owner.
+- This action can be used to simply create a new application and/or default issuing template by indicating those names with the `-z` zone parameter and applying a file that contains an empty policy (i.e. `{}`).
+- If the issuing template specified by the `-z` zone parameter is not already assigned to the application, this action will attempt to make that assignment.
+- The syntax for the `certificateAuthority` policy value is _"CA Account Type\\CA Account Name\\CA Product Name"_ (e.g. "DIGICERT\\DigiCert SSL Plus\\ssl_plus").
+When not present in the policy specification, `certificateAuthority` defaults to "BUILTIN\\Built-In CA\\Default Product".
+- The `autoInstalled` policy/defaults does not apply as automated installation of certificates by Venafi Cloud is not yet supported.
+- The `ellipticCurves` and `serviceGenerated` policy/defaults (`keyPair`) do not apply as ECC and central key generation are not yet supported by Venafi Cloud.
+- The `ipAllowed`, `emailAllowed`, `uriAllowed`, and `upnAllowed` policy (`subjectAltNames`) do not apply as those SAN types are not yet supported by Venafi Cloud.
+- If undefined key/value pairs are included in the policy specification, they will be silently ignored by this action.  This would include keys that are misspelled.
+
+
+## Parameters for Viewing Certificate Policy
+```
+VCert getpolicy -k <api key> -z <application name\issuing template alias> [--file <policy specification file>]
+```
+Options:
+
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Command&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Description |
+| ------------------ | ------------------------------------------------------------ |
+| `--file`           | Use to write the retrieved certificate policy to a file in JSON format. If not specified, policy is written to STDOUT. |
+| `--starter`        | Use to generate a template policy specification to help with  getting started. `-k` and `-z` are ignored with this option. |
+
+
 ## Examples
 
-For the purposes of the following examples assume that the Venafi Cloud REST API is accessible at [https://api.venafi.cloud](https://api.venafi.cloud/swagger-ui.html), that a user has been registered and granted at least the "OP Resource Owner" role, and that the user has an API key of "3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4". Also assume that a CA Account and Issuing Template has been created and configured appropriately (organization, city, state, country, key length, allowed domains, etc.). Lastly, that an Application has been created with a name of "Storefront" to which the user has been given access, and the Issuing Template has been assigned to the Application with an API Alias of "Public Trust".
+For the purposes of the following examples, assume the following:
+
+- The Venafi Cloud REST API is accessible at [https://api.venafi.cloud](https://api.venafi.cloud/swagger-ui.html)
+- A user has been registered and granted at least the _OP Resource Owner_ role and has an API key of "3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4". 
+- A CA Account and Issuing Template have been created and configured appropriately (organization, city, state, country, key length, allowed domains, etc.). 
+- An Application has been created with a name of _Storefront_ to which the user has been given access, and the Issuing Template has been assigned to the Application with an API Alias of _Public Trust_.
 
 Use the help to view the command line syntax for enroll:
 ```

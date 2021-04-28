@@ -14,3 +14,4 @@ aruba/log.log
 /vars
 /exec
 credentials
+*.DS_Store

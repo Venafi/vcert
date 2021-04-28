@@ -26,10 +26,12 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"github.com/Venafi/vcert/v4/pkg/policy"
 	"net/http"
 	"net/url"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -1593,4 +1595,443 @@ func TestOmitSans(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+func TestSetPolicy(t *testing.T) {
+	policyName := os.Getenv("TPP_POLICY_MANAGEMENT_ROOT") + test.RandTppPolicyName()
+	ctx.CloudZone = policyName
+
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+
+	//
+	createConfigurationCredentials(tpp)
+	//
+
+	tpp.verbose = true
+
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+
+	ps := test.GetTppPolicySpecification()
+
+	_, err = tpp.SetPolicy(policyName, ps)
+
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	//revert back to the certificate scope
+	createCertificateCredentials(tpp)
+
+}
+
+func TestGetPolicy(t *testing.T) {
+
+	policyName := os.Getenv("TPP_POLICY_MANAGEMENT_SAMPLE")
+
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+
+	tpp.verbose = true
+
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+
+	specifiedPS := test.GetTppPolicySpecification()
+
+	ps, err := tpp.GetPolicySpecification(policyName)
+
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	//validate each attribute
+	//validate subject attributes
+
+	if ps == nil {
+		t.Fatalf("specified Policy wasn't found")
+	}
+
+	if ps.Policy.Domains != nil && specifiedPS.Policy.Domains != nil {
+		valid := test.IsArrayStringEqual(specifiedPS.Policy.Domains, ps.Policy.Domains)
+		if !valid {
+			t.Fatalf("specified domains are different")
+		}
+	}
+
+	//validate cert authority id.
+	if specifiedPS.Policy.CertificateAuthority != nil && *(specifiedPS.Policy.CertificateAuthority) != "" {
+		if ps.Policy.CertificateAuthority == nil || *(ps.Policy.CertificateAuthority) == "" {
+			t.Fatalf("venafi policy doesn't have a certificate authority")
+		}
+		if *(ps.Policy.CertificateAuthority) != *(specifiedPS.Policy.CertificateAuthority) {
+			t.Fatalf("certificate authority value doesn't match, get: %s but expected: %s", *(ps.Policy.CertificateAuthority), *(specifiedPS.Policy.CertificateAuthority))
+		}
+	}
+
+	if specifiedPS.Policy.Subject.Orgs != nil {
+
+		if ps.Policy.Subject.Orgs == nil {
+			t.Fatalf("specified policy orgs are not specified")
+		}
+
+		valid := test.IsArrayStringEqual(specifiedPS.Policy.Subject.Orgs, ps.Policy.Subject.Orgs)
+		if !valid {
+			t.Fatalf("specified policy orgs are different")
+		}
+
+	}
+
+	if specifiedPS.Policy.Subject.OrgUnits != nil {
+
+		if ps.Policy.Subject.OrgUnits == nil {
+			t.Fatalf("specified policy orgs units are not specified")
+		}
+
+		valid := test.IsArrayStringEqual(specifiedPS.Policy.Subject.OrgUnits, ps.Policy.Subject.OrgUnits)
+		if !valid {
+			t.Fatalf("specified policy orgs units are different")
+		}
+
+	}
+
+	if specifiedPS.Policy.Subject.Localities != nil {
+
+		if ps.Policy.Subject.Localities == nil {
+			t.Fatalf("specified policy localities are not specified")
+		}
+
+		valid := test.IsArrayStringEqual(specifiedPS.Policy.Subject.Localities, ps.Policy.Subject.Localities)
+		if !valid {
+			t.Fatalf("specified policy localities are different")
+		}
+
+	}
+
+	if specifiedPS.Policy.Subject.States != nil {
+
+		if ps.Policy.Subject.States == nil {
+			t.Fatalf("specified policy states are not specified")
+		}
+
+		valid := test.IsArrayStringEqual(specifiedPS.Policy.Subject.States, ps.Policy.Subject.States)
+		if !valid {
+			t.Fatalf("specified policy states are different")
+		}
+
+	}
+
+	if specifiedPS.Policy.Subject.Countries != nil {
+
+		if ps.Policy.Subject.Countries == nil {
+			t.Fatalf("specified policy countries are not specified")
+		}
+
+		valid := test.IsArrayStringEqual(specifiedPS.Policy.Subject.Countries, ps.Policy.Subject.Countries)
+		if !valid {
+			t.Fatalf("specified policy countries are different")
+		}
+
+	}
+
+	//validate key pair values.
+
+	if specifiedPS.Policy.KeyPair.KeyTypes != nil {
+
+		if ps.Policy.KeyPair.KeyTypes == nil {
+			t.Fatalf("specified policy key types are not specified")
+		}
+
+		valid := test.IsArrayStringEqual(specifiedPS.Policy.KeyPair.KeyTypes, ps.Policy.KeyPair.KeyTypes)
+		if !valid {
+			t.Fatalf("specified policy key types are different")
+		}
+
+	}
+
+	if specifiedPS.Policy.KeyPair.RsaKeySizes != nil {
+
+		if ps.Policy.KeyPair.RsaKeySizes == nil {
+			t.Fatalf("specified policy rsa key sizes are not specified")
+		}
+
+		valid := test.IsArrayIntEqual(specifiedPS.Policy.KeyPair.RsaKeySizes, ps.Policy.KeyPair.RsaKeySizes)
+		if !valid {
+			t.Fatalf("specified policy rsa key sizes are different")
+		}
+
+	}
+
+	if specifiedPS.Policy.KeyPair.ReuseAllowed != nil {
+
+		if ps.Policy.KeyPair.ReuseAllowed == nil {
+			t.Fatalf("specified policy rsa key sizes are not specified")
+		}
+
+		if *(ps.Policy.KeyPair.ReuseAllowed) != *(specifiedPS.Policy.KeyPair.ReuseAllowed) {
+			t.Fatalf("specified policy rsa key sizes are different")
+		}
+
+	}
+
+}
+
+func TestSetEmptyPolicy(t *testing.T) {
+	policyName := os.Getenv("TPP_POLICY_MANAGEMENT_ROOT") + test.RandTppPolicyName()
+	ctx.CloudZone = policyName
+
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	specification := policy.PolicySpecification{}
+
+	createConfigurationCredentials(tpp)
+
+	tpp.verbose = true
+
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+
+	_, err = tpp.SetPolicy(policyName, &specification)
+
+	if err != nil {
+		createCertificateCredentials(tpp)
+		t.Fatalf("%s", err)
+	}
+	//revert back to the certificate scope
+	createCertificateCredentials(tpp)
+
+}
+
+func TestSetDefaultPolicyValuesAndValidate(t *testing.T) {
+
+	specification := test.GetTppPolicySpecification()
+
+	specification.Policy = nil
+	ec := "P384"
+	serGenerated := true
+	specification.Default.KeyPair.EllipticCurve = &ec
+	specification.Default.KeyPair.ServiceGenerated = &serGenerated
+	policyName := os.Getenv("TPP_POLICY_MANAGEMENT_ROOT") + test.RandTppPolicyName()
+	ctx.CloudZone = policyName
+
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+
+	createConfigurationCredentials(tpp)
+
+	tpp.verbose = true
+
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+
+	_, err = tpp.SetPolicy(policyName, specification)
+
+	if err != nil {
+		createCertificateCredentials(tpp)
+		t.Fatalf("%s", err)
+	}
+
+	//get the created policy
+	ps, err := tpp.GetPolicySpecification(policyName)
+
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	if ps.Default == nil {
+		t.Fatalf("policy's defaults are nil")
+	}
+	localDefault := specification.Default
+	remoteDefault := ps.Default
+
+	if *(localDefault.AutoInstalled) != *(remoteDefault.AutoInstalled) {
+		t.Fatalf("policy's defaults are nil")
+	}
+	if remoteDefault.Subject == nil {
+		t.Fatalf("policy's default subject is nil")
+	}
+	if *(remoteDefault.Subject.Locality) != *(localDefault.Subject.Locality) {
+		t.Fatalf("policy's default locality is different expected: %s but get %s", *(localDefault.Subject.Locality), *(remoteDefault.Subject.Locality))
+	}
+
+	if *(remoteDefault.Subject.Country) != *(localDefault.Subject.Country) {
+		t.Fatalf("policy's default country is different expected: %s but get %s", *(localDefault.Subject.Country), *(remoteDefault.Subject.Country))
+	}
+
+	if *(remoteDefault.Subject.State) != *(localDefault.Subject.State) {
+		t.Fatalf("policy's default state is different expected: %s but get %s", *(localDefault.Subject.State), *(remoteDefault.Subject.State))
+	}
+
+	if *(remoteDefault.Subject.Org) != *(localDefault.Subject.Org) {
+		t.Fatalf("policy's default org is different expected: %s but get %s", *(localDefault.Subject.Org), *(remoteDefault.Subject.Org))
+	}
+
+	valid := test.IsArrayStringEqual(remoteDefault.Subject.OrgUnits, localDefault.Subject.OrgUnits)
+	if !valid {
+		t.Fatalf("policy's default orgUnits are different")
+	}
+
+	if remoteDefault.KeyPair == nil {
+		t.Fatalf("policy's default keyPair is nil")
+	}
+
+	if *(remoteDefault.KeyPair.KeyType) != *(localDefault.KeyPair.KeyType) {
+		t.Fatalf("policy's default keyType is different expected: %s but get %s", *(localDefault.KeyPair.KeyType), *(remoteDefault.KeyPair.KeyType))
+	}
+
+	/*if *(remoteDefault.KeyPair.EllipticCurve) != *(localDefault.KeyPair.EllipticCurve) {
+		t.Fatalf("policy's default ellipticCurve is different expected: %s but get %s", *(localDefault.KeyPair.KeyType), * (remoteDefault.KeyPair.KeyType))
+	}*/
+
+	if *(remoteDefault.KeyPair.ServiceGenerated) != *(localDefault.KeyPair.ServiceGenerated) {
+		t.Fatalf("policy's default serviceGenerated is different expected: %s but get %s", strconv.FormatBool(*(localDefault.KeyPair.ServiceGenerated)), strconv.FormatBool(*(remoteDefault.KeyPair.ServiceGenerated)))
+	}
+
+	if *(remoteDefault.KeyPair.RsaKeySize) != *(localDefault.KeyPair.RsaKeySize) {
+		t.Fatalf("policy's default RsaKeySize is different expected: %s but get %s", strconv.Itoa(*(localDefault.KeyPair.RsaKeySize)), strconv.Itoa(*(remoteDefault.KeyPair.RsaKeySize)))
+	}
+
+	//revert back to the certificate scope
+	createCertificateCredentials(tpp)
+
+}
+
+func TestSetPolicyValuesAndValidate(t *testing.T) {
+	specification := test.GetTppPolicySpecification()
+
+	specification.Default = nil
+
+	policyName := os.Getenv("TPP_POLICY_MANAGEMENT_ROOT") + test.RandTppPolicyName()
+	ctx.CloudZone = policyName
+
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+
+	createConfigurationCredentials(tpp)
+
+	tpp.verbose = true
+
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+
+	_, err = tpp.SetPolicy(policyName, specification)
+
+	if err != nil {
+		createCertificateCredentials(tpp)
+		t.Fatalf("%s", err)
+	}
+
+	//get the created policy
+	ps, err := tpp.GetPolicySpecification(policyName)
+
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	if ps.Policy == nil {
+		t.Fatalf("policy is nil")
+	}
+	localPolicy := specification.Policy
+	remotePolicy := ps.Policy
+
+	if *(localPolicy.AutoInstalled) != *(remotePolicy.AutoInstalled) {
+		t.Fatalf("policy are nil")
+	}
+	if remotePolicy.Subject == nil {
+		t.Fatalf("policy's subject is nil")
+	}
+
+	valid := test.IsArrayStringEqual(remotePolicy.Subject.Localities, localPolicy.Subject.Localities)
+	if !valid {
+		t.Fatalf("policy's localities are different expected: %+q but get  %+q ", localPolicy.Subject.Localities, remotePolicy.Subject.Localities)
+	}
+
+	valid = test.IsArrayStringEqual(remotePolicy.Subject.Countries, localPolicy.Subject.Countries)
+	if !valid {
+		t.Fatalf("policy's countries are different expected: %+q but get  %+q", localPolicy.Subject.Countries, remotePolicy.Subject.Countries)
+	}
+
+	valid = test.IsArrayStringEqual(remotePolicy.Subject.States, localPolicy.Subject.States)
+	if !valid {
+		t.Fatalf("policy's states are different expected: %+q but get  %+q", localPolicy.Subject.States, remotePolicy.Subject.States)
+	}
+
+	valid = test.IsArrayStringEqual(remotePolicy.Subject.Orgs, localPolicy.Subject.Orgs)
+	if !valid {
+		t.Fatalf("policy's org are different expected: %+q but get  %+q", localPolicy.Subject.Orgs, remotePolicy.Subject.Orgs)
+	}
+
+	valid = test.IsArrayStringEqual(remotePolicy.Subject.OrgUnits, localPolicy.Subject.OrgUnits)
+	if !valid {
+		t.Fatalf("policy's org units are different expected: %+q but get  %+q", localPolicy.Subject.OrgUnits, remotePolicy.Subject.OrgUnits)
+	}
+
+	if remotePolicy.KeyPair == nil {
+		t.Fatalf("policy's keyPair is nil")
+	}
+
+	valid = test.IsArrayStringEqual(remotePolicy.KeyPair.KeyTypes, localPolicy.KeyPair.KeyTypes)
+	if !valid {
+		t.Fatalf("policy's keyTypes are different expected: %+q but get  %+q", localPolicy.KeyPair.KeyTypes, remotePolicy.KeyPair.KeyTypes)
+	}
+
+	if *(remotePolicy.KeyPair.ServiceGenerated) != *(localPolicy.KeyPair.ServiceGenerated) {
+		t.Fatalf("policy's serviceGenerated is different expected: %s but get %s", strconv.FormatBool(*(localPolicy.KeyPair.ServiceGenerated)), strconv.FormatBool(*(remotePolicy.KeyPair.ServiceGenerated)))
+	}
+
+	valid = test.IsArrayIntEqual(remotePolicy.KeyPair.RsaKeySizes, localPolicy.KeyPair.RsaKeySizes)
+	if !valid {
+		t.Fatalf("policy's RsaKeySizes are different expected:  %+q but get  %+q", localPolicy.KeyPair.RsaKeySizes, remotePolicy.KeyPair.RsaKeySizes)
+	}
+
+	//revert back to the certificate scope
+	createCertificateCredentials(tpp)
+}
+
+func createConfigurationCredentials(c *Connector) {
+	resp, err := c.GetRefreshToken(&endpoint.Authentication{
+		User: ctx.TPPuser, Password: ctx.TPPPassword,
+		Scope:    "certificate:manage;configuration:manage",
+		ClientId: os.Getenv("TPP_POLICY_MANAGEMENT_CLIENT_ID"),
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	ctx.TPPRefreshToken = resp.Refresh_token
+	ctx.TPPaccessToken = resp.Access_token
+}
+
+func createCertificateCredentials(c *Connector) {
+	resp, err := c.GetRefreshToken(&endpoint.Authentication{
+		User: ctx.TPPuser, Password: ctx.TPPPassword,
+		Scope: "certificate:discover,manage,revoke;configuration"})
+	if err != nil {
+		panic(err)
+	}
+
+	ctx.TPPRefreshToken = resp.Refresh_token
+	ctx.TPPaccessToken = resp.Access_token
 }

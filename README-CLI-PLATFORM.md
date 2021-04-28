@@ -10,11 +10,14 @@ We welcome and appreciate all contributions. Got questions or want to discuss so
 
 # VCert CLI for Venafi Trust Protection Platform
 
-Venafi VCert command line utility is designed to generate keys and simplify certificate acquisition by eliminating the need to write code to interact with the Venafi REST API. VCert is available in 32 and 64 bit versions for Linux, Windows, and macOS.
+Venafi VCert is a command line tool designed to generate keys and simplify certificate acquisition, eliminating the need to write code that's required to interact with the Venafi REST API. VCert is available in 32- and 64-bit versions for Linux, Windows, and macOS.
 
-The following content applies to the latest version of VCert CLI, click [here](https://github.com/Venafi/vcert/releases/latest) to download it from https://github.com/Venafi/vcert/releases/latest.
+This article applies to the latest version of VCert CLI, which you can [download here](https://github.com/Venafi/vcert/releases/latest).
 
 ## Quick Links
+
+Use these to quickly jump to a relevant section lower on this page:
+
 - [Detailed usage examples](#examples)
 - [Options for requesting a certificate using the `enroll` action](#certificate-request-parameters)
 - [Options for downloading a certificate using the `pickup` action](#certificate-retrieval-parameters)
@@ -24,25 +27,29 @@ The following content applies to the latest version of VCert CLI, click [here](h
 - [Options for obtaining a new authorization token using the `getcred` action](#obtaining-an-authorization-token)
 - [Options for checking the validity of an authorization token using the `checkcred` action](#checking-the-validity-of-an-authorization-token)
 - [Options for invalidating an authorization token using the `voidcred` action](#invalidating-an-authorization-token)
+- [Options for applying certificate policy using the `setpolicy` action](#parameters-for-applying-certificate-policy)
+- [Options for viewing certificate policy using the `getpolicy` action](#parameters-for-viewing-certificate-policy)
 - [Options for generating a new key pair and CSR using the `gencsr` action (for manual enrollment)](#generating-a-new-key-pair-and-csr)
 
 ## Prerequisites
 
+Review these prerequistes to get started. You'll need: 
+
 1. A user account that has an authentication token with "certificate:manage,revoke" scope (i.e. access to the "Venafi VCert CLI" API Application as of 20.1) or has been granted WebSDK Access
-2. A folder where the user has been granted the following permissions: View, Read, Write, Create, Revoke (for the revoke action), and Private Key Read (for the pickup action when CSR is service generated)
-3. A policy applied to the folder which specifies:
+2. A folder where the user has been granted the following permissions: View, Read, Write, Create, Revoke (for the revoke action), and Private Key Read; this is for the pickup action when the certificate signing request (CSR) is service-generated.
+3. A policy applied to the folder that specifies the following:
     1. Subject DN values for Organizational Unit (OU), Organization (O), City/Locality (L), State/Province (ST) and Country (C)
     2. CA Template that Trust Protection Platform will use to enroll certificate requests submitted by VCert
-    3. Management Type not locked or locked to 'Enrollment'
-    4. Certificate Signing Request (CSR) Generation not locked or locked to Service Generated CSR
-    5. Generate Key/CSR on Application not locked or locked to 'No'
-    6. (Recommended) Disable Automatic Renewal set to 'Yes'
+    3. Management Type not locked, or locked to _Enrollment_
+    4. CSR Generation not locked, or locked to _Service Generated CSR_
+    5. Generate Key/CSR on Application not locked, or locked to _No_
+    6. (Recommended) Disable Automatic Renewal set to _Yes_
     7. (Recommended) Key Bit Strength set to 2048 or higher
-    8. (Recommended) Domain Whitelisting policy appropriately assigned
+    8. (Recommended) Domain Whitelisting policy assigned appropriately
 
 ### Compatibility
 
-VCert is compatible with Trust Protection Platform 17.3 and higher. The Custom Fields and Instance Tracking features require 18.2 or higher. Token Authentication requires 20.1 or higher; for earlier versions, username/password authentication (deprecated) applies.
+VCert is compatible with Trust Protection Platform 17.3 or later. The Custom Fields and Instance Tracking features require 18.2 or later. Token Authentication requires 20.1 or later; for earlier versions, username/password authentication (deprecated) applies.
 
 ## General Command Line Parameters
 
@@ -64,7 +71,7 @@ The following options apply to the `enroll`, `pickup`, `renew`, and `revoke` act
 
 ### Environment Variables
 
-As an alternative to specifying token, trust bundle, url, and/or zone via the command line or in a config file, VCert supports supplying those values using environment variables `VCERT_TOKEN`, `VCERT_TRUST_BUNDLE`, `VCERT_URL`, and `VCERT_ZONE` respectively.
+As an alternative to specifying a token, trust bundle, url, and/or zone via the command line or in a config file, VCert supports supplying those values using environment variables `VCERT_TOKEN`, `VCERT_TRUST_BUNDLE`, `VCERT_URL`, and `VCERT_ZONE` respectively.
 
 ## Certificate Request Parameters
 ```
@@ -158,6 +165,7 @@ Options:
 | `--san-ip`           | Use to specify an IP Address Subject Alternative Name.  To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-ip 10.20.30.40` `--san-ip 192.168.192.168` |
 | `--thumbprint`     | Use to specify the SHA1 thumbprint of the certificate to renew. Value may be specified as a string or read from the certificate file using the `file:` prefix. |
 
+
 ## Certificate Revocation Parameters
 ```
 VCert revoke -u <tpp url> -t <auth token> [--id <request id> | --thumbprint <sha1 thumb>]
@@ -174,11 +182,54 @@ Options:
 | `--thumbprint` | Use to specify the SHA1 thumbprint of the certificate to revoke. Value may be specified as a string or read from the certificate file using the `file:` prefix. |
 
 
+## Parameters for Applying Certificate Policy
+```
+VCert setpolicy -u <tpp url> -t <auth token> -z <policy folder dn> --file <policy specification file>
+```
+Options:
+
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Command&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Description |
+| ------------------ | ------------------------------------------------------------ |
+| `--file`           | Use to specify the location of the required file containing the certificate policy specification in JSON or YAML format. |
+| `--verify`         | Use to verify that a policy specification is valid. `-k` and `-z` are ignored with this option. |
+
+Notes:
+- The `configuration:manage` scope (token auth) and `Manage Policy` permission are required to apply certificate policy.
+- Policy and defaults revert to their default state if they are not present in a policy specification applied by this action.
+- Policy and defaults will not override policy that is locked by a parent folder.
+- If the policy folder specified by the `-z` zone parameter does not exist, this action will attempt to create it.
+- This action can be used to simply create a new policy folder by indicating its name with the `-z` zone parameter and applying a file that contains an empty policy (i.e. `{}`).
+- The syntax for the `certificateAuthority` policy value is the full object DN of an existing CA template (e.g. "\\VED\\Policy\\Certificate Authorities\\Entrust Advantage").
+- The `maxValidDays` policy does not apply as validity in Trust Protection Platform is governed by the CA template.
+- Although the `orgs`, `localities`, `states`, and `countries` policy (`subject`) are arrays, only a single value is allowed by Trust Protection Platform.
+- Although the `keyTypes`, `rsaKeySizes`, and `ellipticCurves` policy (`keyPair`) are arrays, only a single value is allowed by Trust Protection Platform.
+- The `autoInstalled` policy/default sets the _Management Type_ (i.e. `true`&#8594;Provisioning; `false`&#8594;Enrollment)
+- The `serviceGenerated` policy/default sets the _CSR Generation_ (i.e. `true`&#8594;TPP generated; `false`&#8594;user provided)
+- If undefined key/value pairs are included in the policy specification, they will be silently ignored by this action.  This would include keys that are misspelled.
+
+
+## Parameters for Viewing Certificate Policy
+```
+VCert getpolicy -u <tpp url> -t <auth token> -z <policy folder dn> [--file <policy specification file>]
+```
+Options:
+
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Command&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Description |
+| ------------------ | ------------------------------------------------------------ |
+| `--file`           | Use to write the retrieved certificate policy to a file in JSON format. If not specified, policy is written to STDOUT. |
+| `--starter`        | Use to generate a template policy specification to help with getting started. `-k` and `-z` are ignored with this option. |
+
+
 ## Examples
 
-For the purposes of the following examples assume that the Trust Protection Platform REST API is available at https://tpp.venafi.example/vedsdk, and that a user account named "DevOps" has been created with an authentication token of "ql8AEpCtGSv61XGfAknXIA==" that has "certificate:manage,revoke" scope, a password of "Passw0rd", and has been granted "WebSDK Access". Also assume that a folder has been created at the root of the Policy Tree called "DevOps Certificates" and the DevOps user has been granted View, Read, Write, Create, Revoke, and Private Key Read permissions to it.  Lastly, assume that a CA Template has been created and assigned to the DevOps Certificates folder along with other typical policy settings (organization, city, state, country, key size, whitelisted domains, etc.).
+For the purposes of the following examples, assume the following:
 
-Use the help to view the command line syntax for enroll:
+- The Trust Protection Platform REST API is available at https://tpp.venafi.example/vedsdk 
+- A user account named _DevOps_ has been created with an authentication token of "ql8AEpCtGSv61XGfAknXIA==", with a scope of "certificate:manage,revoke", a password of "Passw0rd", and has been granted "WebSDK Access". 
+- A folder has been created at the root of the Policy Tree called _DevOps Certificates_ and the DevOps user has been granted View, Read, Write, Create, Revoke, and Private Key Read permissions to that folder.  
+- A CA Template has been created and assigned to the DevOps Certificates folder along with other typical policy settings (such as, organization, city, state, country, key size, whitelisted domains, etc.).
+
+Use the Help to view the command line syntax for enroll:
 ```
 VCert enroll -h
 ```

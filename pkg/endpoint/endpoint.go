@@ -22,6 +22,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"github.com/Venafi/vcert/v4/pkg/policy"
 	"log"
 	"net"
 	"net/http"
@@ -94,6 +95,8 @@ type Connector interface {
 	SetHTTPClient(client *http.Client)
 	// ListCertificates
 	ListCertificates(filter Filter) ([]certificate.CertificateInfo, error)
+	SetPolicy(name string, ps *policy.PolicySpecification) (string, error)
+	GetPolicySpecification(name string) (*policy.PolicySpecification, error)
 }
 
 type Filter struct {

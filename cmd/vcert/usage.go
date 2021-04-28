@@ -82,4 +82,6 @@ func showvcertUsage() {
 	fmt.Printf("\tTo retrieve a certificate, use the 'pickup' action.\n")
 	fmt.Printf("\tTo renew a certificate, use the 'renew' action.\n")
 	fmt.Printf("\tTo revoke a certificate, use the 'revoke' action.\n")
+	fmt.Printf("\tTo retrieve certificate policy, use the 'getpolicy' action.\n")
+	fmt.Printf("\tTo apply certificate policy, use the 'setpolicy' action.\n")
 }

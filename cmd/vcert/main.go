@@ -70,6 +70,8 @@ func main() {
 			commandPickup,
 			commandRenew,
 			commandRevoke,
+			commandCreatePolicy,
+			commandGetPolicy,
 		},
 		EnableBashCompletion: true, //todo: write BashComplete function for options
 		//HideHelp:             true,
@@ -96,6 +98,9 @@ ACTIONS:
    pickup     To retrieve a certificate
    renew      To renew a certificate
    revoke     To revoke a certificate
+
+   getpolicy  To retrieve the certificate policy of a zone
+   setpolicy  To apply a certificate policy specification to a zone
 
    getcred    To obtain a new token for authentication
    checkcred  To check the validity of a token and grant

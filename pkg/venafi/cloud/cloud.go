@@ -22,11 +22,13 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"github.com/Venafi/vcert/v4/pkg/policy"
 	"io"
 	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -149,8 +151,21 @@ type importResponse struct {
 }
 
 type ApplicationDetails struct {
-	ApplicationId   string            `json:"id,omitempty"`
-	CitAliasToIdMap map[string]string `json:"certificateIssuingTemplateAliasIdMap,omitempty"`
+	ApplicationId             string               `json:"id,omitempty"`
+	CitAliasToIdMap           map[string]string    `json:"certificateIssuingTemplateAliasIdMap,omitempty"`
+	CompanyId                 string               `json:"companyId,omitempty"`
+	Name                      string               `json:"name,omitempty"`
+	Description               string               `json:"description,omitempty"`
+	OwnerIdType               []policy.OwnerIdType `json:"ownerIdsAndTypes,omitempty"`
+	InternalFqDns             []string             `json:"internalFqDns,omitempty"`
+	ExternalIpRanges          []string             `json:"externalIpRanges,omitempty"`
+	InternalIpRanges          []string             `json:"internalIpRanges,omitempty"`
+	InternalPorts             []string             `json:"internalPorts,omitempty"`
+	FullyQualifiedDomainNames []string             `json:"fullyQualifiedDomainNames,omitempty"`
+	IpRanges                  []string             `json:"ipRanges,omitempty"`
+	Ports                     []string             `json:"ports,omitempty"`
+	FqDns                     []string             `json:"fqDns,omitempty"`
+	OrganizationalUnitId      string               `json:"organizationalUnitId,omitempty"`
 }
 
 //GenerateRequest generates a CertificateRequest based on the zone configuration, and returns the request along with the private key.
@@ -234,6 +249,9 @@ func (c *Connector) request(method string, url string, data interface{}, authNot
 	if method == "POST" {
 		b, _ = json.Marshal(data)
 		payload = bytes.NewReader(b)
+	} else if method == "PUT" {
+		b, _ = json.Marshal(data)
+		payload = bytes.NewReader(b)
 	}
 
 	r, err := http.NewRequest(method, url, payload)
@@ -245,6 +263,9 @@ func (c *Connector) request(method string, url string, data interface{}, authNot
 		r.Header.Add("tppl-api-key", c.apiKey)
 	}
 	if method == "POST" {
+		r.Header.Add("Accept", "application/json")
+		r.Header.Add("content-type", "application/json")
+	} else if method == "PUT" {
 		r.Header.Add("Accept", "application/json")
 		r.Header.Add("content-type", "application/json")
 	} else {
@@ -486,4 +507,237 @@ func (z *cloudZone) parseZone() error {
 	z.templateAlias = segments[1]
 
 	return nil
+}
+
+func createAppUpdateRequest(applicationDetails *ApplicationDetails, cit *certificateTemplate) policy.ApplicationCreateRequest {
+	request := policy.ApplicationCreateRequest{
+		OwnerIdsAndTypes:                     applicationDetails.OwnerIdType,
+		Name:                                 applicationDetails.Name,
+		Description:                          applicationDetails.Description,
+		Fqdns:                                applicationDetails.FqDns,
+		InternalFqdns:                        applicationDetails.InternalFqDns,
+		InternalIpRanges:                     applicationDetails.InternalIpRanges,
+		ExternalIpRanges:                     applicationDetails.ExternalIpRanges,
+		InternalPorts:                        applicationDetails.InternalPorts,
+		FullyQualifiedDomainNames:            applicationDetails.FullyQualifiedDomainNames,
+		IpRanges:                             applicationDetails.IpRanges,
+		Ports:                                applicationDetails.Ports,
+		CertificateIssuingTemplateAliasIdMap: applicationDetails.CitAliasToIdMap,
+		OrganizationalUnitId:                 applicationDetails.OrganizationalUnitId,
+	}
+
+	//add new cit values to the map.
+	citMap := request.CertificateIssuingTemplateAliasIdMap
+	value := citMap[cit.Name]
+	if value == "" {
+		citMap[cit.Name] = cit.ID
+	} else {
+		if value != cit.ID {
+			citMap[cit.Name] = cit.ID
+		}
+	}
+	request.CertificateIssuingTemplateAliasIdMap = citMap
+
+	return request
+}
+
+func buildPolicySpecification(cit *certificateTemplate, info *policy.CertificateAuthorityInfo) *policy.PolicySpecification {
+	if cit == nil {
+		return nil
+	}
+
+	var ps policy.PolicySpecification
+
+	var pol policy.Policy
+
+	if len(cit.SubjectCNRegexes) > 0 {
+		pol.Domains = cit.SubjectCNRegexes
+	}
+	wildCard := isWildCard(cit.SubjectCNRegexes)
+	pol.WildcardAllowed = &wildCard
+
+	// ps.Policy.WildcardAllowed is pending.
+	if cit.ValidityPeriod != "" {
+		//they have the format P#D
+		days := cit.ValidityPeriod[1 : len(cit.ValidityPeriod)-1]
+		intDays, _ := strconv.ParseInt(days, 10, 32)
+		//ok we have a 32 bits int but we need to convert it just into a "int"
+		intVal := int(intDays)
+		pol.MaxValidDays = &intVal
+	}
+	if info != nil {
+		ca := fmt.Sprint(info.CAType, "\\", info.CAAccountKey, "\\", info.VendorProductName)
+		pol.CertificateAuthority = &ca
+	}
+
+	//subject.
+	var subject policy.Subject
+	shouldCreateSubject := false
+
+	if len(cit.SubjectORegexes) > 0 {
+		subject.Orgs = cit.SubjectORegexes
+		shouldCreateSubject = true
+	}
+
+	if len(cit.SubjectOURegexes) > 0 {
+		subject.OrgUnits = cit.SubjectOURegexes
+		shouldCreateSubject = true
+	}
+
+	if len(cit.SubjectLRegexes) > 0 {
+		subject.Localities = cit.SubjectLRegexes
+		shouldCreateSubject = true
+	}
+
+	if len(cit.SubjectSTRegexes) > 0 {
+		subject.States = cit.SubjectSTRegexes
+		shouldCreateSubject = true
+	}
+
+	if len(cit.SubjectCValues) > 0 {
+		subject.Countries = cit.SubjectCValues
+		shouldCreateSubject = true
+	}
+
+	if shouldCreateSubject {
+		pol.Subject = &subject
+	}
+
+	//key pair
+	var keyPair policy.KeyPair
+	shouldCreateKeyPair := false
+	if len(cit.KeyTypes) > 0 {
+		var keyTypes []string
+		var keySizes []int
+
+		for _, allowedKT := range cit.KeyTypes {
+			keyType := string(allowedKT.KeyType)
+			keyLengths := allowedKT.KeyLengths
+
+			keyTypes = append(keyTypes, keyType)
+
+			keySizes = append(keySizes, keyLengths...)
+
+		}
+		shouldCreateKeyPair = true
+		keyPair.KeyTypes = keyTypes
+		keyPair.RsaKeySizes = keySizes
+	}
+
+	if shouldCreateKeyPair {
+		pol.KeyPair = &keyPair
+		pol.KeyPair.ReuseAllowed = &cit.KeyReuse
+	}
+
+	ps.Policy = &pol
+
+	//build defaults.
+	var defaultSub policy.DefaultSubject
+	shouldCreateDeFaultSub := false
+	if cit.RecommendedSettings.SubjectOValue != "" {
+		defaultSub.Org = &cit.RecommendedSettings.SubjectOValue
+		shouldCreateDeFaultSub = true
+	}
+
+	if cit.RecommendedSettings.SubjectOUValue != "" {
+		defaultSub.OrgUnits = []string{cit.RecommendedSettings.SubjectOUValue}
+		shouldCreateDeFaultSub = true
+	}
+
+	if cit.RecommendedSettings.SubjectCValue != "" {
+		defaultSub.Country = &cit.RecommendedSettings.SubjectCValue
+		shouldCreateDeFaultSub = true
+	}
+
+	if cit.RecommendedSettings.SubjectSTValue != "" {
+		defaultSub.State = &cit.RecommendedSettings.SubjectSTValue
+		shouldCreateDeFaultSub = true
+	}
+
+	if cit.RecommendedSettings.SubjectLValue != "" {
+		defaultSub.Locality = &cit.RecommendedSettings.SubjectLValue
+		shouldCreateDeFaultSub = true
+	}
+
+	if shouldCreateDeFaultSub {
+		if ps.Default == nil {
+			ps.Default = &policy.Default{}
+		}
+		ps.Default.Subject = &defaultSub
+	}
+
+	//default key type
+	var defaultKP policy.DefaultKeyPair
+	shouldCreateDefaultKeyPAir := false
+
+	if cit.RecommendedSettings.Key.Type != "" {
+		defaultKP.KeyType = &cit.RecommendedSettings.Key.Type
+		shouldCreateDefaultKeyPAir = true
+	}
+
+	if cit.RecommendedSettings.Key.Length > 0 {
+		defaultKP.RsaKeySize = &cit.RecommendedSettings.Key.Length
+		shouldCreateDefaultKeyPAir = true
+	}
+
+	if shouldCreateDefaultKeyPAir {
+		if ps.Default == nil {
+			ps.Default = &policy.Default{}
+		}
+		ps.Default.KeyPair = &defaultKP
+	}
+
+	return &ps
+}
+
+func parseCitResult(expectedStatusCode int, httpStatusCode int, httpStatus string, body []byte) (*certificateTemplate, error) {
+	if httpStatusCode == expectedStatusCode {
+		return parseCitDetailsData(body, httpStatusCode)
+	}
+	respErrors, err := parseResponseErrors(body)
+	if err != nil {
+		return nil, err // parseResponseErrors always return verror.ServerError
+	}
+	respError := fmt.Sprintf("unexpected status code on Venafi Cloud registration. Status: %s\n", httpStatus)
+	for _, e := range respErrors {
+		respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
+	}
+	return nil, fmt.Errorf("%w: %v", verror.ServerError, respError)
+}
+
+func parseCitDetailsData(b []byte, status int) (*certificateTemplate, error) {
+
+	var cits CertificateTemplates
+	var cit certificateTemplate
+
+	if status == http.StatusOK { //update case
+		err := json.Unmarshal(b, &cit)
+
+		if err != nil {
+			return nil, err
+		}
+	} else { //create case
+		err := json.Unmarshal(b, &cits)
+
+		if err != nil {
+			return nil, err
+		}
+
+		//we just get the cit we created/updated
+		cit = cits.CertificateTemplates[0]
+	}
+
+	return &cit, nil
+}
+
+func isWildCard(cnRegex []string) bool {
+	if len(cnRegex) > 0 {
+		for _, val := range cnRegex {
+			if !(strings.HasPrefix(val, "[*a")) {
+				return false
+			}
+		}
+		return true
+	}
+	return false
 }

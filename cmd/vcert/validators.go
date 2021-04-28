@@ -643,3 +643,51 @@ func validateOverWritingEnviromentVariables() {
 	}
 
 }
+
+func validateGetPolicyFlags(commandName string) error {
+	isPolicyConfigStarter := flags.policyConfigStarter
+	if isPolicyConfigStarter {
+		if flags.tppUser != "" || flags.tppPassword != "" || flags.tppToken != "" || flags.apiKey != "" {
+			return fmt.Errorf("starter flag and credentials are set, please remove credentials to be able to use starter flag")
+		}
+
+	} else {
+		if flags.tppUser != "" && flags.tppPassword != "" && flags.tppToken != "" && flags.apiKey != "" {
+			return fmt.Errorf("credentials are required")
+		}
+
+		if flags.policyName == "" {
+			return fmt.Errorf("zone is required")
+		}
+	}
+	return nil
+}
+
+func validateSetPolicyFlags(commandName string) error {
+
+	isVerifyPolicy := flags.verifyPolicyConfig
+
+	if isVerifyPolicy {
+
+		if flags.tppUser != "" || flags.tppPassword != "" || flags.tppToken != "" || flags.apiKey != "" {
+			return fmt.Errorf("starter flag and credentials are set, please remove credentials to be able to use starter flag")
+		}
+
+	} else {
+
+		if flags.tppUser != "" && flags.tppPassword != "" && flags.tppToken != "" && flags.apiKey != "" {
+			return fmt.Errorf("credentials are required")
+		}
+
+		if flags.policyName == "" {
+			return fmt.Errorf("zone is required")
+		}
+
+		if flags.policySpecLocation == "" {
+			return fmt.Errorf("a policy specification file is required")
+		}
+
+	}
+
+	return nil
+}

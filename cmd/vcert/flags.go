@@ -490,6 +490,33 @@ var (
 		Destination: &flags.validDays,
 	}
 
+	flagPolicyName = &cli.StringFlag{
+		Name: "z",
+		Usage: "REQUIRED. Use to specify target zone for applying or retrieving certificate policy. " +
+			"In Trust Protection Platform this is the path (DN) of a policy folder and in Venafi Cloud " +
+			"this is the name of an Application and Issuing Template separated by a backslash. " +
+			"Example: -z Engineering\\Internal Certs",
+		Destination: &flags.policyName,
+	}
+
+	flagPolicyConfigFile = &cli.StringFlag{
+		Name:        "file",
+		Usage:       "Use to specify the location of a certificate policy specification. REQUIRED for the setpolicy action",
+		Destination: &flags.policySpecLocation,
+	}
+
+	flagPolicyStarterConfigFile = &cli.BoolFlag{
+		Name:        "starter",
+		Usage:       "Use to generate an empty policy specification file, when using this flag credentials should be avoided",
+		Destination: &flags.policyConfigStarter,
+	}
+
+	flagPolicyVerifyConfigFile = &cli.BoolFlag{
+		Name:        "verify",
+		Usage:       "Use to verify if a policy specification is valid, when using this flag credentials should be avoided",
+		Destination: &flags.verifyPolicyConfig,
+	}
+
 	commonFlags              = []cli.Flag{flagInsecure, flagVerbose, flagNoPrompt}
 	keyFlags                 = []cli.Flag{flagKeyType, flagKeySize, flagKeyCurve, flagKeyFile, flagKeyPassword}
 	sansFlags                = []cli.Flag{flagDNSSans, flagEmailSans, flagIPSans, flagURISans, flagUPNSans}
@@ -639,6 +666,28 @@ var (
 	voidCredFlags = sortedFlags(flagsApppend(
 		commonCredFlags,
 		commonFlags,
+	))
+
+	createPolicyFlags = sortedFlags(flagsApppend(
+		flagKey,
+		flagUrl,
+		flagTPPToken,
+		flagVerbose,
+		flagPolicyName,
+		flagPolicyConfigFile,
+		flagPolicyVerifyConfigFile,
+		flagTrustBundle,
+	))
+
+	getPolicyFlags = sortedFlags(flagsApppend(
+		flagKey,
+		flagUrl,
+		flagTPPToken,
+		flagVerbose,
+		flagPolicyName,
+		flagPolicyConfigFile,
+		flagPolicyStarterConfigFile,
+		flagTrustBundle,
 	))
 )
 

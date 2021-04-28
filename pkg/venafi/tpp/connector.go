@@ -21,10 +21,12 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"github.com/Venafi/vcert/v4/pkg/policy"
 	"log"
 	"net/http"
 	neturl "net/url"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -661,6 +663,296 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 	return
 }
 
+func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecification, error) {
+	var ps *policy.PolicySpecification
+	var tp policy.TppPolicy
+
+	log.Println("Collecting policy attributes")
+
+	if !strings.HasPrefix(name, policy.RootPath) {
+		name = policy.RootPath + name
+
+	}
+
+	tp.Name = &name
+
+	var checkPolicyResponse policy.CheckPolicyResponse
+
+	req := policy.CheckPolicyRequest{
+		PolicyDN: name,
+	}
+	_, _, body, err := c.request("POST", urlResourceReadPolicy, req)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(body, &checkPolicyResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	if checkPolicyResponse.Error != "" {
+		return nil, fmt.Errorf(checkPolicyResponse.Error)
+	}
+
+	log.Println("Building policy")
+	ps, err = policy.BuildPolicySpecificationForTPP(checkPolicyResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	return ps, nil
+}
+
+func PolicyExist(policyName string, c *Connector) (bool, error) {
+
+	req := policy.PolicyExistPayloadRequest{
+		ObjectDN: policyName,
+	}
+	_, _, body, err := c.request("POST", urlResourceIsValidPolicy, req)
+
+	if err != nil {
+		return false, err
+	}
+	var response policy.PolicyIsValidResponse
+	err = json.Unmarshal(body, &response)
+
+	if err != nil {
+		return false, err
+	}
+
+	//if error is not null then the policy doesn't exists
+	if response.Result == 1 && response.PolicyObject.DN != "" {
+		return true, nil
+	} else if (response.Error != "") && (response.Result == 400) {
+		return false, nil
+	} else {
+		return false, fmt.Errorf(response.Error)
+	}
+
+}
+
+func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (string, error) {
+
+	//validate policy specification and policy
+	err := policy.ValidateTppPolicySpecification(ps)
+
+	if err != nil {
+		return "", err
+	}
+
+	log.Printf("policy specification is valid")
+	var status = ""
+	tppPolicy := policy.BuildTppPolicy(ps)
+
+	if !strings.HasPrefix(name, policy.RootPath) {
+		name = policy.RootPath + name
+
+	}
+
+	tppPolicy.Name = &name
+
+	var policyExists = false
+
+	//validate if the policy exists
+	policyExist, err := PolicyExist(name, c)
+	if err != nil {
+		return "", err
+	}
+
+	if policyExist {
+		policyExists = true
+		log.Printf("found existing policy folder: %s", name)
+	} else {
+
+		//validate if the parent exist
+		parent := policy.GetParent(name)
+
+		parentExist, err := PolicyExist(parent, c)
+		if err != nil {
+			return "", err
+		}
+
+		if parent != policy.RootPath && !parentExist {
+
+			return "", fmt.Errorf("the policy's parent doesn't exists")
+
+		}
+	}
+
+	//step 1 create root policy folder.
+	if !policyExists {
+
+		log.Printf("creating policy folder: %s", name)
+
+		req := policy.PolicyPayloadRequest{
+			Class:    policy.PolicyClass,
+			ObjectDN: *(tppPolicy.Name),
+		}
+
+		_, status, _, err = c.request("POST", urlResourceCreatePolicy, req)
+
+		if err != nil {
+			return "", err
+		}
+	}
+	//step 2 create policy's attributes.
+
+	log.Printf("updating certificate policy attributes")
+
+	//create Contact
+	if tppPolicy.Contact != nil {
+		_, status, _, err = createPolicyAttribute(c, policy.TppContact, tppPolicy.Contact, *(tppPolicy.Name), true)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	//create Approver
+	if tppPolicy.Approver != nil {
+		_, status, _, err = createPolicyAttribute(c, policy.TppApprover, tppPolicy.Approver, *(tppPolicy.Name), true)
+		if err != nil {
+			return "", err
+		}
+	}
+	if policyExists {
+		err = resetTPPAttributes(*(tppPolicy.Name), c)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	//create Domain Suffix Whitelist
+	if tppPolicy.ManagementType != nil {
+		_, status, _, err = createPolicyAttribute(c, policy.TppManagementType, []string{tppPolicy.ManagementType.Value}, *(tppPolicy.Name), tppPolicy.ManagementType.Locked)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	//create Domain Suffix Whitelist
+	if tppPolicy.DomainSuffixWhitelist != nil {
+		_, status, _, err = createPolicyAttribute(c, policy.TppDomainSuffixWhitelist, tppPolicy.DomainSuffixWhitelist, *(tppPolicy.Name), true)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	//create Prohibit Wildcard
+	if tppPolicy.ProhibitWildcard != nil {
+		_, status, _, err = createPolicyAttribute(c, policy.TppProhibitWildcard, []string{strconv.Itoa(*(tppPolicy.ProhibitWildcard))}, *(tppPolicy.Name), false)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	//create Certificate Authority
+	if tppPolicy.CertificateAuthority != nil {
+		_, status, _, err = createPolicyAttribute(c, policy.TppCertificateAuthority, []string{*(tppPolicy.CertificateAuthority)}, *(tppPolicy.Name), false)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	//create Organization attribute
+	if tppPolicy.Organization != nil {
+		_, status, _, err = createPolicyAttribute(c, policy.TppOrganization, []string{tppPolicy.Organization.Value}, *(tppPolicy.Name), tppPolicy.Organization.Locked)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	//create Organizational Unit attribute
+	if tppPolicy.OrganizationalUnit != nil {
+		_, status, _, err = createPolicyAttribute(c, policy.TppOrganizationalUnit, tppPolicy.OrganizationalUnit.Value, *(tppPolicy.Name), tppPolicy.OrganizationalUnit.Locked)
+		if err != nil {
+			return "", err
+		}
+	}
+	//create City attribute
+	if tppPolicy.City != nil {
+		_, status, _, err = createPolicyAttribute(c, policy.TppCity, []string{tppPolicy.City.Value}, *(tppPolicy.Name), tppPolicy.City.Locked)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	//create State attribute
+	if tppPolicy.State != nil {
+		_, status, _, err = createPolicyAttribute(c, policy.TppState, []string{tppPolicy.State.Value}, *(tppPolicy.Name), tppPolicy.State.Locked)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	//create Country attribute
+	if tppPolicy.Country != nil {
+		_, status, _, err = createPolicyAttribute(c, policy.TppCountry, []string{tppPolicy.Country.Value}, *(tppPolicy.Name), tppPolicy.Country.Locked)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	//create Key Algorithm attribute
+	if tppPolicy.KeyAlgorithm != nil {
+		_, status, _, err = createPolicyAttribute(c, policy.TppKeyAlgorithm, []string{tppPolicy.KeyAlgorithm.Value}, *(tppPolicy.Name), tppPolicy.KeyAlgorithm.Locked)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	//create Key Bit Strength
+	if tppPolicy.KeyBitStrength != nil {
+		_, status, _, err = createPolicyAttribute(c, policy.TppKeyBitStrength, []string{tppPolicy.KeyBitStrength.Value}, *(tppPolicy.Name), tppPolicy.KeyBitStrength.Locked)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	//create Elliptic Curve attribute
+	if tppPolicy.EllipticCurve != nil {
+		_, status, _, err = createPolicyAttribute(c, policy.TppEllipticCurve, []string{tppPolicy.EllipticCurve.Value}, *(tppPolicy.Name), tppPolicy.EllipticCurve.Locked)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	//create Manual Csr attribute
+	if tppPolicy.ManualCsr != nil {
+		_, status, _, err = createPolicyAttribute(c, policy.ServiceGenerated, []string{tppPolicy.ManualCsr.Value}, *(tppPolicy.Name), tppPolicy.ManualCsr.Locked)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	if tppPolicy.ProhibitedSANType != nil {
+		_, status, _, err = createPolicyAttribute(c, policy.TppProhibitedSANTypes, tppPolicy.ProhibitedSANType, *(tppPolicy.Name), false)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	//Allow Private Key Reuse" & "Want Renewal
+	if tppPolicy.AllowPrivateKeyReuse != nil {
+		_, status, _, err = createPolicyAttribute(c, policy.TppAllowPrivateKeyReuse, []string{strconv.Itoa(*(tppPolicy.AllowPrivateKeyReuse))}, *(tppPolicy.Name), true)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	if tppPolicy.WantRenewal != nil {
+		_, status, _, err = createPolicyAttribute(c, policy.TppWantRenewal, []string{strconv.Itoa(*(tppPolicy.WantRenewal))}, *(tppPolicy.Name), true)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	log.Printf("policy successfully applied to %s", name)
+
+	return status, nil
+}
+
 // RetrieveCertificate attempts to retrieve the requested certificate
 func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates *certificate.PEMCollection, err error) {
 
@@ -1160,4 +1452,194 @@ func (c *Connector) configDNToGuid(objectDN string) (guid string, err error) {
 	}
 	return resp.GUID, nil
 
+}
+
+func createPolicyAttribute(c *Connector, at string, av []string, n string, l bool) (statusCode int, statusText string, body []byte, err error) {
+
+	request := policy.PolicySetAttributePayloadRequest{
+		Locked:        l,
+		ObjectDN:      n,
+		Class:         policy.PolicyAttributeClass,
+		AttributeName: at,
+		Values:        av,
+	}
+	// if is locked is a policy value
+	// if is not locked then is a default.
+
+	statusCode, statusText, body, err = c.request("POST", urlResourceWritePolicy, request)
+	if err != nil {
+		return statusCode, statusText, body, err
+	}
+
+	var response policy.PolicySetAttributeResponse
+
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		return statusCode, statusText, body, err
+	}
+
+	if response.Error != "" {
+		err = fmt.Errorf(response.Error)
+		return statusCode, statusText, body, err
+	}
+
+	return statusCode, statusText, body, err
+}
+
+func getPolicyAttribute(c *Connector, at string, n string) (s []string, b *bool, err error) {
+
+	request := policy.PolicyGetAttributePayloadRequest{
+		ObjectDN:      n,
+		Class:         policy.PolicyAttributeClass,
+		AttributeName: at,
+		Values:        []string{"1"},
+	}
+	// if is locked is a policy value
+	// if is not locked then is a default.
+	_, _, body, err := c.request("POST", urlResourceReadPolicy, request)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var response policy.PolicyGetAttributeResponse
+	err = json.Unmarshal(body, &response)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if len(response.Values) > 0 {
+		return response.Values, &response.Locked, nil
+	}
+	//no value set and no error.
+	return nil, nil, nil
+}
+
+func resetTPPAttributes(zone string, c *Connector) error {
+
+	//reset Domain Suffix Whitelist
+	err := resetTPPAttribute(c, policy.TppDomainSuffixWhitelist, zone)
+	if err != nil {
+		return err
+	}
+
+	//reset Prohibit Wildcard
+	err = resetTPPAttribute(c, policy.TppProhibitWildcard, zone)
+	if err != nil {
+		return err
+	}
+
+	//reset Certificate Authority
+	err = resetTPPAttribute(c, policy.TppCertificateAuthority, zone)
+	if err != nil {
+		return err
+	}
+
+	//reset Organization attribute
+	err = resetTPPAttribute(c, policy.TppOrganization, zone)
+	if err != nil {
+		return err
+	}
+
+	//reset Organizational Unit attribute
+	err = resetTPPAttribute(c, policy.TppOrganizationalUnit, zone)
+	if err != nil {
+		return err
+	}
+
+	//reset City attribute
+	err = resetTPPAttribute(c, policy.TppCity, zone)
+	if err != nil {
+		return err
+	}
+
+	//reset State attribute
+	err = resetTPPAttribute(c, policy.TppState, zone)
+	if err != nil {
+		return err
+	}
+
+	//reset Country attribute
+	err = resetTPPAttribute(c, policy.TppCountry, zone)
+	if err != nil {
+		return err
+	}
+
+	//reset Key Algorithm attribute
+	err = resetTPPAttribute(c, policy.TppKeyAlgorithm, zone)
+	if err != nil {
+		return err
+	}
+
+	//reset Key Bit Strength
+	err = resetTPPAttribute(c, policy.TppKeyBitStrength, zone)
+	if err != nil {
+		return err
+	}
+
+	//reset Elliptic Curve attribute
+	err = resetTPPAttribute(c, policy.TppEllipticCurve, zone)
+	if err != nil {
+		return err
+	}
+
+	//reset Manual Csr attribute
+	err = resetTPPAttribute(c, policy.ServiceGenerated, zone)
+	if err != nil {
+		return err
+	}
+
+	//reset Manual Csr attribute
+	err = resetTPPAttribute(c, policy.TppProhibitedSANTypes, zone)
+	if err != nil {
+		return err
+	}
+
+	//reset Allow Private Key Reuse" & "Want Renewal
+	err = resetTPPAttribute(c, policy.TppAllowPrivateKeyReuse, zone)
+	if err != nil {
+		return err
+	}
+
+	err = resetTPPAttribute(c, policy.TppWantRenewal, zone)
+	if err != nil {
+		return err
+	}
+
+	err = resetTPPAttribute(c, policy.TppManagementType, zone)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func resetTPPAttribute(c *Connector, at, zone string) error {
+
+	request := policy.ClearTTPAttributesRequest{
+		ObjectDN:      zone,
+		Class:         policy.PolicyAttributeClass,
+		AttributeName: at,
+	}
+	// if is locked is a policy value
+	// if is not locked then is a default.
+
+	_, _, body, err := c.request("POST", urlResourceCleanPolicy, request)
+	if err != nil {
+		return err
+	}
+
+	var response policy.PolicySetAttributeResponse
+
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		return err
+	}
+
+	if response.Error != "" {
+		err = fmt.Errorf(response.Error)
+		return err
+	}
+
+	return nil
 }
