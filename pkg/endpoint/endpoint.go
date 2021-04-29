@@ -96,7 +96,7 @@ type Connector interface {
 	// ListCertificates
 	ListCertificates(filter Filter) ([]certificate.CertificateInfo, error)
 	SetPolicy(name string, ps *policy.PolicySpecification) (string, error)
-	GetPolicySpecification(name string) (*policy.PolicySpecification, error)
+	GetPolicy(name string) (*policy.PolicySpecification, error)
 }
 
 type Filter struct {

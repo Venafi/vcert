@@ -1652,7 +1652,7 @@ func TestGetPolicy(t *testing.T) {
 
 	specifiedPS := test.GetTppPolicySpecification()
 
-	ps, err := tpp.GetPolicySpecification(policyName)
+	ps, err := tpp.GetPolicy(policyName)
 
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -1851,7 +1851,7 @@ func TestSetDefaultPolicyValuesAndValidate(t *testing.T) {
 	}
 
 	//get the created policy
-	ps, err := tpp.GetPolicySpecification(policyName)
+	ps, err := tpp.GetPolicy(policyName)
 
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -1944,7 +1944,7 @@ func TestSetPolicyValuesAndValidate(t *testing.T) {
 	}
 
 	//get the created policy
-	ps, err := tpp.GetPolicySpecification(policyName)
+	ps, err := tpp.GetPolicy(policyName)
 
 	if err != nil {
 		t.Fatalf("%s", err)

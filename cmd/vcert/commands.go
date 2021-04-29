@@ -736,7 +736,7 @@ func doCommandGetPolicy(c *cli.Context) error {
 
 		}
 
-		ps, err = connector.GetPolicySpecification(policyName)
+		ps, err = connector.GetPolicy(policyName)
 
 		if err != nil {
 			return err

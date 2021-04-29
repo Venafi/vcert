@@ -663,7 +663,7 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 	return
 }
 
-func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecification, error) {
+func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) {
 	var ps *policy.PolicySpecification
 	var tp policy.TppPolicy
 

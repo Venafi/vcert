@@ -78,7 +78,7 @@ type Connector struct {
 	client  *http.Client
 }
 
-func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecification, error) {
+func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) {
 
 	appName := policy.GetApplicationName(name)
 	if appName != "" {
