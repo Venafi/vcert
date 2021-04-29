@@ -842,7 +842,7 @@ func TestGetPolicy(t *testing.T) {
 
 	specifiedPS := test.GetCloudPolicySpecification()
 
-	ps, err := conn.GetPolicySpecification(policyName)
+	ps, err := conn.GetPolicy(policyName)
 
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -1101,7 +1101,7 @@ func TestSetDefaultPolicyValuesAndValidate(t *testing.T) {
 	}
 
 	//get the created policy
-	ps, err := conn.GetPolicySpecification(policyName)
+	ps, err := conn.GetPolicy(policyName)
 
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -1175,7 +1175,7 @@ func TestSetPolicyValuesAndValidate(t *testing.T) {
 	}
 
 	//get the created policy
-	ps, err := conn.GetPolicySpecification(policyName)
+	ps, err := conn.GetPolicy(policyName)
 
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -1258,7 +1258,7 @@ func TestSetPolicyEntrust(t *testing.T) {
 		t.Fatalf("%s", err)
 	}
 
-	ps, err := conn.GetPolicySpecification(policyName)
+	ps, err := conn.GetPolicy(policyName)
 
 	if ps.Policy.CertificateAuthority == nil || *(ps.Policy.CertificateAuthority) == "" {
 		t.Fatalf("venafi policy doesn't have a certificate authority")
@@ -1295,7 +1295,7 @@ func TestSetPolicyDigicert(t *testing.T) {
 		t.Fatalf("%s", err)
 	}
 
-	ps, err := conn.GetPolicySpecification(policyName)
+	ps, err := conn.GetPolicy(policyName)
 
 	if ps.Policy.CertificateAuthority == nil || *(ps.Policy.CertificateAuthority) == "" {
 		t.Fatalf("venafi policy doesn't have a certificate authority")

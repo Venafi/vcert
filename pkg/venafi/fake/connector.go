@@ -38,7 +38,7 @@ type Connector struct {
 	verbose bool
 }
 
-func (c *Connector) GetPolicySpecification(name string) (*policy.PolicySpecification, error) {
+func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) {
 
 	caName := "\\VED\\Policy\\Certificate Authorities\\TEST CA\\QA Test CA - Server 90 Days"
 	validityHours := 120
