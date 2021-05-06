@@ -46,7 +46,7 @@ is accessible from the system where VCert will be run.
         1. (Recommended) Limits Common Name and Subject Alternative Name to domains that are allowed by your organization
         2. (Recommended) Restricts the Key Length to 2048 or higher
         3. (Recommended) Does not allow Private Key Reuse
-5. An OutagePREDICT Application exists where you are among the owners, and you know the Application Name.
+5. An Application exists where you are among the owners, and you know the Application Name.
 6. An Issuing Template is assigned to the Application, and you know its API Alias.
 
 ## General Command Line Parameters
