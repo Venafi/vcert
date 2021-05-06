@@ -1,14 +1,14 @@
 ![Venafi](Venafi_logo.png)
 [![Apache 2.0 License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 ![Community Supported](https://img.shields.io/badge/Support%20Level-Community-brightgreen)
-![Compatible with TPP 17.3+ & Cloud](https://img.shields.io/badge/Compatibility-TPP%2017.3+%20%26%20Cloud-f9a90c)  
+![Compatible with TPP 17.3+ & VaaS](https://img.shields.io/badge/Compatibility-TPP%2017.3+%20%26%20VaaS-f9a90c)  
 _**This open source project is community-supported.** To report a problem or share an idea, use
 **[Issues](../../issues)**; and if you have a suggestion for fixing the issue, please include those details, too.
 In addition, use **[Pull Requests](../../pulls)** to contribute actual bug fixes or proposed enhancements.
 We welcome and appreciate all contributions. Got questions or want to discuss something with our team?
 **[Join us on Slack](https://join.slack.com/t/venafi-integrations/shared_invite/zt-i8fwc379-kDJlmzU8OiIQOJFSwiA~dg)**!_
 
-# VCert CLI for Venafi Cloud
+# VCert CLI for Venafi as a Service
 
 Venafi VCert is a command line tool designed to generate keys and simplify certificate acquisition, eliminating the need to write code that's required to interact with the Venafi REST API. VCert is available in 32- and 64-bit versions for Linux, Windows, and macOS.
 
@@ -31,11 +31,11 @@ Use these links to quickly jump to a relevant section lower on this page:
 
 Review these prerequistes to get started. You'll need the following:
 
-1. Verify that the Venafi Cloud REST API at [https://api.venafi.cloud](https://api.venafi.cloud/swagger-ui.html)
+1. Verify that the Venafi as a Service REST API at [https://api.venafi.cloud](https://api.venafi.cloud/swagger-ui.html)
 is accessible from the system where VCert will be run.
-2. You have successfully registered for a Venafi Cloud account, have been granted at least the
-OutagePREDICT "Resource Owner" role, and know your API key.
-3. A CA Account and Issuing Template exist and have been configured with:
+2. You have successfully registered for a Venafi as a Service account, have been granted at least the
+"Resource Owner" role, and know your API key.
+4. A CA Account and Issuing Template exist and have been configured with:
     1. Recommended Settings values for:
         1. Organizational Unit (OU)
         2. Organization (O)
@@ -46,8 +46,8 @@ OutagePREDICT "Resource Owner" role, and know your API key.
         1. (Recommended) Limits Common Name and Subject Alternative Name to domains that are allowed by your organization
         2. (Recommended) Restricts the Key Length to 2048 or higher
         3. (Recommended) Does not allow Private Key Reuse
-4. An OutagePREDICT Application exists where you are among the owners, and you know the Application Name.
-5. An Issuing Template is assigned to the Application, and you know its API Alias.
+5. An OutagePREDICT Application exists where you are among the owners, and you know the Application Name.
+6. An Issuing Template is assigned to the Application, and you know its API Alias.
 
 ## General Command Line Parameters
 
@@ -56,12 +56,12 @@ The following options apply to the `enroll`, `pickup`, and `renew` actions:
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Command&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Description                                                  |
 | ------------------- | ------------------------------------------------------------ |
 | `--config`          | Use to specify INI configuration file containing connection details.  Available parameters: *cloud_apikey*, *cloud_zone*, *trust_bundle*, *test_mode* |
-| `--k`               | Use to specify your API key for Venafi Cloud.<br/>Example: -k aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee |
+| `--k`               | Use to specify your API key for Venafi as a Service.<br/>Example: -k aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee |
 | `--no-prompt`       | Use to exclude password prompts.  If you enable the prompt and you enter incorrect information, an error is displayed.  This option is useful with scripting. |
-| `--test-mode`       | Use to test operations without connecting to Venafi Cloud.  This option is useful for integration tests where the test environment does not have access to Venafi Cloud.  Default is false. |
+| `--test-mode`       | Use to test operations without connecting to Venafi as a Service.  This option is useful for integration tests where the test environment does not have access to Venafi as a Service.  Default is false. |
 | `--test-mode-delay` | Use to specify the maximum number of seconds for the random test-mode connection delay.  Default is 15 (seconds). |
-| `--timeout`         | Use to specify the maximum amount of time to wait in seconds for a certificate to be processed by Venafi Cloud. Default is 120 (seconds). |
-| `--trust-bundle`    | Use to specify a file with PEM formatted certificates to be used as trust anchors when communicating with Venafi Cloud.  Generally not needed because Venafi Cloud is secured by a publicly trusted certificate but it may be needed if your organization requires VCert to traverse a proxy server. VCert uses the trust store of your operating system for this purpose if not specified.<br/>Example: `--trust-bundle /path-to/bundle.pem` |
+| `--timeout`         | Use to specify the maximum amount of time to wait in seconds for a certificate to be processed by VaaS. Default is 120 (seconds). |
+| `--trust-bundle`    | Use to specify a file with PEM formatted certificates to be used as trust anchors when communicating with VaaS.  Generally not needed because VaaS is secured by a publicly trusted certificate but it may be needed if your organization requires VCert to traverse a proxy server. VCert uses the trust store of your operating system for this purpose if not specified.<br/>Example: `--trust-bundle /path-to/bundle.pem` |
 | `--verbose`         | Use to increase the level of logging detail, which is helpful when troubleshooting issues. |
 
 ### Environment Variables
@@ -159,9 +159,9 @@ Notes:
 - If the issuing template specified by the `-z` zone parameter is not already assigned to the application, this action will attempt to make that assignment.
 - The syntax for the `certificateAuthority` policy value is _"CA Account Type\\CA Account Name\\CA Product Name"_ (e.g. "DIGICERT\\DigiCert SSL Plus\\ssl_plus").
 When not present in the policy specification, `certificateAuthority` defaults to "BUILTIN\\Built-In CA\\Default Product".
-- The `autoInstalled` policy/defaults does not apply as automated installation of certificates by Venafi Cloud is not yet supported.
-- The `ellipticCurves` and `serviceGenerated` policy/defaults (`keyPair`) do not apply as ECC and central key generation are not yet supported by Venafi Cloud.
-- The `ipAllowed`, `emailAllowed`, `uriAllowed`, and `upnAllowed` policy (`subjectAltNames`) do not apply as those SAN types are not yet supported by Venafi Cloud.
+- The `autoInstalled` policy/defaults does not apply as automated installation of certificates by VaaS is not yet supported.
+- The `ellipticCurves` and `serviceGenerated` policy/defaults (`keyPair`) do not apply as ECC and central key generation are not yet supported by VaaS.
+- The `ipAllowed`, `emailAllowed`, `uriAllowed`, and `upnAllowed` policy (`subjectAltNames`) do not apply as those SAN types are not yet supported by VaaS.
 - If undefined key/value pairs are included in the policy specification, they will be silently ignored by this action.  This would include keys that are misspelled.
 
 
@@ -181,7 +181,7 @@ Options:
 
 For the purposes of the following examples, assume the following:
 
-- The Venafi Cloud REST API is accessible at [https://api.venafi.cloud](https://api.venafi.cloud/swagger-ui.html)
+- The Venafi as a Service REST API is accessible at [https://api.venafi.cloud](https://api.venafi.cloud/swagger-ui.html)
 - A user has been registered and granted at least the _OP Resource Owner_ role and has an API key of "3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4". 
 - A CA Account and Issuing Template have been created and configured appropriately (organization, city, state, country, key length, allowed domains, etc.). 
 - An Application has been created with a name of _Storefront_ to which the user has been given access, and the Issuing Template has been assigned to the Application with an API Alias of _Public Trust_.
@@ -190,51 +190,51 @@ Use the help to view the command line syntax for enroll:
 ```
 VCert enroll -h
 ```
-Submit a Venafi Cloud request for enrolling a certificate with a common name of “first-time.venafi.example” using an authentication token and have VCert prompt for the password to encrypt the private key:
+Submit a request to Venafi as a Service for enrolling a certificate with a common name of “first-time.venafi.example” using an authentication token and have VCert prompt for the password to encrypt the private key:
 ```
 VCert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --cn first-time.venafi.example
 ```
-Submit a Venafi Cloud request for enrolling a certificate where the password for encrypting the private key to be generated is specified in a text file called passwd.txt:
+Submit a request to Venafi as a Service for enrolling a certificate where the password for encrypting the private key to be generated is specified in a text file called passwd.txt:
 ```
 VCert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --key-password file:passwd.txt --cn passwd-from-file.venafi.example
 ```
-Submit a Venafi Cloud request for enrolling a certificate where the private key to be generated is not password encrypted:
+Submit a request to Venafi as a Service for enrolling a certificate where the private key to be generated is not password encrypted:
 ```
 VCert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --cn non-encrypted-key.venafi.example --no-prompt
 ```
-Submit a Venafi Cloud request for enrolling a certificate using an externally generated CSR:
+Submit a request to Venafi as a Service for enrolling a certificate using an externally generated CSR:
 ```
 VCert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --csr file:/opt/pki/cert.req
 ```
-Submit a Venafi Cloud request for enrolling a certificate where the certificate and private key are output using JSON syntax to a file called json.txt:
+Submit a request to Venafi as a Service for enrolling a certificate where the certificate and private key are output using JSON syntax to a file called json.txt:
 ```
 VCert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --key-password Passw0rd --cn json-to-file.venafi.example --format json --file keycert.json
 ```
-Submit a Venafi Cloud request for enrolling a certificate where only the certificate and private key are output, no chain certificates:
+Submit a request to Venafi as a Service for enrolling a certificate where only the certificate and private key are output, no chain certificates:
 ```
 VCert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --key-password Passw0rd --cn no-chain.venafi.example --chain ignore
 ```
-Submit a Venafi Cloud request for enrolling a certificate with three DNS subject alternative names:
+Submit a request to Venafi as a Service for enrolling a certificate with three DNS subject alternative names:
 ```
 VCert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --no-prompt --cn three-sans.venafi.example --san-dns first-san.venafi.example --san-dns second-san.venafi.example --san-dns third-san.venafi.example
 ```
-Submit a Venafi Cloud request for enrolling a certificate where the certificate is not issued after two minutes and then subsequently retrieve that certificate after it has been issued:
+Submit request to Venafi as a Service for enrolling a certificate where the certificate is not issued after two minutes and then subsequently retrieve that certificate after it has been issued:
 ```
 VCert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --no-prompt --cn demo-pickup.venafi.example
 
 VCert pickup -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 --pickup-id "{7428fac3-d0e8-4679-9f48-d9e867a326ca}"
 ```
-Submit a Venafi Cloud request for enrolling a certificate that will be retrieved later using a Pickup ID from in a text file:
+Submit request to Venafi as a Service for enrolling a certificate that will be retrieved later using a Pickup ID from in a text file:
 ```
 VCert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --no-prompt --cn demo-pickup.venafi.example --no-pickup -pickup-id-file pickup_id.txt
 
 VCert pickup -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 --pickup-id-file pickup_id.txt
 ```
-Submit a Venafi Cloud request for renewing a certificate using the enrollment (pickup) ID of the expiring certificate:
+Submit request to Venafi as a Service for renewing a certificate using the enrollment (pickup) ID of the expiring certificate:
 ```
 VCert renew -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 --id "{7428fac3-d0e8-4679-9f48-d9e867a326ca}"
 ```
-Submit a Venafi Cloud request for renewing a certificate using the expiring certificate file:
+Submit request to Venafi as a Service for renewing a certificate using the expiring certificate file:
 ```
 VCert renew -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 --thumbprint file:/opt/pki/demo.crt
 ```
