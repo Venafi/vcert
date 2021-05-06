@@ -1,7 +1,7 @@
 ![Venafi](Venafi_logo.png)
 [![Apache 2.0 License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 ![Community Supported](https://img.shields.io/badge/Support%20Level-Community-brightgreen)
-![Compatible with TPP 17.3+ & Cloud](https://img.shields.io/badge/Compatibility-TPP%2017.3+%20%26%20Cloud-f9a90c)  
+![Compatible with TPP 17.3+ & VaaS](https://img.shields.io/badge/Compatibility-TPP%2017.3+%20%26%20VaaS-f9a90c)  
 _**This open source project is community-supported.** To report a problem or share an idea, use
 **[Issues](../../issues)**; and if you have a suggestion for fixing the issue, please include those details, too.
 In addition, use **[Pull Requests](../../pulls)** to contribute actual bug fixes or proposed enhancements.
@@ -15,10 +15,10 @@ We welcome and appreciate all contributions. Got questions or want to discuss so
 
 VCert is a Go library, SDK, and command line utility designed to simplify key generation and enrollment of machine identities
 (also known as SSL/TLS certificates and keys) that comply with enterprise security policy by using the
-[Venafi Platform](https://www.venafi.com/platform/trust-protection-platform) or [Venafi Cloud](https://pki.venafi.com/venafi-cloud/).
+[Venafi Trust Protection Platform](https://www.venafi.com/platform/trust-protection-platform) or [Venafi as a Service](https://www.venafi.com/venaficloud).
 
 See [VCert CLI for Venafi Trust Protection Platform](README-CLI-PLATFORM.md) or
-[VCert CLI for Venafi Cloud](README-CLI-CLOUD.md) to get started with the command line utility.
+[VCert CLI for Venafi as a Service](README-CLI-CLOUD.md) to get started with the command line utility.
 
 #### Compatibility
 
@@ -96,7 +96,7 @@ go test -v ./example -run TestRequestCertificate
 
 The requirement for the CA Template to be assigned by policy follows a long standing Venafi best practice which also met our design objective to keep the certificate request process simple for VCert users. If you require the ability to specify the CA Template with the request you can use the TPP REST APIs but please be advised this goes against Venafi recommendations.
 
-## Testing with Trust Protection Platform and Cloud
+## Testing with Trust Protection Platform and Venafi as a Service
 
 Unit tests:
 
@@ -104,8 +104,8 @@ Unit tests:
 make test
 ```
 
-Integration tests for Trust Protection Platform and Venafi Cloud require access to those products. Environment 
-variables are used to specify required settings including credentials.  The Venafi Cloud API key and zone value
+Integration tests for Trust Protection Platform and Venafi as a Service require access to those products. Environment 
+variables are used to specify required settings including credentials.  The VaaS API key and zone value
 fragments (i.e. `Application Name`\\`Issuing Template API Alias`) are readily available in the web interface.
 
 ```sh
