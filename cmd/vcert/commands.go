@@ -49,13 +49,13 @@ var (
 		Action: doCommandEnroll1,
 		Name:   commandEnrollName,
 		Usage:  "To enroll a certificate",
-		UsageText: ` vcert enroll <Required Venafi Cloud Config> OR <Required Trust Protection Platform Config> <Options>
-		vcert enroll -k <Venafi Cloud API key> -z <zone> --cn <common name>
-		vcert enroll -k <Venafi Cloud API key> -z <zone> --cn <common name> --key-type rsa --key-size 4096 --san-dns <alt name> --san-dns <alt name2>
-		vcert enroll -u https://tpp.example.com -t <TPP access token> -z <zone> --cn <common name>
-		vcert enroll -u https://tpp.example.com -t <TPP access token> -z <zone> --cn <common name> --key-size 4096 --san-dns <alt name> --san-dns <alt name2>
-		vcert enroll -u https://tpp.example.com -t <TPP access token> -z <zone> --cn <common name> --key-type ecdsa --key-curve p384 --san-dns <alt name> -san-dns <alt name2>
-		vcert enroll -u https://tpp.example.com -t <TPP access token> -z <zone> --p12-file <PKCS#12 client cert> --p12-password <PKCS#12 password> --cn <common name>`,
+		UsageText: ` vcert enroll <Required Venafi as a Service -OR- Trust Protection Platform Config> <Options>
+		vcert enroll -k <VaaS API key> -z "<app name>\<CIT alias>" --cn <common name>
+		vcert enroll -k <VaaS API key> -z "<app name>\<CIT alias>" --cn <common name> --key-type rsa --key-size 4096 --san-dns <alt name> --san-dns <alt name2>
+		vcert enroll -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --cn <common name>
+		vcert enroll -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --cn <common name> --key-size 4096 --san-dns <alt name> --san-dns <alt name2>
+		vcert enroll -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --cn <common name> --key-type ecdsa --key-curve p384 --san-dns <alt name> -san-dns <alt name2>
+		vcert enroll -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --p12-file <PKCS#12 client cert> --p12-password <PKCS#12 password> --cn <common name>`,
 	}
 	commandGetCred = &cli.Command{
 		Before: runBeforeCommand,
@@ -99,8 +99,8 @@ var (
 		Flags:  pickupFlags,
 		Action: doCommandPickup1,
 		Usage:  "To download a certificate",
-		UsageText: ` vcert pickup <Required Venafi Cloud Config> OR <Required Trust Protection Platform Config> <Options>
-		vcert pickup -k <Venafi Cloud API key> [--pickup-id <ID value> | --pickup-id-file <file containing ID value>]
+		UsageText: ` vcert pickup <Required Venafi as a Service -OR- Trust Protection Platform Config> <Options>
+		vcert pickup -k <VaaS API key> [--pickup-id <ID value> | --pickup-id-file <file containing ID value>]
 		vcert pickup -u https://tpp.example.com -t <TPP access token> --pickup-id <ID value>`,
 	}
 	commandRevoke = &cli.Command{
@@ -119,9 +119,9 @@ var (
 		Flags:  renewFlags,
 		Action: doCommandRenew1,
 		Usage:  "To renew a certificate",
-		UsageText: ` vcert renew <Required Venafi Cloud Config> OR <Required Trust Protection Platform Config> <Options>
+		UsageText: ` vcert renew <Required Venafi as a Service -OR- Trust Protection Platform Config> <Options>
 		vcert renew -u https://tpp.example.com -t <TPP access token> --id <ID value>
-		vcert renew -k <Venafi Cloud API key> --thumbprint <cert SHA1 fingerprint>`,
+		vcert renew -k <VaaS API key> --thumbprint <cert SHA1 fingerprint>`,
 	}
 
 	commandCreatePolicy = &cli.Command{
@@ -130,9 +130,9 @@ var (
 		Flags:  createPolicyFlags,
 		Action: doCommandCreatePolicy,
 		Usage:  "To apply a certificate policy specification to a zone",
-		UsageText: ` vcert setpolicy <Required Venafi Cloud Config> OR <Required Trust Protection Platform Config> <Options>
-		vcert setpolicy -u https://tpp.example.com -t <TPP access token> -z <zone> --file /path-to/policy.spec
-		vcert setpolicy -k <Venafi Cloud API key> -z <zone> --file /path-to/policy.spec`,
+		UsageText: ` vcert setpolicy <Required Venafi as a Service -OR- Trust Protection Platform Config> <Options>
+		vcert setpolicy -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --file /path-to/policy.spec
+		vcert setpolicy -k <VaaS API key> -z "<app name>\<CIT alias>" --file /path-to/policy.spec`,
 	}
 
 	commandGetPolicy = &cli.Command{
@@ -141,9 +141,9 @@ var (
 		Flags:  getPolicyFlags,
 		Action: doCommandGetPolicy,
 		Usage:  "To retrieve the certificate policy of a zone",
-		UsageText: ` vcert getpolicy <Required Venafi Cloud Config> OR <Required Trust Protection Platform Config> <Options>
-		vcert getpolicy -u https://tpp.example.com -t <TPP access token> -z <zone>
-		vcert getpolicy -k <Venafi Cloud API key> -z <zone>`,
+		UsageText: ` vcert getpolicy <Required Venafi as a Service -OR- Trust Protection Platform Config> <Options>
+		vcert getpolicy -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>"
+		vcert getpolicy -k <VaaS API key> -z "<app name>\<CIT alias>"`,
 	}
 )
 

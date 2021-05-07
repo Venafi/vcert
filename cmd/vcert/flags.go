@@ -40,7 +40,7 @@ var (
 
 	flagKey = &cli.StringFlag{
 		Name:        "k",
-		Usage:       "REQUIRED/CLOUD. Your API key for Venafi Cloud.  Example: -k aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+		Usage:       "REQUIRED/VAAS. Your API key for Venafi as a Service.  Example: -k aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
 		Destination: &flags.apiKey,
 	}
 
@@ -350,8 +350,8 @@ var (
 		Name: "config",
 		Usage: "Use to specify INI configuration file containing connection details instead\n" +
 			"\t\tFor TPP: url, access_token, tpp_zone\n" +
-			"\t\tFor Cloud: cloud_apikey, cloud_zone\n" +
-			"\t\tTPP & Cloud: trust_bundle, test_mode",
+			"\t\tFor VaaS: cloud_apikey, cloud_zone\n" +
+			"\t\tTPP & VaaS: trust_bundle, test_mode",
 		Destination: &flags.config,
 		TakesFile:   true,
 	}
@@ -493,7 +493,7 @@ var (
 	flagPolicyName = &cli.StringFlag{
 		Name: "z",
 		Usage: "REQUIRED. Use to specify target zone for applying or retrieving certificate policy. " +
-			"In Trust Protection Platform this is the path (DN) of a policy folder and in Venafi Cloud " +
+			"In Trust Protection Platform this is the path (DN) of a policy folder and in Venafi as a Service " +
 			"this is the name of an Application and Issuing Template separated by a backslash. " +
 			"Example: -z Engineering\\Internal Certs",
 		Destination: &flags.policyName,
