@@ -54,8 +54,8 @@ var (
 		vcert enroll -k <VaaS API key> -z "<app name>\<CIT alias>" --cn <common name> --key-type rsa --key-size 4096 --san-dns <alt name> --san-dns <alt name2>
 		vcert enroll -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --cn <common name>
 		vcert enroll -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --cn <common name> --key-size 4096 --san-dns <alt name> --san-dns <alt name2>
-		vcert enroll -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN> --cn <common name> --key-type ecdsa --key-curve p384 --san-dns <alt name> -san-dns <alt name2>
-		vcert enroll -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN> --p12-file <PKCS#12 client cert> --p12-password <PKCS#12 password> --cn <common name>`,
+		vcert enroll -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --cn <common name> --key-type ecdsa --key-curve p384 --san-dns <alt name> -san-dns <alt name2>
+		vcert enroll -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --p12-file <PKCS#12 client cert> --p12-password <PKCS#12 password> --cn <common name>`,
 	}
 	commandGetCred = &cli.Command{
 		Before: runBeforeCommand,
@@ -130,7 +130,7 @@ var (
 		Flags:  createPolicyFlags,
 		Action: doCommandCreatePolicy,
 		Usage:  "To apply a certificate policy specification to a zone",
-		UsageText: ` vcert setpolicy <Required Venafi as a Server -OR- Trust Protection Platform Config> <Options>
+		UsageText: ` vcert setpolicy <Required Venafi as a Service -OR- Trust Protection Platform Config> <Options>
 		vcert setpolicy -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --file /path-to/policy.spec
 		vcert setpolicy -k <VaaS API key> -z "<app name>\<CIT alias>" --file /path-to/policy.spec`,
 	}
