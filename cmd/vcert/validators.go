@@ -142,7 +142,7 @@ func validateConnectionFlags(commandName string) error {
 		if flags.tppUser == "" && tppToken == "" {
 			// should be SaaS endpoint
 			if flags.apiKey == "" && getPropertyFromEnvironment(vCertApiKey) == "" {
-				return fmt.Errorf("An API key is required for communicating with Venafi Cloud")
+				return fmt.Errorf("An API key is required for communicating with Venafi as a Service")
 			}
 		} else {
 			// should be TPP service
@@ -281,10 +281,10 @@ func validateEnrollFlags(commandName string) error {
 		if flags.tppUser == "" && tppToken == "" {
 			// should be SaaS endpoint
 			if apiKey == "" {
-				return fmt.Errorf("An API key is required for enrollment with Venafi Cloud")
+				return fmt.Errorf("An API key is required for enrollment with Venafi as a Service")
 			}
 			if zone == "" {
-				return fmt.Errorf("A zone is required for requesting a certificate from Venafi Cloud")
+				return fmt.Errorf("A zone is required for requesting a certificate from Venafi as a Service")
 			}
 		} else {
 			// should be TPP service
@@ -344,7 +344,7 @@ func validateEnrollFlags(commandName string) error {
 	}
 
 	if (flags.tlsAddress != "" || flags.instance != "") && apiKey != "" {
-		return fmt.Errorf("--instance and --tls-address are not applicable to Venafi Cloud")
+		return fmt.Errorf("--instance and --tls-address are not applicable to Venafi as a Service")
 	}
 
 	return nil
