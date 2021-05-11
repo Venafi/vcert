@@ -62,7 +62,7 @@ func init() {
 
 	resp, err := tpp.GetRefreshToken(&endpoint.Authentication{
 		User: ctx.TPPuser, Password: ctx.TPPPassword,
-		Scope: "certificate:discover,manage,revoke;configuration"})
+		Scope: "certificate:discover,manage,revoke;configuration:manage"})
 	if err != nil {
 		panic(err)
 	}
@@ -1606,9 +1606,6 @@ func TestSetPolicy(t *testing.T) {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
 
-	//
-	createConfigurationCredentials(tpp)
-	//
 
 	tpp.verbose = true
 
@@ -1627,8 +1624,6 @@ func TestSetPolicy(t *testing.T) {
 		t.Fatalf("%s", err)
 	}
 
-	//revert back to the certificate scope
-	createCertificateCredentials(tpp)
 
 }
 
@@ -1797,7 +1792,6 @@ func TestSetEmptyPolicy(t *testing.T) {
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	specification := policy.PolicySpecification{}
 
-	createConfigurationCredentials(tpp)
 
 	tpp.verbose = true
 
@@ -1811,11 +1805,8 @@ func TestSetEmptyPolicy(t *testing.T) {
 	_, err = tpp.SetPolicy(policyName, &specification)
 
 	if err != nil {
-		createCertificateCredentials(tpp)
 		t.Fatalf("%s", err)
 	}
-	//revert back to the certificate scope
-	createCertificateCredentials(tpp)
 
 }
 
@@ -1833,7 +1824,6 @@ func TestSetDefaultPolicyValuesAndValidate(t *testing.T) {
 
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 
-	createConfigurationCredentials(tpp)
 
 	tpp.verbose = true
 
@@ -1847,7 +1837,6 @@ func TestSetDefaultPolicyValuesAndValidate(t *testing.T) {
 	_, err = tpp.SetPolicy(policyName, specification)
 
 	if err != nil {
-		createCertificateCredentials(tpp)
 		t.Fatalf("%s", err)
 	}
 
@@ -1911,8 +1900,7 @@ func TestSetDefaultPolicyValuesAndValidate(t *testing.T) {
 		t.Fatalf("policy's default RsaKeySize is different expected: %s but get %s", strconv.Itoa(*(localDefault.KeyPair.RsaKeySize)), strconv.Itoa(*(remoteDefault.KeyPair.RsaKeySize)))
 	}
 
-	//revert back to the certificate scope
-	createCertificateCredentials(tpp)
+
 
 }
 
@@ -1926,7 +1914,6 @@ func TestSetPolicyValuesAndValidate(t *testing.T) {
 
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 
-	createConfigurationCredentials(tpp)
 
 	tpp.verbose = true
 
@@ -1940,7 +1927,6 @@ func TestSetPolicyValuesAndValidate(t *testing.T) {
 	_, err = tpp.SetPolicy(policyName, specification)
 
 	if err != nil {
-		createCertificateCredentials(tpp)
 		t.Fatalf("%s", err)
 	}
 
@@ -2007,32 +1993,5 @@ func TestSetPolicyValuesAndValidate(t *testing.T) {
 		t.Fatalf("policy's RsaKeySizes are different expected:  %+q but get  %+q", localPolicy.KeyPair.RsaKeySizes, remotePolicy.KeyPair.RsaKeySizes)
 	}
 
-	//revert back to the certificate scope
-	createCertificateCredentials(tpp)
 }
 
-func createConfigurationCredentials(c *Connector) {
-	resp, err := c.GetRefreshToken(&endpoint.Authentication{
-		User: ctx.TPPuser, Password: ctx.TPPPassword,
-		Scope:    "certificate:manage;configuration:manage",
-		ClientId: os.Getenv("CLIENT_ID"),
-	})
-	if err != nil {
-		panic(err)
-	}
-
-	ctx.TPPRefreshToken = resp.Refresh_token
-	ctx.TPPaccessToken = resp.Access_token
-}
-
-func createCertificateCredentials(c *Connector) {
-	resp, err := c.GetRefreshToken(&endpoint.Authentication{
-		User: ctx.TPPuser, Password: ctx.TPPPassword,
-		Scope: "certificate:discover,manage,revoke;configuration"})
-	if err != nil {
-		panic(err)
-	}
-
-	ctx.TPPRefreshToken = resp.Refresh_token
-	ctx.TPPaccessToken = resp.Access_token
-}
