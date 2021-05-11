@@ -43,7 +43,7 @@ func RandCN() string {
 }
 
 func RandAppName() string {
-	return fmt.Sprintf("t%d-%sAppOpenSource", time.Now().Unix(), randRunes(4))
+	return fmt.Sprintf("vcert-go-%d-%sAppOpenSource", time.Now().Unix(), randRunes(4))
 }
 
 func RandCitName() string {
@@ -51,7 +51,7 @@ func RandCitName() string {
 }
 
 func RandTppPolicyName() string {
-	return fmt.Sprintf("t%d-%sPolicyOpenSource", time.Now().Unix(), randRunes(4))
+	return fmt.Sprintf("vcert-go-%d-%sPolicyOpenSource", time.Now().Unix(), randRunes(4))
 }
 
 func GetCloudPolicySpecification() *policy.PolicySpecification {

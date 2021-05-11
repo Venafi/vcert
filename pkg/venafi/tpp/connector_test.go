@@ -1598,7 +1598,7 @@ func TestOmitSans(t *testing.T) {
 }
 
 func TestSetPolicy(t *testing.T) {
-	policyName := os.Getenv("TPP_POLICY_MANAGEMENT_ROOT") + test.RandTppPolicyName()
+	policyName := os.Getenv("TPP_PM_ROOT") + "\\" + test.RandTppPolicyName()
 	ctx.CloudZone = policyName
 
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
@@ -1633,6 +1633,7 @@ func TestSetPolicy(t *testing.T) {
 }
 
 func TestGetPolicy(t *testing.T) {
+	t.Skip() //this is just for development purpose
 
 	policyName := os.Getenv("TPP_POLICY_MANAGEMENT_SAMPLE")
 
@@ -1790,7 +1791,7 @@ func TestGetPolicy(t *testing.T) {
 }
 
 func TestSetEmptyPolicy(t *testing.T) {
-	policyName := os.Getenv("TPP_POLICY_MANAGEMENT_ROOT") + test.RandTppPolicyName()
+	policyName := os.Getenv("TPP_PM_ROOT") + "\\" + test.RandTppPolicyName()
 	ctx.CloudZone = policyName
 
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
@@ -1827,7 +1828,7 @@ func TestSetDefaultPolicyValuesAndValidate(t *testing.T) {
 	serGenerated := true
 	specification.Default.KeyPair.EllipticCurve = &ec
 	specification.Default.KeyPair.ServiceGenerated = &serGenerated
-	policyName := os.Getenv("TPP_POLICY_MANAGEMENT_ROOT") + test.RandTppPolicyName()
+	policyName := os.Getenv("TPP_PM_ROOT") + "\\" + test.RandTppPolicyName()
 	ctx.CloudZone = policyName
 
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
@@ -1920,7 +1921,7 @@ func TestSetPolicyValuesAndValidate(t *testing.T) {
 
 	specification.Default = nil
 
-	policyName := os.Getenv("TPP_POLICY_MANAGEMENT_ROOT") + test.RandTppPolicyName()
+	policyName := os.Getenv("TPP_PM_ROOT") + "\\" + test.RandTppPolicyName()
 	ctx.CloudZone = policyName
 
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
@@ -2014,7 +2015,7 @@ func createConfigurationCredentials(c *Connector) {
 	resp, err := c.GetRefreshToken(&endpoint.Authentication{
 		User: ctx.TPPuser, Password: ctx.TPPPassword,
 		Scope:    "certificate:manage;configuration:manage",
-		ClientId: os.Getenv("TPP_POLICY_MANAGEMENT_CLIENT_ID"),
+		ClientId: os.Getenv("CLIENT_ID"),
 	})
 	if err != nil {
 		panic(err)
