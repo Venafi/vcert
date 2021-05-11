@@ -1606,7 +1606,6 @@ func TestSetPolicy(t *testing.T) {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
 
-
 	tpp.verbose = true
 
 	if tpp.apiKey == "" {
@@ -1623,7 +1622,6 @@ func TestSetPolicy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-
 
 }
 
@@ -1792,7 +1790,6 @@ func TestSetEmptyPolicy(t *testing.T) {
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	specification := policy.PolicySpecification{}
 
-
 	tpp.verbose = true
 
 	if tpp.apiKey == "" {
@@ -1823,7 +1820,6 @@ func TestSetDefaultPolicyValuesAndValidate(t *testing.T) {
 	ctx.CloudZone = policyName
 
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
-
 
 	tpp.verbose = true
 
@@ -1900,8 +1896,6 @@ func TestSetDefaultPolicyValuesAndValidate(t *testing.T) {
 		t.Fatalf("policy's default RsaKeySize is different expected: %s but get %s", strconv.Itoa(*(localDefault.KeyPair.RsaKeySize)), strconv.Itoa(*(remoteDefault.KeyPair.RsaKeySize)))
 	}
 
-
-
 }
 
 func TestSetPolicyValuesAndValidate(t *testing.T) {
@@ -1913,7 +1907,6 @@ func TestSetPolicyValuesAndValidate(t *testing.T) {
 	ctx.CloudZone = policyName
 
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
-
 
 	tpp.verbose = true
 
@@ -1994,4 +1987,3 @@ func TestSetPolicyValuesAndValidate(t *testing.T) {
 	}
 
 }
-
