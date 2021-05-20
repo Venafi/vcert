@@ -112,13 +112,18 @@ func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) 
 	return ps, nil
 }
 
-func PolicyExist(policyName string, c *Connector) bool {
+func PolicyExist(policyName string, c *Connector) (bool, error) {
 
 	c.zone.appName = policy.GetApplicationName(policyName)
-	c.zone.templateAlias = policy.GetCitName(policyName)
+	citName := policy.GetCitName(policyName)
+	if citName != "" {
+		c.zone.templateAlias = citName
+	} else {
+		return false, fmt.Errorf("cit name is not valid, please provide a valid zone name in the format: appName\\CitName")
+	}
 
 	_, err := c.getTemplateByID()
-	return err == nil
+	return err == nil, nil
 }
 
 func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (string, error) {
@@ -263,7 +268,13 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 
 	} else {
 		//update the application and assign the cit tho the application
-		if !PolicyExist(name, c) { // relation between app-cit doesn't exist so create it.
+		exist, err := PolicyExist(name, c)
+
+		if err != nil {
+			return "", err
+		}
+
+		if !exist { // relation between app-cit doesn't exist so create it.
 			log.Printf("updating application: %s", appName)
 
 			appReq := createAppUpdateRequest(appDetails, cit)

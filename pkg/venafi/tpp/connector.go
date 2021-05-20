@@ -669,6 +669,10 @@ func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) 
 
 	log.Println("Collecting policy attributes")
 
+	if !strings.HasPrefix(name, policy.PathSeparator) {
+		name = policy.PathSeparator + name
+	}
+
 	if !strings.HasPrefix(name, policy.RootPath) {
 		name = policy.RootPath + name
 
@@ -745,6 +749,9 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 	log.Printf("policy specification is valid")
 	var status = ""
 	tppPolicy := policy.BuildTppPolicy(ps)
+	if !strings.HasPrefix(name, policy.PathSeparator) {
+		name = policy.PathSeparator + name
+	}
 
 	if !strings.HasPrefix(name, policy.RootPath) {
 		name = policy.RootPath + name
