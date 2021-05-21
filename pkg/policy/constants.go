@@ -3,7 +3,8 @@ package policy
 const (
 	JsonExtension        = ".json"
 	YamlExtension        = ".yaml"
-	RootPath             = "\\VED\\Policy\\"
+	RootPath             = PathSeparator + "VED" + PathSeparator + "Policy"
+	PathSeparator        = "\\"
 	PolicyClass          = "Policy"
 	PolicyAttributeClass = "X509 Certificate"
 

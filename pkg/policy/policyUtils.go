@@ -1100,7 +1100,7 @@ func GetApplicationName(zone string) string {
 
 func GetCitName(zone string) string {
 	data := strings.Split(zone, "\\")
-	if data != nil && data[1] != "" {
+	if len(data) == 2 {
 		return data[1]
 	}
 	return ""
