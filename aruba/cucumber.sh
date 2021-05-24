@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "Using token $TPPACCESS_TOKEN"
+echo "Using token $TPP_ACCESS_TOKEN"
 RUN_COMMAND="docker run -t --rm \
           -e TPP_URL \
           -e TPP_USER \
@@ -11,12 +11,14 @@ RUN_COMMAND="docker run -t --rm \
           -e CLOUD_APIKEY \
           -e CLOUD_ZONE \
           -e TPP_IP \
-          -e TPP_CN vcert.auto cucumber --fail-fast --no-color -v"
+          -e TPP_CN \
+          -e FILE_PATH vcert.auto"
 
 set -ex
 
 if [ x$1 != x ]; then
     echo One-feature run
+    export FILE_PATH=$1
     $RUN_COMMAND $1
 elif which parallel; then
     echo Parallel...
@@ -27,9 +29,6 @@ elif which parallel; then
     parallel -j 20 $RUN_COMMAND -- $FEATURES
 else
     echo Sequential...
-    for F in `find features/ -type f -name '*.feature'`; do
     hostname;
-    docker images;
-        $RUN_COMMAND $F
-    done
+    $RUN_COMMAND
 fi

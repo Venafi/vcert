@@ -561,7 +561,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 
 	switch {
 	case req.CertID != "":
-		statusCode, status, body, err := c.request("GET", url, nil)
+		statusCode, status, body, err := c.waitForCertificate(url, req) //c.request("GET", url, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -577,7 +577,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 		default:
 			url = fmt.Sprintf(url, condorChainOptionRootLast)
 		}
-		statusCode, status, body, err := c.request("GET", url, nil)
+		statusCode, status, body, err := c.waitForCertificate(url, req) //c.request("GET", url, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -595,6 +595,29 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 		}
 	}
 	return nil, fmt.Errorf("couldn't retrieve certificate because both PickupID and CertId are empty")
+}
+
+// Waits for the Certificate to be available. Fails when the timeout is exceeded
+func (c *Connector) waitForCertificate(url string, request *certificate.Request) (statusCode int, status string, body []byte, err error) {
+	startTime := time.Now()
+	for {
+		statusCode, status, body, err = c.request("GET", url, nil)
+		if err != nil {
+			return
+		}
+		if statusCode == http.StatusOK {
+			return
+		}
+		if request.Timeout == 0 {
+			err = endpoint.ErrCertificatePending{CertificateID: request.PickupID, Status: status}
+			return
+		}
+		if time.Now().After(startTime.Add(request.Timeout)) {
+			err = endpoint.ErrRetrieveCertificateTimeout{CertificateID: request.PickupID}
+			return
+		}
+		time.Sleep(2 * time.Second)
+	}
 }
 
 // RevokeCertificate attempts to revoke the certificate
@@ -1026,26 +1049,6 @@ func getUserDetails(c *Connector) (*userDetails, error) {
 	return ud, nil
 }
 
-func getCertificateAuthorityProductOptionId(caName string, c *Connector) (string, error) {
-
-	accounts, info, err := getAccounts(caName, c)
-	if err != nil {
-		return "", err
-	}
-
-	for _, account := range accounts.Accounts {
-		if account.Account.Key == info.CAAccountKey {
-			for _, productOption := range account.ProductOption {
-				if productOption.ProductName == info.VendorProductName {
-					return productOption.Id, nil
-				}
-			}
-		}
-	}
-
-	return "", nil
-}
-
 func getAccounts(caName string, c *Connector) (*policy.Accounts, *policy.CertificateAuthorityInfo, error) {
 	info, err := policy.GetCertAuthorityInfo(caName)
 	if err != nil {
@@ -1070,26 +1073,6 @@ func getAccounts(caName string, c *Connector) (*policy.Accounts, *policy.Certifi
 	}
 
 	return &accounts, &info, nil
-}
-
-func getCertificateAuthorityAccountId(caName string, c *Connector) (string, error) {
-
-	accounts, info, err := getAccounts(caName, c)
-	if err != nil {
-		return "", err
-	}
-
-	for _, account := range accounts.Accounts {
-		if account.Account.Key == info.CAAccountKey {
-			for _, productOption := range account.ProductOption {
-				if productOption.ProductName == info.VendorProductName {
-					return account.Account.Id, nil
-				}
-			}
-		}
-	}
-
-	return "", nil
 }
 
 func getCertificateAuthorityDetails(caName string, c *Connector) (*policy.CADetails, error) {
