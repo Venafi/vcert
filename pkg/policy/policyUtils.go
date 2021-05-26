@@ -744,7 +744,7 @@ func ValidateCloudPolicySpecification(ps *PolicySpecification) error {
 			subjectAltNames := getSubjectAltNames(*(ps.Policy.SubjectAltNames))
 			if len(subjectAltNames) > 0 {
 				for k, v := range subjectAltNames {
-					if k != "DnsAllowed" && v {
+					if k != "dnsAllowed" && v {
 						return fmt.Errorf("specified subjectAltNames: %s value is true, this value is not allowed ", k)
 					}
 				}
