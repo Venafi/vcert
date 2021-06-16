@@ -58,7 +58,7 @@ func readPasswordsFromInputFlags(commandName string, cf *commandFlags) error {
 		}
 	}
 
-	if commandName == commandEnrollName || commandName == commandGenCSRName || commandName == commandRenewName || commandName == commandPickupName && (cf.format == "pkcs12" || cf.format == JKSFormat) {
+	if commandName == commandSshPickupName || commandName == commandSshEnrollName || commandName == commandEnrollName || commandName == commandGenCSRName || commandName == commandRenewName || commandName == commandPickupName && (cf.format == "pkcs12" || cf.format == JKSFormat) {
 		var keyPasswordNotNeeded = false
 
 		keyPasswordNotNeeded = keyPasswordNotNeeded || (cf.csrOption == "service" && cf.noPickup)

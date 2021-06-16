@@ -29,6 +29,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -145,6 +146,26 @@ var (
 		vcert getpolicy -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>"
 		vcert getpolicy -k <VaaS API key> -z "<app name>\<CIT alias>"`,
 	}
+
+	commandSshPickup = &cli.Command{
+		Before: runBeforeCommand,
+		Name:   commandSshPickupName,
+		Flags:  sshPickupFlags,
+		Action: doCommandSshPickup,
+		Usage:  "To retrieve a SSH Certificate",
+		UsageText: ` vcert getpolicy <Required Trust Protection Platform Config> <Options>
+		vcert sshpickup -u https://tpp.example.com -t <TPP access token> --ca "<val>" --id <val> --principals "bob" --principals "alice" --valid-hours 1"`,
+	}
+
+	commandSshEnroll = &cli.Command{
+		Before: runBeforeCommand,
+		Name:   commandSshEnrollName,
+		Flags:  sshEnrollFlags,
+		Action: doCommandEnrollSshCert,
+		Usage:  "To retrieve a SSH Certificate",
+		UsageText: ` vcert getpolicy <Required Venafi as a Service -OR- Trust Protection Platform Config> <Options>
+		vcert sshpickup -u https://tpp.example.com -t <TPP access token>"`,
+	}
 )
 
 func runBeforeCommand(c *cli.Context) error {
@@ -154,6 +175,8 @@ func runBeforeCommand(c *cli.Context) error {
 	flags.emailSans = c.StringSlice("san-email")
 	flags.upnSans = c.StringSlice("san-upn")
 	flags.customFields = c.StringSlice("field")
+	flags.sshCertExtension = c.StringSlice("extensions")
+	flags.sshCertPrincipals = c.StringSlice("principals")
 
 	noDuplicatedFlags := []string{"instance", "tls-address", "app-info"}
 	for _, f := range noDuplicatedFlags {
@@ -334,6 +357,129 @@ func doCommandEnroll1(c *cli.Context) error {
 		return fmt.Errorf("Failed to output the results: %s", err)
 	}
 	return nil
+}
+
+func doCommandEnrollSshCert(c *cli.Context) error {
+
+	err := validateSshEnrollFlags(c.Command.Name)
+
+	if err != nil {
+		return err
+	}
+
+	err = setTLSConfig()
+	if err != nil {
+		return err
+	}
+
+	cfg, err := buildConfig(c, &flags)
+	if err != nil {
+		return fmt.Errorf("Failed to build vcert config: %s", err)
+	}
+
+	connector, err := vcert.NewClient(&cfg)
+
+	if err != nil {
+		logf("Unable to build connector for %s: %s", cfg.ConnectorType, err)
+	} else {
+		logf("Successfully built connector for %s", cfg.ConnectorType)
+	}
+
+	err = connector.Ping()
+
+	if err != nil {
+		logf("Unable to connect to %s: %s", cfg.ConnectorType, err)
+	} else {
+		logf("Successfully connected to %s", cfg.ConnectorType)
+	}
+
+	var req = &certificate.SshCertRequest{}
+
+	if err != nil {
+		return err
+	}
+
+	req = fillSshCertificateRequest(req, &flags)
+
+	flags.pickupID, err = connector.RequestSSHCertificate(req)
+
+	if err != nil {
+		return err
+	}
+
+	logf("certificate were created")
+
+	retReq := certificate.SshCertRequest{
+		PickupID:                  flags.pickupID,
+		IncludeCertificateDetails: true,
+	}
+	if flags.keyPassword != "" {
+		retReq.PrivateKeyPassphrase = flags.keyPassword
+	}
+
+	data, err := retrieveSshCertificate(connector, &retReq, time.Duration(10)*time.Second)
+	if err != nil {
+		return fmt.Errorf("Failed to retrieve certificate: %s", err)
+	}
+
+	printSshMetadata(data)
+
+	err = writeSshFiles(data.CertificateDetails.KeyID, data.PrivateKeyData, data.PublicKeyData, data.CertificateData)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func fillSshCertificateRequest(req *certificate.SshCertRequest, cf *commandFlags) *certificate.SshCertRequest {
+
+	if cf.sshCertCa != "" {
+		req.CADN = cf.sshCertCa
+	}
+
+	if cf.sshCertKeyId != "" {
+		req.KeyId = cf.sshCertKeyId
+	}
+
+	if cf.sshCertObjectName != "" {
+		req.ObjectName = cf.sshCertObjectName
+	}
+
+	if cf.sshCertValidHours > 0 {
+		req.ValidityPeriod = strconv.Itoa(cf.sshCertValidHours) + "h"
+	}
+
+	if cf.sshCertPolicyDn != "" {
+		req.PolicyDN = cf.sshCertPolicyDn
+	}
+
+	if cf.sshCertDestAddr != "" {
+		req.PolicyDN = cf.sshCertDestAddr
+	}
+
+	if len(cf.sshCertPrincipals) > 0 {
+		req.Principals = cf.sshCertPrincipals
+	}
+
+	if len(cf.sshCertExtension) > 0 {
+		req.Extensions = cf.sshCertExtension
+	}
+
+	if cf.sshCertSourceAddr != "" {
+		req.SourceAddresses = cf.sshCertSourceAddr
+	}
+
+	if cf.sshCertPubKeyData != "" {
+		req.PublicKeyData = cf.sshCertPubKeyData
+	}
+
+	if cf.sshCertForceCommand != "" {
+		req.ForceCommand = cf.sshCertForceCommand
+	}
+
+	return req
 }
 
 func doCommandCredMgmt1(c *cli.Context) error {
@@ -1012,4 +1158,64 @@ func writeOutKeyAndCsr(commandName string, cf *commandFlags, key []byte, csr []b
 
 	err = result.Flush()
 	return
+}
+
+func doCommandSshPickup(c *cli.Context) error {
+
+	err := validateSshRetrieveFlags(c.Command.Name)
+
+	if err != nil {
+		return err
+	}
+
+	err = setTLSConfig()
+	if err != nil {
+		return err
+	}
+
+	cfg, err := buildConfig(c, &flags)
+	if err != nil {
+		return fmt.Errorf("Failed to build vcert config: %s", err)
+	}
+
+	connector, err := vcert.NewClient(&cfg) // Everything else requires an endpoint connection
+	if err != nil {
+		logf("Unable to connect to %s: %s", cfg.ConnectorType, err)
+	} else {
+		logf("Successfully connected to %s", cfg.ConnectorType)
+	}
+
+	var req certificate.SshCertRequest
+
+	req = buildSshCertRequest(req, &flags)
+
+	data, err := retrieveSshCertificate(connector, &req, time.Duration(flags.timeout)*time.Second)
+	if err != nil {
+		return fmt.Errorf("Failed to retrieve certificate: %s", err)
+	}
+	logf("Successfully retrieved request for %s", data.DN)
+
+	printSshMetadata(data)
+
+	err = writeSshFiles(data.CertificateDetails.KeyID, data.PrivateKeyData, data.PublicKeyData, data.CertificateData)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func buildSshCertRequest(r certificate.SshCertRequest, cf *commandFlags) certificate.SshCertRequest {
+
+	if cf.sshCertPickupId != "" {
+		r.PickupID = cf.sshCertPickupId
+	}
+
+	if cf.sshCertGuid != "" {
+		r.Guid = cf.sshCertGuid
+	}
+
+	r.IncludeCertificateDetails = true
+
+	return r
 }

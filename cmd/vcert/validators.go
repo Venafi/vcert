@@ -691,3 +691,19 @@ func validateSetPolicyFlags(commandName string) error {
 
 	return nil
 }
+
+func validateSshEnrollFlags(commandName string) error {
+	err := readData(commandName)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func validateSshRetrieveFlags(commandName string) error {
+	err := readData(commandName)
+	if err != nil {
+		return err
+	}
+	return nil
+}

@@ -49,6 +49,7 @@ const (
 	vCertTrustBundle = "VCERT_TRUST_BUNDLE"
 
 	JKSFormat = "jks"
+	Sha256    = "SHA256"
 )
 
 func parseCustomField(s string) (key, value string, err error) {
@@ -299,6 +300,31 @@ func retrieveCertificate(connector endpoint.Connector, req *certificate.Request,
 	}
 }
 
+func retrieveSshCertificate(connector endpoint.Connector, req *certificate.SshCertRequest, timeout time.Duration) (data *certificate.TppSshCertRetrieveResponse, err error) {
+	startTime := time.Now()
+	for {
+		data, err = connector.RetrieveSSHCertificate(req)
+		if err != nil {
+			_, ok := err.(endpoint.ErrCertificatePending)
+			if ok && timeout > 0 {
+				if time.Now().After(startTime.Add(timeout)) {
+					return nil, endpoint.ErrRetrieveCertificateTimeout{CertificateID: req.PickupID}
+				}
+				if timeout > 0 {
+					logger.Printf("Issuance of certificate is pending...")
+					time.Sleep(time.Duration(5) * time.Second)
+				}
+			} else {
+				return nil, err
+			}
+		} else if data == nil {
+			return nil, fmt.Errorf("fail: certificate is not returned by remote, while error is nil")
+		} else {
+			return data, nil
+		}
+	}
+}
+
 /* TODO: This one utilizes req.Timeout feature that is added to connector.RetrieveCertificate(), but
 it cannot do logging in CLI context right now -- logger.Printf("Issuance of certificate is pending ...") */
 func retrieveCertificateNew(connector endpoint.Connector, req *certificate.Request, timeout time.Duration) (certificates *certificate.PEMCollection, err error) {
@@ -460,4 +486,106 @@ func verifyPolicySpec(bytes []byte, fileExt string) error {
 	}
 
 	return nil
+}
+
+func convertSecondsToTime(t int64) time.Time {
+	return time.Unix(0, t*int64(time.Second))
+}
+
+func writeToFile(content, fileName string) error {
+	b := []byte(content)
+
+	err := ioutil.WriteFile(fileName, b, 0600)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func writeSshFiles(id, privKey, pubKey, cert string) error {
+
+	regex, err := regexp.Compile("[^A-Za-z0-9]+")
+	if err != nil {
+		return err
+	}
+
+	fileName := regex.ReplaceAllString(id, "_")
+
+	err = writeToFile(privKey, fileName)
+	if err != nil {
+		return err
+	}
+	err = writeToFile(pubKey, fileName+".pub")
+	if err != nil {
+		return err
+	}
+	err = writeToFile(cert, fileName+"-cer.pub")
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+func printExtensions(e map[string]interface{}) {
+	fmt.Println("Extensions: ")
+	if len(e) > 0 {
+		for k, v := range e {
+			if v != "" {
+				kv := fmt.Sprintf("%s:%v", k, v)
+
+				fmt.Println("\t", kv)
+			} else {
+				fmt.Println("\t", k)
+			}
+		}
+	} else {
+		fmt.Println("\t", "None")
+	}
+}
+
+func printPrincipals(p []string) {
+	fmt.Println("Principals: ")
+	if len(p) > 0 {
+		for _, v := range p {
+			fmt.Println("\t", v)
+		}
+	} else {
+		fmt.Println("\t", "None")
+	}
+
+}
+
+func printCriticalOptions(fc, sa string) {
+	fmt.Println("Critical Options: ")
+	if fc == "" && sa == "" {
+		fmt.Println("\t", "None")
+	} else {
+		if fc != "" {
+			fmt.Println("\t", fc)
+		}
+		if sa != "" {
+			fmt.Println("\t", sa)
+		}
+	}
+}
+
+func printSshMetadata(data *certificate.TppSshCertRetrieveResponse) {
+	logf("certificate meta data:")
+
+	fmt.Println("Certificate Type: ", data.CertificateDetails.CertificateType)
+	pubKey := fmt.Sprintf("%s:%s", Sha256, data.CertificateDetails.PublicKeyFingerprintSHA256)
+	fmt.Println("Public key: ", pubKey)
+	signingCa := fmt.Sprintf("%s:%s", Sha256, data.CertificateDetails.CAFingerprintSHA256)
+	fmt.Println("Signing CA: ", signingCa)
+	fmt.Println("Certificate Identifier: ", data.CertificateDetails.KeyID)
+	fmt.Println("Serial: ", data.CertificateDetails.SerialNumber)
+	fmt.Println("Valid From: ", convertSecondsToTime(data.CertificateDetails.ValidFrom).String())
+	fmt.Println("Valid To: ", convertSecondsToTime(data.CertificateDetails.ValidTo).String())
+	printPrincipals(data.CertificateDetails.Principals)
+	printCriticalOptions(data.CertificateDetails.ForceCommand, data.CertificateDetails.SourceAddresses)
+	printExtensions(data.CertificateDetails.Extensions)
 }

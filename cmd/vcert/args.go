@@ -31,6 +31,8 @@ const (
 	commandVoidCredName     = "voidcred"
 	commandCreatePolicyName = "setpolicy"
 	commandGetePolicyName   = "getpolicy"
+	commandSshPickupName    = "sshpickup"
+	commandSshEnrollName    = "sshenroll"
 )
 
 var (
@@ -106,4 +108,17 @@ type commandFlags struct {
 	policySpecLocation  string
 	policyConfigStarter bool
 	verifyPolicyConfig  bool
+	sshCertKeyId        string
+	sshCertObjectName   string
+	sshCertDestAddr     string
+	sshCertValidHours   int
+	sshCertCa           string
+	sshCertPolicyDn     string
+	sshCertPubKeyData   string
+	sshCertForceCommand string
+	sshCertSourceAddr   string
+	sshCertPickupId     string
+	sshCertGuid         string
+	sshCertExtension    stringSlice
+	sshCertPrincipals   stringSlice
 }

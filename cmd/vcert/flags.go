@@ -517,6 +517,91 @@ var (
 		Destination: &flags.verifyPolicyConfig,
 	}
 
+	//SSH Certificate flags
+
+	flagKeyId = &cli.StringFlag{
+		Name:        "id",
+		Usage:       "The identifier of the requested certificate (usually used to determine ownership).",
+		Destination: &flags.sshCertKeyId,
+	}
+	flagObjectName = &cli.StringFlag{
+		Name:        "object-name",
+		Usage:       "The friendly name for the certificate object. If ObjectName is not specified, then KeyID parameter is used.",
+		Destination: &flags.sshCertObjectName,
+	}
+	flagDestinationAddress = &cli.StringFlag{
+		Name: "destination-address",
+		Usage: "The address (FQDN/hostname/IP/CIDR) of the destination host where the certificate will be used to authenticate to." +
+			"This is applicable for client certificates and used for reporting/auditing only",
+		Destination: &flags.sshCertDestAddr,
+	}
+	flagValidityHours = &cli.IntFlag{
+		Name:        "valid-hours",
+		Usage:       "How much time the requester wants to have the certificate valid, the format is hours. ",
+		Destination: &flags.sshCertValidHours,
+	}
+
+	flagSshCertCa = &cli.StringFlag{
+		Name:        "ca",
+		Usage:       "the certificate issuing template that will be used.",
+		Destination: &flags.sshCertCa,
+	}
+
+	flagPolicyDN = &cli.StringFlag{
+		Name:        "policy-dn",
+		Usage:       "The DN of the policy folder where the certificate object will be created. If this is not specified, then the policy folder specified on the certificate template will be used.",
+		Destination: &flags.sshCertPolicyDn,
+	}
+
+	flagPublicKeyData = &cli.StringFlag{
+		Name: "public-key-data",
+		Usage: "The Base-64 encoded public key which will be signed (e.g. ssh-rsa AAAAB3NzaC1yc2...SA5E1F2H root@localhost.localdomain)." +
+			" The comment section at the end is optional. If this is not passed, then SSH Protect will generate new keypair." +
+			" The generated private key can be retrieved with the certificate.",
+		Destination: &flags.sshCertPubKeyData,
+	}
+
+	flagForceCommand = &cli.StringFlag{
+		Name:        "force-command",
+		Usage:       "The requested force command. Example: /usr/scripts/db_backup.sh",
+		Destination: &flags.sshCertForceCommand,
+	}
+
+	flagSourceAddresses = &cli.StringFlag{
+		Name:        "source-address",
+		Usage:       "The requested source addresses as list of IP/CIDR. Example: 192.168.1.1/24",
+		Destination: &flags.sshCertSourceAddr,
+	}
+
+	flagSshCertPickupId = &cli.StringFlag{
+		Name:        "pickup-id",
+		Usage:       "the SSH Certificate DN",
+		Destination: &flags.sshCertPickupId,
+	}
+
+	flagSshCertGuid = &cli.StringFlag{
+		Name:        "guid",
+		Usage:       "A value that uniquely identifies the certificate request.",
+		Destination: &flags.sshCertGuid,
+	}
+
+	flagSshPrivKeyPassphrase = &cli.StringFlag{
+		Name: "pk-passphrase",
+		Usage: "The passphrase which will be used to wrap the generated private key before it is returned in the API response." +
+			" This is applicable only in case of service-generated keypair.",
+		Destination: &flags.sshCertGuid,
+	}
+
+	flagSshCertExtension = &cli.StringSliceFlag{
+		Name:  "extensions",
+		Usage: "The requested certificate extensions. Example:permit-pty: value, permit-port-forwarding:value,login@github.com: alice@github.com",
+	}
+
+	flagSshCertPrincipals = &cli.StringSliceFlag{
+		Name:  "principals",
+		Usage: "The requested principals. If no value is specified, then the default principals from the certificate template will be used.",
+	}
+
 	commonFlags              = []cli.Flag{flagInsecure, flagVerbose, flagNoPrompt}
 	keyFlags                 = []cli.Flag{flagKeyType, flagKeySize, flagKeyCurve, flagKeyFile, flagKeyPassword}
 	sansFlags                = []cli.Flag{flagDNSSans, flagEmailSans, flagIPSans, flagURISans, flagUPNSans}
@@ -688,6 +773,35 @@ var (
 		flagPolicyConfigFile,
 		flagPolicyStarterConfigFile,
 		flagTrustBundle,
+	))
+
+	sshPickupFlags = sortedFlags(flagsApppend(
+		flagKey,
+		flagUrl,
+		flagTPPToken,
+		flagTrustBundle,
+		flagSshCertPickupId,
+		flagSshCertGuid,
+		commonFlags,
+	))
+
+	sshEnrollFlags = sortedFlags(flagsApppend(
+		flagKey,
+		flagUrl,
+		flagTPPToken,
+		flagTrustBundle,
+		flagKeyId,
+		flagObjectName,
+		flagDestinationAddress,
+		flagValidityHours,
+		flagSshCertPrincipals,
+		flagPolicyDN,
+		flagPublicKeyData,
+		flagSshCertExtension,
+		flagForceCommand,
+		flagSourceAddresses,
+		flagSshCertCa,
+		commonFlags,
 	))
 )
 

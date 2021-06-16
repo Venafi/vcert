@@ -78,6 +78,14 @@ type Connector struct {
 	client  *http.Client
 }
 
+func (c *Connector) RetrieveSSHCertificate(req *certificate.SshCertRequest) (response *certificate.TppSshCertRetrieveResponse, err error) {
+	panic("implement me")
+}
+
+func (c *Connector) RequestSSHCertificate(req *certificate.SshCertRequest) (requestID string, err error) {
+	panic("implement me")
+}
+
 func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) {
 
 	appName := policy.GetApplicationName(name)
