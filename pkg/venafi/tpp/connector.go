@@ -72,9 +72,8 @@ func normalizeURL(url string) (normalizedURL string, err error) {
 		modified = modified + "/"
 	}
 
-	if strings.HasSuffix(modified, "vedsdk/") {
-		modified = modified[:len(modified)-7]
-	}
+	modified = strings.TrimSuffix(modified, "vedsdk/")
+
 	if loc := baseUrlRegex.FindStringIndex(modified); loc == nil {
 		return "", fmt.Errorf("The specified TPP URL is invalid. %s\nExpected TPP URL format 'https://tpp.company.com/vedsdk/'", url)
 	}

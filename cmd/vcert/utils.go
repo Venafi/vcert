@@ -48,8 +48,11 @@ const (
 	vCertApiKey      = "VCERT_APIKEY"
 	vCertTrustBundle = "VCERT_TRUST_BUNDLE"
 
-	JKSFormat = "jks"
-	Sha256    = "SHA256"
+	JKSFormat              = "jks"
+	Sha256                 = "SHA256"
+	SshCertPubKeyServ      = "service"
+	SshCertPubKeyFilePreff = "file:"
+	SshCertPubKeyLocal     = "local"
 )
 
 func parseCustomField(s string) (key, value string, err error) {
@@ -492,10 +495,9 @@ func convertSecondsToTime(t int64) time.Time {
 	return time.Unix(0, t*int64(time.Second))
 }
 
-func writeToFile(content, fileName string) error {
-	b := []byte(content)
+func writeToFile(content []byte, fileName string) error {
 
-	err := ioutil.WriteFile(fileName, b, 0600)
+	err := ioutil.WriteFile(fileName, content, 0600)
 
 	if err != nil {
 		return err
@@ -504,7 +506,7 @@ func writeToFile(content, fileName string) error {
 	return nil
 }
 
-func writeSshFiles(id, privKey, pubKey, cert string) error {
+func writeSshFiles(id string, privKey, pubKey, cert []byte) error {
 
 	regex, err := regexp.Compile("[^A-Za-z0-9]+")
 	if err != nil {
@@ -513,14 +515,21 @@ func writeSshFiles(id, privKey, pubKey, cert string) error {
 
 	fileName := regex.ReplaceAllString(id, "_")
 
-	err = writeToFile(privKey, fileName)
-	if err != nil {
-		return err
+	if !isPubKeyInFile() {
+		err = writeToFile(privKey, fileName)
+		if err != nil {
+			return err
+		}
 	}
-	err = writeToFile(pubKey, fileName+".pub")
-	if err != nil {
-		return err
+
+	//only write public key into a file if is not provided.
+	if !isPubKeyInFile() {
+		err = writeToFile(pubKey, fileName+".pub")
+		if err != nil {
+			return err
+		}
 	}
+
 	err = writeToFile(cert, fileName+"-cer.pub")
 	if err != nil {
 		return err
@@ -588,4 +597,43 @@ func printSshMetadata(data *certificate.TppSshCertRetrieveResponse) {
 	printPrincipals(data.CertificateDetails.Principals)
 	printCriticalOptions(data.CertificateDetails.ForceCommand, data.CertificateDetails.SourceAddresses)
 	printExtensions(data.CertificateDetails.Extensions)
+}
+
+func isPubKeyInFile() bool {
+
+	value := flags.sshCertPubKey
+
+	if value != "" {
+
+		if strings.HasPrefix(value, SshCertPubKeyFilePreff) {
+			return true
+		}
+
+	}
+	return false
+}
+
+func getSshPubKeyFromFile() (content string, err error) {
+	value := flags.sshCertPubKey
+
+	if value != "" {
+		data := strings.Split(value, ":")
+		if len(data) == 2 {
+			fileName := data[1]
+
+			var fileContent []byte
+
+			fileContent, err = ioutil.ReadFile(fileName)
+			if err != nil {
+				return
+			}
+
+			content = string(fileContent)
+
+		} else {
+			err = fmt.Errorf("wrong specification on sshCertPubKey flag value, please provide a file name in the format: file:file-name")
+			return
+		}
+	}
+	return
 }

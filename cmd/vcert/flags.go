@@ -547,6 +547,19 @@ var (
 		Destination: &flags.sshCertCa,
 	}
 
+	flagSshPubKey = &cli.StringFlag{
+		Name:        "public-key",
+		Usage:       "if user will provide a public key, local or service generated",
+		Value:       "service",
+		Destination: &flags.sshCertPubKey,
+	}
+
+	flagSshKeySize = &cli.IntFlag{
+		Name:        "key-size",
+		Usage:       "key size bits, they will be used for creating keypair on case public-key:local",
+		Destination: &flags.sshCertKeySize,
+	}
+
 	flagPolicyDN = &cli.StringFlag{
 		Name:        "policy-dn",
 		Usage:       "The DN of the policy folder where the certificate object will be created. If this is not specified, then the policy folder specified on the certificate template will be used.",
@@ -801,6 +814,8 @@ var (
 		flagForceCommand,
 		flagSourceAddresses,
 		flagSshCertCa,
+		flagSshPubKey,
+		flagSshKeySize,
 		commonFlags,
 	))
 )

@@ -401,6 +401,47 @@ func doCommandEnrollSshCert(c *cli.Context) error {
 
 	req = fillSshCertificateRequest(req, &flags)
 
+	var privateKey, publicKey []byte
+	sPubKey := ""
+	//support for local generated keypair or provided public key
+	if flags.sshCertPubKey == SshCertPubKeyLocal {
+
+		keySize := flags.sshCertKeySize
+		if keySize <= 0 {
+			keySize = 3072
+		}
+
+		privateKey, publicKey, err = generateSshKeyPair(keySize)
+
+		if err != nil {
+			return err
+		}
+
+		sPubKey = string(publicKey)
+		sPubKey = strings.TrimRight(sPubKey, "\r\n")
+		sPubKey = fmt.Sprint(sPubKey, " ", flags.sshCertKeyId)
+		req.PublicKeyData = sPubKey
+	}
+
+	if isPubKeyInFile() {
+		pubKeyS, err := getSshPubKeyFromFile()
+
+		if err != nil {
+
+			return err
+
+		}
+
+		if pubKeyS == "" {
+
+			return fmt.Errorf("specified public key in %s is empty", flags.sshCertPubKey)
+
+		}
+
+		req.PublicKeyData = pubKeyS
+
+	}
+
 	flags.pickupID, err = connector.RequestSSHCertificate(req)
 
 	if err != nil {
@@ -422,9 +463,17 @@ func doCommandEnrollSshCert(c *cli.Context) error {
 		return fmt.Errorf("Failed to retrieve certificate: %s", err)
 	}
 
+	//this case is when the keypair is local generated, or file provided.
+	if data.PrivateKeyData == "" {
+		data.PrivateKeyData = string(privateKey)
+	}
+	if sPubKey != "" {
+		data.PublicKeyData = sPubKey
+	}
+
 	printSshMetadata(data)
 
-	err = writeSshFiles(data.CertificateDetails.KeyID, data.PrivateKeyData, data.PublicKeyData, data.CertificateData)
+	err = writeSshFiles(data.CertificateDetails.KeyID, []byte(data.PrivateKeyData), []byte(data.PublicKeyData), []byte(data.CertificateData))
 
 	if err != nil {
 		return err
@@ -1197,7 +1246,7 @@ func doCommandSshPickup(c *cli.Context) error {
 
 	printSshMetadata(data)
 
-	err = writeSshFiles(data.CertificateDetails.KeyID, data.PrivateKeyData, data.PublicKeyData, data.CertificateData)
+	err = writeSshFiles(data.CertificateDetails.KeyID, []byte(data.PrivateKeyData), []byte(data.PublicKeyData), []byte(data.CertificateData))
 	if err != nil {
 		return err
 	}

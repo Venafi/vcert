@@ -693,17 +693,52 @@ func validateSetPolicyFlags(commandName string) error {
 }
 
 func validateSshEnrollFlags(commandName string) error {
-	err := readData(commandName)
+
+	err := validateConnectionFlags(commandName)
 	if err != nil {
 		return err
 	}
+
+	err = readData(commandName)
+	if err != nil {
+		return err
+	}
+
+	if flags.sshCertKeyId == "" {
+		return fmt.Errorf("a ssh certificate key id is requiered")
+	}
+
+	if flags.sshCertCa == "" {
+		return fmt.Errorf("ca value is required")
+	}
+
+	if flags.sshCertPubKey == "" {
+		return fmt.Errorf("public-key value is required")
+	} else {
+		pubKeyType := flags.sshCertPubKey
+
+		if pubKeyType != SshCertPubKeyServ && pubKeyType != SshCertPubKeyLocal && !strings.HasPrefix(pubKeyType, SshCertPubKeyFilePreff) {
+			return fmt.Errorf("public-key value: %s is not expected, please provide: service, local or file:path value", pubKeyType)
+		}
+	}
+
 	return nil
 }
 
 func validateSshRetrieveFlags(commandName string) error {
-	err := readData(commandName)
+
+	err := validateConnectionFlags(commandName)
 	if err != nil {
 		return err
+	}
+
+	err = readData(commandName)
+	if err != nil {
+		return err
+	}
+
+	if flags.sshCertPickupId == "" && flags.sshCertGuid == "" {
+		return fmt.Errorf("please provide a pick up id or guid value")
 	}
 	return nil
 }

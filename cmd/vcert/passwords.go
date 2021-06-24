@@ -64,6 +64,13 @@ func readPasswordsFromInputFlags(commandName string, cf *commandFlags) error {
 		keyPasswordNotNeeded = keyPasswordNotNeeded || (cf.csrOption == "service" && cf.noPickup)
 		keyPasswordNotNeeded = keyPasswordNotNeeded || (strings.Index(cf.csrOption, "file:") == 0)
 		keyPasswordNotNeeded = keyPasswordNotNeeded || (cf.csrOption == "service" && cf.url == "")
+		if commandName == commandSshEnrollName {
+			keyPasswordNotNeeded = keyPasswordNotNeeded || (cf.sshCertPubKey != SshCertPubKeyServ && cf.sshCertPubKey != SshCertPubKeyLocal)
+		}
+
+		if commandName == commandSshPickupName {
+			keyPasswordNotNeeded = false //we should always ask for a password as a best practice.
+		}
 
 		if !keyPasswordNotNeeded {
 			if cf.keyPassword == "" && !cf.noPrompt {
