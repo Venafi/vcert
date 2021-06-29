@@ -278,6 +278,17 @@ type TppSshCertRetrieveResponse struct {
 	Response           TppSshCertResponseInfo
 }
 
+type SshCertRetrieveDetails struct {
+	Guid               string
+	DN                 string
+	CAGuid             string
+	CADN               string
+	CertificateData    string
+	PrivateKeyData     string
+	PublicKeyData      string
+	CertificateDetails SshCertificateDetails
+}
+
 type SshCertificateDetails struct {
 	KeyType                      string                 `json:"KeyType,omitempty"`
 	CertificateType              string                 `json:"CertificateType,omitempty"`

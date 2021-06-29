@@ -699,11 +699,6 @@ func validateSshEnrollFlags(commandName string) error {
 		return err
 	}
 
-	err = readData(commandName)
-	if err != nil {
-		return err
-	}
-
 	if flags.sshCertKeyId == "" {
 		return fmt.Errorf("a ssh certificate key id is requiered")
 	}
@@ -722,6 +717,11 @@ func validateSshEnrollFlags(commandName string) error {
 		}
 	}
 
+	err = readData(commandName)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -732,13 +732,13 @@ func validateSshRetrieveFlags(commandName string) error {
 		return err
 	}
 
+	if flags.sshCertPickupId == "" && flags.sshCertGuid == "" {
+		return fmt.Errorf("please provide a pick up id or guid value")
+	}
+
 	err = readData(commandName)
 	if err != nil {
 		return err
-	}
-
-	if flags.sshCertPickupId == "" && flags.sshCertGuid == "" {
-		return fmt.Errorf("please provide a pick up id or guid value")
 	}
 	return nil
 }

@@ -6,6 +6,8 @@ import (
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
 	"github.com/Venafi/vcert/v4/pkg/policy"
+	"github.com/Venafi/vcert/v4/pkg/util"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -21,14 +23,17 @@ func RequestSSHCertificate(c *Connector, req *certificate.SshCertRequest) (reque
 
 	fmt.Println("Requesting certificate with key id: ", sshCertReq.KeyId)
 
-	_, _, body, err := c.request("POST", urlResourceSshCertReq, sshCertReq)
+	statusCode, status, body, err := c.request("POST", urlResourceSshCertReq, sshCertReq)
 	if err != nil {
 		return "", err
 	}
-	var response certificate.TppSshCertRequestResponse
-	err = json.Unmarshal(body, &response)
+
+	response, err := parseSshCertRequestResult(statusCode, status, body)
 
 	if err != nil {
+		if response.Response.ErrorMessage != "" && c.verbose {
+			log.Println(util.GetJsonAsString(response.Response))
+		}
 		return "", err
 	}
 
@@ -111,7 +116,7 @@ func convertToSShCertReq(req *certificate.SshCertRequest) certificate.TPPSshCert
 	return tppSshCertReq
 }
 
-func RetrieveSSHCertificate(c *Connector, req *certificate.SshCertRequest) (*certificate.TppSshCertRetrieveResponse, error) {
+func RetrieveSSHCertificate(c *Connector, req *certificate.SshCertRequest) (*certificate.SshCertRetrieveDetails, error) {
 	var reqRetrieve certificate.TppSshCertRetrieveRequest
 
 	if req.PickupID != "" {
@@ -138,7 +143,7 @@ func RetrieveSSHCertificate(c *Connector, req *certificate.SshCertRequest) (*cer
 			return nil, err
 		}
 		if retrieveResponse.CertificateData != "" {
-			return retrieveResponse, nil
+			return convertToGenericRetrieveResponse(retrieveResponse), nil
 		}
 		if req.Timeout == 0 {
 			return nil, endpoint.ErrCertificatePending{CertificateID: req.PickupID, Status: retrieveResponse.Status}
@@ -175,11 +180,55 @@ func parseSshCertRetrieveResult(httpStatusCode int, httpStatus string, body []by
 		}
 		return retrieveResponse, nil
 	default:
-		return retrieveResponse, fmt.Errorf("Unexpected status code on TPP SSH Certificate Retrieval. Status: %s", httpStatus)
+		return retrieveResponse, fmt.Errorf("unexpected status code on TPP SSH Certificate Retrieval. Status: %s", httpStatus)
 	}
 }
 
 func parseSshCertRetrieveData(b []byte) (data certificate.TppSshCertRetrieveResponse, err error) {
 	err = json.Unmarshal(b, &data)
 	return
+}
+
+func parseSshCertRequestResult(httpStatusCode int, httpStatus string, body []byte) (certificate.TppSshCertRequestResponse, error) {
+	var requestResponse certificate.TppSshCertRequestResponse
+	var err error
+	switch httpStatusCode {
+	case http.StatusOK, http.StatusAccepted:
+		requestResponse, err = parseSshCertRequestData(body)
+		if err != nil {
+			return requestResponse, err
+		}
+		if !requestResponse.Response.Success {
+			return requestResponse, fmt.Errorf("error requesting certificate, error code: %d, error description: %s", requestResponse.Response.ErrorCode, requestResponse.Response.ErrorMessage)
+		}
+		return requestResponse, nil
+	default:
+		requestResponse, err = parseSshCertRequestData(body)
+		if err != nil {
+			return requestResponse, err
+		}
+		return requestResponse, fmt.Errorf("unexpected status code on TPP SSH Certificate Request. Status code: %s, %s", httpStatus, requestResponse.Response.ErrorMessage)
+	}
+}
+
+func parseSshCertRequestData(b []byte) (data certificate.TppSshCertRequestResponse, err error) {
+	err = json.Unmarshal(b, &data)
+	return
+}
+
+func convertToGenericRetrieveResponse(data *certificate.TppSshCertRetrieveResponse) *certificate.SshCertRetrieveDetails {
+
+	response := &certificate.SshCertRetrieveDetails{}
+
+	response.CertificateDetails = data.CertificateDetails
+	response.PrivateKeyData = data.PrivateKeyData
+	response.PublicKeyData = data.PublicKeyData
+	response.CertificateData = data.CertificateData
+	response.Guid = data.Guid
+	response.DN = data.DN
+	response.CAGuid = data.CAGuid
+	response.CADN = data.CADN
+
+	return response
+
 }

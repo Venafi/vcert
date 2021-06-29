@@ -1656,6 +1656,6 @@ func (c *Connector) RequestSSHCertificate(req *certificate.SshCertRequest) (requ
 
 }
 
-func (c *Connector) RetrieveSSHCertificate(req *certificate.SshCertRequest) (response *certificate.TppSshCertRetrieveResponse, err error) {
+func (c *Connector) RetrieveSSHCertificate(req *certificate.SshCertRequest) (response *certificate.SshCertRetrieveDetails, err error) {
 	return RetrieveSSHCertificate(c, req)
 }

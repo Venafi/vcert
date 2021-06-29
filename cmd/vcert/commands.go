@@ -23,6 +23,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"github.com/Venafi/vcert/v4/pkg/policy"
+	"github.com/Venafi/vcert/v4/pkg/util"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
@@ -176,7 +177,7 @@ func runBeforeCommand(c *cli.Context) error {
 	flags.upnSans = c.StringSlice("san-upn")
 	flags.customFields = c.StringSlice("field")
 	flags.sshCertExtension = c.StringSlice("extensions")
-	flags.sshCertPrincipals = c.StringSlice("principals")
+	flags.sshCertPrincipal = c.StringSlice("principal")
 
 	noDuplicatedFlags := []string{"instance", "tls-address", "app-info"}
 	for _, f := range noDuplicatedFlags {
@@ -395,11 +396,11 @@ func doCommandEnrollSshCert(c *cli.Context) error {
 
 	var req = &certificate.SshCertRequest{}
 
-	if err != nil {
-		return err
-	}
-
 	req = fillSshCertificateRequest(req, &flags)
+
+	if flags.sshCertKeyPassphrase != "" {
+		flags.keyPassword = flags.sshCertKeyPassphrase
+	}
 
 	var privateKey, publicKey []byte
 	sPubKey := ""
@@ -411,7 +412,7 @@ func doCommandEnrollSshCert(c *cli.Context) error {
 			keySize = 3072
 		}
 
-		privateKey, publicKey, err = generateSshKeyPair(keySize)
+		privateKey, publicKey, err = util.GenerateSshKeyPair(keySize, flags.keyPassword)
 
 		if err != nil {
 			return err
@@ -508,8 +509,8 @@ func fillSshCertificateRequest(req *certificate.SshCertRequest, cf *commandFlags
 		req.PolicyDN = cf.sshCertDestAddr
 	}
 
-	if len(cf.sshCertPrincipals) > 0 {
-		req.Principals = cf.sshCertPrincipals
+	if len(cf.sshCertPrincipal) > 0 {
+		req.Principals = cf.sshCertPrincipal
 	}
 
 	if len(cf.sshCertExtension) > 0 {
@@ -1240,7 +1241,7 @@ func doCommandSshPickup(c *cli.Context) error {
 
 	data, err := retrieveSshCertificate(connector, &req, time.Duration(flags.timeout)*time.Second)
 	if err != nil {
-		return fmt.Errorf("Failed to retrieve certificate: %s", err)
+		return fmt.Errorf("failed to retrieve certificate: %s", err)
 	}
 	logf("Successfully retrieved request for %s", data.DN)
 
@@ -1256,12 +1257,20 @@ func doCommandSshPickup(c *cli.Context) error {
 
 func buildSshCertRequest(r certificate.SshCertRequest, cf *commandFlags) certificate.SshCertRequest {
 
+	if cf.sshCertKeyPassphrase != "" {
+		cf.keyPassword = cf.sshCertKeyPassphrase
+	}
+
 	if cf.sshCertPickupId != "" {
 		r.PickupID = cf.sshCertPickupId
 	}
 
 	if cf.sshCertGuid != "" {
 		r.Guid = cf.sshCertGuid
+	}
+
+	if cf.keyPassword != "" {
+		r.PrivateKeyPassphrase = cf.keyPassword
 	}
 
 	r.IncludeCertificateDetails = true

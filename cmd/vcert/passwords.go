@@ -65,27 +65,27 @@ func readPasswordsFromInputFlags(commandName string, cf *commandFlags) error {
 		keyPasswordNotNeeded = keyPasswordNotNeeded || (strings.Index(cf.csrOption, "file:") == 0)
 		keyPasswordNotNeeded = keyPasswordNotNeeded || (cf.csrOption == "service" && cf.url == "")
 		if commandName == commandSshEnrollName {
-			keyPasswordNotNeeded = keyPasswordNotNeeded || (cf.sshCertPubKey != SshCertPubKeyServ && cf.sshCertPubKey != SshCertPubKeyLocal)
+			keyPasswordNotNeeded = keyPasswordNotNeeded || (cf.sshCertPubKey != SshCertPubKeyServ && cf.sshCertPubKey != SshCertPubKeyLocal) || cf.sshCertKeyPassphrase != ""
 		}
 
 		if commandName == commandSshPickupName {
-			keyPasswordNotNeeded = false //we should always ask for a password as a best practice.
+			keyPasswordNotNeeded = cf.sshCertKeyPassphrase != ""
 		}
 
 		if !keyPasswordNotNeeded {
 			if cf.keyPassword == "" && !cf.noPrompt {
-				fmt.Printf("Enter key pass phrase:")
+				fmt.Printf("Enter key passphrase:")
 				input, err := gopass.GetPasswdMasked()
 				if err != nil {
 					return err
 				}
-				fmt.Printf("Verifying - Enter key pass phrase:")
+				fmt.Printf("Verifying - Enter key passphrase:")
 				verify, err := gopass.GetPasswdMasked()
 				if err != nil {
 					return err
 				}
 				if !doValuesMatch(input, verify) {
-					return fmt.Errorf("Pass phrases don't match")
+					return fmt.Errorf("passphrases don't match")
 				}
 				cf.keyPassword = string(input)
 			} else if cf.keyPassword == "" && cf.noPrompt && commandName == commandPickupName {

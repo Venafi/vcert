@@ -98,7 +98,7 @@ type Connector interface {
 	SetPolicy(name string, ps *policy.PolicySpecification) (string, error)
 	GetPolicy(name string) (*policy.PolicySpecification, error)
 	RequestSSHCertificate(req *certificate.SshCertRequest) (requestID string, err error)
-	RetrieveSSHCertificate(req *certificate.SshCertRequest) (response *certificate.TppSshCertRetrieveResponse, err error)
+	RetrieveSSHCertificate(req *certificate.SshCertRequest) (response *certificate.SshCertRetrieveDetails, err error)
 }
 
 type Filter struct {

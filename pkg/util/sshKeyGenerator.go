@@ -1,4 +1,4 @@
-package main
+package util
 
 import (
 	"crypto/rand"
@@ -29,15 +29,15 @@ func generatePrivKey(bitSize int) (*rsa.PrivateKey, error) {
 	return privKey, nil
 }
 
-func encodePrivKeyToPEM(privateKey *rsa.PrivateKey) ([]byte, error) {
+func encodePrivKeyToPEM(privateKey *rsa.PrivateKey, keyPassword string) ([]byte, error) {
 
 	var err error
 	var privBlock *pem.Block
 
 	privDER := x509.MarshalPKCS1PrivateKey(privateKey)
 
-	if flags.keyPassword != "" {
-		privBlock, err = x509.EncryptPEMBlock(rand.Reader, RsaPrivKeyType, privDER, []byte(flags.keyPassword), x509.PEMCipherDES)
+	if keyPassword != "" {
+		privBlock, err = x509.EncryptPEMBlock(rand.Reader, RsaPrivKeyType, privDER, []byte(keyPassword), x509.PEMCipherDES)
 		if err != nil {
 			return nil, err
 		}
@@ -68,7 +68,7 @@ func generatePublicKey(key *rsa.PublicKey) ([]byte, error) {
 
 }
 
-func generateSshKeyPair(bitSize int) ([]byte, []byte, error) {
+func GenerateSshKeyPair(bitSize int, keyPassword string) ([]byte, []byte, error) {
 
 	privateKey, err := generatePrivKey(bitSize)
 
@@ -82,7 +82,7 @@ func generateSshKeyPair(bitSize int) ([]byte, []byte, error) {
 		return nil, nil, err
 	}
 
-	privateKeyBytes, err := encodePrivKeyToPEM(privateKey)
+	privateKeyBytes, err := encodePrivKeyToPEM(privateKey, keyPassword)
 
 	if err != nil {
 		return nil, nil, err

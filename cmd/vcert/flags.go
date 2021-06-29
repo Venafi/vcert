@@ -560,18 +560,16 @@ var (
 		Destination: &flags.sshCertKeySize,
 	}
 
+	flagSshPassPhrase = &cli.StringFlag{
+		Name:        "key-passphrase",
+		Usage:       "passphrase for encrypting the private key",
+		Destination: &flags.sshCertKeyPassphrase,
+	}
+
 	flagPolicyDN = &cli.StringFlag{
 		Name:        "policy-dn",
 		Usage:       "The DN of the policy folder where the certificate object will be created. If this is not specified, then the policy folder specified on the certificate template will be used.",
 		Destination: &flags.sshCertPolicyDn,
-	}
-
-	flagPublicKeyData = &cli.StringFlag{
-		Name: "public-key-data",
-		Usage: "The Base-64 encoded public key which will be signed (e.g. ssh-rsa AAAAB3NzaC1yc2...SA5E1F2H root@localhost.localdomain)." +
-			" The comment section at the end is optional. If this is not passed, then SSH Protect will generate new keypair." +
-			" The generated private key can be retrieved with the certificate.",
-		Destination: &flags.sshCertPubKeyData,
 	}
 
 	flagForceCommand = &cli.StringFlag{
@@ -610,8 +608,8 @@ var (
 		Usage: "The requested certificate extensions. Example:permit-pty: value, permit-port-forwarding:value,login@github.com: alice@github.com",
 	}
 
-	flagSshCertPrincipals = &cli.StringSliceFlag{
-		Name:  "principals",
+	flagSshCertPrincipal = &cli.StringSliceFlag{
+		Name:  "principal",
 		Usage: "The requested principals. If no value is specified, then the default principals from the certificate template will be used.",
 	}
 
@@ -795,6 +793,7 @@ var (
 		flagTrustBundle,
 		flagSshCertPickupId,
 		flagSshCertGuid,
+		flagSshPassPhrase,
 		commonFlags,
 	))
 
@@ -807,15 +806,15 @@ var (
 		flagObjectName,
 		flagDestinationAddress,
 		flagValidityHours,
-		flagSshCertPrincipals,
+		flagSshCertPrincipal,
 		flagPolicyDN,
-		flagPublicKeyData,
 		flagSshCertExtension,
 		flagForceCommand,
 		flagSourceAddresses,
 		flagSshCertCa,
 		flagSshPubKey,
 		flagSshKeySize,
+		flagSshPassPhrase,
 		commonFlags,
 	))
 )

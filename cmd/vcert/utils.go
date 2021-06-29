@@ -303,7 +303,7 @@ func retrieveCertificate(connector endpoint.Connector, req *certificate.Request,
 	}
 }
 
-func retrieveSshCertificate(connector endpoint.Connector, req *certificate.SshCertRequest, timeout time.Duration) (data *certificate.TppSshCertRetrieveResponse, err error) {
+func retrieveSshCertificate(connector endpoint.Connector, req *certificate.SshCertRequest, timeout time.Duration) (data *certificate.SshCertRetrieveDetails, err error) {
 	startTime := time.Now()
 	for {
 		data, err = connector.RetrieveSSHCertificate(req)
@@ -491,9 +491,7 @@ func verifyPolicySpec(bytes []byte, fileExt string) error {
 	return nil
 }
 
-func convertSecondsToTime(t int64) time.Time {
-	return time.Unix(0, t*int64(time.Second))
-}
+
 
 func writeToFile(content []byte, fileName string) error {
 
@@ -582,7 +580,7 @@ func printCriticalOptions(fc, sa string) {
 	}
 }
 
-func printSshMetadata(data *certificate.TppSshCertRetrieveResponse) {
+func printSshMetadata(data *certificate.SshCertRetrieveDetails) {
 	logf("certificate meta data:")
 
 	fmt.Println("Certificate Type: ", data.CertificateDetails.CertificateType)
@@ -592,8 +590,8 @@ func printSshMetadata(data *certificate.TppSshCertRetrieveResponse) {
 	fmt.Println("Signing CA: ", signingCa)
 	fmt.Println("Certificate Identifier: ", data.CertificateDetails.KeyID)
 	fmt.Println("Serial: ", data.CertificateDetails.SerialNumber)
-	fmt.Println("Valid From: ", convertSecondsToTime(data.CertificateDetails.ValidFrom).String())
-	fmt.Println("Valid To: ", convertSecondsToTime(data.CertificateDetails.ValidTo).String())
+	fmt.Println("Valid From: ", util.ConvertSecondsToTime(data.CertificateDetails.ValidFrom).String())
+	fmt.Println("Valid To: ", util.ConvertSecondsToTime(data.CertificateDetails.ValidTo).String())
 	printPrincipals(data.CertificateDetails.Principals)
 	printCriticalOptions(data.CertificateDetails.ForceCommand, data.CertificateDetails.SourceAddresses)
 	printExtensions(data.CertificateDetails.Extensions)
