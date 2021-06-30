@@ -491,8 +491,6 @@ func verifyPolicySpec(bytes []byte, fileExt string) error {
 	return nil
 }
 
-
-
 func writeToFile(content []byte, fileName string) error {
 
 	err := ioutil.WriteFile(fileName, content, 0600)

@@ -149,23 +149,21 @@ var (
 	}
 
 	commandSshPickup = &cli.Command{
-		Before: runBeforeCommand,
-		Name:   commandSshPickupName,
-		Flags:  sshPickupFlags,
-		Action: doCommandSshPickup,
-		Usage:  "To retrieve a SSH Certificate",
-		UsageText: ` vcert getpolicy <Required Trust Protection Platform Config> <Options>
-		vcert sshpickup -u https://tpp.example.com -t <TPP access token> --ca "<val>" --id <val> --principals "bob" --principals "alice" --valid-hours 1"`,
+		Before:    runBeforeCommand,
+		Name:      commandSshPickupName,
+		Flags:     sshPickupFlags,
+		Action:    doCommandSshPickup,
+		Usage:     "To retrieve a SSH Certificate",
+		UsageText: ` vcert sshpickup -u https://tpp.example.com -t <TPP access token> --ca "<val>" --id <val> --principals "bob" --principals "alice" --valid-hours 1"`,
 	}
 
 	commandSshEnroll = &cli.Command{
-		Before: runBeforeCommand,
-		Name:   commandSshEnrollName,
-		Flags:  sshEnrollFlags,
-		Action: doCommandEnrollSshCert,
-		Usage:  "To retrieve a SSH Certificate",
-		UsageText: ` vcert getpolicy <Required Venafi as a Service -OR- Trust Protection Platform Config> <Options>
-		vcert sshpickup -u https://tpp.example.com -t <TPP access token>"`,
+		Before:    runBeforeCommand,
+		Name:      commandSshEnrollName,
+		Flags:     sshEnrollFlags,
+		Action:    doCommandEnrollSshCert,
+		Usage:     "To retrieve a SSH Certificate",
+		UsageText: `vcert sshpickup -u https://tpp.example.com -t <TPP access token> --pickup-id <ssh cert DN>"`,
 	}
 )
 

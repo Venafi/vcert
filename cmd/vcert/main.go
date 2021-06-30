@@ -109,7 +109,7 @@ ACTIONS:
    voidcred    To invalidate an authentication grant
 
    sshenroll   To enroll a SSH ertificate
-   sshretrieve To retrieve a SSH certificate
+   sshpickup   To retrieve a SSH certificate
 
 OPTIONS:
    {{range .VisibleFlags}}{{.}}
