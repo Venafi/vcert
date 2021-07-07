@@ -85,7 +85,7 @@ func readPasswordsFromInputFlags(commandName string, cf *commandFlags) error {
 					return err
 				}
 				if !doValuesMatch(input, verify) {
-					return fmt.Errorf("passphrases don't match")
+					return fmt.Errorf("Passphrases don't match")
 				}
 				cf.keyPassword = string(input)
 			} else if cf.keyPassword == "" && cf.noPrompt && commandName == commandPickupName {

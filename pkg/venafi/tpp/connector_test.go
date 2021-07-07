@@ -2198,8 +2198,6 @@ func TestCreateSshCertProvidedPubKey(t *testing.T) {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
 
-	//waitForCertificate(tpp *Connector, retReq *certificate.SshCertRequest, resp *certificate.TppSshCertRetrieveResponse, t *testing.T)
-
 	if resp.CertificateData == "" {
 		t.Error("Certificate key data is empty")
 	}

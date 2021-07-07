@@ -526,7 +526,7 @@ func writeSshFiles(id string, privKey, pubKey, cert []byte) error {
 		}
 	}
 
-	err = writeToFile(cert, fileName+"-cer.pub")
+	err = writeToFile(cert, fileName+"-cert.pub")
 	if err != nil {
 		return err
 	}
