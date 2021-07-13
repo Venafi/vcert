@@ -85,6 +85,9 @@ type commandFlags struct {
 	replaceInstance      bool
 	revocationReason     string
 	scope                string
+	sshCred              bool
+	pmCred               bool
+	cpmCred              bool
 	state                string
 	testMode             bool
 	testModeDelay        int
@@ -112,8 +115,8 @@ type commandFlags struct {
 	sshCertObjectName    string
 	sshCertDestAddr      string
 	sshCertValidHours    int
-	sshCertCa            string
-	sshCertPolicyDn      string
+	sshCertTemplate      string
+	sshCertFolder        string
 	sshCertPubKeyData    string
 	sshCertForceCommand  string
 	sshCertSourceAddr    string

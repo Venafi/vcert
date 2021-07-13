@@ -28,6 +28,7 @@ import (
 	"gopkg.in/yaml.v2"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"regexp"
 	"strconv"
@@ -53,6 +54,8 @@ const (
 	SshCertPubKeyServ      = "service"
 	SshCertPubKeyFilePreff = "file:"
 	SshCertPubKeyLocal     = "local"
+	sshCerExtension        = "-cert.pub"
+	sshPublicKeyExtension  = ".pub"
 )
 
 func parseCustomField(s string) (key, value string, err error) {
@@ -491,9 +494,9 @@ func verifyPolicySpec(bytes []byte, fileExt string) error {
 	return nil
 }
 
-func writeToFile(content []byte, fileName string) error {
+func writeToFile(content []byte, fileName string, perm os.FileMode) error {
 
-	err := ioutil.WriteFile(fileName, content, 0600)
+	err := ioutil.WriteFile(fileName, content, perm)
 
 	if err != nil {
 		return err
@@ -504,32 +507,37 @@ func writeToFile(content []byte, fileName string) error {
 
 func writeSshFiles(id string, privKey, pubKey, cert []byte) error {
 
-	regex, err := regexp.Compile("[^A-Za-z0-9]+")
+	fileName, err := normalizeSshCertFileName(id)
+
 	if err != nil {
 		return err
 	}
 
-	fileName := regex.ReplaceAllString(id, "_")
-
 	if !isPubKeyInFile() {
-		err = writeToFile(privKey, fileName)
+		err = writeToFile(privKey, fileName, 0600)
 		if err != nil {
 			return err
 		}
+		log.Println("Private key file was saved: " + fileName)
 	}
 
 	//only write public key into a file if is not provided.
 	if !isPubKeyInFile() {
-		err = writeToFile(pubKey, fileName+".pub")
+		pubFileName := fileName + sshPublicKeyExtension
+		err = writeToFile(pubKey, pubFileName, 0644)
 		if err != nil {
 			return err
 		}
+		log.Println("Public key file was saved:  " + pubFileName)
+
 	}
 
-	err = writeToFile(cert, fileName+"-cert.pub")
+	certFileName := fileName + sshCerExtension
+	err = writeToFile(cert, certFileName, 0644)
 	if err != nil {
 		return err
 	}
+	log.Println("Public key file was saved:  " + certFileName)
 
 	return nil
 
@@ -632,4 +640,37 @@ func getSshPubKeyFromFile() (content string, err error) {
 		}
 	}
 	return
+}
+
+func getExistingSshFiles(id string) ([]string, error) {
+	fileName, err := normalizeSshCertFileName(id)
+	if err != nil {
+		return nil, err
+	}
+	existingFiles := make([]string, 0)
+
+	certFile, err := ioutil.ReadFile(fileName + sshCerExtension)
+	if err == nil && certFile != nil { //means file exists.
+		existingFiles = append(existingFiles, fileName+sshCerExtension)
+	}
+
+	pubKeyFile, err := ioutil.ReadFile(fileName + sshPublicKeyExtension)
+	if err == nil && pubKeyFile != nil { //means file exists.
+		existingFiles = append(existingFiles, fileName+sshPublicKeyExtension)
+	}
+	privKeyFile, err := ioutil.ReadFile(fileName)
+	if err == nil && privKeyFile != nil { //means file exists.
+		existingFiles = append(existingFiles, fileName)
+	}
+
+	return existingFiles, nil
+}
+
+func normalizeSshCertFileName(s string) (string, error) {
+	regex, err := regexp.Compile("[^A-Za-z0-9]+")
+	if err != nil {
+		return "", err
+	}
+	fileName := regex.ReplaceAllString(s, "_")
+	return fileName, err
 }

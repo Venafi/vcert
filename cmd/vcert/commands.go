@@ -154,7 +154,7 @@ var (
 		Flags:     sshPickupFlags,
 		Action:    doCommandSshPickup,
 		Usage:     "To retrieve a SSH Certificate",
-		UsageText: ` vcert sshpickup -u https://tpp.example.com -t <TPP access token> --ca "<val>" --id <val> --principals "bob" --principals "alice" --valid-hours 1"`,
+		UsageText: `vcert sshpickup -u https://tpp.example.com -t <TPP access token> --pickup-id <ssh cert DN>"`,
 	}
 
 	commandSshEnroll = &cli.Command{
@@ -163,7 +163,7 @@ var (
 		Flags:     sshEnrollFlags,
 		Action:    doCommandEnrollSshCert,
 		Usage:     "To retrieve a SSH Certificate",
-		UsageText: `vcert sshpickup -u https://tpp.example.com -t <TPP access token> --pickup-id <ssh cert DN>"`,
+		UsageText: `vcert sshenroll -u https://tpp.example.com -t <TPP access token> --ca "<val>" --id <val> --principals "bob" --principals "alice" --valid-hours 1"`,
 	}
 )
 
@@ -483,8 +483,8 @@ func doCommandEnrollSshCert(c *cli.Context) error {
 
 func fillSshCertificateRequest(req *certificate.SshCertRequest, cf *commandFlags) *certificate.SshCertRequest {
 
-	if cf.sshCertCa != "" {
-		req.CADN = cf.sshCertCa
+	if cf.sshCertTemplate != "" {
+		req.CADN = cf.sshCertTemplate
 	}
 
 	if cf.sshCertKeyId != "" {
@@ -499,8 +499,8 @@ func fillSshCertificateRequest(req *certificate.SshCertRequest, cf *commandFlags
 		req.ValidityPeriod = strconv.Itoa(cf.sshCertValidHours) + "h"
 	}
 
-	if cf.sshCertPolicyDn != "" {
-		req.PolicyDN = cf.sshCertPolicyDn
+	if cf.sshCertFolder != "" {
+		req.PolicyDN = cf.sshCertFolder
 	}
 
 	if cf.sshCertDestAddr != "" {
@@ -591,11 +591,22 @@ func doCommandCredMgmt1(c *cli.Context) error {
 				fmt.Println("refresh_token: ", resp.Refresh_token)
 			}
 		} else if cfg.Credentials.User != "" && cfg.Credentials.Password != "" {
-			resp, err := tppConnector.GetRefreshToken(&endpoint.Authentication{
+
+			auth := &endpoint.Authentication{
 				User:     cfg.Credentials.User,
 				Password: cfg.Credentials.Password,
 				Scope:    flags.scope,
-				ClientId: flags.clientId})
+				ClientId: flags.clientId}
+
+			if flags.sshCred {
+				auth.Scope = "ssh:manage"
+			} else if flags.pmCred {
+				auth.Scope = "configuration:manage"
+			} else if flags.cpmCred {
+				auth.Scope = "certificate:manage,revoke;configuration:manage"
+			}
+
+			resp, err := tppConnector.GetRefreshToken(auth)
 			if err != nil {
 				return err
 			}
@@ -1242,6 +1253,11 @@ func doCommandSshPickup(c *cli.Context) error {
 		return fmt.Errorf("failed to retrieve certificate: %s", err)
 	}
 	logf("Successfully retrieved request for %s", data.DN)
+
+	err = validateExistingFile(data.CertificateDetails.KeyID)
+	if err != nil {
+		return err
+	}
 
 	printSshMetadata(data)
 

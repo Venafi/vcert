@@ -450,6 +450,24 @@ var (
 		Value:       "certificate:manage,revoke",
 	}
 
+	flagCredSsh = &cli.BoolFlag{
+		Name:        "ssh",
+		Usage:       "Use to request a ssh certificate scope - ssh:manage",
+		Destination: &flags.sshCred,
+	}
+
+	flagCredPm = &cli.BoolFlag{
+		Name:        "pm",
+		Usage:       "Use to request policy management scope - configuration:manage",
+		Destination: &flags.pmCred,
+	}
+
+	flagCredCpm = &cli.BoolFlag{
+		Name:        "cpm",
+		Usage:       "Use to request certificate and policy management scope - certificate:manage,revoke;configuration:manage",
+		Destination: &flags.cpmCred,
+	}
+
 	flagClientId = &cli.StringFlag{
 		Name:        "client-id",
 		Usage:       "Use to specify the application that will be using the token.",
@@ -542,9 +560,9 @@ var (
 	}
 
 	flagSshCertCa = &cli.StringFlag{
-		Name:        "ca",
+		Name:        "template",
 		Usage:       "the certificate issuing template that will be used.",
-		Destination: &flags.sshCertCa,
+		Destination: &flags.sshCertTemplate,
 	}
 
 	flagSshPubKey = &cli.StringFlag{
@@ -567,9 +585,9 @@ var (
 	}
 
 	flagPolicyDN = &cli.StringFlag{
-		Name:        "policy-dn",
+		Name:        "folder",
 		Usage:       "The DN of the policy folder where the certificate object will be created. If this is not specified, then the policy folder specified on the certificate template will be used.",
-		Destination: &flags.sshCertPolicyDn,
+		Destination: &flags.sshCertFolder,
 	}
 
 	flagForceCommand = &cli.StringFlag{
@@ -749,6 +767,9 @@ var (
 		flagTPPPassword,
 		flagTPPUser,
 		flagScope,
+		flagCredSsh,
+		flagCredPm,
+		flagCredCpm,
 		flagClientId,
 		commonFlags,
 	))
@@ -787,7 +808,6 @@ var (
 	))
 
 	sshPickupFlags = sortedFlags(flagsApppend(
-		flagKey,
 		flagUrl,
 		flagTPPToken,
 		flagTrustBundle,
@@ -798,7 +818,6 @@ var (
 	))
 
 	sshEnrollFlags = sortedFlags(flagsApppend(
-		flagKey,
 		flagUrl,
 		flagTPPToken,
 		flagTrustBundle,

@@ -17,8 +17,10 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"regexp"
 	"strings"
 
@@ -703,7 +705,12 @@ func validateSshEnrollFlags(commandName string) error {
 		return fmt.Errorf("a ssh certificate key id is requiered")
 	}
 
-	if flags.sshCertCa == "" {
+	err = validateExistingFile(flags.sshCertKeyId)
+	if err != nil {
+		return err
+	}
+
+	if flags.sshCertTemplate == "" {
 		return fmt.Errorf("ca value is required")
 	}
 
@@ -739,6 +746,33 @@ func validateSshRetrieveFlags(commandName string) error {
 	err = readData(commandName)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func validateExistingFile(f string) error {
+	fileNames, err := getExistingSshFiles(f)
+
+	if err != nil {
+		return err
+	}
+
+	if len(fileNames) > 0 {
+	START:
+		fmt.Print("The following files already exists: ", fileNames, " would you like to override them? y/n: ")
+		reader := bufio.NewReader(os.Stdin)
+		text, err := reader.ReadString('\n')
+		if err != nil {
+			return err
+		}
+		text = strings.ToLower(text)
+		if !strings.HasPrefix(text, "y") {
+			if strings.HasPrefix(text, "n") {
+				return fmt.Errorf("user aborted operation")
+			} else {
+				goto START
+			}
+		}
 	}
 	return nil
 }
