@@ -29,7 +29,6 @@ import (
 	"github.com/Venafi/vcert/v4/pkg/policy"
 	"github.com/Venafi/vcert/v4/pkg/util"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -2022,9 +2021,10 @@ func TestCreateSshCertServiceGeneratedKP(t *testing.T) {
 	retReq := &certificate.SshCertRequest{
 		PickupID:                  id,
 		IncludeCertificateDetails: true,
+		Timeout:                   time.Duration(10) * time.Second,
 	}
 
-	resp, err := waitForCertificate(tpp, retReq)
+	resp, err := tpp.RetrieveSSHCertificate(retReq)
 
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
@@ -2104,9 +2104,10 @@ func TestCreateSshCertLocalGeneratedKP(t *testing.T) {
 	retReq := &certificate.SshCertRequest{
 		PickupID:                  id,
 		IncludeCertificateDetails: true,
+		Timeout:                   time.Duration(10) * time.Second,
 	}
 
-	resp, err := waitForCertificate(tpp, retReq)
+	resp, err := tpp.RetrieveSSHCertificate(retReq)
 
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
@@ -2190,9 +2191,10 @@ func TestCreateSshCertProvidedPubKey(t *testing.T) {
 	retReq := &certificate.SshCertRequest{
 		PickupID:                  id,
 		IncludeCertificateDetails: true,
+		Timeout:                   time.Duration(10) * time.Second,
 	}
 
-	resp, err := waitForCertificate(tpp, retReq)
+	resp, err := tpp.RetrieveSSHCertificate(retReq)
 
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
@@ -2211,31 +2213,5 @@ func TestCreateSshCertProvidedPubKey(t *testing.T) {
 	intHours := int(hours)
 	if intHours != duration {
 		fmt.Errorf("certificate duration is different, expected: %v but got %v", duration, intHours)
-	}
-}
-
-func waitForCertificate(tpp *Connector, retReq *certificate.SshCertRequest) (*certificate.SshCertRetrieveDetails, error) {
-	timeout := time.Duration(10) * time.Second
-	startTime := time.Now()
-	for {
-		resp, err := tpp.RetrieveSSHCertificate(retReq)
-		if err != nil {
-			_, ok := err.(endpoint.ErrCertificatePending)
-			if ok && timeout > 0 {
-				if time.Now().After(startTime.Add(timeout)) {
-					return nil, fmt.Errorf("unable to retrieve certificate")
-				}
-				if timeout > 0 {
-					log.Printf("Issuance of certificate is pending...")
-					time.Sleep(time.Duration(5) * time.Second)
-				}
-			} else {
-				return nil, fmt.Errorf("unable to retrieve certificate")
-			}
-		} else if resp == nil {
-			return nil, fmt.Errorf("unable to retrieve certificate")
-		} else {
-			return resp, nil
-		}
 	}
 }

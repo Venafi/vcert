@@ -21,7 +21,7 @@ func RequestSSHCertificate(c *Connector, req *certificate.SshCertRequest) (reque
 
 	sshCertReq := convertToSShCertReq(req)
 
-	fmt.Println("Requesting certificate with key id: ", sshCertReq.KeyId)
+	fmt.Println("Requesting certificate with certificate identifier: ", sshCertReq.KeyId)
 
 	statusCode, status, body, err := c.request("POST", urlResourceSshCertReq, sshCertReq)
 	if err != nil {
@@ -36,6 +36,9 @@ func RequestSSHCertificate(c *Connector, req *certificate.SshCertRequest) (reque
 		}
 		return "", err
 	}
+
+	fmt.Println("SSH cert DN: ", response.DN)
+	fmt.Println("GUID: ", response.Guid)
 
 	return response.DN, nil
 }

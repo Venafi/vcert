@@ -54,7 +54,7 @@ const (
 	SshCertPubKeyServ      = "service"
 	SshCertPubKeyFilePreff = "file:"
 	SshCertPubKeyLocal     = "local"
-	sshCerExtension        = "-cert.pub"
+	sshCertExtension       = "-cert.pub"
 	sshPublicKeyExtension  = ".pub"
 )
 
@@ -306,31 +306,6 @@ func retrieveCertificate(connector endpoint.Connector, req *certificate.Request,
 	}
 }
 
-func retrieveSshCertificate(connector endpoint.Connector, req *certificate.SshCertRequest, timeout time.Duration) (data *certificate.SshCertRetrieveDetails, err error) {
-	startTime := time.Now()
-	for {
-		data, err = connector.RetrieveSSHCertificate(req)
-		if err != nil {
-			_, ok := err.(endpoint.ErrCertificatePending)
-			if ok && timeout > 0 {
-				if time.Now().After(startTime.Add(timeout)) {
-					return nil, endpoint.ErrRetrieveCertificateTimeout{CertificateID: req.PickupID}
-				}
-				if timeout > 0 {
-					logger.Printf("Issuance of certificate is pending...")
-					time.Sleep(time.Duration(5) * time.Second)
-				}
-			} else {
-				return nil, err
-			}
-		} else if data == nil {
-			return nil, fmt.Errorf("fail: certificate is not returned by remote, while error is nil")
-		} else {
-			return data, nil
-		}
-	}
-}
-
 /* TODO: This one utilizes req.Timeout feature that is added to connector.RetrieveCertificate(), but
 it cannot do logging in CLI context right now -- logger.Printf("Issuance of certificate is pending ...") */
 func retrieveCertificateNew(connector endpoint.Connector, req *certificate.Request, timeout time.Duration) (certificates *certificate.PEMCollection, err error) {
@@ -518,7 +493,7 @@ func writeSshFiles(id string, privKey, pubKey, cert []byte) error {
 		if err != nil {
 			return err
 		}
-		log.Println("Private key file was saved: " + fileName)
+		log.Println("Private key file was saved:  " + fileName)
 	}
 
 	//only write public key into a file if is not provided.
@@ -528,16 +503,16 @@ func writeSshFiles(id string, privKey, pubKey, cert []byte) error {
 		if err != nil {
 			return err
 		}
-		log.Println("Public key file was saved:  " + pubFileName)
+		log.Println("Public key file was saved:   " + pubFileName)
 
 	}
 
-	certFileName := fileName + sshCerExtension
+	certFileName := fileName + sshCertExtension
 	err = writeToFile(cert, certFileName, 0644)
 	if err != nil {
 		return err
 	}
-	log.Println("Public key file was saved:  " + certFileName)
+	log.Println("Certificate file was saved:  " + certFileName)
 
 	return nil
 
@@ -649,9 +624,9 @@ func getExistingSshFiles(id string) ([]string, error) {
 	}
 	existingFiles := make([]string, 0)
 
-	certFile, err := ioutil.ReadFile(fileName + sshCerExtension)
+	certFile, err := ioutil.ReadFile(fileName + sshCertExtension)
 	if err == nil && certFile != nil { //means file exists.
-		existingFiles = append(existingFiles, fileName+sshCerExtension)
+		existingFiles = append(existingFiles, fileName+sshCertExtension)
 	}
 
 	pubKeyFile, err := ioutil.ReadFile(fileName + sshPublicKeyExtension)

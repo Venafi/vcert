@@ -162,8 +162,8 @@ var (
 		Name:      commandSshEnrollName,
 		Flags:     sshEnrollFlags,
 		Action:    doCommandEnrollSshCert,
-		Usage:     "To retrieve a SSH Certificate",
-		UsageText: `vcert sshenroll -u https://tpp.example.com -t <TPP access token> --ca "<val>" --id <val> --principals "bob" --principals "alice" --valid-hours 1"`,
+		Usage:     "To enroll a SSH Certificate",
+		UsageText: `vcert sshenroll -u https://tpp.example.com -t <TPP access token> --template "<val>" --id <val> --principal "bob" --principal "alice" --valid-hours 1"`,
 	}
 )
 
@@ -457,7 +457,8 @@ func doCommandEnrollSshCert(c *cli.Context) error {
 		retReq.PrivateKeyPassphrase = flags.keyPassword
 	}
 
-	data, err := retrieveSshCertificate(connector, &retReq, time.Duration(10)*time.Second)
+	retReq.Timeout = time.Duration(10) * time.Second
+	data, err := connector.RetrieveSSHCertificate(&retReq)
 	if err != nil {
 		return fmt.Errorf("Failed to retrieve certificate: %s", err)
 	}
@@ -1248,7 +1249,9 @@ func doCommandSshPickup(c *cli.Context) error {
 
 	req = buildSshCertRequest(req, &flags)
 
-	data, err := retrieveSshCertificate(connector, &req, time.Duration(flags.timeout)*time.Second)
+	req.Timeout = time.Duration(10) * time.Second
+	data, err := connector.RetrieveSSHCertificate(&req)
+
 	if err != nil {
 		return fmt.Errorf("failed to retrieve certificate: %s", err)
 	}
