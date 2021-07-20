@@ -216,7 +216,7 @@ type SshCertRequest struct {
 	PublicKeyData      string
 	Extensions         []string
 	ForceCommand       string
-	SourceAddresses    string
+	SourceAddresses    []string
 
 	PickupID                  string
 	Guid                      string
@@ -239,7 +239,7 @@ type TPPSshCertRequest struct {
 	PublicKeyData      string                 `json:"PublicKeyData,omitempty"`
 	Extensions         map[string]interface{} `json:"Extensions,omitempty"`
 	ForceCommand       string                 `json:"ForceCommand,omitempty"`
-	SourceAddresses    string                 `json:"SourceAddresses,omitempty"`
+	SourceAddresses    []string               `json:"SourceAddresses,omitempty"`
 }
 
 type TppSshCertRequestResponse struct {
@@ -300,7 +300,7 @@ type SshCertificateDetails struct {
 	ValidFrom                    int64                  `json:"ValidFrom,omitempty"`
 	ValidTo                      int64                  `json:"ValidTo,omitempty"`
 	ForceCommand                 string                 `json:"ForceCommand,omitempty"`
-	SourceAddresses              string                 `json:"SourceAddresses,omitempty"`
+	SourceAddresses              []string               `json:"SourceAddresses,omitempty"`
 	PublicKeyFingerprintSHA256   string                 `json:"PublicKeyFingerprintSHA256,omitempty"`
 	Extensions                   map[string]interface{} `json:"Extensions,omitempty"`
 }

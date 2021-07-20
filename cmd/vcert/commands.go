@@ -176,6 +176,7 @@ func runBeforeCommand(c *cli.Context) error {
 	flags.customFields = c.StringSlice("field")
 	flags.sshCertExtension = c.StringSlice("extensions")
 	flags.sshCertPrincipal = c.StringSlice("principal")
+	flags.sshCertSourceAddrs = c.StringSlice("source-address")
 
 	noDuplicatedFlags := []string{"instance", "tls-address", "app-info"}
 	for _, f := range noDuplicatedFlags {
@@ -516,8 +517,8 @@ func fillSshCertificateRequest(req *certificate.SshCertRequest, cf *commandFlags
 		req.Extensions = cf.sshCertExtension
 	}
 
-	if cf.sshCertSourceAddr != "" {
-		req.SourceAddresses = cf.sshCertSourceAddr
+	if len(cf.sshCertSourceAddrs) > 0 {
+		req.SourceAddresses = cf.sshCertSourceAddrs
 	}
 
 	if cf.sshCertPubKeyData != "" {

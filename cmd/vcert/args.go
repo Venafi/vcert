@@ -118,7 +118,7 @@ type commandFlags struct {
 	sshCertFolder        string
 	sshCertPubKeyData    string
 	sshCertForceCommand  string
-	sshCertSourceAddr    string
+	sshCertSourceAddrs   stringSlice
 	sshCertPickupId      string
 	sshCertGuid          string
 	sshCertPubKey        string

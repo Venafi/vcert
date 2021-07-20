@@ -91,7 +91,7 @@ func convertToSShCertReq(req *certificate.SshCertRequest) certificate.TPPSshCert
 		tppSshCertReq.ValidityPeriod = req.ValidityPeriod
 	}
 
-	if req.SourceAddresses != "" {
+	if len(req.SourceAddresses) > 0 {
 		tppSshCertReq.SourceAddresses = req.SourceAddresses
 	}
 

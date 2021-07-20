@@ -54,8 +54,8 @@ const (
 	SshCertPubKeyServ      = "service"
 	SshCertPubKeyFilePreff = "file:"
 	SshCertPubKeyLocal     = "local"
-	sshCertExtension       = "-cert.pub"
-	sshPublicKeyExtension  = ".pub"
+	sshCertFileExt         = "-cert.pub"
+	sshPubKeyFileExt       = ".pub"
 )
 
 func parseCustomField(s string) (key, value string, err error) {
@@ -498,7 +498,7 @@ func writeSshFiles(id string, privKey, pubKey, cert []byte) error {
 
 	//only write public key into a file if is not provided.
 	if !isPubKeyInFile() {
-		pubFileName := fileName + sshPublicKeyExtension
+		pubFileName := fileName + sshPubKeyFileExt
 		err = writeToFile(pubKey, pubFileName, 0644)
 		if err != nil {
 			return err
@@ -507,7 +507,7 @@ func writeSshFiles(id string, privKey, pubKey, cert []byte) error {
 
 	}
 
-	certFileName := fileName + sshCertExtension
+	certFileName := fileName + sshCertFileExt
 	err = writeToFile(cert, certFileName, 0644)
 	if err != nil {
 		return err
@@ -547,15 +547,15 @@ func printPrincipals(p []string) {
 
 }
 
-func printCriticalOptions(fc, sa string) {
+func printCriticalOptions(fc string, sa []string) {
 	fmt.Println("Critical Options: ")
-	if fc == "" && sa == "" {
+	if fc == "" && len(sa) == 0 {
 		fmt.Println("\t", "None")
 	} else {
 		if fc != "" {
 			fmt.Println("\t", fc)
 		}
-		if sa != "" {
+		if len(sa) > 0 {
 			fmt.Println("\t", sa)
 		}
 	}
@@ -624,14 +624,14 @@ func getExistingSshFiles(id string) ([]string, error) {
 	}
 	existingFiles := make([]string, 0)
 
-	certFile, err := ioutil.ReadFile(fileName + sshCertExtension)
+	certFile, err := ioutil.ReadFile(fileName + sshCertFileExt)
 	if err == nil && certFile != nil { //means file exists.
-		existingFiles = append(existingFiles, fileName+sshCertExtension)
+		existingFiles = append(existingFiles, fileName+sshCertFileExt)
 	}
 
-	pubKeyFile, err := ioutil.ReadFile(fileName + sshPublicKeyExtension)
+	pubKeyFile, err := ioutil.ReadFile(fileName + sshPubKeyFileExt)
 	if err == nil && pubKeyFile != nil { //means file exists.
-		existingFiles = append(existingFiles, fileName+sshPublicKeyExtension)
+		existingFiles = append(existingFiles, fileName+sshPubKeyFileExt)
 	}
 	privKeyFile, err := ioutil.ReadFile(fileName)
 	if err == nil && privKeyFile != nil { //means file exists.

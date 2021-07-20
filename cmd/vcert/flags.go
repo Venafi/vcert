@@ -590,10 +590,9 @@ var (
 		Destination: &flags.sshCertForceCommand,
 	}
 
-	flagSourceAddresses = &cli.StringFlag{
-		Name:        "source-address",
-		Usage:       "The requested source addresses as list of IP/CIDR. Example: 192.168.1.1/24",
-		Destination: &flags.sshCertSourceAddr,
+	flagSourceAddresses = &cli.StringSliceFlag{
+		Name:  "source-address",
+		Usage: "The requested source addresses as list of IP/CIDR. Example: 192.168.1.1/24",
 	}
 
 	flagSshCertPickupId = &cli.StringFlag{
