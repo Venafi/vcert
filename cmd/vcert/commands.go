@@ -154,7 +154,7 @@ var (
 		Flags:     sshPickupFlags,
 		Action:    doCommandSshPickup,
 		Usage:     "To retrieve a SSH Certificate",
-		UsageText: `vcert sshpickup -u https://tpp.example.com -t <TPP access token> --pickup-id <ssh cert DN>"`,
+		UsageText: `vcert sshpickup -u https://tpp.example.com -t <TPP access token> --pickup-id <ssh cert DN>`,
 	}
 
 	commandSshEnroll = &cli.Command{
@@ -163,7 +163,7 @@ var (
 		Flags:     sshEnrollFlags,
 		Action:    doCommandEnrollSshCert,
 		Usage:     "To enroll a SSH Certificate",
-		UsageText: `vcert sshenroll -u https://tpp.example.com -t <TPP access token> --template "<val>" --id <val> --principal "bob" --principal "alice" --valid-hours 1"`,
+		UsageText: `vcert sshenroll -u https://tpp.example.com -t <TPP access token> --template <val> --id <val> --principal bob --principal alice --valid-hours 1`,
 	}
 )
 
@@ -463,7 +463,7 @@ func doCommandEnrollSshCert(c *cli.Context) error {
 		return fmt.Errorf("Failed to retrieve certificate: %s", err)
 	}
 
-	//this case is when the keypair is local generated, or file provided.
+	//this case is when the keypair is local generated
 	if data.PrivateKeyData == "" {
 		data.PrivateKeyData = string(privateKey)
 	}
@@ -602,8 +602,6 @@ func doCommandCredMgmt1(c *cli.Context) error {
 			if flags.sshCred {
 				auth.Scope = "ssh:manage"
 			} else if flags.pmCred {
-				auth.Scope = "configuration:manage"
-			} else if flags.cpmCred {
 				auth.Scope = "certificate:manage,revoke;configuration:manage"
 			}
 

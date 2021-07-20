@@ -462,12 +462,6 @@ var (
 		Destination: &flags.pmCred,
 	}
 
-	flagCredCpm = &cli.BoolFlag{
-		Name:        "cpm",
-		Usage:       "Use to request certificate and policy management scope - certificate:manage,revoke;configuration:manage",
-		Destination: &flags.cpmCred,
-	}
-
 	flagClientId = &cli.StringFlag{
 		Name:        "client-id",
 		Usage:       "Use to specify the application that will be using the token.",
@@ -769,7 +763,6 @@ var (
 		flagScope,
 		flagCredSsh,
 		flagCredPm,
-		flagCredCpm,
 		flagClientId,
 		commonFlags,
 	))

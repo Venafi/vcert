@@ -87,7 +87,6 @@ type commandFlags struct {
 	scope                string
 	sshCred              bool
 	pmCred               bool
-	cpmCred              bool
 	state                string
 	testMode             bool
 	testModeDelay        int

@@ -702,7 +702,7 @@ func validateSshEnrollFlags(commandName string) error {
 	}
 
 	if flags.sshCertKeyId == "" {
-		return fmt.Errorf("a ssh certificate key id is requiered")
+		return fmt.Errorf("ID is required for the SSH certificate (--id)")
 	}
 
 	err = validateExistingFile(flags.sshCertKeyId)
@@ -711,7 +711,7 @@ func validateSshEnrollFlags(commandName string) error {
 	}
 
 	if flags.sshCertTemplate == "" {
-		return fmt.Errorf("ca value is required")
+		return fmt.Errorf("certificate issuing template value is required (--template)")
 	}
 
 	if flags.sshCertPubKey == "" {
