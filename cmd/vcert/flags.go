@@ -607,15 +607,8 @@ var (
 		Destination: &flags.sshCertGuid,
 	}
 
-	flagSshPrivKeyPassphrase = &cli.StringFlag{
-		Name: "pk-passphrase",
-		Usage: "The passphrase which will be used to wrap the generated private key before it is returned in the API response." +
-			" This is applicable only in case of service-generated keypair.",
-		Destination: &flags.sshCertGuid,
-	}
-
 	flagSshCertExtension = &cli.StringSliceFlag{
-		Name:  "extensions",
+		Name:  "extension",
 		Usage: "The requested certificate extensions. Example:permit-pty: value, permit-port-forwarding:value,login@github.com: alice@github.com",
 	}
 

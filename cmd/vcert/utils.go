@@ -553,10 +553,10 @@ func printCriticalOptions(fc string, sa []string) {
 		fmt.Println("\t", "None")
 	} else {
 		if fc != "" {
-			fmt.Println("\t", fc)
+			fmt.Println("\tForce command:", fc)
 		}
 		if len(sa) > 0 {
-			fmt.Println("\t", sa)
+			fmt.Println("\tSource addresses:", sa)
 		}
 	}
 }

@@ -174,7 +174,7 @@ func runBeforeCommand(c *cli.Context) error {
 	flags.emailSans = c.StringSlice("san-email")
 	flags.upnSans = c.StringSlice("san-upn")
 	flags.customFields = c.StringSlice("field")
-	flags.sshCertExtension = c.StringSlice("extensions")
+	flags.sshCertExtension = c.StringSlice("extension")
 	flags.sshCertPrincipal = c.StringSlice("principal")
 	flags.sshCertSourceAddrs = c.StringSlice("source-address")
 
