@@ -30,6 +30,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -473,8 +474,19 @@ func doCommandEnrollSshCert(c *cli.Context) error {
 	}
 
 	printSshMetadata(data)
-
-	err = writeSshFiles(data.CertificateDetails.KeyID, []byte(data.PrivateKeyData), []byte(data.PublicKeyData), []byte(data.CertificateData))
+	privateKeyS := data.PrivateKeyData
+	if isServiceGenerated() {
+		//fix an issue related to adding new lines in different OS.
+		//1.-remove any new line
+		privateKeyS = strings.TrimRight(data.PrivateKeyData, "\r\n")
+		//determine OS and add the new line accordingly
+		if runtime.GOOS == "linux" || runtime.GOOS == "darwin" {
+			privateKeyS = fmt.Sprint(privateKeyS, "\n")
+		} else if runtime.GOOS == "windows" {
+			privateKeyS = fmt.Sprint(privateKeyS, "\r\n")
+		}
+	}
+	err = writeSshFiles(data.CertificateDetails.KeyID, []byte(privateKeyS), []byte(data.PublicKeyData), []byte(data.CertificateData))
 
 	if err != nil {
 		return err

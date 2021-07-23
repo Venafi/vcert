@@ -556,7 +556,15 @@ func printCriticalOptions(fc string, sa []string) {
 			fmt.Println("\tForce command:", fc)
 		}
 		if len(sa) > 0 {
-			fmt.Println("\tSource addresses:", sa)
+			sourceAddsStr := ""
+			size := len(sa)
+			for i, val := range sa {
+				sourceAddsStr = sourceAddsStr + val
+				if i < size-1 {
+					sourceAddsStr = sourceAddsStr + ","
+				}
+			}
+			fmt.Println("\tSource addresses:", sourceAddsStr)
 		}
 	}
 }
@@ -590,6 +598,11 @@ func isPubKeyInFile() bool {
 
 	}
 	return false
+}
+
+func isServiceGenerated() bool {
+	value := flags.sshCertPubKey
+	return value == SshCertPubKeyServ
 }
 
 func getSshPubKeyFromFile() (content string, err error) {
