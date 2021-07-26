@@ -126,4 +126,5 @@ type commandFlags struct {
 	sshCertKeyPassphrase string
 	sshCertExtension     stringSlice
 	sshCertPrincipal     stringSlice
+	sshCertWindows       bool
 }

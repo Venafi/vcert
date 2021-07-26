@@ -30,7 +30,6 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -478,13 +477,23 @@ func doCommandEnrollSshCert(c *cli.Context) error {
 	if isServiceGenerated() {
 		//fix an issue related to adding new lines in different OS.
 		//1.-remove any new line
-		privateKeyS = strings.TrimRight(data.PrivateKeyData, "\r\n")
+		privateKeyS = strings.TrimRight(data.PrivateKeyData, "\n")
+		strNewLine := "\n"
 		//determine OS and add the new line accordingly
-		if runtime.GOOS == "linux" || runtime.GOOS == "darwin" {
-			privateKeyS = fmt.Sprint(privateKeyS, "\n")
-		} else if runtime.GOOS == "windows" {
-			privateKeyS = fmt.Sprint(privateKeyS, "\r\n")
+		if flags.sshCertWindows {
+			strNewLine = "\r\n"
 		}
+
+		arrS := strings.Split(privateKeyS, "\n")
+		content := ""
+
+		for _, current := range arrS {
+			current = strings.TrimRight(current, "\r")
+			content = content + current + strNewLine
+		}
+
+		privateKeyS = content
+
 	}
 	err = writeSshFiles(data.CertificateDetails.KeyID, []byte(privateKeyS), []byte(data.PublicKeyData), []byte(data.CertificateData))
 

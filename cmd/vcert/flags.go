@@ -608,8 +608,15 @@ var (
 	}
 
 	flagSshCertExtension = &cli.StringSliceFlag{
-		Name:  "extension",
-		Usage: "The requested certificate extensions. Example:permit-pty: value, permit-port-forwarding:value,login@github.com: alice@github.com",
+		Name: "extension",
+		Usage: "The requested certificate extensions. For normal extensions use --extension <value> and" +
+			"for key value extensions use --extension <k:v>",
+	}
+
+	flagSshCertWindows = &cli.BoolFlag{
+		Name:        "windows",
+		Usage:       "Use it to add end of lines in MS Windows format \\r\\n",
+		Destination: &flags.sshCertWindows,
 	}
 
 	flagSshCertPrincipal = &cli.StringSliceFlag{
@@ -820,6 +827,7 @@ var (
 		flagSshKeySize,
 		flagSshPassPhrase,
 		commonFlags,
+		flagSshCertWindows,
 	))
 )
 
