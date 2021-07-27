@@ -80,9 +80,10 @@ func convertToSShCertReq(req *certificate.SshCertRequest) certificate.TPPSshCert
 		tppSshCertReq.ObjectName = req.ObjectName
 	}
 
-	if req.DestinationAddress != "" {
-		tppSshCertReq.ObjectName = req.DestinationAddress
+	if len(req.DestinationAddresses) > 0 {
+		tppSshCertReq.DestinationAddresses = req.DestinationAddresses
 	}
+
 	if req.KeyId != "" {
 		tppSshCertReq.KeyId = req.KeyId
 	}

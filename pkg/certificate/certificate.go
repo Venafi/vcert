@@ -206,17 +206,17 @@ type Request struct {
 //This request is a standard one, it will hold data for tpp request
 //and in the future it will hold VaS data.
 type SshCertRequest struct {
-	CADN               string
-	PolicyDN           string
-	ObjectName         string
-	DestinationAddress string
-	KeyId              string
-	Principals         []string
-	ValidityPeriod     string
-	PublicKeyData      string
-	Extensions         []string
-	ForceCommand       string
-	SourceAddresses    []string
+	CADN                 string
+	PolicyDN             string
+	ObjectName           string
+	DestinationAddresses []string
+	KeyId                string
+	Principals           []string
+	ValidityPeriod       string
+	PublicKeyData        string
+	Extensions           []string
+	ForceCommand         string
+	SourceAddresses      []string
 
 	PickupID                  string
 	Guid                      string
@@ -229,17 +229,17 @@ type SshCertRequest struct {
 }
 
 type TPPSshCertRequest struct {
-	CADN               string                 `json:"CADN,omitempty"`
-	PolicyDN           string                 `json:"PolicyDN,omitempty"`
-	ObjectName         string                 `json:"ObjectName,omitempty"`
-	DestinationAddress string                 `json:"DestinationAddress,omitempty"`
-	KeyId              string                 `json:"KeyId,omitempty"`
-	Principals         []string               `json:"Principals,omitempty"`
-	ValidityPeriod     string                 `json:"ValidityPeriod,omitempty"`
-	PublicKeyData      string                 `json:"PublicKeyData,omitempty"`
-	Extensions         map[string]interface{} `json:"Extensions,omitempty"`
-	ForceCommand       string                 `json:"ForceCommand,omitempty"`
-	SourceAddresses    []string               `json:"SourceAddresses,omitempty"`
+	CADN                 string                 `json:"CADN,omitempty"`
+	PolicyDN             string                 `json:"PolicyDN,omitempty"`
+	ObjectName           string                 `json:"ObjectName,omitempty"`
+	DestinationAddresses []string               `json:"DestinationAddresses,omitempty"`
+	KeyId                string                 `json:"KeyId,omitempty"`
+	Principals           []string               `json:"Principals,omitempty"`
+	ValidityPeriod       string                 `json:"ValidityPeriod,omitempty"`
+	PublicKeyData        string                 `json:"PublicKeyData,omitempty"`
+	Extensions           map[string]interface{} `json:"Extensions,omitempty"`
+	ForceCommand         string                 `json:"ForceCommand,omitempty"`
+	SourceAddresses      []string               `json:"SourceAddresses,omitempty"`
 }
 
 type TppSshCertRequestResponse struct {

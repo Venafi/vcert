@@ -541,11 +541,10 @@ var (
 		Usage:       "The friendly name for the certificate object. If ObjectName is not specified, then KeyID parameter is used.",
 		Destination: &flags.sshCertObjectName,
 	}
-	flagDestinationAddress = &cli.StringFlag{
+	flagDestinationAddress = &cli.StringSliceFlag{
 		Name: "destination-address",
 		Usage: "The address (FQDN/hostname/IP/CIDR) of the destination host where the certificate will be used to authenticate to." +
 			"This is applicable for client certificates and used for reporting/auditing only",
-		Destination: &flags.sshCertDestAddr,
 	}
 	flagValidityHours = &cli.IntFlag{
 		Name:        "valid-hours",
@@ -609,7 +608,7 @@ var (
 
 	flagSshCertExtension = &cli.StringSliceFlag{
 		Name: "extension",
-		Usage: "The requested certificate extensions. For normal extensions use --extension <value> and" +
+		Usage: "The requested certificate extensions. For normal extensions use --extension <value> and " +
 			"for key value extensions use --extension <k:v>",
 	}
 

@@ -112,7 +112,7 @@ type commandFlags struct {
 	verifyPolicyConfig   bool
 	sshCertKeyId         string
 	sshCertObjectName    string
-	sshCertDestAddr      string
+	sshCertDestAddrs     stringSlice
 	sshCertValidHours    int
 	sshCertTemplate      string
 	sshCertFolder        string

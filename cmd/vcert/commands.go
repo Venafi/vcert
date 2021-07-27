@@ -177,6 +177,7 @@ func runBeforeCommand(c *cli.Context) error {
 	flags.sshCertExtension = c.StringSlice("extension")
 	flags.sshCertPrincipal = c.StringSlice("principal")
 	flags.sshCertSourceAddrs = c.StringSlice("source-address")
+	flags.sshCertDestAddrs = c.StringSlice("destination-address")
 
 	noDuplicatedFlags := []string{"instance", "tls-address", "app-info"}
 	for _, f := range noDuplicatedFlags {
@@ -477,22 +478,22 @@ func doCommandEnrollSshCert(c *cli.Context) error {
 	if isServiceGenerated() {
 		//fix an issue related to adding new lines in different OS.
 		//1.-remove any new line
-		privateKeyS = strings.TrimRight(data.PrivateKeyData, "\n")
+		privateKeyS = strings.TrimRight(data.PrivateKeyData, "\r\n")
 		strNewLine := "\n"
 		//determine OS and add the new line accordingly
 		if flags.sshCertWindows {
 			strNewLine = "\r\n"
 		}
 
-		arrS := strings.Split(privateKeyS, "\n")
-		content := ""
+		arrS := strings.Split(privateKeyS, "\r\n")
+		var content strings.Builder
 
 		for _, current := range arrS {
-			current = strings.TrimRight(current, "\r")
-			content = content + current + strNewLine
+			content.WriteString(current)
+			content.WriteString(strNewLine)
 		}
 
-		privateKeyS = content
+		privateKeyS = content.String()
 
 	}
 	err = writeSshFiles(data.CertificateDetails.KeyID, []byte(privateKeyS), []byte(data.PublicKeyData), []byte(data.CertificateData))
@@ -526,8 +527,8 @@ func fillSshCertificateRequest(req *certificate.SshCertRequest, cf *commandFlags
 		req.PolicyDN = cf.sshCertFolder
 	}
 
-	if cf.sshCertDestAddr != "" {
-		req.PolicyDN = cf.sshCertDestAddr
+	if len(cf.sshCertDestAddrs) > 0 {
+		req.DestinationAddresses = cf.sshCertDestAddrs
 	}
 
 	if len(cf.sshCertPrincipal) > 0 {
