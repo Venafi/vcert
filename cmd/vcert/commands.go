@@ -476,25 +476,7 @@ func doCommandEnrollSshCert(c *cli.Context) error {
 	printSshMetadata(data)
 	privateKeyS := data.PrivateKeyData
 	if isServiceGenerated() {
-		//fix an issue related to adding new lines in different OS.
-		//1.-remove any new line
-		privateKeyS = strings.TrimRight(data.PrivateKeyData, "\r\n")
-		strNewLine := "\n"
-		//determine OS and add the new line accordingly
-		if flags.sshCertWindows {
-			strNewLine = "\r\n"
-		}
-
-		arrS := strings.Split(privateKeyS, "\r\n")
-		var content strings.Builder
-
-		for _, current := range arrS {
-			content.WriteString(current)
-			content.WriteString(strNewLine)
-		}
-
-		privateKeyS = content.String()
-
+		privateKeyS = AddLineEnding(privateKeyS)
 	}
 	err = writeSshFiles(data.CertificateDetails.KeyID, []byte(privateKeyS), []byte(data.PublicKeyData), []byte(data.CertificateData))
 
@@ -1284,8 +1266,12 @@ func doCommandSshPickup(c *cli.Context) error {
 	}
 
 	printSshMetadata(data)
+	privateKeyS := data.PrivateKeyData
+	if privateKeyS != "" {
+		privateKeyS = AddLineEnding(privateKeyS)
+	}
 
-	err = writeSshFiles(data.CertificateDetails.KeyID, []byte(data.PrivateKeyData), []byte(data.PublicKeyData), []byte(data.CertificateData))
+	err = writeSshFiles(data.CertificateDetails.KeyID, []byte(privateKeyS), []byte(data.PublicKeyData), []byte(data.CertificateData))
 	if err != nil {
 		return err
 	}

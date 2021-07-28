@@ -662,3 +662,24 @@ func normalizeSshCertFileName(s string) (string, error) {
 	fileName := regex.ReplaceAllString(s, "_")
 	return fileName, err
 }
+
+func AddLineEnding(s string) string {
+	//fix an issue related to adding new lines in different OS.
+	//1.-remove any new line
+	s = strings.TrimRight(s, "\r\n")
+	strNewLine := "\n"
+	//determine OS and add the new line accordingly
+	if flags.sshCertWindows {
+		strNewLine = "\r\n"
+	}
+
+	arrS := strings.Split(s, "\r\n")
+	var content strings.Builder
+
+	for _, current := range arrS {
+		content.WriteString(current)
+		content.WriteString(strNewLine)
+	}
+
+	return content.String()
+}
