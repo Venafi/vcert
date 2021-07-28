@@ -561,7 +561,7 @@ var (
 	flagSshPubKey = &cli.StringFlag{
 		Name:        "public-key",
 		Usage:       "if user will provide a public key, local or service generated",
-		Value:       "service",
+		Value:       "local",
 		Destination: &flags.sshCertPubKey,
 	}
 
@@ -806,6 +806,7 @@ var (
 		flagSshCertGuid,
 		flagSshPassPhrase,
 		commonFlags,
+		flagSshCertWindows,
 	))
 
 	sshEnrollFlags = sortedFlags(flagsApppend(

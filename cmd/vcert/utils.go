@@ -488,7 +488,7 @@ func writeSshFiles(id string, privKey, pubKey, cert []byte) error {
 		return err
 	}
 
-	if !isPubKeyInFile() {
+	if !isPubKeyInFile() && len(privKey) > 0 {
 		err = writeToFile(privKey, fileName, 0600)
 		if err != nil {
 			return err
@@ -664,22 +664,8 @@ func normalizeSshCertFileName(s string) (string, error) {
 }
 
 func AddLineEnding(s string) string {
-	//fix an issue related to adding new lines in different OS.
-	//1.-remove any new line
-	s = strings.TrimRight(s, "\r\n")
-	strNewLine := "\n"
-	//determine OS and add the new line accordingly
-	if flags.sshCertWindows {
-		strNewLine = "\r\n"
+	if !flags.sshCertWindows {
+		s = strings.ReplaceAll(s, "\r\n", "\n")
 	}
-
-	arrS := strings.Split(s, "\r\n")
-	var content strings.Builder
-
-	for _, current := range arrS {
-		content.WriteString(current)
-		content.WriteString(strNewLine)
-	}
-
-	return content.String()
+	return s
 }
