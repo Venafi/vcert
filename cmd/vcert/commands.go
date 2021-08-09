@@ -412,15 +412,13 @@ func doCommandEnrollSshCert(c *cli.Context) error {
 			keySize = 3072
 		}
 
-		privateKey, publicKey, err = util.GenerateSshKeyPair(keySize, flags.keyPassword)
+		privateKey, publicKey, err = util.GenerateSshKeyPair(keySize, flags.keyPassword, flags.sshCertKeyId)
 
 		if err != nil {
 			return err
 		}
 
 		sPubKey = string(publicKey)
-		sPubKey = strings.TrimRight(sPubKey, "\r\n")
-		sPubKey = fmt.Sprint(sPubKey, " ", flags.sshCertKeyId)
 		req.PublicKeyData = sPubKey
 	}
 

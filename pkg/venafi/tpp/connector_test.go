@@ -2071,8 +2071,9 @@ func TestCreateSshCertLocalGeneratedKP(t *testing.T) {
 	}
 
 	var req = &certificate.SshCertRequest{}
+	req.KeyId = test.RandSshKeyId()
 
-	priv, pub, err := util.GenerateSshKeyPair(3072, "")
+	priv, pub, err := util.GenerateSshKeyPair(3072, "", req.KeyId)
 
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)

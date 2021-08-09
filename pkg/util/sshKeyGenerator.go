@@ -5,8 +5,10 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+	"fmt"
 	"golang.org/x/crypto/ssh"
 	"log"
+	"strings"
 )
 
 const (
@@ -68,7 +70,7 @@ func generatePublicKey(key *rsa.PublicKey) ([]byte, error) {
 
 }
 
-func GenerateSshKeyPair(bitSize int, keyPassword string) ([]byte, []byte, error) {
+func GenerateSshKeyPair(bitSize int, keyPassword, certId string) ([]byte, []byte, error) {
 
 	privateKey, err := generatePrivKey(bitSize)
 
@@ -88,6 +90,10 @@ func GenerateSshKeyPair(bitSize int, keyPassword string) ([]byte, []byte, error)
 		return nil, nil, err
 	}
 
-	return privateKeyBytes, publicKeyBytes, nil
+	sPubKey := string(publicKeyBytes)
+	sPubKey = strings.TrimRight(sPubKey, "\r\n")
+	sPubKey = fmt.Sprint(sPubKey, " ", certId)
+
+	return privateKeyBytes, []byte(sPubKey), nil
 
 }
