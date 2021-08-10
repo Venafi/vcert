@@ -142,6 +142,18 @@ func (err ErrCertificatePending) Error() string {
 	return fmt.Sprintf("Issuance is pending. You may try retrieving the certificate later using Pickup ID: %s\n\tStatus: %s", err.CertificateID, err.Status)
 }
 
+type ErrCertificateRejected struct {
+	CertificateID string
+	Status        string
+}
+
+func (err ErrCertificateRejected) Error() string {
+	if err.Status == "" {
+		return fmt.Sprintf("Certificate request was rejected. You may need to verify the certificate id: %s on your TPP instance", err.CertificateID)
+	}
+	return fmt.Sprintf("Certificate request was rejected. You may need to verify the certificate using Pickup ID: %s\n\tStatus: %s", err.CertificateID, err.Status)
+}
+
 // Policy is struct that contains restrictions for certificates. Most of the fields contains list of regular expression.
 // For satisfying policies, all values in the certificate field must match AT LEAST ONE regular expression in corresponding policy field.
 type Policy struct {

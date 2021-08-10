@@ -17,9 +17,9 @@ const (
 	CaRootPath = policy.PathSeparator + "VED" + policy.PathSeparator + "Certificate Authority" + policy.PathSeparator + "SSH" + policy.PathSeparator + "Templates"
 )
 
-func RequestSSHCertificate(c *Connector, req *certificate.SshCertRequest) (requestID string, err error) {
+func RequestSshCertificate(c *Connector, req *certificate.SshCertRequest) (requestID string, err error) {
 
-	sshCertReq := convertToSShCertReq(req)
+	sshCertReq := convertToSshCertReq(req)
 
 	fmt.Println("Requesting certificate with certificate identifier: ", sshCertReq.KeyId)
 
@@ -43,7 +43,7 @@ func RequestSSHCertificate(c *Connector, req *certificate.SshCertRequest) (reque
 	return response.DN, nil
 }
 
-func convertToSShCertReq(req *certificate.SshCertRequest) certificate.TPPSshCertRequest {
+func convertToSshCertReq(req *certificate.SshCertRequest) certificate.TPPSshCertRequest {
 
 	var tppSshCertReq certificate.TPPSshCertRequest
 
@@ -120,7 +120,7 @@ func convertToSShCertReq(req *certificate.SshCertRequest) certificate.TPPSshCert
 	return tppSshCertReq
 }
 
-func RetrieveSSHCertificate(c *Connector, req *certificate.SshCertRequest) (*certificate.SshCertRetrieveDetails, error) {
+func RetrieveSshCertificate(c *Connector, req *certificate.SshCertRequest) (*certificate.SshCertRetrieveDetails, error) {
 	var reqRetrieve certificate.TppSshCertRetrieveRequest
 
 	if req.PickupID != "" {
@@ -149,6 +149,11 @@ func RetrieveSSHCertificate(c *Connector, req *certificate.SshCertRequest) (*cer
 		if retrieveResponse.CertificateData != "" {
 			return convertToGenericRetrieveResponse(retrieveResponse), nil
 		}
+
+		if retrieveResponse.Response.Success && retrieveResponse.Status == "Rejected"  {
+			return nil, endpoint.ErrCertificateRejected{CertificateID: req.PickupID, Status: retrieveResponse.Status}
+		}
+
 		if req.Timeout == 0 {
 			return nil, endpoint.ErrCertificatePending{CertificateID: req.PickupID, Status: retrieveResponse.Status}
 		}

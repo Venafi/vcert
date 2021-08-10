@@ -1652,10 +1652,10 @@ func resetTPPAttribute(c *Connector, at, zone string) error {
 
 func (c *Connector) RequestSSHCertificate(req *certificate.SshCertRequest) (requestID string, err error) {
 
-	return RequestSSHCertificate(c, req)
+	return RequestSshCertificate(c, req)
 
 }
 
 func (c *Connector) RetrieveSSHCertificate(req *certificate.SshCertRequest) (response *certificate.SshCertRetrieveDetails, err error) {
-	return RetrieveSSHCertificate(c, req)
+	return RetrieveSshCertificate(c, req)
 }
