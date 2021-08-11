@@ -150,7 +150,7 @@ func RetrieveSshCertificate(c *Connector, req *certificate.SshCertRequest) (*cer
 			return convertToGenericRetrieveResponse(retrieveResponse), nil
 		}
 
-		if retrieveResponse.Response.Success && retrieveResponse.Status == "Rejected"  {
+		if retrieveResponse.Response.Success && retrieveResponse.Status == "Rejected" {
 			return nil, endpoint.ErrCertificateRejected{CertificateID: req.PickupID, Status: retrieveResponse.Status}
 		}
 
