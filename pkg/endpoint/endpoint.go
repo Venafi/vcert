@@ -149,7 +149,7 @@ type ErrCertificateRejected struct {
 
 func (err ErrCertificateRejected) Error() string {
 	if err.Status == "" {
-		return fmt.Sprintf("Certificate request was rejected. You may need to verify the certificate id: %s on your TPP instance", err.CertificateID)
+		return fmt.Sprintf("Certificate request was rejected. You may need to verify the certificate id: %s", err.CertificateID)
 	}
 	return fmt.Sprintf("Certificate request was rejected. You may need to verify the certificate using Pickup ID: %s\n\tStatus: %s", err.CertificateID, err.Status)
 }
