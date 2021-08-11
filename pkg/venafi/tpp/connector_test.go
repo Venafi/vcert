@@ -2087,14 +2087,11 @@ func TestCreateSshCertLocalGeneratedKP(t *testing.T) {
 		t.Fatalf("generated public key is nil")
 	}
 
-	req.KeyId = test.RandSshKeyId()
 	req.ValidityPeriod = fmt.Sprint(duration, "h")
 	req.CADN = os.Getenv("SSH_CERT_CA")
 	req.SourceAddresses = []string{"test.com"}
 
 	sPubKey := string(pub)
-	sPubKey = strings.TrimRight(sPubKey, "\r\n")
-	sPubKey = fmt.Sprint(sPubKey, " ", req.KeyId)
 
 	req.PublicKeyData = sPubKey
 
