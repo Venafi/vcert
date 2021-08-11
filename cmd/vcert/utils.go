@@ -28,6 +28,7 @@ import (
 	"gopkg.in/yaml.v2"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"regexp"
 	"strconv"
@@ -48,7 +49,13 @@ const (
 	vCertApiKey      = "VCERT_APIKEY"
 	vCertTrustBundle = "VCERT_TRUST_BUNDLE"
 
-	JKSFormat = "jks"
+	JKSFormat              = "jks"
+	Sha256                 = "SHA256"
+	SshCertPubKeyServ      = "service"
+	SshCertPubKeyFilePreff = "file:"
+	SshCertPubKeyLocal     = "local"
+	sshCertFileExt         = "-cert.pub"
+	sshPubKeyFileExt       = ".pub"
 )
 
 func parseCustomField(s string) (key, value string, err error) {
@@ -460,4 +467,205 @@ func verifyPolicySpec(bytes []byte, fileExt string) error {
 	}
 
 	return nil
+}
+
+func writeToFile(content []byte, fileName string, perm os.FileMode) error {
+
+	err := ioutil.WriteFile(fileName, content, perm)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func writeSshFiles(id string, privKey, pubKey, cert []byte) error {
+
+	fileName, err := normalizeSshCertFileName(id)
+
+	if err != nil {
+		return err
+	}
+
+	if !isPubKeyInFile() && len(privKey) > 0 {
+		err = writeToFile(privKey, fileName, 0600)
+		if err != nil {
+			return err
+		}
+		log.Println("Private key file was saved:  " + fileName)
+	}
+
+	//only write public key into a file if is not provided.
+	if !isPubKeyInFile() {
+		pubFileName := fileName + sshPubKeyFileExt
+		err = writeToFile(pubKey, pubFileName, 0644)
+		if err != nil {
+			return err
+		}
+		log.Println("Public key file was saved:   " + pubFileName)
+
+	}
+
+	certFileName := fileName + sshCertFileExt
+	err = writeToFile(cert, certFileName, 0644)
+	if err != nil {
+		return err
+	}
+	log.Println("Certificate file was saved:  " + certFileName)
+
+	return nil
+
+}
+
+func printExtensions(e map[string]interface{}) {
+	fmt.Println("Extensions: ")
+	if len(e) > 0 {
+		for k, v := range e {
+			if v != "" {
+				kv := fmt.Sprintf("%s:%v", k, v)
+
+				fmt.Println("\t", kv)
+			} else {
+				fmt.Println("\t", k)
+			}
+		}
+	} else {
+		fmt.Println("\t", "None")
+	}
+}
+
+func printPrincipals(p []string) {
+	fmt.Println("Principals: ")
+	if len(p) > 0 {
+		for _, v := range p {
+			fmt.Println("\t", v)
+		}
+	} else {
+		fmt.Println("\t", "None")
+	}
+
+}
+
+func printCriticalOptions(fc string, sa []string) {
+	fmt.Println("Critical Options: ")
+	if fc == "" && len(sa) == 0 {
+		fmt.Println("\t", "None")
+	} else {
+		if fc != "" {
+			fmt.Println("\tForce command:", fc)
+		}
+		if len(sa) > 0 {
+			sourceAddsStr := ""
+			size := len(sa)
+			for i, val := range sa {
+				sourceAddsStr = sourceAddsStr + val
+				if i < size-1 {
+					sourceAddsStr = sourceAddsStr + ","
+				}
+			}
+			fmt.Println("\tSource addresses:", sourceAddsStr)
+		}
+	}
+}
+
+func printSshMetadata(data *certificate.SshCertRetrieveDetails) {
+	logf("certificate meta data:")
+
+	fmt.Println("Certificate Type: ", data.CertificateDetails.CertificateType)
+	pubKey := fmt.Sprintf("%s:%s", Sha256, data.CertificateDetails.PublicKeyFingerprintSHA256)
+	fmt.Println("Public key: ", pubKey)
+	signingCa := fmt.Sprintf("%s:%s", Sha256, data.CertificateDetails.CAFingerprintSHA256)
+	fmt.Println("Signing CA: ", signingCa)
+	fmt.Println("Certificate Identifier: ", data.CertificateDetails.KeyID)
+	fmt.Println("Serial: ", data.CertificateDetails.SerialNumber)
+	fmt.Println("Valid From: ", util.ConvertSecondsToTime(data.CertificateDetails.ValidFrom).String())
+	fmt.Println("Valid To: ", util.ConvertSecondsToTime(data.CertificateDetails.ValidTo).String())
+	printPrincipals(data.CertificateDetails.Principals)
+	printCriticalOptions(data.CertificateDetails.ForceCommand, data.CertificateDetails.SourceAddresses)
+	printExtensions(data.CertificateDetails.Extensions)
+}
+
+func isPubKeyInFile() bool {
+
+	value := flags.sshCertPubKey
+
+	if value != "" {
+
+		if strings.HasPrefix(value, SshCertPubKeyFilePreff) {
+			return true
+		}
+
+	}
+	return false
+}
+
+func isServiceGenerated() bool {
+	value := flags.sshCertPubKey
+	return value == SshCertPubKeyServ
+}
+
+func getSshPubKeyFromFile() (content string, err error) {
+	value := flags.sshCertPubKey
+
+	if value != "" {
+		data := strings.Split(value, ":")
+		if len(data) == 2 {
+			fileName := data[1]
+
+			var fileContent []byte
+
+			fileContent, err = ioutil.ReadFile(fileName)
+			if err != nil {
+				return
+			}
+
+			content = string(fileContent)
+
+		} else {
+			err = fmt.Errorf("wrong specification on sshCertPubKey flag value, please provide a file name in the format: file:file-name")
+			return
+		}
+	}
+	return
+}
+
+func getExistingSshFiles(id string) ([]string, error) {
+	fileName, err := normalizeSshCertFileName(id)
+	if err != nil {
+		return nil, err
+	}
+	existingFiles := make([]string, 0)
+
+	certFile, err := ioutil.ReadFile(fileName + sshCertFileExt)
+	if err == nil && certFile != nil { //means file exists.
+		existingFiles = append(existingFiles, fileName+sshCertFileExt)
+	}
+
+	pubKeyFile, err := ioutil.ReadFile(fileName + sshPubKeyFileExt)
+	if err == nil && pubKeyFile != nil { //means file exists.
+		existingFiles = append(existingFiles, fileName+sshPubKeyFileExt)
+	}
+	privKeyFile, err := ioutil.ReadFile(fileName)
+	if err == nil && privKeyFile != nil { //means file exists.
+		existingFiles = append(existingFiles, fileName)
+	}
+
+	return existingFiles, nil
+}
+
+func normalizeSshCertFileName(s string) (string, error) {
+	regex, err := regexp.Compile("[^A-Za-z0-9]+")
+	if err != nil {
+		return "", err
+	}
+	fileName := regex.ReplaceAllString(s, "_")
+	return fileName, err
+}
+
+func AddLineEnding(s string) string {
+	if !flags.sshCertWindows {
+		s = strings.ReplaceAll(s, "\r\n", "\n")
+	}
+	return s
 }

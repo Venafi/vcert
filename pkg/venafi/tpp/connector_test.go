@@ -27,9 +27,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Venafi/vcert/v4/pkg/policy"
+	"github.com/Venafi/vcert/v4/pkg/util"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
@@ -62,7 +65,7 @@ func init() {
 
 	resp, err := tpp.GetRefreshToken(&endpoint.Authentication{
 		User: ctx.TPPuser, Password: ctx.TPPPassword,
-		Scope: "certificate:discover,manage,revoke;configuration:manage"})
+		Scope: "certificate:discover,manage,revoke;configuration:manage;ssh:manage"})
 	if err != nil {
 		panic(err)
 	}
@@ -1986,4 +1989,230 @@ func TestSetPolicyValuesAndValidate(t *testing.T) {
 		t.Fatalf("policy's RsaKeySizes are different expected:  %+q but get  %+q", localPolicy.KeyPair.RsaKeySizes, remotePolicy.KeyPair.RsaKeySizes)
 	}
 
+}
+
+func TestCreateSshCertServiceGeneratedKP(t *testing.T) {
+
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+
+	duration := 4
+
+	tpp.verbose = true
+
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+
+	var req = &certificate.SshCertRequest{}
+
+	req.KeyId = test.RandSshKeyId()
+	req.ValidityPeriod = fmt.Sprint(duration, "h")
+	req.CADN = os.Getenv("SSH_CERT_CA")
+	req.SourceAddresses = []string{"test.com"}
+
+	id, err := tpp.RequestSSHCertificate(req)
+
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	retReq := &certificate.SshCertRequest{
+		PickupID:                  id,
+		IncludeCertificateDetails: true,
+		Timeout:                   time.Duration(10) * time.Second,
+	}
+
+	resp, err := tpp.RetrieveSSHCertificate(retReq)
+
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	if resp.PrivateKeyData == "" {
+		t.Error("Private key data is empty")
+	}
+
+	if resp.PublicKeyData == "" {
+		t.Error("Public key data is empty")
+	}
+
+	if resp.CertificateData == "" {
+		t.Error("Certificate key data is empty")
+	}
+
+	validFrom := util.ConvertSecondsToTime(resp.CertificateDetails.ValidFrom)
+	validTo := util.ConvertSecondsToTime(resp.CertificateDetails.ValidTo)
+
+	durationFromCert := validTo.Sub(validFrom)
+
+	hours := durationFromCert.Hours()
+	intHours := int(hours)
+	if intHours != duration {
+		fmt.Errorf("certificate duration is different, expected: %v but got %v", duration, intHours)
+	}
+}
+
+func TestCreateSshCertLocalGeneratedKP(t *testing.T) {
+
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+
+	duration := 4
+
+	tpp.verbose = true
+
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+
+	var req = &certificate.SshCertRequest{}
+	req.KeyId = test.RandSshKeyId()
+
+	priv, pub, err := util.GenerateSshKeyPair(3072, "", req.KeyId)
+
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	if priv == nil {
+		t.Fatalf("generated private key is nil")
+	}
+
+	if pub == nil {
+		t.Fatalf("generated public key is nil")
+	}
+
+	req.ValidityPeriod = fmt.Sprint(duration, "h")
+	req.CADN = os.Getenv("SSH_CERT_CA")
+	req.SourceAddresses = []string{"test.com"}
+
+	sPubKey := string(pub)
+
+	req.PublicKeyData = sPubKey
+
+	id, err := tpp.RequestSSHCertificate(req)
+
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	retReq := &certificate.SshCertRequest{
+		PickupID:                  id,
+		IncludeCertificateDetails: true,
+		Timeout:                   time.Duration(10) * time.Second,
+	}
+
+	resp, err := tpp.RetrieveSSHCertificate(retReq)
+
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	if resp.PrivateKeyData != "" {
+		t.Error("Private key data is not empty")
+	}
+
+	if resp.PublicKeyData == "" {
+		t.Error("Public key data is empty")
+	}
+
+	if resp.PublicKeyData != req.PublicKeyData {
+		t.Error("expected public key data is different")
+	}
+
+	if resp.CertificateData == "" {
+		t.Error("Certificate key data is empty")
+	}
+
+	validFrom := util.ConvertSecondsToTime(resp.CertificateDetails.ValidFrom)
+	validTo := util.ConvertSecondsToTime(resp.CertificateDetails.ValidTo)
+
+	durationFromCert := validTo.Sub(validFrom)
+
+	hours := durationFromCert.Hours()
+	intHours := int(hours)
+	if intHours != duration {
+		t.Errorf("certificate duration is different, expected: %v but got %v", duration, intHours)
+	}
+}
+
+func TestCreateSshCertProvidedPubKey(t *testing.T) {
+
+	var fileContent []byte
+
+	absPath, err := filepath.Abs("../../../test-files/open-source-ssh-cert-test.pub")
+
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	fileContent, err = ioutil.ReadFile(absPath)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	content := string(fileContent)
+
+	if content == "" {
+		t.Fatal("public key is empty")
+	}
+
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+
+	duration := 4
+
+	tpp.verbose = true
+
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+
+	var req = &certificate.SshCertRequest{}
+
+	req.KeyId = test.RandSshKeyId()
+	req.ValidityPeriod = fmt.Sprint(duration, "h")
+	req.CADN = os.Getenv("SSH_CERT_CA")
+	req.PublicKeyData = content
+	req.SourceAddresses = []string{"test.com"}
+
+	id, err := tpp.RequestSSHCertificate(req)
+
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	retReq := &certificate.SshCertRequest{
+		PickupID:                  id,
+		IncludeCertificateDetails: true,
+		Timeout:                   time.Duration(10) * time.Second,
+	}
+
+	resp, err := tpp.RetrieveSSHCertificate(retReq)
+
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	if resp.CertificateData == "" {
+		t.Error("Certificate key data is empty")
+	}
+
+	validFrom := util.ConvertSecondsToTime(resp.CertificateDetails.ValidFrom)
+	validTo := util.ConvertSecondsToTime(resp.CertificateDetails.ValidTo)
+
+	durationFromCert := validTo.Sub(validFrom)
+
+	hours := durationFromCert.Hours()
+	intHours := int(hours)
+	if intHours != duration {
+		fmt.Errorf("certificate duration is different, expected: %v but got %v", duration, intHours)
+	}
 }

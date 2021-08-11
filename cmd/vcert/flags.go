@@ -450,6 +450,18 @@ var (
 		Value:       "certificate:manage,revoke",
 	}
 
+	flagCredSsh = &cli.BoolFlag{
+		Name:        "ssh",
+		Usage:       "Use to request a ssh certificate scope - ssh:manage",
+		Destination: &flags.sshCred,
+	}
+
+	flagCredPm = &cli.BoolFlag{
+		Name:        "pm",
+		Usage:       "Use to request policy management scope - configuration:manage",
+		Destination: &flags.pmCred,
+	}
+
 	flagClientId = &cli.StringFlag{
 		Name:        "client-id",
 		Usage:       "Use to specify the application that will be using the token.",
@@ -515,6 +527,100 @@ var (
 		Name:        "verify",
 		Usage:       "Use to verify if a policy specification is valid, when using this flag credentials should be avoided",
 		Destination: &flags.verifyPolicyConfig,
+	}
+
+	//SSH Certificate flags
+
+	flagKeyId = &cli.StringFlag{
+		Name:        "id",
+		Usage:       "The identifier of the requested certificate (usually used to determine ownership).",
+		Destination: &flags.sshCertKeyId,
+	}
+	flagObjectName = &cli.StringFlag{
+		Name:        "object-name",
+		Usage:       "The friendly name for the certificate object. If ObjectName is not specified, then KeyID parameter is used.",
+		Destination: &flags.sshCertObjectName,
+	}
+	flagDestinationAddress = &cli.StringSliceFlag{
+		Name: "destination-address",
+		Usage: "The address (FQDN/hostname/IP/CIDR) of the destination host where the certificate will be used to authenticate to." +
+			"This is applicable for client certificates and used for reporting/auditing only",
+	}
+	flagValidityHours = &cli.IntFlag{
+		Name:        "valid-hours",
+		Usage:       "How much time the requester wants to have the certificate valid, the format is hours. ",
+		Destination: &flags.sshCertValidHours,
+	}
+
+	flagSshCertCa = &cli.StringFlag{
+		Name:        "template",
+		Usage:       "the certificate issuing template that will be used.",
+		Destination: &flags.sshCertTemplate,
+	}
+
+	flagSshPubKey = &cli.StringFlag{
+		Name:        "public-key",
+		Usage:       "if user will provide a public key, local or service generated",
+		Value:       "local",
+		Destination: &flags.sshCertPubKey,
+	}
+
+	flagSshKeySize = &cli.IntFlag{
+		Name:        "key-size",
+		Usage:       "key size bits, they will be used for creating keypair on case public-key:local",
+		Destination: &flags.sshCertKeySize,
+	}
+
+	flagSshPassPhrase = &cli.StringFlag{
+		Name:        "key-passphrase",
+		Usage:       "passphrase for encrypting the private key",
+		Destination: &flags.sshCertKeyPassphrase,
+	}
+
+	flagPolicyDN = &cli.StringFlag{
+		Name:        "folder",
+		Usage:       "The DN of the policy folder where the certificate object will be created. If this is not specified, then the policy folder specified on the certificate template will be used.",
+		Destination: &flags.sshCertFolder,
+	}
+
+	flagForceCommand = &cli.StringFlag{
+		Name:        "force-command",
+		Usage:       "The requested force command. Example: /usr/scripts/db_backup.sh",
+		Destination: &flags.sshCertForceCommand,
+	}
+
+	flagSourceAddresses = &cli.StringSliceFlag{
+		Name:  "source-address",
+		Usage: "The requested source addresses as list of IP/CIDR. Example: 192.168.1.1/24",
+	}
+
+	flagSshCertPickupId = &cli.StringFlag{
+		Name:        "pickup-id",
+		Usage:       "the SSH Certificate DN",
+		Destination: &flags.sshCertPickupId,
+	}
+
+	flagSshCertGuid = &cli.StringFlag{
+		Name:        "guid",
+		Usage:       "A value that uniquely identifies the certificate request.",
+		Destination: &flags.sshCertGuid,
+	}
+
+	flagSshCertExtension = &cli.StringSliceFlag{
+		Name: "extension",
+		Usage: "The requested certificate extensions. For normal extensions use --extension <value> and " +
+			"for key value extensions use --extension <k:v>",
+	}
+
+	flagSshCertWindows = &cli.BoolFlag{
+		Name:        "windows",
+		Usage:       "Use it to add end of lines in MS Windows format \\r\\n",
+		Destination: &flags.sshCertWindows,
+	}
+
+	flagSshCertPrincipal = &cli.StringSliceFlag{
+		Name:  "principal",
+		Usage: "The requested principals. If no value is specified, then the default principals from the certificate template will be used.",
 	}
 
 	commonFlags              = []cli.Flag{flagInsecure, flagVerbose, flagNoPrompt}
@@ -653,6 +759,8 @@ var (
 		flagTPPPassword,
 		flagTPPUser,
 		flagScope,
+		flagCredSsh,
+		flagCredPm,
 		flagClientId,
 		commonFlags,
 	))
@@ -688,6 +796,38 @@ var (
 		flagPolicyConfigFile,
 		flagPolicyStarterConfigFile,
 		flagTrustBundle,
+	))
+
+	sshPickupFlags = sortedFlags(flagsApppend(
+		flagUrl,
+		flagTPPToken,
+		flagTrustBundle,
+		flagSshCertPickupId,
+		flagSshCertGuid,
+		flagSshPassPhrase,
+		commonFlags,
+		flagSshCertWindows,
+	))
+
+	sshEnrollFlags = sortedFlags(flagsApppend(
+		flagUrl,
+		flagTPPToken,
+		flagTrustBundle,
+		flagKeyId,
+		flagObjectName,
+		flagDestinationAddress,
+		flagValidityHours,
+		flagSshCertPrincipal,
+		flagPolicyDN,
+		flagSshCertExtension,
+		flagForceCommand,
+		flagSourceAddresses,
+		flagSshCertCa,
+		flagSshPubKey,
+		flagSshKeySize,
+		flagSshPassPhrase,
+		commonFlags,
+		flagSshCertWindows,
 	))
 )
 

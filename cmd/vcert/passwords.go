@@ -58,27 +58,34 @@ func readPasswordsFromInputFlags(commandName string, cf *commandFlags) error {
 		}
 	}
 
-	if commandName == commandEnrollName || commandName == commandGenCSRName || commandName == commandRenewName || commandName == commandPickupName && (cf.format == "pkcs12" || cf.format == JKSFormat) {
+	if commandName == commandSshPickupName || commandName == commandSshEnrollName || commandName == commandEnrollName || commandName == commandGenCSRName || commandName == commandRenewName || commandName == commandPickupName && (cf.format == "pkcs12" || cf.format == JKSFormat) {
 		var keyPasswordNotNeeded = false
 
 		keyPasswordNotNeeded = keyPasswordNotNeeded || (cf.csrOption == "service" && cf.noPickup)
 		keyPasswordNotNeeded = keyPasswordNotNeeded || (strings.Index(cf.csrOption, "file:") == 0)
 		keyPasswordNotNeeded = keyPasswordNotNeeded || (cf.csrOption == "service" && cf.url == "")
+		if commandName == commandSshEnrollName {
+			keyPasswordNotNeeded = keyPasswordNotNeeded || (cf.sshCertPubKey != SshCertPubKeyServ && cf.sshCertPubKey != SshCertPubKeyLocal) || cf.sshCertKeyPassphrase != ""
+		}
+
+		if commandName == commandSshPickupName {
+			keyPasswordNotNeeded = cf.sshCertKeyPassphrase != ""
+		}
 
 		if !keyPasswordNotNeeded {
 			if cf.keyPassword == "" && !cf.noPrompt {
-				fmt.Printf("Enter key pass phrase:")
+				fmt.Printf("Enter key passphrase:")
 				input, err := gopass.GetPasswdMasked()
 				if err != nil {
 					return err
 				}
-				fmt.Printf("Verifying - Enter key pass phrase:")
+				fmt.Printf("Verifying - Enter key passphrase:")
 				verify, err := gopass.GetPasswdMasked()
 				if err != nil {
 					return err
 				}
 				if !doValuesMatch(input, verify) {
-					return fmt.Errorf("Pass phrases don't match")
+					return fmt.Errorf("Passphrases don't match")
 				}
 				cf.keyPassword = string(input)
 			} else if cf.keyPassword == "" && cf.noPrompt && commandName == commandPickupName {

@@ -315,6 +315,8 @@ const (
 	urlResourceIsValidPolicy          urlResource = "vedsdk/Config/isvalid"
 	urlResourceReadPolicy             urlResource = "vedsdk/certificates/checkpolicy"
 	urlResourceCleanPolicy            urlResource = "vedsdk/config/clearpolicyattribute"
+	urlResourceSshCertReq             urlResource = "vedsdk/SSHCertificates/request"
+	urlResourceSshCertRet             urlResource = "vedsdk/SSHCertificates/retrieve"
 )
 
 const (

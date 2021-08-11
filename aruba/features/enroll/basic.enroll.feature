@@ -18,11 +18,11 @@ Feature: Enroll certificate
     Then it should post certificate request
     And it should retrieve certificate
 
-  Scenario: Pass phrases don't match
+  Scenario: Passphrases don't match
     When I run `vcert enroll -test-mode -test-mode-delay 0 -cn vfidev.example.com` interactively
       And I type "newPassw0rd!"
       And I type "different password"
-    Then it should fail with "Pass phrases don't match"
+    Then it should fail with "Passphrases don't match"
 
   Scenario: request a certificate with default arguments
     When I run `vcert enroll -test-mode -test-mode-delay 0 -cn vfidev.example.com -no-prompt -no-pickup`

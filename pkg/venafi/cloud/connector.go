@@ -78,6 +78,14 @@ type Connector struct {
 	client  *http.Client
 }
 
+func (c *Connector) RetrieveSSHCertificate(req *certificate.SshCertRequest) (response *certificate.SshCertRetrieveDetails, err error) {
+	panic("operation is not supported yet")
+}
+
+func (c *Connector) RequestSSHCertificate(req *certificate.SshCertRequest) (requestID string, err error) {
+	panic("operation is not supported yet")
+}
+
 func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) {
 
 	appName := policy.GetApplicationName(name)
@@ -495,7 +503,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 			return nil, fmt.Errorf("failed to retrieve certificate: %s", err)
 		}
 		if len(searchResult.Certificates) == 0 {
-			return nil, fmt.Errorf("no certifiate found using fingerprint %s", req.Thumbprint)
+			return nil, fmt.Errorf("no certificate found using fingerprint %s", req.Thumbprint)
 		}
 
 		var reqIds []string

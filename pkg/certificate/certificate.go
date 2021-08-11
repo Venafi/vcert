@@ -201,6 +201,110 @@ type Request struct {
 	IssuerHint    string
 }
 
+//SSH Certificate structures
+
+//This request is a standard one, it will hold data for tpp request
+//and in the future it will hold VaS data.
+type SshCertRequest struct {
+	CADN                 string
+	PolicyDN             string
+	ObjectName           string
+	DestinationAddresses []string
+	KeyId                string
+	Principals           []string
+	ValidityPeriod       string
+	PublicKeyData        string
+	Extensions           []string
+	ForceCommand         string
+	SourceAddresses      []string
+
+	PickupID                  string
+	Guid                      string
+	IncludePrivateKeyData     bool
+	PrivateKeyPassphrase      string
+	PrivateKeyFormat          string
+	IncludeCertificateDetails bool
+
+	Timeout time.Duration
+}
+
+type TPPSshCertRequest struct {
+	CADN                 string                 `json:"CADN,omitempty"`
+	PolicyDN             string                 `json:"PolicyDN,omitempty"`
+	ObjectName           string                 `json:"ObjectName,omitempty"`
+	DestinationAddresses []string               `json:"DestinationAddresses,omitempty"`
+	KeyId                string                 `json:"KeyId,omitempty"`
+	Principals           []string               `json:"Principals,omitempty"`
+	ValidityPeriod       string                 `json:"ValidityPeriod,omitempty"`
+	PublicKeyData        string                 `json:"PublicKeyData,omitempty"`
+	Extensions           map[string]interface{} `json:"Extensions,omitempty"`
+	ForceCommand         string                 `json:"ForceCommand,omitempty"`
+	SourceAddresses      []string               `json:"SourceAddresses,omitempty"`
+}
+
+type TppSshCertRequestResponse struct {
+	DN          string
+	Guid        string
+	Status      string
+	Permissions string
+	Response    TppSshCertResponseInfo `json:"Response,omitempty"`
+}
+
+type TppSshCertResponseInfo struct {
+	ErrorCode    int
+	ErrorMessage string
+	Success      bool
+}
+
+type TppSshCertRetrieveRequest struct {
+	Guid                      string
+	DN                        string
+	IncludePrivateKeyData     bool
+	PrivateKeyPassphrase      string
+	PrivateKeyFormat          string
+	IncludeCertificateDetails bool
+}
+
+type TppSshCertRetrieveResponse struct {
+	Status             string
+	Guid               string
+	DN                 string
+	CertificateData    string
+	PrivateKeyData     string
+	PublicKeyData      string
+	CAGuid             string
+	CADN               string
+	CertificateDetails SshCertificateDetails
+	Response           TppSshCertResponseInfo
+}
+
+type SshCertRetrieveDetails struct {
+	Guid               string
+	DN                 string
+	CAGuid             string
+	CADN               string
+	CertificateData    string
+	PrivateKeyData     string
+	PublicKeyData      string
+	CertificateDetails SshCertificateDetails
+}
+
+type SshCertificateDetails struct {
+	KeyType                      string                 `json:"KeyType,omitempty"`
+	CertificateType              string                 `json:"CertificateType,omitempty"`
+	CertificateFingerprintSHA256 string                 `json:"CertificateFingerprintSHA256,omitempty"`
+	CAFingerprintSHA256          string                 `json:"CAFingerprintSHA256,omitempty"`
+	KeyID                        string                 `json:"KeyID,omitempty"`
+	SerialNumber                 string                 `json:"SerialNumber,omitempty"`
+	Principals                   []string               `json:"Principals,omitempty"`
+	ValidFrom                    int64                  `json:"ValidFrom,omitempty"`
+	ValidTo                      int64                  `json:"ValidTo,omitempty"`
+	ForceCommand                 string                 `json:"ForceCommand,omitempty"`
+	SourceAddresses              []string               `json:"SourceAddresses,omitempty"`
+	PublicKeyFingerprintSHA256   string                 `json:"PublicKeyFingerprintSHA256,omitempty"`
+	Extensions                   map[string]interface{} `json:"Extensions,omitempty"`
+}
+
 type RevocationRequest struct {
 	CertificateDN string
 	Thumbprint    string

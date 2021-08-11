@@ -72,9 +72,8 @@ func normalizeURL(url string) (normalizedURL string, err error) {
 		modified = modified + "/"
 	}
 
-	if strings.HasSuffix(modified, "vedsdk/") {
-		modified = modified[:len(modified)-7]
-	}
+	modified = strings.TrimSuffix(modified, "vedsdk/")
+
 	if loc := baseUrlRegex.FindStringIndex(modified); loc == nil {
 		return "", fmt.Errorf("The specified TPP URL is invalid. %s\nExpected TPP URL format 'https://tpp.company.com/vedsdk/'", url)
 	}
@@ -1649,4 +1648,14 @@ func resetTPPAttribute(c *Connector, at, zone string) error {
 	}
 
 	return nil
+}
+
+func (c *Connector) RequestSSHCertificate(req *certificate.SshCertRequest) (requestID string, err error) {
+
+	return RequestSshCertificate(c, req)
+
+}
+
+func (c *Connector) RetrieveSSHCertificate(req *certificate.SshCertRequest) (response *certificate.SshCertRetrieveDetails, err error) {
+	return RetrieveSshCertificate(c, req)
 }

@@ -551,10 +551,18 @@ func buildPolicySpecification(cit *certificateTemplate, info *policy.Certificate
 	var pol policy.Policy
 
 	if len(cit.SubjectCNRegexes) > 0 {
-		pol.Domains = cit.SubjectCNRegexes
+		pol.Domains = policy.RemoveRegex(cit.SubjectCNRegexes)
 	}
+
 	wildCard := isWildCard(cit.SubjectCNRegexes)
 	pol.WildcardAllowed = &wildCard
+
+	if len(cit.SANRegexes) > 0 {
+		subjectAlt := policy.SubjectAltNames{}
+		trueVal := true
+		subjectAlt.DnsAllowed = &trueVal
+		pol.SubjectAltNames = &subjectAlt
+	}
 
 	// ps.Policy.WildcardAllowed is pending.
 	if cit.ValidityPeriod != "" {

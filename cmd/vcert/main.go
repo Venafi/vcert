@@ -72,6 +72,8 @@ func main() {
 			commandRevoke,
 			commandCreatePolicy,
 			commandGetPolicy,
+			commandSshPickup,
+			commandSshEnroll,
 		},
 		EnableBashCompletion: true, //todo: write BashComplete function for options
 		//HideHelp:             true,
@@ -93,18 +95,21 @@ AUTHOR:
    {{end}}{{if .Commands}}
 ACTIONS:
 
-   gencsr     To generate a certificate signing request (CSR)
-   enroll     To enroll a certificate
-   pickup     To retrieve a certificate
-   renew      To renew a certificate
-   revoke     To revoke a certificate
+   gencsr      To generate a certificate signing request (CSR)
+   enroll      To enroll a certificate
+   pickup      To retrieve a certificate
+   renew       To renew a certificate
+   revoke      To revoke a certificate
 
-   getpolicy  To retrieve the certificate policy of a zone
-   setpolicy  To apply a certificate policy specification to a zone
+   getpolicy   To retrieve the certificate policy of a zone
+   setpolicy   To apply a certificate policy specification to a zone
 
-   getcred    To obtain a new token for authentication
-   checkcred  To check the validity of a token and grant
-   voidcred   To invalidate an authentication grant
+   getcred     To obtain a new token for authentication
+   checkcred   To check the validity of a token and grant
+   voidcred    To invalidate an authentication grant
+
+   sshenroll   To enroll a SSH ertificate
+   sshpickup   To retrieve a SSH certificate
 
 OPTIONS:
    {{range .VisibleFlags}}{{.}}

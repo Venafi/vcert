@@ -23,12 +23,14 @@ import (
 	"encoding/pem"
 	"fmt"
 	"github.com/Venafi/vcert/v4/pkg/policy"
+	"github.com/Venafi/vcert/v4/pkg/util"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -145,6 +147,24 @@ var (
 		vcert getpolicy -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>"
 		vcert getpolicy -k <VaaS API key> -z "<app name>\<CIT alias>"`,
 	}
+
+	commandSshPickup = &cli.Command{
+		Before:    runBeforeCommand,
+		Name:      commandSshPickupName,
+		Flags:     sshPickupFlags,
+		Action:    doCommandSshPickup,
+		Usage:     "To retrieve a SSH Certificate",
+		UsageText: `vcert sshpickup -u https://tpp.example.com -t <TPP access token> --pickup-id <ssh cert DN>`,
+	}
+
+	commandSshEnroll = &cli.Command{
+		Before:    runBeforeCommand,
+		Name:      commandSshEnrollName,
+		Flags:     sshEnrollFlags,
+		Action:    doCommandEnrollSshCert,
+		Usage:     "To enroll a SSH Certificate",
+		UsageText: `vcert sshenroll -u https://tpp.example.com -t <TPP access token> --template <val> --id <val> --principal bob --principal alice --valid-hours 1`,
+	}
 )
 
 func runBeforeCommand(c *cli.Context) error {
@@ -154,6 +174,10 @@ func runBeforeCommand(c *cli.Context) error {
 	flags.emailSans = c.StringSlice("san-email")
 	flags.upnSans = c.StringSlice("san-upn")
 	flags.customFields = c.StringSlice("field")
+	flags.sshCertExtension = c.StringSlice("extension")
+	flags.sshCertPrincipal = c.StringSlice("principal")
+	flags.sshCertSourceAddrs = c.StringSlice("source-address")
+	flags.sshCertDestAddrs = c.StringSlice("destination-address")
 
 	noDuplicatedFlags := []string{"instance", "tls-address", "app-info"}
 	for _, f := range noDuplicatedFlags {
@@ -336,6 +360,180 @@ func doCommandEnroll1(c *cli.Context) error {
 	return nil
 }
 
+func doCommandEnrollSshCert(c *cli.Context) error {
+
+	err := validateSshEnrollFlags(c.Command.Name)
+
+	if err != nil {
+		return err
+	}
+
+	err = setTLSConfig()
+	if err != nil {
+		return err
+	}
+
+	cfg, err := buildConfig(c, &flags)
+	if err != nil {
+		return fmt.Errorf("Failed to build vcert config: %s", err)
+	}
+
+	connector, err := vcert.NewClient(&cfg)
+
+	if err != nil {
+		logf("Unable to build connector for %s: %s", cfg.ConnectorType, err)
+	} else {
+		logf("Successfully built connector for %s", cfg.ConnectorType)
+	}
+
+	err = connector.Ping()
+
+	if err != nil {
+		logf("Unable to connect to %s: %s", cfg.ConnectorType, err)
+	} else {
+		logf("Successfully connected to %s", cfg.ConnectorType)
+	}
+
+	var req = &certificate.SshCertRequest{}
+
+	req = fillSshCertificateRequest(req, &flags)
+
+	if flags.sshCertKeyPassphrase != "" {
+		flags.keyPassword = flags.sshCertKeyPassphrase
+	}
+
+	var privateKey, publicKey []byte
+	sPubKey := ""
+	//support for local generated keypair or provided public key
+	if flags.sshCertPubKey == SshCertPubKeyLocal {
+
+		keySize := flags.sshCertKeySize
+		if keySize <= 0 {
+			keySize = 3072
+		}
+
+		privateKey, publicKey, err = util.GenerateSshKeyPair(keySize, flags.keyPassword, flags.sshCertKeyId)
+
+		if err != nil {
+			return err
+		}
+
+		sPubKey = string(publicKey)
+		req.PublicKeyData = sPubKey
+	}
+
+	if isPubKeyInFile() {
+		pubKeyS, err := getSshPubKeyFromFile()
+
+		if err != nil {
+
+			return err
+
+		}
+
+		if pubKeyS == "" {
+
+			return fmt.Errorf("specified public key in %s is empty", flags.sshCertPubKey)
+
+		}
+
+		req.PublicKeyData = pubKeyS
+
+	}
+
+	flags.pickupID, err = connector.RequestSSHCertificate(req)
+
+	if err != nil {
+		return err
+	}
+
+	logf("certificate were created")
+
+	retReq := certificate.SshCertRequest{
+		PickupID:                  flags.pickupID,
+		IncludeCertificateDetails: true,
+	}
+	if flags.keyPassword != "" {
+		retReq.PrivateKeyPassphrase = flags.keyPassword
+	}
+
+	retReq.Timeout = time.Duration(10) * time.Second
+	data, err := connector.RetrieveSSHCertificate(&retReq)
+	if err != nil {
+		return fmt.Errorf("Failed to retrieve certificate: %s", err)
+	}
+
+	//this case is when the keypair is local generated
+	if data.PrivateKeyData == "" {
+		data.PrivateKeyData = string(privateKey)
+	}
+	if sPubKey != "" {
+		data.PublicKeyData = sPubKey
+	}
+
+	printSshMetadata(data)
+	privateKeyS := data.PrivateKeyData
+	if isServiceGenerated() {
+		privateKeyS = AddLineEnding(privateKeyS)
+	}
+	err = writeSshFiles(data.CertificateDetails.KeyID, []byte(privateKeyS), []byte(data.PublicKeyData), []byte(data.CertificateData))
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func fillSshCertificateRequest(req *certificate.SshCertRequest, cf *commandFlags) *certificate.SshCertRequest {
+
+	if cf.sshCertTemplate != "" {
+		req.CADN = cf.sshCertTemplate
+	}
+
+	if cf.sshCertKeyId != "" {
+		req.KeyId = cf.sshCertKeyId
+	}
+
+	if cf.sshCertObjectName != "" {
+		req.ObjectName = cf.sshCertObjectName
+	}
+
+	if cf.sshCertValidHours > 0 {
+		req.ValidityPeriod = strconv.Itoa(cf.sshCertValidHours) + "h"
+	}
+
+	if cf.sshCertFolder != "" {
+		req.PolicyDN = cf.sshCertFolder
+	}
+
+	if len(cf.sshCertDestAddrs) > 0 {
+		req.DestinationAddresses = cf.sshCertDestAddrs
+	}
+
+	if len(cf.sshCertPrincipal) > 0 {
+		req.Principals = cf.sshCertPrincipal
+	}
+
+	if len(cf.sshCertExtension) > 0 {
+		req.Extensions = cf.sshCertExtension
+	}
+
+	if len(cf.sshCertSourceAddrs) > 0 {
+		req.SourceAddresses = cf.sshCertSourceAddrs
+	}
+
+	if cf.sshCertPubKeyData != "" {
+		req.PublicKeyData = cf.sshCertPubKeyData
+	}
+
+	if cf.sshCertForceCommand != "" {
+		req.ForceCommand = cf.sshCertForceCommand
+	}
+
+	return req
+}
+
 func doCommandCredMgmt1(c *cli.Context) error {
 	err := validateCredMgmtFlags1(c.Command.Name)
 	if err != nil {
@@ -397,11 +595,20 @@ func doCommandCredMgmt1(c *cli.Context) error {
 				fmt.Println("refresh_token: ", resp.Refresh_token)
 			}
 		} else if cfg.Credentials.User != "" && cfg.Credentials.Password != "" {
-			resp, err := tppConnector.GetRefreshToken(&endpoint.Authentication{
+
+			auth := &endpoint.Authentication{
 				User:     cfg.Credentials.User,
 				Password: cfg.Credentials.Password,
 				Scope:    flags.scope,
-				ClientId: flags.clientId})
+				ClientId: flags.clientId}
+
+			if flags.sshCred {
+				auth.Scope = "ssh:manage"
+			} else if flags.pmCred {
+				auth.Scope = "certificate:manage,revoke;configuration:manage"
+			}
+
+			resp, err := tppConnector.GetRefreshToken(auth)
 			if err != nil {
 				return err
 			}
@@ -1012,4 +1219,83 @@ func writeOutKeyAndCsr(commandName string, cf *commandFlags, key []byte, csr []b
 
 	err = result.Flush()
 	return
+}
+
+func doCommandSshPickup(c *cli.Context) error {
+
+	err := validateSshRetrieveFlags(c.Command.Name)
+
+	if err != nil {
+		return err
+	}
+
+	err = setTLSConfig()
+	if err != nil {
+		return err
+	}
+
+	cfg, err := buildConfig(c, &flags)
+	if err != nil {
+		return fmt.Errorf("Failed to build vcert config: %s", err)
+	}
+
+	connector, err := vcert.NewClient(&cfg) // Everything else requires an endpoint connection
+	if err != nil {
+		logf("Unable to connect to %s: %s", cfg.ConnectorType, err)
+	} else {
+		logf("Successfully connected to %s", cfg.ConnectorType)
+	}
+
+	var req certificate.SshCertRequest
+
+	req = buildSshCertRequest(req, &flags)
+
+	req.Timeout = time.Duration(10) * time.Second
+	data, err := connector.RetrieveSSHCertificate(&req)
+
+	if err != nil {
+		return fmt.Errorf("failed to retrieve certificate: %s", err)
+	}
+	logf("Successfully retrieved request for %s", data.DN)
+
+	err = validateExistingFile(data.CertificateDetails.KeyID)
+	if err != nil {
+		return err
+	}
+
+	printSshMetadata(data)
+	privateKeyS := data.PrivateKeyData
+	if privateKeyS != "" {
+		privateKeyS = AddLineEnding(privateKeyS)
+	}
+
+	err = writeSshFiles(data.CertificateDetails.KeyID, []byte(privateKeyS), []byte(data.PublicKeyData), []byte(data.CertificateData))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func buildSshCertRequest(r certificate.SshCertRequest, cf *commandFlags) certificate.SshCertRequest {
+
+	if cf.sshCertKeyPassphrase != "" {
+		cf.keyPassword = cf.sshCertKeyPassphrase
+	}
+
+	if cf.sshCertPickupId != "" {
+		r.PickupID = cf.sshCertPickupId
+	}
+
+	if cf.sshCertGuid != "" {
+		r.Guid = cf.sshCertGuid
+	}
+
+	if cf.keyPassword != "" {
+		r.PrivateKeyPassphrase = cf.keyPassword
+	}
+
+	r.IncludeCertificateDetails = true
+
+	return r
 }

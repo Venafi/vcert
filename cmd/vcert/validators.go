@@ -17,8 +17,10 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"regexp"
 	"strings"
 
@@ -689,5 +691,88 @@ func validateSetPolicyFlags(commandName string) error {
 
 	}
 
+	return nil
+}
+
+func validateSshEnrollFlags(commandName string) error {
+
+	err := validateConnectionFlags(commandName)
+	if err != nil {
+		return err
+	}
+
+	if flags.sshCertKeyId == "" {
+		return fmt.Errorf("ID is required for the SSH certificate (--id)")
+	}
+
+	err = validateExistingFile(flags.sshCertKeyId)
+	if err != nil {
+		return err
+	}
+
+	if flags.sshCertTemplate == "" {
+		return fmt.Errorf("certificate issuing template value is required (--template)")
+	}
+
+	if flags.sshCertPubKey == "" {
+		return fmt.Errorf("public-key value is required")
+	} else {
+		pubKeyType := flags.sshCertPubKey
+
+		if pubKeyType != SshCertPubKeyServ && pubKeyType != SshCertPubKeyLocal && !strings.HasPrefix(pubKeyType, SshCertPubKeyFilePreff) {
+			return fmt.Errorf("public-key value: %s is not expected, please provide: service, local or file:path value", pubKeyType)
+		}
+	}
+
+	err = readData(commandName)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func validateSshRetrieveFlags(commandName string) error {
+
+	err := validateConnectionFlags(commandName)
+	if err != nil {
+		return err
+	}
+
+	if flags.sshCertPickupId == "" && flags.sshCertGuid == "" {
+		return fmt.Errorf("please provide a pick up id or guid value")
+	}
+
+	err = readData(commandName)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func validateExistingFile(f string) error {
+	fileNames, err := getExistingSshFiles(f)
+
+	if err != nil {
+		return err
+	}
+
+	if len(fileNames) > 0 {
+	START:
+		fmt.Print("The following files already exists: ", fileNames, " would you like to override them? y/n: ")
+		reader := bufio.NewReader(os.Stdin)
+		text, err := reader.ReadString('\n')
+		if err != nil {
+			return err
+		}
+		text = strings.ToLower(text)
+		if !strings.HasPrefix(text, "y") {
+			if strings.HasPrefix(text, "n") {
+				return fmt.Errorf("user aborted operation")
+			} else {
+				goto START
+			}
+		}
+	}
 	return nil
 }
