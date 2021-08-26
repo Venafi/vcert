@@ -1064,8 +1064,6 @@ func BuildCloudCitRequest(ps *PolicySpecification, ca *CADetails) (*CloudPolicyR
 	}
 
 	if shouldCreateKPRS || shouldCreateSubjectRS {
-		falseValue := false
-		recommendedSettings.KeyReuse = &falseValue
 		cloudPolicyRequest.RecommendedSettings = &recommendedSettings
 	}
 

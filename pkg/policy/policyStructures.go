@@ -89,7 +89,6 @@ type RecommendedSettings struct {
 	SubjectCValue    *string  `json:"subjectCValue"`
 	SanRegexes       []string `json:"sanRegexes"`
 	Key              *Key     `json:"key"`
-	KeyReuse         *bool    `json:"keyReuse"`
 }
 
 type Key struct {
