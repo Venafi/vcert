@@ -74,6 +74,7 @@ func main() {
 			commandGetPolicy,
 			commandSshPickup,
 			commandSshEnroll,
+			commandSshGetConfig,
 		},
 		EnableBashCompletion: true, //todo: write BashComplete function for options
 		//HideHelp:             true,

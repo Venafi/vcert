@@ -2216,3 +2216,39 @@ func TestCreateSshCertProvidedPubKey(t *testing.T) {
 		fmt.Errorf("certificate duration is different, expected: %v but got %v", duration, intHours)
 	}
 }
+
+func TestSshGetConfig(t *testing.T) {
+
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	tpp.verbose = true
+
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+
+	var req = &certificate.CaTemplateRequest{}
+	req.Dn = os.Getenv("SSH_CERT_CA")
+
+	data, err := tpp.RetrieveSshConfig(req)
+
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	if data.CaPublicKey == "" {
+		t.Fatalf("CA public key is empty")
+	}
+
+	if len(data.Principals) == 0 {
+		t.Fatalf("principals are empty  ")
+	}
+
+}

@@ -33,6 +33,7 @@ const (
 	commandGetePolicyName   = "getpolicy"
 	commandSshPickupName    = "sshpickup"
 	commandSshEnrollName    = "sshenroll"
+	commandSshGetConfigName = "sshgetconfig"
 )
 
 var (

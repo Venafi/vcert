@@ -266,7 +266,7 @@ type TppSshCertRetrieveRequest struct {
 }
 
 type TppSshCertRetrieveResponse struct {
-	Status             string
+	ProcessingDetails  ProcessingDetails
 	Guid               string
 	DN                 string
 	CertificateData    string
@@ -303,6 +303,11 @@ type SshCertificateDetails struct {
 	SourceAddresses              []string               `json:"SourceAddresses,omitempty"`
 	PublicKeyFingerprintSHA256   string                 `json:"PublicKeyFingerprintSHA256,omitempty"`
 	Extensions                   map[string]interface{} `json:"Extensions,omitempty"`
+}
+
+type ProcessingDetails struct {
+	Status            string `json:"Status,omitempty"`
+	StatusDescription string `json:"StatusDescription,omitempty"`
 }
 
 type RevocationRequest struct {

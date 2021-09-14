@@ -829,6 +829,14 @@ var (
 		commonFlags,
 		flagSshCertWindows,
 	))
+
+	sshGetConfigFlags = sortedFlags(flagsApppend(
+		flagUrl,
+		flagTPPToken,
+		flagSshCertCa,
+		flagSshCertGuid,
+		commonFlags,
+	))
 )
 
 var delimiterCounter int

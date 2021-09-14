@@ -165,6 +165,15 @@ var (
 		Usage:     "To enroll a SSH Certificate",
 		UsageText: `vcert sshenroll -u https://tpp.example.com -t <TPP access token> --template <val> --id <val> --principal bob --principal alice --valid-hours 1`,
 	}
+
+	commandSshGetConfig = &cli.Command{
+		Before:    runBeforeCommand,
+		Name:      commandSshGetConfigName,
+		Flags:     sshGetConfigFlags,
+		Action:    doCommandSshGetConfig,
+		Usage:     "To get the CA public key and principals",
+		UsageText: `vcert sshgetconfig -u https://tpp.example.com -t <TPP access token> --template <val>”`,
+	}
 )
 
 func runBeforeCommand(c *cli.Context) error {
@@ -1151,6 +1160,73 @@ func doCommandRenew1(c *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("Failed to output the results: %s", err)
 	}
+	return nil
+}
+
+func doCommandSshGetConfig(c *cli.Context) error {
+
+	err := validateGetSshConfigFlags(c.Command.Name)
+
+	if err != nil {
+		return err
+	}
+
+	err = setTLSConfig()
+	if err != nil {
+		return err
+	}
+
+	cfg, err := buildConfig(c, &flags)
+	if err != nil {
+		return fmt.Errorf("failed to build vcert config: %s", err)
+	}
+
+	connector, err := vcert.NewClient(&cfg)
+
+	if err != nil {
+		strErr := (err).Error()
+		if strErr != "vcert error: your data contains problems: auth error: failed to authenticate: can't determine valid credentials set" {
+			logf("Unable to build connector for %s: %s", cfg.ConnectorType, err)
+		} else {
+			logf("Successfully built connector for %s", cfg.ConnectorType)
+		}
+	} else {
+		logf("Successfully built connector for %s", cfg.ConnectorType)
+	}
+
+	err = connector.Ping()
+
+	if err != nil {
+		logf("Unable to connect to %s: %s", cfg.ConnectorType, err)
+	} else {
+		logf("Successfully connected to %s", cfg.ConnectorType)
+	}
+
+	req := &certificate.CaTemplateRequest{}
+	if flags.sshCertTemplate != "" {
+		req.Dn = flags.sshCertTemplate
+	}
+	if flags.sshCertGuid != "" {
+		req.Guid = flags.sshCertGuid
+	}
+
+	conf, err := connector.RetrieveSshConfig(req)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println()
+	fmt.Println("CA public key:")
+	fmt.Println(conf.CaPublicKey)
+
+	if len(conf.Principals) > 0 {
+		fmt.Println()
+		fmt.Println("Principals:")
+		for _, v := range conf.Principals {
+			fmt.Println(v)
+		}
+	}
+
 	return nil
 }
 

@@ -9,6 +9,7 @@ import (
 	"github.com/Venafi/vcert/v4/pkg/util"
 	"log"
 	"net/http"
+	netUrl "net/url"
 	"strings"
 	"time"
 )
@@ -150,12 +151,12 @@ func RetrieveSshCertificate(c *Connector, req *certificate.SshCertRequest) (*cer
 			return convertToGenericRetrieveResponse(retrieveResponse), nil
 		}
 
-		if retrieveResponse.Response.Success && retrieveResponse.Status == "Rejected" {
-			return nil, endpoint.ErrCertificateRejected{CertificateID: req.PickupID, Status: retrieveResponse.Status}
+		if retrieveResponse.Response.Success && retrieveResponse.ProcessingDetails.Status == "Rejected" {
+			return nil, endpoint.ErrCertificateRejected{CertificateID: req.PickupID, Status: retrieveResponse.ProcessingDetails.StatusDescription}
 		}
 
 		if req.Timeout == 0 {
-			return nil, endpoint.ErrCertificatePending{CertificateID: req.PickupID, Status: retrieveResponse.Status}
+			return nil, endpoint.ErrCertificatePending{CertificateID: req.PickupID, Status: retrieveResponse.ProcessingDetails.StatusDescription}
 		}
 		if time.Now().After(startTime.Add(req.Timeout)) {
 			return nil, endpoint.ErrRetrieveCertificateTimeout{CertificateID: req.PickupID}
@@ -240,4 +241,126 @@ func convertToGenericRetrieveResponse(data *certificate.TppSshCertRetrieveRespon
 
 	return response
 
+}
+
+func getSshConfigUrlWithQueryParam(key, value string) string {
+	var url string
+	query := fmt.Sprintf("%s=%s", key, value)
+	query = netUrl.PathEscape(query)
+	url = fmt.Sprintf("%s?%s", urlResourceSshCAPubKey, query)
+	return url
+}
+
+func RetrieveSshConfig(c *Connector, ca *certificate.CaTemplateRequest) (*certificate.SshConfig, error) {
+
+	var url string
+	if ca.Dn != "" {
+		fullPath := getCaDnFullPath(ca.Dn)
+		url = getSshConfigUrlWithQueryParam("DN", fullPath)
+		fmt.Println("Retrieving the configured CA public key for template:", fullPath)
+	} else if ca.Guid != "" {
+		url = getSshConfigUrlWithQueryParam("guid", ca.Guid)
+		fmt.Println("Retrieving the configured CA public key for GUID:", ca.Guid)
+	} else {
+		return nil, fmt.Errorf("CA template or GUID are not specified")
+	}
+
+	statusCode, status, body, err := c.request("GET", urlResource(url), nil)
+
+	if err != nil {
+		return nil, err
+	}
+	conf := certificate.SshConfig{}
+	switch statusCode {
+
+	case http.StatusOK, http.StatusAccepted:
+		conf.CaPublicKey = string(body)
+
+	default:
+		return nil, fmt.Errorf("error while retriving CA public key, error body:%s, status:%s and status code:%v", string(body), status, statusCode)
+	}
+
+	if c.accessToken != "" {
+		principals, err := RetrieveSshCaPrincipals(c, ca)
+		if err != nil {
+			return nil, err
+		}
+
+		conf.Principals = principals
+	} else {
+		fmt.Println("Skipping retrieval of Principals. No authentication data is provided.")
+	}
+
+	return &conf, nil
+}
+
+func RetrieveSshCaPrincipals(c *Connector, ca *certificate.CaTemplateRequest) ([]string, error) {
+
+	tppReq := certificate.TppCaTemplateRequest{}
+
+	if ca.Dn != "" {
+		tppReq.Dn = getCaDnFullPath(ca.Dn)
+		fmt.Println("Retrieving the configured Principals for template:", tppReq.Dn)
+	} else if ca.Guid != "" {
+		tppReq.Guid = ca.Guid
+		fmt.Println("Retrieving the configured Principals for GUID:", ca.Guid)
+	} else {
+		return nil, fmt.Errorf("CA template or GUID are not specified")
+	}
+
+	statusCode, status, body, err := c.request("POST", urlResourceSshCADetails, tppReq)
+
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := parseSshCaDetailsRequestResult(statusCode, status, body)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return data.AccessControl.DefaultPrincipals, nil
+}
+
+func parseSshCaDetailsRequestResult(httpStatusCode int, httpStatus string, body []byte) (*certificate.CaTemplateResponse, error) {
+	switch httpStatusCode {
+	case http.StatusOK, http.StatusAccepted:
+		data, err := parseSshCaDetailsRequestData(body)
+		if err != nil {
+			return nil, err
+		}
+		if !data.Response.Success {
+			return data, fmt.Errorf("error requesting CA template details, error code: %d, error description: %s", data.Response.ErrorCode, data.Response.ErrorMessage)
+		}
+
+		return data, nil
+
+	default:
+		data, err := parseSshCaDetailsRequestData(body)
+		if err != nil {
+			return nil, err
+		}
+		return data, fmt.Errorf("unexpected status code on TPP CA details Request. Status code: %s, %s", httpStatus, data.Response.ErrorMessage)
+
+	}
+}
+
+func parseSshCaDetailsRequestData(b []byte) (data *certificate.CaTemplateResponse, err error) {
+	err = json.Unmarshal(b, &data)
+	return
+}
+
+func getCaDnFullPath(ca string) string {
+
+	fullPath := ca
+	if !strings.HasPrefix(ca, policy.PathSeparator) {
+		fullPath = policy.PathSeparator + ca
+	}
+
+	if !strings.HasPrefix(fullPath, CaRootPath) {
+		fullPath = CaRootPath + fullPath
+	}
+
+	return fullPath
 }

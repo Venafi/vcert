@@ -78,6 +78,10 @@ type Connector struct {
 	client  *http.Client
 }
 
+func (c *Connector) RetrieveSshConfig(ca *certificate.CaTemplateRequest) (*certificate.SshConfig, error) {
+	panic("implement me")
+}
+
 func (c *Connector) RetrieveSSHCertificate(req *certificate.SshCertRequest) (response *certificate.SshCertRetrieveDetails, err error) {
 	panic("operation is not supported yet")
 }

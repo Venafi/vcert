@@ -48,6 +48,10 @@ type Connector struct {
 	client      *http.Client
 }
 
+func (c *Connector) RetrieveSshConfig(ca *certificate.CaTemplateRequest) (*certificate.SshConfig, error) {
+	return RetrieveSshConfig(c, ca)
+}
+
 // NewConnector creates a new TPP Connector object used to communicate with TPP
 func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (*Connector, error) {
 	c := Connector{verbose: verbose, trust: trust, zone: zone}
