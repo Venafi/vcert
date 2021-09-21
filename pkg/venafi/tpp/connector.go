@@ -48,7 +48,7 @@ type Connector struct {
 	client      *http.Client
 }
 
-func (c *Connector) RetrieveSshConfig(ca *certificate.CaTemplateRequest) (*certificate.SshConfig, error) {
+func (c *Connector) RetrieveSshConfig(ca *certificate.SshCaTemplateRequest) (*certificate.SshConfig, error) {
 	return RetrieveSshConfig(c, ca)
 }
 

@@ -1202,9 +1202,9 @@ func doCommandSshGetConfig(c *cli.Context) error {
 		logf("Successfully connected to %s", cfg.ConnectorType)
 	}
 
-	req := &certificate.CaTemplateRequest{}
+	req := &certificate.SshCaTemplateRequest{}
 	if flags.sshCertTemplate != "" {
-		req.Dn = flags.sshCertTemplate
+		req.DN = flags.sshCertTemplate
 	}
 	if flags.sshCertGuid != "" {
 		req.Guid = flags.sshCertGuid

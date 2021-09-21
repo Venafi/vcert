@@ -2234,8 +2234,8 @@ func TestSshGetConfig(t *testing.T) {
 		}
 	}
 
-	var req = &certificate.CaTemplateRequest{}
-	req.Dn = os.Getenv("SSH_CERT_CA")
+	var req = &certificate.SshCaTemplateRequest{}
+	req.DN = os.Getenv("SSH_CERT_CA")
 
 	data, err := tpp.RetrieveSshConfig(req)
 

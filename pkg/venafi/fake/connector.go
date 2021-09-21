@@ -38,7 +38,7 @@ type Connector struct {
 	verbose bool
 }
 
-func (c *Connector) RetrieveSshConfig(ca *certificate.CaTemplateRequest) (*certificate.SshConfig, error) {
+func (c *Connector) RetrieveSshConfig(ca *certificate.SshCaTemplateRequest) (*certificate.SshConfig, error) {
 	panic("implement me")
 }
 

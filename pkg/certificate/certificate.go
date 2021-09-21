@@ -243,11 +243,10 @@ type TPPSshCertRequest struct {
 }
 
 type TppSshCertRequestResponse struct {
-	DN          string
-	Guid        string
-	Status      string
-	Permissions string
-	Response    TppSshCertResponseInfo `json:"Response,omitempty"`
+	DN                string
+	Guid              string
+	ProcessingDetails ProcessingDetails
+	Response          TppSshCertResponseInfo `json:"Response,omitempty"`
 }
 
 type TppSshCertResponseInfo struct {

@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	CaRootPath = policy.PathSeparator + "VED" + policy.PathSeparator + "Certificate Authority" + policy.PathSeparator + "SSH" + policy.PathSeparator + "Templates"
+	SSHCaRootPath = policy.PathSeparator + "VED" + policy.PathSeparator + "Certificate Authority" + policy.PathSeparator + "SSH" + policy.PathSeparator + "Templates"
 )
 
 func RequestSshCertificate(c *Connector, req *certificate.SshCertRequest) (requestID string, err error) {
@@ -109,8 +109,8 @@ func convertToSshCertReq(req *certificate.SshCertRequest) certificate.TPPSshCert
 			tppSshCertReq.CADN = policy.PathSeparator + tppSshCertReq.CADN
 		}
 
-		if !strings.HasPrefix(tppSshCertReq.CADN, CaRootPath) {
-			tppSshCertReq.CADN = CaRootPath + tppSshCertReq.CADN
+		if !strings.HasPrefix(tppSshCertReq.CADN, SSHCaRootPath) {
+			tppSshCertReq.CADN = SSHCaRootPath + tppSshCertReq.CADN
 		}
 	}
 
@@ -186,7 +186,7 @@ func parseSshCertRetrieveResult(httpStatusCode int, httpStatus string, body []by
 			return retrieveResponse, err
 		}
 		if !retrieveResponse.Response.Success {
-			return retrieveResponse, fmt.Errorf("error getting certificate, error code: %d, error description: %s", retrieveResponse.Response.ErrorCode, retrieveResponse.Response.ErrorMessage)
+			return retrieveResponse, fmt.Errorf("error getting certificate, error status: %s, error description: %s", retrieveResponse.ProcessingDetails.Status, retrieveResponse.ProcessingDetails.StatusDescription)
 		}
 		return retrieveResponse, nil
 	default:
@@ -243,7 +243,7 @@ func convertToGenericRetrieveResponse(data *certificate.TppSshCertRetrieveRespon
 
 }
 
-func getSshConfigUrlWithQueryParam(key, value string) string {
+func getSshConfigUrl(key, value string) string {
 	var url string
 	query := fmt.Sprintf("%s=%s", key, value)
 	query = netUrl.PathEscape(query)
@@ -251,15 +251,15 @@ func getSshConfigUrlWithQueryParam(key, value string) string {
 	return url
 }
 
-func RetrieveSshConfig(c *Connector, ca *certificate.CaTemplateRequest) (*certificate.SshConfig, error) {
+func RetrieveSshConfig(c *Connector, ca *certificate.SshCaTemplateRequest) (*certificate.SshConfig, error) {
 
 	var url string
-	if ca.Dn != "" {
-		fullPath := getCaDnFullPath(ca.Dn)
-		url = getSshConfigUrlWithQueryParam("DN", fullPath)
+	if ca.DN != "" {
+		fullPath := getCaDNFullPath(ca.DN)
+		url = getSshConfigUrl("DN", fullPath)
 		fmt.Println("Retrieving the configured CA public key for template:", fullPath)
 	} else if ca.Guid != "" {
-		url = getSshConfigUrlWithQueryParam("guid", ca.Guid)
+		url = getSshConfigUrl("guid", ca.Guid)
 		fmt.Println("Retrieving the configured CA public key for GUID:", ca.Guid)
 	} else {
 		return nil, fmt.Errorf("CA template or GUID are not specified")
@@ -294,13 +294,13 @@ func RetrieveSshConfig(c *Connector, ca *certificate.CaTemplateRequest) (*certif
 	return &conf, nil
 }
 
-func RetrieveSshCaPrincipals(c *Connector, ca *certificate.CaTemplateRequest) ([]string, error) {
+func RetrieveSshCaPrincipals(c *Connector, ca *certificate.SshCaTemplateRequest) ([]string, error) {
 
-	tppReq := certificate.TppCaTemplateRequest{}
+	tppReq := certificate.SshTppCaTemplateRequest{}
 
-	if ca.Dn != "" {
-		tppReq.Dn = getCaDnFullPath(ca.Dn)
-		fmt.Println("Retrieving the configured Principals for template:", tppReq.Dn)
+	if ca.DN != "" {
+		tppReq.DN = getCaDNFullPath(ca.DN)
+		fmt.Println("Retrieving the configured Principals for template:", tppReq.DN)
 	} else if ca.Guid != "" {
 		tppReq.Guid = ca.Guid
 		fmt.Println("Retrieving the configured Principals for GUID:", ca.Guid)
@@ -323,7 +323,7 @@ func RetrieveSshCaPrincipals(c *Connector, ca *certificate.CaTemplateRequest) ([
 	return data.AccessControl.DefaultPrincipals, nil
 }
 
-func parseSshCaDetailsRequestResult(httpStatusCode int, httpStatus string, body []byte) (*certificate.CaTemplateResponse, error) {
+func parseSshCaDetailsRequestResult(httpStatusCode int, httpStatus string, body []byte) (*certificate.SshTppCaTemplateResponse, error) {
 	switch httpStatusCode {
 	case http.StatusOK, http.StatusAccepted:
 		data, err := parseSshCaDetailsRequestData(body)
@@ -346,20 +346,20 @@ func parseSshCaDetailsRequestResult(httpStatusCode int, httpStatus string, body 
 	}
 }
 
-func parseSshCaDetailsRequestData(b []byte) (data *certificate.CaTemplateResponse, err error) {
+func parseSshCaDetailsRequestData(b []byte) (data *certificate.SshTppCaTemplateResponse, err error) {
 	err = json.Unmarshal(b, &data)
 	return
 }
 
-func getCaDnFullPath(ca string) string {
+func getCaDNFullPath(ca string) string {
 
 	fullPath := ca
 	if !strings.HasPrefix(ca, policy.PathSeparator) {
 		fullPath = policy.PathSeparator + ca
 	}
 
-	if !strings.HasPrefix(fullPath, CaRootPath) {
-		fullPath = CaRootPath + fullPath
+	if !strings.HasPrefix(fullPath, SSHCaRootPath) {
+		fullPath = SSHCaRootPath + fullPath
 	}
 
 	return fullPath

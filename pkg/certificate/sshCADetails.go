@@ -1,16 +1,16 @@
 package certificate
 
-type CaTemplateRequest struct {
-	Dn   string
+type SshCaTemplateRequest struct {
+	DN   string
 	Guid string
 }
 
-type TppCaTemplateRequest struct {
-	Dn   string `json:"DN,omitempty"`
+type SshTppCaTemplateRequest struct {
+	DN   string `json:"DN,omitempty"`
 	Guid string `json:"Guid,omitempty"`
 }
 
-type CaTemplateResponse struct {
+type SshTppCaTemplateResponse struct {
 	AccessControl AccessControl
 	Response      TppSshCertResponseInfo `json:"Response,omitempty"`
 }
