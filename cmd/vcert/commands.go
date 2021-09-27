@@ -1227,9 +1227,9 @@ func doCommandSshGetConfig(c *cli.Context) error {
 		}
 	}
 
-	if flags.sshFile != ""{
+	if flags.sshFile != "" {
 		err = writeToFile([]byte(conf.CaPublicKey), flags.sshFile, 0600)
-		if err != nil{
+		if err != nil {
 			return err
 		}
 	}
