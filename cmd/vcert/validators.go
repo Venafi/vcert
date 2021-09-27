@@ -740,7 +740,7 @@ func validateGetSshConfigFlags(commandName string) error {
 	}
 
 	if flags.sshCertTemplate == "" && flags.sshCertGuid == "" {
-		return fmt.Errorf("certificate issuing template(--template) or guid(--guid) value is required")
+		return fmt.Errorf("SSH certificate issuance template name (--template) or template guid (--guid) value is required")
 	}
 
 	return nil

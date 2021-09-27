@@ -623,6 +623,15 @@ var (
 		Usage: "The requested principals. If no value is specified, then the default principals from the certificate template will be used.",
 	}
 
+	flagSshFile = &cli.StringFlag{
+		Name: "file",
+		Usage: "Use to specify a file name and a location where the resulting file should be written. " +
+			"If this option is used the key, certificate, and chain will be written to the same file. " +
+			"Example: --file /path-to/ssh_pub.cer",
+		Destination: &flags.sshFile,
+		TakesFile:   true,
+	}
+
 	commonFlags              = []cli.Flag{flagInsecure, flagVerbose, flagNoPrompt}
 	keyFlags                 = []cli.Flag{flagKeyType, flagKeySize, flagKeyCurve, flagKeyFile, flagKeyPassword}
 	sansFlags                = []cli.Flag{flagDNSSans, flagEmailSans, flagIPSans, flagURISans, flagUPNSans}
@@ -835,6 +844,7 @@ var (
 		flagTPPToken,
 		flagSshCertCa,
 		flagSshCertGuid,
+		flagSshFile,
 		commonFlags,
 	))
 )

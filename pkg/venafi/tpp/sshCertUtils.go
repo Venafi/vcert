@@ -103,15 +103,8 @@ func convertToSshCertReq(req *certificate.SshCertRequest) certificate.TPPSshCert
 
 	if req.CADN != "" {
 
-		tppSshCertReq.CADN = req.CADN
+		tppSshCertReq.CADN = getCaDNFullPath(req.CADN)
 
-		if !strings.HasPrefix(tppSshCertReq.CADN, policy.PathSeparator) {
-			tppSshCertReq.CADN = policy.PathSeparator + tppSshCertReq.CADN
-		}
-
-		if !strings.HasPrefix(tppSshCertReq.CADN, SSHCaRootPath) {
-			tppSshCertReq.CADN = SSHCaRootPath + tppSshCertReq.CADN
-		}
 	}
 
 	if req.ForceCommand != "" {
@@ -260,7 +253,7 @@ func RetrieveSshConfig(c *Connector, ca *certificate.SshCaTemplateRequest) (*cer
 		fmt.Println("Retrieving the configured CA public key for template:", fullPath)
 	} else if ca.Guid != "" {
 		url = getSshConfigUrl("guid", ca.Guid)
-		fmt.Println("Retrieving the configured CA public key for GUID:", ca.Guid)
+		fmt.Println("Retrieving the configured CA public key for template with GUID:", ca.Guid)
 	} else {
 		return nil, fmt.Errorf("CA template or GUID are not specified")
 	}
@@ -288,7 +281,7 @@ func RetrieveSshConfig(c *Connector, ca *certificate.SshCaTemplateRequest) (*cer
 
 		conf.Principals = principals
 	} else {
-		fmt.Println("Skipping retrieval of Principals. No authentication data is provided.")
+		fmt.Println("Skipping retrieval of Default Principals. No authentication data is provided.")
 	}
 
 	return &conf, nil
@@ -300,10 +293,10 @@ func RetrieveSshCaPrincipals(c *Connector, ca *certificate.SshCaTemplateRequest)
 
 	if ca.DN != "" {
 		tppReq.DN = getCaDNFullPath(ca.DN)
-		fmt.Println("Retrieving the configured Principals for template:", tppReq.DN)
+		fmt.Println("Retrieving the configured Default Principals for template:", tppReq.DN)
 	} else if ca.Guid != "" {
 		tppReq.Guid = ca.Guid
-		fmt.Println("Retrieving the configured Principals for GUID:", ca.Guid)
+		fmt.Println("Retrieving the configured Default Principals for template with GUID:", ca.Guid)
 	} else {
 		return nil, fmt.Errorf("CA template or GUID are not specified")
 	}

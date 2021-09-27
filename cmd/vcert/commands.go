@@ -171,8 +171,8 @@ var (
 		Name:      commandSshGetConfigName,
 		Flags:     sshGetConfigFlags,
 		Action:    doCommandSshGetConfig,
-		Usage:     "To get the CA public key and principals",
-		UsageText: `vcert sshgetconfig -u https://tpp.example.com -t <TPP access token> --template <val>”`,
+		Usage:     "To get the SSH CA public key and default principals",
+		UsageText: `vcert sshgetconfig -u https://tpp.example.com -t <TPP access token> --template <val>`,
 	}
 )
 
@@ -1224,6 +1224,13 @@ func doCommandSshGetConfig(c *cli.Context) error {
 		fmt.Println("Principals:")
 		for _, v := range conf.Principals {
 			fmt.Println(v)
+		}
+	}
+
+	if flags.sshFile != ""{
+		err = writeToFile([]byte(conf.CaPublicKey), flags.sshFile, 0600)
+		if err != nil{
+			return err
 		}
 	}
 
