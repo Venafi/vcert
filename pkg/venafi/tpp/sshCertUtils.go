@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
-	"github.com/Venafi/vcert/v4/pkg/policy"
 	"github.com/Venafi/vcert/v4/pkg/util"
 	"log"
 	"net/http"
@@ -15,7 +14,7 @@ import (
 )
 
 const (
-	SSHCaRootPath = policy.PathSeparator + "VED" + policy.PathSeparator + "Certificate Authority" + policy.PathSeparator + "SSH" + policy.PathSeparator + "Templates"
+	SSHCaRootPath = util.PathSeparator + "VED" + util.PathSeparator + "Certificate Authority" + util.PathSeparator + "SSH" + util.PathSeparator + "Templates"
 )
 
 func RequestSshCertificate(c *Connector, req *certificate.SshCertRequest) (requestID string, err error) {
@@ -103,7 +102,7 @@ func convertToSshCertReq(req *certificate.SshCertRequest) certificate.TPPSshCert
 
 	if req.CADN != "" {
 
-		tppSshCertReq.CADN = getCaDNFullPath(req.CADN)
+		tppSshCertReq.CADN = getSshCaDN(req.CADN)
 
 	}
 
@@ -248,7 +247,7 @@ func RetrieveSshConfig(c *Connector, ca *certificate.SshCaTemplateRequest) (*cer
 
 	var url string
 	if ca.DN != "" {
-		fullPath := getCaDNFullPath(ca.DN)
+		fullPath := getSshCaDN(ca.DN)
 		url = getSshConfigUrl("DN", fullPath)
 		fmt.Println("Retrieving the configured CA public key for template:", fullPath)
 	} else if ca.Guid != "" {
@@ -292,7 +291,7 @@ func RetrieveSshCaPrincipals(c *Connector, ca *certificate.SshCaTemplateRequest)
 	tppReq := certificate.SshTppCaTemplateRequest{}
 
 	if ca.DN != "" {
-		tppReq.DN = getCaDNFullPath(ca.DN)
+		tppReq.DN = getSshCaDN(ca.DN)
 		fmt.Println("Retrieving the configured Default Principals for template:", tppReq.DN)
 	} else if ca.Guid != "" {
 		tppReq.Guid = ca.Guid
@@ -344,11 +343,11 @@ func parseSshCaDetailsRequestData(b []byte) (data *certificate.SshTppCaTemplateR
 	return
 }
 
-func getCaDNFullPath(ca string) string {
+func getSshCaDN(ca string) string {
 
 	fullPath := ca
-	if !strings.HasPrefix(ca, policy.PathSeparator) {
-		fullPath = policy.PathSeparator + ca
+	if !strings.HasPrefix(ca, util.PathSeparator) {
+		fullPath = util.PathSeparator + ca
 	}
 
 	if !strings.HasPrefix(fullPath, SSHCaRootPath) {

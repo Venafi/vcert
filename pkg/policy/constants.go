@@ -1,10 +1,11 @@
 package policy
 
+import "github.com/Venafi/vcert/v4/pkg/util"
+
 const (
 	JsonExtension        = ".json"
 	YamlExtension        = ".yaml"
-	RootPath             = PathSeparator + "VED" + PathSeparator + "Policy"
-	PathSeparator        = "\\"
+	RootPath             = util.PathSeparator + "VED" + util.PathSeparator + "Policy"
 	PolicyClass          = "Policy"
 	PolicyAttributeClass = "X509 Certificate"
 
