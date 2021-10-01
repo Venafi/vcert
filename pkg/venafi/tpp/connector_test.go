@@ -2010,7 +2010,7 @@ func TestCreateSshCertServiceGeneratedKP(t *testing.T) {
 
 	req.KeyId = test.RandSshKeyId()
 	req.ValidityPeriod = fmt.Sprint(duration, "h")
-	req.CADN = os.Getenv("TPP_SSH_CA")
+	req.Template = os.Getenv("TPP_SSH_CA")
 	req.SourceAddresses = []string{"test.com"}
 
 	id, err := tpp.RequestSSHCertificate(req)
@@ -2088,7 +2088,7 @@ func TestCreateSshCertLocalGeneratedKP(t *testing.T) {
 	}
 
 	req.ValidityPeriod = fmt.Sprint(duration, "h")
-	req.CADN = os.Getenv("TPP_SSH_CA")
+	req.Template = os.Getenv("TPP_SSH_CA")
 	req.SourceAddresses = []string{"test.com"}
 
 	sPubKey := string(pub)
@@ -2180,7 +2180,7 @@ func TestCreateSshCertProvidedPubKey(t *testing.T) {
 
 	req.KeyId = test.RandSshKeyId()
 	req.ValidityPeriod = fmt.Sprint(duration, "h")
-	req.CADN = os.Getenv("TPP_SSH_CA")
+	req.Template = os.Getenv("TPP_SSH_CA")
 	req.PublicKeyData = content
 	req.SourceAddresses = []string{"test.com"}
 
@@ -2236,7 +2236,7 @@ func TestSshGetConfig(t *testing.T) {
 	}
 
 	var req = &certificate.SshCaTemplateRequest{}
-	req.DN = os.Getenv("TPP_SSH_CA")
+	req.Template = os.Getenv("TPP_SSH_CA")
 
 	data, err := tpp.RetrieveSshConfig(req)
 

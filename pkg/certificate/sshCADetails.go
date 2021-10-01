@@ -1,8 +1,8 @@
 package certificate
 
 type SshCaTemplateRequest struct {
-	DN   string
-	Guid string
+	Template string
+	Guid     string
 }
 
 type SshTppCaTemplateRequest struct {

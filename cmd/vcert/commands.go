@@ -497,7 +497,7 @@ func doCommandEnrollSshCert(c *cli.Context) error {
 func fillSshCertificateRequest(req *certificate.SshCertRequest, cf *commandFlags) *certificate.SshCertRequest {
 
 	if cf.sshCertTemplate != "" {
-		req.CADN = cf.sshCertTemplate
+		req.Template = cf.sshCertTemplate
 	}
 
 	if cf.sshCertKeyId != "" {
@@ -1204,7 +1204,7 @@ func doCommandSshGetConfig(c *cli.Context) error {
 
 	req := &certificate.SshCaTemplateRequest{}
 	if flags.sshCertTemplate != "" {
-		req.DN = flags.sshCertTemplate
+		req.Template = flags.sshCertTemplate
 	}
 	if flags.sshCertGuid != "" {
 		req.Guid = flags.sshCertGuid

@@ -100,9 +100,9 @@ func convertToSshCertReq(req *certificate.SshCertRequest) certificate.TPPSshCert
 		tppSshCertReq.PublicKeyData = req.PublicKeyData
 	}
 
-	if req.CADN != "" {
+	if req.Template != "" {
 
-		tppSshCertReq.CADN = getSshCaDN(req.CADN)
+		tppSshCertReq.CADN = getSshCaDN(req.Template)
 
 	}
 
@@ -246,8 +246,8 @@ func getSshConfigUrl(key, value string) string {
 func RetrieveSshConfig(c *Connector, ca *certificate.SshCaTemplateRequest) (*certificate.SshConfig, error) {
 
 	var url string
-	if ca.DN != "" {
-		fullPath := getSshCaDN(ca.DN)
+	if ca.Template != "" {
+		fullPath := getSshCaDN(ca.Template)
 		url = getSshConfigUrl("DN", fullPath)
 		fmt.Println("Retrieving the configured CA public key for template:", fullPath)
 	} else if ca.Guid != "" {
@@ -290,8 +290,8 @@ func RetrieveSshCaPrincipals(c *Connector, ca *certificate.SshCaTemplateRequest)
 
 	tppReq := certificate.SshTppCaTemplateRequest{}
 
-	if ca.DN != "" {
-		tppReq.DN = getSshCaDN(ca.DN)
+	if ca.Template != "" {
+		tppReq.DN = getSshCaDN(ca.Template)
 		fmt.Println("Retrieving the configured Default Principals for template:", tppReq.DN)
 	} else if ca.Guid != "" {
 		tppReq.Guid = ca.Guid

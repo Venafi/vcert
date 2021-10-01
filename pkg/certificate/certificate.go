@@ -206,7 +206,7 @@ type Request struct {
 //This request is a standard one, it will hold data for tpp request
 //and in the future it will hold VaS data.
 type SshCertRequest struct {
-	CADN                 string
+	Template             string
 	PolicyDN             string
 	ObjectName           string
 	DestinationAddresses []string
