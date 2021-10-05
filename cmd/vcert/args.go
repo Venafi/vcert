@@ -33,6 +33,7 @@ const (
 	commandGetePolicyName   = "getpolicy"
 	commandSshPickupName    = "sshpickup"
 	commandSshEnrollName    = "sshenroll"
+	commandSshGetConfigName = "sshgetconfig"
 )
 
 var (
@@ -127,4 +128,5 @@ type commandFlags struct {
 	sshCertExtension     stringSlice
 	sshCertPrincipal     stringSlice
 	sshCertWindows       bool
+	sshFile              string
 }

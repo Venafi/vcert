@@ -4,4 +4,5 @@ const (
 	IssuerHintMicrosoft = "MICROSOFT"
 	IssuerHintDigicert  = "DIGICERT"
 	IssuerHintEntrust   = "ENTRUST"
+	PathSeparator       = "\\"
 )

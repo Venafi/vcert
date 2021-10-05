@@ -317,6 +317,8 @@ const (
 	urlResourceCleanPolicy            urlResource = "vedsdk/config/clearpolicyattribute"
 	urlResourceSshCertReq             urlResource = "vedsdk/SSHCertificates/request"
 	urlResourceSshCertRet             urlResource = "vedsdk/SSHCertificates/retrieve"
+	urlResourceSshCAPubKey            urlResource = "vedsdk/SSHCertificates/Template/Retrieve/PublicKeyData"
+	urlResourceSshCADetails           urlResource = "vedsdk/SSHCertificates/Template/Retrieve"
 )
 
 const (

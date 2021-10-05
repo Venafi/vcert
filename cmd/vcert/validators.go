@@ -143,7 +143,7 @@ func validateConnectionFlags(commandName string) error {
 		}
 		if flags.tppUser == "" && tppToken == "" {
 			// should be SaaS endpoint
-			if flags.apiKey == "" && getPropertyFromEnvironment(vCertApiKey) == "" {
+			if commandName != "sshgetconfig" && flags.apiKey == "" && getPropertyFromEnvironment(vCertApiKey) == "" {
 				return fmt.Errorf("An API key is required for communicating with Venafi as a Service")
 			}
 		} else {
@@ -727,6 +727,20 @@ func validateSshEnrollFlags(commandName string) error {
 	err = readData(commandName)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func validateGetSshConfigFlags(commandName string) error {
+
+	err := validateConnectionFlags(commandName)
+	if err != nil {
+		return err
+	}
+
+	if flags.sshCertTemplate == "" && flags.sshCertGuid == "" {
+		return fmt.Errorf("SSH certificate issuance template name (--template) or template guid (--guid) value is required")
 	}
 
 	return nil

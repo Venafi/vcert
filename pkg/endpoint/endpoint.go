@@ -99,6 +99,7 @@ type Connector interface {
 	GetPolicy(name string) (*policy.PolicySpecification, error)
 	RequestSSHCertificate(req *certificate.SshCertRequest) (requestID string, err error)
 	RetrieveSSHCertificate(req *certificate.SshCertRequest) (response *certificate.SshCertRetrieveDetails, err error)
+	RetrieveSshConfig(ca *certificate.SshCaTemplateRequest) (*certificate.SshConfig, error)
 }
 
 type Filter struct {

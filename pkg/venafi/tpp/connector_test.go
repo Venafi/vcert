@@ -2010,7 +2010,7 @@ func TestCreateSshCertServiceGeneratedKP(t *testing.T) {
 
 	req.KeyId = test.RandSshKeyId()
 	req.ValidityPeriod = fmt.Sprint(duration, "h")
-	req.CADN = os.Getenv("SSH_CERT_CA")
+	req.Template = os.Getenv("TPP_SSH_CA")
 	req.SourceAddresses = []string{"test.com"}
 
 	id, err := tpp.RequestSSHCertificate(req)
@@ -2088,7 +2088,7 @@ func TestCreateSshCertLocalGeneratedKP(t *testing.T) {
 	}
 
 	req.ValidityPeriod = fmt.Sprint(duration, "h")
-	req.CADN = os.Getenv("SSH_CERT_CA")
+	req.Template = os.Getenv("TPP_SSH_CA")
 	req.SourceAddresses = []string{"test.com"}
 
 	sPubKey := string(pub)
@@ -2142,6 +2142,7 @@ func TestCreateSshCertLocalGeneratedKP(t *testing.T) {
 }
 
 func TestCreateSshCertProvidedPubKey(t *testing.T) {
+	t.Skip("skipping this test since a fresh generated ssh public key is required")
 
 	var fileContent []byte
 
@@ -2179,7 +2180,7 @@ func TestCreateSshCertProvidedPubKey(t *testing.T) {
 
 	req.KeyId = test.RandSshKeyId()
 	req.ValidityPeriod = fmt.Sprint(duration, "h")
-	req.CADN = os.Getenv("SSH_CERT_CA")
+	req.Template = os.Getenv("TPP_SSH_CA")
 	req.PublicKeyData = content
 	req.SourceAddresses = []string{"test.com"}
 
@@ -2215,4 +2216,40 @@ func TestCreateSshCertProvidedPubKey(t *testing.T) {
 	if intHours != duration {
 		fmt.Errorf("certificate duration is different, expected: %v but got %v", duration, intHours)
 	}
+}
+
+func TestSshGetConfig(t *testing.T) {
+
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	tpp.verbose = true
+
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+
+	var req = &certificate.SshCaTemplateRequest{}
+	req.Template = os.Getenv("TPP_SSH_CA")
+
+	data, err := tpp.RetrieveSshConfig(req)
+
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	if data.CaPublicKey == "" {
+		t.Fatalf("CA public key is empty")
+	}
+
+	if len(data.Principals) == 0 {
+		t.Fatalf("principals are empty  ")
+	}
+
 }

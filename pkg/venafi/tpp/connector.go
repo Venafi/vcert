@@ -48,6 +48,10 @@ type Connector struct {
 	client      *http.Client
 }
 
+func (c *Connector) RetrieveSshConfig(ca *certificate.SshCaTemplateRequest) (*certificate.SshConfig, error) {
+	return RetrieveSshConfig(c, ca)
+}
+
 // NewConnector creates a new TPP Connector object used to communicate with TPP
 func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (*Connector, error) {
 	c := Connector{verbose: verbose, trust: trust, zone: zone}
@@ -668,8 +672,8 @@ func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) 
 
 	log.Println("Collecting policy attributes")
 
-	if !strings.HasPrefix(name, policy.PathSeparator) {
-		name = policy.PathSeparator + name
+	if !strings.HasPrefix(name, util.PathSeparator) {
+		name = util.PathSeparator + name
 	}
 
 	if !strings.HasPrefix(name, policy.RootPath) {
@@ -748,8 +752,8 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 	log.Printf("policy specification is valid")
 	var status = ""
 	tppPolicy := policy.BuildTppPolicy(ps)
-	if !strings.HasPrefix(name, policy.PathSeparator) {
-		name = policy.PathSeparator + name
+	if !strings.HasPrefix(name, util.PathSeparator) {
+		name = util.PathSeparator + name
 	}
 
 	if !strings.HasPrefix(name, policy.RootPath) {
