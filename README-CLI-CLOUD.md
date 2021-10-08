@@ -70,7 +70,7 @@ As an alternative to specifying API key, trust bundle, and/or zone via the comma
 
 ## Certificate Request Parameters
 ```
-VCert enroll -k <api key> --cn <common name> -z <application name\issuing template alias>
+vcert enroll -k <api key> --cn <common name> -z <application name\issuing template alias>
 ```
 Options:
 
@@ -97,7 +97,7 @@ Options:
 
 ## Certificate Retrieval Parameters
 ```
-VCert pickup -k <api key> [--pickup-id <request id> | --pickup-id-file <file name>]
+vcert pickup -k <api key> [--pickup-id <request id> | --pickup-id-file <file name>]
 ```
 Options:
 
@@ -114,7 +114,7 @@ Options:
 
 ## Certificate Renewal Parameters
 ```
-VCert renew -k <api key> [--id <request id> | --thumbprint <sha1 thumb>]
+vcert renew -k <api key> [--id <request id> | --thumbprint <sha1 thumb>]
 ```
 Options:
 
@@ -142,7 +142,7 @@ Options:
 
 ## Parameters for Applying Certificate Policy
 ```
-VCert setpolicy -k <api key> -z <application name\issuing template alias> --file <policy specification file>
+vcert setpolicy -k <api key> -z <application name\issuing template alias> --file <policy specification file>
 ```
 Options:
 
@@ -152,6 +152,7 @@ Options:
 | `--verify`         | Use to verify that a policy specification is valid. `-k` and `-z` are ignored with this option. |
 
 Notes:
+- The Venafi certificate policy specification is documented in detail [here](README-POLICY-SPEC.md).
 - The PKI Administrator role is required to apply certificate policy.
 - Policy (Issuing Template rules) and defaults (Issuing Template recommended settings) revert to their default state if they are not present in a policy specification applied by this action.
 - If the application or issuing template specified by the `-z` zone parameter do not exist, this action will attempt to create them with the calling user as the application owner.
@@ -167,7 +168,7 @@ When not present in the policy specification, `certificateAuthority` defaults to
 
 ## Parameters for Viewing Certificate Policy
 ```
-VCert getpolicy -k <api key> -z <application name\issuing template alias> [--file <policy specification file>]
+vcert getpolicy -k <api key> -z <application name\issuing template alias> [--file <policy specification file>]
 ```
 Options:
 
@@ -188,55 +189,55 @@ For the purposes of the following examples, assume the following:
 
 Use the help to view the command line syntax for enroll:
 ```
-VCert enroll -h
+vcert enroll -h
 ```
 Submit a request to Venafi as a Service for enrolling a certificate with a common name of “first-time.venafi.example” using an authentication token and have VCert prompt for the password to encrypt the private key:
 ```
-VCert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --cn first-time.venafi.example
+vcert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --cn first-time.venafi.example
 ```
 Submit a request to Venafi as a Service for enrolling a certificate where the password for encrypting the private key to be generated is specified in a text file called passwd.txt:
 ```
-VCert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --key-password file:passwd.txt --cn passwd-from-file.venafi.example
+vcert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --key-password file:passwd.txt --cn passwd-from-file.venafi.example
 ```
 Submit a request to Venafi as a Service for enrolling a certificate where the private key to be generated is not password encrypted:
 ```
-VCert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --cn non-encrypted-key.venafi.example --no-prompt
+vcert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --cn non-encrypted-key.venafi.example --no-prompt
 ```
 Submit a request to Venafi as a Service for enrolling a certificate using an externally generated CSR:
 ```
-VCert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --csr file:/opt/pki/cert.req
+vcert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --csr file:/opt/pki/cert.req
 ```
 Submit a request to Venafi as a Service for enrolling a certificate where the certificate and private key are output using JSON syntax to a file called json.txt:
 ```
-VCert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --key-password Passw0rd --cn json-to-file.venafi.example --format json --file keycert.json
+vcert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --key-password Passw0rd --cn json-to-file.venafi.example --format json --file keycert.json
 ```
 Submit a request to Venafi as a Service for enrolling a certificate where only the certificate and private key are output, no chain certificates:
 ```
-VCert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --key-password Passw0rd --cn no-chain.venafi.example --chain ignore
+vcert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --key-password Passw0rd --cn no-chain.venafi.example --chain ignore
 ```
 Submit a request to Venafi as a Service for enrolling a certificate with three DNS subject alternative names:
 ```
-VCert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --no-prompt --cn three-sans.venafi.example --san-dns first-san.venafi.example --san-dns second-san.venafi.example --san-dns third-san.venafi.example
+vcert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --no-prompt --cn three-sans.venafi.example --san-dns first-san.venafi.example --san-dns second-san.venafi.example --san-dns third-san.venafi.example
 ```
 Submit request to Venafi as a Service for enrolling a certificate where the certificate is not issued after two minutes and then subsequently retrieve that certificate after it has been issued:
 ```
-VCert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --no-prompt --cn demo-pickup.venafi.example
+vcert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --no-prompt --cn demo-pickup.venafi.example
 
-VCert pickup -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 --pickup-id "{7428fac3-d0e8-4679-9f48-d9e867a326ca}"
+vcert pickup -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 --pickup-id "{7428fac3-d0e8-4679-9f48-d9e867a326ca}"
 ```
 Submit request to Venafi as a Service for enrolling a certificate that will be retrieved later using a Pickup ID from in a text file:
 ```
-VCert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --no-prompt --cn demo-pickup.venafi.example --no-pickup -pickup-id-file pickup_id.txt
+vcert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --no-prompt --cn demo-pickup.venafi.example --no-pickup -pickup-id-file pickup_id.txt
 
-VCert pickup -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 --pickup-id-file pickup_id.txt
+vcert pickup -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 --pickup-id-file pickup_id.txt
 ```
 Submit request to Venafi as a Service for renewing a certificate using the enrollment (pickup) ID of the expiring certificate:
 ```
-VCert renew -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 --id "{7428fac3-d0e8-4679-9f48-d9e867a326ca}"
+vcert renew -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 --id "{7428fac3-d0e8-4679-9f48-d9e867a326ca}"
 ```
 Submit request to Venafi as a Service for renewing a certificate using the expiring certificate file:
 ```
-VCert renew -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 --thumbprint file:/opt/pki/demo.crt
+vcert renew -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 --thumbprint file:/opt/pki/demo.crt
 ```
 
 ## Appendix

@@ -109,7 +109,7 @@ ACTIONS:
    checkcred    To check the validity of a token and grant
    voidcred     To invalidate an authentication grant
 
-   sshenroll    To enroll a SSH ertificate
+   sshenroll    To enroll a SSH certificate
    sshpickup    To retrieve a SSH certificate
    sshgetconfig To get the SSH CA public key and default principals
 

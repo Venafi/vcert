@@ -24,11 +24,11 @@ Use these to quickly jump to a relevant section lower on this page:
 - [Options for renewing a certificate using the `renew` action](#certificate-renewal-parameters)
 - [Options for revoking a certificate using the `revoke` action](#certificate-revocation-parameters)
 - [Options common to the `enroll`, `pickup`, `renew`, and `revoke` actions](#general-command-line-parameters)
+- [Options for applying certificate policy using the `setpolicy` action](#parameters-for-applying-certificate-policy)
+- [Options for viewing certificate policy using the `getpolicy` action](#parameters-for-viewing-certificate-policy)
 - [Options for obtaining a new authorization token using the `getcred` action](#obtaining-an-authorization-token)
 - [Options for checking the validity of an authorization token using the `checkcred` action](#checking-the-validity-of-an-authorization-token)
 - [Options for invalidating an authorization token using the `voidcred` action](#invalidating-an-authorization-token)
-- [Options for applying certificate policy using the `setpolicy` action](#parameters-for-applying-certificate-policy)
-- [Options for viewing certificate policy using the `getpolicy` action](#parameters-for-viewing-certificate-policy)
 - [Options for generating a new key pair and CSR using the `gencsr` action (for manual enrollment)](#generating-a-new-key-pair-and-csr)
 
 ## Prerequisites
@@ -75,9 +75,9 @@ As an alternative to specifying a token, trust bundle, url, and/or zone via the 
 
 ## Certificate Request Parameters
 ```
-VCert enroll -u <tpp url> -t <auth token> --cn <common name> -z <zone>
+vcert enroll -u <tpp url> -t <auth token> --cn <common name> -z <zone>
 
-VCert enroll -u <tpp url> --tpp-user <username> --tpp-password <password> --cn <common name> -z <zone>
+vcert enroll -u <tpp url> --tpp-user <username> --tpp-password <password> --cn <common name> -z <zone>
 ```
 Options:
 
@@ -113,9 +113,9 @@ Options:
 
 ## Certificate Retrieval Parameters
 ```
-VCert pickup -u <tpp url> -t <auth token> [--pickup-id <request id> | --pickup-id-file <file name>]
+vcert pickup -u <tpp url> -t <auth token> [--pickup-id <request id> | --pickup-id-file <file name>]
 
-VCert pickup -u <tpp url> --tpp-user <username> --tpp-password <password> [--pickup-id <request id> | --pickup-id-file <file name>]
+vcert pickup -u <tpp url> --tpp-user <username> --tpp-password <password> [--pickup-id <request id> | --pickup-id-file <file name>]
 ```
 Options:
 
@@ -134,9 +134,9 @@ Options:
 
 ## Certificate Renewal Parameters
 ```
-VCert renew -u <tpp url> -t <auth token> [--id <request id> | --thumbprint <sha1 thumb>]
+vcert renew -u <tpp url> -t <auth token> [--id <request id> | --thumbprint <sha1 thumb>]
 
-VCert renew -u <tpp url> --tpp-user <username> --tpp-password <password> [--id <request id> | --thumbprint <sha1 thumb>]
+vcert renew -u <tpp url> --tpp-user <username> --tpp-password <password> [--id <request id> | --thumbprint <sha1 thumb>]
 ```
 Options:
 
@@ -168,9 +168,9 @@ Options:
 
 ## Certificate Revocation Parameters
 ```
-VCert revoke -u <tpp url> -t <auth token> [--id <request id> | --thumbprint <sha1 thumb>]
+vcert revoke -u <tpp url> -t <auth token> [--id <request id> | --thumbprint <sha1 thumb>]
 
-VCert revoke -u <tpp url> --tpp-user <username> --tpp-password <password> [--id <request id> | --thumbprint <sha1 thumb>]
+vcert revoke -u <tpp url> --tpp-user <username> --tpp-password <password> [--id <request id> | --thumbprint <sha1 thumb>]
 ```
 Options:
 
@@ -184,7 +184,7 @@ Options:
 
 ## Parameters for Applying Certificate Policy
 ```
-VCert setpolicy -u <tpp url> -t <auth token> -z <policy folder dn> --file <policy specification file>
+vcert setpolicy -u <tpp url> -t <auth token> -z <policy folder dn> --file <policy specification file>
 ```
 Options:
 
@@ -194,6 +194,7 @@ Options:
 | `--verify`         | Use to verify that a policy specification is valid. `-k` and `-z` are ignored with this option. |
 
 Notes:
+- The Venafi certificate policy specification is documented in detail [here](README-POLICY-SPEC.md).
 - The `configuration:manage` scope (token auth) and `Manage Policy` permission are required to apply certificate policy.
 - Policy and defaults revert to their default state if they are not present in a policy specification applied by this action.
 - Policy and defaults will not override policy that is locked by a parent folder.
@@ -210,7 +211,7 @@ Notes:
 
 ## Parameters for Viewing Certificate Policy
 ```
-VCert getpolicy -u <tpp url> -t <auth token> -z <policy folder dn> [--file <policy specification file>]
+vcert getpolicy -u <tpp url> -t <auth token> -z <policy folder dn> [--file <policy specification file>]
 ```
 Options:
 
@@ -231,96 +232,97 @@ For the purposes of the following examples, assume the following:
 
 Use the Help to view the command line syntax for enroll:
 ```
-VCert enroll -h
+vcert enroll -h
 ```
 Submit a Trust Protection Platform request for enrolling a certificate with a common name of “first-time.venafi.example” using an authentication token and have VCert prompt for the password to encrypt the private key:
 ```
-VCert enroll -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" -z "DevOps Certificates" --cn first-time.venafi.example
+vcert enroll -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" -z "DevOps Certificates" --cn first-time.venafi.example
 ```
 Submit a Trust Protection Platform request for enrolling a certificate with a common name of “first-time.venafi.example” and have VCert prompt for the DevOps user’s password and the password to encrypt the private key:
 ```
-VCert enroll -u https://tpp.venafi.example --tpp-user DevOps -z "DevOps Certificates" --cn first-time.venafi.example
+vcert enroll -u https://tpp.venafi.example --tpp-user DevOps -z "DevOps Certificates" --cn first-time.venafi.example
 ```
 Submit a Trust Protection Platform request for enrolling a certificate where the DevOps user password is specified on the command line and the password for encrypting the private key to be generated is specified in a text file called passwd.txt:
 ```
-VCert enroll -u https://tpp.venafi.example --tpp-user DevOps --tpp-password Passw0rd -z "DevOps Certificates" --key-password file:passwd.txt --cn passwd-from-file.venafi.example
+vcert enroll -u https://tpp.venafi.example --tpp-user DevOps --tpp-password Passw0rd -z "DevOps Certificates" --key-password file:passwd.txt --cn passwd-from-file.venafi.example
 ```
 Submit a Trust Protection Platform request for enrolling a certificate where the private key to be generated is not password encrypted:
 ```
-VCert enroll -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" -z "DevOps Certificates" --cn non-encrypted-key.venafi.example --no-prompt
+vcert enroll -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" -z "DevOps Certificates" --cn non-encrypted-key.venafi.example --no-prompt
 ```
 Submit a Trust Protection Platform request for enrolling a certificate where the private key and CSR are to be generated by the Venafi Platform:
 ```
-VCert enroll -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" -z "DevOps Certificates" --cn service-generated.venafi.example --csr service --key-password somePassw0rd!
+vcert enroll -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" -z "DevOps Certificates" --cn service-generated.venafi.example --csr service --key-password somePassw0rd!
 ```
 Submit a Trust Protection Platform request for enrolling a certificate using an externally generated CSR:
 ```
-VCert enroll -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" -z "DevOps Certificates" --nickname externally-generated-csr --csr file:/opt/pki/cert.req
+vcert enroll -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" -z "DevOps Certificates" --nickname externally-generated-csr --csr file:/opt/pki/cert.req
 ```
 Submit a Trust Protection Platform request for enrolling a certificate where the certificate and private key are output using JSON syntax to a file called json.txt:
 ```
-VCert enroll -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" -z "DevOps Certificates" --key-password Passw0rd --cn json-to-file.venafi.example --format json --file keycert.json
+vcert enroll -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" -z "DevOps Certificates" --key-password Passw0rd --cn json-to-file.venafi.example --format json --file keycert.json
 ```
 Submit a Trust Protection Platform request for enrolling a certificate where only the certificate and private key are output, no chain certificates:
 ```
-VCert enroll -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" -z "DevOps Certificates" --key-password Passw0rd --cn no-chain.venafi.example --chain ignore
+vcert enroll -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" -z "DevOps Certificates" --key-password Passw0rd --cn no-chain.venafi.example --chain ignore
 ```
 Submit a Trust Protection Platform request for enrolling two certificate that have the same common name but are to be represented by distinct objects in TPP rather than having the first certificate be considered an older generation of the second:
 ```
-VCert enroll -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" -z "DevOps Certificates" --key-password Passw0rd --cn same-cn.venafi.example --nickname same-cn-separate-object-1
+vcert enroll -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" -z "DevOps Certificates" --key-password Passw0rd --cn same-cn.venafi.example --nickname same-cn-separate-object-1
 
-VCert enroll -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" -z "DevOps Certificates" --key-password Passw0rd --cn same-cn.venafi.example --nickname same-cn-separate-object-2
+vcert enroll -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" -z "DevOps Certificates" --key-password Passw0rd --cn same-cn.venafi.example --nickname same-cn-separate-object-2
 ```
 Submit a Trust Protection Platform request for enrolling a certificate with three subject alternative names, one each of DNS name, IP address, and email address:
 ```
-VCert enroll -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" -z "DevOps Certificates" --no-prompt --cn three-san-types.venafi.example --san-dns demo.venafi.example --san-ip 10.20.30.40 --san-email zach.jackson@venafi.example
+vcert enroll -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" -z "DevOps Certificates" --no-prompt --cn three-san-types.venafi.example --san-dns demo.venafi.example --san-ip 10.20.30.40 --san-email zach.jackson@venafi.example
 ```
 Submit a Trust Protection Platform request for enrolling a certificate and setting two Custom Fields, one string (Cost Center) and one multi-valued list (Environment):
 ```
-VCert enroll -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" -z "DevOps Certificates" --no-prompt --cn custom-fields.venafi.example --field "Cost Center=ABC123" --field "Environment=Staging" --field "Environment=UAT"
+vcert enroll -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" -z "DevOps Certificates" --no-prompt --cn custom-fields.venafi.example --field "Cost Center=ABC123" --field "Environment=Staging" --field "Environment=UAT"
 ```
 Submit a Trust Protection Platform request for enrolling a certificate and identifying the location where it will be installed and can be validated:
 ```
-VCert enroll -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" -z "DevOps Certificates" --no-prompt --cn custom-fields.venafi.example --instance beta-cluster.venafi.example:order_svc_23 --tls-address 10.20.30.40:44300
+vcert enroll -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" -z "DevOps Certificates" --no-prompt --cn custom-fields.venafi.example --instance beta-cluster.venafi.example:order_svc_23 --tls-address 10.20.30.40:44300
 ```
 Submit a Trust Protection Platform request for enrolling a certificate where the certificate is not issued after two minutes and then subsequently retrieve that certificate after it has been issued:
 ```
-VCert enroll -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" -z "DevOps Certificates" --no-prompt --cn demo-pickup.venafi.example
+vcert enroll -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" -z "DevOps Certificates" --no-prompt --cn demo-pickup.venafi.example
 
-VCert pickup -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" --pickup-id "\VED\Policy\DevOps Certificates\demo-pickup.venafi.example"
+vcert pickup -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" --pickup-id "\VED\Policy\DevOps Certificates\demo-pickup.venafi.example"
 ```
 Note:  Special command line characters vary by shell will generally require escaping.  For example, in Unix/Linux shells the backslash character \ must be escaped so in the value of --pickup-id above would need to be "\\VED\\Policy\\DevOps Certificates\\demo-pickup.venafi.example".
 
 Submit a Trust Protection Platform request for enrolling a certificate that will be retrieved later using a Pickup ID from in a text file:
 ```
-VCert enroll -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" -z "DevOps Certificates" --no-prompt --cn demo-pickup.venafi.example --no-pickup -pickup-id-file pickup_id.txt
+vcert enroll -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" -z "DevOps Certificates" --no-prompt --cn demo-pickup.venafi.example --no-pickup -pickup-id-file pickup_id.txt
 
-VCert pickup -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" --pickup-id-file pickup_id.txt
+vcert pickup -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" --pickup-id-file pickup_id.txt
 ```
 Submit a Trust Protection Platform request for renewing a certificate using the enrollment (pickup) ID of the expiring certificate:
 ```
-VCert renew -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" --id "\VED\Policy\DevOps Certificates\demo.venafi.example"
+vcert renew -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" --id "\VED\Policy\DevOps Certificates\demo.venafi.example"
 ```
 Submit a Trust Protection Platform request for renewing a certificate using the expiring certificate file:
 ```
-VCert renew -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" --thumbprint file:/opt/pki/demo.crt
+vcert renew -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" --thumbprint file:/opt/pki/demo.crt
 ```
 Submit a Trust Protection Platform revocation request using the enrollment (pickup) ID of the certificate and keep the certificate enabled so that a replacement certificate can be enrolled later:
 ```
-VCert revoke -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" --id "\VED\Policy\DevOps Certificates\demo.venafi.example" --reason superseded --no-retire
+vcert revoke -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" --id "\VED\Policy\DevOps Certificates\demo.venafi.example" --reason superseded --no-retire
 ```
 Submit a Trust Protection Platform revocation request using the actual certificate file:
 ```
-VCert revoke -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" --thumbprint file:/opt/pki/demo.crt --reason cessation-of-operation
+vcert revoke -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" --thumbprint file:/opt/pki/demo.crt --reason cessation-of-operation
 ```
+
 
 ## Appendix
 
 ### Obtaining an Authorization Token
 ```
-VCert getcred -u <tpp url> --username <tpp username> --password <tpp password>
+vcert getcred -u <tpp url> --username <tpp username> --password <tpp password>
 
-VCert getcred -u <tpp url> --p12-file <client cert file> --p12-password <client cert file password>
+vcert getcred -u <tpp url> --p12-file <client cert file> --p12-password <client cert file password>
 ```
 Options:
 
@@ -334,13 +336,13 @@ Options:
 | `--scope`        | Use to request specific scopes and restrictions. "certificate:manage,revoke;" is the default which is the minimum required to perform any actions supported by the VCert CLI. |
 | `-t`             | Use to specify a refresh token for a Venafi Platform user. Required if `--username` or `--p12-file` is not present and may not be combined with either. |
 | `--trust-bundle` | Use to specify a PEM file name to be used as trust anchors when communicating with the Venafi Platform API server. |
-| `-u`             | Use to specify the URL of the Venafi Trust Protection Platform API server.<br/>Example: `-u https://tpp.example.com` |
+| `-u`             | Use to specify the URL of the Venafi Trust Protection Platform API server.<br/>Example: `-u https://tpp.venafi.example` |
 | `--username`     | Use to specify the username of a Venafi Platform user. Required if `--p12-file` or `--t` is not present and may not be combined with either. |
 
 ### Checking the validity of an Authorization Token
 ![Minimum Patch Level: TPP 20.1.7+ and 20.2.2+](https://img.shields.io/badge/Minimum%20Patch%20Level-%20TPP%2020.1.7%20and%2020.2.2-f9a90c)
 ```
-VCert checkcred -u <tpp url> -t <access token>
+vcert checkcred -u <tpp url> -t <access token>
 ```
 Options:
 
@@ -349,11 +351,11 @@ Options:
 | `--format`       | Specify "json" to get JSON formatted output instead of the plain text default. |
 | `-t`             | Use to specify an access token for a Venafi Platform user. |
 | `--trust-bundle` | Use to specify a PEM file name to be used as trust anchors when communicating with the Venafi Platform API server. |
-| `-u`             | Use to specify the URL of the Venafi Trust Protection Platform API server.<br/>Example: `-u https://tpp.example.com` |
+| `-u`             | Use to specify the URL of the Venafi Trust Protection Platform API server.<br/>Example: `-u https://tpp.venafi.example` |
 
 ### Invalidating an Authorization Token
 ```
-VCert voidcred -u <tpp url> -t <access token>
+vcert voidcred -u <tpp url> -t <access token>
 ```
 Options:
 
@@ -361,7 +363,7 @@ Options:
 | ---------------- | ------------------------------------------------------------ |
 | `-t`             | Use to specify an access token for a Venafi Platform user. |
 | `--trust-bundle` | Use to specify a PEM file name to be used as trust anchors when communicating with the Venafi Platform API server. |
-| `-u`             | Use to specify the URL of the Venafi Trust Protection Platform API server.<br/>Example: `-u https://tpp.example.com` |
+| `-u`             | Use to specify the URL of the Venafi Trust Protection Platform API server.<br/>Example: `-u https://tpp.venafi.example` |
 
 ### Generating a new key pair and CSR
 ```
