@@ -194,6 +194,7 @@ Options:
 | `--verify`         | Use to verify that a policy specification is valid. `-k` and `-z` are ignored with this option. |
 
 Notes:
+- The Venafi certificate policy specification is documented in detail [here](README-POLICY-SPEC.md).
 - The `configuration:manage` scope (token auth) and `Manage Policy` permission are required to apply certificate policy.
 - Policy and defaults revert to their default state if they are not present in a policy specification applied by this action.
 - Policy and defaults will not override policy that is locked by a parent folder.
