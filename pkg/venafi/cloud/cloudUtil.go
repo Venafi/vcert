@@ -172,7 +172,6 @@ func getCsrAttributes(c *Connector, req *certificate.Request) (*CsrAttributes, e
 		csrAttr.Country = &country
 	}
 
-
 	if len(req.DNSNames) > 0 {
 		sanByType := SubjectAlternativeNamesByType{}
 		sanByType.DnsNames = req.DNSNames

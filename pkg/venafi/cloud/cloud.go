@@ -93,12 +93,12 @@ type certificateRequest struct {
 }
 
 type CsrAttributes struct {
-	CommonName                    *string                       `json:"commonName,omitempty"`
-	Organization                  *string                       `json:"organization,omitempty"`
-	OrganizationalUnits           []string                      `json:"organizationalUnits,omitempty"`
-	Locality                      *string                       `json:"locality,omitempty"`
-	State                         *string                       `json:"state,omitempty"`
-	Country                       *string                       `json:"country,omitempty"`
+	CommonName                    *string                        `json:"commonName,omitempty"`
+	Organization                  *string                        `json:"organization,omitempty"`
+	OrganizationalUnits           []string                       `json:"organizationalUnits,omitempty"`
+	Locality                      *string                        `json:"locality,omitempty"`
+	State                         *string                        `json:"state,omitempty"`
+	Country                       *string                        `json:"country,omitempty"`
 	SubjectAlternativeNamesByType *SubjectAlternativeNamesByType `json:"subjectAlternativeNamesByType,omitempty"`
 }
 type SubjectAlternativeNamesByType struct {
