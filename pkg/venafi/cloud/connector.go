@@ -17,12 +17,15 @@
 package cloud
 
 import (
+	"crypto/rand"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
 	"github.com/Venafi/vcert/v4/pkg/policy"
+	"github.com/Venafi/vcert/v4/pkg/util"
+	"golang.org/x/crypto/nacl/box"
 	"log"
 	"net/http"
 	netUrl "net/url"
@@ -56,6 +59,8 @@ const (
 	urlAppRoot                        urlResource = basePath + "applications"
 	urlCAAccounts                     urlResource = apiVersion + "certificateauthorities/%s/accounts"
 	urlCAAccountDetails               urlResource = urlCAAccounts + "/%s"
+	urlResourceCertificateKS                      = urlResourceCertificates + "/%s/keystore"
+	urlDekPublicKey                   urlResource = apiVersion + "edgeencryptionkeys/%s"
 
 	defaultAppName = "Default"
 )
@@ -90,8 +95,27 @@ func (c *Connector) RequestSSHCertificate(req *certificate.SshCertRequest) (requ
 	panic("operation is not supported yet")
 }
 
-func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) {
+func (c *Connector) GetPolicyWithRegex(name string) (*policy.PolicySpecification, error) {
 
+	cit, err := retrievePolicySpecification(c, name)
+
+	if err != nil {
+		return nil, err
+	}
+
+	info, err := getCertificateAuthorityInfoFromCloud(cit.CertificateAuthority, cit.CertificateAuthorityAccountId, cit.CertificateAuthorityProductOptionId, c)
+
+	if err != nil {
+		return nil, err
+	}
+
+	log.Println("Building policy")
+	ps := buildPolicySpecification(cit, info, false)
+
+	return ps, nil
+}
+
+func retrievePolicySpecification(c *Connector, name string) (*certificateTemplate, error) {
 	appName := policy.GetApplicationName(name)
 	if appName != "" {
 		c.zone.appName = appName
@@ -112,6 +136,17 @@ func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) 
 		return nil, err
 	}
 
+	return cit, nil
+
+}
+
+func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) {
+
+	cit, err := retrievePolicySpecification(c, name)
+	if err != nil {
+		return nil, err
+	}
+
 	info, err := getCertificateAuthorityInfoFromCloud(cit.CertificateAuthority, cit.CertificateAuthorityAccountId, cit.CertificateAuthorityProductOptionId, c)
 
 	if err != nil {
@@ -119,7 +154,7 @@ func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) 
 	}
 
 	log.Println("Building policy")
-	ps := buildPolicySpecification(cit, info)
+	ps := buildPolicySpecification(cit, info, true)
 
 	return ps, nil
 }
@@ -394,15 +429,10 @@ func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration,
 	return config, nil
 }
 
-// RequestCertificate submits the CSR to the Venafi Cloud API for processing
-func (c *Connector) RequestCertificate(req *certificate.Request) (requestID string, err error) {
-	if req.CsrOrigin == certificate.ServiceGeneratedCSR {
-		return "", fmt.Errorf("service generated CSR is not supported by Saas service")
-	}
+func getCloudRequest(c *Connector, req *certificate.Request) (*certificateRequest, error) {
 
-	url := c.getURL(urlResourceCertificateRequests)
 	if c.user == nil || c.user.Company == nil {
-		return "", fmt.Errorf("must be autheticated to request a certificate")
+		return nil, fmt.Errorf("must be autheticated to request a certificate")
 	}
 
 	ipAddr := endpoint.LocalIP
@@ -415,18 +445,31 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 
 	appDetails, _, err := c.getAppDetailsByName(c.zone.getApplicationName())
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	templateId := appDetails.CitAliasToIdMap[c.zone.getTemplateAlias()]
 
 	cloudReq := certificateRequest{
-		CSR:           string(req.GetCSR()),
 		ApplicationId: appDetails.ApplicationId,
 		TemplateId:    templateId,
 		ApiClientInformation: certificateRequestClientInfo{
 			Type:       origin,
 			Identifier: ipAddr,
 		},
+	}
+
+	if req.CsrOrigin != certificate.ServiceGeneratedCSR {
+		cloudReq.CSR = string(req.GetCSR())
+	} else {
+
+		cloudReq.IsVaaSGenerated = true
+		csrAttr, err := getCsrAttributes(c, req)
+		if err != nil {
+			return nil, err
+		}
+		cloudReq.CsrAttributes = *(csrAttr)
+		cloudReq.ApplicationServerTypeId = util.ApplicationServerTypeID
+
 	}
 
 	if req.Location != nil {
@@ -449,6 +492,19 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 		hoursStr := strconv.Itoa(req.ValidityHours)
 		validityHoursStr := "PT" + hoursStr + "H"
 		cloudReq.ValidityPeriod = validityHoursStr
+	}
+
+	return &cloudReq, nil
+
+}
+
+// RequestCertificate submits the CSR to the Venafi Cloud API for processing
+func (c *Connector) RequestCertificate(req *certificate.Request) (requestID string, err error) {
+
+	url := c.getURL(urlResourceCertificateRequests)
+	cloudReq, err := getCloudRequest(c, req)
+	if err != nil {
+		return "", err
 	}
 
 	statusCode, status, body, err := c.request("POST", url, cloudReq)
@@ -530,35 +586,11 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 
 		req.PickupID = certificateRequestId
 	}
-
-	startTime := time.Now()
-	//Wait for certificate to be issued by checking it's PickupID
-	//If certID is filled then certificate should be already issued.
 	var certificateId string
 	if req.CertID == "" {
-		for {
-			if req.PickupID == "" {
-				break
-			}
-			certStatus, err := c.getCertificateStatus(req.PickupID)
-			if err != nil {
-				return nil, fmt.Errorf("unable to retrieve: %s", err)
-			}
-			if certStatus.Status == "ISSUED" {
-				certificateId = certStatus.CertificateIdsList[0]
-				break // to fetch the cert itself
-			} else if certStatus.Status == "FAILED" {
-				return nil, fmt.Errorf("failed to retrieve certificate. Status: %v", certStatus)
-			}
-			// status.Status == "REQUESTED" || status.Status == "PENDING"
-			if req.Timeout == 0 {
-				return nil, endpoint.ErrCertificatePending{CertificateID: req.PickupID, Status: certStatus.Status}
-			}
-			if time.Now().After(startTime.Add(req.Timeout)) {
-				return nil, endpoint.ErrRetrieveCertificateTimeout{CertificateID: req.PickupID}
-			}
-			// fmt.Printf("pending... %s\n", status.Status)
-			time.Sleep(2 * time.Second)
+		certificateId, err = getCertificateId(c, req)
+		if err != nil {
+			return nil, err
 		}
 	} else {
 		certificateId = req.CertID
@@ -607,6 +639,173 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 		}
 	}
 	return nil, fmt.Errorf("couldn't retrieve certificate because both PickupID and CertId are empty")
+}
+
+func (c *Connector) RetrieveCertificateAsKeyStore(req *certificate.Request) ([]byte, error) {
+
+	if req.PickupID == "" && req.CertID == "" && req.Thumbprint != "" {
+		// search cert by Thumbprint and fill pickupID
+		var certificateRequestId string
+		searchResult, err := c.searchCertificatesByFingerprint(req.Thumbprint)
+		if err != nil {
+			return nil, fmt.Errorf("failed to retrieve certificate: %s", err)
+		}
+		if len(searchResult.Certificates) == 0 {
+			return nil, fmt.Errorf("no certificate found using fingerprint %s", req.Thumbprint)
+		}
+
+		var reqIds []string
+		isOnlyOneCertificateRequestId := true
+		for _, c := range searchResult.Certificates {
+			reqIds = append(reqIds, c.CertificateRequestId)
+			if certificateRequestId != "" && certificateRequestId != c.CertificateRequestId {
+				isOnlyOneCertificateRequestId = false
+			}
+			if c.CertificateRequestId != "" {
+				certificateRequestId = c.CertificateRequestId
+			}
+			if c.Id != "" {
+				req.CertID = c.Id
+			}
+		}
+		if !isOnlyOneCertificateRequestId {
+			return nil, fmt.Errorf("more than one CertificateRequestId was found with the same Fingerprint: %s", reqIds)
+		}
+
+		req.PickupID = certificateRequestId
+	}
+
+	var certificateId string
+	var err error
+	if req.CertID == "" {
+		certificateId, err = getCertificateId(c, req)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		certificateId = req.CertID
+	}
+
+	if c.user == nil || c.user.Company == nil {
+		return nil, fmt.Errorf("must be autheticated to retieve certificate")
+	}
+	if req.CertID != "" {
+		return retrieveServiceGeneratedCert(c, req)
+	} else if certificateId != "" {
+		req.CertID = certificateId
+		return retrieveServiceGeneratedCert(c, req)
+	}
+	return nil, fmt.Errorf("couldn't retrieve certificate because both PickupID and CertId are empty")
+}
+
+func getCertificateId(c *Connector, req *certificate.Request) (string, error) {
+	startTime := time.Now()
+	//Wait for certificate to be issued by checking it's PickupID
+	//If certID is filled then certificate should be already issued.
+	var certificateId string
+	if req.CertID == "" {
+		for {
+			if req.PickupID == "" {
+				break
+			}
+			certStatus, err := c.getCertificateStatus(req.PickupID)
+			if err != nil {
+				return "", fmt.Errorf("unable to retrieve: %s", err)
+			}
+			if certStatus.Status == "ISSUED" {
+				certificateId = certStatus.CertificateIdsList[0]
+				break // to fetch the cert itself
+			} else if certStatus.Status == "FAILED" {
+				return "", fmt.Errorf("failed to retrieve certificate. Status: %v", certStatus)
+			}
+
+			if req.Timeout == 0 {
+				return "nil", endpoint.ErrCertificatePending{CertificateID: req.PickupID, Status: certStatus.Status}
+			} else {
+				log.Println("Issuance of certificate is pending...")
+			}
+			if time.Now().After(startTime.Add(req.Timeout)) {
+				return "", endpoint.ErrRetrieveCertificateTimeout{CertificateID: req.PickupID}
+			}
+			time.Sleep(2 * time.Second)
+		}
+	} else {
+		certificateId = req.CertID
+	}
+	return certificateId, nil
+}
+
+func retrieveServiceGeneratedCert(c *Connector, req *certificate.Request) ([]byte, error) {
+
+	//get certificate details for getting DekHash
+	url := c.getURL(urlResourceCertificateByID)
+	url = fmt.Sprintf(url, req.CertID)
+
+	statusCode, status, body, err := c.request("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	managedCert, err := parseCertificateInfo(statusCode, status, body)
+
+	if err != nil {
+		return nil, err
+	}
+
+	//get Dek info for getting DEK's key
+	url = c.getURL(urlDekPublicKey)
+	url = fmt.Sprintf(url, managedCert.DekHash)
+
+	statusCode, status, body, err = c.request("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	dekInfo, err := parseDEKInfo(statusCode, status, body)
+	if err != nil {
+		return nil, err
+	}
+
+	//convert DEK's key string into base 64 bit representation
+	pkEncoded, err := base64.StdEncoding.DecodeString(dekInfo.Key)
+
+	if err != nil {
+		return nil, err
+	}
+
+	publicKey, err := Load32KeyByte(pkEncoded)
+	if err != nil {
+		return nil, err
+	}
+
+	encrypted, err := box.SealAnonymous(nil, []byte(req.KeyPassword), publicKey, rand.Reader)
+
+	if err != nil {
+		return nil, err
+	}
+
+	//Request keystore
+	ksRequest := KeyStoreRequest{
+		ExportFormat:                  "PEM",
+		EncryptedPrivateKeyPassphrase: base64.StdEncoding.EncodeToString(encrypted),
+		EncryptedKeystorePassphrase:   "",
+		CertificateLabel:              "",
+	}
+
+	url = c.getURL(urlResourceCertificateKS)
+	url = fmt.Sprintf(url, req.CertID)
+
+	statusCode, status, body, err = c.request("POST", url, ksRequest)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if statusCode != http.StatusOK && statusCode != http.StatusCreated {
+		return nil, fmt.Errorf("failed to retrieve KeyStore on VaaS, status: %s", status)
+	}
+
+	return body, nil
 }
 
 // Waits for the Certificate to be available. Fails when the timeout is exceeded
@@ -806,6 +1005,7 @@ type managedCertificate struct {
 	Id                   string `json:"id"`
 	CompanyId            string `json:"companyId"`
 	CertificateRequestId string `json:"certificateRequestId"`
+	DekHash              string `json:"dekHash,omitempty"`
 }
 
 func (c *Connector) getCertificate(certificateId string) (*managedCertificate, error) {

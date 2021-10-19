@@ -38,6 +38,10 @@ type Connector struct {
 	verbose bool
 }
 
+func (c *Connector) RetrieveCertificateAsKeyStore(req *certificate.Request) ([]byte, error) {
+	panic("implement me")
+}
+
 func (c *Connector) RetrieveSshConfig(ca *certificate.SshCaTemplateRequest) (*certificate.SshConfig, error) {
 	panic("implement me")
 }

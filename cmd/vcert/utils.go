@@ -17,6 +17,8 @@
 package main
 
 import (
+	"archive/zip"
+	"bytes"
 	"crypto/sha1"
 	"crypto/x509"
 	"encoding/hex"
@@ -668,4 +670,64 @@ func AddLineEnding(s string) string {
 		s = strings.ReplaceAll(s, "\r\n", "\n")
 	}
 	return s
+}
+
+func PrintServiceGeneratedCertChain(dataByte []byte) error {
+	var certificate string
+	var privateKey string
+	var chain string
+
+	zipReader, err := zip.NewReader(bytes.NewReader(dataByte), int64(len(dataByte)))
+	if err != nil {
+		return err
+	}
+
+	for _, zipFile := range zipReader.File {
+		if strings.HasSuffix(zipFile.Name, ".key") {
+
+			f, err := zipFile.Open()
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+			defer f.Close()
+			fileBytes, err := ioutil.ReadAll(f)
+
+			privateKey = strings.TrimSpace(string(fileBytes))
+
+		} else if strings.HasSuffix(zipFile.Name, "_root-first.pem") {
+
+			f, err := zipFile.Open()
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+			defer f.Close()
+			fileBytes, err := ioutil.ReadAll(f)
+
+			certs := strings.Split(strings.TrimSpace(string(fileBytes)), "\n\n")
+
+			for i := 0; i < len(certs); i++ {
+				if i < len(certs)-1 {
+					if chain == "" {
+						chain = certs[i]
+					} else {
+						if true {
+							chain = fmt.Sprintf("%s\n%s", chain, certs[i])
+						} else {
+							chain = fmt.Sprintf("%s\n%s", certs[i], chain)
+						}
+					}
+				} else {
+					certificate = certs[i]
+				}
+			}
+		}
+	}
+
+	fmt.Printf("%s\n\n", certificate)
+	fmt.Printf("%s\n\n", privateKey)
+	fmt.Printf("%s\n\n", chain)
+
+	return nil
 }

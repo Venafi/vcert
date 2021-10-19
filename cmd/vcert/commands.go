@@ -318,6 +318,13 @@ func doCommandEnroll1(c *cli.Context) error {
 	}
 	logf("Successfully posted request for %s, will pick up by %s", requestedFor, flags.pickupID)
 
+	if req.CsrOrigin == certificate.ServiceGeneratedCSR {
+		req.PickupID = flags.pickupID
+		req.ChainOption = certificate.ChainOptionFromString(flags.chainOption)
+		req.KeyPassword = flags.keyPassword
+		return processServiceGenerated(&connector, req)
+	}
+
 	if flags.noPickup {
 		pcc, err = certificate.NewPEMCollection(nil, req.PrivateKey, []byte(flags.keyPassword))
 		if err != nil {
@@ -365,6 +372,35 @@ func doCommandEnroll1(c *cli.Context) error {
 
 	if err != nil {
 		return fmt.Errorf("Failed to output the results: %s", err)
+	}
+	return nil
+}
+
+func processServiceGenerated(connector *endpoint.Connector, req *certificate.Request) error {
+	req.Timeout = time.Duration(180) * time.Second
+
+	dataByte, err := (*connector).RetrieveCertificateAsKeyStore(req)
+
+	if err != nil {
+		return err
+	}
+
+	if flags.file != "" {
+
+		err = util.SaveZipFile(flags.file, dataByte)
+
+		if err != nil {
+			return err
+		}
+
+	} else {
+
+		err = PrintServiceGeneratedCertChain(dataByte)
+
+		if err != nil {
+			return err
+		}
+
 	}
 	return nil
 }
