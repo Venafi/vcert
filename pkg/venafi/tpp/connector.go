@@ -48,10 +48,6 @@ type Connector struct {
 	client      *http.Client
 }
 
-func (c *Connector) RetrieveCertificateAsKeyStore(req *certificate.Request) ([]byte, error) {
-	panic("implement me")
-}
-
 func (c *Connector) RetrieveSshConfig(ca *certificate.SshCaTemplateRequest) (*certificate.SshConfig, error) {
 	return RetrieveSshConfig(c, ca)
 }

@@ -71,12 +71,15 @@ func getCsrAttributes(c *Connector, req *certificate.Request) (*CsrAttributes, e
 	}
 
 	csrAttr := CsrAttributes{}
-	var valid = false
+	valid := false
 
 	if req.Subject.CommonName != "" {
 		if policy.Policy != nil {
 
-			valid, err = isValueAllowed([]string{req.Subject.CommonName}, policy.Policy.Domains)
+			valid, err = isValueMatch([]string{req.Subject.CommonName}, policy.Policy.Domains)
+			if err != nil {
+				return nil, err
+			}
 
 			if !valid {
 				return nil, fmt.Errorf("specified CN %s, doen't match with policy's specified domains %+q", req.Subject.CommonName, policy.Policy.Domains)
@@ -87,7 +90,7 @@ func getCsrAttributes(c *Connector, req *certificate.Request) (*CsrAttributes, e
 
 	if len(req.Subject.Organization) > 0 {
 		if policy.Policy != nil && policy.Policy.Subject != nil {
-			valid, err := isValueAllowed(req.Subject.Organization, policy.Policy.Subject.Orgs)
+			valid, err := isValueMatch(req.Subject.Organization, policy.Policy.Subject.Orgs)
 			if err != nil {
 				return nil, err
 			}
@@ -104,7 +107,7 @@ func getCsrAttributes(c *Connector, req *certificate.Request) (*CsrAttributes, e
 
 	if len(req.Subject.OrganizationalUnit) > 0 {
 		if policy.Policy != nil && policy.Policy.Subject != nil {
-			valid, err := isValueAllowed(req.Subject.OrganizationalUnit, policy.Policy.Subject.OrgUnits)
+			valid, err := isValueMatch(req.Subject.OrganizationalUnit, policy.Policy.Subject.OrgUnits)
 			if err != nil {
 				return nil, err
 			}
@@ -121,7 +124,7 @@ func getCsrAttributes(c *Connector, req *certificate.Request) (*CsrAttributes, e
 	if len(req.Subject.Locality) > 0 {
 
 		if policy.Policy != nil && policy.Policy.Subject != nil {
-			valid, err := isValueAllowed(req.Subject.Locality, policy.Policy.Subject.Localities)
+			valid, err := isValueMatch(req.Subject.Locality, policy.Policy.Subject.Localities)
 			if err != nil {
 				return nil, err
 			}
@@ -132,14 +135,14 @@ func getCsrAttributes(c *Connector, req *certificate.Request) (*CsrAttributes, e
 
 		csrAttr.Locality = &req.Subject.Locality[0]
 	} else if policy.Default != nil && policy.Default.Subject != nil && policy.Default.Subject.State != nil {
-		state := *(policy.Default.Subject.State)
-		csrAttr.State = &state
+		locality := *(policy.Default.Subject.Locality)
+		csrAttr.Locality = &locality
 	}
 
 	if len(req.Subject.Province) > 0 {
 
 		if policy.Policy != nil && policy.Policy.Subject != nil {
-			valid, err := isValueAllowed(req.Subject.Province, policy.Policy.Subject.States)
+			valid, err := isValueMatch(req.Subject.Province, policy.Policy.Subject.States)
 			if err != nil {
 				return nil, err
 			}
@@ -157,7 +160,7 @@ func getCsrAttributes(c *Connector, req *certificate.Request) (*CsrAttributes, e
 	if len(req.Subject.Country) > 0 {
 
 		if policy.Policy != nil && policy.Policy.Subject != nil {
-			valid, err := isValueAllowed(req.Subject.Country, policy.Policy.Subject.Countries)
+			valid, err := isValueMatch(req.Subject.Country, policy.Policy.Subject.Countries)
 			if err != nil {
 				return nil, err
 			}
@@ -190,7 +193,7 @@ func testRegex(toTest, regex string) (bool, error) {
 	return compiledRegex.MatchString(toTest), nil
 }
 
-func isValueAllowed(toTest, regexString []string) (bool, error) {
+func isValueMatch(toTest, regexString []string) (bool, error) {
 	validCN := true
 	var err error
 	if len(regexString) > 0 {

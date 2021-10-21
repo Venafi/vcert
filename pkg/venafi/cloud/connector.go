@@ -17,6 +17,8 @@
 package cloud
 
 import (
+	"archive/zip"
+	"bytes"
 	"crypto/rand"
 	"crypto/x509"
 	"encoding/base64"
@@ -26,6 +28,7 @@ import (
 	"github.com/Venafi/vcert/v4/pkg/policy"
 	"github.com/Venafi/vcert/v4/pkg/util"
 	"golang.org/x/crypto/nacl/box"
+	"io/ioutil"
 	"log"
 	"net/http"
 	netUrl "net/url"
@@ -552,9 +555,6 @@ func (c *Connector) getCertificateStatus(requestID string) (certStatus *certific
 // RetrieveCertificate retrieves the certificate for the specified ID
 func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates *certificate.PEMCollection, err error) {
 
-	if req.FetchPrivateKey {
-		return nil, fmt.Errorf("failed to retrieve private key from Venafi Cloud service: not supported")
-	}
 	if req.PickupID == "" && req.CertID == "" && req.Thumbprint != "" {
 		// search cert by Thumbprint and fill pickupID
 		var certificateRequestId string
@@ -586,11 +586,37 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 
 		req.PickupID = certificateRequestId
 	}
+
+	startTime := time.Now()
+	//Wait for certificate to be issued by checking it's PickupID
+	//If certID is filled then certificate should be already issued.
 	var certificateId string
 	if req.CertID == "" {
-		certificateId, err = getCertificateId(c, req)
-		if err != nil {
-			return nil, err
+		for {
+			if req.PickupID == "" {
+				break
+			}
+			certStatus, err := c.getCertificateStatus(req.PickupID)
+			if err != nil {
+				return nil, fmt.Errorf("unable to retrieve: %s", err)
+			}
+			if certStatus.Status == "ISSUED" {
+				certificateId = certStatus.CertificateIdsList[0]
+				break // to fetch the cert itself
+			} else if certStatus.Status == "FAILED" {
+				return nil, fmt.Errorf("failed to retrieve certificate. Status: %v", certStatus)
+			}
+			// status.Status == "REQUESTED" || status.Status == "PENDING"
+			if req.Timeout == 0 {
+				return nil, endpoint.ErrCertificatePending{CertificateID: req.PickupID, Status: certStatus.Status}
+			} else {
+				log.Println("Issuance of certificate is pending...")
+			}
+			if time.Now().After(startTime.Add(req.Timeout)) {
+				return nil, endpoint.ErrRetrieveCertificateTimeout{CertificateID: req.PickupID}
+			}
+			// fmt.Printf("pending... %s\n", status.Status)
+			time.Sleep(2 * time.Second)
 		}
 	} else {
 		certificateId = req.CertID
@@ -602,6 +628,20 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 
 	url := c.getURL(urlResourceCertificateRetrievePem)
 	url = fmt.Sprintf(url, certificateId)
+
+	var dekInfo *DekInfo
+	var currentId string
+	if req.CertID != "" {
+		dekInfo, err = getDekInfo(c, req.CertID)
+		currentId = req.CertID
+	} else if certificateId != "" {
+		dekInfo, err = getDekInfo(c, certificateId)
+		currentId = certificateId
+	}
+	if err == nil && dekInfo.Key != "" {
+		req.CertID = currentId
+		return retrieveServiceGeneratedCertData(c, req)
+	}
 
 	switch {
 	case req.CertID != "":
@@ -641,101 +681,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 	return nil, fmt.Errorf("couldn't retrieve certificate because both PickupID and CertId are empty")
 }
 
-func (c *Connector) RetrieveCertificateAsKeyStore(req *certificate.Request) ([]byte, error) {
-
-	if req.PickupID == "" && req.CertID == "" && req.Thumbprint != "" {
-		// search cert by Thumbprint and fill pickupID
-		var certificateRequestId string
-		searchResult, err := c.searchCertificatesByFingerprint(req.Thumbprint)
-		if err != nil {
-			return nil, fmt.Errorf("failed to retrieve certificate: %s", err)
-		}
-		if len(searchResult.Certificates) == 0 {
-			return nil, fmt.Errorf("no certificate found using fingerprint %s", req.Thumbprint)
-		}
-
-		var reqIds []string
-		isOnlyOneCertificateRequestId := true
-		for _, c := range searchResult.Certificates {
-			reqIds = append(reqIds, c.CertificateRequestId)
-			if certificateRequestId != "" && certificateRequestId != c.CertificateRequestId {
-				isOnlyOneCertificateRequestId = false
-			}
-			if c.CertificateRequestId != "" {
-				certificateRequestId = c.CertificateRequestId
-			}
-			if c.Id != "" {
-				req.CertID = c.Id
-			}
-		}
-		if !isOnlyOneCertificateRequestId {
-			return nil, fmt.Errorf("more than one CertificateRequestId was found with the same Fingerprint: %s", reqIds)
-		}
-
-		req.PickupID = certificateRequestId
-	}
-
-	var certificateId string
-	var err error
-	if req.CertID == "" {
-		certificateId, err = getCertificateId(c, req)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		certificateId = req.CertID
-	}
-
-	if c.user == nil || c.user.Company == nil {
-		return nil, fmt.Errorf("must be autheticated to retieve certificate")
-	}
-	if req.CertID != "" {
-		return retrieveServiceGeneratedCert(c, req)
-	} else if certificateId != "" {
-		req.CertID = certificateId
-		return retrieveServiceGeneratedCert(c, req)
-	}
-	return nil, fmt.Errorf("couldn't retrieve certificate because both PickupID and CertId are empty")
-}
-
-func getCertificateId(c *Connector, req *certificate.Request) (string, error) {
-	startTime := time.Now()
-	//Wait for certificate to be issued by checking it's PickupID
-	//If certID is filled then certificate should be already issued.
-	var certificateId string
-	if req.CertID == "" {
-		for {
-			if req.PickupID == "" {
-				break
-			}
-			certStatus, err := c.getCertificateStatus(req.PickupID)
-			if err != nil {
-				return "", fmt.Errorf("unable to retrieve: %s", err)
-			}
-			if certStatus.Status == "ISSUED" {
-				certificateId = certStatus.CertificateIdsList[0]
-				break // to fetch the cert itself
-			} else if certStatus.Status == "FAILED" {
-				return "", fmt.Errorf("failed to retrieve certificate. Status: %v", certStatus)
-			}
-
-			if req.Timeout == 0 {
-				return "nil", endpoint.ErrCertificatePending{CertificateID: req.PickupID, Status: certStatus.Status}
-			} else {
-				log.Println("Issuance of certificate is pending...")
-			}
-			if time.Now().After(startTime.Add(req.Timeout)) {
-				return "", endpoint.ErrRetrieveCertificateTimeout{CertificateID: req.PickupID}
-			}
-			time.Sleep(2 * time.Second)
-		}
-	} else {
-		certificateId = req.CertID
-	}
-	return certificateId, nil
-}
-
-func retrieveServiceGeneratedCert(c *Connector, req *certificate.Request) ([]byte, error) {
+func retrieveServiceGeneratedCertData(c *Connector, req *certificate.Request) (*certificate.PEMCollection, error) {
 
 	//get certificate details for getting DekHash
 	url := c.getURL(urlResourceCertificateByID)
@@ -805,7 +751,116 @@ func retrieveServiceGeneratedCert(c *Connector, req *certificate.Request) ([]byt
 		return nil, fmt.Errorf("failed to retrieve KeyStore on VaaS, status: %s", status)
 	}
 
-	return body, nil
+	rootFirst := false
+	if req.ChainOption == certificate.ChainOptionRootFirst {
+		rootFirst = true
+	}
+
+	return ConvertZipBytesToPem(body, rootFirst)
+
+}
+
+func getDekInfo(c *Connector, cerId string) (*DekInfo, error) {
+	//get certificate details for getting DekHash
+	url := c.getURL(urlResourceCertificateByID)
+	url = fmt.Sprintf(url, cerId)
+
+	statusCode, status, body, err := c.request("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	managedCert, err := parseCertificateInfo(statusCode, status, body)
+
+	if err != nil {
+		return nil, err
+	}
+
+	//get Dek info for getting DEK's key
+	url = c.getURL(urlDekPublicKey)
+	url = fmt.Sprintf(url, managedCert.DekHash)
+
+	statusCode, status, body, err = c.request("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	dekInfo, err := parseDEKInfo(statusCode, status, body)
+	if err != nil {
+		return nil, err
+	}
+
+	return dekInfo, nil
+
+}
+
+func ConvertZipBytesToPem(dataByte []byte, rootFirst bool) (*certificate.PEMCollection, error) {
+	collection := certificate.PEMCollection{}
+	var certificate string
+	var privateKey string
+	var chain string
+	var chainArr []string
+
+	zipReader, err := zip.NewReader(bytes.NewReader(dataByte), int64(len(dataByte)))
+	if err != nil {
+		return nil, err
+	}
+
+	for _, zipFile := range zipReader.File {
+		if strings.HasSuffix(zipFile.Name, ".key") {
+
+			f, err := zipFile.Open()
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+			defer f.Close()
+			fileBytes, err := ioutil.ReadAll(f)
+			if err != nil {
+				return nil, err
+			}
+
+			privateKey = strings.TrimSpace(string(fileBytes)) + "\n"
+
+		} else if strings.HasSuffix(zipFile.Name, "_root-first.pem") {
+
+			f, err := zipFile.Open()
+
+			if err != nil {
+				return nil, err
+			}
+
+			defer f.Close()
+			fileBytes, err := ioutil.ReadAll(f)
+			if err != nil {
+				return nil, err
+			}
+
+			certs := strings.Split(strings.TrimSpace(string(fileBytes)), "\n\n")
+
+			for i := 0; i < len(certs); i++ {
+				if i < len(certs)-1 {
+					if chain == "" {
+						chainArr = append(chainArr, certs[i]+"\n")
+					} else {
+						if rootFirst {
+							chainArr = append(chainArr, certs[i]+"\n")
+						} else {
+							chainArr = append([]string{certs[i] + "\n"}, chainArr...)
+						}
+					}
+				} else {
+					certificate = certs[i] + "\n"
+				}
+			}
+		}
+	}
+
+	collection.Certificate = certificate
+	collection.PrivateKey = privateKey
+	collection.Chain = chainArr
+
+	return &collection, nil
 }
 
 // Waits for the Certificate to be available. Fails when the timeout is exceeded

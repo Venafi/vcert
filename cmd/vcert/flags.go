@@ -718,6 +718,7 @@ var (
 			flagPickupIDFile,
 			flagTimeout,
 			commonFlags,
+			flagCSROption,
 		)),
 	)
 
