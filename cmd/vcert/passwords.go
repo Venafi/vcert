@@ -58,7 +58,9 @@ func readPasswordsFromInputFlags(commandName string, cf *commandFlags) error {
 		}
 	}
 
-	if commandName == commandSshPickupName || commandName == commandSshEnrollName || commandName == commandEnrollName || commandName == commandGenCSRName || commandName == commandRenewName || commandName == commandPickupName && (cf.format == "pkcs12" || cf.format == JKSFormat || cf.csrOption == "service") {
+	cloudSerViceGenerated := IsCsrServiceVaaSGenerated(commandName)
+
+	if commandName == commandSshPickupName || commandName == commandSshEnrollName || commandName == commandEnrollName || commandName == commandGenCSRName || commandName == commandRenewName || commandName == commandPickupName && (cf.format == "pkcs12" || cf.format == JKSFormat || cloudSerViceGenerated) {
 		var keyPasswordNotNeeded = false
 
 		keyPasswordNotNeeded = keyPasswordNotNeeded || (cf.csrOption == "service" && cf.noPickup)
@@ -69,6 +71,10 @@ func readPasswordsFromInputFlags(commandName string, cf *commandFlags) error {
 
 		if commandName == commandSshPickupName {
 			keyPasswordNotNeeded = cf.sshCertKeyPassphrase != ""
+		}
+
+		if cloudSerViceGenerated {
+			keyPasswordNotNeeded = false
 		}
 
 		if !keyPasswordNotNeeded {

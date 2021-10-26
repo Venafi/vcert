@@ -38,6 +38,10 @@ type Connector struct {
 	verbose bool
 }
 
+func (c *Connector) IsCSRServiceGenerated(req *certificate.Request) (bool, error) {
+	panic("operation is not supported yet")
+}
+
 func (c *Connector) RetrieveSshConfig(ca *certificate.SshCaTemplateRequest) (*certificate.SshConfig, error) {
 	panic("implement me")
 }

@@ -769,6 +769,14 @@ func doCommandPickup1(c *cli.Context) error {
 	}
 	logf("Successfully retrieved request for %s", flags.pickupID)
 
+	if connector.GetType() == endpoint.ConnectorTypeCloud && (flags.format == Pkcs12 || flags.format == JKSFormat) {
+		privKey, err := util.DecryptPkcs8PrivateKey(pcc.PrivateKey, flags.keyPassword)
+		if err != nil {
+			return err
+		}
+		pcc.PrivateKey = privKey
+	}
+
 	result := &Result{
 		Pcc:      pcc,
 		PickupId: flags.pickupID,

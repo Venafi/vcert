@@ -86,6 +86,89 @@ type Connector struct {
 	client  *http.Client
 }
 
+func (c *Connector) IsCSRServiceGenerated(req *certificate.Request) (bool, error) {
+	if c.user == nil || c.user.Company == nil {
+		return false, fmt.Errorf("must be autheticated to retieve certificate")
+	}
+
+	if req.PickupID == "" && req.CertID == "" && req.Thumbprint != "" {
+		// search cert by Thumbprint and fill pickupID
+		var certificateRequestId string
+		searchResult, err := c.searchCertificatesByFingerprint(req.Thumbprint)
+		if err != nil {
+			return false, fmt.Errorf("failed to retrieve certificate: %s", err)
+		}
+		if len(searchResult.Certificates) == 0 {
+			return false, fmt.Errorf("no certificate found using fingerprint %s", req.Thumbprint)
+		}
+
+		var reqIds []string
+		for _, c := range searchResult.Certificates {
+			reqIds = append(reqIds, c.CertificateRequestId)
+			if certificateRequestId != "" && certificateRequestId != c.CertificateRequestId {
+				return false, fmt.Errorf("more than one CertificateRequestId was found with the same Fingerprint: %s", reqIds)
+			}
+			if c.CertificateRequestId != "" {
+				certificateRequestId = c.CertificateRequestId
+			}
+			if c.Id != "" {
+				req.CertID = c.Id
+			}
+		}
+		req.PickupID = certificateRequestId
+	}
+
+	var dekInfo *DekInfo
+	var currentId string
+	var err error
+	if req.CertID != "" {
+		dekInfo, err = getDekInfo(c, req.CertID)
+	} else {
+		var certificateId string
+		certificateId, err = getCertificateId(c, req)
+		if err == nil && certificateId != "" {
+			dekInfo, err = getDekInfo(c, certificateId)
+		}
+	}
+
+	if err == nil && dekInfo.Key != "" {
+		req.CertID = currentId
+		return true, err
+	}
+	return false, nil
+}
+
+func getCertificateId(c *Connector, req *certificate.Request) (string, error) {
+	startTime := time.Now()
+	//Wait for certificate to be issued by checking it's PickupID
+	//If certID is filled then certificate should be already issued.
+	for {
+		if req.PickupID == "" {
+			break
+		}
+		certStatus, err := c.getCertificateStatus(req.PickupID)
+		if err != nil {
+			return "", fmt.Errorf("unable to retrieve: %s", err)
+		}
+		if certStatus.Status == "ISSUED" {
+			return certStatus.CertificateIdsList[0], nil
+		} else if certStatus.Status == "FAILED" {
+			return "", fmt.Errorf("failed to retrieve certificate. Status: %v", certStatus)
+		}
+		if req.Timeout == 0 {
+			return "", endpoint.ErrCertificatePending{CertificateID: req.PickupID, Status: certStatus.Status}
+		} else {
+			log.Println("Issuance of certificate is pending...")
+		}
+		if time.Now().After(startTime.Add(req.Timeout)) {
+			return "", endpoint.ErrRetrieveCertificateTimeout{CertificateID: req.PickupID}
+		}
+		time.Sleep(2 * time.Second)
+	}
+
+	return "", endpoint.ErrRetrieveCertificateTimeout{CertificateID: req.PickupID}
+}
+
 func (c *Connector) RetrieveSshConfig(ca *certificate.SshCaTemplateRequest) (*certificate.SshConfig, error) {
 	panic("implement me")
 }
@@ -683,31 +766,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 
 func retrieveServiceGeneratedCertData(c *Connector, req *certificate.Request) (*certificate.PEMCollection, error) {
 
-	//get certificate details for getting DekHash
-	url := c.getURL(urlResourceCertificateByID)
-	url = fmt.Sprintf(url, req.CertID)
-
-	statusCode, status, body, err := c.request("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	managedCert, err := parseCertificateInfo(statusCode, status, body)
-
-	if err != nil {
-		return nil, err
-	}
-
-	//get Dek info for getting DEK's key
-	url = c.getURL(urlDekPublicKey)
-	url = fmt.Sprintf(url, managedCert.DekHash)
-
-	statusCode, status, body, err = c.request("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	dekInfo, err := parseDEKInfo(statusCode, status, body)
+	dekInfo, err := getDekInfo(c, req.CertID)
 	if err != nil {
 		return nil, err
 	}
@@ -738,10 +797,10 @@ func retrieveServiceGeneratedCertData(c *Connector, req *certificate.Request) (*
 		CertificateLabel:              "",
 	}
 
-	url = c.getURL(urlResourceCertificateKS)
+	url := c.getURL(urlResourceCertificateKS)
 	url = fmt.Sprintf(url, req.CertID)
 
-	statusCode, status, body, err = c.request("POST", url, ksRequest)
+	statusCode, status, body, err := c.request("POST", url, ksRequest)
 
 	if err != nil {
 		return nil, err
