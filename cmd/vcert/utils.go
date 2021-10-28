@@ -673,7 +673,7 @@ func AddLineEnding(s string) string {
 	return s
 }
 
-func IsCsrServiceVaaSGenerated(commandName string) bool {
+func IsCSRServiceVaaSGenerated(commandName string) bool {
 	cloudSerViceGenerated := false
 	if commandName == commandPickupName {
 		context := &cli.Context{

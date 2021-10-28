@@ -771,14 +771,13 @@ func retrieveServiceGeneratedCertData(c *Connector, req *certificate.Request) (*
 		return nil, err
 	}
 
-	//convert DEK's key string into base 64 bit representation
-	pkEncoded, err := base64.StdEncoding.DecodeString(dekInfo.Key)
+	pkDecoded, err := base64.StdEncoding.DecodeString(dekInfo.Key)
 
 	if err != nil {
 		return nil, err
 	}
 
-	publicKey, err := Load32KeyByte(pkEncoded)
+	publicKey, err := Load32KeyByte(pkDecoded)
 	if err != nil {
 		return nil, err
 	}

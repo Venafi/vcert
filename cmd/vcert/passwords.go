@@ -58,7 +58,7 @@ func readPasswordsFromInputFlags(commandName string, cf *commandFlags) error {
 		}
 	}
 
-	cloudSerViceGenerated := IsCsrServiceVaaSGenerated(commandName)
+	cloudSerViceGenerated := IsCSRServiceVaaSGenerated(commandName)
 
 	if commandName == commandSshPickupName || commandName == commandSshEnrollName || commandName == commandEnrollName || commandName == commandGenCSRName || commandName == commandRenewName || commandName == commandPickupName && (cf.format == "pkcs12" || cf.format == JKSFormat || cloudSerViceGenerated) {
 		var keyPasswordNotNeeded = false
