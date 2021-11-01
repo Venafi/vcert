@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/policy"
 	"log"
 	"net/http"
 	neturl "net/url"
@@ -29,6 +28,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Venafi/vcert/v4/pkg/policy"
 
 	"github.com/Venafi/vcert/v4/pkg/util"
 
@@ -444,6 +445,8 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 	default:
 		return tppReq, fmt.Errorf("Unexpected option in PrivateKeyOrigin")
 	}
+
+	tppReq.CertificateType = "AUTO"
 	tppReq.PolicyDN = getPolicyDN(zone)
 	tppReq.CADN = req.CADN
 	tppReq.ObjectName = req.FriendlyName
