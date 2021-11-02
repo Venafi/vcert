@@ -83,6 +83,7 @@ type certificateRequest struct {
 	DisableAutomaticRenewal bool            `json:",omitempty"`
 	CustomFields            []customField   `json:",omitempty"`
 	Devices                 []device        `json:",omitempty"`
+	CertificateType         string          `json:",omitempty"`
 }
 
 type certificateRetrieveRequest struct {
