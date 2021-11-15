@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/policy"
 	"log"
 	"net/http"
 	netUrl "net/url"
@@ -30,6 +29,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Venafi/vcert/v4/pkg/policy"
 
 	"github.com/Venafi/vcert/v4/pkg/verror"
 
@@ -79,14 +80,14 @@ type Connector struct {
 }
 
 func (c *Connector) RetrieveSshConfig(ca *certificate.SshCaTemplateRequest) (*certificate.SshConfig, error) {
-	panic("implement me")
-}
-
-func (c *Connector) RetrieveSSHCertificate(req *certificate.SshCertRequest) (response *certificate.SshCertRetrieveDetails, err error) {
 	panic("operation is not supported yet")
 }
 
-func (c *Connector) RequestSSHCertificate(req *certificate.SshCertRequest) (requestID string, err error) {
+func (c *Connector) RetrieveSSHCertificate(req *certificate.SshCertRequest) (response *certificate.SshCertificateObject, err error) {
+	panic("operation is not supported yet")
+}
+
+func (c *Connector) RequestSSHCertificate(req *certificate.SshCertRequest) (response *certificate.SshCertificateObject, err error) {
 	panic("operation is not supported yet")
 }
 

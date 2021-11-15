@@ -128,5 +128,6 @@ type commandFlags struct {
 	sshCertExtension     stringSlice
 	sshCertPrincipal     stringSlice
 	sshCertWindows       bool
-	sshFile              string
+	sshFileCertEnroll    string
+	sshFileGetConfig     string
 }

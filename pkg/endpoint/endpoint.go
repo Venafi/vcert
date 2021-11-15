@@ -22,11 +22,12 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/policy"
 	"log"
 	"net"
 	"net/http"
 	"regexp"
+
+	"github.com/Venafi/vcert/v4/pkg/policy"
 
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 )
@@ -97,8 +98,8 @@ type Connector interface {
 	ListCertificates(filter Filter) ([]certificate.CertificateInfo, error)
 	SetPolicy(name string, ps *policy.PolicySpecification) (string, error)
 	GetPolicy(name string) (*policy.PolicySpecification, error)
-	RequestSSHCertificate(req *certificate.SshCertRequest) (requestID string, err error)
-	RetrieveSSHCertificate(req *certificate.SshCertRequest) (response *certificate.SshCertRetrieveDetails, err error)
+	RequestSSHCertificate(req *certificate.SshCertRequest) (response *certificate.SshCertificateObject, err error)
+	RetrieveSSHCertificate(req *certificate.SshCertRequest) (response *certificate.SshCertificateObject, err error)
 	RetrieveSshConfig(ca *certificate.SshCaTemplateRequest) (*certificate.SshConfig, error)
 }
 

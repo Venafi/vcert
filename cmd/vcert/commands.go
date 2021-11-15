@@ -22,9 +22,6 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/policy"
-	"github.com/Venafi/vcert/v4/pkg/util"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
 	"net"
@@ -33,6 +30,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Venafi/vcert/v4/pkg/policy"
+	"github.com/Venafi/vcert/v4/pkg/util"
+	"gopkg.in/yaml.v2"
 
 	"github.com/Venafi/vcert/v4"
 	"github.com/Venafi/vcert/v4/pkg/certificate"
@@ -392,7 +393,9 @@ func doCommandEnrollSshCert(c *cli.Context) error {
 	if err != nil {
 		logf("Unable to build connector for %s: %s", cfg.ConnectorType, err)
 	} else {
-		logf("Successfully built connector for %s", cfg.ConnectorType)
+		if flags.verbose {
+			logf("Successfully built connector for %s", cfg.ConnectorType)
+		}
 	}
 
 	err = connector.Ping()
@@ -400,7 +403,9 @@ func doCommandEnrollSshCert(c *cli.Context) error {
 	if err != nil {
 		logf("Unable to connect to %s: %s", cfg.ConnectorType, err)
 	} else {
-		logf("Successfully connected to %s", cfg.ConnectorType)
+		if flags.verbose {
+			logf("Successfully connected to %s", cfg.ConnectorType)
+		}
 	}
 
 	var req = &certificate.SshCertRequest{}
@@ -435,41 +440,43 @@ func doCommandEnrollSshCert(c *cli.Context) error {
 		pubKeyS, err := getSshPubKeyFromFile()
 
 		if err != nil {
-
 			return err
-
 		}
 
 		if pubKeyS == "" {
-
 			return fmt.Errorf("specified public key in %s is empty", flags.sshCertPubKey)
-
 		}
 
 		req.PublicKeyData = pubKeyS
-
 	}
 
-	flags.pickupID, err = connector.RequestSSHCertificate(req)
+	req.Timeout = time.Duration(flags.timeout) * time.Second
+	data, err := connector.RequestSSHCertificate(req)
 
 	if err != nil {
 		return err
 	}
 
-	logf("certificate were created")
+	// 'Rejected' status is handled in the connector
+	if (data.ProcessingDetails.Status == "Pending Issue") || (data.ProcessingDetails.Status == "Issued" && data.CertificateData == "") {
+		logf("SSH certificate was successfully requested. Retrieving the certificate data.")
 
-	retReq := certificate.SshCertRequest{
-		PickupID:                  flags.pickupID,
-		IncludeCertificateDetails: true,
-	}
-	if flags.keyPassword != "" {
-		retReq.PrivateKeyPassphrase = flags.keyPassword
-	}
+		flags.pickupID = data.DN
+		retReq := certificate.SshCertRequest{
+			PickupID:                  flags.pickupID,
+			IncludeCertificateDetails: true,
+		}
+		if flags.keyPassword != "" {
+			retReq.PrivateKeyPassphrase = flags.keyPassword
+		}
 
-	retReq.Timeout = time.Duration(10) * time.Second
-	data, err := connector.RetrieveSSHCertificate(&retReq)
-	if err != nil {
-		return fmt.Errorf("Failed to retrieve certificate: %s", err)
+		retReq.Timeout = time.Duration(10) * time.Second
+		data, err = connector.RetrieveSSHCertificate(&retReq)
+		if err != nil {
+			return fmt.Errorf("Failed to retrieve SSH certificate '%s'. Error: %s", flags.pickupID, err)
+		}
+	} else {
+		logf("Successfully issued SSH certificate with Key ID '%s'", data.CertificateDetails.KeyID)
 	}
 
 	//this case is when the keypair is local generated
@@ -485,8 +492,21 @@ func doCommandEnrollSshCert(c *cli.Context) error {
 	if isServiceGenerated() {
 		privateKeyS = AddLineEnding(privateKeyS)
 	}
-	err = writeSshFiles(data.CertificateDetails.KeyID, []byte(privateKeyS), []byte(data.PublicKeyData), []byte(data.CertificateData))
 
+	privateKeyFileName := flags.sshFileCertEnroll
+	if privateKeyFileName == "" {
+		privateKeyFileName = data.CertificateDetails.KeyID
+	}
+
+	// Check if the files already exist and prompt the user to overwrite
+	if !flags.noPrompt {
+		err = validateExistingFile(privateKeyFileName)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = writeSshFiles(privateKeyFileName, []byte(privateKeyS), []byte(data.PublicKeyData), []byte(data.CertificateData))
 	if err != nil {
 		return err
 	}
@@ -1227,8 +1247,16 @@ func doCommandSshGetConfig(c *cli.Context) error {
 		}
 	}
 
-	if flags.sshFile != "" {
-		err = writeToFile([]byte(conf.CaPublicKey), flags.sshFile, 0600)
+	if flags.sshFileGetConfig != "" {
+		// Check if the file already exists and prompt the user to overwrite
+		if !flags.noPrompt {
+			err = validateExistingFile(flags.sshFileGetConfig)
+			if err != nil {
+				return err
+			}
+		}
+
+		err = writeToFile([]byte(conf.CaPublicKey), flags.sshFileGetConfig, 0600)
 		if err != nil {
 			return err
 		}
@@ -1341,18 +1369,27 @@ func doCommandSshPickup(c *cli.Context) error {
 	}
 	logf("Successfully retrieved request for %s", data.DN)
 
-	err = validateExistingFile(data.CertificateDetails.KeyID)
-	if err != nil {
-		return err
-	}
-
 	printSshMetadata(data)
 	privateKeyS := data.PrivateKeyData
 	if privateKeyS != "" {
 		privateKeyS = AddLineEnding(privateKeyS)
 	}
 
-	err = writeSshFiles(data.CertificateDetails.KeyID, []byte(privateKeyS), []byte(data.PublicKeyData), []byte(data.CertificateData))
+	// If --file is not set, use Key ID as filename
+	privateKeyFileName := flags.sshFileCertEnroll
+	if privateKeyFileName == "" {
+		privateKeyFileName = data.CertificateDetails.KeyID
+	}
+
+	// Check if the files already exist and prompt the user to overwrite
+	if !flags.noPrompt {
+		err = validateExistingFile(privateKeyFileName)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = writeSshFiles(privateKeyFileName, []byte(privateKeyS), []byte(data.PublicKeyData), []byte(data.CertificateData))
 	if err != nil {
 		return err
 	}
