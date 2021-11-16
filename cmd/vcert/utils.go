@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Venafi, Inc.
+ * Copyright 2018-2021 Venafi, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -551,7 +551,7 @@ func printPrincipals(p []string) {
 func printCriticalOptions(fc string, sa []string) {
 	logf("\tCritical Options: ")
 	if fc == "" && len(sa) == 0 {
-		logf("\t\t", "None")
+		logf("\t\tNone")
 	} else {
 		if fc != "" {
 			logf("\t\tForce command: %s", fc)

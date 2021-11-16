@@ -1,3 +1,18 @@
+/*
+ * Copyright 2018-2021 Venafi, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package tpp
 
 import (
@@ -37,15 +52,15 @@ func RequestSshCertificate(c *Connector, req *certificate.SshCertRequest) (*cert
 
 	response, err := parseSshCertOperationResponse(statusCode, status, body)
 
-	log.Println("SSH certificate DN: ", response.DN)
-	log.Println("GUID: ", response.Guid)
-
 	if err != nil {
 		if response.Response.ErrorMessage != "" && c.verbose {
 			log.Println(util.GetJsonAsString(response.Response))
 		}
 		return nil, err
 	}
+
+	log.Println("SSH certificate DN: ", response.DN)
+	log.Println("GUID: ", response.Guid)
 
 	if response.Response.Success && response.ProcessingDetails.Status == "Rejected" {
 		return nil, endpoint.ErrCertificateRejected{CertificateID: req.PickupID, Status: response.ProcessingDetails.StatusDescription}
@@ -189,7 +204,12 @@ func parseSshCertOperationResponse(httpStatusCode int, httpStatus string, body [
 		if err != nil {
 			return response, err
 		}
-		if response.Response.Success && response.ProcessingDetails.Status == "Rejected" {
+
+		if !response.Response.Success {
+			return response, fmt.Errorf("error getting certificate object, error status: %v, error description: %s", response.Response.ErrorCode, response.Response.ErrorMessage)
+		}
+
+		if response.ProcessingDetails.Status == "Rejected" {
 			return response, fmt.Errorf("error getting certificate object, error status: %s, error description: %s", response.ProcessingDetails.Status, response.ProcessingDetails.StatusDescription)
 		}
 		return response, nil
@@ -202,6 +222,9 @@ func parseSshCertOperationResponse(httpStatusCode int, httpStatus string, body [
 			return response, fmt.Errorf("error getting certificate object, error status: %d, error description: %s", response.Response.ErrorCode, response.Response.ErrorMessage)
 		}
 		return response, nil
+	case http.StatusUnauthorized:
+		err := NewAuthenticationError(body)
+		return retrieveResponse, err
 	default:
 		return retrieveResponse, fmt.Errorf("unexpected status code. Status: %s", httpStatus)
 	}
