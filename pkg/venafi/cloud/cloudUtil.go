@@ -32,10 +32,10 @@ func parseCertificateInfo(httpStatusCode int, httpStatus string, body []byte) (*
 	}
 }
 
-func parseDEKInfo(httpStatusCode int, httpStatus string, body []byte) (*DekInfo, error) {
+func parseDEKInfo(httpStatusCode int, httpStatus string, body []byte) (*EdgeEncryptionKey, error) {
 	switch httpStatusCode {
 	case http.StatusOK:
-		var res = &DekInfo{}
+		var res = &EdgeEncryptionKey{}
 		err := json.Unmarshal(body, res)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse DEK info results: %s, body: %s", err, body)
@@ -82,7 +82,7 @@ func getCsrAttributes(c *Connector, req *certificate.Request) (*CsrAttributes, e
 			}
 
 			if !valid {
-				return nil, fmt.Errorf("specified CN %s, doen't match with policy's specified domains %+q", req.Subject.CommonName, policy.Policy.Domains)
+				return nil, fmt.Errorf("specified CN %s, doesn't match with policy's specified domains %+q", req.Subject.CommonName, policy.Policy.Domains)
 			}
 		}
 		csrAttr.CommonName = &req.Subject.CommonName
@@ -134,7 +134,7 @@ func getCsrAttributes(c *Connector, req *certificate.Request) (*CsrAttributes, e
 		}
 
 		csrAttr.Locality = &req.Subject.Locality[0]
-	} else if policy.Default != nil && policy.Default.Subject != nil && policy.Default.Subject.State != nil {
+	} else if policy.Default != nil && policy.Default.Subject != nil && policy.Default.Subject.Locality != nil {
 		locality := *(policy.Default.Subject.Locality)
 		csrAttr.Locality = &locality
 	}
@@ -170,7 +170,7 @@ func getCsrAttributes(c *Connector, req *certificate.Request) (*CsrAttributes, e
 		}
 
 		csrAttr.Country = &req.Subject.Country[0]
-	} else if policy.Default != nil && policy.Default.Subject != nil && policy.Default.Subject.State != nil {
+	} else if policy.Default != nil && policy.Default.Subject != nil && policy.Default.Subject.Country != nil {
 		country := *(policy.Default.Subject.Country)
 		csrAttr.Country = &country
 	}

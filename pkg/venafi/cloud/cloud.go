@@ -112,7 +112,7 @@ type KeyStoreRequest struct {
 	CertificateLabel              string `json:"certificateLabel"`
 }
 
-type DekInfo struct {
+type EdgeEncryptionKey struct {
 	Key string `json:"key,omitempty"`
 }
 

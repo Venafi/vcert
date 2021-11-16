@@ -118,7 +118,7 @@ func (c *Connector) IsCSRServiceGenerated(req *certificate.Request) (bool, error
 		req.PickupID = certificateRequestId
 	}
 
-	var dekInfo *DekInfo
+	var dekInfo *EdgeEncryptionKey
 	var currentId string
 	var err error
 	if req.CertID != "" {
@@ -712,7 +712,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 	url := c.getURL(urlResourceCertificateRetrievePem)
 	url = fmt.Sprintf(url, certificateId)
 
-	var dekInfo *DekInfo
+	var dekInfo *EdgeEncryptionKey
 	var currentId string
 	if req.CertID != "" {
 		dekInfo, err = getDekInfo(c, req.CertID)
@@ -723,7 +723,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 	}
 	if err == nil && dekInfo.Key != "" {
 		req.CertID = currentId
-		return retrieveServiceGeneratedCertData(c, req)
+		return retrieveServiceGeneratedCertData(c, req, dekInfo)
 	}
 
 	switch {
@@ -764,12 +764,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 	return nil, fmt.Errorf("couldn't retrieve certificate because both PickupID and CertId are empty")
 }
 
-func retrieveServiceGeneratedCertData(c *Connector, req *certificate.Request) (*certificate.PEMCollection, error) {
-
-	dekInfo, err := getDekInfo(c, req.CertID)
-	if err != nil {
-		return nil, err
-	}
+func retrieveServiceGeneratedCertData(c *Connector, req *certificate.Request, dekInfo *EdgeEncryptionKey) (*certificate.PEMCollection, error) {
 
 	pkDecoded, err := base64.StdEncoding.DecodeString(dekInfo.Key)
 
@@ -818,7 +813,7 @@ func retrieveServiceGeneratedCertData(c *Connector, req *certificate.Request) (*
 
 }
 
-func getDekInfo(c *Connector, cerId string) (*DekInfo, error) {
+func getDekInfo(c *Connector, cerId string) (*EdgeEncryptionKey, error) {
 	//get certificate details for getting DekHash
 	url := c.getURL(urlResourceCertificateByID)
 	url = fmt.Sprintf(url, cerId)
@@ -856,7 +851,6 @@ func ConvertZipBytesToPem(dataByte []byte, rootFirst bool) (*certificate.PEMColl
 	collection := certificate.PEMCollection{}
 	var certificate string
 	var privateKey string
-	var chain string
 	var chainArr []string
 
 	zipReader, err := zip.NewReader(bytes.NewReader(dataByte), int64(len(dataByte)))
@@ -898,7 +892,7 @@ func ConvertZipBytesToPem(dataByte []byte, rootFirst bool) (*certificate.PEMColl
 
 			for i := 0; i < len(certs); i++ {
 				if i < len(certs)-1 {
-					if chain == "" {
+					if len(chainArr) == 0 {
 						chainArr = append(chainArr, certs[i]+"\n")
 					} else {
 						if rootFirst {
