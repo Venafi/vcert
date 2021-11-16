@@ -69,6 +69,7 @@ type certificateRequestResponseData struct {
 	SubjectDN          string    `json:"subjectDN,omitempty"`
 	CreationDateString string    `json:"creationDate,omitempty"`
 	CreationDate       time.Time `json:"-"`
+	CertificateIds     []string  `json:"certificateIds,omitempty"`
 }
 
 type certificateRequestClientInfo struct {
@@ -86,6 +87,33 @@ type certificateRequest struct {
 	CertificateUsageMetadata []certificateUsageMetadata   `json:"certificateUsageMetadata,omitempty"`
 	ReuseCSR                 bool                         `json:"reuseCSR,omitempty"`
 	ValidityPeriod           string                       `json:"validityPeriod,omitempty"`
+	IsVaaSGenerated          bool                         `json:"isVaaSGenerated,omitempty"`
+	CsrAttributes            CsrAttributes                `json:"csrAttributes,omitempty"`
+	ApplicationServerTypeId  string                       `json:"applicationServerTypeId,omitempty"`
+}
+
+type CsrAttributes struct {
+	CommonName                    *string                        `json:"commonName,omitempty"`
+	Organization                  *string                        `json:"organization,omitempty"`
+	OrganizationalUnits           []string                       `json:"organizationalUnits,omitempty"`
+	Locality                      *string                        `json:"locality,omitempty"`
+	State                         *string                        `json:"state,omitempty"`
+	Country                       *string                        `json:"country,omitempty"`
+	SubjectAlternativeNamesByType *SubjectAlternativeNamesByType `json:"subjectAlternativeNamesByType,omitempty"`
+}
+type SubjectAlternativeNamesByType struct {
+	DnsNames []string `json:"dnsNames,omitempty"`
+}
+
+type KeyStoreRequest struct {
+	ExportFormat                  string `json:"exportFormat,omitempty"`
+	EncryptedPrivateKeyPassphrase string `json:"encryptedPrivateKeyPassphrase"`
+	EncryptedKeystorePassphrase   string `json:"encryptedKeystorePassphrase"`
+	CertificateLabel              string `json:"certificateLabel"`
+}
+
+type EdgeEncryptionKey struct {
+	Key string `json:"key,omitempty"`
 }
 
 type certificateStatus struct {
@@ -541,7 +569,7 @@ func createAppUpdateRequest(applicationDetails *ApplicationDetails, cit *certifi
 	return request
 }
 
-func buildPolicySpecification(cit *certificateTemplate, info *policy.CertificateAuthorityInfo) *policy.PolicySpecification {
+func buildPolicySpecification(cit *certificateTemplate, info *policy.CertificateAuthorityInfo, removeRegex bool) *policy.PolicySpecification {
 	if cit == nil {
 		return nil
 	}
@@ -551,7 +579,11 @@ func buildPolicySpecification(cit *certificateTemplate, info *policy.Certificate
 	var pol policy.Policy
 
 	if len(cit.SubjectCNRegexes) > 0 {
-		pol.Domains = policy.RemoveRegex(cit.SubjectCNRegexes)
+		if removeRegex {
+			pol.Domains = policy.RemoveRegex(cit.SubjectCNRegexes)
+		} else {
+			pol.Domains = cit.SubjectCNRegexes
+		}
 	}
 
 	wildCard := isWildCard(cit.SubjectCNRegexes)

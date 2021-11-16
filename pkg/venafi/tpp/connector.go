@@ -49,6 +49,10 @@ type Connector struct {
 	client      *http.Client
 }
 
+func (c *Connector) IsCSRServiceGenerated(req *certificate.Request) (bool, error) {
+	panic("operation is not supported yet")
+}
+
 func (c *Connector) RetrieveSshConfig(ca *certificate.SshCaTemplateRequest) (*certificate.SshConfig, error) {
 	return RetrieveSshConfig(c, ca)
 }
