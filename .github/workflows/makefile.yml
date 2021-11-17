@@ -20,6 +20,8 @@ jobs:
 
       - name: Make build
         run: make build
+        env:
+          BUILD_NUMBER: v4.15.2
       
       - name: Run tests
         run: make test
