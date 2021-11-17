@@ -43,7 +43,7 @@ jobs:
         with:
           draft: false
           prerelease: true
-          release_name: ${{ github.run_id }}
+          release_name: "${{ env.RELEASE_VERSION }}-${{ github.run_id }}${{ github.run_number }}${{ github.run_attempt }}"
           tag_name: ${{ github.ref }}
         env:
             GITHUB_TOKEN: ${{ github.token }}
