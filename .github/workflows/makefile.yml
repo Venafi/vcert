@@ -22,6 +22,7 @@ jobs:
         uses: golangci/golangci-lint-action@v2
         with:
           skip-go-installation: true
+          args: --issues-exit-code=0
           
       - name: Make build
         run: make build
