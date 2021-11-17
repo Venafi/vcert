@@ -532,7 +532,7 @@ func printExtensions(e map[string]interface{}) {
 			}
 		}
 	} else {
-		logf("\t\t", "None")
+		logf("\t\tNone")
 	}
 }
 
@@ -543,7 +543,7 @@ func printPrincipals(p []string) {
 			logf("\t\t%s", v)
 		}
 	} else {
-		logf("\t\t", "None")
+		logf("\t\tNone")
 	}
 
 }
