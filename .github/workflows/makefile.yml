@@ -18,10 +18,21 @@ jobs:
       - name: Setup go
         uses: actions/setup-go@v2
 
+      - name: Linter
+        uses: golangci/golangci-lint-action@v2
+        with:
+          skip-go-installation: true
+          
       - name: Make build
         run: make build
         env:
           RELEASE_VERSION: v4.15.2
+
+      - name: Run CMD tests
+        run: make cmd_test
+        
+      - name: Run TPP tests
+        run: make tpp_test
       
-      - name: Run tests
-        run: make test
+      - name: Run VaaS tests
+        run: make cloud_test
