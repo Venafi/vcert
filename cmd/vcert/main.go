@@ -75,6 +75,7 @@ func main() {
 			commandSshPickup,
 			commandSshEnroll,
 			commandSshGetConfig,
+			commandSshLogin,
 		},
 		EnableBashCompletion: true, //todo: write BashComplete function for options
 		//HideHelp:             true,
@@ -109,7 +110,8 @@ ACTIONS:
    checkcred    To check the validity of a token and grant
    voidcred     To invalidate an authentication grant
 
-   sshenroll    To enroll a SSH certificate
+   sshlogin     To get client SSH certificate for the authenticated user
+   sshenroll    To enroll a SSH certificate for application or host
    sshpickup    To retrieve a SSH certificate
    sshgetconfig To get the SSH CA public key and default principals
 

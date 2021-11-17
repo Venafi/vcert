@@ -639,6 +639,13 @@ var (
 		TakesFile:   true,
 	}
 
+	flagSshAddKeysTo = &cli.StringFlag{
+		Name: "add-keys-to",
+		Usage: "Specifies whether keys should be automatically added to a running OpenSSH agent. Possible option 'auto', 'agent', or 'file'" +
+			"Example: --add-keys-to file",
+		Destination: &flags.sshOpenSSHAgent,
+	}
+
 	commonFlags              = []cli.Flag{flagInsecure, flagVerbose, flagNoPrompt}
 	keyFlags                 = []cli.Flag{flagKeyType, flagKeySize, flagKeyCurve, flagKeyFile, flagKeyPassword}
 	sansFlags                = []cli.Flag{flagDNSSans, flagEmailSans, flagIPSans, flagURISans, flagUPNSans}
@@ -853,6 +860,35 @@ var (
 		flagSshCertCa,
 		flagSshCertGuid,
 		flagSshFileGetConfig,
+		commonFlags,
+	))
+	sshLoginFlags = sortedFlags(flagsApppend(
+		flagUrl,
+		flagTrustBundle,
+		flagKeyId,
+		flagObjectName,
+		flagDestinationAddress,
+		flagValidityHours,
+		flagSshCertPrincipal,
+		flagPolicyDN,
+		flagSshCertExtension,
+		flagForceCommand,
+		flagSourceAddresses,
+		flagSshCertCa,
+		flagSshPubKey,
+		flagSshKeySize,
+		flagSshPassPhrase,
+		flagSshFileCertEnroll,
+		flagClientP12, // token flags
+		flagClientP12PW,
+		flagCredFormat,
+		flagTPPPassword,
+		flagTPPUser,
+		flagScope,
+		flagCredSsh,
+		flagCredPm,
+		flagClientId,
+		flagSshAddKeysTo,
 		commonFlags,
 	))
 )

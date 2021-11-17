@@ -34,6 +34,7 @@ const (
 	commandSshPickupName    = "sshpickup"
 	commandSshEnrollName    = "sshenroll"
 	commandSshGetConfigName = "sshgetconfig"
+	commandSshLoginName     = "sshlogin"
 )
 
 var (
@@ -130,4 +131,5 @@ type commandFlags struct {
 	sshCertWindows       bool
 	sshFileCertEnroll    string
 	sshFileGetConfig     string
+	sshOpenSSHAgent      string
 }

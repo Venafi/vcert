@@ -59,8 +59,8 @@ func RequestSshCertificate(c *Connector, req *certificate.SshCertRequest) (*cert
 		return nil, err
 	}
 
-	log.Println("SSH certificate DN: ", response.DN)
-	log.Println("GUID: ", response.Guid)
+	//log.Println("SSH certificate DN: ", response.DN)
+	//log.Println("GUID: ", response.Guid)
 
 	if response.Response.Success && response.ProcessingDetails.Status == "Rejected" {
 		return nil, endpoint.ErrCertificateRejected{CertificateID: req.PickupID, Status: response.ProcessingDetails.StatusDescription}

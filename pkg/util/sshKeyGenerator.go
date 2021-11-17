@@ -6,7 +6,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"log"
 	"strings"
 
 	"golang.org/x/crypto/ssh"
@@ -28,7 +27,8 @@ func generatePrivKey(bitSize int) (*rsa.PrivateKey, error) {
 		return nil, err
 	}
 
-	log.Println("Private Key was generated")
+	//log.Println("Private Key was generated")
+
 	return privKey, nil
 }
 
@@ -67,7 +67,7 @@ func generatePublicKey(key *rsa.PublicKey) ([]byte, error) {
 
 	pubKeyBytes := ssh.MarshalAuthorizedKey(publicRsaKey)
 
-	log.Println("Public key was generated")
+	//log.Println("Public key was generated")
 	return pubKeyBytes, nil
 
 }

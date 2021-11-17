@@ -27,6 +27,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os/user"
 	"strconv"
 	"strings"
 	"time"
@@ -174,6 +175,15 @@ var (
 		Action:    doCommandSshGetConfig,
 		Usage:     "To get the SSH CA public key and default principals",
 		UsageText: `vcert sshgetconfig -u https://tpp.example.com -t <TPP access token> --template <val>`,
+	}
+
+	commandSshLogin = &cli.Command{
+		Before:    runBeforeCommand,
+		Name:      commandSshLoginName,
+		Flags:     sshLoginFlags,
+		Action:    doCommandSshLogin,
+		Usage:     "To get client SSH certificate for an authenticated user",
+		UsageText: `vcert sshlogin -u https://tpp.example.com --template <val> --username <val>`,
 	}
 )
 
@@ -1263,6 +1273,293 @@ func doCommandSshGetConfig(c *cli.Context) error {
 	}
 
 	return nil
+}
+
+func doCommandSshLogin(c *cli.Context) error {
+
+	flags.scope = "ssh:manage"
+	/// get gurrent user
+	user, err := user.Current()
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+
+	if flags.tppUser == "" {
+		logf("No user specified, using %s", user.Username)
+		flags.tppUser = user.Username
+	}
+	////
+	err = validateCredMgmtFlags1(commandGetCredName)
+	if err != nil {
+		return err
+	}
+	validateOverWritingEnviromentVariables()
+
+	err = setTLSConfig()
+	if err != nil {
+		return err
+	}
+
+	cfg, err := buildConfig(c, &flags)
+	if err != nil {
+		return fmt.Errorf("failed to build vcert config: %s", err)
+	}
+
+	var clientP12 bool
+	if flags.clientP12 != "" {
+		clientP12 = true
+	}
+	var connectionTrustBundle *x509.CertPool
+	if cfg.ConnectionTrust != "" {
+		logf("You specified a trust bundle.")
+		connectionTrustBundle = x509.NewCertPool()
+		if !connectionTrustBundle.AppendCertsFromPEM([]byte(cfg.ConnectionTrust)) {
+			return fmt.Errorf("Failed to parse PEM trust bundle")
+		}
+	}
+	tppConnector, err := tpp.NewConnector(cfg.BaseUrl, "", cfg.LogVerbose, connectionTrustBundle)
+	if err != nil {
+		return fmt.Errorf("could not create TPP connector: %s", err)
+	}
+
+	//TODO: quick workaround to supress logs when output is in JSON.
+	if flags.credFormat != "json" {
+		logf("Authenticating '%s' ...", cfg.Credentials.User)
+	}
+
+	if cfg.Credentials.RefreshToken != "" {
+		resp, err := tppConnector.RefreshAccessToken(&endpoint.Authentication{
+			RefreshToken: cfg.Credentials.RefreshToken,
+			ClientId:     flags.clientId,
+			Scope:        flags.scope,
+		})
+		if err != nil {
+			return err
+		}
+		if flags.credFormat == "json" {
+			if err := outputJSON(resp); err != nil {
+				return err
+			}
+		} else {
+			/*tm := time.Unix(int64(resp.Expires), 0).UTC().Format(time.RFC3339)
+			fmt.Println("access_token: ", resp.Access_token)
+			fmt.Println("access_token_expires: ", tm)
+			fmt.Println("refresh_token: ", resp.Refresh_token) */
+			flags.tppToken = resp.Access_token
+		}
+	} else if cfg.Credentials.User != "" && cfg.Credentials.Password != "" {
+
+		auth := &endpoint.Authentication{
+			User:     cfg.Credentials.User,
+			Password: cfg.Credentials.Password,
+			Scope:    flags.scope,
+			ClientId: flags.clientId}
+
+		if flags.sshCred {
+			auth.Scope = "ssh:manage"
+		} else if flags.pmCred {
+			auth.Scope = "certificate:manage,revoke;configuration:manage"
+		}
+
+		resp, err := tppConnector.GetRefreshToken(auth)
+		if err != nil {
+			return err
+		}
+		if flags.credFormat == "json" {
+			if err := outputJSON(resp); err != nil {
+				return err
+			}
+		} else {
+			/*tm := time.Unix(int64(resp.Expires), 0).UTC().Format(time.RFC3339)
+			fmt.Println("access_token: ", resp.Access_token)
+			fmt.Println("access_token_expires: ", tm)
+			if resp.Refresh_token != "" {
+				fmt.Println("refresh_token: ", resp.Refresh_token)
+			}*/
+			flags.tppToken = resp.Access_token
+		}
+	} else if clientP12 {
+		resp, err := tppConnector.GetRefreshToken(&endpoint.Authentication{
+			ClientPKCS12: clientP12,
+			Scope:        flags.scope,
+			ClientId:     flags.clientId})
+		if err != nil {
+			return err
+		}
+		if flags.credFormat == "json" {
+			if err := outputJSON(resp); err != nil {
+				return err
+			}
+		} else {
+			tm := time.Unix(int64(resp.Expires), 0).UTC().Format(time.RFC3339)
+			fmt.Println("access_token: ", resp.Access_token)
+			fmt.Println("access_token_expires: ", tm)
+			if resp.Refresh_token != "" {
+				fmt.Println("refresh_token: ", resp.Refresh_token)
+			}
+			flags.tppToken = resp.Access_token
+		}
+	} else {
+		return fmt.Errorf("Failed to determine credentials set")
+	}
+
+	/////////////////////////////////////// Enroll
+
+	//flags.sshCertKeyPassphrase = ""
+	flags.noPrompt = true
+
+	err = validateSshEnrollFlags(commandSshEnrollName)
+
+	if err != nil {
+		return err
+	}
+
+	// err = setTLSConfig()
+	// if err != nil {
+	// 	return err
+	// }
+
+	cfg, err = buildConfig(c, &flags)
+	if err != nil {
+		return fmt.Errorf("failed to build vcert config: %s", err)
+	}
+
+	connector, err := vcert.NewClient(&cfg)
+
+	if err != nil {
+		logf("Unable to build connector for %s: %s", cfg.ConnectorType, err)
+	} else {
+		if flags.verbose {
+			logf("Successfully built connector for %s", cfg.ConnectorType)
+		}
+	}
+
+	err = connector.Ping()
+
+	if err != nil {
+		logf("Unable to connect to %s: %s", cfg.ConnectorType, err)
+	} else {
+		if flags.verbose {
+			logf("Successfully connected to %s", cfg.ConnectorType)
+		}
+	}
+
+	var req = &certificate.SshCertRequest{}
+
+	req = fillSshCertificateRequest(req, &flags)
+
+	if flags.sshCertKeyPassphrase != "" {
+		flags.keyPassword = flags.sshCertKeyPassphrase
+	}
+
+	var privateKey, publicKey []byte
+	sPubKey := ""
+	//support for local generated keypair or provided public key
+	if flags.sshCertPubKey == SshCertPubKeyLocal {
+
+		keySize := flags.sshCertKeySize
+		if keySize <= 0 {
+			keySize = 3072
+		}
+
+		privateKey, publicKey, err = util.GenerateSshKeyPair(keySize, flags.keyPassword, flags.sshCertKeyId)
+
+		if err != nil {
+			return err
+		}
+
+		sPubKey = string(publicKey)
+		req.PublicKeyData = sPubKey
+	}
+
+	if isPubKeyInFile() {
+		pubKeyS, err := getSshPubKeyFromFile()
+
+		if err != nil {
+			return err
+		}
+
+		if pubKeyS == "" {
+			return fmt.Errorf("specified public key in %s is empty", flags.sshCertPubKey)
+		}
+
+		req.PublicKeyData = pubKeyS
+	}
+
+	req.Timeout = time.Duration(flags.timeout) * time.Second
+	data, err := connector.RequestSSHCertificate(req)
+
+	if err != nil {
+		return err
+	}
+
+	// 'Rejected' status is handled in the connector
+	if (data.ProcessingDetails.Status == "Pending Issue") || (data.ProcessingDetails.Status == "Issued" && data.CertificateData == "") {
+		logf("SSH certificate was successfully requested. Retrieving the certificate data.")
+
+		flags.pickupID = data.DN
+		retReq := certificate.SshCertRequest{
+			PickupID:                  flags.pickupID,
+			IncludeCertificateDetails: true,
+		}
+		if flags.keyPassword != "" {
+			retReq.PrivateKeyPassphrase = flags.keyPassword
+		}
+
+		retReq.Timeout = time.Duration(10) * time.Second
+		data, err = connector.RetrieveSSHCertificate(&retReq)
+		if err != nil {
+			return fmt.Errorf("failed to retrieve SSH certificate '%s'. Error: %s", flags.pickupID, err)
+		}
+	} else {
+		//logf("Successfully issued SSH certificate with Key ID '%s'", data.CertificateDetails.KeyID)
+	}
+
+	//this case is when the keypair is local generated
+	if data.PrivateKeyData == "" {
+		data.PrivateKeyData = string(privateKey)
+	}
+	if sPubKey != "" {
+		data.PublicKeyData = sPubKey
+	}
+
+	if isServiceGenerated() {
+		data.PrivateKeyData = AddLineEnding(data.PrivateKeyData)
+	}
+
+	switch flags.sshOpenSSHAgent {
+	case "", "auto":
+		err = AddKeyToOpenSSHAgent(data.PrivateKeyData, data.CertificateData)
+		if err != nil {
+			logf("Failed to add key to OpenSSH agent. Writing certificate to files. Error: %s", err)
+
+			// fallback to file if OpenSSH agent is not available
+			return writeSshKeysToFiles(data)
+		}
+	case "agent":
+		err = AddKeyToOpenSSHAgent(data.PrivateKeyData, data.CertificateData)
+		if err != nil {
+			logf("Failed to add key to OpenSSH agent: %s", err)
+			return err
+		}
+	case "file":
+		return writeSshKeysToFiles(data)
+	default:
+		return fmt.Errorf("Invalid value for %s flag: %s", flagSshAddKeysTo.Name, flags.sshOpenSSHAgent)
+
+	}
+
+	return nil
+}
+
+func writeSshKeysToFiles(data *certificate.SshCertificateObject) error {
+	// If --file is not set, use Key ID as filename
+	privateKeyFileName := flags.sshFileCertEnroll
+	if privateKeyFileName == "" {
+		privateKeyFileName = data.CertificateDetails.KeyID
+	}
+
+	return writeSshFiles(privateKeyFileName, []byte(data.PrivateKeyData), []byte(data.PublicKeyData), []byte(data.CertificateData))
 }
 
 func generateCsrForCommandGenCsr(cf *commandFlags, privateKeyPass []byte) (privateKey []byte, csr []byte, err error) {
