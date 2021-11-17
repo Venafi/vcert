@@ -43,11 +43,10 @@ jobs:
         with:
           draft: false
           prerelease: true
-          release_name: "$RELEASE_VERSION-${{ github.run_id }}${{ github.run_number }}${{ github.run_attempt }}"
+          release_name: "v4.15.2-${{ github.run_id }}${{ github.run_number }}${{ github.run_attempt }}"
           tag_name: "${{ github.run_id }}${{ github.run_number }}${{ github.run_attempt }}"
         env:
             GITHUB_TOKEN: ${{ github.token }}
-            RELEASE_VERSION: v4.15.2
 
       - name: Upload Linux x86_32 artifact
         uses: actions/upload-release-asset@v1
