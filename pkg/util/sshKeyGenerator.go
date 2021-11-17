@@ -6,9 +6,10 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"golang.org/x/crypto/ssh"
 	"log"
 	"strings"
+
+	"golang.org/x/crypto/ssh"
 )
 
 const (
@@ -31,6 +32,7 @@ func generatePrivKey(bitSize int) (*rsa.PrivateKey, error) {
 	return privKey, nil
 }
 
+//nolint
 func encodePrivKeyToPEM(privateKey *rsa.PrivateKey, keyPassword string) ([]byte, error) {
 
 	var err error

@@ -26,8 +26,6 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/policy"
-	"github.com/Venafi/vcert/v4/pkg/util"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -38,6 +36,9 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/Venafi/vcert/v4/pkg/policy"
+	"github.com/Venafi/vcert/v4/pkg/util"
 
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
@@ -2013,14 +2014,14 @@ func TestCreateSshCertServiceGeneratedKP(t *testing.T) {
 	req.Template = os.Getenv("TPP_SSH_CA")
 	req.SourceAddresses = []string{"test.com"}
 
-	id, err := tpp.RequestSSHCertificate(req)
+	respData, err := tpp.RequestSSHCertificate(req)
 
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
 
 	retReq := &certificate.SshCertRequest{
-		PickupID:                  id,
+		PickupID:                  respData.DN,
 		IncludeCertificateDetails: true,
 		Timeout:                   time.Duration(10) * time.Second,
 	}
@@ -2095,14 +2096,14 @@ func TestCreateSshCertLocalGeneratedKP(t *testing.T) {
 
 	req.PublicKeyData = sPubKey
 
-	id, err := tpp.RequestSSHCertificate(req)
+	respData, err := tpp.RequestSSHCertificate(req)
 
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
 
 	retReq := &certificate.SshCertRequest{
-		PickupID:                  id,
+		PickupID:                  respData.DN,
 		IncludeCertificateDetails: true,
 		Timeout:                   time.Duration(10) * time.Second,
 	}
@@ -2184,14 +2185,14 @@ func TestCreateSshCertProvidedPubKey(t *testing.T) {
 	req.PublicKeyData = content
 	req.SourceAddresses = []string{"test.com"}
 
-	id, err := tpp.RequestSSHCertificate(req)
+	respData, err := tpp.RequestSSHCertificate(req)
 
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
 
 	retReq := &certificate.SshCertRequest{
-		PickupID:                  id,
+		PickupID:                  respData.DN,
 		IncludeCertificateDetails: true,
 		Timeout:                   time.Duration(10) * time.Second,
 	}

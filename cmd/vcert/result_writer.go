@@ -23,13 +23,14 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/certificate"
-	"github.com/pavel-v-chernykh/keystore-go/v4"
 	"io/ioutil"
 	"os"
-	"software.sslmate.com/src/go-pkcs12"
 	"strings"
 	"time"
+
+	"github.com/Venafi/vcert/v4/pkg/certificate"
+	"github.com/pavel-v-chernykh/keystore-go/v4"
+	"software.sslmate.com/src/go-pkcs12"
 )
 
 type Config struct {
@@ -63,6 +64,7 @@ type Output struct {
 	PickupId    string   `json:",omitempty"`
 }
 
+//nolint
 func (o *Output) AsPKCS12(c *Config) ([]byte, error) {
 	if len(o.Certificate) == 0 || len(o.PrivateKey) == 0 {
 		return nil, fmt.Errorf("at least certificate and private key are required")
@@ -122,6 +124,7 @@ func (o *Output) AsPKCS12(c *Config) ([]byte, error) {
 	return bytes, nil
 }
 
+//nolint
 func (o *Output) AsJKS(c *Config) ([]byte, error) {
 
 	var err interface{}

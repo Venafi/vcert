@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Venafi, Inc.
+ * Copyright 2018-2021 Venafi, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,9 +23,6 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/policy"
-	"github.com/spf13/viper"
-	"gopkg.in/yaml.v2"
 	"io"
 	"io/ioutil"
 	"log"
@@ -34,6 +31,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Venafi/vcert/v4/pkg/policy"
+	"github.com/spf13/viper"
+	"gopkg.in/yaml.v2"
 
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
@@ -480,9 +481,9 @@ func writeToFile(content []byte, fileName string, perm os.FileMode) error {
 	return nil
 }
 
-func writeSshFiles(id string, privKey, pubKey, cert []byte) error {
+func writeSshFiles(privateKeyFileName string, privKey, pubKey, cert []byte) error {
 
-	fileName, err := normalizeSshCertFileName(id)
+	fileName, err := normalizeSshCertFileName(privateKeyFileName)
 
 	if err != nil {
 		return err
@@ -493,7 +494,7 @@ func writeSshFiles(id string, privKey, pubKey, cert []byte) error {
 		if err != nil {
 			return err
 		}
-		log.Println("Private key file was saved:  " + fileName)
+		log.Println("Private key has been written to: " + fileName)
 	}
 
 	//only write public key into a file if is not provided.
@@ -503,7 +504,7 @@ func writeSshFiles(id string, privKey, pubKey, cert []byte) error {
 		if err != nil {
 			return err
 		}
-		log.Println("Public key file was saved:   " + pubFileName)
+		log.Println("Public key has been written to:  " + pubFileName)
 
 	}
 
@@ -512,48 +513,48 @@ func writeSshFiles(id string, privKey, pubKey, cert []byte) error {
 	if err != nil {
 		return err
 	}
-	log.Println("Certificate file was saved:  " + certFileName)
+	log.Println("Certificate has been written to: " + certFileName)
 
 	return nil
 
 }
 
 func printExtensions(e map[string]interface{}) {
-	fmt.Println("Extensions: ")
+	logf("\tExtensions: ")
 	if len(e) > 0 {
 		for k, v := range e {
 			if v != "" {
 				kv := fmt.Sprintf("%s:%v", k, v)
 
-				fmt.Println("\t", kv)
+				logf("\t\t%s", kv)
 			} else {
-				fmt.Println("\t", k)
+				logf("\t\t%s", k)
 			}
 		}
 	} else {
-		fmt.Println("\t", "None")
+		logf("\t\tNone")
 	}
 }
 
 func printPrincipals(p []string) {
-	fmt.Println("Principals: ")
+	logf("\tPrincipals: ")
 	if len(p) > 0 {
 		for _, v := range p {
-			fmt.Println("\t", v)
+			logf("\t\t%s", v)
 		}
 	} else {
-		fmt.Println("\t", "None")
+		logf("\t\tNone")
 	}
 
 }
 
 func printCriticalOptions(fc string, sa []string) {
-	fmt.Println("Critical Options: ")
+	logf("\tCritical Options: ")
 	if fc == "" && len(sa) == 0 {
-		fmt.Println("\t", "None")
+		logf("\t\tNone")
 	} else {
 		if fc != "" {
-			fmt.Println("\tForce command:", fc)
+			logf("\t\tForce command: %s", fc)
 		}
 		if len(sa) > 0 {
 			sourceAddsStr := ""
@@ -564,23 +565,23 @@ func printCriticalOptions(fc string, sa []string) {
 					sourceAddsStr = sourceAddsStr + ","
 				}
 			}
-			fmt.Println("\tSource addresses:", sourceAddsStr)
+			logf("\t\tSource addresses: %s", sourceAddsStr)
 		}
 	}
 }
 
-func printSshMetadata(data *certificate.SshCertRetrieveDetails) {
-	logf("certificate meta data:")
+func printSshMetadata(data *certificate.SshCertificateObject) {
+	logf("SSH certificate:")
 
-	fmt.Println("Certificate Type: ", data.CertificateDetails.CertificateType)
+	logf("\tCertificate Type: %s", data.CertificateDetails.CertificateType)
 	pubKey := fmt.Sprintf("%s:%s", Sha256, data.CertificateDetails.PublicKeyFingerprintSHA256)
-	fmt.Println("Public key: ", pubKey)
+	logf("\tPublic key: %s", pubKey)
 	signingCa := fmt.Sprintf("%s:%s", Sha256, data.CertificateDetails.CAFingerprintSHA256)
-	fmt.Println("Signing CA: ", signingCa)
-	fmt.Println("Certificate Identifier: ", data.CertificateDetails.KeyID)
-	fmt.Println("Serial: ", data.CertificateDetails.SerialNumber)
-	fmt.Println("Valid From: ", util.ConvertSecondsToTime(data.CertificateDetails.ValidFrom).String())
-	fmt.Println("Valid To: ", util.ConvertSecondsToTime(data.CertificateDetails.ValidTo).String())
+	logf("\tSigning CA: %s", signingCa)
+	logf("\tCertificate Identifier: %s", data.CertificateDetails.KeyID)
+	logf("\tSerial: %s", data.CertificateDetails.SerialNumber)
+	logf("\tValid From: %s", util.ConvertSecondsToTime(data.CertificateDetails.ValidFrom).String())
+	logf("\tValid To: %s", util.ConvertSecondsToTime(data.CertificateDetails.ValidTo).String())
 	printPrincipals(data.CertificateDetails.Principals)
 	printCriticalOptions(data.CertificateDetails.ForceCommand, data.CertificateDetails.SourceAddresses)
 	printExtensions(data.CertificateDetails.Extensions)
