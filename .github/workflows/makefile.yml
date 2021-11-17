@@ -36,3 +36,74 @@ jobs:
       
  #     - name: Run VaaS tests
  #       run: make cloud_test
+ 
+      - name: release
+        uses: actions/create-release@v1
+        id: create_release
+        with:
+          draft: false
+          prerelease: true
+          release_name: ${{ github.run_id }}
+          tag_name: ${{ github.ref }}
+        env:
+            GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Upload Linux x86_32 artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/linux/vcert86
+          asset_name: vcert_linux_32
+          asset_content_type: application/octet-stream
+          
+      - name: Upload Linux x86_64 artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/linux/vcert
+          asset_name: vcert_linux
+          asset_content_type: application/octet-stream
+          
+      - name: Upload Darwin ARM artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/darwin/vcert_arm
+          asset_name: vcert_macos_arm
+          asset_content_type: application/octet-stream
+          
+      - name: Upload Darwin Intel artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/darwin/vcert
+          asset_name: vcert_macos
+          asset_content_type: application/octet-stream
+          
+      - name: Upload Windows x86_32 artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/window/vcert86.exe
+          asset_name: vcert_windows_86.exe
+          asset_content_type: application/octet-stream
+
+      - name: Upload Windows x86_64 artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/window/vcert.exe
+          asset_name: vcert_windows.exe
+          asset_content_type: application/octet-stream
