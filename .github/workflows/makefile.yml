@@ -31,8 +31,8 @@ jobs:
       - name: Run CMD tests
         run: make cmd_test
         
-      - name: Run TPP tests
-        run: make tpp_test
+ #     - name: Run TPP tests
+ #       run: make tpp_test
       
-      - name: Run VaaS tests
-        run: make cloud_test
+ #     - name: Run VaaS tests
+ #       run: make cloud_test
