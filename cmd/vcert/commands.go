@@ -1545,7 +1545,7 @@ func doCommandSshLogin(c *cli.Context) error {
 	case "file":
 		return writeSshKeysToFiles(data)
 	default:
-		return fmt.Errorf("Invalid value for %s flag: %s", flagSshAddKeysTo.Name, flags.sshOpenSSHAgent)
+		return fmt.Errorf("invalid value for %s flag: %s", flagSshAddKeysTo.Name, flags.sshOpenSSHAgent)
 
 	}
 
