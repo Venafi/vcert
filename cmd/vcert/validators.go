@@ -540,6 +540,12 @@ func validatePickupFlags1(commandName string) error {
 	if err != nil {
 		return err
 	}
+
+	cloudSerViceGenerated := IsCSRServiceVaaSGenerated(commandName)
+	if cloudSerViceGenerated && flags.noPrompt && (flags.keyPassword == "") {
+		return fmt.Errorf("key-password is required")
+	}
+
 	err = readData(commandName)
 	if err != nil {
 		return err
