@@ -339,6 +339,7 @@ func doCommandEnroll1(c *cli.Context) error {
 		req.ChainOption = certificate.ChainOptionFromString(flags.chainOption)
 		req.KeyPassword = flags.keyPassword
 
+		req.Timeout = time.Duration(180) * time.Second
 		pcc, err = retrieveCertificate(connector, req, time.Duration(flags.timeout)*time.Second)
 		if err != nil {
 			return err
@@ -352,6 +353,14 @@ func doCommandEnroll1(c *cli.Context) error {
 				log.Fatal(err)
 			}
 		}
+	}
+
+	if connector.GetType() == endpoint.ConnectorTypeCloud && (flags.format == Pkcs12 || flags.format == JKSFormat) && flags.csrOption == "service" {
+		privKey, err := util.DecryptPkcs8PrivateKey(pcc.PrivateKey, flags.keyPassword)
+		if err != nil {
+			return err
+		}
+		pcc.PrivateKey = privKey
 	}
 
 	result := &Result{
@@ -797,6 +806,14 @@ func doCommandPickup1(c *cli.Context) error {
 		return fmt.Errorf("Failed to retrieve certificate: %s", err)
 	}
 	logf("Successfully retrieved request for %s", flags.pickupID)
+
+	if connector.GetType() == endpoint.ConnectorTypeCloud && (flags.format == Pkcs12 || flags.format == JKSFormat) && IsCSRServiceVaaSGenerated(c.Command.Name) {
+		privKey, err := util.DecryptPkcs8PrivateKey(pcc.PrivateKey, flags.keyPassword)
+		if err != nil {
+			return err
+		}
+		pcc.PrivateKey = privKey
+	}
 
 	result := &Result{
 		Pcc:      pcc,

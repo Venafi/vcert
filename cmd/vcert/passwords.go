@@ -58,18 +58,23 @@ func readPasswordsFromInputFlags(commandName string, cf *commandFlags) error {
 		}
 	}
 
-	if commandName == commandSshPickupName || commandName == commandSshEnrollName || commandName == commandEnrollName || commandName == commandGenCSRName || commandName == commandRenewName || commandName == commandPickupName && (cf.format == "pkcs12" || cf.format == JKSFormat) {
+	cloudSerViceGenerated := IsCSRServiceVaaSGenerated(commandName)
+
+	if commandName == commandSshPickupName || commandName == commandSshEnrollName || commandName == commandEnrollName || commandName == commandGenCSRName || commandName == commandRenewName || commandName == commandPickupName && (cf.format == "pkcs12" || cf.format == JKSFormat || cloudSerViceGenerated) {
 		var keyPasswordNotNeeded = false
 
 		keyPasswordNotNeeded = keyPasswordNotNeeded || (cf.csrOption == "service" && cf.noPickup)
 		keyPasswordNotNeeded = keyPasswordNotNeeded || (strings.Index(cf.csrOption, "file:") == 0)
-		keyPasswordNotNeeded = keyPasswordNotNeeded || (cf.csrOption == "service" && cf.url == "")
 		if commandName == commandSshEnrollName {
 			keyPasswordNotNeeded = keyPasswordNotNeeded || (cf.sshCertPubKey != SshCertPubKeyServ && cf.sshCertPubKey != SshCertPubKeyLocal) || cf.sshCertKeyPassphrase != ""
 		}
 
 		if commandName == commandSshPickupName {
 			keyPasswordNotNeeded = cf.sshCertKeyPassphrase != ""
+		}
+
+		if cloudSerViceGenerated {
+			keyPasswordNotNeeded = false
 		}
 
 		if !keyPasswordNotNeeded {

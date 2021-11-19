@@ -109,6 +109,9 @@ func (o *Output) AsPKCS12(c *Config) ([]byte, error) {
 		privKey, err = x509.ParseECPrivateKey(privDER)
 	case "RSA PRIVATE KEY":
 		privKey, err = x509.ParsePKCS1PrivateKey(privDER)
+		if err != nil {
+			privKey, err = x509.ParsePKCS8PrivateKey(privDER)
+		}
 	default:
 		return nil, fmt.Errorf("unexpected private key PEM type: %s", p.Type)
 	}
@@ -167,9 +170,13 @@ func (o *Output) AsJKS(c *Config) ([]byte, error) {
 	//decrypting the PK because due the restriction that always will be requested the key password
 	//to the user(--key-password or pass phrase value from prompt) for jks format then the PK always
 	//will be encrypted with the key password provided
-	privDER, err = x509.DecryptPEMBlock(p, []byte(c.KeyPassword))
-	if err != nil {
-		return nil, fmt.Errorf("private key PEM decryption error: %s", err)
+	if x509.IsEncryptedPEMBlock(p) {
+		privDER, err = x509.DecryptPEMBlock(p, []byte(c.KeyPassword))
+		if err != nil {
+			return nil, fmt.Errorf("private key PEM decryption error: %s", err)
+		}
+	} else {
+		privDER = p.Bytes
 	}
 
 	//Unmarshalling the PK
@@ -180,6 +187,9 @@ func (o *Output) AsJKS(c *Config) ([]byte, error) {
 		privKey, err = x509.ParseECPrivateKey(privDER)
 	case "RSA PRIVATE KEY":
 		privKey, err = x509.ParsePKCS1PrivateKey(privDER)
+		if err != nil {
+			privKey, err = x509.ParsePKCS8PrivateKey(privDER)
+		}
 	default:
 		return nil, fmt.Errorf("unexpected private key PEM type: %s", p.Type)
 	}
