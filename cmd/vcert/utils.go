@@ -23,6 +23,11 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"github.com/Venafi/vcert/v4"
+	"github.com/Venafi/vcert/v4/pkg/policy"
+	"github.com/spf13/viper"
+	"github.com/urfave/cli/v2"
+	"gopkg.in/yaml.v2"
 	"io"
 	"io/ioutil"
 	"log"
@@ -51,6 +56,7 @@ const (
 	vCertTrustBundle = "VCERT_TRUST_BUNDLE"
 
 	JKSFormat              = "jks"
+	Pkcs12                 = "pkcs12"
 	Sha256                 = "SHA256"
 	SshCertPubKeyServ      = "service"
 	SshCertPubKeyFilePreff = "file:"
@@ -669,4 +675,26 @@ func AddLineEnding(s string) string {
 		s = strings.ReplaceAll(s, "\r\n", "\n")
 	}
 	return s
+}
+
+func IsCSRServiceVaaSGenerated(commandName string) bool {
+	cloudSerViceGenerated := false
+	if commandName == commandPickupName {
+		context := &cli.Context{
+			Command: &cli.Command{
+				Name: commandPickupName,
+			},
+		}
+		cfg, err := buildConfig(context, &flags)
+		if err == nil {
+			connector, err := vcert.NewClient(&cfg)
+			if err == nil && endpoint.ConnectorTypeCloud == connector.GetType() {
+				var req = &certificate.Request{
+					PickupID: flags.pickupID,
+				}
+				cloudSerViceGenerated, _ = connector.IsCSRServiceGenerated(req)
+			}
+		}
+	}
+	return cloudSerViceGenerated
 }

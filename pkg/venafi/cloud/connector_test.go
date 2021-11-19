@@ -1306,3 +1306,85 @@ func TestSetPolicyDigicert(t *testing.T) {
 		t.Fatalf("certificate authority value doesn't match, get: %s but expected: %s", *(ps.Policy.CertificateAuthority), *(specification.Policy.CertificateAuthority))
 	}
 }
+
+func TestCreateCertServiceCSR(t *testing.T) {
+	t.Skip("it will enabled on the future")
+	conn := getTestConnector("App Alfa\\Amoo")
+	conn.verbose = true
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	req := certificate.Request{}
+	req.Subject.CommonName = test.RandCN()
+	req.Subject.Organization = []string{"Venafi, Inc."}
+	req.Subject.OrganizationalUnit = []string{"Automated Tests"}
+	req.Subject.Locality = []string{"Salt Lake City"}
+	req.Subject.Province = []string{"Utah"}
+	req.Subject.Country = []string{"US"}
+	req.DNSNames = []string{req.Subject.CommonName}
+
+	req.CsrOrigin = certificate.ServiceGeneratedCSR
+
+	id, err := conn.RequestCertificate(&req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	req.PickupID = id
+	req.ChainOption = certificate.ChainOptionRootFirst
+	req.KeyPassword = "abcede"
+	req.Timeout = time.Duration(180) * time.Second
+	pcc, err := conn.RetrieveCertificate(&req)
+
+	if pcc.Certificate == "" {
+		t.Fatalf("certificate with pickup id: %s is empty", req.PickupID)
+	}
+	if pcc.PrivateKey == "" {
+		t.Fatalf("private key for certificate with pickup id: %s is empty", req.PickupID)
+	}
+	if len(pcc.Chain) == 0 {
+		t.Fatalf("chai for certificate with pickup id: %s is empty", req.PickupID)
+	}
+
+}
+
+func TestCreateCertServiceCSRWithDefaults(t *testing.T) {
+	t.Skip("it will enabled on the future")
+	conn := getTestConnector("App Alfa\\Amoo")
+	conn.verbose = true
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	req := certificate.Request{}
+	req.Subject.CommonName = test.RandCN()
+
+	req.CsrOrigin = certificate.ServiceGeneratedCSR
+
+	id, err := conn.RequestCertificate(&req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	req.PickupID = id
+	req.ChainOption = certificate.ChainOptionRootFirst
+	req.KeyPassword = "abcede"
+	req.Timeout = time.Duration(180) * time.Second
+	pcc, err := conn.RetrieveCertificate(&req)
+
+	if pcc.Certificate == "" {
+		t.Fatalf("certificate with pickup id: %s is empty", req.PickupID)
+	}
+	if pcc.PrivateKey == "" {
+		t.Fatalf("private key for certificate with pickup id: %s is empty", req.PickupID)
+	}
+	if len(pcc.Chain) == 0 {
+		t.Fatalf("chai for certificate with pickup id: %s is empty", req.PickupID)
+	}
+
+}
