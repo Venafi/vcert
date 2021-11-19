@@ -25,9 +25,6 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/policy"
-	"github.com/Venafi/vcert/v4/pkg/util"
-	"golang.org/x/crypto/nacl/box"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -37,12 +34,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Venafi/vcert/v4/pkg/policy"
-
-	"github.com/Venafi/vcert/v4/pkg/verror"
-
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
+	"github.com/Venafi/vcert/v4/pkg/policy"
+	"github.com/Venafi/vcert/v4/pkg/util"
+	"github.com/Venafi/vcert/v4/pkg/verror"
+
+	"golang.org/x/crypto/nacl/box"
 )
 
 type urlResource string

@@ -23,11 +23,6 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/v4"
-	"github.com/Venafi/vcert/v4/pkg/policy"
-	"github.com/spf13/viper"
-	"github.com/urfave/cli/v2"
-	"gopkg.in/yaml.v2"
 	"io"
 	"io/ioutil"
 	"log"
@@ -37,13 +32,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Venafi/vcert/v4/pkg/policy"
-	"github.com/spf13/viper"
-	"gopkg.in/yaml.v2"
-
+	"github.com/Venafi/vcert/v4"
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
+	"github.com/Venafi/vcert/v4/pkg/policy"
 	"github.com/Venafi/vcert/v4/pkg/util"
+
+	"github.com/spf13/viper"
+	"github.com/urfave/cli/v2"
+	"gopkg.in/yaml.v2"
 )
 
 const (
