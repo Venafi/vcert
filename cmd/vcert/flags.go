@@ -845,7 +845,8 @@ var (
 		flagSshCertCa,
 		flagSshCertGuid,
 		flagSshFile,
-		commonFlags,
+		flagInsecure,
+		flagVerbose,
 	))
 )
 
