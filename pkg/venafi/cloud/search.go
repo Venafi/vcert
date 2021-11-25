@@ -86,8 +86,10 @@ func (c Certificate) ToCertificateInfo() certificate.CertificateInfo {
 	if len(c.SubjectCN) > 0 {
 		cn = c.SubjectCN[0]
 	}
-	start, _ := time.Parse("2006-01-02T15:04:05-0700", c.ValidityStart)
-	end, _ := time.Parse("2006-01-02T15:04:05-0700", c.ValidityEnd)
+
+	start, _ := time.Parse(time.RFC3339, c.ValidityStart)
+	end, _ := time.Parse(time.RFC3339, c.ValidityEnd)
+
 	ci := certificate.CertificateInfo{
 		ID: c.Id,
 		CN: cn,
