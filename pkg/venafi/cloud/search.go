@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Venafi/vcert/v4/pkg/certificate"
+	"log"
 	"net/http"
 	"time"
 )
@@ -86,8 +87,17 @@ func (c Certificate) ToCertificateInfo() certificate.CertificateInfo {
 	if len(c.SubjectCN) > 0 {
 		cn = c.SubjectCN[0]
 	}
-	start, _ := time.Parse("2006-01-02T15:04:05-0700", c.ValidityStart)
-	end, _ := time.Parse("2006-01-02T15:04:05-0700", c.ValidityEnd)
+
+	start, err := time.Parse(time.RFC3339, c.ValidityStart)
+	if err != nil { //we just print the error, and let the user know.
+		log.Println(err)
+	}
+
+	end, err := time.Parse(time.RFC3339, c.ValidityEnd)
+	if err != nil { //we just print the error, and let the user know.
+		log.Println(err)
+	}
+
 	ci := certificate.CertificateInfo{
 		ID: c.Id,
 		CN: cn,
