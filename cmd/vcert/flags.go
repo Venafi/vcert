@@ -849,11 +849,13 @@ var (
 
 	sshGetConfigFlags = sortedFlags(flagsApppend(
 		flagUrl,
+		flagTrustBundle,
 		flagTPPToken,
 		flagSshCertCa,
 		flagSshCertGuid,
 		flagSshFileGetConfig,
-		commonFlags,
+		flagInsecure,
+		flagVerbose,
 	))
 )
 
