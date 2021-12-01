@@ -701,17 +701,7 @@ func validateSetPolicyFlags(commandName string) error {
 }
 
 func validateSshEnrollFlags(commandName string) error {
-
 	err := validateConnectionFlags(commandName)
-	if err != nil {
-		return err
-	}
-
-	if flags.sshCertKeyId == "" {
-		return fmt.Errorf("ID is required for the SSH certificate (--id)")
-	}
-
-	err = validateExistingFile(flags.sshCertKeyId)
 	if err != nil {
 		return err
 	}

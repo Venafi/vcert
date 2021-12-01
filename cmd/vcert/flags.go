@@ -623,12 +623,19 @@ var (
 		Usage: "The requested principals. If no value is specified, then the default principals from the certificate template will be used.",
 	}
 
-	flagSshFile = &cli.StringFlag{
+	flagSshFileCertEnroll = &cli.StringFlag{
 		Name: "file",
-		Usage: "Use to specify a file name and a location where the resulting file should be written. " +
-			"If this option is used the key, certificate, and chain will be written to the same file. " +
-			"Example: --file /path-to/ssh_pub.cer",
-		Destination: &flags.sshFile,
+		Usage: "Use to specify a file name and a location for the resulting private key, public key, certificate. " +
+			"Example: --file /path-to/id_rsa",
+		Destination: &flags.sshFileCertEnroll,
+		TakesFile:   true,
+	}
+
+	flagSshFileGetConfig = &cli.StringFlag{
+		Name: "file",
+		Usage: "Use to specify a file name and a location for the resulting CA public key. " +
+			"Example: --file /path-to/trusted_ca.pub",
+		Destination: &flags.sshFileGetConfig,
 		TakesFile:   true,
 	}
 
@@ -835,8 +842,9 @@ var (
 		flagSshPubKey,
 		flagSshKeySize,
 		flagSshPassPhrase,
-		commonFlags,
 		flagSshCertWindows,
+		flagSshFileCertEnroll,
+		commonFlags,
 	))
 
 	sshGetConfigFlags = sortedFlags(flagsApppend(
@@ -845,7 +853,7 @@ var (
 		flagTPPToken,
 		flagSshCertCa,
 		flagSshCertGuid,
-		flagSshFile,
+		flagSshFileGetConfig,
 		flagInsecure,
 		flagVerbose,
 	))

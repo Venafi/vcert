@@ -1661,12 +1661,12 @@ func resetTPPAttribute(c *Connector, at, zone string) error {
 	return nil
 }
 
-func (c *Connector) RequestSSHCertificate(req *certificate.SshCertRequest) (requestID string, err error) {
+func (c *Connector) RequestSSHCertificate(req *certificate.SshCertRequest) (response *certificate.SshCertificateObject, err error) {
 
 	return RequestSshCertificate(c, req)
 
 }
 
-func (c *Connector) RetrieveSSHCertificate(req *certificate.SshCertRequest) (response *certificate.SshCertRetrieveDetails, err error) {
+func (c *Connector) RetrieveSSHCertificate(req *certificate.SshCertRequest) (response *certificate.SshCertificateObject, err error) {
 	return RetrieveSshCertificate(c, req)
 }
