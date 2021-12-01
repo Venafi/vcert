@@ -77,6 +77,7 @@ func init() {
 
 func getTestConnector(url string, zone string) (c *Connector, err error) {
 	c, err = NewConnector(url, zone, false, nil)
+	c.client = &http.Client{}
 	return c, err
 }
 
@@ -2013,6 +2014,7 @@ func TestCreateSshCertServiceGeneratedKP(t *testing.T) {
 	req.ValidityPeriod = fmt.Sprint(duration, "h")
 	req.Template = os.Getenv("TPP_SSH_CA")
 	req.SourceAddresses = []string{"test.com"}
+	req.Timeout = time.Second * 10
 
 	respData, err := tpp.RequestSSHCertificate(req)
 
@@ -2091,6 +2093,7 @@ func TestCreateSshCertLocalGeneratedKP(t *testing.T) {
 	req.ValidityPeriod = fmt.Sprint(duration, "h")
 	req.Template = os.Getenv("TPP_SSH_CA")
 	req.SourceAddresses = []string{"test.com"}
+	req.Timeout = time.Second * 10
 
 	sPubKey := string(pub)
 
