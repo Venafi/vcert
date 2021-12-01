@@ -2013,10 +2013,9 @@ func TestCreateSshCertServiceGeneratedKP(t *testing.T) {
 	req.ValidityPeriod = fmt.Sprint(duration, "h")
 	req.Template = os.Getenv("TPP_SSH_CA")
 	req.SourceAddresses = []string{"test.com"}
-	req.Timeout = time.Second*10
+	req.Timeout = time.Second * 10
 
-	tpp.client = &http.Client{
-	}
+	tpp.client = &http.Client{}
 	respData, err := tpp.RequestSSHCertificate(req)
 
 	if err != nil {
@@ -2062,8 +2061,7 @@ func TestCreateSshCertServiceGeneratedKP(t *testing.T) {
 func TestCreateSshCertLocalGeneratedKP(t *testing.T) {
 
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
-	tpp.client = &http.Client{
-	}
+	tpp.client = &http.Client{}
 
 	duration := 4
 
@@ -2096,7 +2094,7 @@ func TestCreateSshCertLocalGeneratedKP(t *testing.T) {
 	req.ValidityPeriod = fmt.Sprint(duration, "h")
 	req.Template = os.Getenv("TPP_SSH_CA")
 	req.SourceAddresses = []string{"test.com"}
-	req.Timeout = time.Second*10
+	req.Timeout = time.Second * 10
 
 	sPubKey := string(pub)
 
