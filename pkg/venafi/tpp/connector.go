@@ -999,6 +999,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 	}
 	if req.CsrOrigin == certificate.ServiceGeneratedCSR || req.FetchPrivateKey {
 		certReq.IncludePrivateKey = true
+		certReq.Format = "Base64 (PKCS #8)"
 		certReq.Password = req.KeyPassword
 	}
 

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
+	"github.com/Venafi/vcert/v4/pkg/util"
 	"log"
 	"net"
 	"time"
@@ -90,6 +91,17 @@ func getSimpleCertificate(conn endpoint.Connector, cn string) (tls.Certificate, 
 		return tls.Certificate{}, err
 	}
 	err = certCollection.AddPrivateKey(req.PrivateKey, nil)
+
+	if err != nil {
+		return tls.Certificate{}, err
+	}
+
+	privKey, err := util.DecryptPkcs8PrivateKey(certCollection.PrivateKey, "")
+	if err != nil {
+		return tls.Certificate{}, err
+	}
+	certCollection.PrivateKey = privKey
+
 	return certCollection.ToTLSCertificate(), err
 }
 

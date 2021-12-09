@@ -26,6 +26,8 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
+	"github.com/Venafi/vcert/v4/pkg/util"
+	"github.com/youmark/pkcs8"
 	"net"
 	"net/url"
 	"strings"
@@ -520,10 +522,22 @@ func PublicKey(priv crypto.Signer) crypto.PublicKey {
 }
 
 // GetPrivateKeyPEMBock gets the private key as a PEM data block
-func GetPrivateKeyPEMBock(key crypto.Signer) (*pem.Block, error) {
+func GetPrivateKeyPEMBock(key crypto.Signer, format ...string) (*pem.Block, error) {
+	currentFormat := ""
+	if len(format) > 0 && format[0] != "" {
+		currentFormat = format[0]
+	}
 	switch k := key.(type) {
 	case *rsa.PrivateKey:
-		return &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(k)}, nil
+		if currentFormat == "legacy-pem" {
+			return &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(k)}, nil
+		} else {
+			dataBytes, err := pkcs8.MarshalPrivateKey(key.(*rsa.PrivateKey), nil, nil)
+			if err != nil {
+				return nil, err
+			}
+			return &pem.Block{Type: "PRIVATE KEY", Bytes: dataBytes}, err
+		}
 	case *ecdsa.PrivateKey:
 		b, err := x509.MarshalECPrivateKey(k)
 		if err != nil {
@@ -535,18 +549,29 @@ func GetPrivateKeyPEMBock(key crypto.Signer) (*pem.Block, error) {
 	}
 }
 
-//nolint
 // GetEncryptedPrivateKeyPEMBock gets the private key as an encrypted PEM data block
-func GetEncryptedPrivateKeyPEMBock(key crypto.Signer, password []byte) (*pem.Block, error) {
+func GetEncryptedPrivateKeyPEMBock(key crypto.Signer, password []byte, format ...string) (*pem.Block, error) {
+	currentFormat := ""
+	if len(format) > 0 && format[0] != "" {
+		currentFormat = format[0]
+	}
 	switch k := key.(type) {
 	case *rsa.PrivateKey:
-		return x509.EncryptPEMBlock(rand.Reader, "RSA PRIVATE KEY", x509.MarshalPKCS1PrivateKey(k), password, x509.PEMCipherAES256)
+		if currentFormat == "legacy-pem" {
+			return util.X509EncryptPEMBlock(rand.Reader, "RSA PRIVATE KEY", x509.MarshalPKCS1PrivateKey(k), password, util.PEMCipherAES256)
+		} else {
+			dataBytes, err := pkcs8.MarshalPrivateKey(key.(*rsa.PrivateKey), password, nil)
+			if err != nil {
+				return nil, err
+			}
+			return &pem.Block{Type: "ENCRYPTED PRIVATE KEY", Bytes: dataBytes}, err
+		}
 	case *ecdsa.PrivateKey:
 		b, err := x509.MarshalECPrivateKey(k)
 		if err != nil {
 			return nil, err
 		}
-		return x509.EncryptPEMBlock(rand.Reader, "EC PRIVATE KEY", b, password, x509.PEMCipherAES256)
+		return util.X509EncryptPEMBlock(rand.Reader, "EC PRIVATE KEY", b, password, util.PEMCipherAES256)
 	default:
 		return nil, fmt.Errorf("%w: unable to format Key", verror.VcertError)
 	}

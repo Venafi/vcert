@@ -22,6 +22,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+	"github.com/Venafi/vcert/v4/pkg/util"
 	"math/big"
 	"net"
 	"os"
@@ -322,11 +323,18 @@ func TestGetEncryptedPrivateKeyPEMBock(t *testing.T) {
 		t.Fatalf("GetPrivateKeyPEMBock returned nil for RSA key")
 	}
 
-	b, err := x509.DecryptPEMBlock(p, []byte("something"))
+	encoded := pem.EncodeToMemory(p)
+	str, err := util.DecryptPkcs8PrivateKey(string(encoded), "something")
 	if err != nil {
 		t.Fatalf("Error: %s", err)
 	}
-	_, err = x509.ParsePKCS1PrivateKey(b)
+
+	p, _ = pem.Decode([]byte(str))
+	if p == nil {
+		t.Fatalf("missing private key PEM")
+	}
+
+	_, err = x509.ParsePKCS8PrivateKey(p.Bytes)
 	if err != nil {
 		t.Fatalf("Error: %s", err)
 	}

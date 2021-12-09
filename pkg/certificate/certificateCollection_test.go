@@ -331,7 +331,7 @@ func TestAddPrivateKey(t *testing.T) {
 
 	pcc, _ := NewPEMCollection(nil, nil, nil)
 	err := pcc.AddPrivateKey(pk, []byte("newPassw0rd!"))
-	if !strings.Contains(pcc.PrivateKey, "BEGIN RSA PRIVATE KEY") || err != nil {
+	if !strings.Contains(pcc.PrivateKey, "PRIVATE KEY") || err != nil {
 		t.Fatalf("collection should have PEM encoded private key")
 	}
 	if !strings.Contains(pcc.PrivateKey, "ENCRYPTED") {

@@ -73,7 +73,7 @@ func readData(commandName string) error {
 }
 
 func validateCommonFlags(commandName string) error {
-	if flags.format != "" && flags.format != "pem" && flags.format != "json" && flags.format != "pkcs12" && flags.format != JKSFormat {
+	if flags.format != "" && flags.format != "pem" && flags.format != "json" && flags.format != "pkcs12" && flags.format != JKSFormat && flags.format != LegacyPem {
 		return fmt.Errorf("Unexpected output format: %s", flags.format)
 	}
 	if flags.file != "" && (flags.certFile != "" || flags.chainFile != "" || flags.keyFile != "") {

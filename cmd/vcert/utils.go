@@ -60,6 +60,7 @@ const (
 	SshCertPubKeyLocal     = "local"
 	sshCertFileExt         = "-cert.pub"
 	sshPubKeyFileExt       = ".pub"
+	LegacyPem              = "legacy-pem"
 )
 
 func parseCustomField(s string) (key, value string, err error) {

@@ -3,9 +3,9 @@ package util
 import (
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"github.com/youmark/pkcs8"
 	"log"
 	"strings"
 
@@ -32,22 +32,28 @@ func generatePrivKey(bitSize int) (*rsa.PrivateKey, error) {
 	return privKey, nil
 }
 
-//nolint
 func encodePrivKeyToPEM(privateKey *rsa.PrivateKey, keyPassword string) ([]byte, error) {
 
 	var err error
 	var privBlock *pem.Block
-
-	privDER := x509.MarshalPKCS1PrivateKey(privateKey)
-
+	var privDER []byte
 	if keyPassword != "" {
-		privBlock, err = x509.EncryptPEMBlock(rand.Reader, RsaPrivKeyType, privDER, []byte(keyPassword), x509.PEMCipherDES)
+		privDER, err = pkcs8.MarshalPrivateKey(privateKey, []byte(keyPassword), nil)
 		if err != nil {
 			return nil, err
 		}
-	} else {
 		privBlock = &pem.Block{
-			Type:    RsaPrivKeyType,
+			Type:    "ENCRYPTED PRIVATE KEY",
+			Headers: nil,
+			Bytes:   privDER,
+		}
+	} else {
+		privDER, err := pkcs8.MarshalPrivateKey(privateKey, nil, nil)
+		if err != nil {
+			return nil, err
+		}
+		privBlock = &pem.Block{
+			Type:    "PRIVATE KEY",
 			Headers: nil,
 			Bytes:   privDER,
 		}

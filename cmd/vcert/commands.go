@@ -320,7 +320,7 @@ func doCommandEnroll1(c *cli.Context) error {
 	logf("Successfully posted request for %s, will pick up by %s", requestedFor, flags.pickupID)
 
 	if flags.noPickup {
-		pcc, err = certificate.NewPEMCollection(nil, req.PrivateKey, []byte(flags.keyPassword))
+		pcc, err = certificate.NewPEMCollection(nil, req.PrivateKey, []byte(flags.keyPassword), flags.format)
 		if err != nil {
 			return err
 		}
@@ -338,14 +338,14 @@ func doCommandEnroll1(c *cli.Context) error {
 
 		if req.CsrOrigin == certificate.LocalGeneratedCSR {
 			// otherwise private key can be taken from *req
-			err := pcc.AddPrivateKey(req.PrivateKey, []byte(flags.keyPassword))
+			err := pcc.AddPrivateKey(req.PrivateKey, []byte(flags.keyPassword), flags.format)
 			if err != nil {
 				log.Fatal(err)
 			}
 		}
 	}
 
-	if connector.GetType() == endpoint.ConnectorTypeCloud && (flags.format == Pkcs12 || flags.format == JKSFormat) && flags.csrOption == "service" {
+	if flags.format == Pkcs12 || flags.format == JKSFormat {
 		privKey, err := util.DecryptPkcs8PrivateKey(pcc.PrivateKey, flags.keyPassword)
 		if err != nil {
 			return err
@@ -797,7 +797,7 @@ func doCommandPickup1(c *cli.Context) error {
 	}
 	logf("Successfully retrieved request for %s", flags.pickupID)
 
-	if connector.GetType() == endpoint.ConnectorTypeCloud && (flags.format == Pkcs12 || flags.format == JKSFormat) && IsCSRServiceVaaSGenerated(c.Command.Name) {
+	if connector.GetType() == endpoint.ConnectorTypeCloud && (flags.format == Pkcs12 || flags.format == JKSFormat) && IsCSRServiceVaaSGenerated(c.Command.Name) || (connector.GetType() == endpoint.ConnectorTypeTPP && (flags.format == Pkcs12 || flags.format == JKSFormat) && pcc.PrivateKey != "") {
 		privKey, err := util.DecryptPkcs8PrivateKey(pcc.PrivateKey, flags.keyPassword)
 		if err != nil {
 			return err
