@@ -639,6 +639,60 @@ var (
 		TakesFile:   true,
 	}
 
+	flagDirUrlAcme = &cli.StringFlag{
+		Name:        "dir-url",
+		Usage:       "the directory's url of the acme server",
+		Destination: &flags.acmeDirUrl,
+		TakesFile:   true,
+	}
+	flagContactAcme = &cli.StringFlag{
+		Name:        "contact",
+		Usage:       "email of the contacts.",
+		Destination: &flags.acmeContact,
+		TakesFile:   true,
+	}
+	flagWebrootAcme = &cli.StringFlag{
+		Name:        "webroot",
+		Usage:       "a webroot that the acme will use to perform the challenge",
+		Destination: &flags.acmeWebroot,
+		Value:       "/var/www/html",
+		TakesFile:   true,
+	}
+	flagDomainsAcme = &cli.StringFlag{
+		Name:        "domains",
+		Usage:       "a list of domains, those's certificate will be generated.",
+		Destination: &flags.acmeDomains,
+		TakesFile:   true,
+	}
+	flagAccountFileAcme = &cli.StringFlag{
+		Name:        "account",
+		Usage:       "the json file to store json account data",
+		Destination: &flags.acmeAccountFile,
+		Value:       "account.json",
+		TakesFile:   true,
+	}
+	flagCertFileAcme = &cli.StringFlag{
+		Name:        "cert-file",
+		Usage:       "file for saving the certificate",
+		Destination: &flags.acmeCertFile,
+		Value:       "acme-cert.pem",
+		TakesFile:   true,
+	}
+	flagKeyFileAcme = &cli.StringFlag{
+		Name:        "key-file",
+		Usage:       "file for saving the private key",
+		Destination: &flags.acmeKeyFile,
+		Value:       "acme-priv-key.pem",
+		TakesFile:   true,
+	}
+
+	flagObjectNameAcme = &cli.StringFlag{
+		Name:        "object-name",
+		Usage:       "this is for importing the certificate to TPP or VaaS, will be imported with this name",
+		Destination: &flags.acmeObjectName,
+		TakesFile:   true,
+	}
+
 	commonFlags              = []cli.Flag{flagInsecure, flagVerbose, flagNoPrompt}
 	keyFlags                 = []cli.Flag{flagKeyType, flagKeySize, flagKeyCurve, flagKeyFile, flagKeyPassword}
 	sansFlags                = []cli.Flag{flagDNSSans, flagEmailSans, flagIPSans, flagURISans, flagUPNSans}
@@ -856,6 +910,22 @@ var (
 		flagSshFileGetConfig,
 		flagInsecure,
 		flagVerbose,
+	))
+
+	acmeEnrollFlags = sortedFlags(flagsApppend(
+		flagDirUrlAcme,
+		flagContactAcme,
+		flagWebrootAcme,
+		flagDomainsAcme,
+		flagAccountFileAcme,
+		flagCertFileAcme,
+		flagKeyFileAcme,
+		flagInsecure,
+		credentialsFlags,
+		flagZone,
+		flagTrustBundle,
+		flagObjectNameAcme,
+		flagKeyPassword,
 	))
 )
 

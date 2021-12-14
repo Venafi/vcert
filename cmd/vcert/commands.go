@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	venafi_acme "github.com/Venafi/vcert/v4/pkg/acme"
 	"io/ioutil"
 	"log"
 	"net"
@@ -174,6 +175,15 @@ var (
 		Action:    doCommandSshGetConfig,
 		Usage:     "To get the SSH CA public key and default principals",
 		UsageText: `vcert sshgetconfig -u https://tpp.example.com -t <TPP access token> --template <val>`,
+	}
+
+	commandAcmeEnroll = &cli.Command{
+		Before:    runBeforeCommand,
+		Name:      commandAcmeEnrollName,
+		Flags:     acmeEnrollFlags,
+		Action:    doCommandAcmeEnroll,
+		Usage:     "To enroll a certificate using an ACME server",
+		UsageText: `vcert acme-enroll --domains test.com --dirurl https://host/acme/acme/directory --webroot "/var/www/html"`,
 	}
 )
 
@@ -1197,6 +1207,68 @@ func doCommandRenew1(c *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("Failed to output the results: %s", err)
 	}
+	return nil
+}
+
+func doCommandAcmeEnroll(c *cli.Context) error {
+	if flags.keyPassword == "" {
+		return fmt.Errorf("a password is required")
+	}
+
+	if flags.acmeObjectName == "" {
+		return fmt.Errorf("a password is required")
+	}
+
+	req := &venafi_acme.AcmeRequest{
+		DirUrl:      flags.acmeDirUrl,
+		Contact:     flags.acmeContact,
+		Webroot:     flags.acmeWebroot,
+		Domains:     flags.acmeDomains,
+		AccountFile: flags.acmeAccountFile,
+		CertFile:    flags.acmeCertFile,
+		KeyFile:     flags.acmeKeyFile,
+	}
+
+	venafi_acme.RequestAcmeCertificate(req)
+
+	log.Println("============Importing generated certificate to VaaS============")
+
+	err := setTLSConfig()
+	if err != nil {
+		return err
+	}
+
+	cfg, err := buildConfig(c, &flags)
+	if err != nil {
+		return fmt.Errorf("failed to build vcert config: %s", err)
+	}
+
+	connector, err := vcert.NewClient(&cfg)
+
+	if err != nil {
+
+		return err
+
+	}
+
+	certContent, err := ioutil.ReadFile(flags.acmeCertFile)
+	privKeyContent, err := ioutil.ReadFile(flags.acmeKeyFile)
+
+	importRequest := &certificate.ImportRequest{}
+	importRequest.CertificateData = string(certContent)
+	importRequest.PrivateKeyData = string(privKeyContent)
+	importRequest.Password = flags.keyPassword
+	importRequest.ObjectName = flags.acmeObjectName
+
+	resp, err := connector.ImportCertificate(importRequest)
+
+	if err != nil {
+		return err
+	}
+
+	log.Println("certificate with domains:", flags.acmeDomains, ", were imported to VaaS, with the following info")
+	fmt.Println(util.GetJsonAsString(resp))
+
 	return nil
 }
 

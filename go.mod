@@ -10,6 +10,7 @@ require (
 	gopkg.in/ini.v1 v1.51.0
 	gopkg.in/yaml.v2 v2.4.0
 	software.sslmate.com/src/go-pkcs12 v0.0.0-20180114231543-2291e8f0f237
+	github.com/eggsampler/acme/v3 v3.2.1
 )
 
 go 1.13
