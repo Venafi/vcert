@@ -1279,9 +1279,13 @@ func doCommandAcmeRenew(c *cli.Context) error {
 				flags.acmeDomains, notAfter, days)
 			return nil
 		} else {
+			dirUrl := acme.LetsEncryptStaging
+			if flags.acmeDirUrl != "" {
+				dirUrl = flags.acmeDirUrl
+			}
 			log.Printf("[%s] Attempting certificate renewal...", flags.acmeDomains)
 			req := &venafi_acme.AcmeRequest{
-				DirUrl:      flags.acmeDirUrl,
+				DirUrl:      dirUrl,
 				Contact:     flags.acmeContact,
 				Webroot:     flags.acmeWebroot,
 				Domains:     flags.acmeDomains,
