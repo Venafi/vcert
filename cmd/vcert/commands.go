@@ -1211,13 +1211,6 @@ func doCommandRenew1(c *cli.Context) error {
 }
 
 func doCommandAcmeEnroll(c *cli.Context) error {
-	if flags.keyPassword == "" {
-		return fmt.Errorf("a password is required")
-	}
-
-	if flags.acmeObjectName == "" {
-		return fmt.Errorf("a password is required")
-	}
 
 	req := &venafi_acme.AcmeRequest{
 		DirUrl:      flags.acmeDirUrl,
@@ -1252,13 +1245,9 @@ func doCommandAcmeEnroll(c *cli.Context) error {
 	}
 
 	certContent, err := ioutil.ReadFile(flags.acmeCertFile)
-	privKeyContent, err := ioutil.ReadFile(flags.acmeKeyFile)
 
 	importRequest := &certificate.ImportRequest{}
 	importRequest.CertificateData = string(certContent)
-	importRequest.PrivateKeyData = string(privKeyContent)
-	importRequest.Password = flags.keyPassword
-	importRequest.ObjectName = flags.acmeObjectName
 
 	resp, err := connector.ImportCertificate(importRequest)
 
