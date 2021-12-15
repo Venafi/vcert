@@ -76,6 +76,7 @@ func main() {
 			commandSshEnroll,
 			commandSshGetConfig,
 			commandAcmeEnroll,
+			commandAcmeRenew,
 		},
 		EnableBashCompletion: true, //todo: write BashComplete function for options
 		//HideHelp:             true,

@@ -8,6 +8,7 @@ type AcmeRequest struct {
 	AccountFile string
 	CertFile    string
 	KeyFile     string
+	ReuseKey    bool
 }
 
 type AcmeResponse struct {

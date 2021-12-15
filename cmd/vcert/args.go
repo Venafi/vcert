@@ -21,20 +21,21 @@ import (
 )
 
 const (
-	commandGenCSRName       = "gencsr"
-	commandEnrollName       = "enroll"
-	commandPickupName       = "pickup"
-	commandRevokeName       = "revoke"
-	commandRenewName        = "renew"
-	commandGetCredName      = "getcred"
-	commandCheckCredName    = "checkcred"
-	commandVoidCredName     = "voidcred"
-	commandCreatePolicyName = "setpolicy"
-	commandGetePolicyName   = "getpolicy"
-	commandSshPickupName    = "sshpickup"
-	commandSshEnrollName    = "sshenroll"
-	commandSshGetConfigName = "sshgetconfig"
-	commandAcmeEnrollName   = "acme-enroll"
+	commandGenCSRName           = "gencsr"
+	commandEnrollName           = "enroll"
+	commandPickupName           = "pickup"
+	commandRevokeName           = "revoke"
+	commandRenewName            = "renew"
+	commandGetCredName          = "getcred"
+	commandCheckCredName        = "checkcred"
+	commandVoidCredName         = "voidcred"
+	commandCreatePolicyName     = "setpolicy"
+	commandGetePolicyName       = "getpolicy"
+	commandSshPickupName        = "sshpickup"
+	commandSshEnrollName        = "sshenroll"
+	commandSshGetConfigName     = "sshgetconfig"
+	commandAcmeEnrollName       = "acme-enroll"
+	commandAcmeRenewServiceName = "acme-renew"
 )
 
 var (
@@ -139,4 +140,6 @@ type commandFlags struct {
 	acmeCertFile         string
 	acmeKeyFile          string
 	acmeObjectName       string
+	acmeSetRenewSvc      bool
+	acmeRenewWindow      int
 }

@@ -685,12 +685,22 @@ var (
 		Value:       "acme-priv-key.pem",
 		TakesFile:   true,
 	}
-
 	flagObjectNameAcme = &cli.StringFlag{
 		Name:        "object-name",
 		Usage:       "this is for importing the certificate to TPP or VaaS, will be imported with this name",
 		Destination: &flags.acmeObjectName,
 		TakesFile:   true,
+	}
+	flagRenewAcme = &cli.BoolFlag{
+		Name:        "auto-renew",
+		Usage:       "Indicates if the renewal service should be started for the certificate",
+		Destination: &flags.acmeSetRenewSvc,
+	}
+	flagRenewWindowAcme = &cli.IntFlag{
+		Name:        "renew-window",
+		Usage:       "Use to specify the number of days before certificate expiration in which the renew operation should be attempted.",
+		Destination: &flags.acmeRenewWindow,
+		DefaultText: "7",
 	}
 
 	commonFlags              = []cli.Flag{flagInsecure, flagVerbose, flagNoPrompt}
@@ -926,6 +936,8 @@ var (
 		flagTrustBundle,
 		flagObjectNameAcme,
 		flagKeyPassword,
+		flagRenewAcme,
+		flagRenewWindowAcme,
 	))
 )
 

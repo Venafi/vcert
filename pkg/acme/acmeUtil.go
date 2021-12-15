@@ -1,5 +1,24 @@
-//this functionallity is based on the example that exists on this url:
-//https://github.com/eggsampler/acme/blob/master/examples/certbot/certbot.go
+/*
+ * Copyright 2020-2021 Venafi, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ *
+ * This functionality is based on the example that exists on this url:
+ * https://github.com/eggsampler/acme/blob/master/examples/certbot/certbot.go
+ *
+ */
+
 package venafi_acme
 
 import (
@@ -12,6 +31,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"github.com/eggsampler/acme/v3"
+	"github.com/takama/daemon"
 	"io/ioutil"
 	"log"
 	"os"
@@ -103,22 +123,29 @@ func RequestAcmeCertificate(r *AcmeRequest) (*AcmeResponse, error) {
 		}
 		log.Printf("Challenge updated")
 	}
-
 	// all the challenges should now be completed
 
-	// create a csr for the new certificate
-	log.Printf("Generating certificate private key")
-	certKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-	if err != nil {
-		log.Fatalf("Error generating certificate key: %v", err)
-	}
-
-	b := key2pem(certKey)
-
-	// write the key to the key file as a pem encoded key
-	log.Printf("Writing key file: %s", r.KeyFile)
-	if err := ioutil.WriteFile(r.KeyFile, b, 0600); err != nil {
-		log.Fatalf("Error writing key file %q: %v", r.KeyFile, err)
+	// Load the private key from file
+	var certKey *ecdsa.PrivateKey
+	if r.ReuseKey {
+		b, err := ioutil.ReadFile(r.KeyFile)
+		if err != nil {
+			log.Fatalf("Error reading key file %q: %v", r.KeyFile, err)
+		}
+		certKey = pem2key(b)
+	} else {
+		// generate a private key for the new certificate
+		log.Printf("Generating certificate private key")
+		certKey, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+		if err != nil {
+			log.Fatalf("Error generating certificate key: %v", err)
+		}
+		b := key2pem(certKey)
+		// write the key to the key file as a pem encoded key
+		log.Printf("Writing key file: %s", r.KeyFile)
+		if err := ioutil.WriteFile(r.KeyFile, b, 0600); err != nil {
+			log.Fatalf("Error writing key file %q: %v", r.KeyFile, err)
+		}
 	}
 
 	// create the new csr template
@@ -168,7 +195,14 @@ func RequestAcmeCertificate(r *AcmeRequest) (*AcmeResponse, error) {
 
 	log.Printf("Finished.")
 	return nil, nil
+}
 
+func RenewAcmeCertificate(req *AcmeRequest) (*AcmeResponse, error) {
+	_, err := RequestAcmeCertificate(req)
+	if err != nil {
+		return nil, err
+	}
+	return nil, nil
 }
 
 func loadAccount(client acme.Client, r *AcmeRequest) (acme.Account, error) {
@@ -236,4 +270,54 @@ func pem2key(data []byte) *ecdsa.PrivateKey {
 		log.Fatalf("Error decoding key: %v", err)
 	}
 	return key
+}
+
+//func Service
+
+func SetupRenewalService(req *AcmeRequest) error {
+	name := fmt.Sprintf("vcert-renew-svc-%s", req.Domains)
+	description := fmt.Sprintf("Vcert Renew Service for ACME certificate [%s]", req.Domains)
+	service, err := daemon.New(name, description, daemon.SystemDaemon)
+	if err != nil {
+		log.Fatal("Error: ", err)
+	}
+
+	temp_str := service.GetTemplate()
+	// TODO: EDIT TEMPLATE HERE
+	service.SetTemplate(temp_str)
+
+	status, err := service.Install()
+	if err != nil {
+		log.Fatal(status, "\nError: ", err)
+	}
+	fmt.Println(status)
+	status, err = service.Start()
+
+	return nil
+}
+
+func ParsePEMBundle(bundle []byte) ([]*x509.Certificate, error) {
+	var certificates []*x509.Certificate
+	var certDERBlock *pem.Block
+
+	for {
+		certDERBlock, bundle = pem.Decode(bundle)
+		if certDERBlock == nil {
+			break
+		}
+
+		if certDERBlock.Type == "CERTIFICATE" {
+			cert, err := x509.ParseCertificate(certDERBlock.Bytes)
+			if err != nil {
+				return nil, err
+			}
+			certificates = append(certificates, cert)
+		}
+	}
+
+	if len(certificates) == 0 {
+		return nil, fmt.Errorf("no certificates were found while parsing the bundle")
+	}
+
+	return certificates, nil
 }
