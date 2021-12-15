@@ -37,6 +37,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"text/template"
 )
 
 func RequestAcmeCertificate(r *AcmeRequest) (*AcmeResponse, error) {
@@ -272,9 +273,24 @@ func pem2key(data []byte) *ecdsa.PrivateKey {
 	return key
 }
 
-//func Service
+type Template struct {
+	Description string
+	RestartTime int
+	Path        string
+	Args        string
+}
 
-func SetupRenewalService(req *AcmeRequest) error {
+type customWriter struct {
+	data string
+}
+
+func (cw customWriter) Write(p []byte) (n int, err error) {
+	cw.data = string(p)
+
+	return len(cw.data), nil
+}
+
+func SetupRenewalService(domains string, renewWindow int, apiKey string, zone string, req *AcmeRequest) error {
 	name := "vcert-renew-svc"
 	description := fmt.Sprintf("Vcert Renew Service for ACME certificate [%s]", req.Domains)
 	service, err := daemon.New(name, description, daemon.SystemDaemon)
@@ -282,11 +298,33 @@ func SetupRenewalService(req *AcmeRequest) error {
 		log.Fatal("Error: ", err)
 	}
 
-	temp_str := service.GetTemplate()
+	argStr := "acme-renew --domains %s -renew-window %d -k %s -z \"%s\""
+	bar := fmt.Sprintf(argStr, domains, renewWindow, apiKey, zone)
+	log.Printf("Args: %s", bar)
+	data := Template{
+		Description: description,
+		RestartTime: 10,
+		Path:        "root/vcert",
+		Args:        bar,
+	}
+	templFile, err := ioutil.ReadFile("./template.txt")
+	if err != nil {
+		return err
+	}
+	templStr := string(templFile)
+	tmpl, err := template.New(name).Parse(templStr)
+	customW := customWriter{}
+	err = tmpl.Execute(customW, data)
+	if err != nil {
+		return err
+	}
+
 	log.Printf("Service Template is:")
-	log.Println(temp_str)
-	// TODO: EDIT TEMPLATE HERE
-	service.SetTemplate(temp_str)
+	log.Println(customW.data)
+	err = service.SetTemplate(customW.data)
+	if err != nil {
+		return err
+	}
 
 	status, err := service.Install()
 	if err != nil {

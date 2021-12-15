@@ -1243,7 +1243,7 @@ func doCommandAcmeEnroll(c *cli.Context) error {
 
 	//Add service here to renew certificate
 	if flags.acmeSetRenewSvc == true {
-		err = venafi_acme.SetupRenewalService(req)
+		err = venafi_acme.SetupRenewalService(flags.acmeDomains, flags.acmeRenewWindow, flags.apiKey, flags.zone, req)
 		log.Printf("Renewal service created and started")
 	}
 	return nil
