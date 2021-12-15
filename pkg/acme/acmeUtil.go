@@ -37,7 +37,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"text/template"
 )
 
 func RequestAcmeCertificate(r *AcmeRequest) (*AcmeResponse, error) {
@@ -290,6 +289,10 @@ func (cw customWriter) Write(p []byte) (n int, err error) {
 	return len(cw.data), nil
 }
 
+const commandPattern = "[Unit]\nDescription=%s\n\n[Service]\nRestart=always\nRestartSec=10s\n" +
+	"ExecStart={{.Path}} acme-renew --domains %s -renew-window %d -k %s -z \"%s\"\n\n" +
+	"[Install]\nWantedBy=multi-user.target"
+
 func SetupRenewalService(domains string, renewWindow int, apiKey string, zone string, req *AcmeRequest) error {
 	name := "vcert-renew-svc"
 	description := fmt.Sprintf("Vcert Renew Service for ACME certificate [%s]", req.Domains)
@@ -298,30 +301,30 @@ func SetupRenewalService(domains string, renewWindow int, apiKey string, zone st
 		log.Fatal("Error: ", err)
 	}
 
-	argStr := "acme-renew --domains %s -renew-window %d -k %s -z \"%s\""
-	bar := fmt.Sprintf(argStr, domains, renewWindow, apiKey, zone)
-	log.Printf("Args: %s", bar)
-	data := Template{
-		Description: description,
-		RestartTime: 10,
-		Path:        "root/vcert",
-		Args:        bar,
-	}
-	templFile, err := ioutil.ReadFile("./template.txt")
-	if err != nil {
-		return err
-	}
-	templStr := string(templFile)
-	tmpl, err := template.New(name).Parse(templStr)
-	customW := customWriter{}
-	err = tmpl.Execute(customW, data)
-	if err != nil {
-		return err
-	}
+	//argStr := "acme-renew --domains %s -renew-window %d -k %s -z \"%s\""
+	bar := fmt.Sprintf(commandPattern, description, domains, renewWindow, apiKey, zone)
+	//log.Printf("Template is:\n%s", bar)
+	//data := Template{
+	//	Description: description,
+	//	RestartTime: 10,
+	//	Path:        "root/vcert",
+	//	Args:        bar,
+	//}
+	//templFile, err := ioutil.ReadFile("./template.txt")
+	//if err != nil {
+	//	return err
+	//}
+	//templStr := string(templFile)
+	//tmpl, err := template.New(name).Parse(templStr)
+	//customW := customWriter{}
+	//err = tmpl.Execute(customW, data)
+	//if err != nil {
+	//	return err
+	//}
 
 	log.Printf("Service Template is:")
-	log.Println(customW.data)
-	err = service.SetTemplate(customW.data)
+	log.Println(bar)
+	err = service.SetTemplate(bar)
 	if err != nil {
 		return err
 	}
