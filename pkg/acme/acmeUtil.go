@@ -275,7 +275,7 @@ func pem2key(data []byte) *ecdsa.PrivateKey {
 //func Service
 
 func SetupRenewalService(req *AcmeRequest) error {
-	name := fmt.Sprintf("vcert-renew-svc-%s", req.Domains)
+	name := "vcert-renew-svc"
 	description := fmt.Sprintf("Vcert Renew Service for ACME certificate [%s]", req.Domains)
 	service, err := daemon.New(name, description, daemon.SystemDaemon)
 	if err != nil {
@@ -283,6 +283,8 @@ func SetupRenewalService(req *AcmeRequest) error {
 	}
 
 	temp_str := service.GetTemplate()
+	log.Printf("Service Template is:")
+	log.Println(temp_str)
 	// TODO: EDIT TEMPLATE HERE
 	service.SetTemplate(temp_str)
 

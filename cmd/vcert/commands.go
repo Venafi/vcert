@@ -1236,7 +1236,6 @@ func doCommandAcmeEnroll(c *cli.Context) error {
 		return err
 	}
 
-	log.Println("============Importing generated certificate to VaaS============")
 	err = importCertificate(c)
 	if err != nil {
 		return err
