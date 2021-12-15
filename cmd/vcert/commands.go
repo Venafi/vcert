@@ -23,6 +23,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	venafi_acme "github.com/Venafi/vcert/v4/pkg/acme"
+	"github.com/eggsampler/acme/v3"
 	"io/ioutil"
 	"log"
 	"net"
@@ -1221,8 +1222,12 @@ func doCommandRenew1(c *cli.Context) error {
 
 func doCommandAcmeEnroll(c *cli.Context) error {
 
+	dirUrl := acme.LetsEncryptStaging
+	if flags.acmeDirUrl != "" {
+		dirUrl = flags.acmeDirUrl
+	}
 	req := &venafi_acme.AcmeRequest{
-		DirUrl:      flags.acmeDirUrl,
+		DirUrl:      dirUrl,
 		Contact:     flags.acmeContact,
 		Webroot:     flags.acmeWebroot,
 		Domains:     flags.acmeDomains,
