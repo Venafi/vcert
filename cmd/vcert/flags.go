@@ -17,6 +17,7 @@
 package main
 
 import (
+	"github.com/eggsampler/acme/v3"
 	"sort"
 	"strings"
 
@@ -644,6 +645,7 @@ var (
 		Usage:       "the directory's url of the acme server",
 		Destination: &flags.acmeDirUrl,
 		TakesFile:   true,
+		Value:       acme.LetsEncryptStaging,
 	}
 	flagContactAcme = &cli.StringFlag{
 		Name:        "contact",
