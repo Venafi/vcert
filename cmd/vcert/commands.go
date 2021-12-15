@@ -1232,10 +1232,13 @@ func doCommandAcmeEnroll(c *cli.Context) error {
 		ReuseKey:    false,
 	}
 
-	venafi_acme.RequestAcmeCertificate(req)
+	_, err := venafi_acme.RequestAcmeCertificate(req)
+	if err != nil {
+		return err
+	}
 
 	log.Println("============Importing generated certificate to VaaS============")
-	err := importCertificate(c)
+	err = importCertificate(c)
 	if err != nil {
 		return err
 	}
@@ -1271,7 +1274,7 @@ func doCommandAcmeRenew(c *cli.Context) error {
 				flags.acmeDomains, notAfter, days)
 			return nil
 		} else {
-			log.Printf("[%s] Renewing certificate...", flags.acmeDomains)
+			log.Printf("[%s] Attempting certificate renewal...", flags.acmeDomains)
 			req := &venafi_acme.AcmeRequest{
 				DirUrl:      flags.acmeDirUrl,
 				Contact:     flags.acmeContact,
@@ -1283,13 +1286,14 @@ func doCommandAcmeRenew(c *cli.Context) error {
 				ReuseKey:    true,
 			}
 			_, err = venafi_acme.RenewAcmeCertificate(req)
+			if err != nil {
+				return err
+			}
 			err = importCertificate(c)
 			if err != nil {
 				return err
 			}
-			if err != nil {
-				return err
-			}
+			log.Printf("[%s] Certificate renewal complete!!!", flags.acmeDomains)
 		}
 	}
 	return nil
