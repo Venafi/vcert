@@ -115,6 +115,9 @@ ACTIONS:
    sshpickup    To retrieve a SSH certificate
    sshgetconfig To get the SSH CA public key and default principals
 
+   acme-enroll  To request a certificate from an ACME server and import it to TPP or VaaS
+   acme-renew   To renew a certificate from an ACME server and import it to TPP or VaaS  
+
 OPTIONS:
    {{range .VisibleFlags}}{{.}}
    {{end}}
