@@ -290,7 +290,7 @@ func (cw customWriter) Write(p []byte) (n int, err error) {
 }
 
 const commandPattern = "[Unit]\nDescription=%s\n\n[Service]\nRestart=always\nRestartSec=10s\n" +
-	"ExecStart={{.Path}} acme-renew --domains %s -renew-window %d -k %s -z \"%s\"\n\n" +
+	"ExecStart={{.Path}} acme-renew --domains %s --renew-window %d -k %s -z \"%s\"\n\n" +
 	"[Install]\nWantedBy=multi-user.target"
 
 func SetupRenewalService(domains string, renewWindow int, apiKey string, zone string, req *AcmeRequest) error {
