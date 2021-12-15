@@ -1220,13 +1220,6 @@ func doCommandRenew1(c *cli.Context) error {
 }
 
 func doCommandAcmeEnroll(c *cli.Context) error {
-	if flags.keyPassword == "" {
-		return fmt.Errorf("a password is required")
-	}
-
-	if flags.acmeObjectName == "" {
-		return fmt.Errorf("a password is required")
-	}
 
 	req := &venafi_acme.AcmeRequest{
 		DirUrl:      flags.acmeDirUrl,
