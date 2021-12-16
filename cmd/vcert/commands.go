@@ -28,6 +28,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -1243,7 +1244,32 @@ func doCommandAcmeEnroll(c *cli.Context) error {
 
 	//Add service here to renew certificate
 	if flags.acmeSetRenewSvc == true {
-		err = venafi_acme.SetupRenewalService(flags.acmeDomains, flags.acmeRenewWindow, flags.apiKey, flags.zone, req)
+		if !filepath.IsAbs(req.AccountFile) {
+			req.AccountFile, err = filepath.Abs(req.AccountFile)
+			if err != nil {
+				return err
+			}
+		}
+		if !filepath.IsAbs(req.CertFile) {
+			req.CertFile, err = filepath.Abs(req.CertFile)
+			if err != nil {
+				return err
+			}
+		}
+		if !filepath.IsAbs(req.KeyFile) {
+			req.KeyFile, err = filepath.Abs(req.KeyFile)
+			if err != nil {
+				return err
+			}
+		}
+
+		renewReq := &venafi_acme.AcmeRenewSvcRequest{
+			AcmeRequest: *req,
+			RenewWindow: flags.acmeRenewWindow,
+			ApiKey:      flags.apiKey,
+			Zone:        flags.zone,
+		}
+		err = venafi_acme.SetupRenewalService(renewReq)
 		log.Printf("Renewal service created and started")
 	}
 	return nil

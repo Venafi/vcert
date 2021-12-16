@@ -11,6 +11,12 @@ type AcmeRequest struct {
 	ReuseKey    bool
 }
 
+type AcmeRenewSvcRequest struct {
+	AcmeRequest
+	RenewWindow int
+	ApiKey      string
+	Zone        string
+}
 type AcmeResponse struct {
 }
 

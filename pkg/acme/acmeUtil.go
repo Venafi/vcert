@@ -272,28 +272,17 @@ func pem2key(data []byte) *ecdsa.PrivateKey {
 	return key
 }
 
-type Template struct {
-	Description string
-	RestartTime int
-	Path        string
-	Args        string
-}
+const commandPattern = "" +
+	"[Unit]\n" +
+	"Description=%s\n\n" +
+	"[Service]\n" +
+	"Restart=always\n" +
+	"RestartSec=10s\n" +
+	"ExecStart={{.Path}} acme-renew --domains %s --renew-window %d -k %s -z \"%s\" --account \"%s\" --cert-file \"%s\" --key-file \"%s\"\n\n" +
+	"[Install]\n" +
+	"WantedBy=multi-user.target"
 
-type customWriter struct {
-	data string
-}
-
-func (cw customWriter) Write(p []byte) (n int, err error) {
-	cw.data = string(p)
-
-	return len(cw.data), nil
-}
-
-const commandPattern = "[Unit]\nDescription=%s\n\n[Service]\nRestart=always\nRestartSec=10s\n" +
-	"ExecStart={{.Path}} acme-renew --domains %s --renew-window %d -k %s -z \"%s\"\n\n" +
-	"[Install]\nWantedBy=multi-user.target"
-
-func SetupRenewalService(domains string, renewWindow int, apiKey string, zone string, req *AcmeRequest) error {
+func SetupRenewalService(req *AcmeRenewSvcRequest) error {
 	name := "vcert-renew-svc"
 	description := fmt.Sprintf("Vcert Renew Service for ACME certificate [%s]", req.Domains)
 	service, err := daemon.New(name, description, daemon.SystemDaemon)
@@ -301,26 +290,7 @@ func SetupRenewalService(domains string, renewWindow int, apiKey string, zone st
 		log.Fatal("Error: ", err)
 	}
 
-	//argStr := "acme-renew --domains %s -renew-window %d -k %s -z \"%s\""
-	bar := fmt.Sprintf(commandPattern, description, domains, renewWindow, apiKey, zone)
-	//log.Printf("Template is:\n%s", bar)
-	//data := Template{
-	//	Description: description,
-	//	RestartTime: 10,
-	//	Path:        "root/vcert",
-	//	Args:        bar,
-	//}
-	//templFile, err := ioutil.ReadFile("./template.txt")
-	//if err != nil {
-	//	return err
-	//}
-	//templStr := string(templFile)
-	//tmpl, err := template.New(name).Parse(templStr)
-	//customW := customWriter{}
-	//err = tmpl.Execute(customW, data)
-	//if err != nil {
-	//	return err
-	//}
+	bar := fmt.Sprintf(commandPattern, description, req.Domains, req.RenewWindow, req.ApiKey, req.Zone, req.AccountFile, req.CertFile, req.KeyFile)
 
 	log.Printf("Service Template is:")
 	log.Println(bar)
