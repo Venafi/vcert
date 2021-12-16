@@ -277,7 +277,7 @@ const commandPattern = "" +
 	"Description=%s\n\n" +
 	"[Service]\n" +
 	"Restart=always\n" +
-	"RestartSec=10s\n" +
+	"RestartSec=60s\n" +
 	"ExecStart={{.Path}} acme-renew --domains %s --renew-window %d -k %s -z \"%s\" --account \"%s\" --cert-file \"%s\" --key-file \"%s\"\n\n" +
 	"[Install]\n" +
 	"WantedBy=multi-user.target"
