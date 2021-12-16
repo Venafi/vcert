@@ -1269,6 +1269,8 @@ func doCommandAcmeEnroll(c *cli.Context) error {
 			ApiKey:      flags.apiKey,
 			Zone:        flags.zone,
 		}
+		// Let some time pass before setting up the service
+		time.Sleep(30 * time.Second)
 		err = venafi_acme.SetupRenewalService(renewReq)
 		log.Printf("Renewal service created and started")
 	}

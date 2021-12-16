@@ -290,7 +290,9 @@ func SetupRenewalService(req *AcmeRenewSvcRequest) error {
 		log.Fatal("Error: ", err)
 	}
 
-	bar := fmt.Sprintf(commandPattern, description, req.Domains, req.RenewWindow, req.ApiKey, req.Zone, req.AccountFile, req.CertFile, req.KeyFile)
+	escapedZone := strings.ReplaceAll(req.Zone, "\\", "\\\\")
+
+	bar := fmt.Sprintf(commandPattern, description, req.Domains, req.RenewWindow, req.ApiKey, escapedZone, req.AccountFile, req.CertFile, req.KeyFile)
 
 	log.Printf("Service Template is:")
 	log.Println(bar)
