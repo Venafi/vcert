@@ -55,15 +55,7 @@ Feature: enrolling certificates with -csr option (VEN-40652)
       | TPP       |
       | Cloud     |
 
-  Scenario Outline: where it returns an error on enrolling a certificate with -csr service and empty -key-password
-    When I enroll random certificate using <endpoint> with -csr service -no-prompt
-    Then the exit status should not be 0
-    And the output should contain "-key-password cannot be empty in -csr service mode unless -no-pickup specified"
-    Examples:
-      | endpoint  |
-      | test-mode |
-      | TPP       |
-      | Cloud     |
+
 
   Scenario Outline: where it should however enroll a certificate with -csr service, empty -key-password and -no-pickup
     When I enroll random certificate using <endpoint> with -csr service -no-prompt -no-pickup

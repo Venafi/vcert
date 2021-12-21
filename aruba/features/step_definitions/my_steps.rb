@@ -20,9 +20,17 @@ Then(/^it should post certificate request$/) do
 end
 
 Then(/^it should( not)? output( encrypted)? private key$/) do |negated, encrypted|
-  steps %{Then the output should#{negated} contain "-----BEGIN RSA PRIVATE KEY-----"}
   if encrypted
-    steps %{Then the output should#{negated} contain "ENCRYPTED"}
+    steps %{Then the output should#{negated} contain "-----BEGIN ENCRYPTED PRIVATE KEY-----"}
+   else
+    steps %{Then the output should#{negated} contain "-----BEGIN PRIVATE KEY-----"}
+  end
+end
+
+Then(/^it should( not)? output( encrypted)? RSA private key$/) do |negated, encrypted|
+ steps %{Then the output should#{negated} contain "-----BEGIN RSA PRIVATE KEY-----"}
+  if encrypted
+    steps %{Then the output should#{negated} contain "-----ENCRYPTED-----"}
   end
 end
 
