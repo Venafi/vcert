@@ -352,7 +352,7 @@ func doCommandEnroll1(c *cli.Context) error {
 		}
 	}
 
-	if (pcc.PrivateKey != "" && req.KeyType == certificate.KeyTypeRSA && (flags.format == Pkcs12 || flags.format == JKSFormat)) || (flags.format == util.LegacyPem && IsCSRServiceVaaSGenerated(commandPickupName)) || flags.noPrompt && wasPasswordEmpty && (req.KeyType == certificate.KeyTypeRSA) {
+	if (pcc.PrivateKey != "" && req.KeyType == certificate.KeyTypeRSA && (flags.format == Pkcs12 || flags.format == JKSFormat)) || (flags.format == util.LegacyPem && flags.csrOption == "service") || flags.noPrompt && wasPasswordEmpty && (req.KeyType == certificate.KeyTypeRSA) {
 		privKey, err := util.DecryptPkcs8PrivateKey(pcc.PrivateKey, flags.keyPassword)
 		if err != nil {
 			return err
