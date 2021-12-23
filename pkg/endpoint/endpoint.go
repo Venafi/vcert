@@ -61,9 +61,9 @@ func (t ConnectorType) String() string {
 	case ConnectorTypeFake:
 		return "Fake Endpoint"
 	case ConnectorTypeCloud:
-		return "Venafi Cloud"
+		return "Venafi as a Service"
 	case ConnectorTypeTPP:
-		return "TPP"
+		return "Trust Protection Platform"
 	default:
 		return fmt.Sprintf("unexpected connector type: %d", t)
 	}
