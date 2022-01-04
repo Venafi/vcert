@@ -192,9 +192,9 @@ vcert sshpickup -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" --gu
 
 ### Obtaining an Authorization Token
 ```
-vcert getcred -u <tpp url> --username <tpp username> --password <tpp password>
+vcert getcred -u <tpp url> --username <tpp username> --password <tpp password> --ssh
 
-vcert getcred -u <tpp url> --p12-file <client cert file> --p12-password <client cert file password>
+vcert getcred -u <tpp url> --p12-file <client cert file> --p12-password <client cert file password> --ssh
 ```
 Options:
 
