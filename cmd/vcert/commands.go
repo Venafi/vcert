@@ -355,6 +355,9 @@ func doCommandEnroll1(c *cli.Context) error {
 	if (pcc.PrivateKey != "" && req.KeyType == certificate.KeyTypeRSA && (flags.format == Pkcs12 || flags.format == JKSFormat)) || (flags.format == util.LegacyPem && flags.csrOption == "service") || flags.noPrompt && wasPasswordEmpty && (req.KeyType == certificate.KeyTypeRSA) {
 		privKey, err := util.DecryptPkcs8PrivateKey(pcc.PrivateKey, flags.keyPassword)
 		if err != nil {
+			if err.Error() == "pkcs8: only PBES2 supported" && connector.GetType() == endpoint.ConnectorTypeTPP {
+				return fmt.Errorf("for Trust Protection Platform, you need to select one of the following private key PBE algorithms: SHA 3DES or SHA256 AES256")
+			}
 			return err
 		}
 		pcc.PrivateKey = privKey
@@ -840,6 +843,9 @@ func doCommandPickup1(c *cli.Context) error {
 	if pcc.PrivateKey != "" && (flags.format == Pkcs12 || flags.format == JKSFormat || flags.format == util.LegacyPem) || (flags.noPrompt && wasPasswordEmpty && pcc.PrivateKey != "") {
 		privKey, err := util.DecryptPkcs8PrivateKey(pcc.PrivateKey, flags.keyPassword)
 		if err != nil {
+			if err.Error() == "pkcs8: only PBES2 supported" && connector.GetType() == endpoint.ConnectorTypeTPP {
+				return fmt.Errorf("for Trust Protection Platform, you need to select one of the following private key PBE algorithms: SHA 3DES or SHA256 AES256")
+			}
 			return err
 		}
 		pcc.PrivateKey = privKey
