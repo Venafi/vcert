@@ -205,7 +205,7 @@ Options:
 | `--password`     | Use to specify the Venafi Platform user's password.          |
 | `--p12-file`     | Use to specify a PKCS#12 file containing a client certificate (and private key) of a Venafi Platform user to be used for mutual TLS. Required if `--username` or `--t` is not present and may not be combined with either. Must specify `--trust-bundle` if the chain for the client certificate is not in the PKCS#12 file. |
 | `--p12-password` | Use to specify the password of the PKCS#12 file containing the client certificate
-| `--ssh`          | Use to request a token that can be used for ssh actions.  This is the equivelent of `--scope  ssh:manage;`|
+| `--ssh`          | Use to request a token that can be used for ssh actions.  This is the equivalent of `--scope  ssh:manage;`|
 | `--scope`        | Use to request specific scopes and restrictions. If not specified, tokens with the "certificate:manage,revoke;" scope are returned.  When requesting a token for ssh actions `--scope  ssh:manage;` is required or alternatively, the `--ssh` option can be specified.|
 | `-t`             | Use to specify a refresh token for a Venafi Platform user. Required if `--username` or `--p12-file` is not present and may not be combined with either. |
 | `--trust-bundle` | Use to specify a PEM file name to be used as trust anchors when communicating with the Venafi Platform API server. |
