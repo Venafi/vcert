@@ -354,6 +354,18 @@ type CertificateInfo struct {
 	ValidTo    time.Time
 }
 
+type SearchRequest []string
+
+type CertSearchResponse struct {
+	Certificates []CertSeachInfo `json:"Certificates"`
+	Count        int             `json:"TotalCount"`
+}
+
+type CertSeachInfo struct {
+	CertificateRequestId   string `json:"DN"`
+	CertificateRequestGuid string `json:"Guid"`
+}
+
 // SetCSR sets CSR from PEM or DER format
 func (request *Request) SetCSR(csr []byte) error {
 	pemBlock, _ := pem.Decode(csr)

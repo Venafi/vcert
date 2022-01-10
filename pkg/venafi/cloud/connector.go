@@ -86,6 +86,10 @@ type Connector struct {
 	client  *http.Client
 }
 
+func (c *Connector) SearchCertificates(req *certificate.SearchRequest) (*certificate.CertSearchResponse, error) {
+	panic("implement me")
+}
+
 func (c *Connector) IsCSRServiceGenerated(req *certificate.Request) (bool, error) {
 	if c.user == nil || c.user.Company == nil {
 		return false, fmt.Errorf("must be autheticated to retieve certificate")

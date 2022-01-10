@@ -1294,6 +1294,22 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 	}
 }
 
+func (c *Connector) SearchCertificates(req *certificate.SearchRequest) (*certificate.CertSearchResponse, error) {
+
+	var err error
+
+	url := fmt.Sprintf("%s?%s", urlResourceCertificateSearch, strings.Join(*req, "&"))
+	statusCode, _, body, err := c.request("GET", urlResource(url), nil)
+	if err != nil {
+		return nil, err
+	}
+	searchResult, err := ParseCertificateSearchResponse(statusCode, body)
+	if err != nil {
+		return nil, err
+	}
+	return searchResult, nil
+}
+
 func (c *Connector) SetHTTPClient(client *http.Client) {
 	c.client = client
 }
