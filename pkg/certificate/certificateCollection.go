@@ -59,8 +59,12 @@ type PEMCollection struct {
 }
 
 //NewPEMCollection creates a PEMCollection based on the data being passed in
-func NewPEMCollection(certificate *x509.Certificate, privateKey crypto.Signer, privateKeyPassword []byte) (*PEMCollection, error) {
+func NewPEMCollection(certificate *x509.Certificate, privateKey crypto.Signer, privateKeyPassword []byte, format ...string) (*PEMCollection, error) {
 	collection := PEMCollection{}
+	currentFormat := ""
+	if len(format) > 0 && format[0] != "" {
+		currentFormat = format[0]
+	}
 	if certificate != nil {
 		collection.Certificate = string(pem.EncodeToMemory(GetCertificatePEMBlock(certificate.Raw)))
 	}
@@ -68,9 +72,9 @@ func NewPEMCollection(certificate *x509.Certificate, privateKey crypto.Signer, p
 		var p *pem.Block
 		var err error
 		if len(privateKeyPassword) > 0 {
-			p, err = GetEncryptedPrivateKeyPEMBock(privateKey, privateKeyPassword)
+			p, err = GetEncryptedPrivateKeyPEMBock(privateKey, privateKeyPassword, currentFormat)
 		} else {
-			p, err = GetPrivateKeyPEMBock(privateKey)
+			p, err = GetPrivateKeyPEMBock(privateKey, currentFormat)
 		}
 		if err != nil {
 			return nil, err
@@ -106,7 +110,7 @@ func PEMCollectionFromBytes(certBytes []byte, chainOrder ChainOption) (*PEMColle
 				return nil, err
 			}
 			chain = append(chain, cert)
-		case "RSA PRIVATE KEY", "EC PRIVATE KEY":
+		case "RSA PRIVATE KEY", "EC PRIVATE KEY", "ENCRYPTED PRIVATE KEY", "PRIVATE KEY":
 			privPEM = string(current)
 		}
 		current = remaining
@@ -147,16 +151,22 @@ func PEMCollectionFromBytes(certBytes []byte, chainOrder ChainOption) (*PEMColle
 }
 
 //AddPrivateKey adds a Private Key to the PEMCollection. Note that the collection can only contain one private key
-func (col *PEMCollection) AddPrivateKey(privateKey crypto.Signer, privateKeyPassword []byte) error {
+func (col *PEMCollection) AddPrivateKey(privateKey crypto.Signer, privateKeyPassword []byte, format ...string) error {
+
+	currentFormat := ""
+	if len(format) > 0 && format[0] != "" {
+		currentFormat = format[0]
+	}
+
 	if col.PrivateKey != "" {
 		return fmt.Errorf("%w: the PEM Collection can only contain one private key", verror.VcertError)
 	}
 	var p *pem.Block
 	var err error
 	if len(privateKeyPassword) > 0 {
-		p, err = GetEncryptedPrivateKeyPEMBock(privateKey, privateKeyPassword)
+		p, err = GetEncryptedPrivateKeyPEMBock(privateKey, privateKeyPassword, currentFormat)
 	} else {
-		p, err = GetPrivateKeyPEMBock(privateKey)
+		p, err = GetPrivateKeyPEMBock(privateKey, currentFormat)
 	}
 	if err != nil {
 		return err
@@ -190,7 +200,12 @@ func (col *PEMCollection) ToTLSCertificate() tls.Certificate {
 	case "EC PRIVATE KEY":
 		cert.PrivateKey, _ = x509.ParseECPrivateKey(b.Bytes)
 	case "RSA PRIVATE KEY":
-		cert.PrivateKey, _ = x509.ParsePKCS1PrivateKey(b.Bytes)
+		var privKey interface{}
+		privKey, err := x509.ParsePKCS1PrivateKey(b.Bytes)
+		if err != nil {
+			privKey, _ = x509.ParsePKCS8PrivateKey(b.Bytes)
+		}
+		cert.PrivateKey = privKey
 	}
 	return cert
 }

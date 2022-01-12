@@ -26,6 +26,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"os"
 	"regexp"
 	"strconv"
@@ -694,4 +695,35 @@ func IsCSRServiceVaaSGenerated(commandName string) bool {
 		}
 	}
 	return cloudSerViceGenerated
+}
+
+func isTppConnector(commandName string) bool {
+
+	if commandName == commandPickupName {
+		context := &cli.Context{
+			Command: &cli.Command{
+				Name: commandPickupName,
+			},
+		}
+
+		cfg, err := buildConfig(context, &flags)
+
+		if err == nil {
+			connector, err := vcert.NewClient(&cfg)
+			if err == nil && endpoint.ConnectorTypeTPP == connector.GetType() {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func randRunes(n int) string {
+	var letterRunes = []rune("abcdefghijklmnopqrstuvwxyz")
+	b := make([]rune, n)
+	for i := range b {
+		/* #nosec */
+		b[i] = letterRunes[rand.Intn(len(letterRunes))]
+	}
+	return string(b)
 }

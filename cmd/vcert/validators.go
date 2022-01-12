@@ -19,6 +19,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"github.com/Venafi/vcert/v4/pkg/util"
 	"io/ioutil"
 	"os"
 	"regexp"
@@ -73,7 +74,7 @@ func readData(commandName string) error {
 }
 
 func validateCommonFlags(commandName string) error {
-	if flags.format != "" && flags.format != "pem" && flags.format != "json" && flags.format != "pkcs12" && flags.format != JKSFormat {
+	if flags.format != "" && flags.format != "pem" && flags.format != "json" && flags.format != "pkcs12" && flags.format != JKSFormat && flags.format != util.LegacyPem {
 		return fmt.Errorf("Unexpected output format: %s", flags.format)
 	}
 	if flags.file != "" && (flags.certFile != "" || flags.chainFile != "" || flags.keyFile != "") {
@@ -322,11 +323,7 @@ func validateEnrollFlags(commandName string) error {
 	if flags.csrOption == "file" && flags.keyFile != "" { // Do not specify -key-file with -csr file as VCert cannot access the private key
 		return fmt.Errorf("-key-file cannot be used with -csr file as VCert cannot access the private key")
 	}
-	if flags.csrOption == "service" && (!flags.noPickup) { // Key password is required here
-		if flags.noPrompt && len(flags.keyPassword) == 0 {
-			return fmt.Errorf("-key-password cannot be empty in -csr service mode unless -no-pickup specified")
-		}
-	}
+
 	err = validatePKCS12Flags(commandName)
 	if err != nil {
 		return err

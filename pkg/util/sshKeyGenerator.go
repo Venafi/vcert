@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"github.com/youmark/pkcs8"
 	"log"
 	"strings"
 
@@ -32,24 +33,47 @@ func generatePrivKey(bitSize int) (*rsa.PrivateKey, error) {
 	return privKey, nil
 }
 
-//nolint
-func encodePrivKeyToPEM(privateKey *rsa.PrivateKey, keyPassword string) ([]byte, error) {
+func encodePrivKeyToPEM(privateKey *rsa.PrivateKey, keyPassword string, format ...string) ([]byte, error) {
 
 	var err error
 	var privBlock *pem.Block
-
-	privDER := x509.MarshalPKCS1PrivateKey(privateKey)
-
+	var privDER []byte
 	if keyPassword != "" {
-		privBlock, err = x509.EncryptPEMBlock(rand.Reader, RsaPrivKeyType, privDER, []byte(keyPassword), x509.PEMCipherDES)
-		if err != nil {
-			return nil, err
+		if format[0] == LegacyPem {
+			privDER := x509.MarshalPKCS1PrivateKey(privateKey)
+			privBlock, err = X509EncryptPEMBlock(rand.Reader, RsaPrivKeyType, privDER, []byte(keyPassword), PEMCipherDES)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			privDER, err = pkcs8.MarshalPrivateKey(privateKey, []byte(keyPassword), nil)
+			if err != nil {
+				return nil, err
+			}
+			privBlock = &pem.Block{
+				Type:    "ENCRYPTED PRIVATE KEY",
+				Headers: nil,
+				Bytes:   privDER,
+			}
 		}
 	} else {
-		privBlock = &pem.Block{
-			Type:    RsaPrivKeyType,
-			Headers: nil,
-			Bytes:   privDER,
+		if format[0] == LegacyPem {
+			privDER = x509.MarshalPKCS1PrivateKey(privateKey)
+			privBlock = &pem.Block{
+				Type:    RsaPrivKeyType,
+				Headers: nil,
+				Bytes:   privDER,
+			}
+		} else {
+			privDER, err := pkcs8.MarshalPrivateKey(privateKey, nil, nil)
+			if err != nil {
+				return nil, err
+			}
+			privBlock = &pem.Block{
+				Type:    "PRIVATE KEY",
+				Headers: nil,
+				Bytes:   privDER,
+			}
 		}
 	}
 
@@ -72,7 +96,12 @@ func generatePublicKey(key *rsa.PublicKey) ([]byte, error) {
 
 }
 
-func GenerateSshKeyPair(bitSize int, keyPassword, certId string) ([]byte, []byte, error) {
+func GenerateSshKeyPair(bitSize int, keyPassword, certId string, format ...string) ([]byte, []byte, error) {
+
+	currentFormat := ""
+	if len(format) > 0 && format[0] != "" {
+		currentFormat = format[0]
+	}
 
 	privateKey, err := generatePrivKey(bitSize)
 
@@ -86,7 +115,7 @@ func GenerateSshKeyPair(bitSize int, keyPassword, certId string) ([]byte, []byte
 		return nil, nil, err
 	}
 
-	privateKeyBytes, err := encodePrivKeyToPEM(privateKey, keyPassword)
+	privateKeyBytes, err := encodePrivKeyToPEM(privateKey, keyPassword, currentFormat)
 
 	if err != nil {
 		return nil, nil, err

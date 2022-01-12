@@ -844,6 +844,7 @@ var (
 		flagSshPassPhrase,
 		flagSshCertWindows,
 		flagSshFileCertEnroll,
+		flagFormat,
 		commonFlags,
 	))
 

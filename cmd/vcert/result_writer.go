@@ -23,6 +23,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"github.com/Venafi/vcert/v4/pkg/util"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -64,7 +65,6 @@ type Output struct {
 	PickupId    string   `json:",omitempty"`
 }
 
-//nolint
 func (o *Output) AsPKCS12(c *Config) ([]byte, error) {
 	if len(o.Certificate) == 0 || len(o.PrivateKey) == 0 {
 		return nil, fmt.Errorf("at least certificate and private key are required")
@@ -95,8 +95,8 @@ func (o *Output) AsPKCS12(c *Config) ([]byte, error) {
 		return nil, fmt.Errorf("missing private key PEM")
 	}
 	var privDER []byte
-	if x509.IsEncryptedPEMBlock(p) {
-		privDER, err = x509.DecryptPEMBlock(p, []byte(c.KeyPassword))
+	if util.X509IsEncryptedPEMBlock(p) {
+		privDER, err = util.X509DecryptPEMBlock(p, []byte(c.KeyPassword))
 		if err != nil {
 			return nil, fmt.Errorf("private key PEM decryption error: %s", err)
 		}
@@ -127,7 +127,6 @@ func (o *Output) AsPKCS12(c *Config) ([]byte, error) {
 	return bytes, nil
 }
 
-//nolint
 func (o *Output) AsJKS(c *Config) ([]byte, error) {
 
 	var err interface{}
@@ -170,8 +169,8 @@ func (o *Output) AsJKS(c *Config) ([]byte, error) {
 	//decrypting the PK because due the restriction that always will be requested the key password
 	//to the user(--key-password or pass phrase value from prompt) for jks format then the PK always
 	//will be encrypted with the key password provided
-	if x509.IsEncryptedPEMBlock(p) {
-		privDER, err = x509.DecryptPEMBlock(p, []byte(c.KeyPassword))
+	if util.X509IsEncryptedPEMBlock(p) {
+		privDER, err = util.X509DecryptPEMBlock(p, []byte(c.KeyPassword))
 		if err != nil {
 			return nil, fmt.Errorf("private key PEM decryption error: %s", err)
 		}

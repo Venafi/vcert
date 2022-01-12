@@ -319,8 +319,9 @@ func doCommandEnroll1(c *cli.Context) error {
 	}
 	logf("Successfully posted request for %s, will pick up by %s", requestedFor, flags.pickupID)
 
+	wasPasswordEmpty := false
 	if flags.noPickup {
-		pcc, err = certificate.NewPEMCollection(nil, req.PrivateKey, []byte(flags.keyPassword))
+		pcc, err = certificate.NewPEMCollection(nil, req.PrivateKey, []byte(flags.keyPassword), flags.format)
 		if err != nil {
 			return err
 		}
@@ -328,6 +329,12 @@ func doCommandEnroll1(c *cli.Context) error {
 		req.PickupID = flags.pickupID
 		req.ChainOption = certificate.ChainOptionFromString(flags.chainOption)
 		req.KeyPassword = flags.keyPassword
+
+		if flags.noPrompt && flags.keyPassword == "" && flags.format != "pkcs12" && flags.format != "jks" && flags.csrOption == "service" {
+			flags.keyPassword = fmt.Sprintf("t%d-%s.tem.pwd", time.Now().Unix(), randRunes(4))
+			req.KeyPassword = flags.keyPassword
+			wasPasswordEmpty = true
+		}
 
 		req.Timeout = time.Duration(180) * time.Second
 		pcc, err = retrieveCertificate(connector, req, time.Duration(flags.timeout)*time.Second)
@@ -338,21 +345,34 @@ func doCommandEnroll1(c *cli.Context) error {
 
 		if req.CsrOrigin == certificate.LocalGeneratedCSR {
 			// otherwise private key can be taken from *req
-			err := pcc.AddPrivateKey(req.PrivateKey, []byte(flags.keyPassword))
+			err := pcc.AddPrivateKey(req.PrivateKey, []byte(flags.keyPassword), flags.format)
 			if err != nil {
 				log.Fatal(err)
 			}
 		}
 	}
 
-	if connector.GetType() == endpoint.ConnectorTypeCloud && (flags.format == Pkcs12 || flags.format == JKSFormat) && flags.csrOption == "service" {
+	if (pcc.PrivateKey != "" && req.KeyType == certificate.KeyTypeRSA && (flags.format == Pkcs12 || flags.format == JKSFormat)) || (flags.format == util.LegacyPem && flags.csrOption == "service") || flags.noPrompt && wasPasswordEmpty && (req.KeyType == certificate.KeyTypeRSA) {
 		privKey, err := util.DecryptPkcs8PrivateKey(pcc.PrivateKey, flags.keyPassword)
 		if err != nil {
+			if err.Error() == "pkcs8: only PBES2 supported" && connector.GetType() == endpoint.ConnectorTypeTPP {
+				return fmt.Errorf("ERROR: To continue, you must select either the SHA1 3DES or SHA256 AES256 private key PBE algorithm. In a web browser, log in to TLS Protect and go to Configuration > Folders, select your zone, then click Certificate Policy and expand Show Advanced Options to make the change.")
+			}
 			return err
 		}
 		pcc.PrivateKey = privKey
 	}
 
+	if flags.csrOption == "service" && flags.format == util.LegacyPem && !wasPasswordEmpty {
+		pcc.PrivateKey, err = util.EncryptPkcs1PrivateKey(pcc.PrivateKey, flags.keyPassword)
+		if err != nil {
+			return nil
+		}
+	}
+
+	if wasPasswordEmpty {
+		flags.keyPassword = ""
+	}
 	result := &Result{
 		Pcc:      pcc,
 		PickupId: flags.pickupID,
@@ -435,7 +455,7 @@ func doCommandEnrollSshCert(c *cli.Context) error {
 			keySize = 3072
 		}
 
-		privateKey, publicKey, err = util.GenerateSshKeyPair(keySize, flags.keyPassword, flags.sshCertKeyId)
+		privateKey, publicKey, err = util.GenerateSshKeyPair(keySize, flags.keyPassword, flags.sshCertKeyId, flags.format)
 
 		if err != nil {
 			return err
@@ -751,6 +771,14 @@ func doCommandGenCSR1(c *cli.Context) error {
 }
 
 func doCommandPickup1(c *cli.Context) error {
+
+	isServiceGen := IsCSRServiceVaaSGenerated(c.Command.Name)
+	wasPasswordEmpty := false
+	if flags.noPrompt && flags.keyPassword == "" && flags.format != "pkcs12" && flags.format != "jks" && (isServiceGen || isTppConnector(c.Command.Name)) {
+		flags.keyPassword = fmt.Sprintf("t%d-%s.tem.pwd", time.Now().Unix(), randRunes(4))
+		wasPasswordEmpty = true
+	}
+
 	err := validatePickupFlags1(c.Command.Name)
 	if err != nil {
 		return err
@@ -793,16 +821,45 @@ func doCommandPickup1(c *cli.Context) error {
 	var pcc *certificate.PEMCollection
 	pcc, err = retrieveCertificate(connector, req, time.Duration(flags.timeout)*time.Second)
 	if err != nil {
-		return fmt.Errorf("Failed to retrieve certificate: %s", err)
+		errStr := err.Error()
+		sliceString := strings.Split(errStr, ":")
+		size := len(sliceString)
+		errToValidate := sliceString[size-1]
+		if strings.TrimSpace(errToValidate) == "Failed to lookup private key vault id" && wasPasswordEmpty {
+			req.KeyPassword = ""
+			req.FetchPrivateKey = false
+			pcc, err = retrieveCertificate(connector, req, time.Duration(flags.timeout)*time.Second)
+
+			if err != nil {
+				return fmt.Errorf("Failed to retrieve certificate: %s", err)
+			}
+
+		} else {
+			return fmt.Errorf("Failed to retrieve certificate: %s", err)
+		}
 	}
 	logf("Successfully retrieved request for %s", flags.pickupID)
 
-	if connector.GetType() == endpoint.ConnectorTypeCloud && (flags.format == Pkcs12 || flags.format == JKSFormat) && IsCSRServiceVaaSGenerated(c.Command.Name) {
+	if pcc.PrivateKey != "" && (flags.format == Pkcs12 || flags.format == JKSFormat || flags.format == util.LegacyPem) || (flags.noPrompt && wasPasswordEmpty && pcc.PrivateKey != "") {
 		privKey, err := util.DecryptPkcs8PrivateKey(pcc.PrivateKey, flags.keyPassword)
 		if err != nil {
+			if err.Error() == "pkcs8: only PBES2 supported" && connector.GetType() == endpoint.ConnectorTypeTPP {
+				return fmt.Errorf("ERROR: To continue, you must select either the SHA1 3DES or SHA256 AES256 private key PBE algorithm. In a web browser, log in to TLS Protect and go to Configuration > Folders, select your zone, then click Certificate Policy and expand Show Advanced Options to make the change.")
+			}
 			return err
 		}
 		pcc.PrivateKey = privKey
+	}
+
+	if pcc.PrivateKey != "" && flags.format == util.LegacyPem && !wasPasswordEmpty {
+		pcc.PrivateKey, err = util.EncryptPkcs1PrivateKey(pcc.PrivateKey, flags.keyPassword)
+		if err != nil {
+			return err
+		}
+	}
+
+	if wasPasswordEmpty {
+		flags.keyPassword = ""
 	}
 
 	result := &Result{

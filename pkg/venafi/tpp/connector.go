@@ -999,6 +999,9 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 	}
 	if req.CsrOrigin == certificate.ServiceGeneratedCSR || req.FetchPrivateKey {
 		certReq.IncludePrivateKey = true
+		if req.KeyType == certificate.KeyTypeRSA {
+			certReq.Format = "Base64 (PKCS #8)"
+		}
 		certReq.Password = req.KeyPassword
 	}
 
@@ -1289,6 +1292,22 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 	default:
 		return nil, fmt.Errorf("%w: unexpected response status %d: %s", verror.ServerTemporaryUnavailableError, statusCode, string(body))
 	}
+}
+
+func (c *Connector) SearchCertificates(req *certificate.SearchRequest) (*certificate.CertSearchResponse, error) {
+
+	var err error
+
+	url := fmt.Sprintf("%s?%s", urlResourceCertificateSearch, strings.Join(*req, "&"))
+	statusCode, _, body, err := c.request("GET", urlResource(url), nil)
+	if err != nil {
+		return nil, err
+	}
+	searchResult, err := ParseCertificateSearchResponse(statusCode, body)
+	if err != nil {
+		return nil, err
+	}
+	return searchResult, nil
 }
 
 func (c *Connector) SetHTTPClient(client *http.Client) {

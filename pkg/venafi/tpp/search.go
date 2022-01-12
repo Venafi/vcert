@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"net/http"
 	"strings"
 )
@@ -58,15 +59,15 @@ type Certificate struct {
 	/*...and some more fields... */
 }
 
-func (c *Connector) searchCertificatesByFingerprint(fp string) (*CertificateSearchResponse, error) {
+func (c *Connector) searchCertificatesByFingerprint(fp string) (*certificate.CertSearchResponse, error) {
 	fp = strings.Replace(fp, ":", "", -1)
 	fp = strings.Replace(fp, ".", "", -1)
 	fp = strings.ToUpper(fp)
 
-	var req SearchRequest
+	var req certificate.SearchRequest
 	req = append(req, fmt.Sprintf("Thumbprint=%s", fp))
 
-	return c.searchCertificates(&req)
+	return c.SearchCertificates(&req)
 }
 
 func (c *Connector) configReadDN(req ConfigReadDNRequest) (resp ConfigReadDNResponse, err error) {
@@ -86,22 +87,6 @@ func (c *Connector) configReadDN(req ConfigReadDNRequest) (resp ConfigReadDNResp
 	}
 
 	return resp, nil
-}
-
-func (c *Connector) searchCertificates(req *SearchRequest) (*CertificateSearchResponse, error) {
-
-	var err error
-
-	url := fmt.Sprintf("%s?%s", urlResourceCertificateSearch, strings.Join(*req, "&"))
-	statusCode, _, body, err := c.request("GET", urlResource(url), nil)
-	if err != nil {
-		return nil, err
-	}
-	searchResult, err := ParseCertificateSearchResponse(statusCode, body)
-	if err != nil {
-		return nil, err
-	}
-	return searchResult, nil
 }
 
 func (c *Connector) searchCertificateDetails(guid string) (*CertificateDetailsResponse, error) {
@@ -133,10 +118,10 @@ func parseCertificateDetailsResponse(statusCode int, body []byte) (searchResult 
 	}
 }
 
-func ParseCertificateSearchResponse(httpStatusCode int, body []byte) (searchResult *CertificateSearchResponse, err error) {
+func ParseCertificateSearchResponse(httpStatusCode int, body []byte) (searchResult *certificate.CertSearchResponse, err error) {
 	switch httpStatusCode {
 	case http.StatusOK:
-		var searchResult = &CertificateSearchResponse{}
+		var searchResult = &certificate.CertSearchResponse{}
 		err = json.Unmarshal(body, searchResult)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to parse search results: %s, body: %s", err, body)
