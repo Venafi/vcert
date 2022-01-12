@@ -356,7 +356,7 @@ func doCommandEnroll1(c *cli.Context) error {
 		privKey, err := util.DecryptPkcs8PrivateKey(pcc.PrivateKey, flags.keyPassword)
 		if err != nil {
 			if err.Error() == "pkcs8: only PBES2 supported" && connector.GetType() == endpoint.ConnectorTypeTPP {
-				return fmt.Errorf("for Trust Protection Platform, you need to select one of the following private key PBE algorithms: SHA 3DES or SHA256 AES256")
+				return fmt.Errorf("ERROR: To continue, you must select either the SHA1 3DES or SHA256 AES256 private key PBE algorithm. In a web browser, log in to TLS Protect and go to Configuration > Folders, select your zone, then click Certificate Policy and expand Show Advanced Options to make the change.")
 			}
 			return err
 		}
@@ -844,7 +844,7 @@ func doCommandPickup1(c *cli.Context) error {
 		privKey, err := util.DecryptPkcs8PrivateKey(pcc.PrivateKey, flags.keyPassword)
 		if err != nil {
 			if err.Error() == "pkcs8: only PBES2 supported" && connector.GetType() == endpoint.ConnectorTypeTPP {
-				return fmt.Errorf("for Trust Protection Platform, you need to select one of the following private key PBE algorithms: SHA 3DES or SHA256 AES256")
+				return fmt.Errorf("ERROR: To continue, you must select either the SHA1 3DES or SHA256 AES256 private key PBE algorithm. In a web browser, log in to TLS Protect and go to Configuration > Folders, select your zone, then click Certificate Policy and expand Show Advanced Options to make the change.")
 			}
 			return err
 		}
