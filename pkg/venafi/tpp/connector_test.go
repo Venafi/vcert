@@ -962,7 +962,7 @@ func TestRenewCertRestoringValues(t *testing.T) {
 	req.Subject.Country = []string{"US"}
 	req.KeyType = certificate.KeyTypeECDSA
 	req.KeyCurve = certificate.EllipticCurveP521
-	req.CsrOrigin = certificate.LocalGeneratedCSR
+	req.CsrOrigin = certificate.ServiceGeneratedCSR
 	req.Timeout = time.Second * 10
 	err = tpp.GenerateRequest(&endpoint.ZoneConfiguration{}, req)
 	if err != nil {
@@ -973,6 +973,10 @@ func TestRenewCertRestoringValues(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	req.FetchPrivateKey = true
+	req.KeyPassword = os.Getenv("TPP_PASSWORD")
+
 	pcc, err := tpp.RetrieveCertificate(req)
 	if err != nil {
 		t.Fatal(err)
