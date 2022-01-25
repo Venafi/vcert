@@ -1,4 +1,4 @@
-![Venafi](Venafi_logo.png)
+[![Venafi](.github/images/Venafi_logo.png)](https://www.venafi.com/)
 [![Apache 2.0 License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 ![Community Supported](https://img.shields.io/badge/Support%20Level-Community-brightgreen)
 ![Compatible with TPP 17.3+ & VaaS](https://img.shields.io/badge/Compatibility-TPP%2017.3+%20%26%20VaaS-f9a90c)  
