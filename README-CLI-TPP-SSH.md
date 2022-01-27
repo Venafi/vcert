@@ -192,9 +192,9 @@ vcert sshpickup -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" --gu
 
 ### Obtaining an Authorization Token
 ```
-vcert getcred -u <tpp url> --username <tpp username> --password <tpp password>
+vcert getcred -u <tpp url> --username <tpp username> --password <tpp password> --ssh
 
-vcert getcred -u <tpp url> --p12-file <client cert file> --p12-password <client cert file password>
+vcert getcred -u <tpp url> --p12-file <client cert file> --p12-password <client cert file password> --ssh
 ```
 Options:
 
@@ -204,8 +204,9 @@ Options:
 | `--format`       | Specify "json" to get JSON formatted output instead of the plain text default. |
 | `--password`     | Use to specify the Venafi Platform user's password.          |
 | `--p12-file`     | Use to specify a PKCS#12 file containing a client certificate (and private key) of a Venafi Platform user to be used for mutual TLS. Required if `--username` or `--t` is not present and may not be combined with either. Must specify `--trust-bundle` if the chain for the client certificate is not in the PKCS#12 file. |
-| `--p12-password` | Use to specify the password of the PKCS#12 file containing the client certificate. |
-| `--scope`        | Use to request specific scopes and restrictions. "certificate:manage,revoke;" is the default which is the minimum required to perform any actions supported by the VCert CLI. |
+| `--p12-password` | Use to specify the password of the PKCS#12 file containing the client certificate
+| `--ssh`          | Use to request a token that can be used for ssh actions.  This is the equivalent of `--scope  ssh:manage;`|
+| `--scope`        | Use to request specific scopes and restrictions. If not specified, tokens with the "certificate:manage,revoke;" scope are returned.  When requesting a token for ssh actions `--scope  ssh:manage;` is required or alternatively, the `--ssh` option can be specified.|
 | `-t`             | Use to specify a refresh token for a Venafi Platform user. Required if `--username` or `--p12-file` is not present and may not be combined with either. |
 | `--trust-bundle` | Use to specify a PEM file name to be used as trust anchors when communicating with the Venafi Platform API server. |
 | `-u`             | Use to specify the URL of the Venafi Trust Protection Platform API server.<br/>Example: `-u https://tpp.venafi.example` |
