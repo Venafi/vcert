@@ -60,9 +60,9 @@ type certificateTemplate struct {
 		}
 		keyReuse bool
 	}
-	ValidityPeriod string `json:"validityPeriod,omitempty"`
-	CsrUploadAllowed bool  `json:"csrUploadAllowed"`
-	KeyGeneratedByVenafiAllowed bool  `json:"keyGeneratedByVenafiAllowed"`
+	ValidityPeriod              string `json:"validityPeriod,omitempty"`
+	CsrUploadAllowed            bool   `json:"csrUploadAllowed"`
+	KeyGeneratedByVenafiAllowed bool   `json:"keyGeneratedByVenafiAllowed"`
 }
 
 type CertificateTemplates struct {
