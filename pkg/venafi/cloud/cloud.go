@@ -664,6 +664,17 @@ func buildPolicySpecification(cit *certificateTemplate, info *policy.Certificate
 		keyPair.RsaKeySizes = keySizes
 	}
 
+	if cit.KeyGeneratedByVenafiAllowed && cit.CsrUploadAllowed {
+		keyPair.ServiceGenerated = nil
+	} else if cit.KeyGeneratedByVenafiAllowed {
+		keyPair.ServiceGenerated = &cit.KeyGeneratedByVenafiAllowed
+		shouldCreateKeyPair = true
+	} else if cit.CsrUploadAllowed {
+		falseVal := false
+		keyPair.ServiceGenerated = &falseVal
+		shouldCreateKeyPair = true
+	}
+
 	if shouldCreateKeyPair {
 		pol.KeyPair = &keyPair
 		pol.KeyPair.ReuseAllowed = &cit.KeyReuse
