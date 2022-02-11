@@ -43,20 +43,28 @@ gofmt:
 	! gofmt -l . | grep -v ^vendor/ | grep .
 
 test: get linter
-	go test -v -cover .
-	go test -v -cover ./pkg/certificate
-	go test -v -cover ./pkg/endpoint
-	go test -v -cover ./pkg/venafi/fake
-	go test -v -cover ./cmd/vcert
+	go test -v -coverprofile=cov1.out .
+	go tool cover -func=cov1.out
+	go test -v -coverprofile=cov2.out ./pkg/certificate
+	go tool cover -func=cov2.out
+	go test -v -coverprofile=cov3.out ./pkg/endpoint
+	go tool cover -func=cov3.out
+	go test -v -coverprofile=cov4.out ./pkg/venafi/fake
+	go tool cover -func=cov4.out
+	go test -v -coverprofile=cov_cmd.out ./cmd/vcert
+	go tool cover -func=cov_cmd.out
 
 tpp_test: get
-	go test -v $(GOFLAGS) ./pkg/venafi/tpp
+	go test -v $(GOFLAGS) -coverprofile=cov_tpp.out ./pkg/venafi/tpp
+	go tool cover -func=cov_tpp.out
 
 cloud_test: get
-	go test -v $(GOFLAGS) ./pkg/venafi/cloud
+	go test -v $(GOFLAGS) -coverprofile=cov_vaas.out ./pkg/venafi/cloud
+	go tool cover -func=cov_vaas.out
 
 cmd_test: get
-	go test -v $(GOFLAGS) ./cmd/vcert
+	go test -v $(GOFLAGS) -coverprofile=cov_cmd.out ./cmd/vcert
+	go tool cover -func=cov_cmd.out
 
 collect_artifacts:
 	rm -rf artifacts
