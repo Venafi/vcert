@@ -382,7 +382,6 @@ func getPropertyFromEnvironment(s string) string {
 
 }
 
-
 func getEmptyPolicySpec() *policy.PolicySpecification {
 
 	emptyString := ""

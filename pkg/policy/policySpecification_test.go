@@ -11,7 +11,6 @@ import (
 	"testing"
 )
 
-
 func getPolicySpecificationFromFile(f string) *PolicySpecification {
 
 	file, bytes, err := GetFileAndBytes(f)
@@ -65,7 +64,7 @@ func TestValidateCloudPolicySpecification(t *testing.T) {
 	}
 }
 
-func TestValidateTPPPolicyData(t *testing.T){
+func TestValidateTPPPolicyData(t *testing.T) {
 	absPath, err := filepath.Abs("../../test-files/policy_specification_cloud.json")
 
 	if err != nil {
@@ -86,7 +85,7 @@ func TestValidateTPPPolicyData(t *testing.T){
 
 }
 
-func TestBuildTppPolicy(t *testing.T){
+func TestBuildTppPolicy(t *testing.T) {
 	absPath, err := filepath.Abs("../../test-files/policy_specification_cloud.json")
 
 	if err != nil {
@@ -98,7 +97,6 @@ func TestBuildTppPolicy(t *testing.T){
 	tppPol := BuildTppPolicy(policySpecification)
 
 	assertions.ShouldNotBeEmpty(tppPol)
-
 
 }
 
@@ -117,7 +115,7 @@ func TestValidateTppPolicySpecification(t *testing.T) {
 	}
 }
 
-func TestEmptyPolicy(t *testing.T){
+func TestEmptyPolicy(t *testing.T) {
 	absPath, err := filepath.Abs("../../test-files/empty_policy.json")
 
 	if err != nil {
@@ -127,12 +125,12 @@ func TestEmptyPolicy(t *testing.T){
 	policySpecification := getPolicySpecificationFromFile(absPath)
 
 	isEmpty := IsPolicyEmpty(policySpecification)
-	if !isEmpty{
+	if !isEmpty {
 		t.Fatalf("Policy in policy specification is not empty")
 	}
 
 	isEmpty = IsDefaultEmpty(policySpecification)
-	if !isEmpty{
+	if !isEmpty {
 		t.Fatalf("Default in policy specification is not empty")
 	}
 }
@@ -146,7 +144,7 @@ func TestBuildCloudCitRequest(t *testing.T) {
 
 	policySpecification := getPolicySpecificationFromFile(absPath)
 	prodId := "testiong"
-	var orgId  int64
+	var orgId int64
 	orgId = 1234
 	cd := CADetails{
 		CertificateAuthorityProductOptionId: &prodId,
@@ -155,7 +153,7 @@ func TestBuildCloudCitRequest(t *testing.T) {
 
 	_, err = BuildCloudCitRequest(policySpecification, &cd)
 
-	if err != nil{
+	if err != nil {
 		t.Fatalf("Error building cit \nError: %s", err)
 	}
 }
