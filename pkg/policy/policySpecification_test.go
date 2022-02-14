@@ -49,6 +49,21 @@ func getPolicySpecificationFromFile(f string) *PolicySpecification {
 	return &policySpecification
 }
 
+func TestValidateGetSpecificationFromYml(t *testing.T) {
+	absPath, err := filepath.Abs("../../test-files/policy_specification.yml")
+
+	if err != nil {
+		t.Fatalf("Error opening policy specification\nError: %s", err)
+	}
+
+	policySpecification := getPolicySpecificationFromFile(absPath)
+
+	err = ValidateCloudPolicySpecification(policySpecification)
+	if err != nil {
+		t.Fatalf("Error validating policy specification\nError: %s", err)
+	}
+}
+
 func TestValidateCloudPolicySpecification(t *testing.T) {
 	absPath, err := filepath.Abs("../../test-files/policy_specification_cloud.json")
 
@@ -87,6 +102,21 @@ func TestValidateTPPPolicyData(t *testing.T) {
 
 func TestBuildTppPolicy(t *testing.T) {
 	absPath, err := filepath.Abs("../../test-files/policy_specification_cloud.json")
+
+	if err != nil {
+		t.Fatalf("Error opening policy specification\nError: %s", err)
+	}
+
+	policySpecification := getPolicySpecificationFromFile(absPath)
+
+	tppPol := BuildTppPolicy(policySpecification)
+
+	assertions.ShouldNotBeEmpty(tppPol)
+
+}
+
+func TestBuildTppPolicyWithDefaults(t *testing.T) {
+	absPath, err := filepath.Abs("../../test-files/policy_specification_tpp_management.json")
 
 	if err != nil {
 		t.Fatalf("Error opening policy specification\nError: %s", err)
@@ -155,5 +185,96 @@ func TestBuildCloudCitRequest(t *testing.T) {
 
 	if err != nil {
 		t.Fatalf("Error building cit \nError: %s", err)
+	}
+}
+
+func TestBuildPolicySpecificationForTPP(t *testing.T) {
+
+	policy := getPolicyResponse(false)
+
+	policyResp := CheckPolicyResponse{
+		Error:  "",
+		Policy: &policy,
+	}
+
+	_, err := BuildPolicySpecificationForTPP(policyResp)
+	if err != nil {
+		t.Fatalf("Error building policy specification \nError: %s", err)
+	}
+}
+func TestBuildPolicySpecificationForTPPLocked(t *testing.T) {
+
+	policy := getPolicyResponse(true)
+
+	policyResp := CheckPolicyResponse{
+		Error:  "",
+		Policy: &policy,
+	}
+
+	_, err := BuildPolicySpecificationForTPP(policyResp)
+	if err != nil {
+		t.Fatalf("Error building policy specification \nError: %s", err)
+	}
+}
+
+func getPolicyResponse(lockedAttribute bool) PolicyResponse {
+	return PolicyResponse{
+		CertificateAuthority: LockedAttribute{
+			Value:  "test ca",
+			Locked: lockedAttribute,
+		},
+		CsrGeneration: LockedAttribute{
+			Value:  "0",
+			Locked: lockedAttribute,
+		},
+		KeyGeneration: LockedAttribute{
+			Value:  "",
+			Locked: lockedAttribute,
+		},
+		KeyPairResponse: KeyPairResponse{
+			KeyAlgorithm: LockedAttribute{
+				Value:  "RSA",
+				Locked: lockedAttribute,
+			},
+			KeySize: LockedIntAttribute{
+				Value:  2048,
+				Locked: lockedAttribute,
+			},
+		},
+		ManagementType: LockedAttribute{
+			Value:  "Provisioning",
+			Locked: lockedAttribute,
+		},
+		PrivateKeyReuseAllowed:  false,
+		SubjAltNameDnsAllowed:   false,
+		SubjAltNameEmailAllowed: false,
+		SubjAltNameIpAllowed:    false,
+		SubjAltNameUpnAllowed:   false,
+		SubjAltNameUriAllowed:   false,
+		Subject: SubjectResponse{
+			City: LockedAttribute{
+				Value:  "Merida",
+				Locked: lockedAttribute,
+			},
+			Country: LockedAttribute{
+				Value:  "MX",
+				Locked: lockedAttribute,
+			},
+			Organization: LockedAttribute{
+				Value:  "Venafi",
+				Locked: lockedAttribute,
+			},
+			OrganizationalUnit: LockedArrayAttribute{
+				Value:  []string{"DevOps", "QA"},
+				Locked: lockedAttribute,
+			},
+			State: LockedAttribute{
+				Value:  "Yucatan",
+				Locked: lockedAttribute,
+			},
+		},
+		UniqueSubjectEnforced: false,
+		WhitelistedDomains:    []string{"venafi.com", "kwantec.com"},
+		WildcardsAllowed:      false,
 	}
 }

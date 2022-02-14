@@ -1,0 +1,8 @@
+---
+policy:
+  subject: {}
+keyPair: {}
+subjectAltNames: {}
+defaults:
+  subject: {}
+  keyPair: {}
