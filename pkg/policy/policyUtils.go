@@ -1067,6 +1067,14 @@ func BuildCloudCitRequest(ps *PolicySpecification, ca *CADetails) (*CloudPolicyR
 		cloudPolicyRequest.RecommendedSettings = &recommendedSettings
 	}
 
+	if ps.Policy != nil && ps.Policy.KeyPair != nil && ps.Policy.KeyPair.ServiceGenerated != nil {
+		cloudPolicyRequest.CsrUploadAllowed = !*(ps.Policy.KeyPair.ServiceGenerated)
+		cloudPolicyRequest.KeyGeneratedByVenafiAllowed = *(ps.Policy.KeyPair.ServiceGenerated)
+	} else {
+		cloudPolicyRequest.CsrUploadAllowed = true
+		cloudPolicyRequest.KeyGeneratedByVenafiAllowed = true
+	}
+
 	return &cloudPolicyRequest, nil
 }
 

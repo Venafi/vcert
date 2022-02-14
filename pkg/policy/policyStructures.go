@@ -57,6 +57,8 @@ type CloudPolicyRequest struct {
 	KeyTypes                            []KeyTypes           `json:"keyTypes"`
 	KeyReuse                            *bool                `json:"keyReuse"`
 	RecommendedSettings                 *RecommendedSettings `json:"recommendedSettings"`
+	CsrUploadAllowed                    bool                 `json:"csrUploadAllowed"`
+	KeyGeneratedByVenafiAllowed         bool                 `json:"keyGeneratedByVenafiAllowed"`
 }
 
 type Product struct {
