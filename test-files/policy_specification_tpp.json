@@ -1,0 +1,69 @@
+{
+  "policy": {
+    "wildcardAllowed": true,
+    "autoInstalled": true,
+    "domains": [
+      "venafi.com"
+    ],
+    "certificateAuthority": "\\VED\\Policy\\Open Source\\msca_template_ecdsa",
+    "subject": {
+      "orgs": [
+        "venafi.com"
+      ],
+      "orgUnits": [
+        "DevOps",
+        "QA",
+        "TPP team"
+      ],
+      "localities": [
+        "Salt Lake City"
+      ],
+      "states": [
+        "Utah"
+      ],
+      "countries": [
+        "US"
+      ]
+    },
+    "keyPair": {
+      "keyTypes": [
+        "RSA"
+      ],
+      "rsaKeySizes": [
+        3072
+      ],
+      "ellipticCurves": [
+        "P384"
+      ],
+      "serviceGenerated": true,
+      "reuseAllowed": true
+    },
+    "subjectAltNames": {
+      "dnsAllowed": false,
+      "ipAllowed": false,
+      "emailAllowed": false,
+      "uriAllowed": false,
+      "upnAllowed": false
+    }
+  },
+  "defaults": {
+    "autoInstalled": true,
+    "domain": "venafi.com",
+    "subject": {
+      "org": "venafi.com",
+      "orgUnits": [
+        "DevOps",
+        "QA",
+        "TPP team"
+      ],
+      "locality": "Salt Lake City",
+      "state": "Utah",
+      "country": "US"
+    },
+    "keyPair": {
+      "keyType": "RSA",
+      "rsaKeySize": 3072,
+      "ellipticCurve": ""
+    }
+  }
+}

@@ -1,7 +1,11 @@
 package policy
 
 import (
+	"encoding/json"
 	"fmt"
+	"gopkg.in/yaml.v2"
+	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -1303,4 +1307,39 @@ func IsDefaultEmpty(ps *PolicySpecification) bool {
 	}
 
 	return true
+}
+
+func VerifyPolicySpec(bytes []byte, fileExt string) error {
+
+	var err error
+	var policySpecification PolicySpecification
+
+	if fileExt == JsonExtension {
+		err = json.Unmarshal(bytes, &policySpecification)
+		if err != nil {
+			return err
+		}
+	} else if fileExt == YamlExtension {
+		err = yaml.Unmarshal(bytes, &policySpecification)
+		if err != nil {
+			return err
+		}
+	} else {
+		return fmt.Errorf("the specified file is not supported")
+	}
+
+	return nil
+}
+
+func GetFileAndBytes(p string) (*os.File, []byte, error) {
+	file, err := os.Open(p)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	bytes, err := ioutil.ReadAll(file)
+	if err != nil {
+		return nil, nil, err
+	}
+	return file, bytes, nil
 }
