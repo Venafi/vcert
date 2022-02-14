@@ -51,6 +51,8 @@ test: get linter
 	go tool cover -func=cov3.out
 	go test -v -coverprofile=cov4.out ./pkg/venafi/fake
 	go tool cover -func=cov4.out
+	go test -v -coverprofile=cov5.out ./pkg/policy
+	go tool cover -func=cov5.out
 	go test -v -coverprofile=cov_cmd.out ./cmd/vcert
 	go tool cover -func=cov_cmd.out
 
