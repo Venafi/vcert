@@ -20,7 +20,6 @@ import (
 	"crypto/sha1"
 	"crypto/x509"
 	"encoding/hex"
-	"encoding/json"
 	"encoding/pem"
 	"fmt"
 	"io"
@@ -41,7 +40,6 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/urfave/cli/v2"
-	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -384,18 +382,6 @@ func getPropertyFromEnvironment(s string) string {
 
 }
 
-func getFileAndBytes(p string) (*os.File, []byte, error) {
-	file, err := os.Open(p)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	bytes, err := ioutil.ReadAll(file)
-	if err != nil {
-		return nil, nil, err
-	}
-	return file, bytes, nil
-}
 
 func getEmptyPolicySpec() *policy.PolicySpecification {
 
@@ -450,28 +436,6 @@ func getEmptyPolicySpec() *policy.PolicySpecification {
 		},
 	}
 	return &specification
-}
-
-func verifyPolicySpec(bytes []byte, fileExt string) error {
-
-	var err error
-	var policySpecification policy.PolicySpecification
-
-	if fileExt == policy.JsonExtension {
-		err = json.Unmarshal(bytes, &policySpecification)
-		if err != nil {
-			return err
-		}
-	} else if fileExt == policy.YamlExtension {
-		err = yaml.Unmarshal(bytes, &policySpecification)
-		if err != nil {
-			return err
-		}
-	} else {
-		return fmt.Errorf("the specified file is not supported")
-	}
-
-	return nil
 }
 
 func writeToFile(content []byte, fileName string, perm os.FileMode) error {
