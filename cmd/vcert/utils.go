@@ -35,7 +35,6 @@ import (
 	"github.com/Venafi/vcert/v4"
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
-	"github.com/Venafi/vcert/v4/pkg/policy"
 	"github.com/Venafi/vcert/v4/pkg/util"
 
 	"github.com/spf13/viper"
@@ -380,61 +379,6 @@ func getPropertyFromEnvironment(s string) string {
 
 	}
 
-}
-
-func getEmptyPolicySpec() *policy.PolicySpecification {
-
-	emptyString := ""
-	intVal := 0
-	falseBool := false
-
-	specification := policy.PolicySpecification{
-		Policy: &policy.Policy{
-			CertificateAuthority: &emptyString,
-			Domains:              []string{""},
-			WildcardAllowed:      &falseBool,
-			AutoInstalled:        &falseBool,
-			MaxValidDays:         &intVal,
-			Subject: &policy.Subject{
-				Orgs:       []string{""},
-				OrgUnits:   []string{""},
-				Localities: []string{""},
-				States:     []string{""},
-				Countries:  []string{""},
-			},
-			KeyPair: &policy.KeyPair{
-				KeyTypes:         []string{""},
-				RsaKeySizes:      []int{0},
-				ServiceGenerated: &falseBool,
-				ReuseAllowed:     &falseBool,
-				EllipticCurves:   []string{""},
-			},
-			SubjectAltNames: &policy.SubjectAltNames{
-				DnsAllowed:   &falseBool,
-				IpAllowed:    &falseBool,
-				EmailAllowed: &falseBool,
-				UriAllowed:   &falseBool,
-				UpnAllowed:   &falseBool,
-			},
-		},
-		Default: &policy.Default{
-			Domain: &emptyString,
-			Subject: &policy.DefaultSubject{
-				Org:      &emptyString,
-				OrgUnits: []string{""},
-				Locality: &emptyString,
-				State:    &emptyString,
-				Country:  &emptyString,
-			},
-			KeyPair: &policy.DefaultKeyPair{
-				KeyType:          &emptyString,
-				RsaKeySize:       &intVal,
-				EllipticCurve:    &emptyString,
-				ServiceGenerated: &falseBool,
-			},
-		},
-	}
-	return &specification
 }
 
 func writeToFile(content []byte, fileName string, perm os.FileMode) error {

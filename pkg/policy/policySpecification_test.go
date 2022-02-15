@@ -184,7 +184,30 @@ func TestEmptyPolicy(t *testing.T) {
 }
 
 func TestBuildCloudCitRequest(t *testing.T) {
-	absPath, err := filepath.Abs("../../test-files/policy_specification_tpp.json")
+	absPath, err := filepath.Abs("../../test-files/policy_specification_cloud.json")
+
+	if err != nil {
+		t.Fatalf("Error opening policy specification\nError: %s", err)
+	}
+
+	policySpecification := getPolicySpecificationFromFile(absPath)
+	prodId := "testiong"
+	var orgId int64
+	orgId = 1234
+	cd := CADetails{
+		CertificateAuthorityProductOptionId: &prodId,
+		CertificateAuthorityOrganizationId:  &orgId,
+	}
+
+	_, err = BuildCloudCitRequest(policySpecification, &cd)
+
+	if err != nil {
+		t.Fatalf("Error building cit \nError: %s", err)
+	}
+}
+
+func TestBuildCloudCitRequestWithEmptyPS(t *testing.T) {
+	absPath, err := filepath.Abs("../../test-files/empty_policy.json")
 
 	if err != nil {
 		t.Fatalf("Error opening policy specification\nError: %s", err)
@@ -248,6 +271,20 @@ func TestGetZoneInfo(t *testing.T) {
 
 	if originalCit != cit {
 		t.Fatalf("cit name is different, expected: %s but get: %s", originalCit, cit)
+	}
+}
+
+func TestGetEmptyPolicySpec(t *testing.T) {
+	//get the policy specification template
+	spec := GetPolicySpec()
+	if spec == nil {
+		t.Fatal("policy specification is nil")
+	}
+
+	isEmpty := IsPolicyEmpty(spec)
+	//policy spec shouldn't be empty, should have attributes.
+	if isEmpty {
+		t.Fatal("policy specification is empty")
 	}
 }
 

@@ -1343,3 +1343,57 @@ func GetFileAndBytes(p string) (*os.File, []byte, error) {
 	}
 	return file, bytes, nil
 }
+func GetPolicySpec() *PolicySpecification {
+
+	emptyString := ""
+	intVal := 0
+	falseBool := false
+
+	specification := PolicySpecification{
+		Policy: &Policy{
+			CertificateAuthority: &emptyString,
+			Domains:              []string{""},
+			WildcardAllowed:      &falseBool,
+			AutoInstalled:        &falseBool,
+			MaxValidDays:         &intVal,
+			Subject: &Subject{
+				Orgs:       []string{""},
+				OrgUnits:   []string{""},
+				Localities: []string{""},
+				States:     []string{""},
+				Countries:  []string{""},
+			},
+			KeyPair: &KeyPair{
+				KeyTypes:         []string{""},
+				RsaKeySizes:      []int{0},
+				ServiceGenerated: &falseBool,
+				ReuseAllowed:     &falseBool,
+				EllipticCurves:   []string{""},
+			},
+			SubjectAltNames: &SubjectAltNames{
+				DnsAllowed:   &falseBool,
+				IpAllowed:    &falseBool,
+				EmailAllowed: &falseBool,
+				UriAllowed:   &falseBool,
+				UpnAllowed:   &falseBool,
+			},
+		},
+		Default: &Default{
+			Domain: &emptyString,
+			Subject: &DefaultSubject{
+				Org:      &emptyString,
+				OrgUnits: []string{""},
+				Locality: &emptyString,
+				State:    &emptyString,
+				Country:  &emptyString,
+			},
+			KeyPair: &DefaultKeyPair{
+				KeyType:          &emptyString,
+				RsaKeySize:       &intVal,
+				EllipticCurve:    &emptyString,
+				ServiceGenerated: &falseBool,
+			},
+		},
+	}
+	return &specification
+}
