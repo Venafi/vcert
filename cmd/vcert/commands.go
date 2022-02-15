@@ -1054,7 +1054,7 @@ func doCommandGetPolicy(c *cli.Context) error {
 
 	} else {
 
-		ps = getEmptyPolicySpec()
+		ps = policy.GetPolicySpec()
 
 	}
 
