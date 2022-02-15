@@ -111,7 +111,25 @@ func TestBuildTppPolicy(t *testing.T) {
 
 	tppPol := BuildTppPolicy(policySpecification)
 
-	assertions.ShouldNotBeEmpty(tppPol)
+	if tppPol.Country == nil {
+		t.Fatal("country property is nil")
+	}
+
+	if tppPol.State == nil {
+		t.Fatal("state property is nil")
+	}
+
+	if tppPol.OrganizationalUnit == nil {
+		t.Fatal("ou property is nil")
+	}
+
+	if tppPol.City == nil {
+		t.Fatal("city property is nil")
+	}
+
+	if tppPol.KeyAlgorithm == nil {
+		t.Fatal("key algorithm property is nil")
+	}
 
 }
 
@@ -214,6 +232,22 @@ func TestBuildPolicySpecificationForTPPLocked(t *testing.T) {
 	_, err := BuildPolicySpecificationForTPP(policyResp)
 	if err != nil {
 		t.Fatalf("Error building policy specification \nError: %s", err)
+	}
+}
+
+func TestGetZoneInfo(t *testing.T) {
+	originalAPP := "DevOps"
+	originalCit := "Open Source"
+	zone := originalAPP + "\\" + originalCit
+	app := GetApplicationName(zone)
+	cit := GetCitName(zone)
+
+	if originalAPP != app {
+		t.Fatalf("app name is different, expected: %s but get: %s", originalAPP, app)
+	}
+
+	if originalCit != cit {
+		t.Fatalf("cit name is different, expected: %s but get: %s", originalCit, cit)
 	}
 }
 
