@@ -288,6 +288,7 @@ type urlResource string
 
 const (
 	urlResourceAuthorize              urlResource = "vedsdk/authorize/"
+	urlResourceAuthorizeIsAuthServer  urlResource = "vedauth/authorize/isAuthServer"
 	urlResourceAuthorizeCertificate   urlResource = "vedauth/authorize/certificate"
 	urlResourceAuthorizeOAuth         urlResource = "vedauth/authorize/oauth"
 	urlResourceAuthorizeVerify        urlResource = "vedauth/authorize/verify"
@@ -320,6 +321,7 @@ const (
 	urlResourceSshCertRet             urlResource = "vedsdk/SSHCertificates/retrieve"
 	urlResourceSshCAPubKey            urlResource = "vedsdk/SSHCertificates/Template/Retrieve/PublicKeyData"
 	urlResourceSshCADetails           urlResource = "vedsdk/SSHCertificates/Template/Retrieve"
+	urlResourceSshTemplateAvaliable   urlResource = "vedsdk/SSHCertificates/Template/Available"
 )
 
 const (

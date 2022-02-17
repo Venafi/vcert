@@ -57,6 +57,10 @@ func (c *Connector) RetrieveSshConfig(ca *certificate.SshCaTemplateRequest) (*ce
 	return RetrieveSshConfig(c, ca)
 }
 
+func (c *Connector) GetAvailableSshTemplates() (response []certificate.SshAvaliableTemplate, err error) {
+	return GetAvailableSshTemplates(c)
+}
+
 // NewConnector creates a new TPP Connector object used to communicate with TPP
 func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (*Connector, error) {
 	c := Connector{verbose: verbose, trust: trust, zone: zone}
@@ -98,8 +102,11 @@ func (c *Connector) GetType() endpoint.ConnectorType {
 	return endpoint.ConnectorTypeTPP
 }
 
-//Ping attempts to connect to the TPP Server WebSDK API and returns an errror if it cannot
+//Ping attempts to connect to the TPP Server WebSDK API and returns an error if it cannot
 func (c *Connector) Ping() (err error) {
+
+	//Extended timeout to allow the server to wake up
+	c.getHTTPClient().Timeout = time.Second * 90
 	statusCode, status, _, err := c.request("GET", "vedsdk/", nil)
 	if err != nil {
 		return
@@ -270,6 +277,11 @@ func (c *Connector) RevokeAccessToken(auth *endpoint.Authentication) (err error)
 
 func processAuthData(c *Connector, url urlResource, data interface{}) (resp interface{}, err error) {
 
+	err = checkIfAuthServerIsReachable(c)
+	if err != nil {
+		return nil, err
+	}
+
 	statusCode, status, body, err := c.request("POST", url, data)
 	if err != nil {
 		return resp, err
@@ -313,6 +325,22 @@ func processAuthData(c *Connector, url urlResource, data interface{}) (resp inte
 	}
 
 	return resp, nil
+}
+
+func checkIfAuthServerIsReachable(c *Connector) error {
+	url := urlResource(urlResourceAuthorizeIsAuthServer)
+
+	// Extended timeout to allow the server to wake up
+	c.getHTTPClient().Timeout = time.Second * 90
+	statusCode, statusText, _, err := c.request("GET", url, nil)
+	if err != nil {
+		return fmt.Errorf("error while cheking the authentication server. URL: %s; Error: %v", url, err)
+	}
+
+	if statusCode == http.StatusAccepted && strings.Contains(statusText, "Venafi Authentication Server") {
+		return nil
+	}
+	return fmt.Errorf("invalid authentication server. URL: %s; Status Code: %d; Status Text: %s", url, statusCode, statusText)
 }
 
 func wrapAltNames(req *certificate.Request) (items []sanItem) {

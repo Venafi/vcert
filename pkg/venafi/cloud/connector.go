@@ -185,6 +185,10 @@ func (c *Connector) RequestSSHCertificate(req *certificate.SshCertRequest) (resp
 	panic("operation is not supported yet")
 }
 
+func (c *Connector) GetAvailableSshTemplates() (response []certificate.SshAvaliableTemplate, err error) {
+	panic("operation is not supported yet")
+}
+
 func (c *Connector) GetPolicyWithRegex(name string) (*policy.PolicySpecification, error) {
 
 	cit, err := retrievePolicySpecification(c, name)
