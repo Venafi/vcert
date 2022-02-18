@@ -282,6 +282,18 @@ type metadataSetResponse struct {
 	Locked bool `json:",omitempty"`
 	Result int  `json:",omitempty"`
 }
+
+type DNToGUIDResponse struct {
+	ClassName        string `json:"ClassName"`
+	GUID             string `json:"GUID"`
+	HierarchicalGUID string `json:"HierarchicalGUID"`
+	Result           int    `json:"Result"`
+	Revision         int    `json:"Revision"`
+}
+
+type DNToGUIDRequest struct {
+	ObjectDN string `json:"ObjectDN"`
+}
 type systemStatusVersionResponse string
 
 type urlResource string
@@ -322,6 +334,7 @@ const (
 	urlResourceSshCAPubKey            urlResource = "vedsdk/SSHCertificates/Template/Retrieve/PublicKeyData"
 	urlResourceSshCADetails           urlResource = "vedsdk/SSHCertificates/Template/Retrieve"
 	urlResourceSshTemplateAvaliable   urlResource = "vedsdk/SSHCertificates/Template/Available"
+	urlResourceDNToGUID               urlResource = "vedsdk/Config/DnToGuid"
 )
 
 const (

@@ -1720,3 +1720,73 @@ func (c *Connector) RequestSSHCertificate(req *certificate.SshCertRequest) (resp
 func (c *Connector) RetrieveSSHCertificate(req *certificate.SshCertRequest) (response *certificate.SshCertificateObject, err error) {
 	return RetrieveSshCertificate(c, req)
 }
+
+func (c *Connector) RetrieveCertificateMetaData(dn string) (*certificate.CertificateMetaData, error) {
+
+	//first step convert dn to guid
+	request := DNToGUIDRequest{ObjectDN: dn}
+	statusCode, status, body, err := c.request("POST", urlResourceDNToGUID, request)
+
+	if err != nil {
+		return nil, err
+	}
+
+	guidInfo, err := parseDNToGUIDRequestResponse(statusCode, status, body)
+
+	if err != nil {
+		return nil, err
+	}
+
+	//second step get certificate metadata
+	url := fmt.Sprintf("%s%s", urlResourceCertificate, guidInfo.GUID)
+
+	statusCode, status, body, err = c.request("GET", urlResource(url), nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := parseCertificateMetaData(statusCode, status, body)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
+
+}
+
+func parseDNToGUIDRequestResponse(httpStatusCode int, httpStatus string, body []byte) (*DNToGUIDResponse, error) {
+	switch httpStatusCode {
+	case http.StatusOK, http.StatusCreated:
+		reqData, err := parseDNToGUIDResponseData(body)
+		if err != nil {
+			return nil, err
+		}
+		return reqData, nil
+	default:
+		return nil, fmt.Errorf("Unexpected status code on TPP DN to GUID request.\n Status:\n %s. \n Body:\n %s\n", httpStatus, body)
+	}
+}
+
+func parseDNToGUIDResponseData(b []byte) (data *DNToGUIDResponse, err error) {
+	err = json.Unmarshal(b, &data)
+	return
+}
+
+func parseCertificateMetaData(httpStatusCode int, httpStatus string, body []byte) (*certificate.CertificateMetaData, error) {
+	switch httpStatusCode {
+	case http.StatusOK, http.StatusCreated:
+		reqData, err := parseCertificateMetaDataResponse(body)
+		if err != nil {
+			return nil, err
+		}
+		return reqData, nil
+	default:
+		return nil, fmt.Errorf("Unexpected status code on TPP DN to GUID request.\n Status:\n %s. \n Body:\n %s\n", httpStatus, body)
+	}
+}
+
+func parseCertificateMetaDataResponse(b []byte) (data *certificate.CertificateMetaData, err error) {
+	err = json.Unmarshal(b, &data)
+	return
+}
