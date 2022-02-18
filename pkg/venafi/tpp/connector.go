@@ -57,7 +57,7 @@ func (c *Connector) RetrieveSshConfig(ca *certificate.SshCaTemplateRequest) (*ce
 	return RetrieveSshConfig(c, ca)
 }
 
-func (c *Connector) GetAvailableSshTemplates() (response []certificate.SshAvaliableTemplate, err error) {
+func (c *Connector) RetrieveAvailableSSHTemplates() (response []certificate.SshAvaliableTemplate, err error) {
 	return GetAvailableSshTemplates(c)
 }
 

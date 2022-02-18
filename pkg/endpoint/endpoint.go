@@ -103,7 +103,7 @@ type Connector interface {
 	RetrieveSSHCertificate(req *certificate.SshCertRequest) (response *certificate.SshCertificateObject, err error)
 	RetrieveSshConfig(ca *certificate.SshCaTemplateRequest) (*certificate.SshConfig, error)
 	SearchCertificates(req *certificate.SearchRequest) (*certificate.CertSearchResponse, error)
-	GetAvailableSshTemplates() ([]certificate.SshAvaliableTemplate, error)
+	RetrieveAvailableSSHTemplates() ([]certificate.SshAvaliableTemplate, error)
 }
 
 type Filter struct {
