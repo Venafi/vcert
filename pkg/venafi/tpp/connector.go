@@ -163,7 +163,7 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 	return fmt.Errorf("failed to authenticate: can't determine valid credentials set")
 }
 
-// Get OAuth refresh and access token
+// GetRefreshToken Get OAuth refresh and access token
 func (c *Connector) GetRefreshToken(auth *endpoint.Authentication) (resp OauthGetRefreshTokenResponse, err error) {
 
 	if auth == nil {
@@ -200,7 +200,7 @@ func (c *Connector) GetRefreshToken(auth *endpoint.Authentication) (resp OauthGe
 	return resp, fmt.Errorf("failed to authenticate: missing credentials")
 }
 
-// Refresh OAuth access token
+// RefreshAccessToken Refresh OAuth access token
 func (c *Connector) RefreshAccessToken(auth *endpoint.Authentication) (resp OauthRefreshAccessTokenResponse, err error) {
 
 	if auth == nil {
@@ -277,9 +277,12 @@ func (c *Connector) RevokeAccessToken(auth *endpoint.Authentication) (err error)
 
 func processAuthData(c *Connector, url urlResource, data interface{}) (resp interface{}, err error) {
 
-	err = checkIfAuthServerIsReachable(c)
+	isReachable, err := c.isAuthServerReachable()
 	if err != nil {
 		return nil, err
+	}
+	if !isReachable {
+		return nil, fmt.Errorf("authentication server is not reachable: %s", c.baseURL)
 	}
 
 	statusCode, status, body, err := c.request("POST", url, data)
@@ -327,20 +330,20 @@ func processAuthData(c *Connector, url urlResource, data interface{}) (resp inte
 	return resp, nil
 }
 
-func checkIfAuthServerIsReachable(c *Connector) error {
+func (c *Connector) isAuthServerReachable() (bool, error) {
 	url := urlResource(urlResourceAuthorizeIsAuthServer)
 
 	// Extended timeout to allow the server to wake up
 	c.getHTTPClient().Timeout = time.Second * 90
 	statusCode, statusText, _, err := c.request("GET", url, nil)
 	if err != nil {
-		return fmt.Errorf("error while cheking the authentication server. URL: %s; Error: %v", url, err)
+		return false, fmt.Errorf("error while cheking the authentication server. URL: %s; Error: %v", url, err)
 	}
 
 	if statusCode == http.StatusAccepted && strings.Contains(statusText, "Venafi Authentication Server") {
-		return nil
+		return true, nil
 	}
-	return fmt.Errorf("invalid authentication server. URL: %s; Status Code: %d; Status Text: %s", url, statusCode, statusText)
+	return false, fmt.Errorf("invalid authentication server. URL: %s; Status Code: %d; Status Text: %s", url, statusCode, statusText)
 }
 
 func wrapAltNames(req *certificate.Request) (items []sanItem) {
@@ -382,7 +385,7 @@ func prepareLegacyMetadata(c *Connector, metaItems []customField, dn string) ([]
 	return requestGUIDData, nil
 }
 
-//RequestAllMetadataItems returns all possible metadata items for a DN
+// requestAllMetadataItems returns all possible metadata items for a DN
 func (c *Connector) requestAllMetadataItems(dn string) ([]metadataItem, error) {
 	statusCode, status, body, err := c.request("POST", urlResourceAllMetadataGet, metadataGetItemsRequest{dn})
 	if err != nil {
@@ -397,7 +400,7 @@ func (c *Connector) requestAllMetadataItems(dn string) ([]metadataItem, error) {
 	return response.Items, err
 }
 
-//RequestMetadataItems returns metadata items for a DN that have a value stored
+// requestMetadataItems returns metadata items for a DN that have a value stored
 func (c *Connector) requestMetadataItems(dn string) ([]metadataKeyValueSet, error) {
 	statusCode, status, body, err := c.request("POST", urlResourceMetadataGet, metadataGetItemsRequest{dn})
 	if err != nil {
@@ -411,7 +414,7 @@ func (c *Connector) requestMetadataItems(dn string) ([]metadataKeyValueSet, erro
 	return response.Data, err
 }
 
-//RequestSystemVersion returns the TPP system version of the connector context
+// requestSystemVersion returns the TPP system version of the connector context
 func (c *Connector) requestSystemVersion() (string, error) {
 	statusCode, status, body, err := c.request("GET", urlResourceSystemStatusVersion, "")
 	if err != nil {
@@ -431,7 +434,7 @@ func (c *Connector) requestSystemVersion() (string, error) {
 	return response.Version, err
 }
 
-//SetCertificateMetadata submits the metadata to TPP for storage returning the lock status of the metadata stored
+// setCertificateMetadata submits the metadata to TPP for storage returning the lock status of the metadata stored
 func (c *Connector) setCertificateMetadata(metadataRequest metadataSetRequest) (bool, error) {
 	if metadataRequest.DN == "" {
 		return false, fmt.Errorf("DN must be provided to setCertificateMetaData")
