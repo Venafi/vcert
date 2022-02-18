@@ -104,6 +104,7 @@ type Connector interface {
 	RetrieveSshConfig(ca *certificate.SshCaTemplateRequest) (*certificate.SshConfig, error)
 	SearchCertificates(req *certificate.SearchRequest) (*certificate.CertSearchResponse, error)
 	RetrieveAvailableSSHTemplates() ([]certificate.SshAvaliableTemplate, error)
+	RetrieveCertificateMetaData(dn string) (*certificate.CertificateMetaData, error)
 }
 
 type Filter struct {

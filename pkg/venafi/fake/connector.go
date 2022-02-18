@@ -39,8 +39,12 @@ type Connector struct {
 	verbose bool
 }
 
+func (c *Connector) RetrieveCertificateMetaData(dn string) (*certificate.CertificateMetaData, error) {
+	panic("operation is not supported yet")
+}
+
 func (c *Connector) SearchCertificates(req *certificate.SearchRequest) (*certificate.CertSearchResponse, error) {
-	panic("implement me")
+	panic("operation is not supported yet")
 }
 
 func (c *Connector) IsCSRServiceGenerated(req *certificate.Request) (bool, error) {
