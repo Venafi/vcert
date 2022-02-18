@@ -59,6 +59,10 @@ func (c *Connector) RequestSSHCertificate(req *certificate.SshCertRequest) (resp
 	panic("operation is not supported yet")
 }
 
+func (c *Connector) RetrieveAvailableSSHTemplates() (response []certificate.SshAvaliableTemplate, err error) {
+	panic("operation is not supported yet")
+}
+
 func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) {
 
 	caName := "\\VED\\Policy\\Certificate Authorities\\TEST CA\\QA Test CA - Server 90 Days"

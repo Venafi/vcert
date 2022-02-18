@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package tpp
 
 import (
@@ -303,6 +304,28 @@ func RetrieveSshConfig(c *Connector, ca *certificate.SshCaTemplateRequest) (*cer
 	return &conf, nil
 }
 
+func GetAvailableSshTemplates(c *Connector) ([]certificate.SshAvaliableTemplate, error) {
+	var response []certificate.SshAvaliableTemplate
+	statusCode, status, body, err := c.request("GET", urlResourceSshTemplateAvaliable, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	switch statusCode {
+	case http.StatusOK:
+		response, err = parseSshTemplateData(body)
+		if err != nil {
+			return nil, err
+		}
+	case http.StatusNotFound:
+		// Return NotFound as this API method is unavailable in SSH Protect versions prior 21.4.0
+		return nil, fmt.Errorf(status)
+	default:
+		return nil, fmt.Errorf("error while retriving avaliable SSH templates, error body:%s, status:%s and status code:%v", string(body), status, statusCode)
+	}
+	return response, nil
+}
+
 func RetrieveSshCaPrincipals(c *Connector, ca *certificate.SshCaTemplateRequest) ([]string, error) {
 
 	tppReq := certificate.SshTppCaTemplateRequest{}
@@ -356,6 +379,11 @@ func parseSshCaDetailsRequestResult(httpStatusCode int, httpStatus string, body 
 }
 
 func parseSshCaDetailsRequestData(b []byte) (data *certificate.SshTppCaTemplateResponse, err error) {
+	err = json.Unmarshal(b, &data)
+	return
+}
+
+func parseSshTemplateData(b []byte) (data []certificate.SshAvaliableTemplate, err error) {
 	err = json.Unmarshal(b, &data)
 	return
 }

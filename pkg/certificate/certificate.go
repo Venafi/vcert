@@ -206,7 +206,7 @@ type Request struct {
 
 //SSH Certificate structures
 
-//This request is a standard one, it will hold data for tpp request
+// SshCertRequest This request is a standard one, it will hold data for tpp request
 //and in the future it will hold VaS data.
 type SshCertRequest struct {
 	Template             string
