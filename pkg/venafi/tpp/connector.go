@@ -277,13 +277,13 @@ func (c *Connector) RevokeAccessToken(auth *endpoint.Authentication) (err error)
 
 func processAuthData(c *Connector, url urlResource, data interface{}) (resp interface{}, err error) {
 
-	isReachable, err := c.isAuthServerReachable()
-	if err != nil {
-		return nil, err
-	}
-	if !isReachable {
-		return nil, fmt.Errorf("authentication server is not reachable: %s", c.baseURL)
-	}
+	//isReachable, err := c.isAuthServerReachable()
+	//if err != nil {
+	//	return nil, err
+	//}
+	//if !isReachable {
+	//	return nil, fmt.Errorf("authentication server is not reachable: %s", c.baseURL)
+	//}
 
 	statusCode, status, body, err := c.request("POST", url, data)
 	if err != nil {
