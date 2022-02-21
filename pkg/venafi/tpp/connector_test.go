@@ -2261,3 +2261,51 @@ func TestSshGetConfig(t *testing.T) {
 	}
 
 }
+
+func TestGetCertificateMetaData(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+	config, err := tpp.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	cn := test.RandCN()
+	req := &certificate.Request{}
+	req.Subject.CommonName = cn
+	req.Subject.Organization = []string{"Venafi, Inc."}
+	req.Subject.OrganizationalUnit = []string{"Automated Tests"}
+	req.Subject.Locality = []string{"Las Vegas"}
+	req.Subject.Province = []string{"Nevada"}
+	req.Subject.Country = []string{"US"}
+
+	err = tpp.GenerateRequest(config, req)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	t.Logf("getPolicyDN(ctx.TPPZone) = %s", getPolicyDN(ctx.TPPZone))
+	dn, err := tpp.RequestCertificate(req)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	metaData, err := tpp.RetrieveCertificateMetaData(dn)
+
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	if metaData == nil {
+		t.Fatal("meta data is nil")
+	}
+}

@@ -61,4 +61,14 @@ func unsetFlags() {
 	flags.zone = ""
 	flags.url = ""
 	flags.validDays = ""
+	flags.config = ""
+	flags.testMode = false
+}
+
+func setEmptyCredentials() {
+	flags.config = "fake config"
+	flags.apiKey = ""
+	flags.tppPassword = ""
+	flags.tppToken = ""
+	flags.testMode = true
 }

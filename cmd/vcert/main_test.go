@@ -993,3 +993,17 @@ func TestValidateValidDaysFlagWithInvalidValues(t *testing.T) {
 
 	unsetFlags()
 }
+
+func TestValidateEmptyCredentials(t *testing.T) {
+
+	context := getCliEnrollContext()
+
+	flags.validDays = invalidDaysData
+	setEmptyCredentials()
+	err := validateConnectionFlags(context.Command.Name)
+	if err == nil {
+		t.Fatal("error shouldn't be nil")
+	}
+
+	unsetFlags()
+}
