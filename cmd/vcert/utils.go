@@ -354,16 +354,6 @@ func isValidRFC822Name(name string) bool {
 	return reg.FindStringIndex(name) != nil
 }
 
-func sliceContains(slice []string, item string) bool {
-	set := make(map[string]struct{}, len(slice))
-	for _, s := range slice {
-		set[s] = struct{}{}
-	}
-
-	_, ok := set[item]
-	return ok
-}
-
 func getPropertyFromEnvironment(s string) string {
 	viper.AutomaticEnv()
 

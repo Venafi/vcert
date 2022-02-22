@@ -590,6 +590,65 @@ func TestGenerateCertRequest(t *testing.T) {
 	flags.commonName = "unit.test.vcert"
 	flags.org = "Venafi"
 	flags.orgUnits = []string{"vcert Unit Testing"}
+	flags.validDays = "120#m"
+
+	//cf := createFromCommandFlags(commandEnroll)
+
+	req := &certificate.Request{}
+	req = fillCertificateRequest(req, &flags)
+	if req == nil {
+		t.Fatalf("generateCertificateRequest returned a nil request")
+	}
+	if req.Subject.CommonName != flags.commonName {
+		t.Fatalf("generated request did not contain the expected common name, expected: %s -- actual: %s", flags.commonName, req.Subject.CommonName)
+	}
+}
+
+func TestGenerateCertCSRServiceRequest(t *testing.T) {
+	//setup flags
+	ip := net.ParseIP("127.0.0.1")
+	uri, _ := url.Parse("uri.test.com")
+	flags = commandFlags{}
+
+	flags.distinguishedName = "vcert Unit Test"
+	flags.commonName = "unit.test.vcert"
+	flags.org = "Venafi"
+	flags.orgUnits = []string{"vcert Unit Testing"}
+	flags.validDays = "120#d"
+	flags.csrOption = "service"
+	flags.caDN = "VED/Policy/test/test.com"
+	flags.friendlyName = "test"
+	flags.country = "US"
+	flags.state = "Utah"
+	flags.locality = "Salt lake city"
+	flags.dnsSans = []string{"test.com"}
+	flags.ipSans = []net.IP{ip}
+	flags.emailSans = []string{"test@test.com"}
+	flags.upnSans = []string{"test"}
+	flags.uriSans = []*url.URL{uri}
+
+	//cf := createFromCommandFlags(commandEnroll)
+
+	req := &certificate.Request{}
+	req = fillCertificateRequest(req, &flags)
+	if req == nil {
+		t.Fatalf("generateCertificateRequest returned a nil request")
+	}
+	if req.Subject.CommonName != flags.commonName {
+		t.Fatalf("generated request did not contain the expected common name, expected: %s -- actual: %s", flags.commonName, req.Subject.CommonName)
+	}
+}
+
+func TestGenerateCertCSRFileRequest(t *testing.T) {
+	//setup flags
+	flags = commandFlags{}
+
+	flags.distinguishedName = "vcert Unit Test"
+	flags.commonName = "unit.test.vcert"
+	flags.org = "Venafi"
+	flags.orgUnits = []string{"vcert Unit Testing"}
+	flags.validDays = "120#e"
+	flags.csrOption = "file:../../test-files/test.csr"
 
 	//cf := createFromCommandFlags(commandEnroll)
 
