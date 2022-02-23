@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Venafi, Inc.
+ * Copyright 2022 Venafi, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -478,14 +478,7 @@ func (request *Request) GenerateCSR() error {
 	certificateRequest := x509.CertificateRequest{}
 	certificateRequest.Subject = request.Subject
 	if !request.OmitSANs {
-		certificateRequest.DNSNames = request.DNSNames
-		certificateRequest.EmailAddresses = request.EmailAddresses
-		certificateRequest.IPAddresses = request.IPAddresses
-		certificateRequest.URIs = request.URIs
-
-		if len(request.UPNs) > 0 {
-			addUserPrincipalNameSANs(&certificateRequest, request.UPNs)
-		}
+		addSubjectAltNames(&certificateRequest, request.DNSNames, request.EmailAddresses, request.IPAddresses, request.URIs, request.UPNs)
 	}
 	certificateRequest.Attributes = request.Attributes
 
