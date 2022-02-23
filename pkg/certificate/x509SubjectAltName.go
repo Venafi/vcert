@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Venafi, Inc.
+ * Copyright 2022 Venafi, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,16 +50,20 @@ const (
 	nameTypeIP    = 7
 )
 
-// Workaround for lack of User Principal Name SAN support in crypto/x509 package
-func addUserPrincipalNameSANs(req *x509.CertificateRequest, upNames []string) {
-	sanBytes, err := marshalSANs(req.DNSNames, req.EmailAddresses, req.IPAddresses, req.URIs, upNames)
+// Workaround for lack of User Principal Name SAN support and ability to control SAN extension criticality in crypto/x509 package
+func addSubjectAltNames(req *x509.CertificateRequest, dnsNames []string, emailAddrs []string, ipAddrs []net.IP, URIs []*url.URL, UPNs []string) {
+	sanBytes, err := marshalSANs(dnsNames, emailAddrs, ipAddrs, URIs, UPNs)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// Per RFC 5280, subjectAltName extension MUST be critical if Subject is empty
+	// https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.6
+	sanExtCritical := req.Subject.String() == ""
+
 	extSubjectAltName := pkix.Extension{
 		Id:       oidExtensionSubjectAltName,
-		Critical: false,
+		Critical: sanExtCritical,
 		Value:    sanBytes,
 	}
 
@@ -73,7 +77,7 @@ func addUserPrincipalNameSANs(req *x509.CertificateRequest, upNames []string) {
 	}
 	req.ExtraExtensions = updatedExts
 
-	// Clear the SAN request attributes to prevent the SAN extension from being clobbered when CSR is generated
+	// Ensure SAN request attributes are not set to prevent SAN extension from being clobbered when CSR is generated
 	req.DNSNames = nil
 	req.EmailAddresses = nil
 	req.IPAddresses = nil
