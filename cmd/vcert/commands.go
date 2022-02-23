@@ -958,7 +958,7 @@ func doCommandCreatePolicy(c *cli.Context) error {
 
 	logf("Loading policy specification from %s", policySpecLocation)
 
-	file, bytes, err := getFileAndBytes(policySpecLocation)
+	file, bytes, err := policy.GetFileAndBytes(policySpecLocation)
 
 	if err != nil {
 		return err
@@ -972,7 +972,7 @@ func doCommandCreatePolicy(c *cli.Context) error {
 	fileExt = strings.ToLower(fileExt)
 
 	if flags.verifyPolicyConfig {
-		err = verifyPolicySpec(bytes, fileExt)
+		err = policy.VerifyPolicySpec(bytes, fileExt)
 		if err != nil {
 			err = fmt.Errorf("policy specification file is not valid: %s", err)
 			return err
@@ -1054,7 +1054,7 @@ func doCommandGetPolicy(c *cli.Context) error {
 
 	} else {
 
-		ps = getEmptyPolicySpec()
+		ps = policy.GetPolicySpec()
 
 	}
 

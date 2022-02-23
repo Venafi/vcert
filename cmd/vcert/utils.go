@@ -20,7 +20,6 @@ import (
 	"crypto/sha1"
 	"crypto/x509"
 	"encoding/hex"
-	"encoding/json"
 	"encoding/pem"
 	"fmt"
 	"io"
@@ -36,12 +35,10 @@ import (
 	"github.com/Venafi/vcert/v4"
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
-	"github.com/Venafi/vcert/v4/pkg/policy"
 	"github.com/Venafi/vcert/v4/pkg/util"
 
 	"github.com/spf13/viper"
 	"github.com/urfave/cli/v2"
-	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -357,16 +354,6 @@ func isValidRFC822Name(name string) bool {
 	return reg.FindStringIndex(name) != nil
 }
 
-func sliceContains(slice []string, item string) bool {
-	set := make(map[string]struct{}, len(slice))
-	for _, s := range slice {
-		set[s] = struct{}{}
-	}
-
-	_, ok := set[item]
-	return ok
-}
-
 func getPropertyFromEnvironment(s string) string {
 	viper.AutomaticEnv()
 
@@ -382,96 +369,6 @@ func getPropertyFromEnvironment(s string) string {
 
 	}
 
-}
-
-func getFileAndBytes(p string) (*os.File, []byte, error) {
-	file, err := os.Open(p)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	bytes, err := ioutil.ReadAll(file)
-	if err != nil {
-		return nil, nil, err
-	}
-	return file, bytes, nil
-}
-
-func getEmptyPolicySpec() *policy.PolicySpecification {
-
-	emptyString := ""
-	intVal := 0
-	falseBool := false
-
-	specification := policy.PolicySpecification{
-		Policy: &policy.Policy{
-			CertificateAuthority: &emptyString,
-			Domains:              []string{""},
-			WildcardAllowed:      &falseBool,
-			AutoInstalled:        &falseBool,
-			MaxValidDays:         &intVal,
-			Subject: &policy.Subject{
-				Orgs:       []string{""},
-				OrgUnits:   []string{""},
-				Localities: []string{""},
-				States:     []string{""},
-				Countries:  []string{""},
-			},
-			KeyPair: &policy.KeyPair{
-				KeyTypes:         []string{""},
-				RsaKeySizes:      []int{0},
-				ServiceGenerated: &falseBool,
-				ReuseAllowed:     &falseBool,
-				EllipticCurves:   []string{""},
-			},
-			SubjectAltNames: &policy.SubjectAltNames{
-				DnsAllowed:   &falseBool,
-				IpAllowed:    &falseBool,
-				EmailAllowed: &falseBool,
-				UriAllowed:   &falseBool,
-				UpnAllowed:   &falseBool,
-			},
-		},
-		Default: &policy.Default{
-			Domain: &emptyString,
-			Subject: &policy.DefaultSubject{
-				Org:      &emptyString,
-				OrgUnits: []string{""},
-				Locality: &emptyString,
-				State:    &emptyString,
-				Country:  &emptyString,
-			},
-			KeyPair: &policy.DefaultKeyPair{
-				KeyType:          &emptyString,
-				RsaKeySize:       &intVal,
-				EllipticCurve:    &emptyString,
-				ServiceGenerated: &falseBool,
-			},
-		},
-	}
-	return &specification
-}
-
-func verifyPolicySpec(bytes []byte, fileExt string) error {
-
-	var err error
-	var policySpecification policy.PolicySpecification
-
-	if fileExt == policy.JsonExtension {
-		err = json.Unmarshal(bytes, &policySpecification)
-		if err != nil {
-			return err
-		}
-	} else if fileExt == policy.YamlExtension {
-		err = yaml.Unmarshal(bytes, &policySpecification)
-		if err != nil {
-			return err
-		}
-	} else {
-		return fmt.Errorf("the specified file is not supported")
-	}
-
-	return nil
 }
 
 func writeToFile(content []byte, fileName string, perm os.FileMode) error {

@@ -1388,3 +1388,57 @@ func TestCreateCertServiceCSRWithDefaults(t *testing.T) {
 	}
 
 }
+
+func TestGetDefaultCsrAttributes(t *testing.T) {
+
+	policyName := os.Getenv("CLOUD_ZONE_RESTRICTED")
+	conn := getTestConnector(policyName)
+	conn.verbose = true
+	request := &certificate.Request{}
+	request.Subject.CommonName = "test.vfidev.com"
+
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	attributes, err := getCsrAttributes(conn, request)
+
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	if attributes == nil {
+		t.Fatal("attributes are nil")
+	}
+}
+
+func TestGetCsrAttributes(t *testing.T) {
+
+	policyName := os.Getenv("CLOUD_ZONE_RESTRICTED")
+	conn := getTestConnector(policyName)
+	conn.verbose = true
+	req := &certificate.Request{}
+	req.Subject.CommonName = "test.vfidev.com"
+	req.Subject.Organization = []string{"Venafi Inc."}
+	req.Subject.OrganizationalUnit = []string{"Integrations"}
+	req.Subject.Locality = []string{"Salt Lake City"}
+	req.Subject.Province = []string{"Utah"}
+	req.Subject.Country = []string{"US"}
+	req.DNSNames = []string{req.Subject.CommonName}
+
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	attributes, err := getCsrAttributes(conn, req)
+
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	if attributes == nil {
+		t.Fatal("attributes are nil")
+	}
+}

@@ -1,0 +1,24 @@
+{
+  "policy": {
+    "certificateAuthority": "\\VED\\Policy\\Certificate Authorities\\Microsoft CA\\QA Venafi CA - Server 90 Days"
+  },
+  "defaults": {
+    "subject": {
+      "org": "Venafi, Inc.",
+      "orgUnits": [
+        "Engineering",
+        "Product Management",
+        "Quality Assurance"
+      ],
+      "locality": "Salt Lake City",
+      "state": "Utah",
+      "country": "US"
+    },
+    "keyPair": {
+      "keyType": "RSA",
+      "rsaKeySize": 2048,
+      "serviceGenerated": true
+    },
+    "autoInstalled": false
+  }
+}
