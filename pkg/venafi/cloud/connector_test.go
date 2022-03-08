@@ -855,7 +855,7 @@ func TestSetPolicy(t *testing.T) {
 	if ps.Policy.Domains != nil && localPolicy.Policy.Domains != nil {
 		valid := test.IsArrayStringEqual(localPolicy.Policy.Domains, ps.Policy.Domains)
 		if !valid {
-			t.Fatalf("specified domains are different, expected %+q but got %+q",localPolicy.Policy.Domains,  ps.Policy.Domains)
+			t.Fatalf("specified domains are different, expected %+q but got %+q", localPolicy.Policy.Domains, ps.Policy.Domains)
 		}
 	}
 
@@ -880,16 +880,16 @@ func TestSetPolicy(t *testing.T) {
 
 	}
 
-	if len(localPolicy.Policy.Subject.OrgUnits)  > 0 {
+	if len(localPolicy.Policy.Subject.OrgUnits) > 0 {
 
 		valid := test.IsArrayStringEqual(localPolicy.Policy.Subject.OrgUnits, ps.Policy.Subject.OrgUnits)
 		if !valid {
-			t.Fatalf("specified policy orgs units are different, expected %+q but got %+q",localPolicy.Policy.Subject.OrgUnits, ps.Policy.Subject.OrgUnits)
+			t.Fatalf("specified policy orgs units are different, expected %+q but got %+q", localPolicy.Policy.Subject.OrgUnits, ps.Policy.Subject.OrgUnits)
 		}
 
 	}
 
-	if len(localPolicy.Policy.Subject.Localities) > 0{
+	if len(localPolicy.Policy.Subject.Localities) > 0 {
 
 		valid := test.IsArrayStringEqual(localPolicy.Policy.Subject.Localities, ps.Policy.Subject.Localities)
 		if !valid {
@@ -911,7 +911,7 @@ func TestSetPolicy(t *testing.T) {
 
 		valid := test.IsArrayStringEqual(localPolicy.Policy.Subject.Countries, ps.Policy.Subject.Countries)
 		if !valid {
-			t.Fatalf("specified policy countries are different, expected %+q but got %+q",  localPolicy.Policy.Subject.Countries, ps.Policy.Subject.Countries)
+			t.Fatalf("specified policy countries are different, expected %+q but got %+q", localPolicy.Policy.Subject.Countries, ps.Policy.Subject.Countries)
 		}
 
 	}
@@ -931,7 +931,7 @@ func TestSetPolicy(t *testing.T) {
 
 		valid := test.IsArrayIntEqual(localPolicy.Policy.KeyPair.RsaKeySizes, ps.Policy.KeyPair.RsaKeySizes)
 		if !valid {
-			t.Fatalf("specified policy rsa key sizes are different, expected %+q but got %+q",localPolicy.Policy.KeyPair.RsaKeySizes, ps.Policy.KeyPair.RsaKeySizes)
+			t.Fatalf("specified policy rsa key sizes are different, expected %+q but got %+q", localPolicy.Policy.KeyPair.RsaKeySizes, ps.Policy.KeyPair.RsaKeySizes)
 		}
 
 	}
@@ -963,7 +963,7 @@ func TestSetPolicy(t *testing.T) {
 		valid := test.IsArrayStringEqual(localPolicy.Default.Subject.OrgUnits, ps.Default.Subject.OrgUnits)
 
 		if !valid {
-			t.Fatalf("specified policy default org unit are different, expected %+q but got %+q",localPolicy.Default.Subject.OrgUnits, ps.Default.Subject.OrgUnits)
+			t.Fatalf("specified policy default org unit are different, expected %+q but got %+q", localPolicy.Default.Subject.OrgUnits, ps.Default.Subject.OrgUnits)
 		}
 
 	}
@@ -1033,22 +1033,22 @@ func TestSetPolicy(t *testing.T) {
 	}
 
 	if len(localPolicy.Policy.SubjectAltNames.UriProtocols) > 0 {
-		if len(ps.Policy.SubjectAltNames.UriProtocols) == 0{
+		if len(ps.Policy.SubjectAltNames.UriProtocols) == 0 {
 			t.Fatal("got 0 elements on uriProtocols ")
 		}
 		valid := test.IsArrayStringEqual(localPolicy.Policy.SubjectAltNames.UriProtocols, ps.Policy.SubjectAltNames.UriProtocols)
 		if !valid {
-			t.Fatalf("uri protocols are different, expected %+q but get %+q", localPolicy.Policy.SubjectAltNames.UriProtocols,  ps.Policy.SubjectAltNames.UriProtocols)
+			t.Fatalf("uri protocols are different, expected %+q but get %+q", localPolicy.Policy.SubjectAltNames.UriProtocols, ps.Policy.SubjectAltNames.UriProtocols)
 		}
 	}
 
 	if len(localPolicy.Policy.SubjectAltNames.IpConstraints) > 0 {
-		if len(ps.Policy.SubjectAltNames.IpConstraints) == 0{
+		if len(ps.Policy.SubjectAltNames.IpConstraints) == 0 {
 			t.Fatal("got 0 elements on ipConstrains ")
 		}
 		valid := test.IsArrayStringEqual(localPolicy.Policy.SubjectAltNames.IpConstraints, ps.Policy.SubjectAltNames.IpConstraints)
 		if !valid {
-			t.Fatalf("ip constrains are different, expected %+q but get %+q", localPolicy.Policy.SubjectAltNames.IpConstraints,  ps.Policy.SubjectAltNames.IpConstraints)
+			t.Fatalf("ip constrains are different, expected %+q but get %+q", localPolicy.Policy.SubjectAltNames.IpConstraints, ps.Policy.SubjectAltNames.IpConstraints)
 		}
 	}
 
