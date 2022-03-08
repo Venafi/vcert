@@ -54,7 +54,10 @@ type CloudPolicyRequest struct {
 	SubjectSTRegexes                    []string             `json:"subjectSTRegexes"`
 	SubjectCValues                      []string             `json:"subjectCValues"`
 	SanRegexes                          []string             `json:"sanRegexes"`
-	KeyTypes                            []KeyTypes           `json:"keyTypes"`
+	SanIpAddressRegexes                 []string             `json:"sanIpAddressRegexes"`
+	SanRfc822NameRegexes                []string             `json:"sanRfc822NameRegexes"`
+	SanUniformResourceIdentifierRegexes []string             `json:"sanUniformResourceIdentifierRegexes"`
+	KeyTypes                            []KeyType            `json:"keyTypes"`
 	KeyReuse                            *bool                `json:"keyReuse"`
 	RecommendedSettings                 *RecommendedSettings `json:"recommendedSettings"`
 	CsrUploadAllowed                    bool                 `json:"csrUploadAllowed"`
@@ -70,9 +73,10 @@ type Product struct {
 	OrganizationId       *int64  `json:"organizationId,omitempty"`
 }
 
-type KeyTypes struct {
-	KeyType    string `json:"keyType"`
-	KeyLengths []int  `json:"keyLengths"`
+type KeyType struct {
+	KeyType    string   `json:"keyType"`
+	KeyLengths []int    `json:"keyLengths,omitempty"`
+	KeyCurves  []string `json:"keyCurves,omitempty"`
 }
 
 type TrackingData struct {

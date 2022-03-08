@@ -42,6 +42,10 @@ func RandCN() string {
 	return fmt.Sprintf("t%d-%s.venafi.example.com", time.Now().Unix(), randRunes(4))
 }
 
+func RandSpecificCN(cn string) string {
+	return fmt.Sprintf("t%d-%s.%s", time.Now().Unix(), randRunes(4), cn)
+}
+
 func RandAppName() string {
 	return fmt.Sprintf("vcert-go-%d-%sAppOpenSource", time.Now().Unix(), randRunes(4))
 }
@@ -60,7 +64,8 @@ func GetCloudPolicySpecification() *policy.PolicySpecification {
 	wildcardAllowed := true
 	serviceGenerated := true
 	reuseAllowed := false
-	subjectAltNamesAllowed := false
+	subjectAltNamesAllowed := true
+	upnAllowed := false
 
 	domain := "venafi.com"
 	org := "Venafi"
@@ -96,7 +101,8 @@ func GetCloudPolicySpecification() *policy.PolicySpecification {
 				IpAllowed:    &subjectAltNamesAllowed,
 				EmailAllowed: &subjectAltNamesAllowed,
 				UriAllowed:   &subjectAltNamesAllowed,
-				UpnAllowed:   &subjectAltNamesAllowed,
+				UpnAllowed:   &upnAllowed,
+				UriProtocols: []string{"https", "ldaps", "spiffe"},
 			},
 		},
 		Default: &policy.Default{

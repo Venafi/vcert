@@ -67,3 +67,7 @@ func EncryptPkcs1PrivateKey(privateKey, password string) (string, error) {
 	}
 	return string(pem.EncodeToMemory(encrypted)), nil
 }
+
+func GetBooleanRef(val bool) *bool {
+	return &val
+}

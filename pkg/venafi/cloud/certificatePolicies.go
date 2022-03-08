@@ -33,24 +33,27 @@ type certificateTemplate struct {
 		CertificateAuthority string `json:"certificateAuthority"`
 		ProductName          string `json:"productName"`
 	} `json:"product"`
-	Priority               int              `json:"priority"`
-	SystemGenerated        bool             `json:"systemGenerated,omitempty"`
-	CreationDateString     string           `json:"creationDate,omitempty"`
-	CreationDate           time.Time        `json:"-"`
-	ModificationDateString string           `json:"modificationDate"`
-	ModificationDate       time.Time        `json:"-"`
-	Status                 string           `json:"status"`
-	Reason                 string           `json:"reason"`
-	SubjectCNRegexes       []string         `json:"subjectCNRegexes,omitempty"`
-	SubjectORegexes        []string         `json:"subjectORegexes,omitempty"`
-	SubjectOURegexes       []string         `json:"subjectOURegexes,omitempty"`
-	SubjectSTRegexes       []string         `json:"subjectSTRegexes,omitempty"`
-	SubjectLRegexes        []string         `json:"subjectLRegexes,omitempty"`
-	SubjectCValues         []string         `json:"subjectCValues,omitempty"`
-	SANRegexes             []string         `json:"sanRegexes,omitempty"`
-	KeyTypes               []allowedKeyType `json:"keyTypes,omitempty"`
-	KeyReuse               bool             `json:"keyReuse,omitempty"`
-	RecommendedSettings    struct {
+	Priority                            int              `json:"priority"`
+	SystemGenerated                     bool             `json:"systemGenerated,omitempty"`
+	CreationDateString                  string           `json:"creationDate,omitempty"`
+	CreationDate                        time.Time        `json:"-"`
+	ModificationDateString              string           `json:"modificationDate"`
+	ModificationDate                    time.Time        `json:"-"`
+	Status                              string           `json:"status"`
+	Reason                              string           `json:"reason"`
+	SubjectCNRegexes                    []string         `json:"subjectCNRegexes,omitempty"`
+	SubjectORegexes                     []string         `json:"subjectORegexes,omitempty"`
+	SubjectOURegexes                    []string         `json:"subjectOURegexes,omitempty"`
+	SubjectSTRegexes                    []string         `json:"subjectSTRegexes,omitempty"`
+	SubjectLRegexes                     []string         `json:"subjectLRegexes,omitempty"`
+	SubjectCValues                      []string         `json:"subjectCValues,omitempty"`
+	SANRegexes                          []string         `json:"sanRegexes,omitempty"`
+	SanRfc822NameRegexes                []string         `json:"sanRfc822NameRegexes,omitempty"`
+	SanIpAddressRegexes                 []string         `json:"sanIpAddressRegexes,omitempty"`
+	SanUniformResourceIdentifierRegexes []string         `json:"sanUniformResourceIdentifierRegexes,omitempty"`
+	KeyTypes                            []allowedKeyType `json:"keyTypes,omitempty"`
+	KeyReuse                            bool             `json:"keyReuse,omitempty"`
+	RecommendedSettings                 struct {
 		SubjectOValue, SubjectOUValue,
 		SubjectSTValue, SubjectLValue,
 		SubjectCValue string
@@ -72,6 +75,7 @@ type CertificateTemplates struct {
 type allowedKeyType struct {
 	KeyType    keyType
 	KeyLengths []int
+	KeyCurves  []string `json:"keyCurves:omitempty"`
 }
 
 type keyType string

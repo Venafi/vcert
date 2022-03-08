@@ -28,6 +28,8 @@ import (
 	"fmt"
 	"github.com/Venafi/vcert/v4/pkg/policy"
 	"math/big"
+	"net"
+	"net/url"
 	"os"
 	"reflect"
 	"strconv"
@@ -807,8 +809,9 @@ func TestSearchCertificate(t *testing.T) {
 }
 
 func TestSetPolicy(t *testing.T) {
+	appName := test.RandAppName()
 
-	policyName := test.RandAppName() + "\\" + test.RandCitName()
+	policyName := appName + "\\" + test.RandCitName()
 	conn := getTestConnector(ctx.CloudZone)
 	conn.verbose = true
 
@@ -818,12 +821,235 @@ func TestSetPolicy(t *testing.T) {
 		t.Fatalf("%s", err)
 	}
 
-	ps := test.GetCloudPolicySpecification()
+	localPolicy := test.GetCloudPolicySpecification()
 
-	_, err = conn.SetPolicy(policyName, ps)
+	_, err = conn.SetPolicy(policyName, localPolicy)
 
 	if err != nil {
 		t.Fatalf("%s", err)
+	}
+
+	//now update policy.
+	t.Log("updating policy, modifying ps.Policy.Subject.OrgUnits = []string{\"DevOps\", \"QA\"}.")
+	localPolicy.Policy.Subject.OrgUnits = []string{"DevOps", "QA"}
+	policyName = appName + "\\" + test.RandCitName()
+	_, err = conn.SetPolicy(policyName, localPolicy)
+
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	ps, err := conn.GetPolicy(policyName)
+
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	//validate each attribute
+	//validate subject attributes
+
+	if ps == nil {
+		t.Fatalf("specified Policy wasn't found")
+	}
+
+	if ps.Policy.Domains != nil && localPolicy.Policy.Domains != nil {
+		valid := test.IsArrayStringEqual(localPolicy.Policy.Domains, ps.Policy.Domains)
+		if !valid {
+			t.Fatalf("specified domains are different, expected %+q but got %+q",localPolicy.Policy.Domains,  ps.Policy.Domains)
+		}
+	}
+
+	if *(ps.Policy.MaxValidDays) != *(localPolicy.Policy.MaxValidDays) {
+		t.Fatalf("specified validity period is different")
+	}
+
+	//validate cert authority
+	if ps.Policy.CertificateAuthority == nil || *(ps.Policy.CertificateAuthority) == "" {
+		t.Fatalf("venafi policy doesn't have a certificate authority")
+	}
+	if *(ps.Policy.CertificateAuthority) != *(localPolicy.Policy.CertificateAuthority) {
+		t.Fatalf("certificate authority value doesn't match, get: %s but expected: %s", *(ps.Policy.CertificateAuthority), *(localPolicy.Policy.CertificateAuthority))
+	}
+
+	if len(localPolicy.Policy.Subject.Orgs) > 0 {
+
+		valid := test.IsArrayStringEqual(localPolicy.Policy.Subject.Orgs, ps.Policy.Subject.Orgs)
+		if !valid {
+			t.Fatalf("specified policy orgs are different, expected %+q but got %+q", localPolicy.Policy.Subject.Orgs, ps.Policy.Subject.Orgs)
+		}
+
+	}
+
+	if len(localPolicy.Policy.Subject.OrgUnits)  > 0 {
+
+		valid := test.IsArrayStringEqual(localPolicy.Policy.Subject.OrgUnits, ps.Policy.Subject.OrgUnits)
+		if !valid {
+			t.Fatalf("specified policy orgs units are different, expected %+q but got %+q",localPolicy.Policy.Subject.OrgUnits, ps.Policy.Subject.OrgUnits)
+		}
+
+	}
+
+	if len(localPolicy.Policy.Subject.Localities) > 0{
+
+		valid := test.IsArrayStringEqual(localPolicy.Policy.Subject.Localities, ps.Policy.Subject.Localities)
+		if !valid {
+			t.Fatalf("specified policy localities are different, expected %+q but got %+q", localPolicy.Policy.Subject.Localities, ps.Policy.Subject.Localities)
+		}
+
+	}
+
+	if len(localPolicy.Policy.Subject.States) > 0 {
+
+		valid := test.IsArrayStringEqual(localPolicy.Policy.Subject.States, ps.Policy.Subject.States)
+		if !valid {
+			t.Fatalf("specified policy states are different, expected %+q, but got %+q", localPolicy.Policy.Subject.States, ps.Policy.Subject.States)
+		}
+
+	}
+
+	if len(localPolicy.Policy.Subject.Countries) > 0 {
+
+		valid := test.IsArrayStringEqual(localPolicy.Policy.Subject.Countries, ps.Policy.Subject.Countries)
+		if !valid {
+			t.Fatalf("specified policy countries are different, expected %+q but got %+q",  localPolicy.Policy.Subject.Countries, ps.Policy.Subject.Countries)
+		}
+
+	}
+
+	//validate key pair values.
+
+	if len(localPolicy.Policy.KeyPair.KeyTypes) > 0 {
+
+		valid := test.IsArrayStringEqual(localPolicy.Policy.KeyPair.KeyTypes, ps.Policy.KeyPair.KeyTypes)
+		if !valid {
+			t.Fatalf("specified policy key types are different, expected %+q but got %+q", localPolicy.Policy.KeyPair.KeyTypes, ps.Policy.KeyPair.KeyTypes)
+		}
+
+	}
+
+	if len(localPolicy.Policy.KeyPair.RsaKeySizes) > 0 {
+
+		valid := test.IsArrayIntEqual(localPolicy.Policy.KeyPair.RsaKeySizes, ps.Policy.KeyPair.RsaKeySizes)
+		if !valid {
+			t.Fatalf("specified policy rsa key sizes are different, expected %+q but got %+q",localPolicy.Policy.KeyPair.RsaKeySizes, ps.Policy.KeyPair.RsaKeySizes)
+		}
+
+	}
+
+	if localPolicy.Policy.KeyPair.ReuseAllowed != nil {
+
+		if ps.Policy.KeyPair.ReuseAllowed == nil {
+			t.Fatalf("specified policy rsa key sizes are not specified")
+		}
+
+		if *(ps.Policy.KeyPair.ReuseAllowed) != *(localPolicy.Policy.KeyPair.ReuseAllowed) {
+			t.Fatalf("specified policy rsa key sizes are different")
+		}
+
+	}
+
+	//validate default values.
+	if localPolicy.Default.Subject.Org != nil {
+		if ps.Default.Subject.Org == nil {
+			t.Fatalf("specified policy default org is not specified")
+		}
+		if *(ps.Default.Subject.Org) != *(localPolicy.Default.Subject.Org) {
+			t.Fatalf("specified policy default org is different")
+		}
+	}
+
+	if len(localPolicy.Default.Subject.OrgUnits) > 0 {
+
+		valid := test.IsArrayStringEqual(localPolicy.Default.Subject.OrgUnits, ps.Default.Subject.OrgUnits)
+
+		if !valid {
+			t.Fatalf("specified policy default org unit are different, expected %+q but got %+q",localPolicy.Default.Subject.OrgUnits, ps.Default.Subject.OrgUnits)
+		}
+
+	}
+
+	if localPolicy.Default.Subject.Locality != nil {
+		if ps.Default.Subject.Locality == nil {
+			t.Fatalf("specified policy default locality is not specified")
+		}
+		if *(ps.Default.Subject.Locality) != *(localPolicy.Default.Subject.Locality) {
+			t.Fatalf("specified policy default locality is different")
+		}
+	}
+
+	if localPolicy.Default.Subject.State != nil {
+		if ps.Default.Subject.State == nil {
+			t.Fatalf("specified policy default state is not specified")
+		}
+		if *(ps.Default.Subject.State) != *(localPolicy.Default.Subject.State) {
+			t.Fatalf("specified policy default state is different")
+		}
+	}
+
+	if localPolicy.Default.Subject.Country != nil {
+		if ps.Default.Subject.Country == nil {
+			t.Fatalf("policy default country is not specified")
+		}
+		if *(ps.Default.Subject.Country) != *(localPolicy.Default.Subject.Country) {
+			t.Fatalf("specified policy default country is different")
+		}
+	}
+
+	if localPolicy.Default.KeyPair.KeyType != nil {
+		if ps.Default.KeyPair.KeyType == nil {
+			t.Fatalf("policy default key type is not specified ")
+		}
+		if *(ps.Default.KeyPair.KeyType) != *(localPolicy.Default.KeyPair.KeyType) {
+			t.Fatalf("specified policy default key type is different")
+		}
+	}
+
+	if localPolicy.Default.KeyPair.RsaKeySize != nil {
+		if ps.Default.KeyPair.RsaKeySize == nil {
+			t.Fatalf("policy default rsa key size is not specified")
+		}
+		if *(ps.Default.KeyPair.RsaKeySize) != *(localPolicy.Default.KeyPair.RsaKeySize) {
+			t.Fatalf("specified policy default rsa key size is different")
+		}
+	}
+
+	//validate SAN values.
+	if *(localPolicy.Policy.SubjectAltNames.UriAllowed) != *(ps.Policy.SubjectAltNames.UriAllowed) {
+		t.Fatalf("uriAllowed value is different, expected: %v but got %v",
+			*(localPolicy.Policy.SubjectAltNames.UriAllowed),
+			*(ps.Policy.SubjectAltNames.UriAllowed))
+	}
+
+	if *(localPolicy.Policy.SubjectAltNames.EmailAllowed) != *(ps.Policy.SubjectAltNames.EmailAllowed) {
+		t.Fatalf("uriAllowed value is different, expected: %v but got %v",
+			*(localPolicy.Policy.SubjectAltNames.EmailAllowed),
+			*(ps.Policy.SubjectAltNames.EmailAllowed))
+	}
+
+	if *(localPolicy.Policy.SubjectAltNames.IpAllowed) != *(ps.Policy.SubjectAltNames.IpAllowed) {
+		t.Fatalf("uriAllowed value is different, expected: %v but got %v",
+			*(localPolicy.Policy.SubjectAltNames.IpAllowed),
+			*(ps.Policy.SubjectAltNames.IpAllowed))
+	}
+
+	if len(localPolicy.Policy.SubjectAltNames.UriProtocols) > 0 {
+		if len(ps.Policy.SubjectAltNames.UriProtocols) == 0{
+			t.Fatal("got 0 elements on uriProtocols ")
+		}
+		valid := test.IsArrayStringEqual(localPolicy.Policy.SubjectAltNames.UriProtocols, ps.Policy.SubjectAltNames.UriProtocols)
+		if !valid {
+			t.Fatalf("uri protocols are different, expected %+q but get %+q", localPolicy.Policy.SubjectAltNames.UriProtocols,  ps.Policy.SubjectAltNames.UriProtocols)
+		}
+	}
+
+	if len(localPolicy.Policy.SubjectAltNames.IpConstraints) > 0 {
+		if len(ps.Policy.SubjectAltNames.IpConstraints) == 0{
+			t.Fatal("got 0 elements on ipConstrains ")
+		}
+		valid := test.IsArrayStringEqual(localPolicy.Policy.SubjectAltNames.IpConstraints, ps.Policy.SubjectAltNames.IpConstraints)
+		if !valid {
+			t.Fatalf("ip constrains are different, expected %+q but get %+q", localPolicy.Policy.SubjectAltNames.IpConstraints,  ps.Policy.SubjectAltNames.IpConstraints)
+		}
 	}
 
 }
@@ -1308,8 +1534,8 @@ func TestSetPolicyDigicert(t *testing.T) {
 }
 
 func TestCreateCertServiceCSR(t *testing.T) {
-	t.Skip("it will enabled on the future")
-	conn := getTestConnector("App Alfa\\Amoo")
+	policyName := os.Getenv("CLOUD_ZONE_RESTRICTED")
+	conn := getTestConnector(policyName)
 	conn.verbose = true
 	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
 	if err != nil {
@@ -1318,13 +1544,7 @@ func TestCreateCertServiceCSR(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-	req := certificate.Request{}
-	req.Subject.CommonName = test.RandCN()
-	req.Subject.Organization = []string{"Venafi, Inc."}
-	req.Subject.OrganizationalUnit = []string{"Automated Tests"}
-	req.Subject.Locality = []string{"Salt Lake City"}
-	req.Subject.Province = []string{"Utah"}
-	req.Subject.Country = []string{"US"}
+	req := getBasicRequest()
 	req.DNSNames = []string{req.Subject.CommonName}
 
 	req.CsrOrigin = certificate.ServiceGeneratedCSR
@@ -1418,21 +1638,13 @@ func TestGetCsrAttributes(t *testing.T) {
 	policyName := os.Getenv("CLOUD_ZONE_RESTRICTED")
 	conn := getTestConnector(policyName)
 	conn.verbose = true
-	req := &certificate.Request{}
-	req.Subject.CommonName = "test.vfidev.com"
-	req.Subject.Organization = []string{"Venafi Inc."}
-	req.Subject.OrganizationalUnit = []string{"Integrations"}
-	req.Subject.Locality = []string{"Salt Lake City"}
-	req.Subject.Province = []string{"Utah"}
-	req.Subject.Country = []string{"US"}
-	req.DNSNames = []string{req.Subject.CommonName}
-
+	req := getBasicRequest()
 	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
 
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-	attributes, err := getCsrAttributes(conn, req)
+	attributes, err := getCsrAttributes(conn, &req)
 
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -1441,4 +1653,100 @@ func TestGetCsrAttributes(t *testing.T) {
 	if attributes == nil {
 		t.Fatal("attributes are nil")
 	}
+}
+
+func TestCertificateSanTypes(t *testing.T) {
+
+	ip := net.ParseIP("127.0.0.1")
+	policyName := os.Getenv("CLOUD_ZONE_RESTRICTED")
+	conn := getTestConnector(policyName)
+	conn.verbose = true
+	req := getBasicRequest()
+
+	//email sans
+	req.EmailAddresses = []string{fmt.Sprint("test@", req.Subject.CommonName)}
+
+	//ip sans˘
+	req.IPAddresses = []net.IP{ip}
+
+	//uri sans
+	uri, _ := url.Parse(fmt.Sprint("https://", req.Subject.CommonName))
+	req.URIs = []*url.URL{uri}
+
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	attributes, err := getCsrAttributes(conn, &req)
+
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	if attributes == nil {
+		t.Fatal("attributes are nil")
+	}
+}
+
+func TestVerifyCSRServiceGenerated(t *testing.T) {
+	policyName := os.Getenv("CLOUD_ZONE_RESTRICTED")
+
+	conn := getTestConnector(policyName)
+	conn.verbose = true
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	req := getBasicRequest()
+
+	req.CsrOrigin = certificate.ServiceGeneratedCSR
+
+	id, err := conn.RequestCertificate(&req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	req.PickupID = id
+	req.ChainOption = certificate.ChainOptionRootFirst
+	req.KeyPassword = "abcede"
+	req.Timeout = time.Duration(180) * time.Second
+
+	isCSRService, err := conn.IsCSRServiceGenerated(&req)
+
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	if !isCSRService {
+		t.Fatal("Requested certificate should be CSR service generated")
+	}
+
+}
+
+func TestGetType(t *testing.T) {
+	policyName := os.Getenv("CLOUD_ZONE_RESTRICTED")
+
+	conn := getTestConnector(policyName)
+
+	if endpoint.ConnectorTypeCloud != conn.GetType() {
+		t.Fatalf("expected: %s but get %s", endpoint.ConnectorTypeCloud.String(), conn.GetType().String())
+	}
+
+}
+
+func getBasicRequest() certificate.Request {
+
+	req := certificate.Request{}
+	req.Subject.CommonName = test.RandSpecificCN("test.vfidev.com")
+	req.Subject.Organization = []string{"Venafi Inc."}
+	req.Subject.OrganizationalUnit = []string{"Integrations"}
+	req.Subject.Locality = []string{"Salt Lake"}
+	req.Subject.Province = []string{"Utah"}
+	req.Subject.Country = []string{"US"}
+	req.DNSNames = []string{req.Subject.CommonName}
+
+	return req
 }

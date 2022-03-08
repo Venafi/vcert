@@ -726,13 +726,6 @@ func ValidateCloudPolicySpecification(ps *PolicySpecification) error {
 	//validate key type
 	if ps.Policy != nil {
 		if ps.Policy.KeyPair != nil {
-			if len(ps.Policy.KeyPair.KeyTypes) > 1 {
-				return fmt.Errorf("attribute keyTypes has more than one value")
-			}
-
-			if ps.Policy.KeyPair.KeyTypes[0] != "RSA" {
-				return fmt.Errorf("specified attribute keyTypes value is not supported on Venafi cloud")
-			}
 
 			//validate key KeyTypes:keyLengths
 			if len(ps.Policy.KeyPair.RsaKeySizes) > 0 {
@@ -748,8 +741,13 @@ func ValidateCloudPolicySpecification(ps *PolicySpecification) error {
 			subjectAltNames := getSubjectAltNames(*(ps.Policy.SubjectAltNames))
 			if len(subjectAltNames) > 0 {
 				for k, v := range subjectAltNames {
-					if k != "dnsAllowed" && v {
+					if k == "upnAllowed" && v {
 						return fmt.Errorf("specified subjectAltNames: %s value is true, this value is not allowed ", k)
+					}
+					if k == "uriAllowed" && v {
+						if len(ps.Policy.SubjectAltNames.UriProtocols) == 0 {
+							return fmt.Errorf("uriAllowed attribute is true, but uriProtocols is not specified or empty")
+						}
 					}
 				}
 			}
@@ -943,9 +941,60 @@ func BuildCloudCitRequest(ps *PolicySpecification, ca *CADetails) (*CloudPolicyR
 		} else {
 			cloudPolicyRequest.SanRegexes = regexValues //in cloud subject CN and SAN have the same values and we use domains as those values
 		}
+
+		if ps.Policy.SubjectAltNames != nil && ps.Policy.SubjectAltNames.EmailAllowed != nil {
+			if *(ps.Policy.SubjectAltNames.EmailAllowed) {
+				rfc882Regex := ConvertToRfc822Regex(ps.Policy.Domains)
+				cloudPolicyRequest.SanRfc822NameRegexes = rfc882Regex
+			} else {
+				cloudPolicyRequest.SanRfc822NameRegexes = nil
+			}
+		}
+
+		if ps.Policy != nil && ps.Policy.SubjectAltNames != nil && len(ps.Policy.SubjectAltNames.UriProtocols) > 0 {
+			uriRegex := convertToUriRegex(ps.Policy.SubjectAltNames.UriProtocols, ps.Policy.Domains)
+			cloudPolicyRequest.SanUniformResourceIdentifierRegexes = uriRegex
+		}
+
 	} else {
 		cloudPolicyRequest.SubjectCNRegexes = []string{".*"}
 		cloudPolicyRequest.SanRegexes = []string{".*"}
+
+		if ps.Policy != nil {
+			if ps.Policy.SubjectAltNames != nil && ps.Policy.SubjectAltNames.EmailAllowed != nil {
+				if *(ps.Policy.SubjectAltNames.EmailAllowed) {
+					cloudPolicyRequest.SanRfc822NameRegexes = []string{".*@.*"}
+				}
+			}
+
+			if ps.Policy.SubjectAltNames != nil && ps.Policy.SubjectAltNames.IpAllowed != nil {
+				if *(ps.Policy.SubjectAltNames.IpAllowed) {
+					cloudPolicyRequest.SanIpAddressRegexes = []string{}
+				}
+			}
+
+			//to be implemented.
+			if ps.Policy != nil && ps.Policy.SubjectAltNames != nil && len(ps.Policy.SubjectAltNames.UriProtocols) > 0 {
+				uriRegex := convertToUriRegex(ps.Policy.SubjectAltNames.UriProtocols, []string{".*"})
+				cloudPolicyRequest.SanUniformResourceIdentifierRegexes = uriRegex
+			}
+
+		}
+	}
+
+	if ps.Policy != nil && ps.Policy.SubjectAltNames != nil && ps.Policy.SubjectAltNames.IpAllowed != nil {
+		if *(ps.Policy.SubjectAltNames.IpAllowed) {
+			if len(ps.Policy.SubjectAltNames.IpConstraints) > 0 {
+				cloudPolicyRequest.SanIpAddressRegexes = getIpRegexes(ps.Policy.SubjectAltNames.IpConstraints)
+			} else {
+				cloudPolicyRequest.SanIpAddressRegexes = []string{
+					ipv4, ipv6,
+				}
+			}
+
+		} else {
+			cloudPolicyRequest.SanIpAddressRegexes = nil
+		}
 	}
 
 	if ps.Policy != nil && ps.Policy.Subject != nil && len(ps.Policy.Subject.Orgs) > 0 {
@@ -978,28 +1027,60 @@ func BuildCloudCitRequest(ps *PolicySpecification, ca *CADetails) (*CloudPolicyR
 		cloudPolicyRequest.SubjectCValues = []string{".*"}
 	}
 
-	var keyTypes KeyTypes
+	var keyType *KeyType
+	var ecKeyType *KeyType
 	if ps.Policy != nil && ps.Policy.KeyPair != nil && len(ps.Policy.KeyPair.KeyTypes) > 0 {
-		keyTypes.KeyType = ps.Policy.KeyPair.KeyTypes[0]
-	} else {
-		keyTypes.KeyType = "RSA"
-	}
-
-	if ps.Policy != nil && ps.Policy.KeyPair != nil && len(ps.Policy.KeyPair.RsaKeySizes) > 0 {
-		keyTypes.KeyLengths = ps.Policy.KeyPair.RsaKeySizes
-	} else {
-		// on this case we need to look if there is a default if so then we can use it.
-		if ps.Default != nil && ps.Default.KeyPair != nil && ps.Default.KeyPair.RsaKeySize != nil {
-			keyTypes.KeyLengths = []int{*(ps.Default.KeyPair.RsaKeySize)}
-		} else {
-			keyTypes.KeyLengths = []int{2048}
+		for _, val := range ps.Policy.KeyPair.KeyTypes {
+			if val == "RSA" {
+				keyType = &KeyType{}
+				keyType.KeyType = val
+			} else if val == "EC" {
+				ecKeyType = &KeyType{}
+				ecKeyType.KeyType = val
+			}
 		}
 
+	} else {
+		keyType = &KeyType{}
+		keyType.KeyType = "RSA"
 	}
 
-	var keyTypesArr []KeyTypes
+	if keyType != nil {
+		if ps.Policy != nil && ps.Policy.KeyPair != nil && len(ps.Policy.KeyPair.RsaKeySizes) > 0 {
+			keyType.KeyLengths = ps.Policy.KeyPair.RsaKeySizes
+		} else {
+			// on this case we need to look if there is a default if so then we can use it.
+			if ps.Default != nil && ps.Default.KeyPair != nil && ps.Default.KeyPair.RsaKeySize != nil {
+				keyType.KeyLengths = []int{*(ps.Default.KeyPair.RsaKeySize)}
+			} else {
+				keyType.KeyLengths = []int{2048}
+			}
 
-	keyTypesArr = append(keyTypesArr, keyTypes)
+		}
+	}
+
+	if ecKeyType != nil {
+		if ps.Policy != nil && ps.Policy.KeyPair != nil && len(ps.Policy.KeyPair.EllipticCurves) > 0 {
+			ecKeyType.KeyCurves = ps.Policy.KeyPair.EllipticCurves
+		} else {
+			// on this case we need to look if there is a default if so then we can use it.
+			if ps.Default != nil && ps.Default.KeyPair != nil && ps.Default.KeyPair.EllipticCurve != nil {
+				ecKeyType.KeyCurves = []string{*(ps.Default.KeyPair.EllipticCurve)}
+			} else {
+				ecKeyType.KeyCurves = []string{"P256"}
+			}
+		}
+	}
+
+	var keyTypesArr []KeyType
+
+	if keyType != nil {
+		keyTypesArr = append(keyTypesArr, *(keyType))
+	}
+
+	if ecKeyType != nil {
+		keyTypesArr = append(keyTypesArr, *(ecKeyType))
+	}
 
 	if len(keyTypesArr) > 0 {
 		cloudPolicyRequest.KeyTypes = keyTypesArr
@@ -1100,6 +1181,71 @@ func ConvertToRegex(values []string, wildcardAllowed bool) []string {
 	return nil
 }
 
+func getIpRegexes(supportedIps []string) (ipRegexes []string) {
+
+	ipRegexes = make([]string, 0)
+
+	for _, val := range supportedIps {
+
+		if val == "v4" {
+			ipRegexes = append(ipRegexes, ipv4)
+		}
+		if val == "v6" {
+			ipRegexes = append(ipRegexes, ipv6)
+
+		}
+		if val == "v4private" {
+			ipRegexes = append(ipRegexes, v4private)
+
+		}
+		if val == "v6private" {
+			ipRegexes = append(ipRegexes, v6private)
+
+		}
+	}
+
+	return ipRegexes
+}
+
+func ConvertToRfc822Regex(values []string) []string {
+	var regexVals []string
+	for _, current := range values {
+
+		currentRegex := strings.ReplaceAll(current, ".", "\\.")
+		currentRegex = fmt.Sprint(".*@", currentRegex)
+
+		regexVals = append(regexVals, currentRegex)
+	}
+
+	if len(regexVals) > 0 {
+		return regexVals
+	}
+
+	return nil
+}
+
+func convertToUriRegex(protocols, domains []string) []string {
+
+	var regexVals []string
+
+	protocolsS := strings.Join(protocols, "|")
+	protocolsS = fmt.Sprint("(", protocolsS, ")://.*\\.")
+
+	for _, current := range domains {
+
+		currentRegex := strings.ReplaceAll(current, ".", "\\.")
+		currentRegex = fmt.Sprint(protocolsS, currentRegex)
+
+		regexVals = append(regexVals, currentRegex)
+	}
+
+	if len(regexVals) > 0 {
+		return regexVals
+	}
+
+	return nil
+}
+
 func RemoveRegex(values []string) []string {
 	var regexVals []string
 	for _, current := range values {
@@ -1189,6 +1335,14 @@ func IsPolicyEmpty(ps *PolicySpecification) bool {
 		}
 
 		if san.UpnAllowed != nil {
+			return false
+		}
+
+		if len(san.IpConstraints) > 0 {
+			return false
+		}
+
+		if len(san.UriProtocols) > 0 {
 			return false
 		}
 	}
@@ -1371,11 +1525,13 @@ func GetPolicySpec() *PolicySpecification {
 				EllipticCurves:   []string{""},
 			},
 			SubjectAltNames: &SubjectAltNames{
-				DnsAllowed:   &falseBool,
-				IpAllowed:    &falseBool,
-				EmailAllowed: &falseBool,
-				UriAllowed:   &falseBool,
-				UpnAllowed:   &falseBool,
+				DnsAllowed:    &falseBool,
+				IpAllowed:     &falseBool,
+				EmailAllowed:  &falseBool,
+				UriAllowed:    &falseBool,
+				UpnAllowed:    &falseBool,
+				UriProtocols:  []string{""},
+				IpConstraints: []string{""},
 			},
 		},
 		Default: &Default{
