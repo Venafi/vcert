@@ -720,7 +720,13 @@ func buildPolicySpecification(cit *certificateTemplate, info *policy.Certificate
 		}
 		shouldCreateKeyPair = true
 		keyPair.KeyTypes = keyTypes
-		keyPair.RsaKeySizes = keySizes
+		if len(keySizes) > 0 {
+			keyPair.RsaKeySizes = keySizes
+		}
+
+		if len(ellipticCurves) > 0 {
+			keyPair.EllipticCurves = ellipticCurves
+		}
 	}
 
 	if cit.KeyGeneratedByVenafiAllowed && cit.CsrUploadAllowed {
