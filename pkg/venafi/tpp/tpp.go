@@ -198,6 +198,7 @@ type OauthGetRefreshTokenResponse struct {
 	Expires       int    `json:"expires,omitempty"`
 	Identity      string `json:"identity,omitempty"`
 	Refresh_token string `json:"refresh_token,omitempty"`
+	Refresh_until int    `json:"refresh_until,omitempty"`
 	Scope         string `json:"scope,omitempty"`
 	Token_type    string `json:"token_type,omitempty"`
 }
@@ -217,6 +218,7 @@ type OauthRefreshAccessTokenResponse struct {
 	Expires       int    `json:"expires,omitempty"`
 	Identity      string `json:"identity,omitempty"`
 	Refresh_token string `json:"refresh_token,omitempty"`
+	Refresh_until int    `json:"refresh_until,omitempty"`
 	Token_type    string `json:"token_type,omitempty"`
 }
 
