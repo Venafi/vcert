@@ -11,22 +11,26 @@ Feature: Managing credentials tokens from TPP
     And I remember the output
       And it should output access token
       And it should output refresh token
+      And it should output refresh_until
     Then I refresh access token
       And I remember the output
       And it should output access token
       And it should output refresh token
+      And it should output refresh_until
 
   Scenario: request refresh token in json format
     When I get credentials from TPP with -format json
       And I remember the output
       And it should output access token in JSON
       And it should output refresh token in JSON
+      And it should output refresh_until in JSON
 
   Scenario: request with PKCS12 if possible
     When I get credentials from TPP with PKSC12
     And I remember the output
       And it should output access token
       And it should output refresh token
+      And it should output refresh_until
 
   Scenario: request with PKCS12 if possible with no password
     When I interactively get credentials from TPP with PKSC12 and no password
@@ -34,12 +38,14 @@ Feature: Managing credentials tokens from TPP
     And I remember the output
       And it should output access token
       And it should output refresh token
+      And it should output refresh_until
 
   Scenario: request refresh token and refresh access token with username and no password
     When I interactively get credentials from TPP with username and no password
     And I remember the output
       And it should output access token
       And it should output refresh token
+      And it should output refresh_until
 
   Scenario: check access token
     When I get credentials from TPP
