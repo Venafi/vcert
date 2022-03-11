@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Venafi/vcert/v4/pkg/certificate"
+	"github.com/Venafi/vcert/v4/pkg/util"
 	"net/http"
 	"regexp"
 )
@@ -206,13 +207,23 @@ func getCsrAttributes(c *Connector, req *certificate.Request) (*CsrAttributes, e
 	keyTypeParam := &KeyTypeParameters{}
 	if req.KeyType == certificate.KeyTypeRSA {
 		keyTypeParam.KeyType = "RSA"
-		keyTypeParam.KeyLength = &req.KeyLength
+		if req.KeyLength > 0 {
+			keyTypeParam.KeyLength = &req.KeyLength
+		} else {
+			keyTypeParam.KeyLength = util.GetIntRef(2048)
+		}
 	} else if req.KeyType == certificate.KeyTypeECDSA {
 		keyTypeParam.KeyType = "EC"
-		keyCurve := req.KeyCurve.String()
-		keyTypeParam.KeyCurve = &keyCurve
+		if req.KeyCurve.String() != "" {
+			keyCurve := req.KeyCurve.String()
+			keyTypeParam.KeyCurve = &keyCurve
+		} else {
+			defaultCurve := certificate.EllipticCurveDefault
+			defaultCurveStr := defaultCurve.String()
+			keyTypeParam.KeyCurve = &defaultCurveStr
+		}
 	}
-	//csrAttr.KeyTypeParameters = keyTypeParam
+	csrAttr.KeyTypeParameters = keyTypeParam
 
 	return &csrAttr, nil
 }

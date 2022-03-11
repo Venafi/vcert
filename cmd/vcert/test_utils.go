@@ -29,19 +29,10 @@ func unsetEnvironmentVariables() {
 	os.Unsetenv(vCertTrustBundle)
 }
 
-func getCliContext() *cli.Context {
+func getCliContext(command string) *cli.Context {
 	context := &cli.Context{
 		Command: &cli.Command{
-			Name: "getCred",
-		},
-	}
-	return context
-}
-
-func getCliEnrollContext() *cli.Context {
-	context := &cli.Context{
-		Command: &cli.Command{
-			Name: "enroll",
+			Name: command,
 		},
 	}
 	return context

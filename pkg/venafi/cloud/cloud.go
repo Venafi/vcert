@@ -106,9 +106,9 @@ type CsrAttributes struct {
 }
 
 type KeyTypeParameters struct {
-	KeyType   string  `json:"keyType"`
-	KeyLength *int    `json:"keyLength"`
-	KeyCurve  *string `json:"keyCurve"`
+	KeyType   string  `json:"keyType,omitempty"`
+	KeyLength *int    `json:"keyLength,omitempty"`
+	KeyCurve  *string `json:"keyCurve,omitempty"`
 }
 
 type SubjectAlternativeNamesByType struct {
@@ -713,7 +713,7 @@ func buildPolicySpecification(cit *certificateTemplate, info *policy.Certificate
 				keySizes = append(keySizes, keyLengths...)
 			}
 
-			if len(keyLengths) > 0 {
+			if len(ecKeys) > 0 {
 				ellipticCurves = append(ellipticCurves, ecKeys...)
 			}
 

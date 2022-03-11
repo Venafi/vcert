@@ -107,6 +107,9 @@ func (o *Output) AsPKCS12(c *Config) ([]byte, error) {
 	switch p.Type {
 	case "EC PRIVATE KEY":
 		privKey, err = x509.ParseECPrivateKey(privDER)
+		if err != nil {
+			privKey, err = x509.ParsePKCS8PrivateKey(privDER)
+		}
 	case "RSA PRIVATE KEY":
 		privKey, err = x509.ParsePKCS1PrivateKey(privDER)
 		if err != nil {
@@ -184,6 +187,9 @@ func (o *Output) AsJKS(c *Config) ([]byte, error) {
 	switch p.Type {
 	case "EC PRIVATE KEY":
 		privKey, err = x509.ParseECPrivateKey(privDER)
+		if err != nil {
+			privKey, err = x509.ParsePKCS8PrivateKey(privDER)
+		}
 	case "RSA PRIVATE KEY":
 		privKey, err = x509.ParsePKCS1PrivateKey(privDER)
 		if err != nil {

@@ -75,7 +75,7 @@ type CertificateTemplates struct {
 type allowedKeyType struct {
 	KeyType    keyType
 	KeyLengths []int
-	KeyCurves  []string `json:"keyCurves:omitempty"`
+	KeyCurves  []string `json:"keyCurves,omitempty"`
 }
 
 type keyType string

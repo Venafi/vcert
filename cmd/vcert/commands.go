@@ -352,7 +352,7 @@ func doCommandEnroll1(c *cli.Context) error {
 		}
 	}
 
-	if (pcc.PrivateKey != "" && req.KeyType == certificate.KeyTypeRSA && (flags.format == Pkcs12 || flags.format == JKSFormat)) || (flags.format == util.LegacyPem && flags.csrOption == "service") || flags.noPrompt && wasPasswordEmpty && (req.KeyType == certificate.KeyTypeRSA) {
+	if (pcc.PrivateKey != "" && (flags.format == Pkcs12 || flags.format == JKSFormat)) || (flags.format == util.LegacyPem && flags.csrOption == "service") || flags.noPrompt && wasPasswordEmpty {
 		privKey, err := util.DecryptPkcs8PrivateKey(pcc.PrivateKey, flags.keyPassword)
 		if err != nil {
 			if err.Error() == "pkcs8: only PBES2 supported" && connector.GetType() == endpoint.ConnectorTypeTPP {
