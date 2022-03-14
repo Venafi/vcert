@@ -731,7 +731,7 @@ func ValidateCloudPolicySpecification(ps *PolicySpecification) error {
 			if len(ps.Policy.KeyPair.RsaKeySizes) > 0 {
 				unSupported := getInvalidCloudRsaKeySizeValue(ps.Policy.KeyPair.RsaKeySizes)
 				if unSupported != nil {
-					return fmt.Errorf("specified attribute key lenght value: %s is not supported on Venafi cloud", strconv.Itoa(*(unSupported)))
+					return fmt.Errorf("specified attribute key length value: %s is not supported on VaaS", strconv.Itoa(*(unSupported)))
 				}
 			}
 		}
@@ -813,7 +813,7 @@ func ValidateCloudPolicySpecification(ps *PolicySpecification) error {
 
 		if ps.Default.KeyPair.KeyType != nil && *(ps.Default.KeyPair.KeyType) != "" {
 			if *(ps.Default.KeyPair.KeyType) != "RSA" {
-				return fmt.Errorf("specified default attribute keyType value is not supported on Venafi cloud")
+				return fmt.Errorf("specified default attribute keyType value is not supported on VaaS")
 			}
 		}
 
@@ -821,7 +821,7 @@ func ValidateCloudPolicySpecification(ps *PolicySpecification) error {
 		if ps.Default.KeyPair.RsaKeySize != nil && *(ps.Default.KeyPair.RsaKeySize) != 0 {
 			unSupported := getInvalidCloudRsaKeySizeValue([]int{*(ps.Default.KeyPair.RsaKeySize)})
 			if unSupported != nil {
-				return fmt.Errorf("specified attribute key lenght value: %s is not supported on Venafi cloud", strconv.Itoa(*(unSupported)))
+				return fmt.Errorf("specified attribute key length value: %s is not supported on VaaS", strconv.Itoa(*(unSupported)))
 			}
 		}
 	}
