@@ -613,11 +613,19 @@ func GetPrivateKeyPEMBock(key crypto.Signer, format ...string) (*pem.Block, erro
 			return &pem.Block{Type: "PRIVATE KEY", Bytes: dataBytes}, err
 		}
 	case *ecdsa.PrivateKey:
-		b, err := x509.MarshalECPrivateKey(k)
-		if err != nil {
-			return nil, err
+		if currentFormat == "legacy-pem" {
+			b, err := x509.MarshalECPrivateKey(k)
+			if err != nil {
+				return nil, err
+			}
+			return &pem.Block{Type: "EC PRIVATE KEY", Bytes: b}, nil
+		} else {
+			dataBytes, err := pkcs8.MarshalPrivateKey(key.(*ecdsa.PrivateKey), nil, nil)
+			if err != nil {
+				return nil, err
+			}
+			return &pem.Block{Type: "PRIVATE KEY", Bytes: dataBytes}, err
 		}
-		return &pem.Block{Type: "EC PRIVATE KEY", Bytes: b}, nil
 	default:
 		return nil, fmt.Errorf("%w: unable to format Key", verror.VcertError)
 	}
@@ -641,11 +649,19 @@ func GetEncryptedPrivateKeyPEMBock(key crypto.Signer, password []byte, format ..
 			return &pem.Block{Type: "ENCRYPTED PRIVATE KEY", Bytes: dataBytes}, err
 		}
 	case *ecdsa.PrivateKey:
-		b, err := x509.MarshalECPrivateKey(k)
-		if err != nil {
-			return nil, err
+		if currentFormat == "legacy-pem" {
+			b, err := x509.MarshalECPrivateKey(k)
+			if err != nil {
+				return nil, err
+			}
+			return util.X509EncryptPEMBlock(rand.Reader, "EC PRIVATE KEY", b, password, util.PEMCipherAES256)
+		} else {
+			dataBytes, err := pkcs8.MarshalPrivateKey(key.(*ecdsa.PrivateKey), password, nil)
+			if err != nil {
+				return nil, err
+			}
+			return &pem.Block{Type: "ENCRYPTED PRIVATE KEY", Bytes: dataBytes}, err
 		}
-		return util.X509EncryptPEMBlock(rand.Reader, "EC PRIVATE KEY", b, password, util.PEMCipherAES256)
 	default:
 		return nil, fmt.Errorf("%w: unable to format Key", verror.VcertError)
 	}

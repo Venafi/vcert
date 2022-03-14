@@ -444,12 +444,18 @@ func (z *ZoneConfiguration) UpdateCertificateRequest(request *certificate.Reques
 	}
 
 	if z.KeyConfiguration != nil {
-		request.KeyType = z.KeyConfiguration.KeyType
-		if len(z.KeyConfiguration.KeySizes) != 0 && request.KeyLength == 0 {
-			request.KeyLength = z.KeyConfiguration.KeySizes[0]
+		if request.KeyType.String() == "" {
+			request.KeyType = z.KeyConfiguration.KeyType
 		}
-		if len(z.KeyConfiguration.KeyCurves) != 0 && request.KeyCurve == certificate.EllipticCurveNotSet {
-			request.KeyCurve = z.KeyConfiguration.KeyCurves[0]
+		if request.KeyType == certificate.KeyTypeRSA {
+			if len(z.KeyConfiguration.KeySizes) != 0 && request.KeyLength == 0 {
+				request.KeyLength = z.KeyConfiguration.KeySizes[0]
+			}
+		}
+		if request.KeyType == certificate.KeyTypeECDSA {
+			if len(z.KeyConfiguration.KeyCurves) != 0 && request.KeyCurve == certificate.EllipticCurveNotSet {
+				request.KeyCurve = z.KeyConfiguration.KeyCurves[0]
+			}
 		}
 	} else {
 		// Zone config has no key length parameters, so we just pass user's -key-size or fall to default 2048

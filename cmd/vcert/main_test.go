@@ -855,7 +855,7 @@ func TestConfigEnvironmentVariablesForTpp(t *testing.T) {
 	setEnvironmentVariablesForTpp()
 
 	//create a context, this will be used on the build config function.
-	context := getCliContext()
+	context := getCliContext("getCred")
 
 	cfg, err := buildConfig(context, &flags)
 
@@ -885,7 +885,7 @@ func TestConfigEnvironmentVariablesForCloud(t *testing.T) {
 	setEnvironmentVariablesForCloud()
 
 	//create a context, this will be used on the build config function.
-	context := getCliContext()
+	context := getCliContext("getCred")
 
 	cfg, err := buildConfig(context, &flags)
 
@@ -927,7 +927,7 @@ func TestValidatePrecedenceForFlagsTpp(t *testing.T) {
 
 	setEnvironmentVariablesForTpp()
 
-	context := getCliContext()
+	context := getCliContext("getCred")
 	cfg, err := buildConfig(context, &flags)
 
 	//execute the validations.
@@ -960,7 +960,7 @@ func TestValidatePrecedenceForFlagsCloud(t *testing.T) {
 	setEnvironmentVariablesForCloud()
 
 	//create a context, this will be used on the build config function.
-	context := getCliContext()
+	context := getCliContext("getCred")
 
 	cfg, err := buildConfig(context, &flags)
 
@@ -1025,7 +1025,7 @@ func TestInvalidFileCSROptionFlagsTPP(t *testing.T) {
 
 func TestValidateValidDaysFlag(t *testing.T) {
 
-	context := getCliEnrollContext()
+	context := getCliContext("enroll")
 
 	flags.validDays = validDaysData
 
@@ -1040,7 +1040,7 @@ func TestValidateValidDaysFlag(t *testing.T) {
 
 func TestValidateValidDaysFlagWithInvalidValues(t *testing.T) {
 
-	context := getCliEnrollContext()
+	context := getCliContext("enroll")
 
 	flags.validDays = invalidDaysData
 
@@ -1055,7 +1055,7 @@ func TestValidateValidDaysFlagWithInvalidValues(t *testing.T) {
 
 func TestValidateEmptyCredentials(t *testing.T) {
 
-	context := getCliEnrollContext()
+	context := getCliContext("enroll")
 
 	flags.validDays = invalidDaysData
 	setEmptyCredentials()

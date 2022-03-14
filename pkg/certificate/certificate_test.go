@@ -354,11 +354,14 @@ func TestGetEncryptedPrivateKeyPEMBock(t *testing.T) {
 			t.Fatalf("GetPrivateKeyPEMBock returned nil for ECDSA key")
 		}
 
-		b, err := x509.DecryptPEMBlock(p, []byte("something"))
+		strPem := string(pem.EncodeToMemory(p))
+
+		decryptedKey, err := util.DecryptPkcs8PrivateKey(strPem, "something")
 		if err != nil {
 			t.Fatalf("Error: %s", err)
 		}
-		_, err = x509.ParseECPrivateKey(b)
+		p, _ = pem.Decode([]byte(decryptedKey))
+		_, err = x509.ParsePKCS8PrivateKey(p.Bytes)
 		if err != nil {
 			t.Fatalf("Error: %s", err)
 		}

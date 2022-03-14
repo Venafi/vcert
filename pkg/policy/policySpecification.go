@@ -37,11 +37,13 @@ type KeyPair struct {
 }
 
 type SubjectAltNames struct {
-	DnsAllowed   *bool `json:"dnsAllowed,omitempty" yaml:"dnsAllowed,omitempty"`
-	IpAllowed    *bool `json:"ipAllowed,omitempty" yaml:"ipAllowed,omitempty"`
-	EmailAllowed *bool `json:"emailAllowed,omitempty" yaml:"emailAllowed,omitempty"`
-	UriAllowed   *bool `json:"uriAllowed,omitempty" yaml:"uriAllowed,omitempty"`
-	UpnAllowed   *bool `json:"upnAllowed,omitempty" yaml:"upnAllowed,omitempty"`
+	DnsAllowed    *bool    `json:"dnsAllowed,omitempty" yaml:"dnsAllowed,omitempty"`
+	IpAllowed     *bool    `json:"ipAllowed,omitempty" yaml:"ipAllowed,omitempty"`
+	EmailAllowed  *bool    `json:"emailAllowed,omitempty" yaml:"emailAllowed,omitempty"`
+	UriAllowed    *bool    `json:"uriAllowed,omitempty" yaml:"uriAllowed,omitempty"`
+	UpnAllowed    *bool    `json:"upnAllowed,omitempty" yaml:"uriProtocols,omitempty"`
+	UriProtocols  []string `json:"uriProtocols,omitempty" yaml:"uriProtocols,omitempty"`
+	IpConstraints []string `json:"ipConstraints,omitempty" yaml:"uriProtocols,omitempty"`
 }
 
 type Default struct {

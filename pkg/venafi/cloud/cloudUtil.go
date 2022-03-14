@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Venafi/vcert/v4/pkg/certificate"
+	"github.com/Venafi/vcert/v4/pkg/util"
 	"net/http"
 	"regexp"
 )
@@ -176,12 +177,62 @@ func getCsrAttributes(c *Connector, req *certificate.Request) (*CsrAttributes, e
 	}
 
 	if len(req.DNSNames) > 0 {
-		sanByType := SubjectAlternativeNamesByType{}
+		sanByType := getSANByType(&csrAttr)
 		sanByType.DnsNames = req.DNSNames
-		csrAttr.SubjectAlternativeNamesByType = &sanByType
 	}
 
+	if len(req.IPAddresses) > 0 {
+		sArray := make([]string, 0)
+		for _, val := range req.IPAddresses {
+			sArray = append(sArray, val.String())
+		}
+		sanByType := getSANByType(&csrAttr)
+		sanByType.IpAddresses = sArray
+	}
+
+	if len(req.EmailAddresses) > 0 {
+		sanByType := getSANByType(&csrAttr)
+		sanByType.Rfc822Names = req.EmailAddresses
+	}
+
+	if len(req.URIs) > 0 {
+		sArray := make([]string, 0)
+		for _, val := range req.URIs {
+			sArray = append(sArray, val.String())
+		}
+		sanByType := getSANByType(&csrAttr)
+		sanByType.UniformResourceIdentifiers = sArray
+	}
+
+	keyTypeParam := &KeyTypeParameters{}
+	if req.KeyType == certificate.KeyTypeRSA {
+		keyTypeParam.KeyType = "RSA"
+		if req.KeyLength > 0 {
+			keyTypeParam.KeyLength = &req.KeyLength
+		} else {
+			keyTypeParam.KeyLength = util.GetIntRef(2048)
+		}
+	} else if req.KeyType == certificate.KeyTypeECDSA {
+		keyTypeParam.KeyType = "EC"
+		if req.KeyCurve.String() != "" {
+			keyCurve := req.KeyCurve.String()
+			keyTypeParam.KeyCurve = &keyCurve
+		} else {
+			defaultCurve := certificate.EllipticCurveDefault
+			defaultCurveStr := defaultCurve.String()
+			keyTypeParam.KeyCurve = &defaultCurveStr
+		}
+	}
+	csrAttr.KeyTypeParameters = keyTypeParam
+
 	return &csrAttr, nil
+}
+
+func getSANByType(csrAttributes *CsrAttributes) *SubjectAlternativeNamesByType {
+	if csrAttributes.SubjectAlternativeNamesByType == nil {
+		csrAttributes.SubjectAlternativeNamesByType = &SubjectAlternativeNamesByType{}
+	}
+	return csrAttributes.SubjectAlternativeNamesByType
 }
 
 //receives a string regex and a string to test

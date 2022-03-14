@@ -33,11 +33,13 @@
       "reuseAllowed": false
     },
     "subjectAltNames": {
-      "dnsAllowed": false,
-      "ipAllowed": false,
-      "emailAllowed": false,
-      "uriAllowed": false,
-      "upnAllowed": false
+      "dnsAllowed": true,
+      "ipAllowed": true,
+      "emailAllowed": true,
+      "uriAllowed": true,
+      "upnAllowed": false,
+      "uriProtocols": ["https","ldaps", "spiffe"],
+      "ipConstraints": [ "v4", "v6", "v4private", "v6private"]
     }
   },
   "defaults": {

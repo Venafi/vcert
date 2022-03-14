@@ -184,7 +184,6 @@ var (
 		Name: "san-uri",
 		Usage: "Use to specify a Uniform Resource Identifier (URI) Subject Alternative Name. " +
 			"This option can be repeated to specify more than one value like this: --san-uri https://www.abc.xyz --san-uri spiffe://node.abc.xyz etc.",
-		Hidden: true,
 	}
 
 	flagUPNSans = &cli.StringSliceFlag{

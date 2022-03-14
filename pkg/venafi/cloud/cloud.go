@@ -23,11 +23,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Venafi/vcert/v4/pkg/policy"
+	"github.com/Venafi/vcert/v4/pkg/util"
 	"io"
 	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -100,9 +102,20 @@ type CsrAttributes struct {
 	State                         *string                        `json:"state,omitempty"`
 	Country                       *string                        `json:"country,omitempty"`
 	SubjectAlternativeNamesByType *SubjectAlternativeNamesByType `json:"subjectAlternativeNamesByType,omitempty"`
+	KeyTypeParameters             *KeyTypeParameters             `json:"keyTypeParameters,omitempty"`
 }
+
+type KeyTypeParameters struct {
+	KeyType   string  `json:"keyType,omitempty"`
+	KeyLength *int    `json:"keyLength,omitempty"`
+	KeyCurve  *string `json:"keyCurve,omitempty"`
+}
+
 type SubjectAlternativeNamesByType struct {
-	DnsNames []string `json:"dnsNames,omitempty"`
+	DnsNames                   []string `json:"dnsNames,omitempty"`
+	IpAddresses                []string `json:"ipAddresses,omitempty"`
+	Rfc822Names                []string `json:"rfc822Names,omitempty"`
+	UniformResourceIdentifiers []string `json:"uniformResourceIdentifiers,omitempty"`
 }
 
 type KeyStoreRequest struct {
@@ -569,6 +582,15 @@ func createAppUpdateRequest(applicationDetails *ApplicationDetails, cit *certifi
 	return request
 }
 
+func getSAN(p *policy.Policy) *policy.SubjectAltNames {
+	if p == nil || p.SubjectAltNames == nil {
+		san := policy.SubjectAltNames{}
+		p.SubjectAltNames = &san
+		return &san
+	}
+	return p.SubjectAltNames
+}
+
 func buildPolicySpecification(cit *certificateTemplate, info *policy.CertificateAuthorityInfo, removeRegex bool) *policy.PolicySpecification {
 	if cit == nil {
 		return nil
@@ -590,10 +612,39 @@ func buildPolicySpecification(cit *certificateTemplate, info *policy.Certificate
 	pol.WildcardAllowed = &wildCard
 
 	if len(cit.SANRegexes) > 0 {
-		subjectAlt := policy.SubjectAltNames{}
-		trueVal := true
-		subjectAlt.DnsAllowed = &trueVal
-		pol.SubjectAltNames = &subjectAlt
+		subjectAlt := getSAN(&pol)
+		subjectAlt.DnsAllowed = util.GetBooleanRef(true)
+	}
+
+	if len(cit.SanRfc822NameRegexes) > 0 {
+		subjectAlt := getSAN(&pol)
+		subjectAlt.EmailAllowed = util.GetBooleanRef(true)
+	}
+
+	if len(cit.SanUniformResourceIdentifierRegexes) > 0 {
+		subjectAlt := getSAN(&pol)
+		protocols := make([]string, 0)
+		for _, val := range cit.SanUniformResourceIdentifierRegexes {
+			index := strings.Index(val, ")://")
+			subStr := val[1:index]
+			currProtocols := strings.Split(subStr, "|")
+			for _, currentProtocol := range currProtocols {
+				if len(protocols) == 0 {
+					protocols = append(protocols, currentProtocol)
+				} else {
+					if !contains(protocols, currentProtocol) {
+						protocols = append(protocols, currentProtocol)
+					}
+				}
+			}
+		}
+		subjectAlt.UriProtocols = protocols
+		subjectAlt.UriAllowed = util.GetBooleanRef(true)
+	}
+
+	if len(cit.SanIpAddressRegexes) > 0 {
+		subjectAlt := getSAN(&pol)
+		subjectAlt.IpAllowed = util.GetBooleanRef(true)
 	}
 
 	// ps.Policy.WildcardAllowed is pending.
@@ -649,19 +700,33 @@ func buildPolicySpecification(cit *certificateTemplate, info *policy.Certificate
 	if len(cit.KeyTypes) > 0 {
 		var keyTypes []string
 		var keySizes []int
+		var ellipticCurves []string
 
 		for _, allowedKT := range cit.KeyTypes {
 			keyType := string(allowedKT.KeyType)
 			keyLengths := allowedKT.KeyLengths
+			ecKeys := allowedKT.KeyCurves
 
 			keyTypes = append(keyTypes, keyType)
 
-			keySizes = append(keySizes, keyLengths...)
+			if len(keyLengths) > 0 {
+				keySizes = append(keySizes, keyLengths...)
+			}
+
+			if len(ecKeys) > 0 {
+				ellipticCurves = append(ellipticCurves, ecKeys...)
+			}
 
 		}
 		shouldCreateKeyPair = true
 		keyPair.KeyTypes = keyTypes
-		keyPair.RsaKeySizes = keySizes
+		if len(keySizes) > 0 {
+			keyPair.RsaKeySizes = keySizes
+		}
+
+		if len(ellipticCurves) > 0 {
+			keyPair.EllipticCurves = ellipticCurves
+		}
 	}
 
 	if cit.KeyGeneratedByVenafiAllowed && cit.CsrUploadAllowed {
@@ -739,6 +804,30 @@ func buildPolicySpecification(cit *certificateTemplate, info *policy.Certificate
 	}
 
 	return &ps
+}
+
+func contains(values []string, toSearch string) bool {
+	copiedValues := make([]string, len(values))
+	copy(copiedValues, values)
+	sort.Strings(copiedValues)
+
+	return binarySearch(copiedValues, toSearch) >= 0
+}
+
+func binarySearch(values []string, toSearch string) int {
+	len := len(values) - 1
+	min := 0
+	for min <= len {
+		mid := len - (len-min)/2
+		if strings.Compare(toSearch, values[mid]) > 0 {
+			min = mid + 1
+		} else if strings.Compare(toSearch, values[mid]) < 0 {
+			len = mid - 1
+		} else {
+			return mid
+		}
+	}
+	return -1
 }
 
 func parseCitResult(expectedStatusCode int, httpStatusCode int, httpStatus string, body []byte) (*certificateTemplate, error) {

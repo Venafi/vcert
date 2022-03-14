@@ -60,10 +60,47 @@ func EncryptPkcs1PrivateKey(privateKey, password string) (string, error) {
 
 	block, _ := pem.Decode([]byte(privateKey))
 
-	encrypted, err := X509EncryptPEMBlock(rand.Reader, "RSA PRIVATE KEY", block.Bytes, []byte(password), PEMCipherAES256)
-
-	if err != nil {
-		return "", nil
+	keyType := GetPrivateKeyType(privateKey, password)
+	var encrypted *pem.Block
+	var err error
+	if keyType == "RSA PRIVATE KEY" {
+		encrypted, err = X509EncryptPEMBlock(rand.Reader, "RSA PRIVATE KEY", block.Bytes, []byte(password), PEMCipherAES256)
+		if err != nil {
+			return "", nil
+		}
+	} else if keyType == "EC PRIVATE KEY" {
+		encrypted, err = X509EncryptPEMBlock(rand.Reader, "EC PRIVATE KEY", block.Bytes, []byte(password), PEMCipherAES256)
+		if err != nil {
+			return "", nil
+		}
 	}
 	return string(pem.EncodeToMemory(encrypted)), nil
+}
+
+func GetBooleanRef(val bool) *bool {
+	return &val
+}
+
+func GetIntRef(val int) *int {
+	return &val
+}
+
+func GetPrivateKeyType(pk, pass string) string {
+
+	p, _ := pem.Decode([]byte(pk))
+	if p == nil {
+		return ""
+	}
+
+	var keyType string
+	switch p.Type {
+	case "EC PRIVATE KEY":
+		keyType = "EC PRIVATE KEY"
+	case "RSA PRIVATE KEY":
+		keyType = "RSA PRIVATE KEY"
+	default:
+		keyType = ""
+	}
+
+	return keyType
 }
