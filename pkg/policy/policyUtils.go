@@ -15,7 +15,7 @@ import (
 //this is the nearest to a constant on arrays.
 var TppKeyType = []string{"RSA", "ECDSA"}
 var TppRsaKeySize = []int{512, 1024, 2048, 3072, 4096}
-var CloudRsaKeySize = []int{1024, 2048, 4096}
+var CloudRsaKeySize = []int{1024, 2048, 3072, 4096}
 var TppEllipticCurves = []string{"P256", "P384", "P521"}
 
 func GetFileType(f string) string {
