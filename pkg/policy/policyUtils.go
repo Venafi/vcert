@@ -998,31 +998,54 @@ func BuildCloudCitRequest(ps *PolicySpecification, ca *CADetails) (*CloudPolicyR
 	}
 
 	if ps.Policy != nil && ps.Policy.Subject != nil && len(ps.Policy.Subject.Orgs) > 0 {
-		cloudPolicyRequest.SubjectORegexes = ps.Policy.Subject.Orgs
+		if len(ps.Policy.Subject.Orgs) == 1 && ps.Policy.Subject.Orgs[0] == "" {
+			cloudPolicyRequest.SubjectORegexes = nil
+		} else {
+			cloudPolicyRequest.SubjectORegexes = ps.Policy.Subject.OrgUnits
+		}
+
 	} else {
 		cloudPolicyRequest.SubjectORegexes = []string{".*"}
 	}
 
 	if ps.Policy != nil && ps.Policy.Subject != nil && len(ps.Policy.Subject.OrgUnits) > 0 {
-		cloudPolicyRequest.SubjectOURegexes = ps.Policy.Subject.OrgUnits
+		if len(ps.Policy.Subject.OrgUnits) == 1 && ps.Policy.Subject.OrgUnits[0] == "" {
+			cloudPolicyRequest.SubjectOURegexes = nil
+		} else {
+			cloudPolicyRequest.SubjectOURegexes = ps.Policy.Subject.OrgUnits
+		}
+
 	} else {
 		cloudPolicyRequest.SubjectOURegexes = []string{".*"}
 	}
 
 	if ps.Policy != nil && ps.Policy.Subject != nil && len(ps.Policy.Subject.Localities) > 0 {
-		cloudPolicyRequest.SubjectLRegexes = ps.Policy.Subject.Localities
+		if len(ps.Policy.Subject.Localities) == 1 && ps.Policy.Subject.Localities[0] == "" {
+			cloudPolicyRequest.SubjectLRegexes = nil
+		} else {
+			cloudPolicyRequest.SubjectLRegexes = ps.Policy.Subject.Localities
+		}
+
 	} else {
 		cloudPolicyRequest.SubjectLRegexes = []string{".*"}
 	}
 
 	if ps.Policy != nil && ps.Policy.Subject != nil && len(ps.Policy.Subject.States) > 0 {
-		cloudPolicyRequest.SubjectSTRegexes = ps.Policy.Subject.States
+		if len(ps.Policy.Subject.States) == 1 && ps.Policy.Subject.States[0] == "" {
+			cloudPolicyRequest.SubjectSTRegexes = nil
+		} else {
+			cloudPolicyRequest.SubjectSTRegexes = ps.Policy.Subject.States
+		}
 	} else {
 		cloudPolicyRequest.SubjectSTRegexes = []string{".*"}
 	}
 
 	if ps.Policy != nil && ps.Policy.Subject != nil && len(ps.Policy.Subject.Countries) > 0 {
-		cloudPolicyRequest.SubjectCValues = ps.Policy.Subject.Countries
+		if len(ps.Policy.Subject.Countries) == 1 && ps.Policy.Subject.Countries[0] == "" {
+			cloudPolicyRequest.SubjectCValues = nil
+		} else {
+			cloudPolicyRequest.SubjectCValues = ps.Policy.Subject.Countries
+		}
 	} else {
 		cloudPolicyRequest.SubjectCValues = []string{".*"}
 	}
