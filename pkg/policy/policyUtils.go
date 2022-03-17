@@ -1001,7 +1001,7 @@ func BuildCloudCitRequest(ps *PolicySpecification, ca *CADetails) (*CloudPolicyR
 		if len(ps.Policy.Subject.Orgs) == 1 && ps.Policy.Subject.Orgs[0] == "" {
 			cloudPolicyRequest.SubjectORegexes = nil
 		} else {
-			cloudPolicyRequest.SubjectORegexes = ps.Policy.Subject.OrgUnits
+			cloudPolicyRequest.SubjectORegexes = ps.Policy.Subject.Orgs
 		}
 
 	} else {
