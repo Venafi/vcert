@@ -953,6 +953,11 @@ func doCommandCreatePolicy(c *cli.Context) error {
 		return err
 	}
 
+	err = setTLSConfig()
+	if err != nil {
+		return err
+	}
+
 	policyName := flags.policyName
 	policySpecLocation := flags.policySpecLocation
 
@@ -1021,6 +1026,11 @@ func doCommandGetPolicy(c *cli.Context) error {
 
 	err := validateGetPolicyFlags(c.Command.Name)
 
+	if err != nil {
+		return err
+	}
+
+	err = setTLSConfig()
 	if err != nil {
 		return err
 	}
