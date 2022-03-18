@@ -94,8 +94,10 @@ func validatePolicySubject(ps *PolicySpecification) error {
 		return fmt.Errorf("attribute countries has more than one value")
 	}
 
-	if len(subject.Countries[0]) != 2 {
-		return fmt.Errorf("number of country's characters, doesn't match to two characters")
+	if len(subject.Countries) > 0 {
+		if len(subject.Countries[0]) != 2 {
+			return fmt.Errorf("number of country's characters, doesn't match to two characters")
+		}
 	}
 
 	return nil
