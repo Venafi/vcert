@@ -800,6 +800,7 @@ var (
 		flagPolicyConfigFile,
 		flagPolicyVerifyConfigFile,
 		flagTrustBundle,
+		flagInsecure,
 	))
 
 	getPolicyFlags = sortedFlags(flagsApppend(
@@ -811,6 +812,7 @@ var (
 		flagPolicyConfigFile,
 		flagPolicyStarterConfigFile,
 		flagTrustBundle,
+		flagInsecure,
 	))
 
 	sshPickupFlags = sortedFlags(flagsApppend(

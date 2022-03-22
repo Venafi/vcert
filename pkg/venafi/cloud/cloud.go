@@ -663,36 +663,38 @@ func buildPolicySpecification(cit *certificateTemplate, info *policy.Certificate
 
 	//subject.
 	var subject policy.Subject
-	shouldCreateSubject := false
 
 	if len(cit.SubjectORegexes) > 0 {
 		subject.Orgs = cit.SubjectORegexes
-		shouldCreateSubject = true
+	} else if cit.SubjectORegexes == nil {
+		subject.Orgs = []string{""}
 	}
 
 	if len(cit.SubjectOURegexes) > 0 {
 		subject.OrgUnits = cit.SubjectOURegexes
-		shouldCreateSubject = true
+	} else if cit.SubjectOURegexes == nil {
+		subject.OrgUnits = []string{""}
 	}
 
 	if len(cit.SubjectLRegexes) > 0 {
 		subject.Localities = cit.SubjectLRegexes
-		shouldCreateSubject = true
+	} else if cit.SubjectLRegexes == nil {
+		subject.Localities = []string{""}
 	}
 
 	if len(cit.SubjectSTRegexes) > 0 {
 		subject.States = cit.SubjectSTRegexes
-		shouldCreateSubject = true
+	} else if cit.SubjectSTRegexes == nil {
+		subject.States = []string{""}
 	}
 
 	if len(cit.SubjectCValues) > 0 {
 		subject.Countries = cit.SubjectCValues
-		shouldCreateSubject = true
+	} else if cit.SubjectCValues == nil {
+		subject.Countries = []string{""}
 	}
 
-	if shouldCreateSubject {
-		pol.Subject = &subject
-	}
+	pol.Subject = &subject
 
 	//key pair
 	var keyPair policy.KeyPair
