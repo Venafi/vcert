@@ -1625,6 +1625,8 @@ func TestSetPolicy(t *testing.T) {
 	}
 
 	ps := test.GetTppPolicySpecification()
+	users := []string{"osstestuser"}
+	ps.Users = users
 
 	_, err = tpp.SetPolicy(policyName, ps)
 
@@ -1632,6 +1634,15 @@ func TestSetPolicy(t *testing.T) {
 		t.Fatalf("%s", err)
 	}
 
+	ps, err = tpp.GetPolicy(policyName)
+
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	usersEquals := test.StringArraysContainsSameValues(ps.Users, users)
+	if !usersEquals {
+		t.Fatalf("The users are different, expected %+q but got %+q", users, ps.Users)
+	}
 }
 
 func TestGetPolicy(t *testing.T) {

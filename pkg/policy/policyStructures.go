@@ -102,7 +102,7 @@ type Key struct {
 	Length int    `json:"length"`
 }
 
-type ApplicationCreateRequest struct {
+type Application struct {
 	OwnerIdsAndTypes                     []OwnerIdType     `json:"ownerIdsAndTypes"`
 	Name                                 string            `json:"name"`
 	Description                          string            `json:"description"`
@@ -153,6 +153,38 @@ type TppPolicy struct {
 	ManualCsr            *LockedAttribute
 	AllowPrivateKeyReuse *int
 	WantRenewal          *int
+}
+
+type BrowseIdentitiesRequest struct {
+	Filter       string
+	Limit        int
+	IdentityType int
+}
+
+type BrowseIdentitiesResponse struct {
+	Identities []IdentityEntry
+}
+
+type ValidateIdentityRequest struct {
+	ID IdentityInformation
+}
+
+type ValidateIdentityResponse struct {
+	ID IdentityEntry
+}
+
+type IdentityInformation struct {
+	PrefixedUniversal string
+}
+
+type IdentityEntry struct {
+	FullName          string
+	Name              string
+	Prefix            string
+	PrefixedName      string
+	PrefixedUniversal string
+	Type              int
+	Universal         string
 }
 
 type LockedAttribute struct {

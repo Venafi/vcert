@@ -17,12 +17,12 @@
 package cloud
 
 type team struct {
-	ID            	string    `json:"id"`
-	Name          	string    `json:"name"`
-	Role			string    `json:"role"`
-	CompanyID      	string    `json:"companyId"`
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Role      string `json:"role"`
+	CompanyID string `json:"companyId"`
 }
 
 type teams struct {
-	Teams		[]team `json:"teams"`
+	Teams []team `json:"teams"`
 }

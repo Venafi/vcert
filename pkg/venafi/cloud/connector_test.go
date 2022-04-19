@@ -832,7 +832,7 @@ func TestSetPolicy(t *testing.T) {
 	//now update policy.
 	t.Log("updating policy, modifying ps.Policy.Subject.OrgUnits = []string{\"DevOps\", \"QA\"}.")
 	localPolicy.Policy.Subject.OrgUnits = []string{"DevOps", "QA"}
-	policyName = appName + "\\" + test.RandCitName()
+	//policyName = appName + "\\" + test.RandCitName()
 	_, err = conn.SetPolicy(policyName, localPolicy)
 
 	if err != nil {
@@ -846,6 +846,37 @@ func TestSetPolicy(t *testing.T) {
 	}
 
 	//validate each attribute
+
+	//validating the default users attribute was created
+	users := []string{
+		"admin@opensource.qa.venafi.io",
+	}
+	valid := test.IsArrayStringEqual(users, ps.Users)
+	if !valid {
+		t.Fatalf("It was expected that the current user %s be set as user of the PolicySpecification created but got %+q", users[0], ps.Users)
+	}
+
+	//Validating the addition of an user
+	users = append(users, "resource-owner@opensource.qa.venafi.io")
+	ps.Users = users
+
+	_, err = conn.SetPolicy(policyName, ps)
+
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	ps, err = conn.GetPolicy(policyName)
+
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	valid = test.StringArraysContainsSameValues(users, ps.Users)
+	if !valid {
+		t.Fatalf("The users are different, expected %+q but got %+q", users, ps.Users)
+	}
+
 	//validate subject attributes
 
 	if ps == nil {
@@ -1056,7 +1087,7 @@ func TestSetPolicy(t *testing.T) {
 
 func TestGetPolicy(t *testing.T) {
 
-	t.Skip() //this is just for development purpose
+	//t.Skip() //this is just for development purpose
 
 	policyName := os.Getenv("CLOUD_POLICY_MANAGEMENT_SAMPLE")
 	conn := getTestConnector(ctx.CloudZone)
