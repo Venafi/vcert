@@ -872,7 +872,7 @@ func TestSetPolicy(t *testing.T) {
 		t.Fatalf("%s", err)
 	}
 
-	valid = test.StringArraysContainsSameValues(users, ps.Users)
+	valid = test.IsArrayStringEqual(users, ps.Users)
 	if !valid {
 		t.Fatalf("The users are different, expected %+q but got %+q", users, ps.Users)
 	}

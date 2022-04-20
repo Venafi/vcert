@@ -438,12 +438,9 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 
 	} else { //determine if the application needs to be updated
 		log.Printf("updating application: %s", appName)
-		updated, error := c.updateApplication(name, ps, cit, appDetails)
+		error := c.updateApplication(name, ps, cit, appDetails)
 		if error != nil {
 			return "", error
-		}
-		if !updated {
-			log.Printf("it was not needed to update the application: %s", appName)
 		}
 	}
 
@@ -478,51 +475,35 @@ func (c *Connector) createApplication(appName string, ps *policy.PolicySpecifica
 	return &appReq, nil
 }
 
-func (c *Connector) updateApplication(name string, ps *policy.PolicySpecification, cit *certificateTemplate, appDetails *ApplicationDetails) (bool, error) {
-	updated := false
+func (c *Connector) updateApplication(name string, ps *policy.PolicySpecification, cit *certificateTemplate, appDetails *ApplicationDetails) error {
+
+	//creating the app to use as request
+	appReq := createAppUpdateRequest(appDetails)
 
 	//determining if the relationship between application and cit exist
 	exist, err := PolicyExist(name, c)
-
 	if err != nil {
-		return updated, err
+		return err
 	}
-	updateRelationShip := !exist
+	if !exist {
+		c.addCitToApp(&appReq, cit)
+	}
 
-	//determining if the owners were set to the PolicySpecification and are valid
+	//resolving and setting owners
 	owners, error := c.resolveOwners(ps.Users)
 	if error != nil {
-		return updated, error
+		return error
 	}
-	updateOwners := len(owners) > 0
+	appReq.OwnerIdsAndTypes = owners
 
-	//if it's needed to update the application
-	if updateRelationShip || updateOwners {
-
-		//creating the app to use as request
-		appReq := createAppUpdateRequest(appDetails)
-
-		if updateRelationShip {
-			c.addCitToApp(&appReq, cit)
-		}
-
-		if updateOwners {
-			c.mergeOwners(&appReq, owners)
-		}
-
-		url := c.getURL(urlAppRoot)
-
-		url = fmt.Sprint(url, "/", appDetails.ApplicationId)
-
-		_, _, _, err = c.request("PUT", url, appReq)
-		if err != nil {
-			return updated, err
-		}
-
-		updated = true
+	url := c.getURL(urlAppRoot)
+	url = fmt.Sprint(url, "/", appDetails.ApplicationId)
+	_, _, _, err = c.request("PUT", url, appReq)
+	if err != nil {
+		return err
 	}
 
-	return updated, nil
+	return nil
 }
 
 func (c *Connector) addCitToApp(app *policy.Application, cit *certificateTemplate) {
@@ -531,29 +512,6 @@ func (c *Connector) addCitToApp(app *policy.Application, cit *certificateTemplat
 	if !ok || value != cit.ID {
 		app.CertificateIssuingTemplateAliasIdMap[cit.Name] = cit.ID
 	}
-}
-
-func (c *Connector) mergeOwners(app *policy.Application, owners []policy.OwnerIdType) {
-
-	//creating a new slice from owners adding it the app.OwnerIdsAndTypes slice
-	allOwners := append(owners, app.OwnerIdsAndTypes...)
-
-	//missing add the app.OwnerIdsAndTypes to the owners list
-	ownersMap := make(map[string]policy.OwnerIdType)
-	for _, owner := range allOwners {
-		_, ok := ownersMap[owner.OwnerId]
-		if !ok {
-			ownersMap[owner.OwnerId] = owner
-		}
-	}
-
-	//copying the values of the merged map to an slice
-	ownersMerged := make([]policy.OwnerIdType, 0, len(ownersMap))
-	for _, owner := range ownersMap {
-		ownersMerged = append(ownersMerged, owner)
-	}
-
-	app.OwnerIdsAndTypes = ownersMerged
 }
 
 func (c *Connector) resolveOwners(usersList []string) ([]policy.OwnerIdType, error) {
