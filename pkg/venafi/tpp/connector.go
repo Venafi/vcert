@@ -848,16 +848,13 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 
 	tppPolicy.Name = &name
 
-	var policyExists = false
-
 	//validate if the policy exists
-	policyExist, err := PolicyExist(name, c)
+	policyExists, err := PolicyExist(name, c)
 	if err != nil {
 		return "", err
 	}
 
-	if policyExist {
-		policyExists = true
+	if policyExists {
 		log.Printf("found existing policy folder: %s", name)
 	} else {
 
@@ -896,18 +893,10 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 
 	log.Printf("updating certificate policy attributes")
 
-	//create Contact
-	if tppPolicy.Contact != nil {
-		contacts, err := c.resolveContacts(tppPolicy.Contact)
-		if err != nil {
-			return "", err
-		}
-		tppPolicy.Contact = contacts
-
-		_, status, _, err = createPolicyAttribute(c, policy.TppContact, tppPolicy.Contact, *(tppPolicy.Name), true)
-		if err != nil {
-			return "", err
-		}
+	//set Contacts
+	status, err = c.setContact(&tppPolicy, policyExists)
+	if err != nil {
+		return "", err
 	}
 
 	//create Approver
@@ -1054,6 +1043,70 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 	return status, nil
 }
 
+func (c *Connector) setContact(tppPolicy *policy.TppPolicy, policyExists bool) (status string, err error) {
+
+	var contacts []string
+
+	if !policyExists {
+		var currentIdentity *policy.IdentityEntry
+
+		currentIdentity, err = c.getCurrentIdentity()
+
+		if err != nil {
+			return "", err
+		}
+
+		if currentIdentity != nil {
+			contacts = append(contacts, currentIdentity.PrefixedUniversal)
+		} else {
+			return "", fmt.Errorf("the identity for the current user was not found")
+		}
+
+	} else { //if the policy exists already, then the contacts will be updated only if they were provided
+		if tppPolicy.Contact != nil {
+			contacts, err = c.resolveContacts(tppPolicy.Contact)
+			if err != nil {
+				return "", err
+			}
+			tppPolicy.Contact = contacts
+
+			_, status, _, err = createPolicyAttribute(c, policy.TppContact, tppPolicy.Contact, *(tppPolicy.Name), true)
+			if err != nil {
+				return "", err
+			}
+		}
+	}
+
+	if contacts != nil {
+		tppPolicy.Contact = contacts
+
+		_, status, _, err = createPolicyAttribute(c, policy.TppContact, tppPolicy.Contact, *(tppPolicy.Name), true)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return status, nil
+}
+
+func (c *Connector) getCurrentIdentity() (*policy.IdentityEntry, error) {
+	var currentIdentity *policy.IdentityEntry
+
+	resp, err := c.identitySelf()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, identityEntry := range resp.Identities {
+		if identityEntry.Type == policy.IdentityUser {
+			currentIdentity = &identityEntry
+			break
+		}
+	}
+
+	return currentIdentity, nil
+}
+
 func (c *Connector) resolveContacts(contacts []string) ([]string, error) {
 	var identities []string
 	for _, contact := range contacts {
@@ -1101,6 +1154,19 @@ func (c *Connector) browseIdentities(browseReq policy.BrowseIdentitiesRequest) (
 		return nil, err
 	}
 	return &browseIdentitiesResponse, nil
+}
+
+func (c *Connector) identitySelf() (*policy.IdentitySelfResponse, error) {
+
+	statusCode, status, body, err := c.request("GET", urlResourceIdentitySelf, nil)
+	if err != nil {
+		return nil, err
+	}
+	identitySelfResponse, err := parseIdentitySelfResult(statusCode, status, body)
+	if err != nil {
+		return nil, err
+	}
+	return &identitySelfResponse, nil
 }
 
 // RetrieveCertificate attempts to retrieve the requested certificate

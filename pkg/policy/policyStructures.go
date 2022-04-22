@@ -165,6 +165,10 @@ type BrowseIdentitiesResponse struct {
 	Identities []IdentityEntry
 }
 
+type IdentitySelfResponse struct {
+	Identities []IdentityEntry
+}
+
 type ValidateIdentityRequest struct {
 	ID IdentityInformation
 }

@@ -453,9 +453,22 @@ func (c *Connector) createApplication(appName string, ps *policy.PolicySpecifica
 	appIssuingTemplate := make(map[string]string)
 	appIssuingTemplate[cit.Name] = cit.ID
 
-	owners, error := c.resolveOwners(ps.Users)
-	if error != nil {
-		return nil, error
+	var owners []policy.OwnerIdType
+	var err error
+
+	//if users were passed to the PS, then it will needed to resolve the related Owners to set them
+	if len(ps.Users) > 0 {
+		owners, err = c.resolveOwners(ps.Users)
+	} else { //if the users were not specified in PS, then the current User should be used as owner
+		var owner *policy.OwnerIdType
+		owner, err = c.getOwnerFromUserDetails()
+		if owner != nil {
+			owners = []policy.OwnerIdType{*owner}
+		}
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	//create application
@@ -467,7 +480,7 @@ func (c *Connector) createApplication(appName string, ps *policy.PolicySpecifica
 
 	url := c.getURL(urlAppRoot)
 
-	_, _, _, err := c.request("POST", url, appReq)
+	_, _, _, err = c.request("POST", url, appReq)
 	if err != nil {
 		return nil, err
 	}
@@ -481,26 +494,39 @@ func (c *Connector) updateApplication(name string, ps *policy.PolicySpecificatio
 	appReq := createAppUpdateRequest(appDetails)
 
 	//determining if the relationship between application and cit exist
+	citAddedToApp := false
 	exist, err := PolicyExist(name, c)
 	if err != nil {
 		return err
 	}
 	if !exist {
 		c.addCitToApp(&appReq, cit)
+		citAddedToApp = true
 	}
 
-	//resolving and setting owners
-	owners, error := c.resolveOwners(ps.Users)
-	if error != nil {
-		return error
+	//determining if the owners where provided and should be updated
+	ownersUpdated := false
+	//given that the application exists, the only way to update the owners at the application
+	//is that users in the policy specification were provided
+	if len(ps.Users) > 0 {
+		//resolving and setting owners
+		owners, error := c.resolveOwners(ps.Users)
+		if error != nil {
+			return error
+		}
+		appReq.OwnerIdsAndTypes = owners
+		ownersUpdated = true
 	}
-	appReq.OwnerIdsAndTypes = owners
 
-	url := c.getURL(urlAppRoot)
-	url = fmt.Sprint(url, "/", appDetails.ApplicationId)
-	_, _, _, err = c.request("PUT", url, appReq)
-	if err != nil {
-		return err
+	//if the cit was added to the app or the owners were updated, then is required
+	//to update the application
+	if citAddedToApp || ownersUpdated {
+		url := c.getURL(urlAppRoot)
+		url = fmt.Sprint(url, "/", appDetails.ApplicationId)
+		_, _, _, err = c.request("PUT", url, appReq)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -517,31 +543,24 @@ func (c *Connector) addCitToApp(app *policy.Application, cit *certificateTemplat
 func (c *Connector) resolveOwners(usersList []string) ([]policy.OwnerIdType, error) {
 
 	var owners []policy.OwnerIdType
-	if usersList == nil {
-		userDetails, err := getUserDetails(c)
-		if err != nil {
-			return nil, err
+	var teams *teams
+
+	for _, userName := range usersList {
+		users, error := c.retrieveUsers(userName)
+		if error != nil {
+			return nil, error
 		}
-		owners = appendOwner(owners, userDetails.User.ID, UserType)
-	} else {
-		var teams *teams
-		for _, userName := range usersList {
-			users, error := c.retrieveUsers(userName)
-			if error != nil {
-				return nil, error
+		if users != nil {
+			owners = appendOwner(owners, users.Users[0].ID, UserType)
+		} else {
+			if teams == nil {
+				teams, error = c.retrieveTeams()
 			}
-			if users != nil {
-				owners = appendOwner(owners, users.Users[0].ID, UserType)
-			} else {
-				if teams == nil {
-					teams, error = c.retrieveTeams()
-				}
-				if teams != nil {
-					for _, team := range teams.Teams {
-						if team.Name == userName {
-							owners = appendOwner(owners, team.ID, TeamType)
-							break
-						}
+			if teams != nil {
+				for _, team := range teams.Teams {
+					if team.Name == userName {
+						owners = appendOwner(owners, team.ID, TeamType)
+						break
 					}
 				}
 			}
@@ -554,6 +573,15 @@ func (c *Connector) resolveOwners(usersList []string) ([]policy.OwnerIdType, err
 func appendOwner(owners []policy.OwnerIdType, ownerId string, ownerType OwnerType) []policy.OwnerIdType {
 	owner := createOwner(ownerId, ownerType)
 	return append(owners, *owner)
+}
+
+func (c *Connector) getOwnerFromUserDetails() (*policy.OwnerIdType, error) {
+	userDetails, err := getUserDetails(c)
+	if err != nil {
+		return nil, err
+	}
+	owner := createOwner(userDetails.User.ID, UserType)
+	return owner, nil
 }
 
 func createOwner(ownerId string, ownerType OwnerType) *policy.OwnerIdType {
