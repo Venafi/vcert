@@ -1068,12 +1068,6 @@ func (c *Connector) setContact(tppPolicy *policy.TppPolicy, policyExists bool) (
 			if err != nil {
 				return "", err
 			}
-			tppPolicy.Contact = contacts
-
-			_, status, _, err = createPolicyAttribute(c, policy.TppContact, tppPolicy.Contact, *(tppPolicy.Name), true)
-			if err != nil {
-				return "", err
-			}
 		}
 	}
 
