@@ -1047,26 +1047,25 @@ func (c *Connector) setContact(tppPolicy *policy.TppPolicy, policyExists bool) (
 
 	var contacts []string
 
-	if !policyExists {
-		var currentIdentity *policy.IdentityEntry
-
-		currentIdentity, err = c.getCurrentIdentity()
-
+	if tppPolicy.Contact != nil {
+		contacts, err = c.resolveContacts(tppPolicy.Contact)
 		if err != nil {
 			return "", err
 		}
+	} else {
+		if !policyExists {
+			var currentIdentity *policy.IdentityEntry
 
-		if currentIdentity != nil {
-			contacts = append(contacts, currentIdentity.PrefixedUniversal)
-		} else {
-			return "", fmt.Errorf("the identity for the current user was not found")
-		}
+			currentIdentity, err = c.getCurrentIdentity()
 
-	} else { //if the policy exists already, then the contacts will be updated only if they were provided
-		if tppPolicy.Contact != nil {
-			contacts, err = c.resolveContacts(tppPolicy.Contact)
 			if err != nil {
 				return "", err
+			}
+
+			if currentIdentity != nil {
+				contacts = append(contacts, currentIdentity.PrefixedUniversal)
+			} else {
+				return "", fmt.Errorf("the identity for the current user was not found")
 			}
 		}
 	}
