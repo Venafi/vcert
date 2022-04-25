@@ -1085,7 +1085,7 @@ func (c *Connector) setContact(tppPolicy *policy.TppPolicy, policyExists bool) (
 func (c *Connector) getCurrentIdentity() (*policy.IdentityEntry, error) {
 	var currentIdentity *policy.IdentityEntry
 
-	resp, err := c.identitySelf()
+	resp, err := c.selfIdentity()
 	if err != nil {
 		return nil, err
 	}
@@ -1149,7 +1149,7 @@ func (c *Connector) browseIdentities(browseReq policy.BrowseIdentitiesRequest) (
 	return &browseIdentitiesResponse, nil
 }
 
-func (c *Connector) identitySelf() (*policy.IdentitySelfResponse, error) {
+func (c *Connector) selfIdentity() (*policy.IdentitySelfResponse, error) {
 
 	statusCode, status, body, err := c.request("GET", urlResourceIdentitySelf, nil)
 	if err != nil {
