@@ -1087,7 +1087,7 @@ func TestSetPolicy(t *testing.T) {
 
 func TestGetPolicy(t *testing.T) {
 
-	//t.Skip() //this is just for development purpose
+	t.Skip() //this is just for development purpose
 
 	policyName := os.Getenv("CLOUD_POLICY_MANAGEMENT_SAMPLE")
 	conn := getTestConnector(ctx.CloudZone)
