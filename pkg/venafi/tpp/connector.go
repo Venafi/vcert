@@ -726,7 +726,7 @@ func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) 
 	req := policy.CheckPolicyRequest{
 		PolicyDN: name,
 	}
-	_, _, body, err := c.request("POST", urlResourceReadPolicy, req)
+	_, _, body, err := c.request("POST", urlResourceCheckPolicy, req)
 
 	if err != nil {
 		return nil, err
@@ -747,7 +747,54 @@ func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) 
 		return nil, err
 	}
 
+	userNames, error := c.retrieveUserNamesForPolicySpecification(name)
+	if error != nil {
+		return nil, error
+	}
+	ps.Users = userNames
+
 	return ps, nil
+}
+
+func (c *Connector) retrieveUserNamesForPolicySpecification(policyName string) ([]string, error) {
+	values, _, error := getPolicyAttribute(c, policy.TppContact, policyName)
+	if error != nil {
+		return nil, error
+	}
+	if values != nil {
+		var users []string
+		for _, prefixedUniversal := range values {
+			validateIdentityRequest := policy.ValidateIdentityRequest{
+				ID: policy.IdentityInformation{
+					PrefixedUniversal: prefixedUniversal,
+				},
+			}
+
+			validateIdentityResponse, error := c.validateIdentity(validateIdentityRequest)
+			if error != nil {
+				return nil, error
+			}
+
+			users = append(users, validateIdentityResponse.ID.Name)
+		}
+
+		return users, nil
+	}
+
+	return nil, nil
+}
+
+func (c *Connector) validateIdentity(validateIdentityRequest policy.ValidateIdentityRequest) (*policy.ValidateIdentityResponse, error) {
+
+	statusCode, status, body, err := c.request("POST", urlResourceValidateIdentity, validateIdentityRequest)
+	if err != nil {
+		return nil, err
+	}
+	validateIdentityResponse, err := parseValidateIdentityResponse(statusCode, status, body)
+	if err != nil {
+		return nil, err
+	}
+	return &validateIdentityResponse, nil
 }
 
 func PolicyExist(policyName string, c *Connector) (bool, error) {
@@ -801,16 +848,13 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 
 	tppPolicy.Name = &name
 
-	var policyExists = false
-
 	//validate if the policy exists
-	policyExist, err := PolicyExist(name, c)
+	policyExists, err := PolicyExist(name, c)
 	if err != nil {
 		return "", err
 	}
 
-	if policyExist {
-		policyExists = true
+	if policyExists {
 		log.Printf("found existing policy folder: %s", name)
 	} else {
 
@@ -849,14 +893,6 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 
 	log.Printf("updating certificate policy attributes")
 
-	//create Contact
-	if tppPolicy.Contact != nil {
-		_, status, _, err = createPolicyAttribute(c, policy.TppContact, tppPolicy.Contact, *(tppPolicy.Name), true)
-		if err != nil {
-			return "", err
-		}
-	}
-
 	//create Approver
 	if tppPolicy.Approver != nil {
 		_, status, _, err = createPolicyAttribute(c, policy.TppApprover, tppPolicy.Approver, *(tppPolicy.Name), true)
@@ -869,6 +905,12 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 		if err != nil {
 			return "", err
 		}
+	}
+
+	//set Contacts
+	status, err = c.setContact(&tppPolicy)
+	if err != nil {
+		return "", err
 	}
 
 	//create Domain Suffix Whitelist
@@ -999,6 +1041,75 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 	log.Printf("policy successfully applied to %s", name)
 
 	return status, nil
+}
+
+func (c *Connector) setContact(tppPolicy *policy.TppPolicy) (status string, err error) {
+
+	if tppPolicy.Contact != nil {
+		contacts, err := c.resolveContacts(tppPolicy.Contact)
+		if err != nil {
+			return "", err
+		}
+		if contacts != nil {
+			tppPolicy.Contact = contacts
+
+			_, status, _, err = createPolicyAttribute(c, policy.TppContact, tppPolicy.Contact, *(tppPolicy.Name), true)
+			if err != nil {
+				return "", err
+			}
+		}
+	}
+
+	return status, nil
+}
+
+func (c *Connector) resolveContacts(contacts []string) ([]string, error) {
+	var identities []string
+	for _, contact := range contacts {
+		identity, err := c.getIdentity(contact)
+		if err != nil {
+			return nil, err
+		}
+		identities = append(identities, identity.PrefixedUniversal)
+	}
+
+	return identities, nil
+}
+
+func (c *Connector) getIdentity(userName string) (*policy.IdentityEntry, error) {
+	if userName == "" {
+		return nil, fmt.Errorf("identity string cannot be null")
+	}
+
+	req := policy.BrowseIdentitiesRequest{
+		Filter:       userName,
+		Limit:        2,
+		IdentityType: policy.AllIdentities,
+	}
+
+	resp, err := c.browseIdentities(req)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(resp.Identities) > 1 {
+		return nil, fmt.Errorf("only one Identity must be returned but it was returned more than one")
+	}
+
+	return &resp.Identities[0], nil
+}
+
+func (c *Connector) browseIdentities(browseReq policy.BrowseIdentitiesRequest) (*policy.BrowseIdentitiesResponse, error) {
+
+	statusCode, status, body, err := c.request("POST", urlResourceBrowseIdentities, browseReq)
+	if err != nil {
+		return nil, err
+	}
+	browseIdentitiesResponse, err := parseBrowseIdentitiesResult(statusCode, status, body)
+	if err != nil {
+		return nil, err
+	}
+	return &browseIdentitiesResponse, nil
 }
 
 // RetrieveCertificate attempts to retrieve the requested certificate
@@ -1584,8 +1695,14 @@ func getPolicyAttribute(c *Connector, at string, n string) (s []string, b *bool,
 
 func resetTPPAttributes(zone string, c *Connector) error {
 
+	//reset Contact
+	err := resetTPPAttribute(c, policy.TppContact, zone)
+	if err != nil {
+		return err
+	}
+
 	//reset Domain Suffix Whitelist
-	err := resetTPPAttribute(c, policy.TppDomainSuffixWhitelist, zone)
+	err = resetTPPAttribute(c, policy.TppDomainSuffixWhitelist, zone)
 	if err != nil {
 		return err
 	}

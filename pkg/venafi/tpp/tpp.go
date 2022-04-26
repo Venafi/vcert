@@ -23,6 +23,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/Venafi/vcert/v4/pkg/policy"
 	"io"
 	"io/ioutil"
 	"log"
@@ -328,9 +329,12 @@ const (
 	urlResourceSystemStatusVersion    urlResource = "vedsdk/systemstatus/version"
 	urlResourceCreatePolicy           urlResource = "vedsdk/Config/Create"
 	urlResourceWritePolicy            urlResource = "vedsdk/Config/WritePolicy"
+	urlResourceReadPolicy             urlResource = "vedsdk/Config/ReadPolicy"
 	urlResourceIsValidPolicy          urlResource = "vedsdk/Config/isvalid"
-	urlResourceReadPolicy             urlResource = "vedsdk/certificates/checkpolicy"
+	urlResourceCheckPolicy            urlResource = "vedsdk/certificates/checkpolicy"
 	urlResourceCleanPolicy            urlResource = "vedsdk/config/clearpolicyattribute"
+	urlResourceBrowseIdentities       urlResource = "vedsdk/Identity/Browse"
+	urlResourceValidateIdentity       urlResource = "vedsdk/Identity/Validate"
 	urlResourceSshCertReq             urlResource = "vedsdk/SSHCertificates/request"
 	urlResourceSshCertRet             urlResource = "vedsdk/SSHCertificates/retrieve"
 	urlResourceSshCAPubKey            urlResource = "vedsdk/SSHCertificates/Template/Retrieve/PublicKeyData"
@@ -641,6 +645,44 @@ func newPEMCollectionFromResponse(base64Response string, chainOrder certificate.
 		return certificate.PEMCollectionFromBytes(certBytes, chainOrder)
 	}
 	return nil, nil
+}
+
+func parseBrowseIdentitiesResult(httpStatusCode int, httpStatus string, body []byte) (policy.BrowseIdentitiesResponse, error) {
+	var browseIdentitiesResponse policy.BrowseIdentitiesResponse
+	switch httpStatusCode {
+	case http.StatusOK, http.StatusAccepted:
+		browseIdentitiesResponse, err := parseBrowseIdentitiesData(body)
+		if err != nil {
+			return browseIdentitiesResponse, err
+		}
+		return browseIdentitiesResponse, nil
+	default:
+		return browseIdentitiesResponse, fmt.Errorf("Unexpected status code on TPP Browse Identities. Status: %s", httpStatus)
+	}
+}
+
+func parseBrowseIdentitiesData(b []byte) (data policy.BrowseIdentitiesResponse, err error) {
+	err = json.Unmarshal(b, &data)
+	return
+}
+
+func parseValidateIdentityResponse(httpStatusCode int, httpStatus string, body []byte) (policy.ValidateIdentityResponse, error) {
+	var validateIdentityResponse policy.ValidateIdentityResponse
+	switch httpStatusCode {
+	case http.StatusOK, http.StatusAccepted:
+		validateIdentityResponse, err := parseValidateIdentityData(body)
+		if err != nil {
+			return validateIdentityResponse, err
+		}
+		return validateIdentityResponse, nil
+	default:
+		return validateIdentityResponse, fmt.Errorf("Unexpected status code on TPP Validate Identity. Status: %s", httpStatus)
+	}
+}
+
+func parseValidateIdentityData(b []byte) (data policy.ValidateIdentityResponse, err error) {
+	err = json.Unmarshal(b, &data)
+	return
 }
 
 type _strValue struct {

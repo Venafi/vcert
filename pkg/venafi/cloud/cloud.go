@@ -59,6 +59,23 @@ type userDetails struct {
 	APIKey  *apiKey  `json:"apiKey,omitempty"`
 }
 
+type OwnerType int64
+
+const (
+	UserType OwnerType = iota
+	TeamType
+)
+
+func (o OwnerType) String() string {
+	switch o {
+	case UserType:
+		return "USER"
+	case TeamType:
+		return "TEAM"
+	}
+	return "unknown"
+}
+
 type certificateRequestResponse struct {
 	CertificateRequests []certificateRequestResponseData `json:"certificateRequests,omitempty"`
 }
@@ -371,6 +388,81 @@ func parseUserDetailsData(b []byte) (*userDetails, error) {
 	return &data, nil
 }
 
+func parseUserByIdResult(expectedStatusCode int, httpStatusCode int, httpStatus string, body []byte) (*user, error) {
+	if httpStatusCode == expectedStatusCode {
+		return parseUserByIdData(body)
+	}
+	respErrors, err := parseResponseErrors(body)
+	if err != nil {
+		return nil, err // parseResponseErrors always return verror.ServerError
+	}
+	respError := fmt.Sprintf("unexpected status code on retrieval of user by ID. Status: %s\n", httpStatus)
+	for _, e := range respErrors {
+		respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
+	}
+	return nil, fmt.Errorf("%w: %v", verror.ServerError, respError)
+}
+
+func parseUserByIdData(b []byte) (*user, error) {
+	var data user
+	err := json.Unmarshal(b, &data)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %v", verror.ServerError, err)
+	}
+
+	return &data, nil
+}
+
+func parseUsersByNameResult(expectedStatusCode int, httpStatusCode int, httpStatus string, body []byte) (*users, error) {
+	if httpStatusCode == expectedStatusCode {
+		return parseUsersByNameData(body)
+	}
+	respErrors, err := parseResponseErrors(body)
+	if err != nil {
+		return nil, err // parseResponseErrors always return verror.ServerError
+	}
+	respError := fmt.Sprintf("unexpected status code on retrieval of users by name. Status: %s\n", httpStatus)
+	for _, e := range respErrors {
+		respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
+	}
+	return nil, fmt.Errorf("%w: %v", verror.ServerError, respError)
+}
+
+func parseUsersByNameData(b []byte) (*users, error) {
+	var data users
+	err := json.Unmarshal(b, &data)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %v", verror.ServerError, err)
+	}
+
+	return &data, nil
+}
+
+func parseTeamsResult(expectedStatusCode int, httpStatusCode int, httpStatus string, body []byte) (*teams, error) {
+	if httpStatusCode == expectedStatusCode {
+		return parseTeamsData(body)
+	}
+	respErrors, err := parseResponseErrors(body)
+	if err != nil {
+		return nil, err // parseResponseErrors always return verror.ServerError
+	}
+	respError := fmt.Sprintf("unexpected status code on retrieval of teams. Status: %s\n", httpStatus)
+	for _, e := range respErrors {
+		respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
+	}
+	return nil, fmt.Errorf("%w: %v", verror.ServerError, respError)
+}
+
+func parseTeamsData(b []byte) (*teams, error) {
+	var data teams
+	err := json.Unmarshal(b, &data)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %v", verror.ServerError, err)
+	}
+
+	return &data, nil
+}
+
 func parseZoneConfigurationResult(httpStatusCode int, httpStatus string, body []byte) (*zone, error) {
 	switch httpStatusCode {
 	case http.StatusOK:
@@ -550,8 +642,8 @@ func (z *cloudZone) parseZone() error {
 	return nil
 }
 
-func createAppUpdateRequest(applicationDetails *ApplicationDetails, cit *certificateTemplate) policy.ApplicationCreateRequest {
-	request := policy.ApplicationCreateRequest{
+func createAppUpdateRequest(applicationDetails *ApplicationDetails) policy.Application {
+	request := policy.Application{
 		OwnerIdsAndTypes:                     applicationDetails.OwnerIdType,
 		Name:                                 applicationDetails.Name,
 		Description:                          applicationDetails.Description,
@@ -566,18 +658,6 @@ func createAppUpdateRequest(applicationDetails *ApplicationDetails, cit *certifi
 		CertificateIssuingTemplateAliasIdMap: applicationDetails.CitAliasToIdMap,
 		OrganizationalUnitId:                 applicationDetails.OrganizationalUnitId,
 	}
-
-	//add new cit values to the map.
-	citMap := request.CertificateIssuingTemplateAliasIdMap
-	value := citMap[cit.Name]
-	if value == "" {
-		citMap[cit.Name] = cit.ID
-	} else {
-		if value != cit.ID {
-			citMap[cit.Name] = cit.ID
-		}
-	}
-	request.CertificateIssuingTemplateAliasIdMap = citMap
 
 	return request
 }

@@ -33,6 +33,10 @@ type user struct {
 	CreationDate       time.Time `json:"-"`
 }
 
+type users struct {
+	Users []user `json:"users"`
+}
+
 type userAccount struct {
 	Username           string `json:"username,omitempty"`
 	Password           string `json:"password,omitempty"`

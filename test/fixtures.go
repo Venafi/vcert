@@ -202,13 +202,30 @@ func IsArrayStringEqual(expectedValues, values []string) bool {
 	}
 
 	for i, currentValue := range expectedValues {
-
 		if currentValue != values[i] {
-
 			return false
-
 		}
+	}
 
+	return true
+}
+
+func StringArraysContainsSameValues(s1 []string, s2 []string) bool {
+	if len(s1) != len(s2) {
+		return false
+	}
+
+	for _, value1 := range s1 {
+		found := false
+		for _, value2 := range s2 {
+			if value1 == value2 {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
 	}
 
 	return true

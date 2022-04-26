@@ -61,9 +61,13 @@ const (
 	urlIssuingTemplate                urlResource = apiVersion + "certificateissuingtemplates"
 	urlAppRoot                        urlResource = basePath + "applications"
 	urlCAAccounts                     urlResource = apiVersion + "certificateauthorities/%s/accounts"
-	urlCAAccountDetails               urlResource = urlCAAccounts + "/%s"
+	urlCAAccountDetails                           = urlCAAccounts + "/%s"
 	urlResourceCertificateKS                      = urlResourceCertificates + "/%s/keystore"
 	urlDekPublicKey                   urlResource = apiVersion + "edgeencryptionkeys/%s"
+	urlUsers                          urlResource = apiVersion + "users"
+	urlUserById                                   = urlUsers + "/%s"
+	urlUsersByName                                = urlUsers + "/username/%s"
+	urlTeams                          urlResource = apiVersion + "teams"
 
 	defaultAppName = "Default"
 )
@@ -254,7 +258,50 @@ func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) 
 	log.Println("Building policy")
 	ps := buildPolicySpecification(cit, info, true)
 
+	// getting the users to set to the PolicySpecification
+	users, error := c.getUsers()
+	if error != nil {
+		return nil, error
+	}
+	ps.Users = users
+
 	return ps, nil
+}
+
+func (c *Connector) getUsers() ([]string, error) {
+	var usersList []string
+	appDetails, _, error := c.getAppDetailsByName(c.zone.getApplicationName())
+	if error != nil {
+		return nil, error
+	}
+	var teams *teams
+	for _, owner := range appDetails.OwnerIdType {
+		if owner.OwnerType == UserType.String() {
+			user, error := c.retrieveUser(owner.OwnerId)
+			if error != nil {
+				return nil, error
+			}
+			usersList = append(usersList, user.Username)
+		} else {
+			if owner.OwnerType == TeamType.String() {
+				if teams == nil {
+					teams, error = c.retrieveTeams()
+					if error != nil {
+						return nil, error
+					}
+				}
+				if teams != nil {
+					for _, team := range teams.Teams {
+						if team.ID == owner.OwnerId {
+							usersList = append(usersList, team.Name)
+							break
+						}
+					}
+				}
+			}
+		}
+	}
+	return usersList, nil
 }
 
 func PolicyExist(policyName string, c *Connector) (bool, error) {
@@ -379,66 +426,171 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 		return "", fmt.Errorf("application name is empty, please provide zone in the format: app_name\\cit_name")
 	}
 
-	userDetails, err := getUserDetails(c)
-	if err != nil {
-		return "", err
-	}
-
 	appDetails, statusCode, err := c.getAppDetailsByName(appName)
 
 	if err != nil && statusCode == 404 { //means application was not found.
 		log.Printf("creating application: %s", appName)
-		ownerId := policy.OwnerIdType{
-			OwnerId:   userDetails.User.ID,
-			OwnerType: "USER",
+
+		_, error := c.createApplication(appName, ps, cit)
+		if error != nil {
+			return "", error
 		}
 
-		appIssuingTemplate := make(map[string]string)
-		appIssuingTemplate[cit.Name] = cit.ID
-
-		//create application
-		//fmt.Println(details.ApplicationId)
-		appReq := policy.ApplicationCreateRequest{
-			OwnerIdsAndTypes:                     []policy.OwnerIdType{ownerId},
-			Name:                                 appName,
-			CertificateIssuingTemplateAliasIdMap: appIssuingTemplate,
-		}
-
-		url := c.getURL(urlAppRoot)
-
-		_, status, _, err = c.request("POST", url, appReq)
-		if err != nil {
-			return "", err
-		}
-
-	} else {
-		//update the application and assign the cit tho the application
-		exist, err := PolicyExist(name, c)
-
-		if err != nil {
-			return "", err
-		}
-
-		if !exist { // relation between app-cit doesn't exist so create it.
-			log.Printf("updating application: %s", appName)
-
-			appReq := createAppUpdateRequest(appDetails, cit)
-
-			url := c.getURL(urlAppRoot)
-
-			url = fmt.Sprint(url, "/", appDetails.ApplicationId)
-
-			_, status, _, err = c.request("PUT", url, appReq)
-			if err != nil {
-				return "", err
-			}
-
+	} else { //determine if the application needs to be updated
+		log.Printf("updating application: %s", appName)
+		error := c.updateApplication(name, ps, cit, appDetails)
+		if error != nil {
+			return "", error
 		}
 	}
 
 	log.Printf("policy successfully applied to %s", name)
 
 	return status, nil
+}
+
+func (c *Connector) createApplication(appName string, ps *policy.PolicySpecification, cit *certificateTemplate) (*policy.Application, error) {
+	appIssuingTemplate := make(map[string]string)
+	appIssuingTemplate[cit.Name] = cit.ID
+
+	var owners []policy.OwnerIdType
+	var err error
+
+	//if users were passed to the PS, then it will needed to resolve the related Owners to set them
+	if len(ps.Users) > 0 {
+		owners, err = c.resolveOwners(ps.Users)
+	} else { //if the users were not specified in PS, then the current User should be used as owner
+		var owner *policy.OwnerIdType
+		owner, err = c.getOwnerFromUserDetails()
+		if owner != nil {
+			owners = []policy.OwnerIdType{*owner}
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	//create application
+	appReq := policy.Application{
+		OwnerIdsAndTypes:                     owners,
+		Name:                                 appName,
+		CertificateIssuingTemplateAliasIdMap: appIssuingTemplate,
+	}
+
+	url := c.getURL(urlAppRoot)
+
+	_, _, _, err = c.request("POST", url, appReq)
+	if err != nil {
+		return nil, err
+	}
+
+	return &appReq, nil
+}
+
+func (c *Connector) updateApplication(name string, ps *policy.PolicySpecification, cit *certificateTemplate, appDetails *ApplicationDetails) error {
+
+	//creating the app to use as request
+	appReq := createAppUpdateRequest(appDetails)
+
+	//determining if the relationship between application and cit exist
+	citAddedToApp := false
+	exist, err := PolicyExist(name, c)
+	if err != nil {
+		return err
+	}
+	if !exist {
+		c.addCitToApp(&appReq, cit)
+		citAddedToApp = true
+	}
+
+	//determining if the owners where provided and should be updated
+	ownersUpdated := false
+	//given that the application exists, the only way to update the owners at the application
+	//is that users in the policy specification were provided
+	if len(ps.Users) > 0 {
+		//resolving and setting owners
+		owners, error := c.resolveOwners(ps.Users)
+		if error != nil {
+			return error
+		}
+		appReq.OwnerIdsAndTypes = owners
+		ownersUpdated = true
+	}
+
+	//if the cit was added to the app or the owners were updated, then is required
+	//to update the application
+	if citAddedToApp || ownersUpdated {
+		url := c.getURL(urlAppRoot)
+		url = fmt.Sprint(url, "/", appDetails.ApplicationId)
+		_, _, _, err = c.request("PUT", url, appReq)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (c *Connector) addCitToApp(app *policy.Application, cit *certificateTemplate) {
+	//add cit to the map.
+	value, ok := app.CertificateIssuingTemplateAliasIdMap[cit.Name]
+	if !ok || value != cit.ID {
+		app.CertificateIssuingTemplateAliasIdMap[cit.Name] = cit.ID
+	}
+}
+
+func (c *Connector) resolveOwners(usersList []string) ([]policy.OwnerIdType, error) {
+
+	var owners []policy.OwnerIdType
+	var teams *teams
+
+	for _, userName := range usersList {
+		users, error := c.retrieveUsers(userName)
+		if error != nil {
+			return nil, error
+		}
+		if users != nil {
+			owners = appendOwner(owners, users.Users[0].ID, UserType)
+		} else {
+			if teams == nil {
+				teams, error = c.retrieveTeams()
+			}
+			if teams != nil {
+				for _, team := range teams.Teams {
+					if team.Name == userName {
+						owners = appendOwner(owners, team.ID, TeamType)
+						break
+					}
+				}
+			}
+		}
+	}
+
+	return owners, nil
+}
+
+func appendOwner(owners []policy.OwnerIdType, ownerId string, ownerType OwnerType) []policy.OwnerIdType {
+	owner := createOwner(ownerId, ownerType)
+	return append(owners, *owner)
+}
+
+func (c *Connector) getOwnerFromUserDetails() (*policy.OwnerIdType, error) {
+	userDetails, err := getUserDetails(c)
+	if err != nil {
+		return nil, err
+	}
+	owner := createOwner(userDetails.User.ID, UserType)
+	return owner, nil
+}
+
+func createOwner(ownerId string, ownerType OwnerType) *policy.OwnerIdType {
+	ownerIdType := policy.OwnerIdType{
+		OwnerId:   ownerId,
+		OwnerType: ownerType.String(),
+	}
+
+	return &ownerIdType
 }
 
 // NewConnector creates a new Venafi Cloud Connector object used to communicate with Venafi Cloud
@@ -1378,6 +1530,53 @@ func getUserDetails(c *Connector) (*userDetails, error) {
 	}
 	c.user = ud
 	return ud, nil
+}
+
+func (c *Connector) retrieveUser(id string) (*user, error) {
+
+	url := c.getURL(urlUserById)
+	url = fmt.Sprintf(url, id)
+
+	statusCode, status, body, err := c.request("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	user, err := parseUserByIdResult(http.StatusOK, statusCode, status, body)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (c *Connector) retrieveUsers(userName string) (*users, error) {
+
+	url := c.getURL(urlUsersByName)
+	url = fmt.Sprintf(url, userName)
+
+	statusCode, status, body, err := c.request("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	users, err := parseUsersByNameResult(http.StatusOK, statusCode, status, body)
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
+func (c *Connector) retrieveTeams() (*teams, error) {
+
+	url := c.getURL(urlTeams)
+
+	statusCode, status, body, err := c.request("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	teams, err := parseTeamsResult(http.StatusOK, statusCode, status, body)
+	if err != nil {
+		return nil, err
+	}
+	return teams, nil
 }
 
 func getAccounts(caName string, c *Connector) (*policy.Accounts, *policy.CertificateAuthorityInfo, error) {
