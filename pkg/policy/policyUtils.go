@@ -814,7 +814,7 @@ func ValidateCloudPolicySpecification(ps *PolicySpecification) error {
 	if ps.Default != nil && ps.Default.KeyPair != nil {
 
 		if ps.Default.KeyPair.KeyType != nil && *(ps.Default.KeyPair.KeyType) != "" {
-			if *(ps.Default.KeyPair.KeyType) != "RSA" {
+			if *(ps.Default.KeyPair.KeyType) != "RSA" && *(ps.Default.KeyPair.KeyType) != "EC" {
 				return fmt.Errorf("specified default attribute keyType value is not supported on VaaS")
 			}
 		}
@@ -1157,11 +1157,19 @@ func BuildCloudCitRequest(ps *PolicySpecification, ca *CADetails) (*CloudPolicyR
 		if ps.Default.KeyPair.KeyType != nil {
 
 			key.Type = *(ps.Default.KeyPair.KeyType)
-			if ps.Default.KeyPair.RsaKeySize != nil {
-				key.Length = *(ps.Default.KeyPair.RsaKeySize)
-			} else {
-				//default
-				key.Length = 2048
+			if key.Type == "RSA" {
+				if ps.Default.KeyPair.RsaKeySize != nil {
+					key.Length = *(ps.Default.KeyPair.RsaKeySize)
+				} else {
+					//default
+					key.Length = 2048
+				}
+			} else if key.Type == "EC" {
+				if ps.Default.KeyPair.EllipticCurve != nil && *(ps.Default.KeyPair.EllipticCurve) != "" {
+					key.Curve = *(ps.Default.KeyPair.EllipticCurve)
+				} else {
+					key.Curve = "P256"
+				}
 			}
 
 			shouldCreateKPRS = true

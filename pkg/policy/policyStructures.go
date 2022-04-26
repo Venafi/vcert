@@ -99,7 +99,8 @@ type RecommendedSettings struct {
 
 type Key struct {
 	Type   string `json:"type"`
-	Length int    `json:"length"`
+	Length int    `json:"length,omitempty"`
+	Curve  string `json:"curve,omitempty"`
 }
 
 type ApplicationCreateRequest struct {

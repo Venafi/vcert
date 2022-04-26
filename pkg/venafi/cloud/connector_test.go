@@ -1726,6 +1726,81 @@ func TestVerifyCSRServiceGenerated(t *testing.T) {
 
 }
 
+func TestGenerateCertificateEC(t *testing.T) {
+	policyName := os.Getenv("VAAS_ZONE_ONLY_EC")
+
+	conn := getTestConnector(policyName)
+	conn.verbose = true
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	req := getBasicRequest()
+	req.KeyType = certificate.KeyTypeECDSA
+	req.KeyCurve = certificate.EllipticCurveP384
+	req.CsrOrigin = certificate.ServiceGeneratedCSR
+
+	id, err := conn.RequestCertificate(&req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	req.PickupID = id
+	req.ChainOption = certificate.ChainOptionRootFirst
+	req.KeyPassword = "abcede"
+	req.Timeout = time.Duration(180) * time.Second
+
+	isCSRService, err := conn.IsCSRServiceGenerated(&req)
+
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	if !isCSRService {
+		t.Fatal("Requested certificate should be CSR service generated")
+	}
+
+}
+
+func TestGenerateCertificateECDefault(t *testing.T) {
+	policyName := os.Getenv("VAAS_ZONE_ONLY_EC")
+
+	conn := getTestConnector(policyName)
+	conn.verbose = true
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	req := getBasicRequest()
+	req.KeyType = certificate.KeyTypeECDSA
+	req.CsrOrigin = certificate.ServiceGeneratedCSR
+
+	id, err := conn.RequestCertificate(&req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	req.PickupID = id
+	req.ChainOption = certificate.ChainOptionRootFirst
+	req.KeyPassword = "abcede"
+	req.Timeout = time.Duration(180) * time.Second
+
+	isCSRService, err := conn.IsCSRServiceGenerated(&req)
+
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	if !isCSRService {
+		t.Fatal("Requested certificate should be CSR service generated")
+	}
+
+}
+
 func TestGetType(t *testing.T) {
 	policyName := os.Getenv("CLOUD_ZONE_RESTRICTED")
 
