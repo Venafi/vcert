@@ -333,7 +333,6 @@ const (
 	urlResourceCleanPolicy            urlResource = "vedsdk/config/clearpolicyattribute"
 	urlResourceBrowseIdentities       urlResource = "vedsdk/Identity/Browse"
 	urlResourceValidateIdentity       urlResource = "vedsdk/Identity/Validate"
-	urlResourceIdentitySelf           urlResource = "vedsdk/Identity/Self"
 	urlResourceSshCertReq             urlResource = "vedsdk/SSHCertificates/request"
 	urlResourceSshCertRet             urlResource = "vedsdk/SSHCertificates/retrieve"
 	urlResourceSshCAPubKey            urlResource = "vedsdk/SSHCertificates/Template/Retrieve/PublicKeyData"
@@ -661,25 +660,6 @@ func parseBrowseIdentitiesResult(httpStatusCode int, httpStatus string, body []b
 }
 
 func parseBrowseIdentitiesData(b []byte) (data policy.BrowseIdentitiesResponse, err error) {
-	err = json.Unmarshal(b, &data)
-	return
-}
-
-func parseIdentitySelfResult(httpStatusCode int, httpStatus string, body []byte) (policy.IdentitySelfResponse, error) {
-	var identitySelfResponse policy.IdentitySelfResponse
-	switch httpStatusCode {
-	case http.StatusOK, http.StatusAccepted:
-		identitySelfResponse, err := parseIdentitySelfData(body)
-		if err != nil {
-			return identitySelfResponse, err
-		}
-		return identitySelfResponse, nil
-	default:
-		return identitySelfResponse, fmt.Errorf("Unexpected status code on TPP Identity Self. Status: %s", httpStatus)
-	}
-}
-
-func parseIdentitySelfData(b []byte) (data policy.IdentitySelfResponse, err error) {
 	err = json.Unmarshal(b, &data)
 	return
 }
