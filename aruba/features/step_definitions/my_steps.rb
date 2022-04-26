@@ -1,3 +1,5 @@
+require 'date'
+
 Then(/^it should show deprecated warning$/) do
   steps %{
     Given the exit status should be 0
@@ -126,7 +128,7 @@ Then(/^it should( not)? output (access|refresh) token( in JSON)?$/) do |negated,
   end
 end
 
-Then(/^it should( not)? output (application|expires|scope)( in JSON)?$/) do |negated, property, json|
+Then(/^it should( not)? output (application|expires|scope|refresh_until)( in JSON)?$/) do |negated, property, json|
 
   if @previous_command_output.nil?
     fail(ArgumentError.new('@previous_command_output is nil'))
@@ -146,6 +148,9 @@ Then(/^it should( not)? output (application|expires|scope)( in JSON)?$/) do |neg
         @expires = unescape_text(normalize_json(@previous_command_output, "expires_ISO8601")).tr('"', '')
       elsif property === "scope"
         @scope = unescape_text(normalize_json(@previous_command_output, "scope")).tr('"', '')
+      elsif property === "refresh_until"
+        @refresh_until = unescape_text(normalize_json(@previous_command_output, "refresh_until")).tr('"', '')
+        Integer(@refresh_until)
       else
         fail(ArgumentError.new("Cant determine property type for #{property}"))
       end
@@ -159,6 +164,10 @@ Then(/^it should( not)? output (application|expires|scope)( in JSON)?$/) do |neg
       elsif property === "scope"
         m = @previous_command_output.match /^scope:  (.+)$/
         @scope = m[1]
+      elsif property === "refresh_until"
+        m = @previous_command_output.match /^refresh_until:  (.+)$/
+        @refresh_until = m[1]
+        Date.parse(@refresh_until)
       else
         fail(ArgumentError.new("Cant determine property type for #{property}"))
       end

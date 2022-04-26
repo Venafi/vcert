@@ -651,6 +651,7 @@ func doCommandCredMgmt1(c *cli.Context) error {
 				fmt.Println("access_token: ", resp.Access_token)
 				fmt.Println("access_token_expires: ", tm)
 				fmt.Println("refresh_token: ", resp.Refresh_token)
+				fmt.Println("refresh_until: ", time.Unix(int64(resp.Refresh_until), 0).UTC().Format(time.RFC3339))
 			}
 		} else if cfg.Credentials.User != "" && cfg.Credentials.Password != "" {
 
@@ -680,6 +681,7 @@ func doCommandCredMgmt1(c *cli.Context) error {
 				fmt.Println("access_token_expires: ", tm)
 				if resp.Refresh_token != "" {
 					fmt.Println("refresh_token: ", resp.Refresh_token)
+					fmt.Println("refresh_until: ", time.Unix(int64(resp.Refresh_until), 0).UTC().Format(time.RFC3339))
 				}
 			}
 		} else if clientP12 {
@@ -700,6 +702,7 @@ func doCommandCredMgmt1(c *cli.Context) error {
 				fmt.Println("access_token_expires: ", tm)
 				if resp.Refresh_token != "" {
 					fmt.Println("refresh_token: ", resp.Refresh_token)
+					fmt.Println("refresh_until: ", time.Unix(int64(resp.Refresh_until), 0).UTC().Format(time.RFC3339))
 				}
 			}
 		} else {
