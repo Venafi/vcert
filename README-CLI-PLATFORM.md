@@ -319,6 +319,7 @@ vcert revoke -u https://tpp.venafi.example -t "ql8AEpCtGSv61XGfAknXIA==" --thumb
 ## Appendix
 
 ### Obtaining an Authorization Token
+![Minimum Patch Level: TPP 20.2.2+ and 20.3.3+](https://img.shields.io/badge/Minimum%20Patch%20Level-%20TPP%2020.2.2%20and%2020.3.3-f9a90c)
 ```
 vcert getcred -u <tpp url> --username <tpp username> --password <tpp password>
 
@@ -340,7 +341,7 @@ Options:
 | `--username`     | Use to specify the username of a Venafi Platform user. Required if `--p12-file` or `--t` is not present and may not be combined with either. |
 
 ### Checking the validity of an Authorization Token
-![Minimum Patch Level: TPP 20.1.7+ and 20.2.2+](https://img.shields.io/badge/Minimum%20Patch%20Level-%20TPP%2020.1.7%20and%2020.2.2-f9a90c)
+![Minimum Patch Level: TPP 20.2.2+ and 20.3.3+](https://img.shields.io/badge/Minimum%20Patch%20Level-%20TPP%2020.2.2%20and%2020.3.3-f9a90c)
 ```
 vcert checkcred -u <tpp url> -t <access token>
 ```
@@ -390,4 +391,5 @@ Options:
 | `--san-dns`          | Use to specify a DNS Subject Alternative Name. To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-dns one.example.com` `--san-dns two.example.com` |
 | `--san-email`        | Use to specify an Email Subject Alternative Name.  To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-email me@example.com` `--san-email you@example.com` |
 | `--san-ip`           | Use to specify an IP Address Subject Alternative Name.  To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-ip 10.20.30.40` `--san-ip 192.168.192.168` |
+| `--san-uri`          | Use to specify a Uniform Resource Indicator Subject Alternative Name.  To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-uri spiffe://workload1.example.com` `--san-uri spiffe://workload2.example.com` |
 | `--st` | Use to specify the state or province (ST) for the Subject DN. |
