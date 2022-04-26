@@ -849,7 +849,7 @@ func TestSetPolicy(t *testing.T) {
 
 	//validating the default users attribute was created
 	users := []string{
-		"admin@opensource.qa.venafi.io",
+		"jenkins@opensource.qa.venafi.io",
 	}
 	valid := test.IsArrayStringEqual(users, ps.Users)
 	if !valid {
