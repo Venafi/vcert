@@ -846,17 +846,18 @@ func TestSetPolicy(t *testing.T) {
 	}
 
 	//validate each attribute
-
+	userDetails, err := getUserDetails(conn)
 	//validating the default users attribute was created
 	users := []string{
-		"jenkins@opensource.qa.venafi.io",
+		//"jenkins@opensource.qa.venafi.io",
+		userDetails.User.Username,
 	}
 	valid := test.IsArrayStringEqual(users, ps.Users)
 	if !valid {
 		t.Fatalf("It was expected that the current user %s be set as user of the PolicySpecification created but got %+q", users[0], ps.Users)
 	}
 
-	//Validating the addition of an user
+	//Validating the addition of a user
 	users = append(users, "resource-owner@opensource.qa.venafi.io")
 	ps.Users = users
 

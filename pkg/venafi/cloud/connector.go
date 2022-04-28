@@ -454,21 +454,21 @@ func (c *Connector) createApplication(appName string, ps *policy.PolicySpecifica
 	appIssuingTemplate[cit.Name] = cit.ID
 
 	var owners []policy.OwnerIdType
-	var err error
+	var error error
 
 	//if users were passed to the PS, then it will needed to resolve the related Owners to set them
 	if len(ps.Users) > 0 {
-		owners, err = c.resolveOwners(ps.Users)
+		owners, error = c.resolveOwners(ps.Users)
 	} else { //if the users were not specified in PS, then the current User should be used as owner
 		var owner *policy.OwnerIdType
-		owner, err = c.getOwnerFromUserDetails()
+		owner, error = c.getOwnerFromUserDetails()
 		if owner != nil {
 			owners = []policy.OwnerIdType{*owner}
 		}
 	}
 
-	if err != nil {
-		return nil, err
+	if error != nil {
+		return nil, fmt.Errorf("an error happened trying to resolve the owners: %w", error)
 	}
 
 	//create application
@@ -480,9 +480,9 @@ func (c *Connector) createApplication(appName string, ps *policy.PolicySpecifica
 
 	url := c.getURL(urlAppRoot)
 
-	_, _, _, err = c.request("POST", url, appReq)
-	if err != nil {
-		return nil, err
+	_, _, _, error = c.request("POST", url, appReq)
+	if error != nil {
+		return nil, error
 	}
 
 	return &appReq, nil
@@ -512,7 +512,7 @@ func (c *Connector) updateApplication(name string, ps *policy.PolicySpecificatio
 		//resolving and setting owners
 		owners, error := c.resolveOwners(ps.Users)
 		if error != nil {
-			return error
+			return fmt.Errorf("an error happened trying to resolve the owners: %w", error)
 		}
 		appReq.OwnerIdsAndTypes = owners
 		ownersUpdated = true
@@ -544,30 +544,38 @@ func (c *Connector) resolveOwners(usersList []string) ([]policy.OwnerIdType, err
 
 	var owners []policy.OwnerIdType
 	var teams *teams
+	var err error
 
 	for _, userName := range usersList {
-		users, error := c.retrieveUsers(userName)
-		if error != nil {
-			return nil, error
-		}
+		//The error should be ignored in order to confirm if the userName is not a TeamName
+		users, _ := c.retrieveUsers(userName)
+
 		if users != nil {
 			owners = appendOwner(owners, users.Users[0].ID, UserType)
 		} else {
 			if teams == nil {
-				teams, error = c.retrieveTeams()
+				teams, err = c.retrieveTeams()
+			}
+			if err != nil {
+				return nil, err
 			}
 			if teams != nil {
+				var found = false
 				for _, team := range teams.Teams {
 					if team.Name == userName {
 						owners = appendOwner(owners, team.ID, TeamType)
+						found = true
 						break
 					}
+				}
+				if !found {
+					return nil, fmt.Errorf("it was not possible to find the user %s", userName)
 				}
 			}
 		}
 	}
 
-	return owners, nil
+	return owners, err
 }
 
 func appendOwner(owners []policy.OwnerIdType, ownerId string, ownerType OwnerType) []policy.OwnerIdType {
