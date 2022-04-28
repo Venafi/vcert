@@ -835,7 +835,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 	}
 
 	log.Printf("policy specification is valid")
-	var status = ""
+	var status string
 	tppPolicy := policy.BuildTppPolicy(ps)
 	if !strings.HasPrefix(name, util.PathSeparator) {
 		name = util.PathSeparator + name
@@ -883,7 +883,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 			ObjectDN: *(tppPolicy.Name),
 		}
 
-		_, status, _, err = c.request("POST", urlResourceCreatePolicy, req)
+		_, _, _, err = c.request("POST", urlResourceCreatePolicy, req)
 
 		if err != nil {
 			return "", err
@@ -895,7 +895,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 
 	//create Approver
 	if tppPolicy.Approver != nil {
-		_, status, _, err = createPolicyAttribute(c, policy.TppApprover, tppPolicy.Approver, *(tppPolicy.Name), true)
+		_, _, _, err = createPolicyAttribute(c, policy.TppApprover, tppPolicy.Approver, *(tppPolicy.Name), true)
 		if err != nil {
 			return "", err
 		}
@@ -1048,7 +1048,7 @@ func (c *Connector) setContact(tppPolicy *policy.TppPolicy) (status string, err 
 	if tppPolicy.Contact != nil {
 		contacts, err := c.resolveContacts(tppPolicy.Contact)
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("an error happened trying to resolve the contacts: %w", err)
 		}
 		if contacts != nil {
 			tppPolicy.Contact = contacts
@@ -1094,6 +1094,10 @@ func (c *Connector) getIdentity(userName string) (*policy.IdentityEntry, error) 
 
 	if len(resp.Identities) > 1 {
 		return nil, fmt.Errorf("only one Identity must be returned but it was returned more than one")
+	} else {
+		if len(resp.Identities) != 1 {
+			return nil, fmt.Errorf("it was not possible to find the user %s", userName)
+		}
 	}
 
 	return &resp.Identities[0], nil
