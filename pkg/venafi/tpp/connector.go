@@ -1636,6 +1636,44 @@ func (c *Connector) configDNToGuid(objectDN string) (guid string, err error) {
 
 }
 
+func (c *Connector) findObjectsOfClass(req *findObjectsOfClassRequest) (*findObjectsOfClassResponse, error) {
+	statusCode, statusString, body, err := c.request("POST", urlResourceFindObjectsOfClass, req)
+	if err != nil {
+		return nil, err
+	}
+	response, err := parseFindObjectsOfClassResponse(statusCode, statusString, body)
+	if err != nil {
+		return nil, err
+	}
+	return &response, nil
+}
+
+// getZonesStartingWith returns a list of valid zones for a TPP parent folder specified by zonePrefix
+func (c *Connector) getZonesStartingWith(zonePrefix string) ([]string, error) {
+	var zones []string
+
+	parentFolderDn := zonePrefix
+	if !strings.HasPrefix(parentFolderDn, "\\VED\\Policy") {
+		parentFolderDn = fmt.Sprintf("\\VED\\Policy\\%s", parentFolderDn)
+	}
+
+	request := findObjectsOfClassRequest{
+		Class:    "Policy",
+		ObjectDN: parentFolderDn,
+	}
+
+	response, err := c.findObjectsOfClass(&request)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, folder := range response.PolicyObjects {
+		zones = append(zones, folder.DN)
+	}
+
+	return zones, nil
+}
+
 func createPolicyAttribute(c *Connector, at string, av []string, n string, l bool) (statusCode int, statusText string, body []byte, err error) {
 
 	request := policy.PolicySetAttributePayloadRequest{

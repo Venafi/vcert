@@ -297,6 +297,27 @@ type DNToGUIDResponse struct {
 type DNToGUIDRequest struct {
 	ObjectDN string `json:"ObjectDN"`
 }
+
+type policyObject struct {
+	AbsoluteGUID string `json:"AbsoluteGUID"`
+	DN           string `json:"DN"`
+	GUID         string `json:"GUID"`
+	ID           int32  `json:"Id"`
+	Name         string `json:"Name"`
+	Parent       string `json:"Parent"`
+	Revision     int64  `json:"Revision"`
+	TypeName     string `json:"TypeName"`
+}
+
+type findObjectsOfClassRequest struct {
+	Class    string `json:"Class"`
+	ObjectDN string `json:"ObjectDN"`
+}
+
+type findObjectsOfClassResponse struct {
+	PolicyObjects []policyObject `json:"Objects,omitempty"`
+}
+
 type systemStatusVersionResponse string
 
 type urlResource string
@@ -341,6 +362,7 @@ const (
 	urlResourceSshCADetails           urlResource = "vedsdk/SSHCertificates/Template/Retrieve"
 	urlResourceSshTemplateAvaliable   urlResource = "vedsdk/SSHCertificates/Template/Available"
 	urlResourceDNToGUID               urlResource = "vedsdk/Config/DnToGuid"
+	urlResourceFindObjectsOfClass     urlResource = "vedsdk/config/findobjectsofclass"
 )
 
 const (
@@ -683,6 +705,20 @@ func parseValidateIdentityResponse(httpStatusCode int, httpStatus string, body [
 func parseValidateIdentityData(b []byte) (data policy.ValidateIdentityResponse, err error) {
 	err = json.Unmarshal(b, &data)
 	return
+}
+
+func parseFindObjectsOfClassResponse(httpStatusCode int, httpStatus string, body []byte) (findObjectsOfClassResponse, error) {
+	var response findObjectsOfClassResponse
+	switch httpStatusCode {
+	case http.StatusOK, http.StatusAccepted:
+		err := json.Unmarshal(body, &response)
+		if err != nil {
+			return response, err
+		}
+		return response, nil
+	default:
+		return response, fmt.Errorf("Unexpected status from FindObjectsOfClass. Status: %s", httpStatus)
+	}
 }
 
 type _strValue struct {

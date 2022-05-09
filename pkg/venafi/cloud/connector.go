@@ -1482,6 +1482,22 @@ func (c *Connector) getAppDetailsByName(appName string) (*ApplicationDetails, in
 	return details, statusCode, nil
 }
 
+// getZonesStartingWith returns a list of valid zones for a VaaS application specified by zonePrefix
+func (c *Connector) getZonesStartingWith(zonePrefix string) ([]string, error) {
+	var zones []string
+
+	appDetails, _, err := c.getAppDetailsByName(zonePrefix)
+	if err != nil {
+		return nil, err
+	}
+
+	for citAlias := range appDetails.CitAliasToIdMap {
+		zone := fmt.Sprintf("%s\\%s", zonePrefix, citAlias)
+		zones = append(zones, zone)
+	}
+	return zones, nil
+}
+
 func (c *Connector) getTemplateByID() (*certificateTemplate, error) {
 	url := c.getURL(urlResourceTemplate)
 	appNameEncoded := netUrl.PathEscape(c.zone.getApplicationName())
