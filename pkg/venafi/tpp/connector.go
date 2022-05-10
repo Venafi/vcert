@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2021 Venafi, Inc.
+ * Copyright 2018-2022 Venafi, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1661,16 +1661,15 @@ func (c *Connector) getZonesStartingWith(zonePrefix string) ([]string, error) {
 		Class:    "Policy",
 		ObjectDN: parentFolderDn,
 	}
-
 	response, err := c.findObjectsOfClass(&request)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, folder := range response.PolicyObjects {
-		zones = append(zones, folder.DN)
+		// folder.DN will always start with \VED\Policy but short form is preferrable since both are supported
+		zones = append(zones, strings.Replace(folder.DN, "\\VED\\Policy\\", "", 1))
 	}
-
 	return zones, nil
 }
 
