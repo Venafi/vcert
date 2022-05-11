@@ -1530,6 +1530,7 @@ func (c *Connector) CreateAPIUserAccount(userName string, password string) (int,
 		UserAccountType: "API",
 		Username:        userName,
 		Password:        password,
+		Firstname:       userName, //Given the issue reported in https://jira.eng.venafi.com/browse/VC-16461 it's required the workaround to set something on firstName or lastName field.
 	}
 
 	return c.CreateUserAccount(&userAccountReq)
@@ -1538,7 +1539,7 @@ func (c *Connector) CreateAPIUserAccount(userName string, password string) (int,
 func (c *Connector) CreateUserAccount(userAccount *userAccount) (int, *userDetails, error) {
 
 	url := c.getURL(urlResourceUserAccounts)
-	statusCode, status, body, err := c.request("POST", url, userAccount)
+	statusCode, status, body, err := c.request("POST", url, userAccount, true)
 	if err != nil {
 		return statusCode, nil, err
 	}

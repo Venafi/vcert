@@ -300,7 +300,7 @@ func (c *Connector) getHTTPClient() *http.Client {
 func (c *Connector) request(method string, url string, data interface{}, authNotRequired ...bool) (statusCode int, statusText string, body []byte, err error) {
 	if c.user == nil || c.user.Company == nil {
 		if !(len(authNotRequired) == 1 && authNotRequired[0]) {
-			err = fmt.Errorf("%w: must be autheticated to retieve certificate", verror.VcertError)
+			err = fmt.Errorf("%w: must be autheticated to retrieve certificate", verror.VcertError)
 			return
 		}
 	}

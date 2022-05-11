@@ -38,6 +38,11 @@ type newClientArgs struct {
 // The returned connector will be authenticated by default, but it's possible to pass a bool argument to indicate if it's
 // desired to get the connector authenticated already or not.
 func (cfg *Config) NewClient(args ...interface{}) (connector endpoint.Connector, err error) {
+	return cfg.newClient(args)
+}
+
+//this function is to manage the variadic arguments
+func (cfg *Config) newClient(args []interface{}) (connector endpoint.Connector, err error) {
 
 	var clientArgs *newClientArgs
 	clientArgs, err = getNewClientArguments(args)
@@ -79,7 +84,7 @@ func (cfg *Config) NewClient(args ...interface{}) (connector endpoint.Connector,
 	return
 }
 
-func getNewClientArguments(args ...interface{}) (*newClientArgs, error) {
+func getNewClientArguments(args []interface{}) (*newClientArgs, error) {
 
 	if len(args) > 1 {
 		return nil, fmt.Errorf("too many arguments passed. " +
@@ -112,5 +117,5 @@ func getNewClientArguments(args ...interface{}) (*newClientArgs, error) {
 // The returned connector will be authenticated by default, but it's possible to pass a bool argument to indicate if it's
 // desired to get the connector authenticated already or not.
 func NewClient(cfg *Config, args ...interface{}) (endpoint.Connector, error) {
-	return cfg.NewClient(args)
+	return cfg.newClient(args)
 }

@@ -621,28 +621,31 @@ func doCommandCredMgmt1(c *cli.Context) error {
 		return fmt.Errorf("could not create connector: %s", err)
 	}
 
+	var vaasConnector *cloud.Connector
+	var tppConnector *tpp.Connector
+	var okCasting bool
+
+	//if the email flag is provided then that means that the VaaS headless registration is the required by user
+	if flags.email != "" {
+		vaasConnector, okCasting = connector.(*cloud.Connector)
+		if !okCasting {
+			return fmt.Errorf("could not cast to VaaS connector")
+		}
+	} else {
+		tppConnector, okCasting = connector.(*tpp.Connector)
+		if !okCasting {
+			return fmt.Errorf("could not cast to TPP connector")
+		}
+	}
+
 	switch c.Command.Name {
 	case commandGetCredName:
-		//if the email flag is provided then that means that the VaaS headless registration is the required by user
-		if flags.email != "" {
-			tppConnector, ok := connector.(*cloud.Connector)
-			if !ok {
-				return fmt.Errorf("could not cast to VaaS connector")
-			}
-			return getVaaSCredentials(tppConnector, &cfg)
+		if vaasConnector != nil {
+			return getVaaSCredentials(vaasConnector, &cfg)
 		} else {
-			tppConnector, ok := connector.(*tpp.Connector)
-			if !ok {
-				return fmt.Errorf("could not cast to TPP connector")
-			}
 			return getTppCredentials(tppConnector, &cfg, clientP12)
 		}
 	case commandCheckCredName:
-		tppConnector, ok := connector.(*tpp.Connector)
-		if !ok {
-			return fmt.Errorf("could not cast to TPP connector")
-		}
-
 		//TODO: quick workaround to supress logs when output is in JSON.
 		if flags.credFormat != "json" {
 			logf("Checking credentials...")
@@ -672,10 +675,6 @@ func doCommandCredMgmt1(c *cli.Context) error {
 			return fmt.Errorf("Failed to determine credentials set")
 		}
 	case commandVoidCredName:
-		tppConnector, ok := connector.(*tpp.Connector)
-		if !ok {
-			return fmt.Errorf("could not cast to TPP connector")
-		}
 		if cfg.Credentials.AccessToken != "" {
 			err := tppConnector.RevokeAccessToken(&endpoint.Authentication{
 				AccessToken: cfg.Credentials.AccessToken,

@@ -105,7 +105,7 @@ ACTIONS:
    getpolicy    To retrieve the certificate policy of a zone
    setpolicy    To apply a certificate policy specification to a zone
 
-   getcred      To obtain a new token for authentication
+   getcred      To obtain a new token for authentication on TPP or create a user account on VaaS
    checkcred    To check the validity of a token and grant
    voidcred     To invalidate an authentication grant
 
