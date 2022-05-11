@@ -27,11 +27,24 @@ import (
 	"log"
 )
 
+type newClientArgs struct {
+	authenticate bool
+}
+
 // NewClient returns a connector for either Trust Protection Platform (TPP) or Venafi Cloud based on provided configuration.
 // Config should have Credentials compatible with the selected ConnectorType.
 // Returned connector is a concurrency-safe interface to TPP or Venafi Cloud that can be reused without restriction.
-// Connector can also be of type "fake" for local tests, which doesn`t connect to any backend and all certificates enroll locally.
-func (cfg *Config) NewClient() (connector endpoint.Connector, err error) {
+// Connector can also be of type "fake" for local tests, which doesn't connect to any backend and all certificates enroll locally.
+// The returned connector will be authenticated by default, but it's possible to pass a bool argument to indicate if it's
+// desired to get the connector authenticated already or not.
+func (cfg *Config) NewClient(args ...interface{}) (connector endpoint.Connector, err error) {
+
+	var clientArgs *newClientArgs
+	clientArgs, err = getNewClientArguments(args)
+	if err != nil {
+		return nil, err
+	}
+
 	var connectionTrustBundle *x509.CertPool
 
 	if cfg.ConnectionTrust != "" {
@@ -59,14 +72,45 @@ func (cfg *Config) NewClient() (connector endpoint.Connector, err error) {
 	connector.SetZone(cfg.Zone)
 	connector.SetHTTPClient(cfg.Client)
 
-	err = connector.Authenticate(cfg.Credentials)
+	if clientArgs.authenticate {
+		err = connector.Authenticate(cfg.Credentials)
+	}
+
 	return
+}
+
+func getNewClientArguments(args ...interface{}) (*newClientArgs, error) {
+
+	if len(args) > 1 {
+		return nil, fmt.Errorf("too many arguments passed. " +
+			"Only a bool argument can be passed to indicate the returned Connector will be authenticated or not. " +
+			"If that argument is ommited, then by default the Connector will be authenticated")
+	}
+
+	var authenticate bool
+	if len(args) == 0 {
+		authenticate = true
+	} else {
+		var ok bool
+		authenticate, ok = args[0].(bool)
+		if !ok {
+			return nil, fmt.Errorf("only a bool argument can be passed to indicate the returned Connector " +
+				"will be authenticated or not. " +
+				"If that argument is ommited, then by default the Connector will be authenticated")
+		}
+	}
+
+	return &newClientArgs{
+		authenticate: authenticate,
+	}, nil
 }
 
 // NewClient returns a connector for either Trust Protection Platform (TPP) or Venafi Cloud based on provided configuration.
 // Config should have Credentials compatible with the selected ConnectorType.
 // Returned connector is a concurrency-safe interface to TPP or Venafi Cloud that can be reused without restriction.
-// Connector can also be of type "fake" for local tests, which doesn`t connect to any backend and all certificates enroll locally.
-func NewClient(cfg *Config) (endpoint.Connector, error) {
-	return cfg.NewClient()
+// Connector can also be of type "fake" for local tests, which doesn't connect to any backend and all certificates enroll locally.
+// The returned connector will be authenticated by default, but it's possible to pass a bool argument to indicate if it's
+// desired to get the connector authenticated already or not.
+func NewClient(cfg *Config, args ...interface{}) (endpoint.Connector, error) {
+	return cfg.NewClient(args)
 }

@@ -58,16 +58,22 @@ var (
 		Hidden:      true,
 	}
 
-	flagTPPPassword = &cli.StringFlag{
+	flagEmail = &cli.StringFlag{
+		Name:        "email",
+		Usage:       "Use to specify the email for headless registration on VaaS.",
+		Destination: &flags.email,
+	}
+
+	flagPassword = &cli.StringFlag{
 		Name:        "password",
-		Usage:       "Use to specify the Trust Protection Platform user's password.",
-		Destination: &flags.tppPassword,
+		Usage:       "Use to specify the Trust Protection Platform user's password or the optional password for the headless registration in VaaS.",
+		Destination: &flags.password,
 	}
 
 	flagTPPPasswordDeprecated = &cli.StringFlag{
 		Name:        "tpp-password",
 		Usage:       "",
-		Destination: &flags.tppPassword,
+		Destination: &flags.password,
 		Hidden:      true,
 	}
 
@@ -771,7 +777,8 @@ var (
 		flagClientP12,
 		flagClientP12PW,
 		flagCredFormat,
-		flagTPPPassword,
+		flagEmail,
+		flagPassword,
 		flagTPPUser,
 		flagScope,
 		flagCredSsh,

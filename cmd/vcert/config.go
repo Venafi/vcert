@@ -70,7 +70,7 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 			}
 			//add support for using enviroment variables ends
 
-			if tppTokenS == "" && flags.tppPassword == "" && flags.clientP12 == "" && c.Command.Name != "sshgetconfig" {
+			if tppTokenS == "" && flags.password == "" && flags.clientP12 == "" && c.Command.Name != "sshgetconfig" {
 				return cfg, fmt.Errorf("A password is required to communicate with TPP")
 			}
 
@@ -80,9 +80,9 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 				} else {
 					auth.AccessToken = flags.tppToken
 				}
-			} else if flags.tppUser != "" && flags.tppPassword != "" {
+			} else if flags.tppUser != "" && flags.password != "" {
 				auth.User = flags.tppUser
-				auth.Password = flags.tppPassword
+				auth.Password = flags.password
 			} else {
 				tokenS := getPropertyFromEnvironment(vCertToken)
 				if tokenS != "" {
@@ -101,6 +101,10 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 			connectorType = endpoint.ConnectorTypeCloud
 			baseURL = flags.url
 			auth.APIKey = apiKey
+			if flags.email != "" {
+				auth.User = flags.email
+				auth.Password = flags.password
+			}
 		}
 		cfg.ConnectorType = connectorType
 		cfg.Credentials = auth

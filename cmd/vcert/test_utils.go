@@ -59,7 +59,7 @@ func unsetFlags() {
 func setEmptyCredentials() {
 	flags.config = "fake config"
 	flags.apiKey = ""
-	flags.tppPassword = ""
+	flags.password = ""
 	flags.tppToken = ""
 	flags.testMode = true
 }

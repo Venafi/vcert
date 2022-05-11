@@ -22,6 +22,8 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"github.com/Venafi/vcert/v4/pkg/venafi/cloud"
+	"github.com/Venafi/vcert/v4/pkg/venafi/tpp"
 	"io/ioutil"
 	"log"
 	"net"
@@ -38,7 +40,6 @@ import (
 	"github.com/Venafi/vcert/v4"
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
-	"github.com/Venafi/vcert/v4/pkg/venafi/tpp"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/crypto/pkcs12"
 )
@@ -67,6 +68,7 @@ var (
 		Action: doCommandCredMgmt1,
 		Usage:  "To obtain a new credential (token) for authentication",
 		UsageText: ` vcert getcred -u https://tpp.example.com --username <TPP user> --password <TPP user password>
+		vcert getcred --email <email address for VaaS headless registration> [--password <password>] [--format (text|json)]
 		vcert getcred -u https://tpp.example.com --p12-file <PKCS#12 client cert> --p12-password <PKCS#12 password> --trust-bundle /path-to/bundle.pem
 		vcert getcred -u https://tpp.example.com -t <TPP refresh token>
 		vcert getcred -u https://tpp.example.com -t <TPP refresh token> --scope <scopes and restrictions>`,
@@ -613,102 +615,34 @@ func doCommandCredMgmt1(c *cli.Context) error {
 	if flags.clientP12 != "" {
 		clientP12 = true
 	}
-	var connectionTrustBundle *x509.CertPool
-	if cfg.ConnectionTrust != "" {
-		logf("You specified a trust bundle.")
-		connectionTrustBundle = x509.NewCertPool()
-		if !connectionTrustBundle.AppendCertsFromPEM([]byte(cfg.ConnectionTrust)) {
-			return fmt.Errorf("Failed to parse PEM trust bundle")
-		}
-	}
-	tppConnector, err := tpp.NewConnector(cfg.BaseUrl, "", cfg.LogVerbose, connectionTrustBundle)
+
+	connector, err := vcert.NewClient(&cfg, false) // Everything else requires an endpoint connection
 	if err != nil {
-		return fmt.Errorf("could not create TPP connector: %s", err)
+		return fmt.Errorf("could not create connector: %s", err)
 	}
 
 	switch c.Command.Name {
 	case commandGetCredName:
-		//TODO: quick workaround to supress logs when output is in JSON.
-		if flags.credFormat != "json" {
-			logf("Getting credentials...")
-		}
-
-		if cfg.Credentials.RefreshToken != "" {
-			resp, err := tppConnector.RefreshAccessToken(&endpoint.Authentication{
-				RefreshToken: cfg.Credentials.RefreshToken,
-				ClientId:     flags.clientId,
-				Scope:        flags.scope,
-			})
-			if err != nil {
-				return err
+		//if the email flag is provided then that means that the VaaS headless registration is the required by user
+		if flags.email != "" {
+			tppConnector, ok := connector.(*cloud.Connector)
+			if !ok {
+				return fmt.Errorf("could not cast to VaaS connector")
 			}
-			if flags.credFormat == "json" {
-				if err := outputJSON(resp); err != nil {
-					return err
-				}
-			} else {
-				tm := time.Unix(int64(resp.Expires), 0).UTC().Format(time.RFC3339)
-				fmt.Println("access_token: ", resp.Access_token)
-				fmt.Println("access_token_expires: ", tm)
-				fmt.Println("refresh_token: ", resp.Refresh_token)
-				fmt.Println("refresh_until: ", time.Unix(int64(resp.Refresh_until), 0).UTC().Format(time.RFC3339))
-			}
-		} else if cfg.Credentials.User != "" && cfg.Credentials.Password != "" {
-
-			auth := &endpoint.Authentication{
-				User:     cfg.Credentials.User,
-				Password: cfg.Credentials.Password,
-				Scope:    flags.scope,
-				ClientId: flags.clientId}
-
-			if flags.sshCred {
-				auth.Scope = "ssh:manage"
-			} else if flags.pmCred {
-				auth.Scope = "certificate:manage,revoke;configuration:manage"
-			}
-
-			resp, err := tppConnector.GetRefreshToken(auth)
-			if err != nil {
-				return err
-			}
-			if flags.credFormat == "json" {
-				if err := outputJSON(resp); err != nil {
-					return err
-				}
-			} else {
-				tm := time.Unix(int64(resp.Expires), 0).UTC().Format(time.RFC3339)
-				fmt.Println("access_token: ", resp.Access_token)
-				fmt.Println("access_token_expires: ", tm)
-				if resp.Refresh_token != "" {
-					fmt.Println("refresh_token: ", resp.Refresh_token)
-					fmt.Println("refresh_until: ", time.Unix(int64(resp.Refresh_until), 0).UTC().Format(time.RFC3339))
-				}
-			}
-		} else if clientP12 {
-			resp, err := tppConnector.GetRefreshToken(&endpoint.Authentication{
-				ClientPKCS12: clientP12,
-				Scope:        flags.scope,
-				ClientId:     flags.clientId})
-			if err != nil {
-				return err
-			}
-			if flags.credFormat == "json" {
-				if err := outputJSON(resp); err != nil {
-					return err
-				}
-			} else {
-				tm := time.Unix(int64(resp.Expires), 0).UTC().Format(time.RFC3339)
-				fmt.Println("access_token: ", resp.Access_token)
-				fmt.Println("access_token_expires: ", tm)
-				if resp.Refresh_token != "" {
-					fmt.Println("refresh_token: ", resp.Refresh_token)
-					fmt.Println("refresh_until: ", time.Unix(int64(resp.Refresh_until), 0).UTC().Format(time.RFC3339))
-				}
-			}
+			return getVaaSCredentials(tppConnector, &cfg)
 		} else {
-			return fmt.Errorf("Failed to determine credentials set")
+			tppConnector, ok := connector.(*tpp.Connector)
+			if !ok {
+				return fmt.Errorf("could not cast to TPP connector")
+			}
+			return getTppCredentials(tppConnector, &cfg, clientP12)
 		}
 	case commandCheckCredName:
+		tppConnector, ok := connector.(*tpp.Connector)
+		if !ok {
+			return fmt.Errorf("could not cast to TPP connector")
+		}
+
 		//TODO: quick workaround to supress logs when output is in JSON.
 		if flags.credFormat != "json" {
 			logf("Checking credentials...")
@@ -738,6 +672,10 @@ func doCommandCredMgmt1(c *cli.Context) error {
 			return fmt.Errorf("Failed to determine credentials set")
 		}
 	case commandVoidCredName:
+		tppConnector, ok := connector.(*tpp.Connector)
+		if !ok {
+			return fmt.Errorf("could not cast to TPP connector")
+		}
 		if cfg.Credentials.AccessToken != "" {
 			err := tppConnector.RevokeAccessToken(&endpoint.Authentication{
 				AccessToken: cfg.Credentials.AccessToken,
@@ -751,6 +689,137 @@ func doCommandCredMgmt1(c *cli.Context) error {
 		}
 	default:
 		return fmt.Errorf("Unexpected credential operation %s", c.Command.Name)
+	}
+
+	return nil
+}
+
+func getTppCredentials(tppConnector *tpp.Connector, cfg *vcert.Config, clientP12 bool) error {
+	//TODO: quick workaround to suppress logs when output is in JSON.
+	if flags.credFormat != "json" {
+		logf("Getting credentials...")
+	}
+
+	if cfg.Credentials.RefreshToken != "" {
+		resp, err := tppConnector.RefreshAccessToken(&endpoint.Authentication{
+			RefreshToken: cfg.Credentials.RefreshToken,
+			ClientId:     flags.clientId,
+			Scope:        flags.scope,
+		})
+		if err != nil {
+			return err
+		}
+		if flags.credFormat == "json" {
+			if err := outputJSON(resp); err != nil {
+				return err
+			}
+		} else {
+			tm := time.Unix(int64(resp.Expires), 0).UTC().Format(time.RFC3339)
+			fmt.Println("access_token: ", resp.Access_token)
+			fmt.Println("access_token_expires: ", tm)
+			fmt.Println("refresh_token: ", resp.Refresh_token)
+			fmt.Println("refresh_until: ", time.Unix(int64(resp.Refresh_until), 0).UTC().Format(time.RFC3339))
+		}
+	} else if cfg.Credentials.User != "" && cfg.Credentials.Password != "" {
+
+		auth := &endpoint.Authentication{
+			User:     cfg.Credentials.User,
+			Password: cfg.Credentials.Password,
+			Scope:    flags.scope,
+			ClientId: flags.clientId}
+
+		if flags.sshCred {
+			auth.Scope = "ssh:manage"
+		} else if flags.pmCred {
+			auth.Scope = "certificate:manage,revoke;configuration:manage"
+		}
+
+		resp, err := tppConnector.GetRefreshToken(auth)
+		if err != nil {
+			return err
+		}
+		if flags.credFormat == "json" {
+			if err := outputJSON(resp); err != nil {
+				return err
+			}
+		} else {
+			tm := time.Unix(int64(resp.Expires), 0).UTC().Format(time.RFC3339)
+			fmt.Println("access_token: ", resp.Access_token)
+			fmt.Println("access_token_expires: ", tm)
+			if resp.Refresh_token != "" {
+				fmt.Println("refresh_token: ", resp.Refresh_token)
+				fmt.Println("refresh_until: ", time.Unix(int64(resp.Refresh_until), 0).UTC().Format(time.RFC3339))
+			}
+		}
+	} else if clientP12 {
+		resp, err := tppConnector.GetRefreshToken(&endpoint.Authentication{
+			ClientPKCS12: clientP12,
+			Scope:        flags.scope,
+			ClientId:     flags.clientId})
+		if err != nil {
+			return err
+		}
+		if flags.credFormat == "json" {
+			if err := outputJSON(resp); err != nil {
+				return err
+			}
+		} else {
+			tm := time.Unix(int64(resp.Expires), 0).UTC().Format(time.RFC3339)
+			fmt.Println("access_token: ", resp.Access_token)
+			fmt.Println("access_token_expires: ", tm)
+			if resp.Refresh_token != "" {
+				fmt.Println("refresh_token: ", resp.Refresh_token)
+				fmt.Println("refresh_until: ", time.Unix(int64(resp.Refresh_until), 0).UTC().Format(time.RFC3339))
+			}
+		}
+	} else {
+		return fmt.Errorf("failed to determine credentials set")
+	}
+
+	return nil
+}
+
+func getVaaSCredentials(vaasConnector *cloud.Connector, cfg *vcert.Config) error {
+	//TODO: quick workaround to suppress logs when output is in JSON.
+	if flags.credFormat != "json" {
+		logf("Getting credentials...")
+	}
+
+	if cfg.Credentials.User != "" {
+
+		statusCode, userDetails, error := vaasConnector.CreateAPIUserAccount(cfg.Credentials.User, cfg.Credentials.Password)
+
+		if error != nil {
+			return fmt.Errorf("failed to create a User Account/rotate API Key in VaaS: %s", error)
+		}
+
+		apiKey := userDetails.APIKey
+
+		if flags.credFormat == "json" {
+			if err := outputJSON(apiKey); err != nil {
+				return err
+			}
+		} else {
+			var headerMessage string
+			if statusCode == http.StatusCreated {
+				headerMessage = "the user account was created successfully. To complete the registration please review your email account and follow the link."
+			} else { // it's assumed the statusCode is 202 which means the user exists and therefore the APIKey is rotated
+				headerMessage = "the user account already exists therefore the API Key was rotated. To complete the activation of the rotated API Key," +
+					" please review your email account and follow the link."
+			}
+
+			fmt.Println(headerMessage)
+			fmt.Println("key: ", apiKey.Key)
+			fmt.Println("userId: ", apiKey.UserID)
+			fmt.Println("userName: ", apiKey.Username)
+			fmt.Println("companyId: ", apiKey.CompanyID)
+			fmt.Println("apiVersion: ", apiKey.APIVersion)
+			fmt.Println("creationDate: ", apiKey.CreationDateString)
+			fmt.Println("validityStartDate: ", apiKey.ValidityStartDateString)
+			fmt.Println("validityEndDate: ", apiKey.ValidityEndDateString)
+		}
+	} else {
+		return fmt.Errorf("failed to determine credentials set")
 	}
 
 	return nil

@@ -38,14 +38,13 @@ type users struct {
 }
 
 type userAccount struct {
-	Username           string `json:"username,omitempty"`
-	Password           string `json:"password,omitempty"`
-	Firstname          string `json:"firstname,omitempty"`
-	Lastname           string `json:"lastname,omitempty"`
-	CompanyID          string `json:"companyId,omitempty"`
-	CompanyName        string `json:"companyName,omitempty"`
-	UserAccountType    string `json:"userAccountType,omitempty"`
-	GreCaptchaResponse string `json:"grecaptchaResponse,omitempty"`
+	Username        string `json:"username,omitempty"`
+	Password        string `json:"password,omitempty"`
+	Firstname       string `json:"firstname,omitempty"`
+	Lastname        string `json:"lastname,omitempty"`
+	CompanyID       string `json:"companyId,omitempty"`
+	CompanyName     string `json:"companyName,omitempty"`
+	UserAccountType string `json:"userAccountType,omitempty"`
 }
 
 func (u *user) encodeToJSON() ([]byte, error) {

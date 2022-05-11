@@ -41,7 +41,10 @@ import (
 )
 
 type apiKey struct {
+	Key                     string    `json:"key,omitempty"`
+	UserID                  string    `json:"userId,omitempty"`
 	Username                string    `json:"username,omitempty"`
+	CompanyID               string    `json:"companyId,omitempty"`
 	APITypes                []string  `json:"apitypes,omitempty"`
 	APIVersion              string    `json:"apiVersion,omitempty"`
 	APIKeyStatus            string    `json:"apiKeyStatus,omitempty"`
@@ -365,6 +368,21 @@ func (c *Connector) request(method string, url string, data interface{}, authNot
 
 func parseUserDetailsResult(expectedStatusCode int, httpStatusCode int, httpStatus string, body []byte) (*userDetails, error) {
 	if httpStatusCode == expectedStatusCode {
+		return parseUserDetailsData(body)
+	}
+	respErrors, err := parseResponseErrors(body)
+	if err != nil {
+		return nil, err // parseResponseErrors always return verror.ServerError
+	}
+	respError := fmt.Sprintf("unexpected status code on Venafi Cloud registration. Status: %s\n", httpStatus)
+	for _, e := range respErrors {
+		respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
+	}
+	return nil, fmt.Errorf("%w: %v", verror.ServerError, respError)
+}
+
+func parseUserDetailsResultFromPOST(httpStatusCode int, httpStatus string, body []byte) (*userDetails, error) {
+	if httpStatusCode == http.StatusCreated || httpStatusCode == http.StatusAccepted {
 		return parseUserDetailsData(body)
 	}
 	respErrors, err := parseResponseErrors(body)
