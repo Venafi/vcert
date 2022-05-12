@@ -802,9 +802,11 @@ func getVaaSCredentials(vaasConnector *cloud.Connector, cfg *vcert.Config) error
 			var headerMessage string
 			if statusCode == http.StatusCreated {
 				headerMessage = "the user account was created successfully. To complete the registration please review your email account and follow the link."
-			} else { // it's assumed the statusCode is 202 which means the user exists and therefore the APIKey is rotated
+			} else if statusCode == http.StatusAccepted {
 				headerMessage = "the user account already exists therefore the API Key was rotated. To complete the activation of the rotated API Key," +
 					" please review your email account and follow the link."
+			} else { // only is expected that the status code returned is 201 or 202
+				return fmt.Errorf("unexpected http status code when the useraccount is tried to be created or api key rotated: %d", statusCode)
 			}
 
 			fmt.Println(headerMessage)
