@@ -1648,8 +1648,8 @@ func (c *Connector) findObjectsOfClass(req *findObjectsOfClassRequest) (*findObj
 	return &response, nil
 }
 
-// getZonesStartingWith returns a list of valid zones for a TPP parent folder specified by zonePrefix
-func (c *Connector) getZonesStartingWith(zonePrefix string) ([]string, error) {
+// GetZonesStartingWith returns a list of valid zones for a TPP parent folder specified by zonePrefix
+func (c *Connector) GetZonesStartingWith(zonePrefix string) ([]string, error) {
 	var zones []string
 
 	parentFolderDn := zonePrefix
