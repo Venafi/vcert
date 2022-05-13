@@ -23,6 +23,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"github.com/Venafi/vcert/v4/pkg/venafi/cloud"
+	"github.com/Venafi/vcert/v4/pkg/venafi/fake"
 	"github.com/Venafi/vcert/v4/pkg/venafi/tpp"
 	"io/ioutil"
 	"log"
@@ -621,20 +622,26 @@ func doCommandCredMgmt1(c *cli.Context) error {
 		return fmt.Errorf("could not create connector: %s", err)
 	}
 
+	//getting the concrete connector
 	var vaasConnector *cloud.Connector
 	var tppConnector *tpp.Connector
 	var okCasting bool
 
-	//if the email flag is provided then that means that the VaaS headless registration is the required by user
-	if flags.email != "" {
-		vaasConnector, okCasting = connector.(*cloud.Connector)
-		if !okCasting {
-			return fmt.Errorf("could not cast to VaaS connector")
-		}
-	} else {
+	//trying to cast to cloud.Connector
+	vaasConnector, okCasting = connector.(*cloud.Connector)
+	if !okCasting { // if the connector is not a cloud.Connector
+
+		//trying to cast to tpp.Connector
 		tppConnector, okCasting = connector.(*tpp.Connector)
-		if !okCasting {
-			return fmt.Errorf("could not cast to TPP connector")
+		if !okCasting { // if the connector is not a tpp.Connector
+			_, okCasting = connector.(*fake.Connector) //trying to cast to fake.Connector
+
+			// if the connector is a fake.Connector
+			if okCasting {
+				return fmt.Errorf("unsupported operation")
+			} else { // if the connector is not a fake.Connector
+				return fmt.Errorf("it was not possible to get a supported connector")
+			}
 		}
 	}
 
