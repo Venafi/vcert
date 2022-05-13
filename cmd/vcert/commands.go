@@ -638,9 +638,9 @@ func doCommandCredMgmt1(c *cli.Context) error {
 
 			// if the connector is a fake.Connector
 			if okCasting {
-				return fmt.Errorf("unsupported operation")
+				panic("operation is not supported yet")
 			} else { // if the connector is not a fake.Connector
-				return fmt.Errorf("it was not possible to get a supported connector")
+				panic("it was not possible to get a supported connector")
 			}
 		}
 	}
