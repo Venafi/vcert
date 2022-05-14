@@ -75,7 +75,7 @@ type Connector interface {
 	GetType() ConnectorType
 	// SetZone sets a zone (by name) for requests with this connector.
 	SetZone(z string)
-	// GetZonesByParent returns a list of valid zones for a VaaS application specified by parent
+	// GetZonesByParent returns a list of valid zones specified by parent
 	GetZonesByParent(parent string) ([]string, error)
 	Ping() (err error)
 	// Authenticate is usually called by NewClient and it is not required that you manually call it.
