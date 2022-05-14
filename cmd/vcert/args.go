@@ -94,7 +94,8 @@ type commandFlags struct {
 	thumbprint           string
 	timeout              int
 	tlsAddress           string
-	tppPassword          string
+	email                string
+	password             string
 	tppToken             string
 	tppUser              string
 	trustBundle          string

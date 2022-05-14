@@ -123,7 +123,7 @@ func validateConnectionFlags(commandName string) error {
 	if flags.config != "" {
 		if flags.apiKey != "" ||
 			flags.tppUser != "" ||
-			flags.tppPassword != "" ||
+			flags.password != "" ||
 			flags.tppToken != "" ||
 			flags.url != "" ||
 			flags.testMode {
@@ -152,7 +152,7 @@ func validateConnectionFlags(commandName string) error {
 			if flags.url == "" && getPropertyFromEnvironment(vCertURL) == "" {
 				return fmt.Errorf("missing -u (URL) parameter")
 			}
-			if flags.noPrompt && flags.tppPassword == "" && tppToken == "" {
+			if flags.noPrompt && flags.password == "" && tppToken == "" {
 				return fmt.Errorf("An access token or password is required for communicating with Trust Protection Platform")
 			}
 
@@ -294,7 +294,7 @@ func validateEnrollFlags(commandName string) error {
 			if flags.tppUser == "" && tppToken == "" {
 				return fmt.Errorf("An access token or username is required for communicating with Trust Protection Platform")
 			}
-			if flags.noPrompt && flags.tppPassword == "" && tppToken == "" {
+			if flags.noPrompt && flags.password == "" && tppToken == "" {
 				return fmt.Errorf("An access token or password is required for communicating with Trust Protection Platform")
 			}
 
@@ -334,7 +334,7 @@ func validateEnrollFlags(commandName string) error {
 		return err
 	}
 
-	if flags.tppUser != "" || flags.tppPassword != "" {
+	if flags.tppUser != "" || flags.password != "" {
 		logf("Warning: User\\Password authentication is deprecated, please use access token instead.")
 	}
 
@@ -378,7 +378,7 @@ func validateCredMgmtFlags1(commandName string) error {
 	if flags.config != "" {
 		if flags.apiKey != "" ||
 			flags.tppUser != "" ||
-			flags.tppPassword != "" ||
+			flags.password != "" ||
 			tppTokenS != "" ||
 			flags.url != "" ||
 			flags.testMode {
@@ -392,8 +392,8 @@ func validateCredMgmtFlags1(commandName string) error {
 			return fmt.Errorf("There is no test mode for %s command", commandName)
 		}
 		if commandName == commandGetCredName {
-			if flags.tppUser == "" && tppTokenS == "" && flags.clientP12 == "" {
-				return fmt.Errorf("either --username, --p12-file, or -t must be specified")
+			if flags.tppUser == "" && tppTokenS == "" && flags.clientP12 == "" && flags.email == "" {
+				return fmt.Errorf("either --username, --p12-file, -t or -email must be specified")
 			}
 		} else {
 			if tppTokenS == "" {
@@ -405,7 +405,7 @@ func validateCredMgmtFlags1(commandName string) error {
 			return fmt.Errorf("missing -u (URL) parameter")
 		}
 
-		if flags.noPrompt && flags.tppPassword == "" && tppTokenS == "" {
+		if flags.noPrompt && flags.password == "" && tppTokenS == "" {
 			return fmt.Errorf("An access token or password is required for communicating with Trust Protection Platform")
 		}
 
@@ -652,12 +652,12 @@ func validateOverWritingEnviromentVariables() {
 func validateGetPolicyFlags(commandName string) error {
 	isPolicyConfigStarter := flags.policyConfigStarter
 	if isPolicyConfigStarter {
-		if flags.tppUser != "" || flags.tppPassword != "" || flags.tppToken != "" || flags.apiKey != "" {
+		if flags.tppUser != "" || flags.password != "" || flags.tppToken != "" || flags.apiKey != "" {
 			return fmt.Errorf("starter flag and credentials are set, please remove credentials to be able to use starter flag")
 		}
 
 	} else {
-		if flags.tppUser != "" && flags.tppPassword != "" && flags.tppToken != "" && flags.apiKey != "" {
+		if flags.tppUser != "" && flags.password != "" && flags.tppToken != "" && flags.apiKey != "" {
 			return fmt.Errorf("credentials are required")
 		}
 
@@ -674,13 +674,13 @@ func validateSetPolicyFlags(commandName string) error {
 
 	if isVerifyPolicy {
 
-		if flags.tppUser != "" || flags.tppPassword != "" || flags.tppToken != "" || flags.apiKey != "" {
+		if flags.tppUser != "" || flags.password != "" || flags.tppToken != "" || flags.apiKey != "" {
 			return fmt.Errorf("starter flag and credentials are set, please remove credentials to be able to use starter flag")
 		}
 
 	} else {
 
-		if flags.tppUser != "" && flags.tppPassword != "" && flags.tppToken != "" && flags.apiKey != "" {
+		if flags.tppUser != "" && flags.password != "" && flags.tppToken != "" && flags.apiKey != "" {
 			return fmt.Errorf("credentials are required")
 		}
 

@@ -39,22 +39,22 @@ func readPasswordsFromInputFlags(commandName string, cf *commandFlags) error {
 				return err
 			}
 			cf.clientP12PW = string(input)
-		} else if cf.tppPassword == "" && !cf.noPrompt && cf.tppToken == "" && cf.tppUser != "" {
+		} else if cf.password == "" && !cf.noPrompt && cf.tppToken == "" && cf.tppUser != "" {
 			fmt.Printf("Enter password for %s:", cf.tppUser)
 			input, err := gopass.GetPasswdMasked()
 			if err != nil {
 				return err
 			}
-			cf.tppPassword = string(input)
+			cf.password = string(input)
 		} else {
-			temp, err := readPasswordsFromInputFlag(cf.tppPassword, lineIndex)
+			temp, err := readPasswordsFromInputFlag(cf.password, lineIndex)
 			if err != nil {
 				return err
 			}
-			if cf.tppPassword == cf.keyPassword { //increase the line index if the password values refer to the same files
+			if cf.password == cf.keyPassword { //increase the line index if the password values refer to the same files
 				lineIndex++
 			}
-			cf.tppPassword = temp
+			cf.password = temp
 		}
 	}
 

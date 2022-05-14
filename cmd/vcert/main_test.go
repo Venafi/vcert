@@ -276,7 +276,7 @@ func TestValidateFlagsForTPPMissingData(t *testing.T) {
 
 	flags.url = "https://localhost/vedsdk"
 	flags.tppUser = "admin"
-	flags.tppPassword = "xxxx"
+	flags.password = "xxxx"
 	flags.noPrompt = true
 	flags.zone = "Test Policy"
 
@@ -302,7 +302,7 @@ func TestValidateFlagsForTPPMissingData(t *testing.T) {
 
 	flags.url = "https://localhost/vedsdk"
 	flags.tppUser = "admin"
-	flags.tppPassword = "secret"
+	flags.password = "secret"
 	flags.commonName = "test"
 	flags.noPickup = true
 	flags.zone = ""
@@ -697,21 +697,21 @@ func TestReadPasswordFromInputFlags(t *testing.T) {
 	f.Close()
 
 	flags.url = "https://localhost"
-	flags.tppPassword = fmt.Sprintf("file:%s", tempFileName)
+	flags.password = fmt.Sprintf("file:%s", tempFileName)
 	flags.keyPassword = fmt.Sprintf("file:%s", tempFileName)
 
 	err = readPasswordsFromInputFlags(commandEnrollName, &flags)
 	if err != nil {
 		t.Fatalf("Failed to readPasswordsFromInputFlags.  Error: %s", err)
 	}
-	if flags.tppPassword != "password0" {
-		t.Fatalf("tpp-password read from file did not match expected value.  Expected: password0 -- Actual: %s", flags.tppPassword)
+	if flags.password != "password0" {
+		t.Fatalf("tpp-password read from file did not match expected value.  Expected: password0 -- Actual: %s", flags.password)
 	}
 	if flags.keyPassword != "password1" {
 		t.Fatalf("key-password read from file did not match expected value.  Expected: password1 -- Actual: %s", flags.keyPassword)
 	}
 
-	flags.tppPassword = fmt.Sprintf("file:%s", tempFileName)
+	flags.password = fmt.Sprintf("file:%s", tempFileName)
 	f, err = ioutil.TempFile(os.TempDir(), "vcertTest")
 	if err != nil {
 		t.Fatalf("Failed to create temp file for testing readPasswordsFromInputFlags.  Error: %s", err)
@@ -732,8 +732,8 @@ func TestReadPasswordFromInputFlags(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to readPasswordFromInput.  Error: %s", err)
 	}
-	if flags.tppPassword != "password0" {
-		t.Fatalf("tpp-password read from file did not match expected value.  Expected: password0 -- Actual: %s", flags.tppPassword)
+	if flags.password != "password0" {
+		t.Fatalf("tpp-password read from file did not match expected value.  Expected: password0 -- Actual: %s", flags.password)
 	}
 	if flags.keyPassword != "key-pass" {
 		t.Fatalf("key-password read from file did not match expected value.  Expected: key-pass -- Actual: %s", flags.keyPassword)

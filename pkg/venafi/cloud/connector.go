@@ -1525,6 +1525,40 @@ func getCit(c *Connector, citName string) (*certificateTemplate, error) {
 	return nil, nil
 }
 
+func (c *Connector) CreateAPIUserAccount(userName string, password string) (int, *userDetails, error) {
+
+	indexOfAt := strings.Index(userName, "@")
+
+	if indexOfAt == -1 {
+		indexOfAt = len(userName)
+	}
+
+	userAccountReq := userAccount{
+		UserAccountType: "API",
+		Username:        userName,
+		Password:        password,
+		Firstname:       userName[0:indexOfAt], //Given the issue reported in https://jira.eng.venafi.com/browse/VC-16461 it's
+		// required the workaround to set something on firstName or lastName field. For now we are setting the email's prefix
+	}
+
+	return c.CreateUserAccount(&userAccountReq)
+}
+
+func (c *Connector) CreateUserAccount(userAccount *userAccount) (int, *userDetails, error) {
+
+	url := c.getURL(urlResourceUserAccounts)
+	statusCode, status, body, err := c.request("POST", url, userAccount, true)
+	if err != nil {
+		return statusCode, nil, err
+	}
+	ud, err := parseUserDetailsResultFromPOST(statusCode, status, body)
+	if err != nil {
+		return statusCode, nil, err
+	}
+	//c.user = ud
+	return statusCode, ud, nil
+}
+
 func getUserDetails(c *Connector) (*userDetails, error) {
 
 	url := c.getURL(urlResourceUserAccounts)
