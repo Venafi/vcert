@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2021 Venafi, Inc.
+ * Copyright 2018-2022 Venafi, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1634,6 +1634,43 @@ func (c *Connector) configDNToGuid(objectDN string) (guid string, err error) {
 	}
 	return resp.GUID, nil
 
+}
+
+func (c *Connector) findObjectsOfClass(req *findObjectsOfClassRequest) (*findObjectsOfClassResponse, error) {
+	statusCode, statusString, body, err := c.request("POST", urlResourceFindObjectsOfClass, req)
+	if err != nil {
+		return nil, err
+	}
+	response, err := parseFindObjectsOfClassResponse(statusCode, statusString, body)
+	if err != nil {
+		return nil, err
+	}
+	return &response, nil
+}
+
+// GetZonesByParent returns a list of valid zones for a TPP parent folder specified by parent
+func (c *Connector) GetZonesByParent(parent string) ([]string, error) {
+	var zones []string
+
+	parentFolderDn := parent
+	if !strings.HasPrefix(parentFolderDn, "\\VED\\Policy") {
+		parentFolderDn = fmt.Sprintf("\\VED\\Policy\\%s", parentFolderDn)
+	}
+
+	request := findObjectsOfClassRequest{
+		Class:    "Policy",
+		ObjectDN: parentFolderDn,
+	}
+	response, err := c.findObjectsOfClass(&request)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, folder := range response.PolicyObjects {
+		// folder.DN will always start with \VED\Policy but short form is preferrable since both are supported
+		zones = append(zones, strings.Replace(folder.DN, "\\VED\\Policy\\", "", 1))
+	}
+	return zones, nil
 }
 
 func createPolicyAttribute(c *Connector, at string, av []string, n string, l bool) (statusCode int, statusText string, body []byte, err error) {

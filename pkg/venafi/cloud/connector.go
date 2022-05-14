@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Venafi, Inc.
+ * Copyright 2018-2022 Venafi, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1480,6 +1480,22 @@ func (c *Connector) getAppDetailsByName(appName string) (*ApplicationDetails, in
 		return nil, statusCode, err
 	}
 	return details, statusCode, nil
+}
+
+// GetZonesByParent returns a list of valid zones for a VaaS application specified by parent
+func (c *Connector) GetZonesByParent(parent string) ([]string, error) {
+	var zones []string
+
+	appDetails, _, err := c.getAppDetailsByName(parent)
+	if err != nil {
+		return nil, err
+	}
+
+	for citAlias := range appDetails.CitAliasToIdMap {
+		zone := fmt.Sprintf("%s\\%s", parent, citAlias)
+		zones = append(zones, zone)
+	}
+	return zones, nil
 }
 
 func (c *Connector) getTemplateByID() (*certificateTemplate, error) {
