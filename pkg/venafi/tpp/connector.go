@@ -1127,8 +1127,6 @@ func (c *Connector) getIdentityMatching(identities []policy.IdentityEntry, ident
 	} else {
 		return nil, fmt.Errorf("it was not possible to find the user %s", identityName)
 	}
-
-	return identityEntryMatching, nil
 }
 
 func (c *Connector) browseIdentities(browseReq policy.BrowseIdentitiesRequest) (*policy.BrowseIdentitiesResponse, error) {
