@@ -1120,7 +1120,8 @@ func (c *Connector) getIdentity(userName string) (*policy.IdentityEntry, error) 
 func (c *Connector) getIdentityMatching(identities []policy.IdentityEntry, identityName string) *policy.IdentityEntry {
 	var identityEntryMatching *policy.IdentityEntry
 
-	for _, identityEntry := range identities {
+	for i, _ := range identities {
+		identityEntry := identities[i]
 		if identityEntry.Name == identityName {
 			identityEntryMatching = &identityEntry
 			break
