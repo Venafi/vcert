@@ -1105,30 +1105,28 @@ func (c *Connector) getIdentity(userName string) (*policy.IdentityEntry, error) 
 		return nil, err
 	}
 
-	if len(resp.Identities) > 1 {
-		return c.getIdentityMatching(resp.Identities, userName), nil
-	} else {
-		if len(resp.Identities) == 1 {
-			return &resp.Identities[0], nil
-		} else {
-			return nil, fmt.Errorf("it was not possible to find the user %s", userName)
-		}
-	}
-
+	return c.getIdentityMatching(resp.Identities, userName)
 }
 
-func (c *Connector) getIdentityMatching(identities []policy.IdentityEntry, identityName string) *policy.IdentityEntry {
+func (c *Connector) getIdentityMatching(identities []policy.IdentityEntry, identityName string) (*policy.IdentityEntry, error) {
 	var identityEntryMatching *policy.IdentityEntry
 
-	for i, _ := range identities {
-		identityEntry := identities[i]
-		if identityEntry.Name == identityName {
-			identityEntryMatching = &identityEntry
-			break
+	if len(identities) > 0 {
+		for i := range identities {
+			identityEntry := identities[i]
+			if identityEntry.Name == identityName {
+				identityEntryMatching = &identityEntry
+				break
+			}
 		}
 	}
 
-	return identityEntryMatching
+	//if the identity is not null
+	if identityEntryMatching != nil {
+		return identityEntryMatching, nil
+	} else {
+		return nil, fmt.Errorf("it was not possible to find the user %s", identityName)
+	}
 }
 
 func (c *Connector) browseIdentities(browseReq policy.BrowseIdentitiesRequest) (*policy.BrowseIdentitiesResponse, error) {
