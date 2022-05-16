@@ -365,6 +365,17 @@ func (c *Connector) ReadPolicyConfiguration() (policy *endpoint.Policy, err erro
 	return
 }
 
+func (c *Connector) GetZonesByParent(parent string) ([]string, error) {
+	var zones []string
+
+	children := []string{"Alpha", "Epsilon", "Eta", "Iota", "Omicron", "Upsilon", "Omega"}
+	for _, child := range children {
+		zone := fmt.Sprintf("%s\\%s", parent, child)
+		zones = append(zones, zone)
+	}
+	return zones, nil
+}
+
 func (c *Connector) SetHTTPClient(client *http.Client) {
 }
 
