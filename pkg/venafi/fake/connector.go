@@ -369,7 +369,7 @@ func (c *Connector) GetZonesByParent(parent string) ([]string, error) {
 	var zones []string
 
 	children := []string{"Alpha", "Epsilon", "Eta", "Iota", "Omicron", "Upsilon", "Omega"}
-	for child := range children {
+	for _, child := range children {
 		zone := fmt.Sprintf("%s\\%s", parent, child)
 		zones = append(zones, zone)
 	}
