@@ -1065,7 +1065,8 @@ func (c *Connector) setContact(tppPolicy *policy.TppPolicy) (status string, err 
 
 func (c *Connector) resolveContacts(contacts []string) ([]string, error) {
 	var identities []string
-	for _, contact := range contacts {
+	uniqueContacts := getUniqueStringSlice(contacts)
+	for _, contact := range uniqueContacts {
 		identity, err := c.getIdentity(contact)
 		if err != nil {
 			return nil, err
@@ -1074,6 +1075,18 @@ func (c *Connector) resolveContacts(contacts []string) ([]string, error) {
 	}
 
 	return identities, nil
+}
+
+func getUniqueStringSlice(stringSlice []string) []string {
+	keys := make(map[string]bool)
+	var list []string
+	for _, entry := range stringSlice {
+		if _, found := keys[entry]; !found {
+			keys[entry] = true
+			list = append(list, entry)
+		}
+	}
+	return list
 }
 
 func (c *Connector) getIdentity(userName string) (*policy.IdentityEntry, error) {
@@ -1093,14 +1106,28 @@ func (c *Connector) getIdentity(userName string) (*policy.IdentityEntry, error) 
 	}
 
 	if len(resp.Identities) > 1 {
-		return nil, fmt.Errorf("only one Identity must be returned but it was returned more than one")
+		return c.getIdentityMatching(resp.Identities, userName), nil
 	} else {
-		if len(resp.Identities) != 1 {
+		if len(resp.Identities) == 1 {
+			return &resp.Identities[0], nil
+		} else {
 			return nil, fmt.Errorf("it was not possible to find the user %s", userName)
 		}
 	}
 
-	return &resp.Identities[0], nil
+}
+
+func (c *Connector) getIdentityMatching(identities []policy.IdentityEntry, identityName string) *policy.IdentityEntry {
+	var identityEntryMatching *policy.IdentityEntry
+
+	for _, identityEntry := range identities {
+		if identityEntry.Name == identityName {
+			identityEntryMatching = &identityEntry
+			break
+		}
+	}
+
+	return identityEntryMatching
 }
 
 func (c *Connector) browseIdentities(browseReq policy.BrowseIdentitiesRequest) (*policy.BrowseIdentitiesResponse, error) {
