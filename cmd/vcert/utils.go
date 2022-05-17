@@ -633,10 +633,10 @@ func getUserParameterProvidedForGetCred() (string, error) {
 	}
 
 	identityParameters := map[string]bool{
-		flagTPPUser.Name:   flags.tppUser == "",   //"--username": flags.tppUser == "",
-		flagTPPToken.Name:  tppTokenS == "",       //"-t":         tppTokenS == "",
-		flagClientP12.Name: flags.clientP12 == "", //"--p12-file": flags.clientP12 == "",
-		flagEmail.Name:     flags.email == "",     //"--email":    flags.email == "",
+		flagTPPUser.Name:   flags.tppUser == "",
+		flagTPPToken.Name:  tppTokenS == "",
+		flagClientP12.Name: flags.clientP12 == "",
+		flagEmail.Name:     flags.email == "",
 	}
 
 	var uniqueIdentity string
