@@ -401,7 +401,7 @@ func validateCredMgmtFlags1(commandName string) error {
 			}
 		}
 
-		if flags.email == "" && flags.url == "" && getPropertyFromEnvironment(vCertURL) == "" {
+		if flags.url == "" && getPropertyFromEnvironment(vCertURL) == "" {
 			return fmt.Errorf("missing -u (URL) parameter")
 		}
 
