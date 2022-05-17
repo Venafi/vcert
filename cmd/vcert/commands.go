@@ -817,14 +817,8 @@ func getVaaSCredentials(vaasConnector *cloud.Connector, cfg *vcert.Config) error
 			}
 
 			fmt.Println(headerMessage)
-			fmt.Println("key: ", apiKey.Key)
-			fmt.Println("userId: ", apiKey.UserID)
-			fmt.Println("userName: ", apiKey.Username)
-			fmt.Println("companyId: ", apiKey.CompanyID)
-			fmt.Println("apiVersion: ", apiKey.APIVersion)
-			fmt.Println("creationDate: ", apiKey.CreationDateString)
-			fmt.Println("validityStartDate: ", apiKey.ValidityStartDateString)
-			fmt.Println("validityEndDate: ", apiKey.ValidityEndDateString)
+			fmt.Println("api_key: ", apiKey.Key)
+			fmt.Println("api_key_expires: ", apiKey.ValidityEndDateString)
 		}
 	} else {
 		return fmt.Errorf("failed to determine credentials set")
