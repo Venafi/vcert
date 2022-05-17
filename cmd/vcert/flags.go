@@ -60,7 +60,7 @@ var (
 
 	flagEmail = &cli.StringFlag{
 		Name:        "email",
-		Usage:       "Use to specify the email for headless registration on VaaS.",
+		Usage:       "REQUIRED/VaaS. Use to specify the email for headless registration on VaaS.",
 		Destination: &flags.email,
 	}
 
