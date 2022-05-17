@@ -633,20 +633,19 @@ func getUserParameterProvidedForGetCred() (string, error) {
 	}
 
 	identityParameters := map[string]bool{
-		flagTPPUser.Name:   flags.tppUser == "",
-		flagTPPToken.Name:  tppTokenS == "",
-		flagClientP12.Name: flags.clientP12 == "",
-		flagEmail.Name:     flags.email == "",
+		flagTPPUser.Name:   flags.tppUser != "",
+		flagTPPToken.Name:  tppTokenS != "",
+		flagClientP12.Name: flags.clientP12 != "",
+		flagEmail.Name:     flags.email != "",
 	}
 
 	var uniqueIdentity string
 	for identityName, identityValue := range identityParameters {
-		if uniqueIdentity != "" {
-			return "", fmt.Errorf("only one of either --username, --p12-file, -t or --email can be specified")
-		} else {
-			if identityValue {
-				uniqueIdentity = identityName
+		if identityValue {
+			if uniqueIdentity != "" {
+				return "", fmt.Errorf("only one of either --username, --p12-file, -t or --email can be specified")
 			}
+			uniqueIdentity = identityName
 		}
 	}
 
