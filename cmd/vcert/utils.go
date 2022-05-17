@@ -624,3 +624,35 @@ func randRunes(n int) string {
 	}
 	return string(b)
 }
+
+func getUserParameterProvidedForGetCred() (string, error) {
+
+	tppTokenS := flags.tppToken
+	if tppTokenS == "" {
+		tppTokenS = getPropertyFromEnvironment(vCertToken)
+	}
+
+	identityParameters := map[string]bool{
+		flagTPPUser.Name:   flags.tppUser == "",   //"--username": flags.tppUser == "",
+		flagTPPToken.Name:  tppTokenS == "",       //"-t":         tppTokenS == "",
+		flagClientP12.Name: flags.clientP12 == "", //"--p12-file": flags.clientP12 == "",
+		flagEmail.Name:     flags.email == "",     //"--email":    flags.email == "",
+	}
+
+	var uniqueIdentity string
+	for identityName, identityValue := range identityParameters {
+		if uniqueIdentity != "" {
+			return "", fmt.Errorf("only one of either --username, --p12-file, -t or --email can be specified")
+		} else {
+			if identityValue {
+				uniqueIdentity = identityName
+			}
+		}
+	}
+
+	if uniqueIdentity == "" {
+		return "", fmt.Errorf("either --username, --p12-file, -t or --email must be specified")
+	}
+
+	return uniqueIdentity, nil
+}

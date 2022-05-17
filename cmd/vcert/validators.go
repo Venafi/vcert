@@ -391,17 +391,26 @@ func validateCredMgmtFlags1(commandName string) error {
 		if flags.testMode {
 			return fmt.Errorf("There is no test mode for %s command", commandName)
 		}
+		getCredForVaaS := false
 		if commandName == commandGetCredName {
-			if flags.tppUser == "" && tppTokenS == "" && flags.clientP12 == "" && flags.email == "" {
-				return fmt.Errorf("either --username, --p12-file, -t or -email must be specified")
+
+			userParameterProvided, err := getUserParameterProvidedForGetCred()
+
+			if err != nil {
+				return err
 			}
+
+			if userParameterProvided == flagEmail.Name {
+				getCredForVaaS = true
+			}
+
 		} else {
 			if tppTokenS == "" {
 				return fmt.Errorf("missing -t (access token) parameter")
 			}
 		}
 
-		if flags.url == "" && getPropertyFromEnvironment(vCertURL) == "" {
+		if flags.url == "" && getPropertyFromEnvironment(vCertURL) == "" && !getCredForVaaS {
 			return fmt.Errorf("missing -u (URL) parameter")
 		}
 
