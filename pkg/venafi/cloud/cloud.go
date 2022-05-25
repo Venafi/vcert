@@ -226,7 +226,6 @@ type ApplicationDetails struct {
 	IpRanges                  []string             `json:"ipRanges,omitempty"`
 	Ports                     []string             `json:"ports,omitempty"`
 	FqDns                     []string             `json:"fqDns,omitempty"`
-	OrganizationalUnitId      string               `json:"organizationalUnitId,omitempty"`
 }
 
 //GenerateRequest generates a CertificateRequest based on the zone configuration, and returns the request along with the private key.
@@ -674,7 +673,6 @@ func createAppUpdateRequest(applicationDetails *ApplicationDetails) policy.Appli
 		IpRanges:                             applicationDetails.IpRanges,
 		Ports:                                applicationDetails.Ports,
 		CertificateIssuingTemplateAliasIdMap: applicationDetails.CitAliasToIdMap,
-		OrganizationalUnitId:                 applicationDetails.OrganizationalUnitId,
 	}
 
 	return request
