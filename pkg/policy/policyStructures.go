@@ -117,7 +117,6 @@ type Application struct {
 	Ports                                []string          `json:"ports"`
 	CertificateIssuingTemplateAliasIdMap map[string]string `json:"certificateIssuingTemplateAliasIdMap"`
 	StartTargetedDiscovery               bool              `json:"startTargetedDiscovery"`
-	OrganizationalUnitId                 string            `json:"organizationalUnitId"`
 }
 
 type OwnerIdType struct {

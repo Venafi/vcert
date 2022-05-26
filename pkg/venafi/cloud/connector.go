@@ -455,6 +455,8 @@ func (c *Connector) createApplication(appName string, ps *policy.PolicySpecifica
 
 	var owners []policy.OwnerIdType
 	var error error
+	var statusCode int
+	var status string
 
 	//if users were passed to the PS, then it will needed to resolve the related Owners to set them
 	if len(ps.Users) > 0 {
@@ -480,9 +482,12 @@ func (c *Connector) createApplication(appName string, ps *policy.PolicySpecifica
 
 	url := c.getURL(urlAppRoot)
 
-	_, _, _, error = c.request("POST", url, appReq)
+	statusCode, status, _, error = c.request("POST", url, appReq)
 	if error != nil {
 		return nil, error
+	}
+	if statusCode != 201 {
+		return nil, fmt.Errorf("unexpected result %s attempting to create application %s", status, appName)
 	}
 
 	return &appReq, nil
