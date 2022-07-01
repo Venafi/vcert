@@ -761,35 +761,35 @@ func ValidateCloudPolicySpecification(ps *PolicySpecification) error {
 			if ps.Default != nil && ps.Default.Subject != nil && ps.Default.Subject.Org != nil && len(ps.Policy.Subject.Orgs) > 0 {
 				exist := validateDefaultStringCloudValues(ps.Policy.Subject.Orgs, *(ps.Default.Subject.Org))
 				if !exist {
-					return fmt.Errorf("specified default org value: %s  doesn't match with specified policy org", *(ps.Default.Subject.Org))
+					return verror.VCertPolicyUnmatchedDefaultValueAttributeError{Attribute: "org", Value: *(ps.Default.Subject.Org)}
 				}
 			}
 
 			if ps.Default != nil && ps.Default.Subject != nil && len(ps.Default.Subject.OrgUnits) > 0 && len(ps.Policy.Subject.OrgUnits) > 0 {
 				exist := validateDefaultSubjectOrgsCloudValues(ps.Default.Subject.OrgUnits, ps.Policy.Subject.OrgUnits)
 				if !exist {
-					return fmt.Errorf("specified default org unit value: %s  doesn't match with specified policy org unit", *(ps.Default.Subject.Org))
+					return verror.VCertPolicyUnmatchedDefaultValueAttributeError{Attribute: "org unit", Value: *(ps.Default.Subject.Org)}
 				}
 			}
 
 			if ps.Default != nil && ps.Default.Subject != nil && ps.Default.Subject.Locality != nil && len(ps.Policy.Subject.Localities) > 0 {
 				exist := validateDefaultStringCloudValues(ps.Policy.Subject.Localities, *(ps.Default.Subject.Locality))
 				if !exist {
-					return fmt.Errorf("specified default locality value: %s  doesn't match with specified policy locality", *(ps.Default.Subject.Locality))
+					return verror.VCertPolicyUnmatchedDefaultValueAttributeError{Attribute: "locality", Value: *(ps.Default.Subject.Locality)}
 				}
 			}
 
 			if ps.Default != nil && ps.Default.Subject != nil && ps.Default.Subject.State != nil && len(ps.Policy.Subject.States) > 0 {
 				exist := validateDefaultStringCloudValues(ps.Policy.Subject.States, *(ps.Default.Subject.State))
 				if !exist {
-					return fmt.Errorf("specified default state value: %s  doesn't match with specified policy state", *(ps.Default.Subject.State))
+					return verror.VCertPolicyUnmatchedDefaultValueAttributeError{Attribute: "state", Value: *(ps.Default.Subject.State)}
 				}
 			}
 
 			if ps.Default != nil && ps.Default.Subject != nil && ps.Default.Subject.Country != nil && len(ps.Policy.Subject.Countries) > 0 {
 				exist := validateDefaultStringCloudValues(ps.Policy.Subject.Countries, *(ps.Default.Subject.Country))
 				if !exist {
-					return fmt.Errorf("specified default country value: %s  doesn't match with specified policy country", *(ps.Default.Subject.Country))
+					return verror.VCertPolicyUnmatchedDefaultValueAttributeError{Attribute: "country", Value: *(ps.Default.Subject.Country)}
 				}
 			}
 		}
@@ -798,14 +798,14 @@ func ValidateCloudPolicySpecification(ps *PolicySpecification) error {
 			if ps.Default != nil && ps.Default.KeyPair != nil && ps.Default.KeyPair.KeyType != nil && len(ps.Policy.KeyPair.KeyTypes) > 0 {
 				exist := existValueInArray(ps.Policy.KeyPair.KeyTypes, *(ps.Default.KeyPair.KeyType))
 				if !exist {
-					return fmt.Errorf("specified default key type value: %s  doesn't match with specified policy key type", *(ps.Default.KeyPair.KeyType))
+					return verror.VCertPolicyUnmatchedDefaultValueAttributeError{Attribute: "key type", Value: *(ps.Default.KeyPair.KeyType)}
 				}
 			}
 
 			if ps.Default != nil && ps.Default.KeyPair != nil && ps.Default.KeyPair.RsaKeySize != nil && len(ps.Policy.KeyPair.RsaKeySizes) > 0 {
 				exist := existIntInArray([]int{*(ps.Default.KeyPair.RsaKeySize)}, ps.Policy.KeyPair.RsaKeySizes)
 				if !exist {
-					return fmt.Errorf("specified default rsa key size value: %s  doesn't match with specified policy rsa key size", strconv.Itoa(*(ps.Default.KeyPair.RsaKeySize)))
+					return verror.VCertPolicyUnmatchedDefaultValueAttributeError{Attribute: "rsa key size", Value: *(ps.Default.KeyPair.RsaKeySize)}
 				}
 			}
 		}
@@ -816,7 +816,7 @@ func ValidateCloudPolicySpecification(ps *PolicySpecification) error {
 
 		if ps.Default.KeyPair.KeyType != nil && *(ps.Default.KeyPair.KeyType) != "" {
 			if *(ps.Default.KeyPair.KeyType) != "RSA" && *(ps.Default.KeyPair.KeyType) != "EC" {
-				return fmt.Errorf("specified default attribute keyType value is not supported on VaaS")
+				return verror.VCertPolicyUnsupportedKeyTypeError{}
 			}
 		}
 
@@ -824,7 +824,7 @@ func ValidateCloudPolicySpecification(ps *PolicySpecification) error {
 		if ps.Default.KeyPair.RsaKeySize != nil && *(ps.Default.KeyPair.RsaKeySize) != 0 {
 			unSupported := getInvalidCloudRsaKeySizeValue([]int{*(ps.Default.KeyPair.RsaKeySize)})
 			if unSupported != nil {
-				return fmt.Errorf("specified attribute key length value: %s is not supported on VaaS", strconv.Itoa(*(unSupported)))
+				return verror.VCertPolicyKeyLengthValueError{Value: strconv.Itoa(*(unSupported))}
 			}
 		}
 	}
@@ -1320,7 +1320,7 @@ func GetCertAuthorityInfo(certificateAuthority string) (CertificateAuthorityInfo
 	data := strings.Split(certificateAuthority, "\\")
 
 	if len(data) < 3 {
-		return caInfo, fmt.Errorf("certificate Authority is invalid, please provide a valid value with this structure: ca_type\\ca_account_key\\vendor_product_name")
+		return caInfo, verror.VCertPolicyInvalidCAError{}
 	}
 
 	caInfo = CertificateAuthorityInfo{
@@ -1513,7 +1513,7 @@ func VerifyPolicySpec(bytes []byte, fileExt string) error {
 			return err
 		}
 	} else {
-		return fmt.Errorf("the specified file is not supported")
+		return verror.VCertPolicyUnsupportedFileError{}
 	}
 
 	return nil

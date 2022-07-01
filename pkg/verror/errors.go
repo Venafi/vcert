@@ -33,9 +33,13 @@ type VCertPolicyUnaryAttributeError                         struct{ VCertPolicyA
 type VCertPolicyCountryAttributeError                       struct{ VCertPolicyAttributeError }
 type VCertPolicyUnmatchedAttributeError                     struct{ VCertPolicyAttributeError; Attribute string }
 type VCertPolicyUnmatchedDefaultAttributeError              struct{ VCertPolicyAttributeError; Attribute string; AttributePlural string }
+type VCertPolicyUnmatchedDefaultValueAttributeError         struct{ VCertPolicyAttributeError; Attribute string; Value           string }
 type VCertPolicyUnmatchedDefaultAutoInstalledAttributeError struct{ VCertPolicyAttributeError }
 type VCertPolicyIsNullError                                 struct{ VCertPolicyError }
 type VCertPolicyKeyLengthValueError                         struct{ VCertPolicyError;          Value     string }
+type VCertPolicyInvalidCAError                              struct{ VCertPolicyError }
+type VCertPolicyUnsupportedKeyTypeError                     struct{ VCertPolicyError }
+type VCertPolicyUnsupportedFileError                        struct{ VCertPolicyError }
 
 func (e VCertPolicyUnspecifiedPolicyError) Error() string {
 	return fmt.Sprintf("policy specification is nil")
@@ -61,6 +65,14 @@ func (e VCertPolicyUnmatchedDefaultAttributeError) Error() string {
 	return fmt.Sprintf("policy default %s doesn't match with policy's %s value", e.Attribute, e.AttributePlural)
 }
 
+func (e VCertPolicyUnmatchedDefaultValueAttributeError) Error() string {
+	return fmt.Sprintf("specified default %s value: %s  doesn't match with specified policy %s", e.Attribute, e.Value, e.Attribute)
+}
+
+func (e VCertPolicyUnsupportedKeyType) Error() string {
+	return fmt.Sprintf("specified default attribute keyType value is not supported on VaaS")
+}
+
 func (e VCertPolicyUnmatchedDefaultAutoInstalledAttributeError) Error() string {
 	return fmt.Sprintf("default autoInstalled attribute value doesn't match with policy's autoInstalled attribute value")
 }
@@ -71,6 +83,10 @@ func (e VCertPolicyIsNullError) Error() string {
 
 func (e VCertPolicyKeyLengthValueError) Error() string {
 	return fmt.Sprintf("specified attribute key length value: %s is not supported on VaaS", e.Value)
+}
+
+func (e VCertPolicyInvalidCAError) Error() string {
+	return fmt.Sprintf("certificate Authority is invalid, please provide a valid value with this structure: ca_type\\ca_account_key\\vendor_product_name")
 }
 
 type VCertLoadConfigError struct {
