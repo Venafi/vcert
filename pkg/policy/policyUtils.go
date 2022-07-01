@@ -3,6 +3,7 @@ package policy
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Venafi/vcert/v4/pkg/verror"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
@@ -67,7 +68,7 @@ func ValidateTppPolicySpecification(ps *PolicySpecification) error {
 
 	if ps.Default != nil && ps.Default.AutoInstalled != nil && ps.Policy != nil && ps.Policy.AutoInstalled != nil {
 		if *(ps.Default.AutoInstalled) != *(ps.Policy.AutoInstalled) {
-			return fmt.Errorf("default autoInstalled attribute value doesn't match with policy's autoInstalled attribute value")
+			return verror.VCertPolicyUnmatchedDefaultAutoInstalledAttributeError{}
 		}
 	}
 
@@ -82,21 +83,21 @@ func validatePolicySubject(ps *PolicySpecification) error {
 	subject := ps.Policy.Subject
 
 	if len(subject.Orgs) > 1 {
-		return fmt.Errorf("attribute orgs has more than one value")
+		return verror.VCertPolicyUnaryAttributeError{Attribute: "orgs"}
 	}
 	if len(subject.Localities) > 1 {
-		return fmt.Errorf("attribute localities has more than one value")
+		return verror.VCertPolicyUnaryAttributeError{Attribute: "localities"}
 	}
 	if len(subject.States) > 1 {
-		return fmt.Errorf("attribute states has more than one value")
+		return verror.VCertPolicyUnaryAttributeError{Attribute: "states"}
 	}
 	if len(subject.Countries) > 1 {
-		return fmt.Errorf("attribute countries has more than one value")
+		return verror.VCertPolicyUnaryAttributeError{Attribute: "countries"}
 	}
 
 	if len(subject.Countries) > 0 {
 		if len(subject.Countries[0]) != 2 {
-			return fmt.Errorf("number of country's characters, doesn't match to two characters")
+			return verror.VCertPolicyCountryAttributeError{}
 		}
 	}
 
@@ -111,26 +112,26 @@ func validateKeyPair(ps *PolicySpecification) error {
 
 	//validate algorithm
 	if len(keyPair.KeyTypes) > 1 {
-		return fmt.Errorf("attribute keyTypes has more than one value")
+		return verror.VCertPolicyUnaryAttributeError{Attribute: "keyTypes"}
 	}
 	if len(keyPair.KeyTypes) > 0 && !existStringInArray(keyPair.KeyTypes, TppKeyType) {
-		return fmt.Errorf("specified keyTypes doesn't match with the supported ones")
+		return verror.VCertPolicyUnmatchedAttributeError{Attribute: "keyTypes"}
 	}
 
 	//validate key bit strength
 	if len(keyPair.RsaKeySizes) > 1 {
-		return fmt.Errorf("attribute rsaKeySizes has more than one value")
+		return verror.VCertPolicyUnaryAttributeError{Attribute: "rsaKeySizes"}
 	}
 	if len(keyPair.RsaKeySizes) > 0 && !existIntInArray(keyPair.RsaKeySizes, TppRsaKeySize) {
-		return fmt.Errorf("specified rsaKeySizes doesn't match with the supported ones")
+		return verror.VCertPolicyUnmatchedAttributeError{Attribute: "rsaKeySizes"}
 	}
 
 	//validate elliptic curve
 	if len(keyPair.EllipticCurves) > 1 {
-		return fmt.Errorf("attribute ellipticCurves has more than one value")
+		return verror.VCertPolicyUnaryAttributeError{Attribute: "ellipticCurves"}
 	}
 	if len(keyPair.EllipticCurves) > 0 && !existStringInArray(keyPair.EllipticCurves, TppEllipticCurves) {
-		return fmt.Errorf("specified ellipticCurves doesn't match with the supported ones")
+		return verror.VCertPolicyUnmatchedAttributeError{Attribute: "ellipticCurves"}
 	}
 
 	return nil
@@ -179,34 +180,34 @@ func validateDefaultSubject(ps *PolicySpecification) error {
 
 			if policySubject.Orgs != nil && policySubject.Orgs[0] != "" && defaultSubject.Org != nil && *(defaultSubject.Org) != "" {
 				if policySubject.Orgs[0] != *(defaultSubject.Org) {
-					return fmt.Errorf("policy default org doesn't match with policy's orgs value")
+					return verror.VCertPolicyUnmatchedDefaultAttributeError{Attribute: "org", AttributePlural: "orgs"}
 				}
 			}
 
 			if len(policySubject.OrgUnits) > 0 && len(defaultSubject.OrgUnits) > 0 {
 				if !existStringInArray(defaultSubject.OrgUnits, policySubject.OrgUnits) {
-					return fmt.Errorf("policy default orgUnits doesn't match with policy's orgUnits value")
+					return verror.VCertPolicyUnmatchedDefaultAttributeError{Attribute: "orgUnits", AttributePlural: "orgUnits"}
 				}
 			}
 
 			if policySubject.Localities != nil && policySubject.Localities[0] != "" && defaultSubject.Locality != nil && *(defaultSubject.Locality) != "" {
 				if policySubject.Localities[0] != *(defaultSubject.Locality) {
-					return fmt.Errorf("policy default locality doesn't match with policy's localities value")
+					return verror.VCertPolicyUnmatchedDefaultAttributeError{Attribute: "locality", AttributePlural: "localities"}
 				}
 			}
 			if policySubject.States != nil && policySubject.States[0] != "" && defaultSubject.State != nil && *(defaultSubject.State) != "" {
 				if policySubject.States[0] != *(defaultSubject.State) {
-					return fmt.Errorf("policy default state doesn't match with policy's states value")
+					return verror.VCertPolicyUnmatchedDefaultAttributeError{Attribute: "state", AttributePlural: "states"}
 				}
 			}
 			if policySubject.Countries != nil && policySubject.Countries[0] != "" && defaultSubject.Country != nil && *(defaultSubject.Country) != "" {
 				if policySubject.Countries[0] != *(defaultSubject.Country) {
-					return fmt.Errorf("policy default country doesn't match with policy's countries value")
+					return verror.VCertPolicyUnmatchedDefaultAttributeError{Attribute: "country", AttributePlural: "countries"}
 				}
 			}
 			if defaultSubject.Country != nil && *(defaultSubject.Country) != "" {
 				if len(*(defaultSubject.Country)) != 2 {
-					return fmt.Errorf("number of defualt country's characters, doesn't match to two characters")
+					return verror.VCertPolicyCountryAttributeError{}
 				}
 			}
 		} else {
@@ -227,25 +228,25 @@ func validateDefaultKeyPairWithPolicySubject(ps *PolicySpecification) error {
 
 	if policyKeyPair.KeyTypes != nil && policyKeyPair.KeyTypes[0] != "" && defaultKeyPair.KeyType != nil && *(defaultKeyPair.KeyType) != "" {
 		if policyKeyPair.KeyTypes[0] != *(defaultKeyPair.KeyType) {
-			return fmt.Errorf("policy default keyType doesn't match with policy's keyType value")
+			return verror.VCertPolicyUnmatchedDefaultAttributeError{Attribute: "keyType", AttributePlural: "keyType"}
 		}
 	}
 
 	if policyKeyPair.RsaKeySizes != nil && policyKeyPair.RsaKeySizes[0] != 0 && defaultKeyPair.RsaKeySize != nil && *(defaultKeyPair.RsaKeySize) != 0 {
 		if policyKeyPair.RsaKeySizes[0] != *(defaultKeyPair.RsaKeySize) {
-			return fmt.Errorf("policy default rsaKeySize doesn't match with policy's rsaKeySize value")
+			return verror.VCertPolicyUnmatchedDefaultAttributeError{Attribute: "rsaKeySize", AttributePlural: "rsaKeySize"}
 		}
 	}
 
 	if policyKeyPair.EllipticCurves != nil && policyKeyPair.EllipticCurves[0] != "" && defaultKeyPair.EllipticCurve != nil && *(defaultKeyPair.EllipticCurve) != "" {
 		if policyKeyPair.EllipticCurves[0] != *(defaultKeyPair.EllipticCurve) {
-			return fmt.Errorf("policy default ellipticCurve doesn't match with policy's ellipticCurve value")
+			return verror.VCertPolicyUnmatchedDefaultAttributeError{Attribute: "ellipticCurve", AttributePlural: "ellipticCurve"}
 		}
 	}
 
 	if policyKeyPair.ServiceGenerated != nil && defaultKeyPair.ServiceGenerated != nil {
 		if *(policyKeyPair.ServiceGenerated) != *(defaultKeyPair.ServiceGenerated) {
-			return fmt.Errorf("policy default serviceGenerated generated doesn't match with policy's serviceGenerated value")
+			return verror.VCertPolicyUnmatchedDefaultAttributeError{Attribute: "serviceGenerated", AttributePlural: "serviceGenerated"}
 		}
 	}
 
@@ -265,17 +266,17 @@ func validateDefaultKeyPair(ps *PolicySpecification) error {
 	keyPair := ps.Default.KeyPair
 
 	if keyPair.KeyType != nil && *(keyPair.KeyType) != "" && !existStringInArray([]string{*(keyPair.KeyType)}, TppKeyType) {
-		return fmt.Errorf("specified default keyType doesn't match with the supported ones")
+		return verror.VCertPolicyUnmatchedAttributeError{Attribute: "keyType"}
 	}
 
 	//validate key bit strength
 	if keyPair.RsaKeySize != nil && *(keyPair.RsaKeySize) > 0 && !existIntInArray([]int{*(keyPair.RsaKeySize)}, TppRsaKeySize) {
-		return fmt.Errorf("specified default rsaKeySize doesn't match with the supported ones")
+		return verror.VCertPolicyUnmatchedAttributeError{Attribute: "rsaKeySize"}
 	}
 
 	//validate elliptic curve
 	if keyPair.EllipticCurve != nil && *(keyPair.EllipticCurve) != "" && !existStringInArray([]string{*(keyPair.EllipticCurve)}, TppEllipticCurves) {
-		return fmt.Errorf("specified default ellipticCurve doesn't match with the supported ones")
+		return verror.VCertPolicyUnmatchedAttributeError{Attribute: "ellipticCurve"}
 	}
 
 	return nil
@@ -462,7 +463,7 @@ func getProhibitedSanTypes(sa SubjectAltNames) []string {
 func BuildPolicySpecificationForTPP(checkPolicyResp CheckPolicyResponse) (*PolicySpecification, error) {
 
 	if checkPolicyResp.Policy == nil {
-		return nil, fmt.Errorf("policy is nul")
+		return nil, verror.VCertPolicyIsNullError{}
 	}
 
 	policy := checkPolicyResp.Policy
@@ -733,7 +734,7 @@ func ValidateCloudPolicySpecification(ps *PolicySpecification) error {
 			if len(ps.Policy.KeyPair.RsaKeySizes) > 0 {
 				unSupported := getInvalidCloudRsaKeySizeValue(ps.Policy.KeyPair.RsaKeySizes)
 				if unSupported != nil {
-					return fmt.Errorf("specified attribute key length value: %s is not supported on VaaS", strconv.Itoa(*(unSupported)))
+					return verror.VCertPolicyKeyLengthValueError{Value: strconv.Itoa(*(unSupported))}
 				}
 			}
 		}

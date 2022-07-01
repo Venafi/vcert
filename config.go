@@ -18,6 +18,7 @@ package vcert
 
 import (
 	"fmt"
+	"github.com/Venafi/vcert/v4/pkg/verror"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -56,17 +57,17 @@ func LoadConfigFromFile(path, section string) (cfg Config, err error) {
 
 	fname, err := expand(path)
 	if err != nil {
-		return cfg, fmt.Errorf("failed to load config: %s", err)
+		return cfg, verror.VCertLoadConfigError{Description: err}
 	}
 
 	iniFile, err := ini.Load(fname)
 	if err != nil {
-		return cfg, fmt.Errorf("failed to load config: %s", err)
+		return cfg, verror.VCertLoadConfigError{Description: err}
 	}
 
 	err = validateFile(iniFile)
 	if err != nil {
-		return cfg, fmt.Errorf("failed to load config: %s", err)
+		return cfg, verror.VCertLoadConfigError{Description: err}
 	}
 
 	ok := func() bool {

@@ -1421,7 +1421,7 @@ func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration,
 			return nil, verror.ZoneNotFoundError
 		}
 	}
-	return nil, fmt.Errorf("Invalid status: %s Server response: %s", status, string(body))
+	return nil, verror.VCertConnectorError{Status: status, Body: body}
 
 }
 

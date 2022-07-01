@@ -2,7 +2,7 @@ package policy
 
 import (
 	"encoding/json"
-	"fmt"
+	"github.com/Venafi/vcert/v4/pkg/verror"
 	"github.com/smartystreets/assertions"
 	"gopkg.in/yaml.v2"
 	t "log"
@@ -37,12 +37,12 @@ func getPolicySpecificationFromFile(f string) *PolicySpecification {
 			t.Fatalf("Error unmarshalling policy specification\nError: %s", err)
 		}
 	} else {
-		err = fmt.Errorf("the specified file is not supported")
+		err = verror.VCertPolicyUnsupportedFileError{}
 		t.Fatalf("Error unmarshalling policy specification\nError: %s", err)
 
 	}
 	if &policySpecification == nil {
-		err = fmt.Errorf("policy specification is nil")
+		err = verror.VCertPolicyUnspecifiedPolicyError{}
 		t.Fatalf("Error openning policy specification\nError: %s", err)
 	}
 	defer file.Close()
