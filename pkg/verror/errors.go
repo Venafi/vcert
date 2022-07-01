@@ -54,7 +54,7 @@ func (e VCertPolicyCountryAttributeError) Error() string {
 }
 
 func (e VCertPolicyUnmatchedAttributeError) Error() string {
-	return fmt.Sprintf("attribute %s has more than one value", e.Attribute)
+	return fmt.Sprintf("specified default %s doesn't match with the supported ones", e.Attribute)
 }
 
 func (e VCertPolicyUnmatchedDefaultAttributeError) Error() string {
