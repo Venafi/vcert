@@ -31,6 +31,7 @@ type VCertPolicyUnsupportedFileError                        struct{ VCertPolicyE
 type VCertPolicyAttributeError                              struct{ VCertPolicyError }
 type VCertPolicyUnaryAttributeError                         struct{ VCertPolicyAttributeError; Attribute string }
 type VCertPolicyCountryAttributeError                       struct{ VCertPolicyAttributeError }
+type VCertPolicyCountryDefaultAttributeError                struct{ VCertPolicyAttributeError }
 type VCertPolicyUnmatchedAttributeError                     struct{ VCertPolicyAttributeError; Attribute string }
 type VCertPolicyUnmatchedDefaultAttributeError              struct{ VCertPolicyAttributeError; Attribute string; AttributePlural string }
 type VCertPolicyUnmatchedDefaultValueAttributeError         struct{ VCertPolicyAttributeError; Attribute string; Value           string }
@@ -39,7 +40,6 @@ type VCertPolicyIsNullError                                 struct{ VCertPolicyE
 type VCertPolicyKeyLengthValueError                         struct{ VCertPolicyError;          Value     string }
 type VCertPolicyInvalidCAError                              struct{ VCertPolicyError }
 type VCertPolicyUnsupportedKeyTypeError                     struct{ VCertPolicyError }
-type VCertPolicyUnsupportedFileError                        struct{ VCertPolicyError }
 
 func (e VCertPolicyUnspecifiedPolicyError) Error() string {
 	return fmt.Sprintf("policy specification is nil")
@@ -57,6 +57,10 @@ func (e VCertPolicyCountryAttributeError) Error() string {
 	return fmt.Sprintf("number of country's characters, doesn't match to two characters")
 }
 
+func (e VCertPolicyCountryDefaultAttributeError) Error() string {
+	return fmt.Sprintf("number of default country's characters, doesn't match to two characters")
+}
+
 func (e VCertPolicyUnmatchedAttributeError) Error() string {
 	return fmt.Sprintf("specified default %s doesn't match with the supported ones", e.Attribute)
 }
@@ -69,7 +73,7 @@ func (e VCertPolicyUnmatchedDefaultValueAttributeError) Error() string {
 	return fmt.Sprintf("specified default %s value: %s  doesn't match with specified policy %s", e.Attribute, e.Value, e.Attribute)
 }
 
-func (e VCertPolicyUnsupportedKeyType) Error() string {
+func (e VCertPolicyUnsupportedKeyTypeError) Error() string {
 	return fmt.Sprintf("specified default attribute keyType value is not supported on VaaS")
 }
 

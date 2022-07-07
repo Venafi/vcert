@@ -207,7 +207,7 @@ func validateDefaultSubject(ps *PolicySpecification) error {
 			}
 			if defaultSubject.Country != nil && *(defaultSubject.Country) != "" {
 				if len(*(defaultSubject.Country)) != 2 {
-					return verror.VCertPolicyCountryAttributeError{}
+					return verror.VCertPolicyCountryDefaultAttributeError{}
 				}
 			}
 		} else {
