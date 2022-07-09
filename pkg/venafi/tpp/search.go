@@ -44,6 +44,7 @@ type CertificateDetailsResponse struct {
 		Value []string
 	}
 	Consumers []string
+	Disabled  bool `json:",omitempty"`
 }
 
 type CertificateSearchResponse struct {

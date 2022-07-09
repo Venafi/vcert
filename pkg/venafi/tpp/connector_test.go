@@ -577,6 +577,76 @@ func DoRequestCertificate(t *testing.T, tpp *Connector) {
 	}
 }
 
+func DoRevokeAndDisableCertificate(t *testing.T, tpp *Connector) (req *certificate.Request) {
+	config, err := tpp.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	req = &certificate.Request{}
+	req.Subject.CommonName = test.RandCN()
+	req.Subject.Organization = []string{"Venafi, Inc."}
+	req.Subject.OrganizationalUnit = []string{"Automated Tests"}
+	req.Subject.Locality = []string{"Las Vegas"}
+	req.Subject.Province = []string{"Nevada"}
+	req.Subject.Country = []string{"US"}
+	// req.FriendlyName = fmt.Sprintf("vcert integration test - %d", time.Now().Unix())
+	err = tpp.GenerateRequest(config, req)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	certDN, err := tpp.RequestCertificate(req)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	t.Logf("waiting for %s to be ready", certDN)
+
+	var isPending = true
+	for isPending {
+		t.Logf("%s is pending...", certDN)
+		time.Sleep(time.Second * 1)
+
+		req.PickupID = certDN
+		req.ChainOption = certificate.ChainOptionIgnore
+
+		_, err = tpp.RetrieveCertificate(req)
+		_, isPending = err.(endpoint.ErrCertificatePending)
+	}
+	if err != nil {
+		t.Fatalf("Error should not be nil, certificate has not been issued.")
+	}
+
+	t.Logf("Start revocation for %s", certDN)
+	revReq := &certificate.RevocationRequest{CertificateDN: certDN, Disable: true}
+	err = tpp.RevokeCertificate(revReq)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	t.Logf("Verifying the Certificate is Disabled")
+	guid, err := tpp.configDNToGuid(certDN)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	if guid == "" {
+		t.Fatalf("Certificate with DN %s doesn't exists", certDN)
+	}
+	details, err := tpp.searchCertificateDetails(guid)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	if details.Disabled {
+		t.Logf("The certificate is disabled")
+	} else {
+		t.Fatalf("The certificate was not disable")
+	}
+
+	return req
+}
+
 func TestRequestCertificateServiceGenerated(t *testing.T) {
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
@@ -765,9 +835,7 @@ func TestRevokeNonIssuedCertificate(t *testing.T) {
 	}
 }
 
-func TestRevokeAndDisableCertificate(t *testing.T) {
-
-	cn := test.RandCN()
+func TestReEnrollRevokedAndDisabledCertificate(t *testing.T) {
 
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
@@ -780,63 +848,34 @@ func TestRevokeAndDisableCertificate(t *testing.T) {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
 	}
-	config, err := tpp.ReadZoneConfiguration()
+
+	req := DoRevokeAndDisableCertificate(t, tpp)
+
+	t.Logf("Trying to re-enable the certificate")
+	_, err = tpp.RequestCertificate(req)
 	if err != nil {
-		t.Fatalf("err is not nil, err: %s", err)
+		t.Fatal(err)
 	}
+	t.Logf("The certificate was re-enabled successfully")
+}
 
-	req := &certificate.Request{}
-	req.Subject.CommonName = cn
-	req.Subject.Organization = []string{"Venafi, Inc."}
-	req.Subject.OrganizationalUnit = []string{"Automated Tests"}
-	req.Subject.Locality = []string{"Las Vegas"}
-	req.Subject.Province = []string{"Nevada"}
-	req.Subject.Country = []string{"US"}
-	// req.FriendlyName = fmt.Sprintf("vcert integration test - %d", time.Now().Unix())
-	err = tpp.GenerateRequest(config, req)
+func TestRevokeAndDisableCertificate(t *testing.T) {
+
+	//cn := test.RandCN()
+
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
-		t.Fatalf("err is not nil, err: %s", err)
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
 
-	certDN, err := tpp.RequestCertificate(req)
-	if err != nil {
-		t.Fatalf("err is not nil, err: %s", err)
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
 	}
 
-	t.Logf("waiting for %s to be ready", certDN)
-
-	var isPending = true
-	for isPending {
-		t.Logf("%s is pending...", certDN)
-		time.Sleep(time.Second * 1)
-
-		req.PickupID = certDN
-		req.ChainOption = certificate.ChainOptionIgnore
-
-		_, err = tpp.RetrieveCertificate(req)
-		_, isPending = err.(endpoint.ErrCertificatePending)
-	}
-	if err != nil {
-		t.Fatalf("Error should not be nil, certificate has not been issued.")
-	}
-
-	t.Logf("Start revocation for %s", certDN)
-	revReq := &certificate.RevocationRequest{CertificateDN: certDN, Disable: true}
-	err = tpp.RevokeCertificate(revReq)
-	if err != nil {
-		t.Fatalf("%s", err)
-	}
-
-	t.Logf("trying to enroll %s again after revoked with Disable=true", certDN)
-	err = tpp.GenerateRequest(config, req)
-	if err != nil {
-		t.Fatalf("err is not nil, err: %s", err)
-	}
-
-	certDN, err = tpp.RequestCertificate(req)
-	if err == nil {
-		t.Fatalf("Certificate/Request should return error if DN has been revoked with Disable=true")
-	}
+	DoRevokeAndDisableCertificate(t, tpp)
 }
 
 func TestRenewCertificate(t *testing.T) {
