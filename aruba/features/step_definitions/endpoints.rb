@@ -15,7 +15,9 @@ ENDPOINTS = {
              " -t '#{ENV['TPP_ACCESS_TOKEN']}'" +
              " -insecure",
 
-    "Cloud" => "-u '#{ENV['CLOUD_URL']}' -k '#{ENV['CLOUD_APIKEY']}'"
+    "Cloud" => "-u '#{ENV['CLOUD_URL']}' -k '#{ENV['CLOUD_APIKEY']}'",
+
+    "VaaS" => "-u '#{ENV['CLOUD_URL']}' -k '#{ENV['CLOUD_APIKEY']}'"
 }
 
 ZONE = {
@@ -27,7 +29,9 @@ ZONE = {
 
     "TPPecdsa" => "-z '#{ENV['TPP_ZONE_ECDSA']}'", 
 
-    "Cloud" => "-z '#{ENV['CLOUD_ZONE']}'"
+    "Cloud" => "-z '#{ENV['CLOUD_ZONE']}'",
+
+    "VaaS" => "-z '#{ENV['CLOUD_ZONE']}'"
 }
 
 ENDPOINT_CONFIGS = {
@@ -46,6 +50,12 @@ ENDPOINT_CONFIGS = {
         tpp_zone = #{ENV['TPP_ZONE']}
     ",
     "Cloud" => "
+        url = #{ENV['CLOUD_URL']}
+        cloud_apikey = #{ENV['CLOUD_APIKEY']}
+        cloud_zone = #{ENV['CLOUD_ZONE']}
+    ",
+
+    "VaaS" => "
         url = #{ENV['CLOUD_URL']}
         cloud_apikey = #{ENV['CLOUD_APIKEY']}
         cloud_zone = #{ENV['CLOUD_ZONE']}
