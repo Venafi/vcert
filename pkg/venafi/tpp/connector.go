@@ -532,7 +532,6 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 			expirationDate.Year(), expirationDate.Month(), expirationDate.Day(), expirationDate.Hour(), expirationDate.Minute(), expirationDate.Second())
 
 		tppReq.CASpecificAttributes = append(tppReq.CASpecificAttributes, nameValuePair{Name: expirationDateAttribute, Value: formattedExpirationDate})
-
 	}
 
 	for name, value := range customFieldsMap {
@@ -576,6 +575,14 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 		tppReq.KeyAlgorithm = "ECC"
 		tppReq.EllipticCurve = req.KeyCurve.String()
 	}
+
+	//Setting the certificate will be re-enabled.
+	//From https://docs.venafi.com/Docs/currentSDK/TopNav/Content/SDK/WebSDK/r-SDK-POST-Certificates-request.php
+	//Reenable (Optional) The action to control a previously disabled certificate:
+	//
+	//    - false: Default. Do not renew a previously disabled certificate.
+	//    - true: Clear the Disabled attribute, reenable, and then renew the certificate (in this request). Reuse the same CertificateDN, that is also known as a Certificate object.
+	tppReq.Reenable = true
 
 	return tppReq, err
 }

@@ -85,6 +85,7 @@ type certificateRequest struct {
 	CustomFields            []customField   `json:",omitempty"`
 	Devices                 []device        `json:",omitempty"`
 	CertificateType         string          `json:",omitempty"`
+	Reenable                bool            `json:",omitempty"`
 }
 
 type certificateRetrieveRequest struct {
