@@ -53,14 +53,10 @@ ENDPOINT_CONFIGS = {
         url = #{ENV['CLOUD_URL']}
         cloud_apikey = #{ENV['CLOUD_APIKEY']}
         cloud_zone = #{ENV['CLOUD_ZONE']}
-    ",
-
-    "VaaS" => "
-        url = #{ENV['CLOUD_URL']}
-        cloud_apikey = #{ENV['CLOUD_APIKEY']}
-        cloud_zone = #{ENV['CLOUD_ZONE']}
     "
 }
+
+ENDPOINT_CONFIGS["VaaS"] = ENDPOINT_CONFIGS["Cloud"]
 
 ALL_ENDPOINTS_CONFIG = "
     [tpp-profile]
