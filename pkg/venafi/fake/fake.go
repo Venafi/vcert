@@ -45,7 +45,7 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 		return nil
 
 	default:
-		return fmt.Errorf("Unexpected option in PrivateKeyOrigin")
+		return fmt.Errorf("unexpected option in PrivateKeyOrigin")
 	}
 
 	return nil

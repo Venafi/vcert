@@ -46,7 +46,7 @@ func readData(commandName string) error {
 		fileName := flags.distinguishedName[5:]
 		bytes, err := ioutil.ReadFile(fileName)
 		if err != nil {
-			return fmt.Errorf("Failed to read Certificate DN: %s", err)
+			return fmt.Errorf("failed to read Certificate DN: %s", err)
 		}
 		flags.distinguishedName = strings.TrimSpace(string(bytes))
 	}
@@ -54,7 +54,7 @@ func readData(commandName string) error {
 		fileName := flags.keyPassword[5:]
 		bytes, err := ioutil.ReadFile(fileName)
 		if err != nil {
-			return fmt.Errorf("Failed to read password from file: %s", err)
+			return fmt.Errorf("failed to read password from file: %s", err)
 		}
 		flags.keyPassword = strings.TrimSpace(string(bytes))
 	}
@@ -63,22 +63,22 @@ func readData(commandName string) error {
 		certFileName := flags.thumbprint[5:]
 		flags.thumbprint, err = readThumbprintFromFile(certFileName)
 		if err != nil {
-			return fmt.Errorf("Failed to read certificate fingerprint: %s", err)
+			return fmt.Errorf("failed to read certificate fingerprint: %s", err)
 		}
 	}
 
 	if err = readPasswordsFromInputFlags(commandName, &flags); err != nil {
-		return fmt.Errorf("Failed to read password from input: %s", err)
+		return fmt.Errorf("failed to read password from input: %s", err)
 	}
 	return nil
 }
 
 func validateCommonFlags(commandName string) error {
 	if flags.format != "" && flags.format != "pem" && flags.format != "json" && flags.format != "pkcs12" && flags.format != JKSFormat && flags.format != util.LegacyPem {
-		return fmt.Errorf("Unexpected output format: %s", flags.format)
+		return fmt.Errorf("unexpected output format: %s", flags.format)
 	}
 	if flags.file != "" && (flags.certFile != "" || flags.chainFile != "" || flags.keyFile != "") {
-		return fmt.Errorf("The '-file' option cannot be used used with any other -*-file flags. Either all data goes into one file or individual files must be specified using the appropriate flags")
+		return fmt.Errorf("the '-file' option cannot be used used with any other -*-file flags. Either all data goes into one file or individual files must be specified using the appropriate flags")
 	}
 
 	csrOptionRegex := regexp.MustCompile(`(^file:).*$|^local$|^service$|^$`)
@@ -145,7 +145,7 @@ func validateConnectionFlags(commandName string) error {
 		if flags.tppUser == "" && tppToken == "" {
 			// should be SaaS endpoint
 			if commandName != "sshgetconfig" && flags.apiKey == "" && getPropertyFromEnvironment(vCertApiKey) == "" {
-				return fmt.Errorf("An API key is required for communicating with Venafi as a Service")
+				return fmt.Errorf("an API key is required for communicating with Venafi as a Service")
 			}
 		} else {
 			// should be TPP service
@@ -153,7 +153,7 @@ func validateConnectionFlags(commandName string) error {
 				return fmt.Errorf("missing -u (URL) parameter")
 			}
 			if flags.noPrompt && flags.password == "" && tppToken == "" {
-				return fmt.Errorf("An access token or password is required for communicating with Trust Protection Platform")
+				return fmt.Errorf("an access token or password is required for communicating with Trust Protection Platform")
 			}
 
 			// mutual TLS with TPP service
@@ -177,13 +177,13 @@ func validatePKCS12Flags(commandName string) error {
 			}
 		}
 		if flags.certFile != "" || flags.chainFile != "" || flags.keyFile != "" {
-			return fmt.Errorf(`The --file parameter may not be combined with the --cert-file, --key-file, or --chain-file parameters when --format is "pkcs12"`)
+			return fmt.Errorf(`the --file parameter may not be combined with the --cert-file, --key-file, or --chain-file parameters when --format is "pkcs12"`)
 		}
 		if strings.HasPrefix(flags.csrOption, "file:") {
-			return fmt.Errorf(`The --csr "file" option may not be used with the enroll or renew actions when --format is "pkcs12"`)
+			return fmt.Errorf(`the --csr "file" option may not be used with the enroll or renew actions when --format is "pkcs12"`)
 		}
 		if (flags.csrOption == "" || flags.csrOption == "local") && flags.noPickup {
-			return fmt.Errorf(`The --csr "local" option may not be used with the enroll or renew actions when --format is "pkcs12" and --no-pickup is specified`)
+			return fmt.Errorf(`the --csr "local" option may not be used with the enroll or renew actions when --format is "pkcs12" and --no-pickup is specified`)
 		}
 	}
 	return nil
@@ -202,13 +202,13 @@ func validateJKSFlags(commandName string) error {
 			}
 		}
 		if flags.certFile != "" || flags.chainFile != "" || flags.keyFile != "" {
-			return fmt.Errorf(`The --file parameter may not be combined with the --cert-file, --key-file, or --chain-file parameters when --format is "jks"`)
+			return fmt.Errorf(`the --file parameter may not be combined with the --cert-file, --key-file, or --chain-file parameters when --format is "jks"`)
 		}
 		if strings.HasPrefix(flags.csrOption, "file:") {
-			return fmt.Errorf(`The --csr "file" option may not be used with the enroll or renew actions when --format is "jks"`)
+			return fmt.Errorf(`the --csr "file" option may not be used with the enroll or renew actions when --format is "jks"`)
 		}
 		if (flags.csrOption == "" || flags.csrOption == "local") && flags.noPickup {
-			return fmt.Errorf(`The --csr "local" option may not be used with the enroll or renew actions when --format is "jks" and --no-pickup is specified`)
+			return fmt.Errorf(`the --csr "local" option may not be used with the enroll or renew actions when --format is "jks" and --no-pickup is specified`)
 		}
 
 		if flags.keyPassword == "" {
@@ -220,16 +220,16 @@ func validateJKSFlags(commandName string) error {
 		}
 
 		if flags.jksAlias == "" {
-			return fmt.Errorf("The --jks-alias parameter is required with --format jks")
+			return fmt.Errorf("the --jks-alias parameter is required with --format jks")
 		}
 	} else {
 
 		if flags.jksPassword != "" {
-			return fmt.Errorf("The --jks-password parameter may only be used with --format jks")
+			return fmt.Errorf("the --jks-password parameter may only be used with --format jks")
 		}
 
 		if flags.jksAlias != "" {
-			return fmt.Errorf("The --jks-alias parameter may only be used with --format jks")
+			return fmt.Errorf("the --jks-alias parameter may only be used with --format jks")
 		}
 	}
 
@@ -252,16 +252,16 @@ func validateEnrollFlags(commandName string) error {
 	}
 	if strings.Index(flags.csrOption, "file:") == 0 {
 		if flags.commonName != "" {
-			return fmt.Errorf("The '-cn' option cannot be used in -csr file: provided mode")
+			return fmt.Errorf("the '-cn' option cannot be used in -csr file: provided mode")
 		}
 	} else {
 		if flags.commonName == "" {
-			return fmt.Errorf("A Common Name is required for enrollment")
+			return fmt.Errorf("a Common Name is required for enrollment")
 		}
 	}
 
 	if flags.chainOption == "ignore" && flags.chainFile != "" {
-		return fmt.Errorf("The `-chain ignore` option cannot be used with -chain-file option")
+		return fmt.Errorf("the `-chain ignore` option cannot be used with -chain-file option")
 	}
 
 	apiKey := flags.apiKey
@@ -284,22 +284,22 @@ func validateEnrollFlags(commandName string) error {
 		if flags.tppUser == "" && tppToken == "" {
 			// should be SaaS endpoint
 			if apiKey == "" {
-				return fmt.Errorf("An API key is required for enrollment with Venafi as a Service")
+				return fmt.Errorf("an API key is required for enrollment with Venafi as a Service")
 			}
 			if zone == "" {
-				return fmt.Errorf("A zone is required for requesting a certificate from Venafi as a Service")
+				return fmt.Errorf("a zone is required for requesting a certificate from Venafi as a Service")
 			}
 		} else {
 			// should be TPP service
 			if flags.tppUser == "" && tppToken == "" {
-				return fmt.Errorf("An access token or username is required for communicating with Trust Protection Platform")
+				return fmt.Errorf("an access token or username is required for communicating with Trust Protection Platform")
 			}
 			if flags.noPrompt && flags.password == "" && tppToken == "" {
-				return fmt.Errorf("An access token or password is required for communicating with Trust Protection Platform")
+				return fmt.Errorf("an access token or password is required for communicating with Trust Protection Platform")
 			}
 
 			if zone == "" {
-				return fmt.Errorf("A zone is required for requesting a certificate from Trust Protection Platform")
+				return fmt.Errorf("a zone is required for requesting a certificate from Trust Protection Platform")
 			}
 
 			// mutual TLS with TPP service
@@ -389,7 +389,7 @@ func validateCredMgmtFlags1(commandName string) error {
 			return fmt.Errorf("--profile option cannot be used without --config option")
 		}
 		if flags.testMode {
-			return fmt.Errorf("There is no test mode for %s command", commandName)
+			return fmt.Errorf("there is no test mode for %s command", commandName)
 		}
 		getCredForVaaS := false
 		if commandName == commandGetCredName {
@@ -415,7 +415,7 @@ func validateCredMgmtFlags1(commandName string) error {
 		}
 
 		if flags.noPrompt && flags.password == "" && tppTokenS == "" {
-			return fmt.Errorf("An access token or password is required for communicating with Trust Protection Platform")
+			return fmt.Errorf("an access token or password is required for communicating with Trust Protection Platform")
 		}
 
 		// mutual TLS with TPP service
@@ -447,7 +447,7 @@ func validateGenerateFlags1(commandName string) error {
 	}
 
 	if flags.commonName == "" && len(flags.dnsSans) == 0 {
-		return fmt.Errorf("A Common Name (cn) or Subject Alternative Name: DNS (san-dns) value is required")
+		return fmt.Errorf("a Common Name (cn) or Subject Alternative Name: DNS (san-dns) value is required")
 	}
 
 	return nil
@@ -475,7 +475,7 @@ func validateRenewFlags1(commandName string) error {
 		return fmt.Errorf("-id and -thumbprint cannot be used at the same time")
 	}
 	if flags.chainOption == "ignore" && flags.chainFile != "" {
-		return fmt.Errorf("The `-chain ignore` option cannot be used with -chain-file option")
+		return fmt.Errorf("the `-chain ignore` option cannot be used with -chain-file option")
 	}
 
 	if flags.csrOption == "service" {
@@ -492,7 +492,7 @@ func validateRenewFlags1(commandName string) error {
 			len(flags.emailSans) > 0 ||
 			len(flags.ipSans) > 0 {
 
-			return fmt.Errorf("Renewal with -csr=service does not allow options: " +
+			return fmt.Errorf("renewal with -csr=service does not allow options: " +
 				"-cn, -c, -o, -ou, -l, -st, -san-*, -key-type, -key-size")
 		}
 	}
@@ -507,7 +507,7 @@ func validateRenewFlags1(commandName string) error {
 			len(flags.emailSans) > 0 ||
 			len(flags.ipSans) > 0 {
 
-			return fmt.Errorf("Renewal with -csr file:CSR.pem does not allow options: " +
+			return fmt.Errorf("renewal with -csr file:CSR.pem does not allow options: " +
 				"-cn, -c, -o, -ou, -l, -st, -san-*, -key-type, -key-size")
 		}
 	}
@@ -519,7 +519,7 @@ func validateRenewFlags1(commandName string) error {
 			flags.locality != "" ||
 			len(flags.orgUnits) > 0 {
 
-			return fmt.Errorf("Renewal does not allow options: -cn, -c, -o, -ou, -l, -st")
+			return fmt.Errorf("renewal does not allow options: -cn, -c, -o, -ou, -l, -st")
 		}
 	}
 
@@ -558,10 +558,10 @@ func validatePickupFlags1(commandName string) error {
 	}
 
 	if flags.pickupID == "" && flags.pickupIDFile == "" {
-		return fmt.Errorf("A Pickup ID is required to pickup a certificate provided by -pickup-id OR -pickup-id-file options")
+		return fmt.Errorf("a Pickup ID is required to pickup a certificate provided by -pickup-id OR -pickup-id-file options")
 	}
 	if flags.pickupID != "" && flags.pickupIDFile != "" {
-		return fmt.Errorf("Both -pickup-id and -pickup-id-file options cannot be specified at the same time")
+		return fmt.Errorf("both -pickup-id and -pickup-id-file options cannot be specified at the same time")
 	}
 
 	err = validatePKCS12Flags(commandName)
@@ -596,7 +596,7 @@ func validateRevokeFlags1(commandName string) error {
 	}
 
 	if flags.distinguishedName != "" && flags.thumbprint != "" {
-		return fmt.Errorf("Either -id or -thumbprint can be used")
+		return fmt.Errorf("either -id or -thumbprint can be used")
 	}
 
 	if flags.revocationReason != "" {

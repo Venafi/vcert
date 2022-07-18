@@ -392,7 +392,7 @@ func (c *Connector) requestAllMetadataItems(dn string) ([]metadataItem, error) {
 		return nil, err
 	}
 	if statusCode != http.StatusOK {
-		return nil, fmt.Errorf("Unexpected http status code while fetching metadata items. %d-%s", statusCode, status)
+		return nil, fmt.Errorf("unexpected http status code while fetching metadata items. %d-%s", statusCode, status)
 	}
 
 	var response metadataGetItemsResponse
@@ -407,7 +407,7 @@ func (c *Connector) requestMetadataItems(dn string) ([]metadataKeyValueSet, erro
 		return nil, err
 	}
 	if statusCode != http.StatusOK {
-		return nil, fmt.Errorf("Unexpected http status code while fetching certificate metadata items. %d-%s", statusCode, status)
+		return nil, fmt.Errorf("unexpected http status code while fetching certificate metadata items. %d-%s", statusCode, status)
 	}
 	var response metadataGetResponse
 	err = json.Unmarshal(body, &response)
@@ -426,7 +426,7 @@ func (c *Connector) requestSystemVersion() (string, error) {
 	case 401:
 		return "", fmt.Errorf("http status code '%s' was returned by the server. Hint: OAuth scope 'configuration' is required when using custom fields", status)
 	default:
-		return "", fmt.Errorf("Unexpected http status code while fetching TPP version. %s", status)
+		return "", fmt.Errorf("unexpected http status code while fetching TPP version. %s", status)
 	}
 
 	var response struct{ Version string }
@@ -448,7 +448,7 @@ func (c *Connector) setCertificateMetadata(metadataRequest metadataSetRequest) (
 		return false, err
 	}
 	if statusCode != http.StatusOK {
-		return false, fmt.Errorf("Unexpected http status code while setting metadata items. %d-%s", statusCode, status)
+		return false, fmt.Errorf("unexpected http status code while setting metadata items. %d-%s", statusCode, status)
 	}
 
 	var result = metadataSetResponse{}
@@ -478,7 +478,7 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 			tppReq.SubjectAltNames = wrapAltNames(req)
 		}
 	default:
-		return tppReq, fmt.Errorf("Unexpected option in PrivateKeyOrigin")
+		return tppReq, fmt.Errorf("unexpected option in PrivateKeyOrigin")
 	}
 
 	tppReq.CertificateType = "AUTO"
@@ -1159,13 +1159,13 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 		// search cert by Thumbprint and fill pickupID
 		searchResult, err := c.searchCertificatesByFingerprint(req.Thumbprint)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to create renewal request: %s", err)
+			return nil, fmt.Errorf("failed to create renewal request: %s", err)
 		}
 		if len(searchResult.Certificates) == 0 {
-			return nil, fmt.Errorf("No certifiate found using fingerprint %s", req.Thumbprint)
+			return nil, fmt.Errorf("no certifiate found using fingerprint %s", req.Thumbprint)
 		}
 		if len(searchResult.Certificates) > 1 {
-			return nil, fmt.Errorf("Error: more than one CertificateRequestId was found with the same thumbprint")
+			return nil, fmt.Errorf("error: more than one CertificateRequestId was found with the same thumbprint")
 		}
 		req.PickupID = searchResult.Certificates[0].CertificateRequestId
 	}
@@ -1248,15 +1248,15 @@ func (c *Connector) prepareRenewalRequest(renewReq *certificate.RenewalRequest) 
 	// here we fetch old cert anyway
 	oldPcc, err := c.RetrieveCertificate(searchReq)
 	if err != nil {
-		return fmt.Errorf("Failed to fetch old certificate by id %s: %s", renewReq.CertificateDN, err)
+		return fmt.Errorf("failed to fetch old certificate by id %s: %s", renewReq.CertificateDN, err)
 	}
 	oldCertBlock, _ := pem.Decode([]byte(oldPcc.Certificate))
 	if oldCertBlock == nil || oldCertBlock.Type != "CERTIFICATE" {
-		return fmt.Errorf("Failed to fetch old certificate by id %s: PEM parse error", renewReq.CertificateDN)
+		return fmt.Errorf("failed to fetch old certificate by id %s: PEM parse error", renewReq.CertificateDN)
 	}
 	oldCert, err := x509.ParseCertificate([]byte(oldCertBlock.Bytes))
 	if err != nil {
-		return fmt.Errorf("Failed to fetch old certificate by id %s: %s", renewReq.CertificateDN, err)
+		return fmt.Errorf("failed to fetch old certificate by id %s: %s", renewReq.CertificateDN, err)
 	}
 	if renewReq.CertificateRequest == nil {
 		renewReq.CertificateRequest = certificate.NewRequest(oldCert)
@@ -1271,13 +1271,13 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 		// search by Thumbprint and fill *renewReq.CertificateDN
 		searchResult, err := c.searchCertificatesByFingerprint(renewReq.Thumbprint)
 		if err != nil {
-			return "", fmt.Errorf("Failed to create renewal request: %s", err)
+			return "", fmt.Errorf("failed to create renewal request: %s", err)
 		}
 		if len(searchResult.Certificates) == 0 {
-			return "", fmt.Errorf("No certifiate found using fingerprint %s", renewReq.Thumbprint)
+			return "", fmt.Errorf("no certifiate found using fingerprint %s", renewReq.Thumbprint)
 		}
 		if len(searchResult.Certificates) > 1 {
-			return "", fmt.Errorf("Error: more than one CertificateRequestId was found with the same thumbprint")
+			return "", fmt.Errorf("error: more than one CertificateRequestId was found with the same thumbprint")
 		}
 
 		renewReq.CertificateDN = searchResult.Certificates[0].CertificateRequestId
@@ -1346,7 +1346,7 @@ func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (er
 		return
 	}
 	if !revokeResponse.Success {
-		return fmt.Errorf("Revocation error: %s", revokeResponse.Error)
+		return fmt.Errorf("revocation error: %s", revokeResponse.Error)
 	}
 	return
 }
@@ -1382,7 +1382,7 @@ func (c *Connector) ReadPolicyConfiguration() (policy *endpoint.Policy, err erro
 			return nil, verror.ZoneNotFoundError
 		}
 	} else {
-		return nil, fmt.Errorf("Invalid status: %s Server data: %s", status, body)
+		return nil, fmt.Errorf("invalid status: %s Server data: %s", status, body)
 	}
 	return
 }
@@ -1955,7 +1955,7 @@ func parseDNToGUIDRequestResponse(httpStatusCode int, httpStatus string, body []
 		}
 		return reqData, nil
 	default:
-		return nil, fmt.Errorf("Unexpected status code on TPP DN to GUID request.\n Status:\n %s. \n Body:\n %s\n", httpStatus, body)
+		return nil, fmt.Errorf("unexpected status code on TPP DN to GUID request.\n Status:\n %s. \n Body:\n %s\n", httpStatus, body)
 	}
 }
 
@@ -1973,7 +1973,7 @@ func parseCertificateMetaData(httpStatusCode int, httpStatus string, body []byte
 		}
 		return reqData, nil
 	default:
-		return nil, fmt.Errorf("Unexpected status code on TPP DN to GUID request.\n Status:\n %s. \n Body:\n %s\n", httpStatus, body)
+		return nil, fmt.Errorf("unexpected status code on TPP DN to GUID request.\n Status:\n %s. \n Body:\n %s\n", httpStatus, body)
 	}
 }
 

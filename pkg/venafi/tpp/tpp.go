@@ -506,7 +506,7 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 
 	tppMgmtType := config.CustomAttributeValues[tppAttributeManagementType]
 	if tppMgmtType == "Monitoring" || tppMgmtType == "Unassigned" {
-		return fmt.Errorf("Unable to request certificate from TPP, current TPP configuration would not allow the request to be processed")
+		return fmt.Errorf("unable to request certificate from TPP, current TPP configuration would not allow the request to be processed")
 	}
 
 	config.UpdateCertificateRequest(req)
@@ -514,7 +514,7 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 	switch req.CsrOrigin {
 	case certificate.LocalGeneratedCSR:
 		if config.CustomAttributeValues[tppAttributeManualCSR] == "0" {
-			return fmt.Errorf("Unable to request certificate by local generated CSR when zone configuration is 'Manual Csr' = 0")
+			return fmt.Errorf("unable to request certificate by local generated CSR when zone configuration is 'Manual Csr' = 0")
 		}
 		err = req.GeneratePrivateKey()
 		if err != nil {
@@ -526,7 +526,7 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 		}
 	case certificate.UserProvidedCSR:
 		if config.CustomAttributeValues[tppAttributeManualCSR] == "0" {
-			return fmt.Errorf("Unable to request certificate with user provided CSR when zone configuration is 'Manual Csr' = 0")
+			return fmt.Errorf("unable to request certificate with user provided CSR when zone configuration is 'Manual Csr' = 0")
 		}
 		if len(req.GetCSR()) == 0 {
 			return fmt.Errorf("CSR was supposed to be provided by user, but it's empty")
@@ -580,7 +580,7 @@ func parseConfigResult(httpStatusCode int, httpStatus string, body []byte) (tppD
 		}
 		return tppData, nil
 	default:
-		return tppData, fmt.Errorf("Unexpected status code on TPP Config Operation. Status: %s", httpStatus)
+		return tppData, fmt.Errorf("unexpected status code on TPP Config Operation. Status: %s", httpStatus)
 	}
 }
 
@@ -598,7 +598,7 @@ func parseRequestResult(httpStatusCode int, httpStatus string, body []byte) (str
 		}
 		return reqData.CertificateDN, nil
 	default:
-		return "", fmt.Errorf("Unexpected status code on TPP Certificate Request.\n Status:\n %s. \n Body:\n %s\n", httpStatus, body)
+		return "", fmt.Errorf("unexpected status code on TPP Certificate Request.\n Status:\n %s. \n Body:\n %s\n", httpStatus, body)
 	}
 }
 
@@ -617,7 +617,7 @@ func parseRetrieveResult(httpStatusCode int, httpStatus string, body []byte) (ce
 		}
 		return retrieveResponse, nil
 	default:
-		return retrieveResponse, fmt.Errorf("Unexpected status code on TPP Certificate Retrieval. Status: %s", httpStatus)
+		return retrieveResponse, fmt.Errorf("unexpected status code on TPP Certificate Retrieval. Status: %s", httpStatus)
 	}
 }
 
@@ -636,7 +636,7 @@ func parseRevokeResult(httpStatusCode int, httpStatus string, body []byte) (cert
 		}
 		return revokeResponse, nil
 	default:
-		return revokeResponse, fmt.Errorf("Unexpected status code on TPP Certificate Revocation. Status: %s", httpStatus)
+		return revokeResponse, fmt.Errorf("unexpected status code on TPP Certificate Revocation. Status: %s", httpStatus)
 	}
 }
 
@@ -718,7 +718,7 @@ func parseFindObjectsOfClassResponse(httpStatusCode int, httpStatus string, body
 		}
 		return response, nil
 	default:
-		return response, fmt.Errorf("Unexpected status from FindObjectsOfClass. Status: %s", httpStatus)
+		return response, fmt.Errorf("unexpected status from FindObjectsOfClass. Status: %s", httpStatus)
 	}
 }
 

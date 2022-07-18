@@ -90,7 +90,7 @@ func readPasswordsFromInputFlags(commandName string, cf *commandFlags) error {
 					return err
 				}
 				if !doValuesMatch(input, verify) {
-					return fmt.Errorf("Passphrases don't match")
+					return fmt.Errorf("passphrases don't match")
 				}
 				cf.keyPassword = string(input)
 			} else if cf.keyPassword == "" && cf.noPrompt && commandName == commandPickupName {
@@ -148,7 +148,7 @@ func readPasswordFromFile(path string, index int) (string, error) {
 		lines = append(lines, scanner.Text())
 	}
 	if index > len(lines)-1 {
-		return "", fmt.Errorf("File did not contain enough data to read from line %d", index)
+		return "", fmt.Errorf("file did not contain enough data to read from line %d", index)
 	}
 	return lines[index], nil
 }

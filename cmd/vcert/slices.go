@@ -54,7 +54,7 @@ func (rs *rfc822NameSlice) Set(value string) error {
 		*rs = append(*rs, value)
 		return nil
 	}
-	return fmt.Errorf("Failed to convert %s to an RFC 822 name (email or UPN)", value)
+	return fmt.Errorf("failed to convert %s to an RFC 822 name (email or UPN)", value)
 }
 
 type ipSlice []net.IP
@@ -73,7 +73,7 @@ func (is *ipSlice) Set(value string) error {
 		*is = append(*is, temp)
 		return nil
 	}
-	return fmt.Errorf("Failed to convert %s to an IP Address", value)
+	return fmt.Errorf("failed to convert %s to an IP Address", value)
 }
 
 type uriSlice []*url.URL
@@ -92,5 +92,5 @@ func (us *uriSlice) Set(value string) error {
 		*us = append(*us, temp)
 		return nil
 	}
-	return fmt.Errorf("Failed to convert %s to a URI", value)
+	return fmt.Errorf("failed to convert %s to a URI", value)
 }

@@ -235,12 +235,12 @@ func setTLSConfig() error {
 		// Load client PKCS#12 archive
 		p12, err := ioutil.ReadFile(flags.clientP12)
 		if err != nil {
-			return fmt.Errorf("Error reading PKCS#12 archive file: %s", err)
+			return fmt.Errorf("error reading PKCS#12 archive file: %s", err)
 		}
 
 		blocks, err := pkcs12.ToPEM(p12, flags.clientP12PW)
 		if err != nil {
-			return fmt.Errorf("Error converting PKCS#12 archive file to PEM blocks: %s", err)
+			return fmt.Errorf("error converting PKCS#12 archive file to PEM blocks: %s", err)
 		}
 
 		var pemData []byte
@@ -251,7 +251,7 @@ func setTLSConfig() error {
 		// Construct TLS certificate from PEM data
 		cert, err := tls.X509KeyPair(pemData, pemData)
 		if err != nil {
-			return fmt.Errorf("Error reading PEM data to build X.509 certificate: %s", err)
+			return fmt.Errorf("error reading PEM data to build X.509 certificate: %s", err)
 		}
 
 		caCertPool := x509.NewCertPool()
@@ -284,7 +284,7 @@ func doCommandEnroll1(c *cli.Context) error {
 
 	cfg, err := buildConfig(c, &flags)
 	if err != nil {
-		return fmt.Errorf("Failed to build vcert config: %s", err)
+		return fmt.Errorf("failed to build vcert config: %s", err)
 	}
 
 	connector, err := vcert.NewClient(&cfg)
@@ -373,7 +373,7 @@ func doCommandEnroll1(c *cli.Context) error {
 		privKey, err := util.DecryptPkcs8PrivateKey(pcc.PrivateKey, flags.keyPassword)
 		if err != nil {
 			if err.Error() == "pkcs8: only PBES2 supported" && connector.GetType() == endpoint.ConnectorTypeTPP {
-				return fmt.Errorf("ERROR: To continue, you must select either the SHA1 3DES or SHA256 AES256 private key PBE algorithm. In a web browser, log in to TLS Protect and go to Configuration > Folders, select your zone, then click Certificate Policy and expand Show Advanced Options to make the change.")
+				return fmt.Errorf("error: to continue, you must select either the SHA1 3DES or SHA256 AES256 private key PBE algorithm. In a web browser, log in to TLS Protect and go to Configuration > Folders, select your zone, then click Certificate Policy and expand Show Advanced Options to make the change.")
 			}
 			return err
 		}
@@ -412,7 +412,7 @@ func doCommandEnroll1(c *cli.Context) error {
 	err = result.Flush()
 
 	if err != nil {
-		return fmt.Errorf("Failed to output the results: %s", err)
+		return fmt.Errorf("failed to output the results: %s", err)
 	}
 	return nil
 }
@@ -432,7 +432,7 @@ func doCommandEnrollSshCert(c *cli.Context) error {
 
 	cfg, err := buildConfig(c, &flags)
 	if err != nil {
-		return fmt.Errorf("Failed to build vcert config: %s", err)
+		return fmt.Errorf("failed to build vcert config: %s", err)
 	}
 
 	connector, err := vcert.NewClient(&cfg)
@@ -520,7 +520,7 @@ func doCommandEnrollSshCert(c *cli.Context) error {
 		retReq.Timeout = time.Duration(10) * time.Second
 		data, err = connector.RetrieveSSHCertificate(&retReq)
 		if err != nil {
-			return fmt.Errorf("Failed to retrieve SSH certificate '%s'. Error: %s", flags.pickupID, err)
+			return fmt.Errorf("failed to retrieve SSH certificate '%s'. Error: %s", flags.pickupID, err)
 		}
 	} else {
 		logf("Successfully issued SSH certificate with Key ID '%s'", data.CertificateDetails.KeyID)
@@ -624,7 +624,7 @@ func doCommandCredMgmt1(c *cli.Context) error {
 
 	cfg, err := buildConfig(c, &flags)
 	if err != nil {
-		return fmt.Errorf("Failed to build vcert config: %s", err)
+		return fmt.Errorf("failed to build vcert config: %s", err)
 	}
 
 	var clientP12 bool
@@ -694,7 +694,7 @@ func doCommandCredMgmt1(c *cli.Context) error {
 				fmt.Println("scope: ", resp.Scope)
 			}
 		} else {
-			return fmt.Errorf("Failed to determine credentials set")
+			return fmt.Errorf("failed to determine credentials set")
 		}
 	case commandVoidCredName:
 		if cfg.Credentials.AccessToken != "" {
@@ -706,10 +706,10 @@ func doCommandCredMgmt1(c *cli.Context) error {
 			}
 			logf("Access token grant successfully revoked")
 		} else {
-			return fmt.Errorf("Failed to determine credentials set")
+			return fmt.Errorf("failed to determine credentials set")
 		}
 	default:
-		return fmt.Errorf("Unexpected credential operation %s", c.Command.Name)
+		return fmt.Errorf("unexpected credential operation %s", c.Command.Name)
 	}
 
 	return nil
@@ -881,7 +881,7 @@ func doCommandPickup1(c *cli.Context) error {
 
 	cfg, err := buildConfig(c, &flags)
 	if err != nil {
-		return fmt.Errorf("Failed to build vcert config: %s", err)
+		return fmt.Errorf("failed to build vcert config: %s", err)
 	}
 
 	connector, err := vcert.NewClient(&cfg) // Everything else requires an endpoint connection
@@ -894,7 +894,7 @@ func doCommandPickup1(c *cli.Context) error {
 	if flags.pickupIDFile != "" {
 		bytes, err := ioutil.ReadFile(flags.pickupIDFile)
 		if err != nil {
-			return fmt.Errorf("Failed to read Pickup ID value: %s", err)
+			return fmt.Errorf("failed to read Pickup ID value: %s", err)
 		}
 		flags.pickupID = strings.TrimSpace(string(bytes))
 	}
@@ -920,11 +920,11 @@ func doCommandPickup1(c *cli.Context) error {
 			pcc, err = retrieveCertificate(connector, req, time.Duration(flags.timeout)*time.Second)
 
 			if err != nil {
-				return fmt.Errorf("Failed to retrieve certificate: %s", err)
+				return fmt.Errorf("failed to retrieve certificate: %s", err)
 			}
 
 		} else {
-			return fmt.Errorf("Failed to retrieve certificate: %s", err)
+			return fmt.Errorf("failed to retrieve certificate: %s", err)
 		}
 	}
 	logf("Successfully retrieved request for %s", flags.pickupID)
@@ -971,7 +971,7 @@ func doCommandPickup1(c *cli.Context) error {
 	err = result.Flush()
 
 	if err != nil {
-		return fmt.Errorf("Failed to output the results: %s", err)
+		return fmt.Errorf("failed to output the results: %s", err)
 	}
 	return nil
 }
@@ -990,7 +990,7 @@ func doCommandRevoke1(c *cli.Context) error {
 
 	cfg, err := buildConfig(c, &flags)
 	if err != nil {
-		return fmt.Errorf("Failed to build vcert config: %s", err)
+		return fmt.Errorf("failed to build vcert config: %s", err)
 	}
 
 	connector, err := vcert.NewClient(&cfg) // Everything else requires an endpoint connection
@@ -1027,7 +1027,7 @@ func doCommandRevoke1(c *cli.Context) error {
 
 	err = connector.RevokeCertificate(revReq)
 	if err != nil {
-		return fmt.Errorf("Failed to revoke certificate: %s", err)
+		return fmt.Errorf("failed to revoke certificate: %s", err)
 	}
 	logf("Successfully created revocation request for %s", requestedFor)
 
@@ -1211,7 +1211,7 @@ func doCommandRenew1(c *cli.Context) error {
 	validateOverWritingEnviromentVariables()
 	cfg, err := buildConfig(c, &flags)
 	if err != nil {
-		return fmt.Errorf("Failed to build vcert config: %s", err)
+		return fmt.Errorf("failed to build vcert config: %s", err)
 	}
 
 	connector, err := vcert.NewClient(&cfg) // Everything else requires an endpoint connection
@@ -1232,15 +1232,15 @@ func doCommandRenew1(c *cli.Context) error {
 	// here we fetch old cert anyway
 	oldPcc, err := connector.RetrieveCertificate(searchReq)
 	if err != nil {
-		return fmt.Errorf("Failed to fetch old certificate by id %s: %s", flags.distinguishedName, err)
+		return fmt.Errorf("failed to fetch old certificate by id %s: %s", flags.distinguishedName, err)
 	}
 	oldCertBlock, _ := pem.Decode([]byte(oldPcc.Certificate))
 	if oldCertBlock == nil || oldCertBlock.Type != "CERTIFICATE" {
-		return fmt.Errorf("Failed to fetch old certificate by id %s: PEM parse error", flags.distinguishedName)
+		return fmt.Errorf("failed to fetch old certificate by id %s: PEM parse error", flags.distinguishedName)
 	}
 	oldCert, err := x509.ParseCertificate([]byte(oldCertBlock.Bytes))
 	if err != nil {
-		return fmt.Errorf("Failed to fetch old certificate by id %s: %s", flags.distinguishedName, err)
+		return fmt.Errorf("failed to fetch old certificate by id %s: %s", flags.distinguishedName, err)
 	}
 	// now we have old one
 	logf("Fetched the latest certificate. Serial: %x, NotAfter: %s", oldCert.SerialNumber, oldCert.NotAfter)
@@ -1396,7 +1396,7 @@ func doCommandRenew1(c *cli.Context) error {
 	err = result.Flush()
 
 	if err != nil {
-		return fmt.Errorf("Failed to output the results: %s", err)
+		return fmt.Errorf("failed to output the results: %s", err)
 	}
 	return nil
 }
@@ -1565,7 +1565,7 @@ func doCommandSshPickup(c *cli.Context) error {
 
 	cfg, err := buildConfig(c, &flags)
 	if err != nil {
-		return fmt.Errorf("Failed to build vcert config: %s", err)
+		return fmt.Errorf("failed to build vcert config: %s", err)
 	}
 
 	connector, err := vcert.NewClient(&cfg) // Everything else requires an endpoint connection

@@ -71,7 +71,7 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 			//add support for using enviroment variables ends
 
 			if tppTokenS == "" && flags.password == "" && flags.clientP12 == "" && c.Command.Name != "sshgetconfig" {
-				return cfg, fmt.Errorf("A password is required to communicate with TPP")
+				return cfg, fmt.Errorf("a password is required to communicate with TPP")
 			}
 
 			if flags.tppToken != "" {
@@ -119,7 +119,7 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 		}
 		data, err := ioutil.ReadFile(flags.trustBundle)
 		if err != nil {
-			return cfg, fmt.Errorf("Failed to read trust bundle: %s", err)
+			return cfg, fmt.Errorf("failed to read trust bundle: %s", err)
 		}
 		cfg.ConnectionTrust = string(data)
 	} else {
@@ -131,7 +131,7 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 			}
 			data, err := ioutil.ReadFile(trustBundleSrc)
 			if err != nil {
-				return cfg, fmt.Errorf("Failed to read trust bundle: %s", err)
+				return cfg, fmt.Errorf("failed to read trust bundle: %s", err)
 			}
 			cfg.ConnectionTrust = string(data)
 		}

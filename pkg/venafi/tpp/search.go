@@ -107,14 +107,14 @@ func parseCertificateDetailsResponse(statusCode int, body []byte) (searchResult 
 		var searchResult = &CertificateDetailsResponse{}
 		err = json.Unmarshal(body, searchResult)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to parse search results: %s, body: %s", err, body)
+			return nil, fmt.Errorf("failed to parse search results: %s, body: %s", err, body)
 		}
 		return searchResult, nil
 	default:
 		if body != nil {
 			return nil, NewResponseError(body)
 		} else {
-			return nil, fmt.Errorf("Unexpected status code on certificate search. Status: %d", statusCode)
+			return nil, fmt.Errorf("unexpected status code on certificate search. Status: %d", statusCode)
 		}
 	}
 }
@@ -125,14 +125,14 @@ func ParseCertificateSearchResponse(httpStatusCode int, body []byte) (searchResu
 		var searchResult = &certificate.CertSearchResponse{}
 		err = json.Unmarshal(body, searchResult)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to parse search results: %s, body: %s", err, body)
+			return nil, fmt.Errorf("failed to parse search results: %s, body: %s", err, body)
 		}
 		return searchResult, nil
 	default:
 		if body != nil {
 			return nil, NewResponseError(body)
 		} else {
-			return nil, fmt.Errorf("Unexpected status code on certificate search. Status: %d", httpStatusCode)
+			return nil, fmt.Errorf("unexpected status code on certificate search. Status: %d", httpStatusCode)
 		}
 	}
 }

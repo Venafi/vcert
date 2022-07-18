@@ -187,7 +187,7 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 		fakeRequest.Req = req
 
 	default:
-		return "", fmt.Errorf("Unexpected option in PrivateKeyOrigin")
+		return "", fmt.Errorf("unexpected option in PrivateKeyOrigin")
 	}
 
 	js, err := json.Marshal(fakeRequest)
@@ -244,7 +244,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (pcc *certific
 
 	bytes, err := base64.StdEncoding.DecodeString(req.PickupID)
 	if err != nil {
-		return nil, fmt.Errorf("Test-mode: could not parse requestID as base64 encoded fakeRequestID structure")
+		return nil, fmt.Errorf("test-mode: could not parse requestID as base64 encoded fakeRequestID structure")
 	}
 
 	var fakeRequest = &fakeRequestID{}
@@ -286,7 +286,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (pcc *certific
 	)
 	csrBlock, _ = pem.Decode([]byte(csrPEMbytes))
 	if csrBlock == nil || !strings.HasSuffix(csrBlock.Type, "CERTIFICATE REQUEST") {
-		return nil, fmt.Errorf("Test-mode: could not parse requestID as base64 encoded certificate request block")
+		return nil, fmt.Errorf("test-mode: could not parse requestID as base64 encoded certificate request block")
 	}
 
 	csr, err = x509.ParseCertificateRequest(csrBlock.Bytes)
