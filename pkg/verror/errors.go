@@ -1,7 +1,6 @@
 package verror
 
 import (
-	"encoding/json"
 	"fmt"
 )
 
@@ -40,6 +39,14 @@ type VCertPolicyIsNullError                                 struct{ VCertPolicyE
 type VCertPolicyKeyLengthValueError                         struct{ VCertPolicyError;          Value     string }
 type VCertPolicyInvalidCAError                              struct{ VCertPolicyError }
 type VCertPolicyUnsupportedKeyTypeError                     struct{ VCertPolicyError }
+
+type VCertLoadConfigError                                   struct{ VCertError;                Description error }
+
+type VCertConnectorError                                    struct{ VCertError;                Status string;    Body   []byte }
+type VCertTPPConnectorError                                 struct{ VCertConnectorError }
+type VCertTPPConnectorAuthorizeError                        struct{ VCertTPPConnectorError }
+type VCertTPPBrowseIdentitiesError                          struct{ VCertTPPConnectorError }
+type VCertTPPValidateIdentityError                          struct{ VCertTPPConnectorError }
 
 func (e VCertPolicyUnspecifiedPolicyError) Error() string {
 	return fmt.Sprintf("policy specification is nil")
@@ -93,39 +100,22 @@ func (e VCertPolicyInvalidCAError) Error() string {
 	return fmt.Sprintf("certificate Authority is invalid, please provide a valid value with this structure: ca_type\\ca_account_key\\vendor_product_name")
 }
 
-type VCertLoadConfigError struct {
-	VCertError
-	Description error
-}
-
 func (e VCertLoadConfigError) Error() string {
 	return fmt.Sprintf("failed to load config: %s", e.Description)
 }
 
-type VCertConnectorError struct {
-	VCertError
-	Status string
-	Body   []byte
+func (e VCertConnectorError) Error() string {
+	return fmt.Sprintf("Invalid status: %s Server response: %s", e.Status, string(e.Body))
 }
 
-// VCertServerError is the error used when a non standard response is returned
-// from the server.
-type VCertServerError struct {
-	VCertError
-	Type        string `json:"error"`
-	Description string `json:"error_description"`
+func (e VCertTPPConnectorAuthorizeError) Error() string {
+	return fmt.Sprintf("unexpected status code on TPP Authorize. Status: %s", e.Status)
 }
 
-// InvalidTokenError is used when the server responds with an `invalid_token`
-// error.
-type InvalidTokenError struct{ VCertServerError }
-
-func (e VCertServerError) Error() string {
-	// Generic server error
-	return fmt.Sprintf("Server error: `%s` Error description: %s", e.Type, e.Description)
+func (e VCertTPPBrowseIdentitiesError) Error() string {
+	return fmt.Sprintf("Unexpected status code on TPP Browse Identities. Status: %s", e.Status)
 }
 
-func (e InvalidTokenError) Error() string {
-	// Don't display token
-	return fmt.Sprintf("Invalid token provided.")
+func (e VCertTPPValidateIdentityError) Error() string {
+	return fmt.Sprintf("Unexpected status code on TPP Validate Identity. Status: %s", e.Status)
 }
