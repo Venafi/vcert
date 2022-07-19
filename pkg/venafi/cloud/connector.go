@@ -833,7 +833,7 @@ func (c *Connector) getCertificateStatus(requestID string) (certStatus *certific
 		return nil, fmt.Errorf(respError)
 	}
 
-	return nil, fmt.Errorf("unexpected status code on Venafi Cloud certificate search. Status: %d", statusCode)
+	return nil, fmt.Errorf("unexpected status code on VaaS certificate search. Status: %d", statusCode)
 
 }
 
@@ -1345,7 +1345,7 @@ func (c *Connector) getCertificate(certificateId string) (*managedCertificate, e
 				return nil, fmt.Errorf(respError)
 			}
 		}
-		return nil, fmt.Errorf("unexpected status code on Venafi Cloud certificate search. Status: %d", statusCode)
+		return nil, fmt.Errorf("unexpected status code on VaaS certificate search. Status: %d", statusCode)
 	}
 }
 

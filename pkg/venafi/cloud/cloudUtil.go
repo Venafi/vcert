@@ -29,7 +29,7 @@ func parseCertificateInfo(httpStatusCode int, httpStatus string, body []byte) (*
 				return nil, fmt.Errorf(respError)
 			}
 		}
-		return nil, fmt.Errorf("unexpected status code on Venafi Cloud certificate search. Status: %s", httpStatus)
+		return nil, fmt.Errorf("unexpected status code on VaaS certificate search. Status: %s", httpStatus)
 	}
 }
 

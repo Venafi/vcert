@@ -392,7 +392,7 @@ func (c *Connector) requestAllMetadataItems(dn string) ([]metadataItem, error) {
 		return nil, err
 	}
 	if statusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected http status code while fetching metadata items. %d-%s", statusCode, status)
+		return nil, fmt.Errorf("unexpected status code on TPP while fetching metadata items. %d-%s", statusCode, status)
 	}
 
 	var response metadataGetItemsResponse
@@ -407,7 +407,7 @@ func (c *Connector) requestMetadataItems(dn string) ([]metadataKeyValueSet, erro
 		return nil, err
 	}
 	if statusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected http status code while fetching certificate metadata items. %d-%s", statusCode, status)
+		return nil, fmt.Errorf("unexpected status code on TPP while fetching certificate metadata items. %d-%s", statusCode, status)
 	}
 	var response metadataGetResponse
 	err = json.Unmarshal(body, &response)
@@ -426,7 +426,7 @@ func (c *Connector) requestSystemVersion() (string, error) {
 	case 401:
 		return "", fmt.Errorf("http status code '%s' was returned by the server. Hint: OAuth scope 'configuration' is required when using custom fields", status)
 	default:
-		return "", fmt.Errorf("unexpected http status code while fetching TPP version. %s", status)
+		return "", fmt.Errorf("unexpected status code on TPP while fetching TPP version. %s", status)
 	}
 
 	var response struct{ Version string }
@@ -448,7 +448,7 @@ func (c *Connector) setCertificateMetadata(metadataRequest metadataSetRequest) (
 		return false, err
 	}
 	if statusCode != http.StatusOK {
-		return false, fmt.Errorf("unexpected http status code while setting metadata items. %d-%s", statusCode, status)
+		return false, fmt.Errorf("unexpected status code on TPP while setting metadata items. %d-%s", statusCode, status)
 	}
 
 	var result = metadataSetResponse{}
@@ -1231,7 +1231,7 @@ func (c *Connector) putCertificateInfo(dn string, attributes []nameSliceValuePai
 		return err
 	}
 	if statusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code: %v", statusCode)
+		return fmt.Errorf("unexpected status code on TPP. Status: %v", statusCode)
 	}
 	return nil
 }

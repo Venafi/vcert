@@ -114,7 +114,7 @@ func parseCertificateDetailsResponse(statusCode int, body []byte) (searchResult 
 		if body != nil {
 			return nil, NewResponseError(body)
 		} else {
-			return nil, fmt.Errorf("unexpected status code on certificate search. Status: %d", statusCode)
+			return nil, fmt.Errorf("unexpected status code on TPP certificate search. Status: %d", statusCode)
 		}
 	}
 }
@@ -132,7 +132,7 @@ func ParseCertificateSearchResponse(httpStatusCode int, body []byte) (searchResu
 		if body != nil {
 			return nil, NewResponseError(body)
 		} else {
-			return nil, fmt.Errorf("unexpected status code on certificate search. Status: %d", httpStatusCode)
+			return nil, fmt.Errorf("unexpected status code on TPP certificate search. Status: %d", httpStatusCode)
 		}
 	}
 }

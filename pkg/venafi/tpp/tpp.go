@@ -718,7 +718,7 @@ func parseFindObjectsOfClassResponse(httpStatusCode int, httpStatus string, body
 		}
 		return response, nil
 	default:
-		return response, fmt.Errorf("unexpected status from FindObjectsOfClass. Status: %s", httpStatus)
+		return response, fmt.Errorf("unexpected status code on TPP FindObjectsOfClass. Status: %s", httpStatus)
 	}
 }
 
