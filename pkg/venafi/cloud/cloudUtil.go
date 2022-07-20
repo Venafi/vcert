@@ -22,7 +22,7 @@ func parseCertificateInfo(httpStatusCode int, httpStatus string, body []byte) (*
 		if body != nil {
 			respErrors, err := parseResponseErrors(body)
 			if err == nil {
-				respError := fmt.Sprintf("unexpected status code on Venafi Cloud certificate search. Status: %s\n", httpStatus)
+				respError := fmt.Sprintf("unexpected status code on VaaS certificate search. Status: %s\n", httpStatus)
 				for _, e := range respErrors {
 					respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
 				}

@@ -113,9 +113,9 @@ func (e VCertTPPConnectorAuthorizeError) Error() string {
 }
 
 func (e VCertTPPBrowseIdentitiesError) Error() string {
-	return fmt.Sprintf("Unexpected status code on TPP Browse Identities. Status: %s", e.Status)
+	return fmt.Sprintf("unexpected status code on TPP Browse Identities. Status: %s", e.Status)
 }
 
 func (e VCertTPPValidateIdentityError) Error() string {
-	return fmt.Sprintf("Unexpected status code on TPP Validate Identity. Status: %s", e.Status)
+	return fmt.Sprintf("unexpected status code on TPP Validate Identity. Status: %s", e.Status)
 }

@@ -373,7 +373,7 @@ func parseUserDetailsResult(expectedStatusCode int, httpStatusCode int, httpStat
 	if err != nil {
 		return nil, err // parseResponseErrors always return verror.ServerError
 	}
-	respError := fmt.Sprintf("unexpected status code on Venafi Cloud registration. Status: %s\n", httpStatus)
+	respError := fmt.Sprintf("unexpected status code on VaaS registration. Status: %s\n", httpStatus)
 	for _, e := range respErrors {
 		respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
 	}
@@ -388,7 +388,7 @@ func parseUserDetailsResultFromPOST(httpStatusCode int, httpStatus string, body 
 	if err != nil {
 		return nil, err // parseResponseErrors always return verror.ServerError
 	}
-	respError := fmt.Sprintf("unexpected status code on Venafi Cloud registration. Status: %s\n", httpStatus)
+	respError := fmt.Sprintf("unexpected status code on VaaS registration. Status: %s\n", httpStatus)
 	for _, e := range respErrors {
 		respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
 	}
@@ -492,7 +492,7 @@ func parseZoneConfigurationResult(httpStatusCode int, httpStatus string, body []
 			return nil, err
 		}
 
-		respError := fmt.Sprintf("Unexpected status code on Venafi Cloud zone read. Status: %s\n", httpStatus)
+		respError := fmt.Sprintf("unexpected status code on VaaS zone read. Status: %s\n", httpStatus)
 		for _, e := range respErrors {
 			if e.Code == 10051 {
 				return nil, verror.ZoneNotFoundError
@@ -524,7 +524,7 @@ func parseCertificateTemplateResult(httpStatusCode int, httpStatus string, body 
 			return nil, err
 		}
 
-		respError := fmt.Sprintf("Unexpected status code on Venafi Cloud zone read. Status: %s\n", httpStatus)
+		respError := fmt.Sprintf("unexpected status code on VaaS zone read. Status: %s\n", httpStatus)
 		for _, e := range respErrors {
 			if e.Code == 10051 {
 				return nil, verror.ZoneNotFoundError
@@ -554,7 +554,7 @@ func parseCertificateRequestResult(httpStatusCode int, httpStatus string, body [
 			return nil, err
 		}
 
-		respError := fmt.Sprintf("Unexpected status code on Venafi Cloud zone read. Status: %s\n", httpStatus)
+		respError := fmt.Sprintf("unexpected status code on VaaS zone read. Status: %s\n", httpStatus)
 		for _, e := range respErrors {
 			respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
 		}
@@ -593,7 +593,7 @@ func parseApplicationDetailsResult(httpStatusCode int, httpStatus string, body [
 			return nil, err
 		}
 
-		respError := fmt.Sprintf("Unexpected status code on Venafi Cloud application read. Status: %s\n", httpStatus)
+		respError := fmt.Sprintf("unexpected status code on VaaS application read. Status: %s\n", httpStatus)
 		for _, e := range respErrors {
 			if e.Code == 10051 {
 				return nil, verror.ApplicationNotFoundError
@@ -936,7 +936,7 @@ func parseCitResult(expectedStatusCode int, httpStatusCode int, httpStatus strin
 	if err != nil {
 		return nil, err // parseResponseErrors always return verror.ServerError
 	}
-	respError := fmt.Sprintf("unexpected status code on Venafi Cloud registration. Status: %s\n", httpStatus)
+	respError := fmt.Sprintf("unexpected status code on VaaS registration. Status: %s\n", httpStatus)
 	for _, e := range respErrors {
 		respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
 	}
