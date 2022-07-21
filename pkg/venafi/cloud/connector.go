@@ -684,9 +684,34 @@ func (c *Connector) ReadPolicyConfiguration() (policy *endpoint.Policy, err erro
 
 // ReadZoneConfiguration reads the Zone information needed for generating and requesting a certificate from Venafi Cloud
 func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration, err error) {
-	template, err := c.getTemplateByID()
-	if err != nil {
-		return
+	var template *certificateTemplate
+	var statusCode int
+
+	// to fully support the "headless registration" use case...
+	// if application does not exist and is for the default CIT, create the application
+	citAlias := c.zone.getTemplateAlias()
+	if citAlias == "Default" {
+		appName := c.zone.getApplicationName()
+		_, statusCode, err = c.getAppDetailsByName(appName)
+		if err != nil && statusCode == 404 {
+			log.Printf("creating application %s for issuing template %s", appName, citAlias)
+
+			ps := policy.PolicySpecification{}
+			template, err = getCit(c, citAlias)
+			if err != nil {
+				return
+			}
+			_, err = c.createApplication(appName, &ps, template)
+			if err != nil {
+				return
+			}
+		}
+	}
+	if template == nil {
+		template, err = c.getTemplateByID()
+		if err != nil {
+			return
+		}
 	}
 	config = getZoneConfiguration(template)
 	return config, nil
