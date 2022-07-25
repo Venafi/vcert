@@ -37,7 +37,7 @@ Feature: renew action with `-csr service` option
     Then it should fail with "Status: 400"
 
   Scenario: renew service-generated-CSR certificate in TPP with `-csr service` option
-    Given I enroll random certificate using TPP with -csr service -key-file k.pem -cert-file c.pem --key-password Passcode123!
+    Given I enroll random certificate using TPP with -csr service -key-file k.pem -cert-file c.pem -key-password Passcode123!
       And it should write private key to the file "k.pem"
       And it should write certificate to the file "c.pem"
       And it should output Pickup ID
