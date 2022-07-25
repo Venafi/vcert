@@ -18,6 +18,8 @@ ENDPOINTS = {
     "Cloud" => "-u '#{ENV['CLOUD_URL']}' -k '#{ENV['CLOUD_APIKEY']}'"
 }
 
+ENDPOINTS["VaaS"] = ENDPOINTS["Cloud"]
+
 ZONE = {
     "test-mode" => "-z Default",
 
@@ -29,6 +31,7 @@ ZONE = {
 
     "Cloud" => "-z '#{ENV['CLOUD_ZONE']}'"
 }
+ZONE["VaaS"] = ZONE["Cloud"]
 
 ENDPOINT_CONFIGS = {
     "test-mode" => "
@@ -51,6 +54,8 @@ ENDPOINT_CONFIGS = {
         cloud_zone = #{ENV['CLOUD_ZONE']}
     "
 }
+
+ENDPOINT_CONFIGS["VaaS"] = ENDPOINT_CONFIGS["Cloud"]
 
 ALL_ENDPOINTS_CONFIG = "
     [tpp-profile]
