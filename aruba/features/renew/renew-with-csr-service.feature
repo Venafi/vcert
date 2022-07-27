@@ -45,7 +45,19 @@ Feature: renew action with `-csr service` option
       Then it should retrieve certificate
       And it should write private key to the file "k1.pem"
       And it should write certificate to the file "c1.pem"
-      And private key in "k1.pem" with passphrase and certificate in "c1.pem" should have the same modulus
+      And private key in "k1.pem" with same passphrase and certificate in "c1.pem" should have the same modulus
+
+  Scenario: renew service-generated-CSR certificate in TPP with `-csr service` option with no passphrase using -no-prompt
+      Given I enroll random certificate using TPP with -csr service -key-file k.pem -cert-file c.pem -no-prompt
+        And it should write private key to the file "k.pem"
+        And it should write certificate to the file "c.pem"
+        And it should output Pickup ID
+      When I renew the certificate in TPP using the same Pickup ID with flags -csr service -no-prompt -no-pickup
+        And it should output Pickup ID
+      And I retrieve the certificate from TPP using the same Pickup ID with --no-prompt -cert-file c1.pem -key-file k1.pem
+        And it should write private key to the file "k1.pem"
+        And it should write certificate to the file "c1.pem"
+        And private key in "k1.pem" and certificate in "c1.pem" should have the same modulus
 
   @TODO # This scenario is not currently working due to reuse csr not being implemented yet in OutagePredict
   Scenario: renew certificate in VaaS with -csr=service which is working only if Zone's policy allows key reuse

@@ -92,15 +92,17 @@ When(/^CSR in "([^"]*)" and private key in "([^"]*)" and certificate in "([^"]*)
   }
 end
 
-When(/^private key in "([^"]*)"( with passphrase)? and certificate in "([^"]*)" should have the same modulus$/) do |key_file, passphrase_set, cert_file|
-  unless passphrase_set
-    steps %{
-      Then I run `openssl rsa -modulus -noout -passin pass:#{@key_password} -in #{key_file}`
-      And I remember the output
-      And I run `openssl x509 -modulus -noout -in #{cert_file}`
-      Then the outputs should be the same
-    }
+When(/^private key in "([^"]*)"( with same passphrase)? and certificate in "([^"]*)" should have the same modulus$/) do |key_file, passphrase_set, cert_file|
+  if passphrase_set != ""
+    steps %{ Then I run `openssl rsa -modulus -noout -passin pass:#{@key_password} -in #{key_file}` }
+  else
+    steps %{ Then I run `openssl rsa -modulus -noout -in #{key_file}` }
   end
+  steps %{
+    And I remember the output
+    And I run `openssl x509 -modulus -noout -in #{cert_file}`
+    Then the outputs should be the same
+  }
 end
 
 When(/^certificate in "([^"]*)" and certificate in "([^"]*)" should( not)? have the same (modulus|serial)$/) do |cert1_file, cert2_file, negated, field|

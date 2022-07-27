@@ -84,7 +84,7 @@ When(/^I renew(?: the)? certificate (?:from|in|using) (\S+) using the same (Pick
         # flags = "-cert-file c1.pem -key-file k1.pem -csr service -key-password -new pass"
         # then, keypass_split[1] will be null
         if keypass_split[1]
-            @key_password
+            @key_password = keypass_split[1]
         end
     end
   end
