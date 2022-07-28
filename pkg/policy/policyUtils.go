@@ -805,7 +805,7 @@ func ValidateCloudPolicySpecification(ps *PolicySpecification) error {
 			if ps.Default != nil && ps.Default.KeyPair != nil && ps.Default.KeyPair.RsaKeySize != nil && len(ps.Policy.KeyPair.RsaKeySizes) > 0 {
 				exist := existIntInArray([]int{*(ps.Default.KeyPair.RsaKeySize)}, ps.Policy.KeyPair.RsaKeySizes)
 				if !exist {
-					return verror.VCertPolicyUnmatchedDefaultValueAttributeError{Attribute: "rsa key size", Value: *(ps.Default.KeyPair.RsaKeySize)}
+					return verror.VCertPolicyUnmatchedDefaultValueAttributeError{Attribute: "rsa key size", Value: string(*(ps.Default.KeyPair.RsaKeySize))}
 				}
 			}
 		}

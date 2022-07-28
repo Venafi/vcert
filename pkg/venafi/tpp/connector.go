@@ -324,7 +324,9 @@ func processAuthData(c *Connector, url urlResource, data interface{}) (resp inte
 			return resp, fmt.Errorf("can not determine data type")
 		}
 	} else {
-		return resp, verror.VCertTPPConnectorAuthorizeError{Status: status}
+		err := verror.VCertTPPConnectorAuthorizeError{}
+		err.Status = status
+		return resp, err
 	}
 
 	return resp, nil

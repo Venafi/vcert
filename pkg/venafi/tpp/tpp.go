@@ -35,6 +35,7 @@ import (
 
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
+	"github.com/Venafi/vcert/v4/pkg/verror"
 )
 
 const defaultKeySize = 2048
@@ -680,7 +681,9 @@ func parseBrowseIdentitiesResult(httpStatusCode int, httpStatus string, body []b
 		}
 		return browseIdentitiesResponse, nil
 	default:
-		return browseIdentitiesResponse, verror.VCertTPPBrowseIdentitiesError{Status: httpStatus}
+		err := verror.VCertTPPBrowseIdentitiesError{}
+		err.Status = httpStatus
+		return browseIdentitiesResponse, err
 	}
 }
 
@@ -699,7 +702,9 @@ func parseValidateIdentityResponse(httpStatusCode int, httpStatus string, body [
 		}
 		return validateIdentityResponse, nil
 	default:
-		return validateIdentityResponse, verror.VCertTPPValidateIdentityError{Status: httpStatus}
+		err := verror.VCertTPPValidateIdentityError{}
+		err.Status = httpStatus
+		return validateIdentityResponse, err
 	}
 }
 
