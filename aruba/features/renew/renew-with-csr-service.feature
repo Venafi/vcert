@@ -45,7 +45,7 @@ Feature: renew action with `-csr service` option
       Then it should retrieve certificate
       And it should write private key to the file "k1.pem"
       And it should write certificate to the file "c1.pem"
-      And private key in "k1.pem" with same passphrase and certificate in "c1.pem" should have the same modulus
+      And private key in "k1.pem" and certificate in "c1.pem" should have the same modulus
 
   Scenario: renew service-generated-CSR certificate in TPP with `-csr service` option with no passphrase using -no-prompt
       Given I enroll random certificate using TPP with -csr service -key-file k.pem -cert-file c.pem -no-prompt
@@ -73,7 +73,7 @@ Feature: renew action with `-csr service` option
       And certificate in "c.pem" and certificate in "c1.pem" should not have the same serial
 
   Scenario: renew service-generated-CSR certificate in TPP with `-csr service` option with PKCS12 flag
-    Given I enroll random certificate using TPP with -csr service -key-password Passcode123! -key-file k.pem -cert-file c.pem -key-password Passcode123!
+    Given I enroll random certificate using TPP with -csr service -key-password Passcode123! -key-file k.pem -cert-file c.pem
       And it should write private key to the file "k.pem"
       And it should write certificate to the file "c.pem"
       And it should output Pickup ID
