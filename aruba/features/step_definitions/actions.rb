@@ -69,10 +69,14 @@ When(/^I renew(?: the)? certificate (?:from|in|using) (\S+) using the same (Pick
   end
   if flags != ""
     # we try to get key-password
-    # This regex basically tries to get everything including "-key-password " (note the space in the string)
-    # And takes anything after previous string and stops until find either a whitespace character or a dash
-    # (meaning we have a next flag in the line)
-    keypass = flags[/-key-password [^[\s|-]]*/]
+    # This regex basically tries to get everything after and including "-key-password " (note the space in the string)
+    # stops until it finds either (a whitespace character and a dash) or (end of line)
+    # without including it
+    # TODO: this can be improved by adding every flag known for the action using a regex like the following:
+    # /-key-password .+?(?= \-key\-file| \-cert\-file)/gm
+    # where can be translated to:
+    # /key_in_flags .+?(?= flag1| flag2 | flag3|... flagN|$)/gm
+    keypass = flags[/-key-password .+?(?=\s-|$)/]
     # For example, the following value:
     # flags = "-cert-file c1.pem -key-file k1.pem -csr service -key-password"
     # Won't enter the following "if" statement.
