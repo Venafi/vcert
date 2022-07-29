@@ -37,15 +37,27 @@ Feature: renew action with `-csr service` option
     Then it should fail with "Status: 400"
 
   Scenario: renew service-generated-CSR certificate in TPP with `-csr service` option
-    Given I enroll random certificate using TPP with -csr service -key-file k.pem -cert-file c.pem --key-password Passcode123!
+    Given I enroll random certificate using TPP with -csr service -key-file k.pem -cert-file c.pem -key-password Passcode123!
       And it should write private key to the file "k.pem"
       And it should write certificate to the file "c.pem"
       And it should output Pickup ID
-    When I renew the certificate in TPP using the same Pickup ID with flags -no-prompt -cert-file c1.pem -key-file k1.pem -csr service -key-password Passcode123!
+    When I renew the certificate in TPP using the same Pickup ID with flags -cert-file c1.pem -key-file k1.pem -csr service -key-password Passcode123!
       Then it should retrieve certificate
       And it should write private key to the file "k1.pem"
       And it should write certificate to the file "c1.pem"
       And private key in "k1.pem" and certificate in "c1.pem" should have the same modulus
+
+  Scenario: renew service-generated-CSR certificate in TPP with `-csr service` option with no passphrase using -no-prompt
+      Given I enroll random certificate using TPP with -csr service -key-file k.pem -cert-file c.pem -no-prompt
+        And it should write private key to the file "k.pem"
+        And it should write certificate to the file "c.pem"
+        And it should output Pickup ID
+      When I renew the certificate in TPP using the same Pickup ID with flags -csr service -no-prompt -no-pickup
+        And it should output Pickup ID
+      And I retrieve the certificate from TPP using the same Pickup ID with --no-prompt -cert-file c1.pem -key-file k1.pem
+        And it should write private key to the file "k1.pem"
+        And it should write certificate to the file "c1.pem"
+        And private key in "k1.pem" and certificate in "c1.pem" should have the same modulus
 
   @TODO # This scenario is not currently working due to reuse csr not being implemented yet in OutagePredict
   Scenario: renew certificate in VaaS with -csr=service which is working only if Zone's policy allows key reuse
@@ -60,9 +72,8 @@ Feature: renew action with `-csr service` option
       And certificate in "k.pem" and certificate in "k1.pem" should have the same modulus
       And certificate in "c.pem" and certificate in "c1.pem" should not have the same serial
 
-
   Scenario: renew service-generated-CSR certificate in TPP with `-csr service` option with PKCS12 flag
-    Given I enroll random certificate using TPP with -csr service -key-password Passcode123! -key-file k.pem -cert-file c.pem -key-password Passcode123!
+    Given I enroll random certificate using TPP with -csr service -key-password Passcode123! -key-file k.pem -cert-file c.pem
       And it should write private key to the file "k.pem"
       And it should write certificate to the file "c.pem"
       And it should output Pickup ID

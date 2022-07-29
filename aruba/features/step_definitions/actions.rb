@@ -67,6 +67,31 @@ When(/^I renew(?: the)? certificate (?:from|in|using) (\S+) using the same (Pick
   if field == "Thumbprint"
     cmd = "vcert renew #{ENDPOINTS[endpoint]} -thumbprint '#{@certificate_fingerprint}' #{flags}"
   end
+  if flags != ""
+    # we try to get key-password
+    # This regex basically tries to get everything after and including "-key-password " (note the space in the string)
+    # stops until it finds either (a whitespace character and a dash) or (end of line)
+    # without including it
+    # TODO: this can be improved by adding every flag known for the action using a regex like the following:
+    # /-key-password .+?(?= \-key\-file| \-cert\-file)/gm
+    # where can be translated to:
+    # /key_in_flags .+?(?= flag1| flag2 | flag3|... flagN|$)/gm
+    keypass = flags[/-key-password .+?(?=\s-|$)/]
+    # For example, the following value:
+    # flags = "-cert-file c1.pem -key-file k1.pem -csr service -key-password"
+    # Won't enter the following "if" statement.
+    # In general, if there's no match then variable keypass will be undefined
+    if keypass
+        # if it does exist, we split it to try to get the keypassword (default delimiter is whitspace)
+        keypass_split = keypass.split
+        # If we get an empty string like the following example:
+        # flags = "-cert-file c1.pem -key-file k1.pem -csr service -key-password -new pass"
+        # then, keypass_split[1] will be null
+        if keypass_split[1]
+            @key_password = keypass_split[1]
+        end
+    end
+  end
   steps %{Then I try to run `#{cmd}`}
 end
 

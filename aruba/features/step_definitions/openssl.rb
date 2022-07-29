@@ -93,8 +93,12 @@ When(/^CSR in "([^"]*)" and private key in "([^"]*)" and certificate in "([^"]*)
 end
 
 When(/^private key in "([^"]*)" and certificate in "([^"]*)" should have the same modulus$/) do |key_file, cert_file|
+  if @key_password != ""
+    steps %{ Then I run `openssl rsa -modulus -noout -passin pass:#{@key_password} -in #{key_file}` }
+  else
+    steps %{ Then I run `openssl rsa -modulus -noout -in #{key_file}` }
+  end
   steps %{
-    Then I run `openssl rsa -modulus -noout -passin pass:newPassw0rd! -in #{key_file}`
     And I remember the output
     And I run `openssl x509 -modulus -noout -in #{cert_file}`
     Then the outputs should be the same
