@@ -5,4 +5,4 @@ Feature: -format output option
 
   Scenario: where it outputs error if unknown format is used
     When I enroll random certificate in test-mode with -no-prompt -format xxx
-    Then it should fail with "Unexpected output format"
+    Then it should fail with "unexpected output format"

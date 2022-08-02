@@ -66,7 +66,7 @@ Feature: PKCS#12 format output
   Scenario Outline: where it outputs error when trying to enroll certificate in -csr file: mode and output it in PKCS#12 format
     Given I generate random CSR with -no-prompt -csr-file csr.pem -key-file k.pem
     When I enroll certificate using <endpoint> with -no-prompt -csr file:csr.pem -file all.p12 -format pkcs12
-    And it should fail with "The --csr \"file\" option may not be used with the enroll or renew actions when --format is \"pkcs12\""
+    And it should fail with "the --csr \"file\" option may not be used with the enroll or renew actions when --format is \"pkcs12\""
     Examples:
       | endpoint  |
       | test-mode |
@@ -75,7 +75,7 @@ Feature: PKCS#12 format output
 
   Scenario Outline: where it outputs error when trying to enroll certificate in -csr local (by default), -no-pickup and output it in PKCS#12 format
     When I enroll random certificate using <endpoint> with -no-prompt -file all.p12 -format pkcs12 -no-pickup
-    And it should fail with "The --csr \"local\" option may not be used with the enroll or renew actions when --format is \"pkcs12\" and --no-pickup is specified"
+    And it should fail with "the --csr \"local\" option may not be used with the enroll or renew actions when --format is \"pkcs12\" and --no-pickup is specified"
     Examples:
       | endpoint  |
       | test-mode |
@@ -84,7 +84,7 @@ Feature: PKCS#12 format output
 
   Scenario Outline: where it outputs error when trying to enroll certificate in -csr local (specified), -no-pickup and output it in PKCS#12 format
     When I enroll random certificate using <endpoint> with -no-prompt -file all.p12 -format pkcs12 -no-pickup -csr local
-    And it should fail with "The --csr \"local\" option may not be used with the enroll or renew actions when --format is \"pkcs12\" and --no-pickup is specified"
+    And it should fail with "the --csr \"local\" option may not be used with the enroll or renew actions when --format is \"pkcs12\" and --no-pickup is specified"
     Examples:
       | endpoint  |
       | test-mode |

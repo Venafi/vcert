@@ -49,4 +49,4 @@ Feature: -pickup-id feature
     Given I enroll a certificate in test-mode with -cn vfidev.example.com -no-prompt -no-pickup -pickup-id-file p.txt
     And I retrieve the certificate from test-mode with -pickup-id-file p.txt -pickup-id xxx
     Then the exit status should not be 0
-    And the output should contain "Both -pickup-id and -pickup-id-file options cannot be specified at the same time"
+    And the output should contain "both -pickup-id and -pickup-id-file options cannot be specified at the same time"

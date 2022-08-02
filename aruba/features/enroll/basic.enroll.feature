@@ -22,7 +22,7 @@ Feature: Enroll certificate
     When I run `vcert enroll -test-mode -test-mode-delay 0 -cn vfidev.example.com` interactively
       And I type "newPassw0rd!"
       And I type "different password"
-    Then it should fail with "Passphrases don't match"
+    Then it should fail with "passphrases don't match"
 
   Scenario: request a certificate with default arguments
     When I run `vcert enroll -test-mode -test-mode-delay 0 -cn vfidev.example.com -no-prompt -no-pickup`

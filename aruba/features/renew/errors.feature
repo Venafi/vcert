@@ -8,17 +8,17 @@ Feature: renew action returns error if incorrect options are used
       And it should retrieve certificate
       And it should write Pickup ID to the file "p.txt"
     When I renew the certificate in TPP with -no-prompt -no-pickup -id file:p.txt -cn xxx.venafi.example.com
-    Then it should fail with "Renewal does not allow options: -cn, -c, -o, -ou, -l, -st"
+    Then it should fail with "renewal does not allow options: -cn, -c, -o, -ou, -l, -st"
     When I renew the certificate in TPP with -no-prompt -no-pickup -id file:p.txt -c  ccc
-    Then it should fail with "Renewal does not allow options: -cn, -c, -o, -ou, -l, -st"
+    Then it should fail with "renewal does not allow options: -cn, -c, -o, -ou, -l, -st"
     When I renew the certificate in TPP with -no-prompt -no-pickup -id file:p.txt -o  ooo
-    Then it should fail with "Renewal does not allow options: -cn, -c, -o, -ou, -l, -st"
+    Then it should fail with "renewal does not allow options: -cn, -c, -o, -ou, -l, -st"
     When I renew the certificate in TPP with -no-prompt -no-pickup -id file:p.txt -ou uuu
-    Then it should fail with "Renewal does not allow options: -cn, -c, -o, -ou, -l, -st"
+    Then it should fail with "renewal does not allow options: -cn, -c, -o, -ou, -l, -st"
     When I renew the certificate in TPP with -no-prompt -no-pickup -id file:p.txt -l  lll
-    Then it should fail with "Renewal does not allow options: -cn, -c, -o, -ou, -l, -st"
+    Then it should fail with "renewal does not allow options: -cn, -c, -o, -ou, -l, -st"
     When I renew the certificate in TPP with -no-prompt -no-pickup -id file:p.txt -st ttt
-    Then it should fail with "Renewal does not allow options: -cn, -c, -o, -ou, -l, -st"
+    Then it should fail with "renewal does not allow options: -cn, -c, -o, -ou, -l, -st"
 
 
   Scenario: where it returns error if both -id and -thumbprint are used
