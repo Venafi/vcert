@@ -53,7 +53,7 @@ func parseDEKInfo(httpStatusCode int, httpStatus string, body []byte) (*EdgeEncr
 				return nil, fmt.Errorf(respError)
 			}
 		}
-		return nil, fmt.Errorf("unexpected status code on VaaS retrieving DEK's info. Status. Status: %s", httpStatus)
+		return nil, fmt.Errorf("unexpected status code on VaaS retrieving DEK's info. Status: %s", httpStatus)
 	}
 }
 
