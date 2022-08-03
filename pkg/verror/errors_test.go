@@ -16,63 +16,79 @@ import (
 //
 // The following unit tests will cover those cases in that order.
 
-// Fixtures
-const (
-	errStatus = "401"
-	// Test with Platform and Status:
-	testString1 = "unexpected status code on TPP. Status: 401"
-	// Test with Platform, Status and Operation:
-	testString2 = "unexpected status code on TPP certificate search. Status: 401"
-	// Test with Platform, Status, Operation and Body:
-	testString3 = "unexpected status code on TPP certificate search.\n Status:\n 401. \n Body:\n the body \n"
-	// Test with Platform, Status and Body:
-	testString4 = "unexpected status code on TPP.\n Status:\n 401. \n Body:\n the body \n"
-	// Format string for when test fails, displays both strings for comparison (might want to diff them instead?)
-	stringDontMatch = "Error messages do not match: \n errString:\n%v\n testString: \n%v"
-)
+// Format string for when test fails, displays both strings for comparison (might want to diff them instead?)
+const stringDontMatch = "Error messages do not match: \n Expected:\n%v\n Got: \n%v"
 
-// Test with Platform and Status:
-func Test_Case1_VCertConnectorUnexpectedStatusError(t *testing.T) {
-	err := VCertConnectorUnexpectedStatusError{Platform: "TPP"}
-	err.Status = errStatus
-	errString := err.Error()
-	testString := testString1
-	if errString != testString {
-		t.Fatalf(stringDontMatch, errString, testString)
-	}
+// Error Mock for creating test cases
+type VCertConnectorUnexpectedStatusErrorMock struct {
+	Status string
+	Body []byte
+	Platform string
+	Operation string
 }
 
-// Test with Platform, Status and Operation:
-func Test_Case2_VCertConnectorUnexpectedStatusError(t *testing.T) {
-	err := VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: "certificate search"}
-	err.Status = errStatus
-	errString := err.Error()
-	testString := testString2
-	if errString != testString {
-		t.Fatalf(stringDontMatch, errString, testString)
+func Test_VCertConnectorUnexpectedStatusError(t *testing.T) {
+	testCases := []struct {
+		testName string
+		testMessage string
+		testError VCertConnectorUnexpectedStatusErrorMock
+	} {
+		// Test with Platform and Status:
+		{
+			testName: "Platform Status",
+			testMessage: "unexpected status code on TPP. Status: 401",
+			testError: VCertConnectorUnexpectedStatusErrorMock{
+				Status: "401",
+				Platform: "TPP",
+			},
+		},
+		// Test with Platform, Status and Operation:
+		{
+			testName: "Platform Status Operation",
+			testMessage: "unexpected status code on VaaS certificate search. Status: 500",
+			testError: VCertConnectorUnexpectedStatusErrorMock{
+				Status: "500",
+				Platform: "VaaS",
+				Operation: "certificate search",
+			},
+		},
+		// Test with Platform, Status, Operation and Body:
+		{
+			testName: "Platform Status Operation Body",
+			testMessage: "unexpected status code on TPP DN to GUID request.\n Status:\n 400. \n Body:\n the body \n",
+			testError: VCertConnectorUnexpectedStatusErrorMock{
+				Status: "400",
+				Platform: "TPP",
+				Operation: "DN to GUID request",
+				Body: []byte("the body"),
+			},
+		},
+		// Test with Platform, Status and Body:
+		{
+			testName: "Platform Status Body",
+			testMessage: "unexpected status code on TPP.\n Status:\n 501. \n Body:\n the body \n",
+			testError: VCertConnectorUnexpectedStatusErrorMock{
+				Status: "501",
+				Platform: "TPP",
+				Body: []byte("the body"),
+			},
+		},
 	}
-}
 
-// Test with Platform, Status, Operation and Body:
-func Test_Case3_VCertConnectorUnexpectedStatusError(t *testing.T) {
-	err := VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: "certificate search"}
-	err.Status = errStatus
-	err.Body = []byte("the body")
-	errString := err.Error()
-	testString := testString3
-	if errString != testString {
-		t.Fatalf(stringDontMatch, errString, testString)
-	}
-}
+	for _, testCase := range testCases {
+		t.Run(testCase.testName, func(t *testing.T) {
+			err := VCertConnectorUnexpectedStatusError{}
+			err.Status = testCase.testError.Status
+			err.Body = testCase.testError.Body
+			err.Platform = testCase.testError.Platform
+			err.Operation = testCase.testError.Operation
 
-// Test with Platform, Status and Body:
-func Test_Case4_VCertConnectorUnexpectedStatusError(t *testing.T) {
-	err := VCertConnectorUnexpectedStatusError{Platform: "TPP"}
-	err.Status = errStatus
-	err.Body = []byte("the body")
-	errString := err.Error()
-	testString := testString4
-	if errString != testString {
-		t.Fatalf(stringDontMatch, errString, testString)
+			errString := err.Error()
+
+			if errString != testCase.testMessage {
+				t.Errorf(stringDontMatch, testCase.testMessage, errString)
+			}
+
+		})
 	}
 }
