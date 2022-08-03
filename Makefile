@@ -56,6 +56,8 @@ test: get linter
 	go tool cover -func=cov5.out
 	go test -v -coverprofile=cov6.out ./pkg/util
 	go tool cover -func=cov6.out
+	go test -v -coverprofile=cov7.out ./pkg/verror
+	go tool cover -func=cov7.out
 	go test -v -coverprofile=cov_cmd.out ./cmd/vcert
 	go tool cover -func=cov_cmd.out
 

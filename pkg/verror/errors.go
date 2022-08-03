@@ -47,6 +47,7 @@ type VCertTPPConnectorError                                 struct{ VCertConnect
 type VCertTPPConnectorAuthorizeError                        struct{ VCertTPPConnectorError }
 type VCertTPPBrowseIdentitiesError                          struct{ VCertTPPConnectorError }
 type VCertTPPValidateIdentityError                          struct{ VCertTPPConnectorError }
+type VCertConnectorUnexpectedStatusError                    struct{ VCertConnectorError;       Platform  string; Operation string }
 
 func (e VCertPolicyUnspecifiedPolicyError) Error() string {
 	return fmt.Sprintf("policy specification is nil")
@@ -118,4 +119,19 @@ func (e VCertTPPBrowseIdentitiesError) Error() string {
 
 func (e VCertTPPValidateIdentityError) Error() string {
 	return fmt.Sprintf("unexpected status code on TPP Validate Identity. Status: %s", e.Status)
+}
+
+func (e VCertConnectorUnexpectedStatusError) Error() string {
+	message := fmt.Sprintf("unexpected status code on %s", e.Platform)
+	if e.Operation != "" {
+		message = message + " " + e.Operation
+	}
+	message = message + "."
+
+	if e.Body != nil {
+		message = message + fmt.Sprintf("\n Status:\n %v. \n Body:\n %s \n", e.Status, e.Body)
+	} else {
+		message = message + fmt.Sprintf(" Status: %v", e.Status)
+	}
+	return message
 }
