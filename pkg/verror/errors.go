@@ -42,7 +42,7 @@ type VCertPolicyUnsupportedKeyTypeError                     struct{ VCertPolicyE
 
 type VCertLoadConfigError                                   struct{ VCertError;                Description error }
 
-type VCertConnectorError                                    struct{ VCertError;                Status string;    Body   []byte }
+type VCertConnectorError                                    struct{ VCertError;                Status string;    StatusCode int; Body   []byte }
 type VCertTPPConnectorError                                 struct{ VCertConnectorError }
 type VCertTPPConnectorAuthorizeError                        struct{ VCertTPPConnectorError }
 type VCertTPPBrowseIdentitiesError                          struct{ VCertTPPConnectorError }
@@ -122,6 +122,13 @@ func (e VCertTPPValidateIdentityError) Error() string {
 }
 
 func (e VCertConnectorUnexpectedStatusError) Error() string {
+	var status string
+	if e.Status != "" {
+		status = e.Status
+	} else {
+		status = fmt.Sprint(e.StatusCode)
+	}
+
 	message := fmt.Sprintf("unexpected status code on %s", e.Platform)
 	if e.Operation != "" {
 		message = message + " " + e.Operation
@@ -129,9 +136,10 @@ func (e VCertConnectorUnexpectedStatusError) Error() string {
 	message = message + "."
 
 	if e.Body != nil {
-		message = message + fmt.Sprintf("\n Status:\n %v. \n Body:\n %s \n", e.Status, e.Body)
+		message = message + fmt.Sprintf("\n Status:\n %v. \n Body:\n %s \n", status, e.Body)
 	} else {
-		message = message + fmt.Sprintf(" Status: %v", e.Status)
+		message = message + fmt.Sprintf(" Status: %v", status)
 	}
+
 	return message
 }
