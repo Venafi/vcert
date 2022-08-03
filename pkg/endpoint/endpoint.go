@@ -217,14 +217,14 @@ func NewZoneConfiguration() *ZoneConfiguration {
 func (p *Policy) ValidateCertificateRequest(request *certificate.Request) error {
 
 	const (
-		emailError            = "email addresses %v do not match regular expessions: %v"
-		ipError               = "IP addresses %v do not match regular expessions: %v"
-		uriError              = "URIs %v do not match regular expessions: %v"
-		organizationError     = "organization %v doesn't match regular expessions: %v"
-		organizationUnitError = "organization unit %v doesn't match regular expessions: %v"
-		countryError          = "country %v doesn't match regular expessions: %v"
-		locationError         = "location %v doesn't match regular expessions: %v"
-		provinceError         = "state (province) %v doesn't match regular expessions: %v"
+		emailError            = "email addresses %v do not match regular expressions: %v"
+		ipError               = "IP addresses %v do not match regular expressions: %v"
+		uriError              = "URIs %v do not match regular expressions: %v"
+		organizationError     = "organization %v doesn't match regular expressions: %v"
+		organizationUnitError = "organization unit %v doesn't match regular expressions: %v"
+		countryError          = "country %v doesn't match regular expressions: %v"
+		locationError         = "location %v doesn't match regular expressions: %v"
+		provinceError         = "state (province) %v doesn't match regular expressions: %v"
 		keyError              = "the requested Key Type and Size do not match any of the allowed Key Types and Sizes"
 	)
 	err := p.SimpleValidateCertificateRequest(*request)
@@ -329,7 +329,7 @@ func (p *Policy) SimpleValidateCertificateRequest(request certificate.Request) e
 	csr := request.GetCSR()
 	const (
 		cnError   = "common name %s is not allowed in this policy: %v"
-		SANsError = "DNS SANs %v do not match regular expessions: %v"
+		SANsError = "DNS SANs %v do not match regular expressions: %v"
 	)
 	if len(csr) > 0 {
 		pemBlock, _ := pem.Decode(csr)
