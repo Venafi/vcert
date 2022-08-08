@@ -414,8 +414,37 @@ func (c *Connector) requestMetadataItems(dn string) ([]metadataKeyValueSet, erro
 	return response.Data, err
 }
 
-// requestSystemVersion returns the TPP system version of the connector context
-func (c *Connector) requestSystemVersion() (string, error) {
+// Retrieve user's self identity
+func (c *Connector) RetrieveSelfIdentity() (response string, err error) {
+
+	var respIndentities = &IdentitiesResponse{}
+
+	statusCode, statusText, body, err := c.request("GET", urlRetrieveSelfIdentity, nil)
+	if err != nil {
+		log.Printf("Failed to get the used user. Error: %v", err)
+		return "", err
+	}
+	log.Printf("Status code: %d", statusCode)
+
+	switch statusCode {
+	case http.StatusOK:
+		err = json.Unmarshal(body, respIndentities)
+		if err != nil {
+			return "", fmt.Errorf("failed to parse identity response: %s, body: %s", err, body)
+		}
+
+		if (respIndentities != nil) && (len(respIndentities.Identities) > 0) {
+			return respIndentities.Identities[0].Name, nil
+		}
+	case http.StatusUnauthorized:
+		//return "", errs.NewExitAuthError(errors.New("authentication failure: check your credentials"))
+		return "", verror.AuthError
+	}
+	return "", fmt.Errorf("failed to get Self. Status code: %d, Status text: %s", statusCode, statusText)
+}
+
+// RetrieveServiceVersion returns the TPP system version of the connector context
+func (c *Connector) RetrieveServiceVersion() (string, error) {
 	statusCode, status, body, err := c.request("GET", urlResourceSystemStatusVersion, "")
 	if err != nil {
 		return "", err

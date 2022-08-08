@@ -197,6 +197,14 @@ func (c *Connector) RetrieveAvailableSSHTemplates() (response []certificate.SshA
 	panic("operation is not supported yet")
 }
 
+func (c *Connector) RetrieveServiceVersion() (response string, err error) {
+	panic("operation is not supported yet")
+}
+
+func (c *Connector) RetrieveSelfIdentity() (response string, err error) {
+	panic("operation is not supported yet")
+}
+
 func (c *Connector) GetPolicyWithRegex(name string) (*policy.PolicySpecification, error) {
 
 	cit, err := retrievePolicySpecification(c, name)

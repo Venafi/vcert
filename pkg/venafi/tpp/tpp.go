@@ -23,7 +23,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/policy"
 	"io"
 	"io/ioutil"
 	"log"
@@ -32,6 +31,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/Venafi/vcert/v4/pkg/policy"
 
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
@@ -319,6 +320,20 @@ type findObjectsOfClassResponse struct {
 	PolicyObjects []policyObject `json:"Objects,omitempty"`
 }
 
+type IdentitiesResponse struct {
+	Identities []Identity `json:"Identities"`
+}
+
+type Identity struct {
+	FullName          string `json:"FullName"`
+	Name              string `json:"Name"`
+	Prefix            string `json:"Prefix"`
+	PrefixedName      string `json:"PrefixedName"`
+	PrefixedUniversal string `json:"PrefixedUniversal"`
+	Type              int    `json:"Type"`
+	Universal         string `json:"Universal"`
+}
+
 type systemStatusVersionResponse string
 
 type urlResource string
@@ -349,6 +364,7 @@ const (
 	urlResourceAllMetadataGet         urlResource = "vedsdk/metadata/getitems"
 	urlResourceMetadataGet            urlResource = "vedsdk/metadata/get"
 	urlResourceSystemStatusVersion    urlResource = "vedsdk/systemstatus/version"
+	urlRetrieveSelfIdentity           urlResource = "vedsdk/Identity/Self"
 	urlResourceCreatePolicy           urlResource = "vedsdk/Config/Create"
 	urlResourceWritePolicy            urlResource = "vedsdk/Config/WritePolicy"
 	urlResourceReadPolicy             urlResource = "vedsdk/Config/ReadPolicy"
