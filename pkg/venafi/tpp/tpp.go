@@ -581,7 +581,9 @@ func parseConfigResult(httpStatusCode int, httpStatus string, body []byte) (tppD
 		}
 		return tppData, nil
 	default:
-		return tppData, fmt.Errorf("unexpected status code on TPP Config Operation. Status: %s", httpStatus)
+		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: "Config Operation"}
+		err.Status = httpStatus;
+		return tppData, err
 	}
 }
 
@@ -599,7 +601,10 @@ func parseRequestResult(httpStatusCode int, httpStatus string, body []byte) (str
 		}
 		return reqData.CertificateDN, nil
 	default:
-		return "", fmt.Errorf("unexpected status code on TPP Certificate Request.\n Status:\n %s. \n Body:\n %s\n", httpStatus, body)
+		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: "Certificate Request"}
+		err.Status = httpStatus;
+		err.Body = body
+		return "", err
 	}
 }
 
@@ -618,7 +623,9 @@ func parseRetrieveResult(httpStatusCode int, httpStatus string, body []byte) (ce
 		}
 		return retrieveResponse, nil
 	default:
-		return retrieveResponse, fmt.Errorf("unexpected status code on TPP Certificate Retrieval. Status: %s", httpStatus)
+		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: "Certificate Retrieval"}
+		err.Status = httpStatus;
+		return retrieveResponse, err
 	}
 }
 
@@ -637,7 +644,9 @@ func parseRevokeResult(httpStatusCode int, httpStatus string, body []byte) (cert
 		}
 		return revokeResponse, nil
 	default:
-		return revokeResponse, fmt.Errorf("unexpected status code on TPP Certificate Revocation. Status: %s", httpStatus)
+		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: "Certificate Revocation"}
+		err.Status = httpStatus;
+		return revokeResponse, err
 	}
 }
 
@@ -681,7 +690,7 @@ func parseBrowseIdentitiesResult(httpStatusCode int, httpStatus string, body []b
 		}
 		return browseIdentitiesResponse, nil
 	default:
-		err := verror.VCertTPPBrowseIdentitiesError{}
+		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: "Browse Identities"}
 		err.Status = httpStatus
 		return browseIdentitiesResponse, err
 	}
@@ -702,7 +711,7 @@ func parseValidateIdentityResponse(httpStatusCode int, httpStatus string, body [
 		}
 		return validateIdentityResponse, nil
 	default:
-		err := verror.VCertTPPValidateIdentityError{}
+		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: "Validate Identity"}
 		err.Status = httpStatus
 		return validateIdentityResponse, err
 	}
@@ -723,7 +732,9 @@ func parseFindObjectsOfClassResponse(httpStatusCode int, httpStatus string, body
 		}
 		return response, nil
 	default:
-		return response, fmt.Errorf("unexpected status code on TPP FindObjectsOfClass. Status: %s", httpStatus)
+		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: "FindObjectsOfClass"}
+		err.Status = httpStatus;
+		return response, err
 	}
 }
 

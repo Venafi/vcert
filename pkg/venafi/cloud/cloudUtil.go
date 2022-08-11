@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/util"
+	"github.com/Venafi/vcert/v4/pkg/verror"
 	"net/http"
 	"regexp"
 )
@@ -29,7 +30,9 @@ func parseCertificateInfo(httpStatusCode int, httpStatus string, body []byte) (*
 				return nil, fmt.Errorf(respError)
 			}
 		}
-		return nil, fmt.Errorf("unexpected status code on VaaS certificate search. Status: %s", httpStatus)
+		err := verror.VCertConnectorUnexpectedStatusError{Platform: "VaaS", Operation: "certificate search"}
+		err.Status = httpStatus;
+		return nil, err
 	}
 }
 
@@ -53,7 +56,9 @@ func parseDEKInfo(httpStatusCode int, httpStatus string, body []byte) (*EdgeEncr
 				return nil, fmt.Errorf(respError)
 			}
 		}
-		return nil, fmt.Errorf("unexpected status code on VaaS retrieving DEK's info. Status: %s", httpStatus)
+		err := verror.VCertConnectorUnexpectedStatusError{Platform: "VaaS", Operation: "retrieving DEK's info"}
+		err.Status = httpStatus;
+		return nil, err
 	}
 }
 

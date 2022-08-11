@@ -487,7 +487,10 @@ func (c *Connector) createApplication(appName string, ps *policy.PolicySpecifica
 		return nil, error
 	}
 	if statusCode != 201 {
-		return nil, fmt.Errorf("unexpected result %s attempting to create application %s", status, appName)
+		Operation := fmt.Sprintf("attemping to create application %s", appName)
+		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: Operation}
+		err.Status = status
+		return nil, err
 	}
 
 	return &appReq, nil
@@ -833,7 +836,10 @@ func (c *Connector) getCertificateStatus(requestID string) (certStatus *certific
 		return nil, fmt.Errorf(respError)
 	}
 
-	return nil, fmt.Errorf("unexpected status code on VaaS certificate search. Status: %d", statusCode)
+	e := verror.VCertConnectorUnexpectedStatusError{Platform: "VaaS", Operation: "certificate search"}
+	e.StatusCode = statusCode;
+
+	return nil, e
 
 }
 
@@ -1345,7 +1351,9 @@ func (c *Connector) getCertificate(certificateId string) (*managedCertificate, e
 				return nil, fmt.Errorf(respError)
 			}
 		}
-		return nil, fmt.Errorf("unexpected status code on VaaS certificate search. Status: %d", statusCode)
+		err := verror.VCertConnectorUnexpectedStatusError{Platform: "VaaS", Operation: "certificate search"}
+		err.StatusCode = statusCode;
+		return nil, err
 	}
 }
 

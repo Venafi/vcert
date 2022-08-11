@@ -43,10 +43,6 @@ type VCertPolicyUnsupportedKeyTypeError                     struct{ VCertPolicyE
 type VCertLoadConfigError                                   struct{ VCertError;                Description error }
 
 type VCertConnectorError                                    struct{ VCertError;                Status string;    StatusCode int; Body   []byte }
-type VCertTPPConnectorError                                 struct{ VCertConnectorError }
-type VCertTPPConnectorAuthorizeError                        struct{ VCertTPPConnectorError }
-type VCertTPPBrowseIdentitiesError                          struct{ VCertTPPConnectorError }
-type VCertTPPValidateIdentityError                          struct{ VCertTPPConnectorError }
 type VCertConnectorUnexpectedStatusError                    struct{ VCertConnectorError;       Platform  string; Operation string }
 
 func (e VCertPolicyUnspecifiedPolicyError) Error() string {
@@ -107,18 +103,6 @@ func (e VCertLoadConfigError) Error() string {
 
 func (e VCertConnectorError) Error() string {
 	return fmt.Sprintf("Invalid status: %s Server response: %s", e.Status, string(e.Body))
-}
-
-func (e VCertTPPConnectorAuthorizeError) Error() string {
-	return fmt.Sprintf("unexpected status code on TPP Authorize. Status: %s", e.Status)
-}
-
-func (e VCertTPPBrowseIdentitiesError) Error() string {
-	return fmt.Sprintf("unexpected status code on TPP Browse Identities. Status: %s", e.Status)
-}
-
-func (e VCertTPPValidateIdentityError) Error() string {
-	return fmt.Sprintf("unexpected status code on TPP Validate Identity. Status: %s", e.Status)
 }
 
 func (e VCertConnectorUnexpectedStatusError) Error() string {

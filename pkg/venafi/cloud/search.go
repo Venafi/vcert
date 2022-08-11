@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Venafi/vcert/v4/pkg/certificate"
+	"github.com/Venafi/vcert/v4/pkg/verror"
 	"log"
 	"net/http"
 	"time"
@@ -138,6 +139,8 @@ func ParseCertificateSearchResponse(httpStatusCode int, body []byte) (searchResu
 				return nil, fmt.Errorf(respError)
 			}
 		}
-		return nil, fmt.Errorf("unexpected status code on VaaS certificate search. Status: %d", httpStatusCode)
+		err := verror.VCertConnectorUnexpectedStatusError{Platform: "VaaS", Operation: "certificate search"}
+		err.StatusCode = httpStatusCode
+		return nil, err
 	}
 }

@@ -22,6 +22,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"github.com/Venafi/vcert/v4/pkg/certificate"
+	"github.com/Venafi/vcert/v4/pkg/verror"
 	"net/http"
 	"strings"
 )
@@ -84,7 +85,10 @@ func (c *Connector) configReadDN(req ConfigReadDNRequest) (resp ConfigReadDNResp
 			return resp, err
 		}
 	} else {
-		return resp, fmt.Errorf("unexpected status code on %s. Status: %s", urlResourceConfigReadDn, status)
+		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP"}
+		err.Status = status;
+		err.Operation = string(urlResourceConfigReadDn)
+		return resp, err
 	}
 
 	return resp, nil
@@ -114,7 +118,9 @@ func parseCertificateDetailsResponse(statusCode int, body []byte) (searchResult 
 		if body != nil {
 			return nil, NewResponseError(body)
 		} else {
-			return nil, fmt.Errorf("unexpected status code on TPP certificate search. Status: %d", statusCode)
+			err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: "certificate search"}
+			err.StatusCode = statusCode;
+			return nil, err
 		}
 	}
 }
@@ -132,7 +138,9 @@ func ParseCertificateSearchResponse(httpStatusCode int, body []byte) (searchResu
 		if body != nil {
 			return nil, NewResponseError(body)
 		} else {
-			return nil, fmt.Errorf("unexpected status code on TPP certificate search. Status: %d", httpStatusCode)
+			err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: "certificate search"}
+			err.StatusCode = httpStatusCode;
+			return nil, err
 		}
 	}
 }

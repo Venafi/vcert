@@ -324,7 +324,7 @@ func processAuthData(c *Connector, url urlResource, data interface{}) (resp inte
 			return resp, fmt.Errorf("can not determine data type")
 		}
 	} else {
-		err := verror.VCertTPPConnectorAuthorizeError{}
+		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: "Authorize"}
 		err.Status = status
 		return resp, err
 	}
@@ -394,7 +394,10 @@ func (c *Connector) requestAllMetadataItems(dn string) ([]metadataItem, error) {
 		return nil, err
 	}
 	if statusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code on TPP while fetching metadata items. %d-%s", statusCode, status)
+		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: "while fetching metadata items"}
+		err.Status = status;
+		err.StatusCode = statusCode
+		return nil, err
 	}
 
 	var response metadataGetItemsResponse
@@ -409,7 +412,10 @@ func (c *Connector) requestMetadataItems(dn string) ([]metadataKeyValueSet, erro
 		return nil, err
 	}
 	if statusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code on TPP while fetching certificate metadata items. %d-%s", statusCode, status)
+		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: "while fetching certificate metadata items"}
+		err.Status = status;
+		err.StatusCode = statusCode
+		return nil, err
 	}
 	var response metadataGetResponse
 	err = json.Unmarshal(body, &response)
@@ -428,7 +434,9 @@ func (c *Connector) requestSystemVersion() (string, error) {
 	case 401:
 		return "", fmt.Errorf("http status code '%s' was returned by the server. Hint: OAuth scope 'configuration' is required when using custom fields", status)
 	default:
-		return "", fmt.Errorf("unexpected status code on TPP while fetching TPP version. %s", status)
+		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: "while fetching TPP version"}
+		err.Status = status;
+		return "", err
 	}
 
 	var response struct{ Version string }
@@ -450,7 +458,10 @@ func (c *Connector) setCertificateMetadata(metadataRequest metadataSetRequest) (
 		return false, err
 	}
 	if statusCode != http.StatusOK {
-		return false, fmt.Errorf("unexpected status code on TPP while setting metadata items. %d-%s", statusCode, status)
+		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: "while setting metadata items"}
+		err.Status = status;
+		err.StatusCode = statusCode
+		return false, err
 	}
 
 	var result = metadataSetResponse{}
@@ -1233,7 +1244,9 @@ func (c *Connector) putCertificateInfo(dn string, attributes []nameSliceValuePai
 		return err
 	}
 	if statusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code on TPP. Status: %v", statusCode)
+		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP"}
+		err.StatusCode = statusCode
+		return err
 	}
 	return nil
 }
@@ -1957,7 +1970,10 @@ func parseDNToGUIDRequestResponse(httpStatusCode int, httpStatus string, body []
 		}
 		return reqData, nil
 	default:
-		return nil, fmt.Errorf("unexpected status code on TPP DN to GUID request.\n Status:\n %s. \n Body:\n %s\n", httpStatus, body)
+		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: "DN to GUID request"}
+		err.Status = httpStatus;
+		err.Body = body;
+		return nil, err
 	}
 }
 
@@ -1975,7 +1991,10 @@ func parseCertificateMetaData(httpStatusCode int, httpStatus string, body []byte
 		}
 		return reqData, nil
 	default:
-		return nil, fmt.Errorf("unexpected status code on TPP DN to GUID request.\n Status:\n %s. \n Body:\n %s\n", httpStatus, body)
+		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: "DN to GUID request"}
+		err.Status = httpStatus;
+		err.Body = body;
+		return nil, err
 	}
 }
 

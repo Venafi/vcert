@@ -28,6 +28,7 @@ import (
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
 	"github.com/Venafi/vcert/v4/pkg/util"
+	"github.com/Venafi/vcert/v4/pkg/verror"
 )
 
 const (
@@ -227,7 +228,9 @@ func parseSshCertOperationResponse(httpStatusCode int, httpStatus string, body [
 		err := NewAuthenticationError(body)
 		return retrieveResponse, err
 	default:
-		return retrieveResponse, fmt.Errorf("unexpected status code. Status: %s", httpStatus)
+		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP"}
+		err.Status = httpStatus;
+		return retrieveResponse, err
 	}
 }
 
