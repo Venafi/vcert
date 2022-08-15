@@ -162,7 +162,7 @@ func TestAuthenticateAuthError(t *testing.T) {
 	}
 }
 
-func TestRetrieveServiceVersion(t *testing.T) {
+func TestRetrieveSystemVersion(t *testing.T) {
 	tpp, err := getTestConnector(ctx.TPPurl, "")
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, ctx.TPPurl)
@@ -180,7 +180,7 @@ func TestRetrieveServiceVersion(t *testing.T) {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
 
-	serviceVersion, err := tpp.requestSystemVersion()
+	serviceVersion, err := tpp.RetrieveSystemVersion()
 	if err != nil {
 		t.Fatalf("Failed to get Venafi service version. _bad_request_1_ Error: %v", err)
 	}

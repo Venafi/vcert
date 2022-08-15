@@ -442,12 +442,8 @@ func (c *Connector) RetrieveSelfIdentity() (response string, err error) {
 	return "", fmt.Errorf("failed to get Self. Status code: %d, Status text: %s", statusCode, statusText)
 }
 
-func (c *Connector) RetrieveServiceVersion() (string, error) {
-	return c.requestSystemVersion()
-}
-
-// requestSystemVersion returns the TPP system version of the connector context
-func (c *Connector) requestSystemVersion() (string, error) {
+// RetrieveSystemVersion returns the TPP system version of the connector context
+func (c *Connector) RetrieveSystemVersion() (string, error) {
 	statusCode, status, body, err := c.request("GET", urlResourceSystemStatusVersion, "")
 	if err != nil {
 		return "", err

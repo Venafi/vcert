@@ -107,7 +107,7 @@ type Connector interface {
 	SearchCertificates(req *certificate.SearchRequest) (*certificate.CertSearchResponse, error)
 	RetrieveAvailableSSHTemplates() ([]certificate.SshAvaliableTemplate, error)
 	RetrieveCertificateMetaData(dn string) (*certificate.CertificateMetaData, error)
-	RetrieveServiceVersion() (string, error)
+	RetrieveSystemVersion() (string, error)
 	// Retrieve self identity
 	RetrieveSelfIdentity() (string, error)
 }
