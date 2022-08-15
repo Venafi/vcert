@@ -437,14 +437,17 @@ func (c *Connector) RetrieveSelfIdentity() (response string, err error) {
 			return respIndentities.Identities[0].Name, nil
 		}
 	case http.StatusUnauthorized:
-		//return "", errs.NewExitAuthError(errors.New("authentication failure: check your credentials"))
 		return "", verror.AuthError
 	}
 	return "", fmt.Errorf("failed to get Self. Status code: %d, Status text: %s", statusCode, statusText)
 }
 
-// RetrieveServiceVersion returns the TPP system version of the connector context
 func (c *Connector) RetrieveServiceVersion() (string, error) {
+	return c.requestSystemVersion()
+}
+
+// requestSystemVersion returns the TPP system version of the connector context
+func (c *Connector) requestSystemVersion() (string, error) {
 	statusCode, status, body, err := c.request("GET", urlResourceSystemStatusVersion, "")
 	if err != nil {
 		return "", err

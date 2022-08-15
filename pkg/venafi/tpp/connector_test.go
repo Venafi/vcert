@@ -44,6 +44,7 @@ import (
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
 	"github.com/Venafi/vcert/v4/pkg/verror"
 	"github.com/Venafi/vcert/v4/test"
+	"github.com/blang/semver"
 )
 
 var ctx *test.Context
@@ -158,6 +159,67 @@ func TestAuthenticateAuthError(t *testing.T) {
 	}
 	if !errors.Is(err, verror.AuthError) {
 		t.Errorf("expected AuthError, got %v", err)
+	}
+}
+
+func TestRetrieveServiceVersion(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, "")
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, ctx.TPPurl)
+	}
+
+	refreshToken, err := tpp.GetRefreshToken(&endpoint.Authentication{
+		User: ctx.TPPuser, Password: ctx.TPPPassword,
+		Scope: "certificate:discover,manage,revoke", ClientId: "vcert-sdk"})
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	err = tpp.Authenticate(&endpoint.Authentication{AccessToken: refreshToken.Access_token})
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	serviceVersion, err := tpp.requestSystemVersion()
+	if err != nil {
+		t.Fatalf("Failed to get Venafi service version. _bad_request_1_ Error: %v", err)
+	}
+
+	if serviceVersion == "" {
+		t.Fatalf("Failed to get Venafi service version. _bad_request_2_ Error: %v", err)
+	}
+
+	_, err = semver.Parse(strings.Join(strings.Split(serviceVersion, ".")[:3], "."))
+	if err != nil {
+		t.Fatalf("Error while parsing current version: %s", err)
+	}
+}
+
+func TestRetrieveSelfIdentity(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, "")
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, ctx.TPPurl)
+	}
+
+	refreshToken, err := tpp.GetRefreshToken(&endpoint.Authentication{
+		User: ctx.TPPuser, Password: ctx.TPPPassword,
+		Scope: "certificate:discover,manage,revoke", ClientId: "vcert-sdk"})
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	err = tpp.Authenticate(&endpoint.Authentication{AccessToken: refreshToken.Access_token})
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	identity, err := tpp.RetrieveSelfIdentity()
+	if err != nil {
+		t.Fatalf("Failed to get the used user. Error: %v", err)
+	}
+
+	if identity == "" {
+		t.Fatalf("Failed to get to get Self")
 	}
 }
 

@@ -1,6 +1,7 @@
 module github.com/Venafi/vcert/v4
 
 require (
+	github.com/blang/semver v3.5.1+incompatible
 	github.com/howeyc/gopass v0.0.0-20170109162249-bf9dde6d0d2c
 	github.com/pavel-v-chernykh/keystore-go/v4 v4.1.0
 	github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d
