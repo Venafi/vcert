@@ -347,9 +347,9 @@ type Sans struct {
 }
 
 type CertificateInfo struct {
-	ID   string
-	CN   string
-	SANS Sans
+	ID         string
+	CN         string
+	SANS       Sans
 	Serial     string
 	Thumbprint string
 	ValidFrom  time.Time
