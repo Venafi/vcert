@@ -47,6 +47,10 @@ func (c *Connector) SearchCertificates(req *certificate.SearchRequest) (*certifi
 	panic("operation is not supported yet")
 }
 
+func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.Sans, valid_for int) (certificateInfo *certificate.CertificateInfo, err error) {
+	panic("operation is not supported yet")
+}
+
 func (c *Connector) IsCSRServiceGenerated(req *certificate.Request) (bool, error) {
 	panic("operation is not supported yet")
 }
