@@ -105,6 +105,8 @@ type Connector interface {
 	RetrieveSSHCertificate(req *certificate.SshCertRequest) (response *certificate.SshCertificateObject, err error)
 	RetrieveSshConfig(ca *certificate.SshCaTemplateRequest) (*certificate.SshConfig, error)
 	SearchCertificates(req *certificate.SearchRequest) (*certificate.CertSearchResponse, error)
+	// Returns 1 valid (or nil) certificate
+	SearchCertificate(zone string, cn string, sans *certificate.Sans, valid_for int) (*certificate.CertificateInfo, error)
 	RetrieveAvailableSSHTemplates() ([]certificate.SshAvaliableTemplate, error)
 	RetrieveCertificateMetaData(dn string) (*certificate.CertificateMetaData, error)
 }
