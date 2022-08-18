@@ -28,9 +28,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"errors"
+	"reflect"
 
 	"github.com/Venafi/vcert/v4/pkg/policy"
-
 	"github.com/Venafi/vcert/v4/pkg/util"
 
 	"github.com/Venafi/vcert/v4/pkg/certificate"
@@ -1490,7 +1491,48 @@ func (c *Connector) SearchCertificates(req *certificate.SearchRequest) (*certifi
 }
 
 func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.Sans, valid_for int) (certificateInfo *certificate.CertificateInfo, err error) {
-	panic("operation is not supported yet")
+	// format arguments for request
+	//
+	// this might be better replaced by a FormatSearchCertificateArguments
+	// function with respective unit tests for correctness
+	//
+	// get future (or past) date for certificate validation
+	date := time.Now().Add(time.Duration(valid_for) * 24 * time.Hour)
+	// create request arguments
+	req := make([]string, 0)
+	req = append(req, fmt.Sprintf("CN=%s", cn))
+	req = append(req, fmt.Sprintf("SAN-DNS=%s", strings.Join(sans.DNS, ",")))
+	req = append(req, fmt.Sprintf("&ValidToGreater=%s", neturl.QueryEscape(date.Format(time.RFC3339))))
+
+	// perform request
+	url := fmt.Sprintf("%s?%s", urlResourceCertificateSearch, strings.Join(req, "&"))
+	statusCode, _, body, err := c.request("GET", urlResource(url), nil)
+	if err != nil {
+		return nil, err
+	}
+	certificates, err := ParseSearchCertificateResponse(statusCode, body)
+	if err != nil {
+		return nil, err
+	}
+
+	// find valid certificate
+	var newestCertificate *certificate.CertificateInfo
+	for _, certificate := range certificates {
+		// log.Printf("looping %v\n", util.GetJsonAsString(certificate))
+		if reflect.DeepEqual(sans.DNS, certificate.SANS.DNS) {
+			if newestCertificate == nil || certificate.ValidTo.Unix() > newestCertificate.ValidTo.Unix() {
+				// log.Printf("assigning newestCertificate == %v\n", util.GetJsonAsString(certificate))
+				newestCertificate = certificate
+			}
+		}
+	}
+
+	// log.Printf("newestCertificate %v\n", util.GetJsonAsString(newestCertificate))
+	if newestCertificate != nil {
+		return newestCertificate, nil
+	}
+
+	return nil, errors.New("No certificate with matching criteria found")
 }
 
 func (c *Connector) SetHTTPClient(client *http.Client) {

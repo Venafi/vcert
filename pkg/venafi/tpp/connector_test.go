@@ -2359,3 +2359,32 @@ func TestGetCertificateMetaData(t *testing.T) {
 		t.Fatal("meta data is nil")
 	}
 }
+
+// TODO: Expand unit tests to cover more cases
+func TestSearchCertificate(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+
+	cn := "one.vfidev.com"
+	sans := &certificate.Sans{DNS: []string{cn, "two.vfidev.com"}}
+	zone := ""
+	certificate, err := tpp.SearchCertificate(zone, cn, sans, 0)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+
+	if certificate == nil {
+		t.Fatal("Should have found a certificate")
+	}
+
+	fmt.Printf("%v\n", util.GetJsonAsString(*certificate))
+}

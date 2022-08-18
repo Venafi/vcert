@@ -343,11 +343,15 @@ type ImportResponse struct {
 }
 
 type Sans struct {
-	DNS, Email, IP, URI, UPN []string
+	DNS   []string
+	Email []string `json:",omitempty"`
+	IP    []string `json:",omitempty"`
+	URI   []string `json:",omitempty"`
+	UPN   []string `json:",omitempty"`
 }
 
 type CertificateInfo struct {
-	ID         string
+	ID         string `json:",omitempty"`
 	CN         string
 	SANS       Sans
 	Serial     string

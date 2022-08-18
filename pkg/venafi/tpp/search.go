@@ -17,6 +17,7 @@
 package tpp
 
 import (
+	"errors"
 	"crypto/sha1"
 	"encoding/json"
 	"encoding/pem"
@@ -45,19 +46,6 @@ type CertificateDetailsResponse struct {
 	}
 	Consumers []string
 	Disabled  bool `json:",omitempty"`
-}
-
-type CertificateSearchResponse struct {
-	Certificates []Certificate `json:"Certificates"`
-	Count        int           `json:"TotalCount"`
-}
-
-type Certificate struct {
-	//Id                   string   `json:"DN"`
-	//ManagedCertificateId string   `json:"DN"`
-	CertificateRequestId   string `json:"DN"`
-	CertificateRequestGuid string `json:"Guid"`
-	/*...and some more fields... */
 }
 
 func (c *Connector) searchCertificatesByFingerprint(fp string) (*certificate.CertSearchResponse, error) {
@@ -128,6 +116,52 @@ func ParseCertificateSearchResponse(httpStatusCode int, body []byte) (searchResu
 			return nil, fmt.Errorf("Failed to parse search results: %s, body: %s", err, body)
 		}
 		return searchResult, nil
+	default:
+		if body != nil {
+			return nil, NewResponseError(body)
+		} else {
+			return nil, fmt.Errorf("Unexpected status code on certificate search. Status: %d", httpStatusCode)
+		}
+	}
+}
+
+type CertificateSearchResponse struct {
+	Certificates []CertificateSearchInfo `json:"Certificates"`
+	Count        int             `json:"TotalCount"`
+}
+
+type CertificateSearchInfo struct {
+	CreatedOn string
+	DN string
+	Guid string
+	Name string
+	ParentDn string
+	SchemaClass string
+	X509 certificate.CertificateInfo
+}
+
+func ParseSearchCertificateResponse(httpStatusCode int, body []byte) (certificates []*certificate.CertificateInfo, err error) {
+	switch httpStatusCode {
+	case http.StatusOK:
+		var searchResult = &CertificateSearchResponse{}
+		err = json.Unmarshal(body, searchResult)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to parse search results: %s, body: %s", err, body)
+		}
+
+		// fmt.Printf("found %v certificate(s)\n", searchResult.Count)
+		if searchResult.Count == 0 {
+			return nil, errors.New("No certificate with matching criteria found in api response")
+		}
+
+		// map (convert) response to an array of CertificateInfo
+		certificates := make([]*certificate.CertificateInfo, searchResult.Count)
+		for n, cert := range searchResult.Certificates {
+			certificates[n] = &cert.X509
+			certificates[n].ID = cert.Guid
+		}
+
+		return certificates, nil
 	default:
 		if body != nil {
 			return nil, NewResponseError(body)
