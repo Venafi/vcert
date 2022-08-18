@@ -199,6 +199,7 @@ type oauthGetRefreshTokenRequest struct {
 type OauthGetRefreshTokenResponse struct {
 	Access_token  string `json:"access_token,omitempty"`
 	Expires       int    `json:"expires,omitempty"`
+	ExpiresIn     int    `json:"expires_in,omitempty"`
 	Identity      string `json:"identity,omitempty"`
 	Refresh_token string `json:"refresh_token,omitempty"`
 	Refresh_until int    `json:"refresh_until,omitempty"`
