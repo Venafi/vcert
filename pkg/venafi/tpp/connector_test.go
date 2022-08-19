@@ -2376,7 +2376,10 @@ func TestSearchCertificate(t *testing.T) {
 
 	cn := "one.vfidev.com"
 	sans := &certificate.Sans{DNS: []string{cn, "two.vfidev.com"}}
-	zone := ""
+	// should find certificate with 2030 expiration date
+	zone := "Open Source\\vcert\\Search Certificate"
+	// should not find any certificate
+	// zone := "Open Source\\vcert\\Search Certificate\\Subpolicy"
 	certificate, err := tpp.SearchCertificate(zone, cn, sans, 0)
 	if err != nil {
 		t.Fatalf("%v", err)

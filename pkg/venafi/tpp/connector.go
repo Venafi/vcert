@@ -1510,28 +1510,53 @@ func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.
 	if err != nil {
 		return nil, err
 	}
-	certificates, err := ParseSearchCertificateResponse(statusCode, body)
+	searchResult, err := ParseSearchCertificateResponse(statusCode, body)
 	if err != nil {
 		return nil, err
 	}
 
-	// find valid certificate
+	// fail if no certificate is returned from api
+	if searchResult.Count == 0 {
+		return nil, errors.New("No certificate with matching criteria found in api response")
+	}
+
+	// map (convert) response to an array of CertificateInfo, only add those
+	// certificates whose Zone matches ours
+	certificates := make([]*certificate.CertificateInfo, 0)
+	n := 0
+	for _, cert := range searchResult.Certificates {
+		if cert.ParentDn == getPolicyDN(zone) {
+			certificates = append(certificates, &certificate.CertificateInfo{})
+			certificates[n] = &cert.X509
+			certificates[n].ID = cert.Guid
+			n = n + 1
+		}
+	}
+
+	// fail if no certificates found with matching zone
+	if n == 0 {
+		return nil, errors.New("No certificate with matching zone found")
+	}
+
+	// at this point all certificates belong to our zone, the next step is
+	// finding the newest valid certificate
 	var newestCertificate *certificate.CertificateInfo
 	for _, certificate := range certificates {
-		// log.Printf("looping %v\n", util.GetJsonAsString(certificate))
+		// exact match SANs
 		if reflect.DeepEqual(sans.DNS, certificate.SANS.DNS) {
+			// update the certificate to the newest match
 			if newestCertificate == nil || certificate.ValidTo.Unix() > newestCertificate.ValidTo.Unix() {
-				// log.Printf("assigning newestCertificate == %v\n", util.GetJsonAsString(certificate))
 				newestCertificate = certificate
 			}
 		}
 	}
 
-	// log.Printf("newestCertificate %v\n", util.GetJsonAsString(newestCertificate))
+	// a valid certificate has been found, return it
 	if newestCertificate != nil {
 		return newestCertificate, nil
 	}
 
+	// fail, since no valid certificate was found at this point
 	return nil, errors.New("No certificate with matching criteria found")
 }
 

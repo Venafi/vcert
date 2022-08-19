@@ -17,7 +17,6 @@
 package tpp
 
 import (
-	"errors"
 	"crypto/sha1"
 	"encoding/json"
 	"encoding/pem"
@@ -140,7 +139,7 @@ type CertificateSearchInfo struct {
 	X509 certificate.CertificateInfo
 }
 
-func ParseSearchCertificateResponse(httpStatusCode int, body []byte) (certificates []*certificate.CertificateInfo, err error) {
+func ParseSearchCertificateResponse(httpStatusCode int, body []byte) (certificates *CertificateSearchResponse, err error) {
 	switch httpStatusCode {
 	case http.StatusOK:
 		var searchResult = &CertificateSearchResponse{}
@@ -148,20 +147,7 @@ func ParseSearchCertificateResponse(httpStatusCode int, body []byte) (certificat
 		if err != nil {
 			return nil, fmt.Errorf("Failed to parse search results: %s, body: %s", err, body)
 		}
-
-		// fmt.Printf("found %v certificate(s)\n", searchResult.Count)
-		if searchResult.Count == 0 {
-			return nil, errors.New("No certificate with matching criteria found in api response")
-		}
-
-		// map (convert) response to an array of CertificateInfo
-		certificates := make([]*certificate.CertificateInfo, searchResult.Count)
-		for n, cert := range searchResult.Certificates {
-			certificates[n] = &cert.X509
-			certificates[n].ID = cert.Guid
-		}
-
-		return certificates, nil
+		return searchResult, nil
 	default:
 		if body != nil {
 			return nil, NewResponseError(body)
