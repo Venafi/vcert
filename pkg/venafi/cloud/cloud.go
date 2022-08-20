@@ -22,8 +22,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/policy"
-	"github.com/Venafi/vcert/v4/pkg/util"
 	"io"
 	"io/ioutil"
 	"log"
@@ -34,10 +32,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Venafi/vcert/v4/pkg/verror"
-
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
+	"github.com/Venafi/vcert/v4/pkg/policy"
+	"github.com/Venafi/vcert/v4/pkg/util"
+	"github.com/Venafi/vcert/v4/pkg/verror"
 )
 
 type apiKey struct {
@@ -484,22 +483,27 @@ func parseZoneConfigurationResult(httpStatusCode int, httpStatus string, body []
 	switch httpStatusCode {
 	case http.StatusOK:
 		return parseZoneConfigurationData(body)
-	case http.StatusBadRequest, http.StatusNotFound:
-		return nil, verror.ZoneNotFoundError
 	default:
+		verr := verror.VCertConnectorError{
+			Platform:   "VaaS",
+			Operation:  "zone read",
+			StatusCode: httpStatusCode,
+			Status:     httpStatus,
+		}
+
+		if body == nil {
+			return nil, verr
+		}
+
 		respErrors, err := parseResponseErrors(body)
 		if err != nil {
 			return nil, err
 		}
 
-		respError := fmt.Sprintf("unexpected status code on VaaS zone read. Status: %s\n", httpStatus)
-		for _, e := range respErrors {
-			if e.Code == 10051 {
-				return nil, verror.ZoneNotFoundError
-			}
-			respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
+		return nil, verror.VCertConnectorResponseError{
+			VCertConnectorError: verr,
+			ResponseErrors:      respErrors,
 		}
-		return nil, fmt.Errorf("%w: %v", verror.ServerError, respError)
 	}
 }
 
@@ -519,19 +523,26 @@ func parseCertificateTemplateResult(httpStatusCode int, httpStatus string, body 
 	case http.StatusBadRequest:
 		return nil, verror.ZoneNotFoundError
 	default:
+		verr := verror.VCertConnectorError{
+			Platform:   "VaaS",
+			Operation:  "certificate template",
+			StatusCode: httpStatusCode,
+			Status:     httpStatus,
+		}
+
+		if body == nil {
+			return nil, verr
+		}
+
 		respErrors, err := parseResponseErrors(body)
 		if err != nil {
 			return nil, err
 		}
 
-		respError := fmt.Sprintf("unexpected status code on VaaS zone read. Status: %s\n", httpStatus)
-		for _, e := range respErrors {
-			if e.Code == 10051 {
-				return nil, verror.ZoneNotFoundError
-			}
-			respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
+		return nil, verror.VCertConnectorResponseError{
+			VCertConnectorError: verr,
+			ResponseErrors:      respErrors,
 		}
-		return nil, fmt.Errorf("%w: %v", verror.ServerError, respError)
 	}
 }
 
@@ -549,16 +560,26 @@ func parseCertificateRequestResult(httpStatusCode int, httpStatus string, body [
 	case http.StatusCreated:
 		return parseCertificateRequestData(body)
 	default:
+		verr := verror.VCertConnectorError{
+			Platform:   "VaaS",
+			Operation:  "certificate request",
+			StatusCode: httpStatusCode,
+			Status:     httpStatus,
+		}
+
+		if body == nil {
+			return nil, verr
+		}
+
 		respErrors, err := parseResponseErrors(body)
 		if err != nil {
 			return nil, err
 		}
 
-		respError := fmt.Sprintf("unexpected status code on VaaS zone read. Status: %s\n", httpStatus)
-		for _, e := range respErrors {
-			respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
+		return nil, verror.VCertConnectorResponseError{
+			VCertConnectorError: verr,
+			ResponseErrors:      respErrors,
 		}
-		return nil, fmt.Errorf("%w: %v", verror.ServerError, respError)
 	}
 }
 
@@ -566,7 +587,7 @@ func parseCertificateRequestData(b []byte) (*certificateRequestResponse, error) 
 	var data certificateRequestResponse
 	err := json.Unmarshal(b, &data)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", verror.ServerError, err)
+		return nil, err
 	}
 
 	return &data, nil
@@ -585,22 +606,27 @@ func parseApplicationDetailsResult(httpStatusCode int, httpStatus string, body [
 	switch httpStatusCode {
 	case http.StatusOK:
 		return parseApplicationDetailsData(body)
-	case http.StatusBadRequest:
-		return nil, verror.ApplicationNotFoundError
 	default:
+		verr := verror.VCertConnectorError{
+			Platform:   "VaaS",
+			Operation:  "application details",
+			StatusCode: httpStatusCode,
+			Status:     httpStatus,
+		}
+
+		if body == nil {
+			return nil, verr
+		}
+
 		respErrors, err := parseResponseErrors(body)
 		if err != nil {
 			return nil, err
 		}
 
-		respError := fmt.Sprintf("unexpected status code on VaaS application read. Status: %s\n", httpStatus)
-		for _, e := range respErrors {
-			if e.Code == 10051 {
-				return nil, verror.ApplicationNotFoundError
-			}
-			respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
+		return nil, verror.VCertConnectorResponseError{
+			VCertConnectorError: verr,
+			ResponseErrors:      respErrors,
 		}
-		return nil, fmt.Errorf("%w: %v", verror.ServerError, respError)
 	}
 }
 
@@ -608,7 +634,7 @@ func parseApplicationDetailsData(b []byte) (*ApplicationDetails, error) {
 	var data ApplicationDetails
 	err := json.Unmarshal(b, &data)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", verror.ServerError, err)
+		return nil, err
 	}
 	return &data, nil
 }

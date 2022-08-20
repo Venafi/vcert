@@ -19,21 +19,14 @@ package cloud
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/Venafi/vcert/v4/pkg/verror"
 )
 
-type responseError struct {
-	Code    int         `json:"code,omitempty"`
-	Message string      `json:"message,omitempty"`
-	Args    interface{} `json:"args,omitempty"`
-}
-
-type jsonData struct {
-	Errors []responseError `json:"errors,omitempty"`
-}
-
-func parseResponseErrors(b []byte) ([]responseError, error) {
-	var data jsonData
+func parseResponseErrors(b []byte) ([]verror.ResponseError, error) {
+	var data struct {
+		Errors []verror.ResponseError `json:"errors,omitempty"`
+	}
 	err := json.Unmarshal(b, &data)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", verror.ServerError, err)

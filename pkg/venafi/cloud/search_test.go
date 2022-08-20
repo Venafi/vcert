@@ -98,7 +98,7 @@ func TestParseCertificateSearchResponse(t *testing.T) {
 		]}
 	`)
 
-	searchResult, err = ParseCertificateSearchResponse(code, body)
+	searchResult, err = ParseCertificateSearchResponse(code, "", body)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -114,7 +114,7 @@ func TestParseCertificateSearchResponse(t *testing.T) {
 
 	code = 400
 	body = []byte("")
-	searchResult, err = ParseCertificateSearchResponse(code, body)
+	searchResult, err = ParseCertificateSearchResponse(code, "", body)
 	if err == nil {
 		t.Fatal("should trigger error")
 	}
@@ -140,7 +140,7 @@ func TestParseCertificateSearchResponse(t *testing.T) {
 		  ]
 		}
 	`)
-	searchResult, err = ParseCertificateSearchResponse(code, body)
+	searchResult, err = ParseCertificateSearchResponse(code, "", body)
 	if err == nil {
 		t.Fatal("JSON body should trigger error")
 	}
