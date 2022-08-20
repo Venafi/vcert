@@ -487,10 +487,12 @@ func (c *Connector) createApplication(appName string, ps *policy.PolicySpecifica
 		return nil, error
 	}
 	if statusCode != 201 {
-		Operation := fmt.Sprintf("attemping to create application %s", appName)
-		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: Operation}
-		err.Status = status
-		return nil, err
+		return nil, verror.VCertConnectorError{
+			Platform:   "TPP",
+			Operation:  fmt.Sprintf("attemping to create application %s", appName),
+			StatusCode: statusCode,
+			Status:     status,
+		}
 	}
 
 	return &appReq, nil
@@ -815,7 +817,7 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 func (c *Connector) getCertificateStatus(requestID string) (certStatus *certificateStatus, err error) {
 	url := c.getURL(urlResourceCertificateStatus)
 	url = fmt.Sprintf(url, requestID)
-	statusCode, _, body, err := c.request("GET", url, nil)
+	statusCode, status, body, err := c.request("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -827,20 +829,27 @@ func (c *Connector) getCertificateStatus(requestID string) (certStatus *certific
 		}
 		return
 	}
-	respErrors, err := parseResponseErrors(body)
-	if err == nil {
-		respError := fmt.Sprintf("unexpected status code on VaaS certificate search. Status: %d\n", statusCode)
-		for _, e := range respErrors {
-			respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
-		}
-		return nil, fmt.Errorf(respError)
+
+	verr := verror.VCertConnectorError{
+		Platform:   "VaaS",
+		Operation:  "get certificate status",
+		StatusCode: statusCode,
+		Status:     status,
 	}
 
-	e := verror.VCertConnectorUnexpectedStatusError{Platform: "VaaS", Operation: "certificate search"}
-	e.StatusCode = statusCode;
+	if body == nil {
+		return nil, verr
+	}
 
-	return nil, e
+	respErrors, err := parseResponseErrors(body)
+	if err != nil {
+		return nil, err
+	}
 
+	return nil, verror.VCertConnectorResponseError{
+		VCertConnectorError: verr,
+		ResponseErrors:      respErrors,
+	}
 }
 
 // RetrieveCertificate retrieves the certificate for the specified ID
@@ -1276,11 +1285,11 @@ func (c *Connector) searchCertificates(req *SearchRequest) (*CertificateSearchRe
 	var err error
 
 	url := c.getURL(urlResourceCertificateSearch)
-	statusCode, _, body, err := c.request("POST", url, req)
+	statusCode, status, body, err := c.request("POST", url, req)
 	if err != nil {
 		return nil, err
 	}
-	searchResult, err := ParseCertificateSearchResponse(statusCode, body)
+	searchResult, err := ParseCertificateSearchResponse(statusCode, status, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1327,7 +1336,7 @@ func (c *Connector) getCertificate(certificateId string) (*managedCertificate, e
 	var err error
 	url := c.getURL(urlResourceCertificateByID)
 	url = fmt.Sprintf(url, certificateId)
-	statusCode, _, body, err := c.request("GET", url, nil)
+	statusCode, status, body, err := c.request("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -1341,19 +1350,27 @@ func (c *Connector) getCertificate(certificateId string) (*managedCertificate, e
 		}
 		return res, nil
 	default:
-		if body != nil {
-			respErrors, err := parseResponseErrors(body)
-			if err == nil {
-				respError := fmt.Sprintf("unexpected status code on VaaS certificate search. Status: %d\n", statusCode)
-				for _, e := range respErrors {
-					respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
-				}
-				return nil, fmt.Errorf(respError)
-			}
+
+		verr := verror.VCertConnectorError{
+			Platform:   "VaaS",
+			Operation:  "get certificate",
+			StatusCode: statusCode,
+			Status:     status,
 		}
-		err := verror.VCertConnectorUnexpectedStatusError{Platform: "VaaS", Operation: "certificate search"}
-		err.StatusCode = statusCode;
-		return nil, err
+
+		if body == nil {
+			return nil, verr
+		}
+
+		respErrors, err := parseResponseErrors(body)
+		if err != nil {
+			return nil, err
+		}
+
+		return nil, verror.VCertConnectorResponseError{
+			VCertConnectorError: verr,
+			ResponseErrors:      respErrors,
+		}
 	}
 }
 

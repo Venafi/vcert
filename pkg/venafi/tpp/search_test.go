@@ -20,13 +20,14 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/certificate"
-	"github.com/Venafi/vcert/v4/pkg/endpoint"
-	"github.com/Venafi/vcert/v4/test"
 	"net/url"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/Venafi/vcert/v4/pkg/certificate"
+	"github.com/Venafi/vcert/v4/pkg/endpoint"
+	"github.com/Venafi/vcert/v4/test"
 )
 
 func TestParseCertificateSearchResponse(t *testing.T) {
@@ -51,7 +52,7 @@ func TestParseCertificateSearchResponse(t *testing.T) {
 		  "TotalCount": 1
 		}`
 
-	res, err := ParseCertificateSearchResponse(200, []byte(body))
+	res, err := ParseCertificateSearchResponse(200, "", []byte(body))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -148,7 +149,7 @@ func TestParseCertificateDetailsResponse(t *testing.T) {
 		  }
 		}`
 
-	res, err := parseCertificateDetailsResponse(200, []byte(body))
+	res, err := parseCertificateDetailsResponse(200, "", []byte(body))
 	if err != nil {
 		t.Fatal(err)
 	}

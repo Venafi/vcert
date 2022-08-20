@@ -3,11 +3,12 @@ package cloud
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"regexp"
+
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/util"
 	"github.com/Venafi/vcert/v4/pkg/verror"
-	"net/http"
-	"regexp"
 )
 
 func parseCertificateInfo(httpStatusCode int, httpStatus string, body []byte) (*managedCertificate, error) {
@@ -20,19 +21,26 @@ func parseCertificateInfo(httpStatusCode int, httpStatus string, body []byte) (*
 		}
 		return res, nil
 	default:
-		if body != nil {
-			respErrors, err := parseResponseErrors(body)
-			if err == nil {
-				respError := fmt.Sprintf("unexpected status code on VaaS certificate search. Status: %s\n", httpStatus)
-				for _, e := range respErrors {
-					respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
-				}
-				return nil, fmt.Errorf(respError)
-			}
+		verr := verror.VCertConnectorError{
+			Platform:   "VaaS",
+			Operation:  "certificate search",
+			StatusCode: httpStatusCode,
+			Status:     httpStatus,
 		}
-		err := verror.VCertConnectorUnexpectedStatusError{Platform: "VaaS", Operation: "certificate search"}
-		err.Status = httpStatus;
-		return nil, err
+
+		if body == nil {
+			return nil, verr
+		}
+
+		respErrors, err := parseResponseErrors(body)
+		if err != nil {
+			return nil, err
+		}
+
+		return nil, verror.VCertConnectorResponseError{
+			VCertConnectorError: verr,
+			ResponseErrors:      respErrors,
+		}
 	}
 }
 
@@ -46,19 +54,26 @@ func parseDEKInfo(httpStatusCode int, httpStatus string, body []byte) (*EdgeEncr
 		}
 		return res, nil
 	default:
-		if body != nil {
-			respErrors, err := parseResponseErrors(body)
-			if err == nil {
-				respError := fmt.Sprintf("unexpected status code on VaaS retrieving DEK's info. Status: %s\n", httpStatus)
-				for _, e := range respErrors {
-					respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
-				}
-				return nil, fmt.Errorf(respError)
-			}
+		verr := verror.VCertConnectorError{
+			Platform:   "VaaS",
+			Operation:  "retrieving DEK's info",
+			StatusCode: httpStatusCode,
+			Status:     httpStatus,
 		}
-		err := verror.VCertConnectorUnexpectedStatusError{Platform: "VaaS", Operation: "retrieving DEK's info"}
-		err.Status = httpStatus;
-		return nil, err
+
+		if body == nil {
+			return nil, verr
+		}
+
+		respErrors, err := parseResponseErrors(body)
+		if err != nil {
+			return nil, err
+		}
+
+		return nil, verror.VCertConnectorResponseError{
+			VCertConnectorError: verr,
+			ResponseErrors:      respErrors,
+		}
 	}
 }
 

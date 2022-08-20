@@ -22,28 +22,65 @@ var (
 //
 // VCertError is the most generic VCert error of which all other errors are
 // inherited, and it is based on the default golang error type
-type VCertError                                             struct{ error }
+type VCertError struct{ error }
 
-type VCertPolicyError                                       struct{ VCertError }
-type VCertPolicyUnspecifiedPolicyError                      struct{ VCertPolicyError }
-type VCertPolicyUnsupportedFileError                        struct{ VCertPolicyError }
-type VCertPolicyAttributeError                              struct{ VCertPolicyError }
-type VCertPolicyUnaryAttributeError                         struct{ VCertPolicyAttributeError; Attribute string }
-type VCertPolicyCountryAttributeError                       struct{ VCertPolicyAttributeError }
-type VCertPolicyCountryDefaultAttributeError                struct{ VCertPolicyAttributeError }
-type VCertPolicyUnmatchedAttributeError                     struct{ VCertPolicyAttributeError; Attribute string }
-type VCertPolicyUnmatchedDefaultAttributeError              struct{ VCertPolicyAttributeError; Attribute string; AttributePlural string }
-type VCertPolicyUnmatchedDefaultValueAttributeError         struct{ VCertPolicyAttributeError; Attribute string; Value           string }
+type VCertPolicyError struct{ VCertError }
+type VCertPolicyUnspecifiedPolicyError struct{ VCertPolicyError }
+type VCertPolicyUnsupportedFileError struct{ VCertPolicyError }
+type VCertPolicyAttributeError struct{ VCertPolicyError }
+type VCertPolicyUnaryAttributeError struct {
+	VCertPolicyAttributeError
+	Attribute string
+}
+type VCertPolicyCountryAttributeError struct{ VCertPolicyAttributeError }
+type VCertPolicyCountryDefaultAttributeError struct{ VCertPolicyAttributeError }
+type VCertPolicyUnmatchedAttributeError struct {
+	VCertPolicyAttributeError
+	Attribute string
+}
+type VCertPolicyUnmatchedDefaultAttributeError struct {
+	VCertPolicyAttributeError
+	Attribute       string
+	AttributePlural string
+}
+type VCertPolicyUnmatchedDefaultValueAttributeError struct {
+	VCertPolicyAttributeError
+	Attribute string
+	Value     string
+}
 type VCertPolicyUnmatchedDefaultAutoInstalledAttributeError struct{ VCertPolicyAttributeError }
-type VCertPolicyIsNullError                                 struct{ VCertPolicyError }
-type VCertPolicyKeyLengthValueError                         struct{ VCertPolicyError;          Value     string }
-type VCertPolicyInvalidCAError                              struct{ VCertPolicyError }
-type VCertPolicyUnsupportedKeyTypeError                     struct{ VCertPolicyError }
+type VCertPolicyIsNullError struct{ VCertPolicyError }
+type VCertPolicyKeyLengthValueError struct {
+	VCertPolicyError
+	Value string
+}
+type VCertPolicyInvalidCAError struct{ VCertPolicyError }
+type VCertPolicyUnsupportedKeyTypeError struct{ VCertPolicyError }
 
-type VCertLoadConfigError                                   struct{ VCertError;                Description error }
+type VCertLoadConfigError struct {
+	VCertError
+	Description error
+}
 
-type VCertConnectorError                                    struct{ VCertError;                Status string;    StatusCode int; Body   []byte }
-type VCertConnectorUnexpectedStatusError                    struct{ VCertConnectorError;       Platform  string; Operation string }
+type VCertConnectorError struct {
+	VCertError
+	Status     string
+	StatusCode int
+	Platform   string
+	Operation  string
+	Body       string
+}
+
+type ResponseError struct {
+	Code    int         `json:"code,omitempty"`
+	Message string      `json:"message,omitempty"`
+	Args    interface{} `json:"args,omitempty"`
+}
+
+type VCertConnectorResponseError struct {
+	VCertConnectorError
+	ResponseErrors []ResponseError
+}
 
 func (e VCertPolicyUnspecifiedPolicyError) Error() string {
 	return fmt.Sprintf("policy specification is nil")
@@ -102,10 +139,6 @@ func (e VCertLoadConfigError) Error() string {
 }
 
 func (e VCertConnectorError) Error() string {
-	return fmt.Sprintf("Invalid status: %s Server response: %s", e.Status, string(e.Body))
-}
-
-func (e VCertConnectorUnexpectedStatusError) Error() string {
 	var status string
 	if e.Status != "" {
 		status = e.Status
@@ -119,11 +152,19 @@ func (e VCertConnectorUnexpectedStatusError) Error() string {
 	}
 	message = message + "."
 
-	if e.Body != nil {
-		message = message + fmt.Sprintf("\n Status:\n %v. \n Body:\n %s \n", status, e.Body)
+	if e.Body != "" {
+		message = message + fmt.Sprintf("\n Status:\n %v.\n Body:\n %s\n", status, e.Body)
 	} else {
 		message = message + fmt.Sprintf(" Status: %v", status)
 	}
 
+	return message
+}
+
+func (e VCertConnectorResponseError) Error() string {
+	var message string
+	for _, e := range e.ResponseErrors {
+		message += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
+	}
 	return message
 }

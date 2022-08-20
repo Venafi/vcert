@@ -21,10 +21,11 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/certificate"
-	"github.com/Venafi/vcert/v4/pkg/verror"
 	"net/http"
 	"strings"
+
+	"github.com/Venafi/vcert/v4/pkg/certificate"
+	"github.com/Venafi/vcert/v4/pkg/verror"
 )
 
 type SearchRequest []string
@@ -85,10 +86,12 @@ func (c *Connector) configReadDN(req ConfigReadDNRequest) (resp ConfigReadDNResp
 			return resp, err
 		}
 	} else {
-		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP"}
-		err.Status = status;
-		err.Operation = string(urlResourceConfigReadDn)
-		return resp, err
+		return resp, verror.VCertConnectorError{
+			Platform:   "TPP",
+			Operation:  string(urlResourceConfigReadDn),
+			StatusCode: statusCode,
+			Status:     status,
+		}
 	}
 
 	return resp, nil
@@ -98,50 +101,52 @@ func (c *Connector) searchCertificateDetails(guid string) (*CertificateDetailsRe
 	var err error
 
 	url := fmt.Sprintf("%s%s", urlResourceCertificateSearch, guid)
-	statusCode, _, body, err := c.request("GET", urlResource(url), nil)
+	statusCode, status, body, err := c.request("GET", urlResource(url), nil)
 	if err != nil {
 		return nil, err
 	}
-	return parseCertificateDetailsResponse(statusCode, body)
+	return parseCertificateDetailsResponse(statusCode, status, body)
 }
 
-func parseCertificateDetailsResponse(statusCode int, body []byte) (searchResult *CertificateDetailsResponse, err error) {
-	switch statusCode {
+func parseCertificateDetailsResponse(httpStatusCode int, httpStatus string, body []byte) (searchResult *CertificateDetailsResponse, err error) {
+	switch httpStatusCode {
 	case http.StatusOK:
 		var searchResult = &CertificateDetailsResponse{}
 		err = json.Unmarshal(body, searchResult)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse search results: %s, body: %s", err, body)
+			return nil, fmt.Errorf("failed to parse certificate details results: %s, body: %s", err, body)
 		}
 		return searchResult, nil
 	default:
+
 		if body != nil {
 			return nil, NewResponseError(body)
-		} else {
-			err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: "certificate search"}
-			err.StatusCode = statusCode;
-			return nil, err
+		}
+
+		return nil, verror.VCertConnectorError{
+			Platform:   "TPP",
+			Operation:  "certificate search",
+			StatusCode: httpStatusCode,
+			Status:     httpStatus,
 		}
 	}
 }
 
-func ParseCertificateSearchResponse(httpStatusCode int, body []byte) (searchResult *certificate.CertSearchResponse, err error) {
+func ParseCertificateSearchResponse(httpStatusCode int, httpStatus string, body []byte) (searchResult *certificate.CertSearchResponse, err error) {
 	switch httpStatusCode {
 	case http.StatusOK:
 		var searchResult = &certificate.CertSearchResponse{}
 		err = json.Unmarshal(body, searchResult)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse search results: %s, body: %s", err, body)
+			return nil, fmt.Errorf("failed to parse certificate search results: %s, body: %s", err, body)
 		}
 		return searchResult, nil
 	default:
 		if body != nil {
 			return nil, NewResponseError(body)
-		} else {
-			err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: "certificate search"}
-			err.StatusCode = httpStatusCode;
-			return nil, err
 		}
+
+		return nil, verror.VCertConnectorError{Platform: "TPP", Operation: "certificate search", StatusCode: httpStatusCode}
 	}
 }
 

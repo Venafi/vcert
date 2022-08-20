@@ -324,9 +324,12 @@ func processAuthData(c *Connector, url urlResource, data interface{}) (resp inte
 			return resp, fmt.Errorf("can not determine data type")
 		}
 	} else {
-		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: "Authorize"}
-		err.Status = status
-		return resp, err
+		return resp, verror.VCertConnectorError{
+			Platform:   "TPP",
+			Operation:  "Authorize",
+			StatusCode: statusCode,
+			Status:     status,
+		}
 	}
 
 	return resp, nil
@@ -394,10 +397,12 @@ func (c *Connector) requestAllMetadataItems(dn string) ([]metadataItem, error) {
 		return nil, err
 	}
 	if statusCode != http.StatusOK {
-		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: "while fetching metadata items"}
-		err.Status = status;
-		err.StatusCode = statusCode
-		return nil, err
+		return nil, verror.VCertConnectorError{
+			Platform:   "TPP",
+			Operation:  "while fetching metadata items",
+			StatusCode: statusCode,
+			Status:     status,
+		}
 	}
 
 	var response metadataGetItemsResponse
@@ -412,10 +417,12 @@ func (c *Connector) requestMetadataItems(dn string) ([]metadataKeyValueSet, erro
 		return nil, err
 	}
 	if statusCode != http.StatusOK {
-		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: "while fetching certificate metadata items"}
-		err.Status = status;
-		err.StatusCode = statusCode
-		return nil, err
+		return nil, verror.VCertConnectorError{
+			Platform:   "TPP",
+			Operation:  "while fetching certificate metadata items",
+			StatusCode: statusCode,
+			Status:     status,
+		}
 	}
 	var response metadataGetResponse
 	err = json.Unmarshal(body, &response)
@@ -434,9 +441,12 @@ func (c *Connector) requestSystemVersion() (string, error) {
 	case 401:
 		return "", fmt.Errorf("http status code '%s' was returned by the server. Hint: OAuth scope 'configuration' is required when using custom fields", status)
 	default:
-		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: "while fetching TPP version"}
-		err.Status = status;
-		return "", err
+		return "", verror.VCertConnectorError{
+			Platform:   "TPP",
+			Operation:  "while fetching TPP version",
+			StatusCode: statusCode,
+			Status:     status,
+		}
 	}
 
 	var response struct{ Version string }
@@ -458,10 +468,12 @@ func (c *Connector) setCertificateMetadata(metadataRequest metadataSetRequest) (
 		return false, err
 	}
 	if statusCode != http.StatusOK {
-		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: "while setting metadata items"}
-		err.Status = status;
-		err.StatusCode = statusCode
-		return false, err
+		return false, verror.VCertConnectorError{
+			Platform:   "TPP",
+			Operation:  "while setting metadata items",
+			StatusCode: statusCode,
+			Status:     status,
+		}
 	}
 
 	var result = metadataSetResponse{}
@@ -1239,14 +1251,16 @@ func (c *Connector) putCertificateInfo(dn string, attributes []nameSliceValuePai
 	if err != nil {
 		return err
 	}
-	statusCode, _, _, err := c.request("PUT", urlResourceCertificate+urlResource(guid), struct{ AttributeData []nameSliceValuePair }{attributes})
+	statusCode, status, _, err := c.request("PUT", urlResourceCertificate+urlResource(guid), struct{ AttributeData []nameSliceValuePair }{attributes})
 	if err != nil {
 		return err
 	}
 	if statusCode != http.StatusOK {
-		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP"}
-		err.StatusCode = statusCode
-		return err
+		return verror.VCertConnectorError{
+			Platform:   "TPP",
+			StatusCode: statusCode,
+			Status:     status,
+		}
 	}
 	return nil
 }
@@ -1436,7 +1450,13 @@ func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration,
 			return nil, verror.ZoneNotFoundError
 		}
 	}
-	return nil, verror.VCertConnectorError{Status: status, Body: body}
+	return nil, verror.VCertConnectorError{
+		Platform:   "TPP",
+		Operation:  "read zone configuration",
+		StatusCode: statusCode,
+		Status:     status,
+		Body:       string(body),
+	}
 
 }
 
@@ -1460,7 +1480,7 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 			origin = f.Value + " (+)"
 		}
 	}
-	statusCode, _, body, err := c.request("POST", urlResourceCertificateImport, r)
+	statusCode, status, body, err := c.request("POST", urlResourceCertificateImport, r)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", verror.ServerTemporaryUnavailableError, err)
 	}
@@ -1476,15 +1496,23 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 			log.Println(err)
 		}
 		return response, nil
-	case http.StatusBadRequest:
-		var errorResponse = &struct{ Error string }{}
-		err := json.Unmarshal(body, errorResponse)
-		if err != nil {
-			return nil, fmt.Errorf("%w: failed to decode error message: %s", verror.ServerBadDataResponce, err)
-		}
-		return nil, fmt.Errorf("%w: can't import certificate %s", verror.ServerBadDataResponce, errorResponse.Error)
 	default:
-		return nil, fmt.Errorf("%w: unexpected response status %d: %s", verror.ServerTemporaryUnavailableError, statusCode, string(body))
+
+		if body != nil {
+			var errorResponse = &struct{ Error string }{}
+			err := json.Unmarshal(body, errorResponse)
+			if err == nil {
+				return nil, fmt.Errorf("%w: can't import certificate %s", verror.ServerBadDataResponce, errorResponse.Error)
+			}
+		}
+
+		return nil, verror.VCertConnectorError{
+			Platform:   "VaaS",
+			Operation:  "import certificate",
+			StatusCode: statusCode,
+			Status:     status,
+			Body:       string(body),
+		}
 	}
 }
 
@@ -1493,11 +1521,11 @@ func (c *Connector) SearchCertificates(req *certificate.SearchRequest) (*certifi
 	var err error
 
 	url := fmt.Sprintf("%s?%s", urlResourceCertificateSearch, strings.Join(*req, "&"))
-	statusCode, _, body, err := c.request("GET", urlResource(url), nil)
+	statusCode, status, body, err := c.request("GET", urlResource(url), nil)
 	if err != nil {
 		return nil, err
 	}
-	searchResult, err := ParseCertificateSearchResponse(statusCode, body)
+	searchResult, err := ParseCertificateSearchResponse(statusCode, status, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1685,11 +1713,11 @@ func (c *Connector) configDNToGuid(objectDN string) (guid string, err error) {
 }
 
 func (c *Connector) findObjectsOfClass(req *findObjectsOfClassRequest) (*findObjectsOfClassResponse, error) {
-	statusCode, statusString, body, err := c.request("POST", urlResourceFindObjectsOfClass, req)
+	statusCode, status, body, err := c.request("POST", urlResourceFindObjectsOfClass, req)
 	if err != nil {
 		return nil, err
 	}
-	response, err := parseFindObjectsOfClassResponse(statusCode, statusString, body)
+	response, err := parseFindObjectsOfClassResponse(statusCode, status, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1970,10 +1998,13 @@ func parseDNToGUIDRequestResponse(httpStatusCode int, httpStatus string, body []
 		}
 		return reqData, nil
 	default:
-		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: "DN to GUID request"}
-		err.Status = httpStatus;
-		err.Body = body;
-		return nil, err
+		return nil, verror.VCertConnectorError{
+			Platform:   "TPP",
+			Operation:  "DN to GUID request",
+			StatusCode: httpStatusCode,
+			Status:     httpStatus,
+			Body:       string(body),
+		}
 	}
 }
 
@@ -1991,10 +2022,13 @@ func parseCertificateMetaData(httpStatusCode int, httpStatus string, body []byte
 		}
 		return reqData, nil
 	default:
-		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: "DN to GUID request"}
-		err.Status = httpStatus;
-		err.Body = body;
-		return nil, err
+		return nil, verror.VCertConnectorError{
+			Platform:   "TPP",
+			Operation:  "DN to GUID request",
+			StatusCode: httpStatusCode,
+			Status:     httpStatus,
+			Body:       string(body),
+		}
 	}
 }
 

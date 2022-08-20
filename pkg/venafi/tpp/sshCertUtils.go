@@ -208,11 +208,23 @@ func parseSshCertOperationResponse(httpStatusCode int, httpStatus string, body [
 		}
 
 		if !response.Response.Success {
-			return response, fmt.Errorf("error getting certificate object, error status: %v, error description: %s", response.Response.ErrorCode, response.Response.ErrorMessage)
+			return response, verror.VCertConnectorError{
+				Platform:   "TPP",
+				Operation:  "ssh cert",
+				StatusCode: httpStatusCode,
+				Status:     httpStatus,
+				Body:       fmt.Sprintf("error code: %d, error message: %s", response.Response.ErrorCode, response.Response.ErrorMessage),
+			}
 		}
 
 		if response.ProcessingDetails.Status == "Rejected" {
-			return response, fmt.Errorf("error getting certificate object, error status: %s, error description: %s", response.ProcessingDetails.Status, response.ProcessingDetails.StatusDescription)
+			return response, verror.VCertConnectorError{
+				Platform:   "TPP",
+				Operation:  "ssh cert",
+				StatusCode: httpStatusCode,
+				Status:     httpStatus,
+				Body:       fmt.Sprintf("error status: %s, error description: %s", response.ProcessingDetails.Status, response.ProcessingDetails.StatusDescription),
+			}
 		}
 		return response, nil
 	case http.StatusBadRequest:
@@ -221,16 +233,25 @@ func parseSshCertOperationResponse(httpStatusCode int, httpStatus string, body [
 			return response, err
 		}
 		if !response.Response.Success {
-			return response, fmt.Errorf("error getting certificate object, error status: %d, error description: %s", response.Response.ErrorCode, response.Response.ErrorMessage)
+			return response, verror.VCertConnectorError{
+				Platform:   "TPP",
+				Operation:  "ssh cert",
+				StatusCode: httpStatusCode,
+				Status:     httpStatus,
+				Body:       fmt.Sprintf("error code: %d, error description: %s", response.Response.ErrorCode, response.Response.ErrorMessage),
+			}
 		}
 		return response, nil
 	case http.StatusUnauthorized:
 		err := NewAuthenticationError(body)
 		return retrieveResponse, err
 	default:
-		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP"}
-		err.Status = httpStatus;
-		return retrieveResponse, err
+		return retrieveResponse, verror.VCertConnectorError{
+			Platform:   "TPP",
+			Operation:  "ssh cert",
+			StatusCode: httpStatusCode,
+			Status:     httpStatus,
+		}
 	}
 }
 
@@ -316,17 +337,16 @@ func GetAvailableSshTemplates(c *Connector) ([]certificate.SshAvaliableTemplate,
 
 	switch statusCode {
 	case http.StatusOK:
-		response, err = parseSshTemplateData(body)
-		if err != nil {
-			return nil, err
-		}
-	case http.StatusNotFound:
-		// Return NotFound as this API method is unavailable in SSH Protect versions prior 21.4.0
-		return nil, fmt.Errorf(status)
+		return parseSshTemplateData(body)
 	default:
-		return nil, fmt.Errorf("error while retriving avaliable SSH templates, error body:%s, status:%s and status code:%v", string(body), status, statusCode)
+		return response, verror.VCertConnectorError{
+			Platform:   "TPP",
+			Operation:  "retrieving avaliable SSH templates",
+			StatusCode: statusCode,
+			Status:     status,
+			Body:       string(body),
+		}
 	}
-	return response, nil
 }
 
 func RetrieveSshCaPrincipals(c *Connector, ca *certificate.SshCaTemplateRequest) ([]string, error) {
@@ -366,18 +386,38 @@ func parseSshCaDetailsRequestResult(httpStatusCode int, httpStatus string, body 
 			return nil, err
 		}
 		if !data.Response.Success {
-			return data, fmt.Errorf("error requesting CA template details, error code: %d, error description: %s", data.Response.ErrorCode, data.Response.ErrorMessage)
+			return nil, verror.VCertConnectorError{
+				Platform:   "TPP",
+				Operation:  "ssh CA details request",
+				StatusCode: httpStatusCode,
+				Status:     httpStatus,
+				Body:       fmt.Sprintf("error code: %d, error description: %s", data.Response.ErrorCode, data.Response.ErrorMessage),
+			}
 		}
 
 		return data, nil
 
 	default:
-		data, err := parseSshCaDetailsRequestData(body)
-		if err != nil {
-			return nil, err
+		if body != nil {
+			data, err := parseSshCaDetailsRequestData(body)
+			if err != nil {
+				return nil, err
+			}
+			return nil, verror.VCertConnectorError{
+				Platform:   "TPP",
+				Operation:  "ssh CA details request",
+				StatusCode: httpStatusCode,
+				Status:     httpStatus,
+				Body:       data.Response.ErrorMessage,
+			}
 		}
-		return data, fmt.Errorf("unexpected status code on TPP CA details Request. Status code: %s, %s", httpStatus, data.Response.ErrorMessage)
 
+		return nil, verror.VCertConnectorError{
+			Platform:   "TPP",
+			Operation:  "ssh CA details request",
+			StatusCode: httpStatusCode,
+			Status:     httpStatus,
+		}
 	}
 }
 

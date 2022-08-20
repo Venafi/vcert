@@ -23,7 +23,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/policy"
 	"io"
 	"io/ioutil"
 	"log"
@@ -35,6 +34,7 @@ import (
 
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
+	"github.com/Venafi/vcert/v4/pkg/policy"
 	"github.com/Venafi/vcert/v4/pkg/verror"
 )
 
@@ -129,7 +129,7 @@ type certificateRevokeRequest struct {
 }
 
 /* {Requested:true  Success:true Error:} -- means requested
-   {Requested:false Success:true Error:} -- means already revoked  */
+{Requested:false Success:true Error:} -- means already revoked  */
 type certificateRevokeResponse struct {
 	Requested bool   `json:",omitempty"`
 	Success   bool   `json:",omitempty"`
@@ -581,9 +581,12 @@ func parseConfigResult(httpStatusCode int, httpStatus string, body []byte) (tppD
 		}
 		return tppData, nil
 	default:
-		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: "Config Operation"}
-		err.Status = httpStatus;
-		return tppData, err
+		return tppData, verror.VCertConnectorError{
+			Platform:   "TPP",
+			Operation:  "Config Operation",
+			StatusCode: httpStatusCode,
+			Status:     httpStatus,
+		}
 	}
 }
 
@@ -601,10 +604,13 @@ func parseRequestResult(httpStatusCode int, httpStatus string, body []byte) (str
 		}
 		return reqData.CertificateDN, nil
 	default:
-		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: "Certificate Request"}
-		err.Status = httpStatus;
-		err.Body = body
-		return "", err
+		return "", verror.VCertConnectorError{
+			Platform:   "TPP",
+			Operation:  "Certificate Request",
+			StatusCode: httpStatusCode,
+			Status:     httpStatus,
+			Body:       string(body),
+		}
 	}
 }
 
@@ -623,9 +629,12 @@ func parseRetrieveResult(httpStatusCode int, httpStatus string, body []byte) (ce
 		}
 		return retrieveResponse, nil
 	default:
-		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: "Certificate Retrieval"}
-		err.Status = httpStatus;
-		return retrieveResponse, err
+		return retrieveResponse, verror.VCertConnectorError{
+			Platform:   "TPP",
+			Operation:  "Certificate Retrieval",
+			StatusCode: httpStatusCode,
+			Status:     httpStatus,
+		}
 	}
 }
 
@@ -644,9 +653,12 @@ func parseRevokeResult(httpStatusCode int, httpStatus string, body []byte) (cert
 		}
 		return revokeResponse, nil
 	default:
-		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: "Certificate Revocation"}
-		err.Status = httpStatus;
-		return revokeResponse, err
+		return revokeResponse, verror.VCertConnectorError{
+			Platform:   "TPP",
+			Operation:  "Certificate Revocation",
+			StatusCode: httpStatusCode,
+			Status:     httpStatus,
+		}
 	}
 }
 
@@ -690,9 +702,12 @@ func parseBrowseIdentitiesResult(httpStatusCode int, httpStatus string, body []b
 		}
 		return browseIdentitiesResponse, nil
 	default:
-		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: "Browse Identities"}
-		err.Status = httpStatus
-		return browseIdentitiesResponse, err
+		return browseIdentitiesResponse, verror.VCertConnectorError{
+			Platform:   "TPP",
+			Operation:  "Browse Identities",
+			StatusCode: httpStatusCode,
+			Status:     httpStatus,
+		}
 	}
 }
 
@@ -711,9 +726,12 @@ func parseValidateIdentityResponse(httpStatusCode int, httpStatus string, body [
 		}
 		return validateIdentityResponse, nil
 	default:
-		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: "Validate Identity"}
-		err.Status = httpStatus
-		return validateIdentityResponse, err
+		return validateIdentityResponse, verror.VCertConnectorError{
+			Platform:   "TPP",
+			Operation:  "Validate Identity",
+			StatusCode: httpStatusCode,
+			Status:     httpStatus,
+		}
 	}
 }
 
@@ -732,9 +750,12 @@ func parseFindObjectsOfClassResponse(httpStatusCode int, httpStatus string, body
 		}
 		return response, nil
 	default:
-		err := verror.VCertConnectorUnexpectedStatusError{Platform: "TPP", Operation: "FindObjectsOfClass"}
-		err.Status = httpStatus;
-		return response, err
+		return response, verror.VCertConnectorError{
+			Platform:   "TPP",
+			Operation:  "FindObjectsOfClass",
+			StatusCode: httpStatusCode,
+			Status:     httpStatus,
+		}
 	}
 }
 
