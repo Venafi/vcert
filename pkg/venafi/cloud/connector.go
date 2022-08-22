@@ -101,6 +101,13 @@ func (c *Connector) SearchCertificates(req *certificate.SearchRequest) (*certifi
 }
 
 func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.Sans, valid_for int) (certificateInfo *certificate.CertificateInfo, err error) {
+	// get application id
+	app, statusCode, err := c.getAppDetailsByName(zone)
+	if statusCode != 200 || err != nil {
+		// TODO: format better error
+		return nil, fmt.Errorf("%q: application not found, statusCode: %v, err: %w", zone, statusCode, err)
+	}
+
 	// format arguments for request
 	req := &SearchRequest{
 		Expression: &Expression{
@@ -143,7 +150,7 @@ func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.
 	for _, cert := range searchResult.Certificates {
 		// log.Printf("looping %v\n", util.GetJsonAsString(cert))
 		// TODO: filter based on applicationId (VaaS equivalent to TPP Zone)
-		// if cert.ParentDn == getPolicyDN(zone) {
+		if util.ArrayContainsString(cert.ApplicationIds, app.ApplicationId) {
 			certificates = append(certificates, &certificate.CertificateInfo{})
 			certificates[n].ID = cert.Id
 			certificates[n].CN = strings.Join(cert.SubjectCN, ",")
@@ -159,7 +166,7 @@ func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.
 			certificates[n].ValidFrom = cert.ValidityStart
 			certificates[n].ValidTo = cert.ValidityEnd
 			n = n + 1
-		// }
+		}
 	}
 
 	// fail if no certificates found with matching zone

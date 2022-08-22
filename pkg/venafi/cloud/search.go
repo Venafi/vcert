@@ -80,6 +80,7 @@ type Certificate struct {
 	Fingerprint                   string              `json:"fingerprint"`
 	ValidityStart                 time.Time           `json:"validityStart"`
 	ValidityEnd                   time.Time           `json:"validityEnd"`
+	ApplicationIds                []string            `json:"applicationIds"`
 	/* ... and many more fields ... */
 }
 

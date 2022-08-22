@@ -104,3 +104,13 @@ func GetPrivateKeyType(pk, pass string) string {
 
 	return keyType
 }
+
+// TODO: test this function
+func ArrayContainsString(s []string, e string) bool {
+    for _, a := range s {
+        if a == e {
+            return true
+        }
+    }
+    return false
+}
