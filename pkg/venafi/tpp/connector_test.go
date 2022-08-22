@@ -2361,7 +2361,7 @@ func TestGetCertificateMetaData(t *testing.T) {
 }
 
 // TODO: Expand unit tests to cover more cases
-func TestSearchCertificate(t *testing.T) {
+func TestSearchValidCertificate(t *testing.T) {
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
