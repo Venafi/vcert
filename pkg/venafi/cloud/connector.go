@@ -18,6 +18,8 @@ package cloud
 
 import (
 	"archive/zip"
+	"errors"
+	"reflect"
 	"bytes"
 	"crypto/rand"
 	"crypto/x509"
@@ -99,7 +101,93 @@ func (c *Connector) SearchCertificates(req *certificate.SearchRequest) (*certifi
 }
 
 func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.Sans, valid_for int) (certificateInfo *certificate.CertificateInfo, err error) {
-	panic("operation is not supported yet")
+	// format arguments for request
+	req := &SearchRequest{
+		Expression: &Expression{
+			Operator: AND,
+			Operands: []Operand{
+				{
+					Field: "subjectCN",
+					Operator: EQ,
+					Value: cn,
+				},
+				{
+					Field: "subjectAlternativeNameDns",
+					Operator: IN,
+					Values: sans.DNS,
+				},
+				{
+					Field: "validityPeriodDays",
+					Operator: GTE,
+					Value: valid_for,
+				},
+			},
+		},
+	}
+
+	// perform request
+	searchResult, err := c.searchCertificates(req)
+	if err != nil {
+		return nil, err
+	}
+
+	// fail if no certificate is returned from api
+	if searchResult.Count == 0 {
+		return nil, errors.New("No certificate with matching criteria found in api response")
+	}
+
+	// map (convert) response to an array of CertificateInfo, TODO: only add
+	// those certificates whose Zone matches ours
+	certificates := make([]*certificate.CertificateInfo, 0)
+	n := 0
+	for _, cert := range searchResult.Certificates {
+		// log.Printf("looping %v\n", util.GetJsonAsString(cert))
+		// TODO: filter based on applicationId (VaaS equivalent to TPP Zone)
+		// if cert.ParentDn == getPolicyDN(zone) {
+			certificates = append(certificates, &certificate.CertificateInfo{})
+			certificates[n].ID = cert.Id
+			certificates[n].CN = strings.Join(cert.SubjectCN, ",")
+			certificates[n].SANS = certificate.Sans{
+				DNS: cert.SubjectAlternativeNamesByType["dNSName"],
+				Email: cert.SubjectAlternativeNamesByType["x400Address"],
+				IP: cert.SubjectAlternativeNamesByType["iPAddress"],
+				URI: cert.SubjectAlternativeNamesByType["uniformResourceIdentifier"],
+				UPN: cert.SubjectAlternativeNamesByType["x400Address"],
+			}
+			certificates[n].Serial = cert.SerialNumber
+			certificates[n].Thumbprint = cert.Fingerprint
+			certificates[n].ValidFrom = cert.ValidityStart
+			certificates[n].ValidTo = cert.ValidityEnd
+			n = n + 1
+		// }
+	}
+
+	// fail if no certificates found with matching zone
+	if n == 0 {
+		return nil, errors.New("No certificate with matching zone found")
+	}
+
+	// at this point all certificates belong to our zone, the next step is
+	// finding the newest valid certificate
+	var newestCertificate *certificate.CertificateInfo
+	for _, certificate := range certificates {
+		// log.Printf("looping %v\n", util.GetJsonAsString(certificate))
+		// exact match SANs
+		if reflect.DeepEqual(sans.DNS, certificate.SANS.DNS) {
+			// update the certificate to the newest match
+			if newestCertificate == nil || certificate.ValidTo.Unix() > newestCertificate.ValidTo.Unix() {
+				newestCertificate = certificate
+			}
+		}
+	}
+
+	// a valid certificate has been found, return it
+	if newestCertificate != nil {
+		return newestCertificate, nil
+	}
+
+	// fail, since no valid certificate was found at this point
+	return nil, errors.New("No certificate with matching criteria found")
 }
 
 func (c *Connector) IsCSRServiceGenerated(req *certificate.Request) (bool, error) {
