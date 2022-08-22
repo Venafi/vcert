@@ -28,9 +28,9 @@ func TestSearchRequest(t *testing.T) {
 		Expression: &Expression{
 			Operands: []Operand{
 				{
-					"fingerprint",
-					MATCH,
-					"A7BDECDA0B67D5CEF28D6C8C7D7CFA882E3DC9D6",
+					Field: "fingerprint",
+					Operator: MATCH,
+					Value: "A7BDECDA0B67D5CEF28D6C8C7D7CFA882E3DC9D6",
 				},
 			},
 		},
@@ -67,9 +67,9 @@ func TestSearchRequest(t *testing.T) {
 		Expression: &Expression{
 			Operands: []Operand{
 				{
-					"fingerprint",
-					MATCH,
-					"A7BDECDA0B67D5CEF28D6C8C7D7CFA882E3DC9D6",
+					Field: "fingerprint",
+					Operator: MATCH,
+					Value: "A7BDECDA0B67D5CEF28D6C8C7D7CFA882E3DC9D6",
 				},
 			},
 		},

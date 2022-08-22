@@ -1293,9 +1293,9 @@ func (c *Connector) searchCertificatesByFingerprint(fp string) (*CertificateSear
 		Expression: &Expression{
 			Operands: []Operand{
 				{
-					"fingerprint",
-					MATCH,
-					fp,
+					Field: "fingerprint",
+					Operator: MATCH,
+					Value: fp,
 				},
 			},
 		},
@@ -1474,7 +1474,11 @@ func (c *Connector) getCertsBatch(page, pageSize int, withExpired bool) ([]certi
 	req := &SearchRequest{
 		Expression: &Expression{
 			Operands: []Operand{
-				{"appstackIds", MATCH, appDetails.ApplicationId},
+				{
+					Field: "appstackIds",
+					Operator: MATCH,
+					Value: appDetails.ApplicationId,
+				},
 			},
 			Operator: AND,
 		},
@@ -1482,9 +1486,9 @@ func (c *Connector) getCertsBatch(page, pageSize int, withExpired bool) ([]certi
 	}
 	if !withExpired {
 		req.Expression.Operands = append(req.Expression.Operands, Operand{
-			"validityEnd",
-			GTE,
-			time.Now().Format(time.RFC3339),
+			Field: "validityEnd",
+			Operator: GTE,
+			Value: time.Now().Format(time.RFC3339),
 		})
 	}
 	r, err := c.searchCertificates(req)

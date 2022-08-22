@@ -20,9 +20,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Venafi/vcert/v4/pkg/certificate"
-	"log"
 	"net/http"
 	"time"
+	"strings"
 )
 
 type SearchRequest struct {
@@ -41,7 +41,8 @@ type Expression struct {
 type Operand struct {
 	Field    Field       `json:"field"`
 	Operator Operator    `json:"operator"`
-	Value    interface{} `json:"value"`
+	Value    interface{} `json:"value,omitempty"`
+	Values   interface{} `json:"values,omitempty"`
 }
 
 type Field string
@@ -77,45 +78,28 @@ type Certificate struct {
 	SubjectAlternativeNamesByType map[string][]string `json:"subjectAlternativeNamesByType"`
 	SerialNumber                  string              `json:"serialNumber"`
 	Fingerprint                   string              `json:"fingerprint"`
-	ValidityStart                 string              `json:"validityStart"`
-	ValidityEnd                   string              `json:"validityEnd"`
+	ValidityStart                 time.Time           `json:"validityStart"`
+	ValidityEnd                   time.Time           `json:"validityEnd"`
 	/* ... and many more fields ... */
 }
 
 func (c Certificate) ToCertificateInfo() certificate.CertificateInfo {
-	var cn string
-	if len(c.SubjectCN) > 0 {
-		cn = c.SubjectCN[0]
-	}
-
-	start, err := time.Parse(time.RFC3339, c.ValidityStart)
-	if err != nil { //we just print the error, and let the user know.
-		log.Println(err)
-	}
-
-	end, err := time.Parse(time.RFC3339, c.ValidityEnd)
-	if err != nil { //we just print the error, and let the user know.
-		log.Println(err)
-	}
-
-	ci := certificate.CertificateInfo{
+	return certificate.CertificateInfo{
 		ID: c.Id,
-		CN: cn,
-		SANS: struct {
-			DNS, Email, IP, URI, UPN []string
-		}{
-			c.SubjectAlternativeNamesByType["dNSName"],
-			c.SubjectAlternativeNamesByType["rfc822Name"],
-			c.SubjectAlternativeNamesByType["iPAddress"],
-			c.SubjectAlternativeNamesByType["uniformResourceIdentifier"],
-			[]string{}, // todo: find correct field
+		CN: strings.Join(c.SubjectCN, ","),
+		SANS: certificate.Sans{
+			// TODO: find correct field names
+			DNS: c.SubjectAlternativeNamesByType["dNSName"],
+			// Email: cert.SubjectAlternativeNamesByType["x400Address"],
+			IP: c.SubjectAlternativeNamesByType["iPAddress"],
+			URI: c.SubjectAlternativeNamesByType["uniformResourceIdentifier"],
+			// UPN: cert.SubjectAlternativeNamesByType["x400Address"],
 		},
 		Serial:     c.SerialNumber,
 		Thumbprint: c.Fingerprint,
-		ValidFrom:  start,
-		ValidTo:    end,
+		ValidFrom:  c.ValidityStart,
+		ValidTo:    c.ValidityEnd,
 	}
-	return ci
 }
 
 func ParseCertificateSearchResponse(httpStatusCode int, body []byte) (searchResult *CertificateSearchResponse, err error) {
