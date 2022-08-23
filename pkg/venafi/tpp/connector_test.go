@@ -2380,7 +2380,12 @@ func TestSearchValidCertificate(t *testing.T) {
 	zone := "Open Source\\vcert\\Search Certificate"
 	// should not find any certificate
 	// zone := "Open Source\\vcert\\Search Certificate\\Subpolicy"
-	certificate, err := tpp.SearchCertificate(zone, cn, sans, 0)
+
+	// use time.Duration instead of integer
+	day := 24 * time.Hour
+	valid_for := 3 * day
+
+	certificate, err := tpp.SearchCertificate(zone, cn, sans, valid_for)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}

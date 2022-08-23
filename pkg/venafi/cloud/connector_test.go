@@ -1880,7 +1880,11 @@ func TestSearchValidCertificate(t *testing.T) {
 	// but not with this (or any non valid zone)
 	// zone := "Invalid zone"
 
-	certificate, err := conn.SearchCertificate(zone, cn, sans, 3)
+	// use time.Duration instead of integer
+	day := 24 * time.Hour
+	valid_for := 3 * day
+
+	certificate, err := conn.SearchCertificate(zone, cn, sans, valid_for)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}

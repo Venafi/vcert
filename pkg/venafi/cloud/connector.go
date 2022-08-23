@@ -18,6 +18,7 @@ package cloud
 
 import (
 	"archive/zip"
+	"math"
 	"bytes"
 	"crypto/rand"
 	"crypto/x509"
@@ -99,12 +100,15 @@ func (c *Connector) SearchCertificates(req *certificate.SearchRequest) (*certifi
 	panic("operation is not supported yet")
 }
 
-func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.Sans, valid_for int) (certificateInfo *certificate.CertificateInfo, err error) {
+func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.Sans, valid_for time.Duration) (certificateInfo *certificate.CertificateInfo, err error) {
 	// get application id
 	app, _, err := c.getAppDetailsByName(zone)
 	if err != nil {
 		return nil, err
 	}
+
+	// convert a time.Duration to days
+	valid_for_days := math.Floor(valid_for.Hours() / 24)
 
 	// format arguments for request
 	req := &SearchRequest{
@@ -124,7 +128,7 @@ func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.
 				{
 					Field:    "validityPeriodDays",
 					Operator: GTE,
-					Value:    valid_for,
+					Value:    valid_for_days,
 				},
 			},
 		},

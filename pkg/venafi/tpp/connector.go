@@ -1489,14 +1489,14 @@ func (c *Connector) SearchCertificates(req *certificate.SearchRequest) (*certifi
 	return searchResult, nil
 }
 
-func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.Sans, valid_for int) (certificateInfo *certificate.CertificateInfo, err error) {
+func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.Sans, valid_for time.Duration) (certificateInfo *certificate.CertificateInfo, err error) {
 	// format arguments for request
 	//
 	// this might be better replaced by a FormatSearchCertificateArguments
 	// function with respective unit tests for correctness
 	//
 	// get future (or past) date for certificate validation
-	date := time.Now().Add(time.Duration(valid_for) * 24 * time.Hour)
+	date := time.Now().Add(valid_for)
 	// create request arguments
 	req := make([]string, 0)
 	req = append(req, fmt.Sprintf("CN=%s", cn))

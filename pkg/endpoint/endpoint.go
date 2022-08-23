@@ -26,6 +26,7 @@ import (
 	"net"
 	"net/http"
 	"regexp"
+	"time"
 
 	"github.com/Venafi/vcert/v4/pkg/policy"
 
@@ -106,7 +107,7 @@ type Connector interface {
 	RetrieveSshConfig(ca *certificate.SshCaTemplateRequest) (*certificate.SshConfig, error)
 	SearchCertificates(req *certificate.SearchRequest) (*certificate.CertSearchResponse, error)
 	// Returns 1 valid (or nil) certificate
-	SearchCertificate(zone string, cn string, sans *certificate.Sans, valid_for int) (*certificate.CertificateInfo, error)
+	SearchCertificate(zone string, cn string, sans *certificate.Sans, valid_for time.Duration) (*certificate.CertificateInfo, error)
 	RetrieveAvailableSSHTemplates() ([]certificate.SshAvaliableTemplate, error)
 	RetrieveCertificateMetaData(dn string) (*certificate.CertificateMetaData, error)
 }
