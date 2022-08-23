@@ -18,7 +18,6 @@ package cloud
 
 import (
 	"archive/zip"
-	"reflect"
 	"bytes"
 	"crypto/rand"
 	"crypto/x509"
@@ -30,6 +29,7 @@ import (
 	"log"
 	"net/http"
 	netUrl "net/url"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -112,19 +112,19 @@ func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.
 			Operator: AND,
 			Operands: []Operand{
 				{
-					Field: "subjectCN",
+					Field:    "subjectCN",
 					Operator: EQ,
-					Value: cn,
+					Value:    cn,
 				},
 				{
-					Field: "subjectAlternativeNameDns",
+					Field:    "subjectAlternativeNameDns",
 					Operator: IN,
-					Values: sans.DNS,
+					Values:   sans.DNS,
 				},
 				{
-					Field: "validityPeriodDays",
+					Field:    "validityPeriodDays",
 					Operator: GTE,
-					Value: valid_for,
+					Value:    valid_for,
 				},
 			},
 		},
@@ -153,11 +153,11 @@ func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.
 			certificates[n].ID = cert.Id
 			certificates[n].CN = strings.Join(cert.SubjectCN, ",")
 			certificates[n].SANS = certificate.Sans{
-				DNS: cert.SubjectAlternativeNamesByType["dNSName"],
+				DNS:   cert.SubjectAlternativeNamesByType["dNSName"],
 				Email: cert.SubjectAlternativeNamesByType["x400Address"],
-				IP: cert.SubjectAlternativeNamesByType["iPAddress"],
-				URI: cert.SubjectAlternativeNamesByType["uniformResourceIdentifier"],
-				UPN: cert.SubjectAlternativeNamesByType["x400Address"],
+				IP:    cert.SubjectAlternativeNamesByType["iPAddress"],
+				URI:   cert.SubjectAlternativeNamesByType["uniformResourceIdentifier"],
+				UPN:   cert.SubjectAlternativeNamesByType["x400Address"],
 			}
 			certificates[n].Serial = cert.SerialNumber
 			certificates[n].Thumbprint = cert.Fingerprint
@@ -1386,9 +1386,9 @@ func (c *Connector) searchCertificatesByFingerprint(fp string) (*CertificateSear
 		Expression: &Expression{
 			Operands: []Operand{
 				{
-					Field: "fingerprint",
+					Field:    "fingerprint",
 					Operator: MATCH,
-					Value: fp,
+					Value:    fp,
 				},
 			},
 		},
@@ -1568,9 +1568,9 @@ func (c *Connector) getCertsBatch(page, pageSize int, withExpired bool) ([]certi
 		Expression: &Expression{
 			Operands: []Operand{
 				{
-					Field: "appstackIds",
+					Field:    "appstackIds",
 					Operator: MATCH,
-					Value: appDetails.ApplicationId,
+					Value:    appDetails.ApplicationId,
 				},
 			},
 			Operator: AND,
@@ -1579,9 +1579,9 @@ func (c *Connector) getCertsBatch(page, pageSize int, withExpired bool) ([]certi
 	}
 	if !withExpired {
 		req.Expression.Operands = append(req.Expression.Operands, Operand{
-			Field: "validityEnd",
+			Field:    "validityEnd",
 			Operator: GTE,
-			Value: time.Now().Format(time.RFC3339),
+			Value:    time.Now().Format(time.RFC3339),
 		})
 	}
 	r, err := c.searchCertificates(req)

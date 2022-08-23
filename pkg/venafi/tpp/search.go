@@ -126,17 +126,17 @@ func ParseCertificateSearchResponse(httpStatusCode int, body []byte) (searchResu
 
 type CertificateSearchResponse struct {
 	Certificates []CertificateSearchInfo `json:"Certificates"`
-	Count        int             `json:"TotalCount"`
+	Count        int                     `json:"TotalCount"`
 }
 
 type CertificateSearchInfo struct {
-	CreatedOn string
-	DN string
-	Guid string
-	Name string
-	ParentDn string
+	CreatedOn   string
+	DN          string
+	Guid        string
+	Name        string
+	ParentDn    string
 	SchemaClass string
-	X509 certificate.CertificateInfo
+	X509        certificate.CertificateInfo
 }
 
 func ParseSearchCertificateResponse(httpStatusCode int, body []byte) (certificates *CertificateSearchResponse, err error) {

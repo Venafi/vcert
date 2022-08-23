@@ -24,11 +24,11 @@ import (
 	"log"
 	"net/http"
 	neturl "net/url"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
-	"reflect"
 
 	"github.com/Venafi/vcert/v4/pkg/policy"
 	"github.com/Venafi/vcert/v4/pkg/util"

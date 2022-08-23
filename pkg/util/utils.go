@@ -107,10 +107,10 @@ func GetPrivateKeyType(pk, pass string) string {
 
 // TODO: test this function
 func ArrayContainsString(s []string, e string) bool {
-    for _, a := range s {
-        if a == e {
-            return true
-        }
-    }
-    return false
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
 }

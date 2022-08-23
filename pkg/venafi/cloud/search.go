@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"net/http"
-	"time"
 	"strings"
+	"time"
 )
 
 type SearchRequest struct {
@@ -92,7 +92,7 @@ func (c Certificate) ToCertificateInfo() certificate.CertificateInfo {
 			// TODO: find correct field names
 			DNS: c.SubjectAlternativeNamesByType["dNSName"],
 			// Email: cert.SubjectAlternativeNamesByType["x400Address"],
-			IP: c.SubjectAlternativeNamesByType["iPAddress"],
+			IP:  c.SubjectAlternativeNamesByType["iPAddress"],
 			URI: c.SubjectAlternativeNamesByType["uniformResourceIdentifier"],
 			// UPN: cert.SubjectAlternativeNamesByType["x400Address"],
 		},
