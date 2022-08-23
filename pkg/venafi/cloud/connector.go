@@ -18,7 +18,6 @@ package cloud
 
 import (
 	"archive/zip"
-	"errors"
 	"reflect"
 	"bytes"
 	"crypto/rand"
@@ -102,10 +101,9 @@ func (c *Connector) SearchCertificates(req *certificate.SearchRequest) (*certifi
 
 func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.Sans, valid_for int) (certificateInfo *certificate.CertificateInfo, err error) {
 	// get application id
-	app, statusCode, err := c.getAppDetailsByName(zone)
-	if statusCode != 200 || err != nil {
-		// TODO: format better error
-		return nil, fmt.Errorf("%q: application not found, statusCode: %v, err: %w", zone, statusCode, err)
+	app, _, err := c.getAppDetailsByName(zone)
+	if err != nil {
+		return nil, err
 	}
 
 	// format arguments for request
@@ -140,7 +138,7 @@ func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.
 
 	// fail if no certificate is returned from api
 	if searchResult.Count == 0 {
-		return nil, errors.New("No certificate with matching criteria found in api response")
+		return nil, verror.NoCertificateFoundError
 	}
 
 	// map (convert) response to an array of CertificateInfo, TODO: only add
@@ -171,7 +169,7 @@ func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.
 
 	// fail if no certificates found with matching zone
 	if n == 0 {
-		return nil, errors.New("No certificate with matching zone found")
+		return nil, verror.NoCertificateWithMatchingZoneFoundError
 	}
 
 	// at this point all certificates belong to our zone, the next step is
@@ -194,7 +192,7 @@ func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.
 	}
 
 	// fail, since no valid certificate was found at this point
-	return nil, errors.New("No certificate with matching criteria found")
+	return nil, verror.NoCertificateFoundError
 }
 
 func (c *Connector) IsCSRServiceGenerated(req *certificate.Request) (bool, error) {

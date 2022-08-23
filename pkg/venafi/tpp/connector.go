@@ -28,7 +28,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"errors"
 	"reflect"
 
 	"github.com/Venafi/vcert/v4/pkg/policy"
@@ -1517,7 +1516,7 @@ func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.
 
 	// fail if no certificate is returned from api
 	if searchResult.Count == 0 {
-		return nil, errors.New("No certificate with matching criteria found in api response")
+		return nil, verror.NoCertificateFoundError
 	}
 
 	// map (convert) response to an array of CertificateInfo, only add those
@@ -1535,7 +1534,7 @@ func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.
 
 	// fail if no certificates found with matching zone
 	if n == 0 {
-		return nil, errors.New("No certificate with matching zone found")
+		return nil, verror.NoCertificateWithMatchingZoneFoundError
 	}
 
 	// at this point all certificates belong to our zone, the next step is
@@ -1557,7 +1556,7 @@ func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.
 	}
 
 	// fail, since no valid certificate was found at this point
-	return nil, errors.New("No certificate with matching criteria found")
+	return nil, verror.NoCertificateFoundError
 }
 
 func (c *Connector) SetHTTPClient(client *http.Client) {
