@@ -32,6 +32,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
@@ -44,7 +45,6 @@ import (
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
 	"github.com/Venafi/vcert/v4/pkg/verror"
 	"github.com/Venafi/vcert/v4/test"
-	"github.com/blang/semver"
 )
 
 var ctx *test.Context
@@ -182,16 +182,17 @@ func TestRetrieveSystemVersion(t *testing.T) {
 
 	serviceVersion, err := tpp.RetrieveSystemVersion()
 	if err != nil {
-		t.Fatalf("Failed to get Venafi service version. _bad_request_1_ Error: %v", err)
+		t.Fatalf("Failed to get Venafi system version. Error: %v", err)
 	}
 
 	if serviceVersion == "" {
-		t.Fatalf("Failed to get Venafi service version. _bad_request_2_ Error: %v", err)
+		t.Fatalf("Failed to get Venafi system version. Error: %v", err)
 	}
 
-	_, err = semver.Parse(strings.Join(strings.Split(serviceVersion, ".")[:3], "."))
+	_, err = regexp.MatchString(`^([0-9]{2})(\.[1-4]{1})(\.[0-9]{1,4})+`, serviceVersion)
+
 	if err != nil {
-		t.Fatalf("Error while parsing current version: %s", err)
+		t.Fatalf("Failed due to Venafi system version's format is invalid. Error: %s", err)
 	}
 }
 
