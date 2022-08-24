@@ -1876,9 +1876,9 @@ func TestSearchValidCertificate(t *testing.T) {
 
 	// TODO: Filter zone
 	// with this zone you should be able to find those certificates
-	zone := "Open Source Integrations"
+	zone := "Open Source Integrations\\Unrestricted"
 	// but not with this (or any non valid zone)
-	// zone := "Invalid zone"
+	// zone := "Invalid zone\\The CIT"
 
 	// use time.Duration instead of integer
 	day := 24 * time.Hour

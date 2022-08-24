@@ -101,8 +101,9 @@ func (c *Connector) SearchCertificates(req *certificate.SearchRequest) (*certifi
 }
 
 func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.Sans, valid_for time.Duration) (certificateInfo *certificate.CertificateInfo, err error) {
+	appName := GetAppNameFromZone(zone)
 	// get application id
-	app, _, err := c.getAppDetailsByName(zone)
+	app, _, err := c.getAppDetailsByName(appName)
 	if err != nil {
 		return nil, err
 	}

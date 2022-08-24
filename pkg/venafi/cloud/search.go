@@ -126,3 +126,8 @@ func ParseCertificateSearchResponse(httpStatusCode int, body []byte) (searchResu
 		return nil, fmt.Errorf("unexpected status code on Venafi Cloud certificate search. Status: %d", httpStatusCode)
 	}
 }
+
+func GetAppNameFromZone(zone string) string {
+	lastSlash := strings.LastIndex(zone, "\\")
+	return zone[:lastSlash]
+}
