@@ -129,5 +129,12 @@ func ParseCertificateSearchResponse(httpStatusCode int, body []byte) (searchResu
 
 func GetAppNameFromZone(zone string) string {
 	lastSlash := strings.LastIndex(zone, "\\")
+
+	// there is no backslash in zone, meaning it's just the application name,
+	// return it
+	if lastSlash == -1 {
+		return zone
+	}
+
 	return zone[:lastSlash]
 }

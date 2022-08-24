@@ -145,3 +145,42 @@ func TestParseCertificateSearchResponse(t *testing.T) {
 		t.Fatal("JSON body should trigger error")
 	}
 }
+
+
+func TestGetAppNameFromZone(t *testing.T) {
+	testCases := []struct{
+		name     string
+		input    string
+		expected string
+	} {
+		{
+			name:     "Empty",
+			input:    "",
+			expected: "",
+		},
+		{
+			name:     "App",
+			input:    "Just The App Name",
+			expected: "Just The App Name",
+		},
+		{
+			name:     "App+Cit",
+			input:    "The application\\With Cit",
+			expected: "The application",
+		},
+		{
+			name:     "App+Cit Complex",
+			input:    "The complex application\\name\\and the cit",
+			expected: "The complex application\\name",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			appName := GetAppNameFromZone(testCase.input)
+			if testCase.expected != appName {
+				t.Errorf("unmatched application name\nExpected:\n%v\nGot:\n%v", testCase.expected, appName)
+			}
+		})
+	}
+}
