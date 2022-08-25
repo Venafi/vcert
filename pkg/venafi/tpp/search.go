@@ -24,6 +24,8 @@ import (
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"net/http"
 	"strings"
+	"time"
+	neturl "net/url"
 )
 
 type SearchRequest []string
@@ -155,6 +157,25 @@ func ParseSearchCertificateResponse(httpStatusCode int, body []byte) (certificat
 			return nil, fmt.Errorf("Unexpected status code on certificate search. Status: %d", httpStatusCode)
 		}
 	}
+}
+
+func FormatSearchCertificateArguments(cn string, sans *certificate.Sans, valid_for time.Duration) string {
+	// get future (or past) date for certificate validation
+	date := time.Now().Add(valid_for)
+	// create request arguments
+	req := make([]string, 0)
+
+	if cn != "" {
+		req = append(req, fmt.Sprintf("CN=%s", cn))
+	}
+
+	if sans != nil && sans.DNS != nil {
+		req = append(req, fmt.Sprintf("SAN-DNS=%s", strings.Join(sans.DNS, ",")))
+	}
+
+	req = append(req, fmt.Sprintf("ValidToGreater=%s", neturl.QueryEscape(date.Format(time.RFC3339))))
+
+	return strings.Join(req, "&")
 }
 
 func calcThumbprint(cert string) string {

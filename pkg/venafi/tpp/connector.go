@@ -1491,20 +1491,10 @@ func (c *Connector) SearchCertificates(req *certificate.SearchRequest) (*certifi
 
 func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.Sans, valid_for time.Duration) (certificateInfo *certificate.CertificateInfo, err error) {
 	// format arguments for request
-	//
-	// this might be better replaced by a FormatSearchCertificateArguments
-	// function with respective unit tests for correctness
-	//
-	// get future (or past) date for certificate validation
-	date := time.Now().Add(valid_for)
-	// create request arguments
-	req := make([]string, 0)
-	req = append(req, fmt.Sprintf("CN=%s", cn))
-	req = append(req, fmt.Sprintf("SAN-DNS=%s", strings.Join(sans.DNS, ",")))
-	req = append(req, fmt.Sprintf("&ValidToGreater=%s", neturl.QueryEscape(date.Format(time.RFC3339))))
+	req := FormatSearchCertificateArguments(cn, sans, valid_for)
 
 	// perform request
-	url := fmt.Sprintf("%s?%s", urlResourceCertificateSearch, strings.Join(req, "&"))
+	url := fmt.Sprintf("%s?%s", urlResourceCertificateSearch, req)
 	statusCode, _, body, err := c.request("GET", urlResource(url), nil)
 	if err != nil {
 		return nil, err
