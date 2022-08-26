@@ -1513,10 +1513,11 @@ func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.
 	// certificates whose Zone matches ours
 	certificates := make([]*certificate.CertificateInfo, 0)
 	n := 0
+	policyDn := getPolicyDN(zone)
 	for _, cert := range searchResult.Certificates {
-		if cert.ParentDn == getPolicyDN(zone) {
-			certificates = append(certificates, &certificate.CertificateInfo{})
-			certificates[n] = &cert.X509
+		if cert.ParentDn == policyDn {
+			match := cert.X509
+			certificates = append(certificates, &match)
 			certificates[n].ID = cert.Guid
 			n = n + 1
 		}
