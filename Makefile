@@ -74,16 +74,13 @@ cmd_test: get
 collect_artifacts:
 	rm -rf artifacts
 	mkdir -p artifacts
-	zip -j "artifacts/vcert_$(VERSION)_linux.zip" "bin/linux/vcert" || exit 1
-	zip -j "artifacts/vcert_$(VERSION)_linux86.zip" "bin/linux/vcert86" || exit 1
-	zip -j "artifacts/vcert_$(VERSION)_darwin.zip" "bin/darwin/vcert" || exit 1
-	zip -j "artifacts/vcert_$(VERSION)_darwin_arm.zip" "bin/darwin/vcert_arm" || exit 1
+	# we are assuming that signature are in the path were the make file was executed (not necessarily should be in the root of project)
+	zip -j "artifacts/vcert_$(VERSION)_linux.zip" "bin/linux/vcert" "vcert_linux.sig" || exit 1
+	zip -j "artifacts/vcert_$(VERSION)_linux86.zip" "bin/linux/vcert86" "vcert_linux86.sig" || exit 1
+	zip -j "artifacts/vcert_$(VERSION)_darwin.zip" "bin/darwin/vcert" "vcert_darwin.sig" || exit 1
+	zip -j "artifacts/vcert_$(VERSION)_darwin_arm.zip" "bin/darwin/vcert_arm" "vcert_darwin_arm.sig" || exit 1
 	zip -j "artifacts/vcert_$(VERSION)_windows.zip" "bin/windows/vcert.exe" || exit 1
 	zip -j "artifacts/vcert_$(VERSION)_windows86.zip" "bin/windows/vcert86.exe" || exit 1
-	cp vcert_linux.sig artifacts/
-	cp vcert_linux86.sig artifacts/
-	cp vcert_darwin.sig artifacts/
-	cp vcert_darwin_arm.sig artifacts/
 
 release:
 	echo '```' > release.txt
