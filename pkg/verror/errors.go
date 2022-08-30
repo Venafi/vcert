@@ -14,4 +14,7 @@ var (
 	AuthError                       = fmt.Errorf("%w: auth error", UserDataError)
 	ZoneNotFoundError               = fmt.Errorf("%w: zone not found", UserDataError)
 	ApplicationNotFoundError        = fmt.Errorf("%w: application not found", UserDataError)
+	// certificate search errors
+	NoCertificateFoundError                 = fmt.Errorf("no certificate with matching criteria found")
+	NoCertificateWithMatchingZoneFoundError = fmt.Errorf("no certificate with matching zone found")
 )

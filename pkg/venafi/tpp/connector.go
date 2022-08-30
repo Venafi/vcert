@@ -30,7 +30,6 @@ import (
 	"time"
 
 	"github.com/Venafi/vcert/v4/pkg/policy"
-
 	"github.com/Venafi/vcert/v4/pkg/util"
 
 	"github.com/Venafi/vcert/v4/pkg/certificate"
@@ -1487,6 +1486,50 @@ func (c *Connector) SearchCertificates(req *certificate.SearchRequest) (*certifi
 		return nil, err
 	}
 	return searchResult, nil
+}
+
+func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.Sans, certMinTimeLeft time.Duration) (certificateInfo *certificate.CertificateInfo, err error) {
+	// format arguments for request
+	req := formatSearchCertificateArguments(cn, sans, certMinTimeLeft)
+
+	// perform request
+	url := fmt.Sprintf("%s?%s", urlResourceCertificateSearch, req)
+	statusCode, _, body, err := c.request("GET", urlResource(url), nil)
+	if err != nil {
+		return nil, err
+	}
+	searchResult, err := parseSearchCertificateResponse(statusCode, body)
+	if err != nil {
+		return nil, err
+	}
+
+	// fail if no certificate is returned from api
+	if searchResult.Count == 0 {
+		return nil, verror.NoCertificateFoundError
+	}
+
+	// map (convert) response to an array of CertificateInfo, only add those
+	// certificates whose Zone matches ours
+	certificates := make([]*certificate.CertificateInfo, 0)
+	n := 0
+	policyDn := getPolicyDN(zone)
+	for _, cert := range searchResult.Certificates {
+		if cert.ParentDn == policyDn {
+			match := cert.X509
+			certificates = append(certificates, &match)
+			certificates[n].ID = cert.Guid
+			n = n + 1
+		}
+	}
+
+	// fail if no certificates found with matching zone
+	if n == 0 {
+		return nil, verror.NoCertificateWithMatchingZoneFoundError
+	}
+
+	// at this point all certificates belong to our zone, the next step is
+	// finding the newest valid certificate matching the provided sans
+	return certificate.FindNewestCertificateWithSans(certificates, sans)
 }
 
 func (c *Connector) SetHTTPClient(client *http.Client) {

@@ -26,6 +26,7 @@ import (
 	"net"
 	"net/http"
 	"regexp"
+	"time"
 
 	"github.com/Venafi/vcert/v4/pkg/policy"
 
@@ -105,6 +106,17 @@ type Connector interface {
 	RetrieveSSHCertificate(req *certificate.SshCertRequest) (response *certificate.SshCertificateObject, err error)
 	RetrieveSshConfig(ca *certificate.SshCaTemplateRequest) (*certificate.SshConfig, error)
 	SearchCertificates(req *certificate.SearchRequest) (*certificate.CertSearchResponse, error)
+	// Returns a valid certificate
+	//
+	// If it returns no error, the certificate returned should be the latest [1]
+	// exact matching zone [2], CN and sans.DNS [3] provided, with a minimum
+	// validity of `certMinTimeLeft`
+	//
+	// [1] the one with longest validity; field named ValidTo for TPP and
+	// validityEnd for VaaS
+	// [2] application name for VaaS
+	// [3] an array of strings representing the DNS names
+	SearchCertificate(zone string, cn string, sans *certificate.Sans, certMinTimeLeft time.Duration) (*certificate.CertificateInfo, error)
 	RetrieveAvailableSSHTemplates() ([]certificate.SshAvaliableTemplate, error)
 	RetrieveCertificateMetaData(dn string) (*certificate.CertificateMetaData, error)
 }

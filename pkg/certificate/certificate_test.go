@@ -26,6 +26,7 @@ import (
 	"math/big"
 	"net"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -579,4 +580,142 @@ func pemRSADecode(priv string) *rsa.PrivateKey {
 		panic(err)
 	}
 	return parsedKey.(*rsa.PrivateKey)
+}
+
+type FindNewestCertificateWithSansMock struct {
+	// testCase name
+	name string
+	// expected returned certificate
+	expected *CertificateInfo
+	// sans argument passed to FindNewestCertificateWithSans function
+	sans *Sans
+}
+
+func createTimeMock(t *testing.T, s string) time.Time {
+	time, err := time.Parse(time.RFC3339, s)
+
+	if err != nil {
+		t.Error(err)
+		t.Fatalf("error parsing time string %q", s)
+	}
+
+	return time
+}
+
+func TestFindNewestCertificateWithSans(t *testing.T) {
+	// create a list of certificates where we will try to find according to our
+	// testCases, we are not interested in any other field but the `SANS.DNS`,
+	// and `ValidTo` which are the ones used to match in the
+	// `FindNewestCertificateWithSans` function
+	certificates := []*CertificateInfo{
+		{
+			SANS: Sans{
+				DNS: []string{
+					"one.vfidev.com",
+				},
+			},
+			ValidTo: createTimeMock(t, "2022-08-22T00:00:00.000+00:00"),
+		},
+		{
+			SANS: Sans{
+				DNS: []string{
+					"one.vfidev.com",
+					"two.vfidev.com",
+				},
+			},
+			ValidTo: createTimeMock(t, "2022-08-22T00:00:00.000+00:00"),
+		},
+		{
+			SANS: Sans{
+				DNS: []string{
+					"one.vfidev.com",
+					"two.vfidev.com",
+				},
+			},
+			ValidTo: createTimeMock(t, "2030-01-01T00:00:00.000+00:00"),
+		},
+		{
+			SANS: Sans{
+				DNS: []string{
+					"1.vfidev.com",
+					"2.vfidev.com",
+					"3.vfidev.com",
+				},
+			},
+			ValidTo: createTimeMock(t, "2022-08-22T00:00:00.000+00:00"),
+		},
+	}
+
+	testCases := []FindNewestCertificateWithSansMock{
+		// should not return any certificate
+		{
+			name:     "Empty SANS",
+			expected: nil,
+			sans:     nil,
+		},
+		// should return the only existing certificate
+		{
+			name: "Simple",
+			expected: &CertificateInfo{
+				SANS: Sans{
+					DNS: []string{
+						"one.vfidev.com",
+					},
+				},
+				ValidTo: createTimeMock(t, "2022-08-22T00:00:00.000+00:00"),
+			},
+			sans: &Sans{DNS: []string{"one.vfidev.com"}},
+		},
+		//should return the newest certificate
+		{
+			name: "Newest",
+			expected: &CertificateInfo{
+				SANS: Sans{
+					DNS: []string{
+						"one.vfidev.com",
+						"two.vfidev.com",
+					},
+				},
+				ValidTo: createTimeMock(t, "2030-01-01T00:00:00.000+00:00"),
+			},
+			sans: &Sans{DNS: []string{"one.vfidev.com", "two.vfidev.com"}},
+		},
+		// should return the only existing certificate regardless of the order of
+		// the sans arguments
+		{
+			name: "Order of arguments",
+			expected: &CertificateInfo{
+				SANS: Sans{
+					DNS: []string{
+						"1.vfidev.com",
+						"2.vfidev.com",
+						"3.vfidev.com",
+					},
+				},
+				ValidTo: createTimeMock(t, "2022-08-22T00:00:00.000+00:00"),
+			},
+			sans: &Sans{DNS: []string{"3.vfidev.com", "2.vfidev.com", "1.vfidev.com"}},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			// ignore error, just use the certificate value as a sign of success
+			certificate, _ := FindNewestCertificateWithSans(certificates, testCase.sans)
+
+			// certificate should have been found but function returned no certificate
+			if testCase.expected != nil && certificate == nil {
+				t.Fatalf("certificate should have been found but function returned no certificate\nsans provided: %v\nexpected certificate: %v", util.GetJsonAsString(testCase.sans), util.GetJsonAsString(testCase.expected))
+			}
+
+			// no certificate should have been found but function returned one
+			if testCase.expected == nil && certificate != nil {
+				t.Fatalf("no certificate should have been found but function returned one\nsans provided: %v\nreturned certificate: %v", util.GetJsonAsString(testCase.sans), util.GetJsonAsString(certificate))
+			}
+
+			if !reflect.DeepEqual(testCase.expected, certificate) {
+				t.Fatalf("certificates did not match.\nexpected:\n%v\ngot:\n%v", util.GetJsonAsString(testCase.expected), util.GetJsonAsString(certificate))
+			}
+		})
+	}
 }
