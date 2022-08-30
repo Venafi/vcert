@@ -44,6 +44,7 @@ type Connector struct {
 	apiKey      string
 	accessToken string
 	verbose     bool
+	Identity    identity
 	trust       *x509.CertPool
 	zone        string
 	client      *http.Client
@@ -142,6 +143,14 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 
 		resp := result.(authorizeResponse)
 		c.apiKey = resp.APIKey
+
+		userIdentity, err := c.retrieveSelfIdentity()
+		if err != nil {
+			return err
+		}
+
+		c.Identity = userIdentity
+
 		return nil
 
 	} else if auth.RefreshToken != "" {
@@ -154,10 +163,23 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 		resp := result.(OauthRefreshAccessTokenResponse)
 		c.accessToken = resp.Access_token
 		auth.RefreshToken = resp.Refresh_token
+
+		userIdentity, err := c.retrieveSelfIdentity()
+		if err != nil {
+			return err
+		}
+
+		c.Identity = userIdentity
 		return nil
 
 	} else if auth.AccessToken != "" {
 		c.accessToken = auth.AccessToken
+		userIdentity, err := c.retrieveSelfIdentity()
+		if err != nil {
+			return err
+		}
+
+		c.Identity = userIdentity
 		return nil
 	}
 	return fmt.Errorf("failed to authenticate: can't determine valid credentials set")
@@ -415,14 +437,14 @@ func (c *Connector) requestMetadataItems(dn string) ([]metadataKeyValueSet, erro
 }
 
 // Retrieve user's self identity
-func (c *Connector) RetrieveSelfIdentity() (response string, err error) {
+func (c *Connector) retrieveSelfIdentity() (response identity, err error) {
 
-	var respIndentities = &IdentitiesResponse{}
+	var respIndentities = &identitiesResponse{}
 
 	statusCode, statusText, body, err := c.request("GET", urlRetrieveSelfIdentity, nil)
 	if err != nil {
 		log.Printf("Failed to get the used user. Error: %v", err)
-		return "", err
+		return identity{}, err
 	}
 	log.Printf("Status code: %d", statusCode)
 
@@ -430,16 +452,16 @@ func (c *Connector) RetrieveSelfIdentity() (response string, err error) {
 	case http.StatusOK:
 		err = json.Unmarshal(body, respIndentities)
 		if err != nil {
-			return "", fmt.Errorf("failed to parse identity response: %s, body: %s", err, body)
+			return identity{}, fmt.Errorf("failed to parse identity response: %s, body: %s", err, body)
 		}
 
 		if (respIndentities != nil) && (len(respIndentities.Identities) > 0) {
-			return respIndentities.Identities[0].Name, nil
+			return respIndentities.Identities[0], nil
 		}
 	case http.StatusUnauthorized:
-		return "", verror.AuthError
+		return identity{}, verror.AuthError
 	}
-	return "", fmt.Errorf("failed to get Self. Status code: %d, Status text: %s", statusCode, statusText)
+	return identity{}, fmt.Errorf("failed to get Self. Status code: %d, Status text: %s", statusCode, statusText)
 }
 
 // RetrieveSystemVersion returns the TPP system version of the connector context

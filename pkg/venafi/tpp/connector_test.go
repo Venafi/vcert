@@ -214,12 +214,12 @@ func TestRetrieveSelfIdentity(t *testing.T) {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
 
-	identity, err := tpp.RetrieveSelfIdentity()
+	identity, err := tpp.retrieveSelfIdentity()
 	if err != nil {
 		t.Fatalf("Failed to get the used user. Error: %v", err)
 	}
 
-	if identity == "" {
+	if identity.Name == "" {
 		t.Fatalf("Failed to get to get Self")
 	}
 }

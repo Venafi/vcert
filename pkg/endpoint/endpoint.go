@@ -108,8 +108,6 @@ type Connector interface {
 	RetrieveAvailableSSHTemplates() ([]certificate.SshAvaliableTemplate, error)
 	RetrieveCertificateMetaData(dn string) (*certificate.CertificateMetaData, error)
 	RetrieveSystemVersion() (string, error)
-	// Retrieve self identity
-	RetrieveSelfIdentity() (string, error)
 }
 
 type Filter struct {
