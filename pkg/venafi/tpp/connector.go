@@ -24,7 +24,6 @@ import (
 	"log"
 	"net/http"
 	neturl "net/url"
-	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -1529,25 +1528,8 @@ func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.
 	}
 
 	// at this point all certificates belong to our zone, the next step is
-	// finding the newest valid certificate
-	var newestCertificate *certificate.CertificateInfo
-	for _, certificate := range certificates {
-		// exact match SANs
-		if reflect.DeepEqual(sans.DNS, certificate.SANS.DNS) {
-			// update the certificate to the newest match
-			if newestCertificate == nil || certificate.ValidTo.Unix() > newestCertificate.ValidTo.Unix() {
-				newestCertificate = certificate
-			}
-		}
-	}
-
-	// a valid certificate has been found, return it
-	if newestCertificate != nil {
-		return newestCertificate, nil
-	}
-
-	// fail, since no valid certificate was found at this point
-	return nil, verror.NoCertificateFoundError
+	// finding the newest valid certificate matching the provided sans
+	return certificate.FindNewestCertificateWithSans(certificates, sans)
 }
 
 func (c *Connector) SetHTTPClient(client *http.Client) {
