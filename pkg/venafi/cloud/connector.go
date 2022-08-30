@@ -18,7 +18,6 @@ package cloud
 
 import (
 	"archive/zip"
-	"math"
 	"bytes"
 	"crypto/rand"
 	"crypto/x509"
@@ -28,6 +27,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math"
 	"net/http"
 	netUrl "net/url"
 	"reflect"

@@ -146,13 +146,12 @@ func TestParseCertificateSearchResponse(t *testing.T) {
 	}
 }
 
-
 func TestGetAppNameFromZone(t *testing.T) {
-	testCases := []struct{
+	testCases := []struct {
 		name     string
 		input    string
 		expected string
-	} {
+	}{
 		{
 			name:     "Empty",
 			input:    "",

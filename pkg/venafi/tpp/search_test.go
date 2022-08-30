@@ -24,10 +24,10 @@ import (
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
 	"github.com/Venafi/vcert/v4/test"
 	"net/url"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
-	"regexp"
 )
 
 func TestParseCertificateSearchResponse(t *testing.T) {
@@ -375,20 +375,20 @@ func TestSearchDevice(t *testing.T) {
 }
 
 type FormatSearchCertificateArgumentsMock struct {
-	zone string
-	cn string
-	sans *certificate.Sans
+	zone      string
+	cn        string
+	sans      *certificate.Sans
 	valid_for time.Duration
 }
 
 // TODO: find a way to test the correct time
 func TestFormatSearchCertificateArguments(t *testing.T) {
 	timeRegex := "((?:(\\d{4}-\\d{2}-\\d{2})T(\\d{2}%3A\\d{2}%3A\\d{2}(?:\\.\\d+)?))(Z|[\\+-]\\d{2}%3A\\d{2})?)$"
-	testCases := []struct{
+	testCases := []struct {
 		name     string
 		input    FormatSearchCertificateArgumentsMock
 		expected string
-	} {
+	}{
 		{
 			// test empty arguments, should return just the ValidToGreater
 			// argument
@@ -399,8 +399,8 @@ func TestFormatSearchCertificateArguments(t *testing.T) {
 		{
 			// test with just CN, should return Common Name and ValidToGreater
 			// arguments
-			name:     "CN",
-			input:    FormatSearchCertificateArgumentsMock{
+			name: "CN",
+			input: FormatSearchCertificateArgumentsMock{
 				cn: "test.example.com",
 			},
 			expected: "^CN=test\\.example\\.com&ValidToGreater=" + timeRegex,
@@ -408,38 +408,38 @@ func TestFormatSearchCertificateArguments(t *testing.T) {
 		{
 			// test with just 1 DNS, should return SAN-DNS and ValidToGreater
 			// arguments
-			name:     "SANS_1",
-			input:    FormatSearchCertificateArgumentsMock{
-				sans: &certificate.Sans{DNS:[]string{"one.example.com"}},
+			name: "SANS_1",
+			input: FormatSearchCertificateArgumentsMock{
+				sans: &certificate.Sans{DNS: []string{"one.example.com"}},
 			},
 			expected: "^SAN-DNS=one\\.example\\.com&ValidToGreater=" + timeRegex,
 		},
 		{
 			// test with 2 DNS, should return both SAN-DNS and ValidToGreater
 			// arguments
-			name:     "SANS_2",
-			input:    FormatSearchCertificateArgumentsMock{
-				sans: &certificate.Sans{DNS:[]string{"one.example.com", "two.example.com"}},
+			name: "SANS_2",
+			input: FormatSearchCertificateArgumentsMock{
+				sans: &certificate.Sans{DNS: []string{"one.example.com", "two.example.com"}},
 			},
 			expected: "^SAN-DNS=one\\.example\\.com,two\\.example\\.com&ValidToGreater=" + timeRegex,
 		},
 		{
 			// test with CN and 1 DNS, should return the Common Name, DNS and
 			// ValidToGreater arguments
-			name:     "CN SANS_1",
-			input:    FormatSearchCertificateArgumentsMock{
-				cn: "test.example.com",
-				sans: &certificate.Sans{DNS:[]string{"one.example.com"}},
+			name: "CN SANS_1",
+			input: FormatSearchCertificateArgumentsMock{
+				cn:   "test.example.com",
+				sans: &certificate.Sans{DNS: []string{"one.example.com"}},
 			},
 			expected: "^CN=test\\.example\\.com&SAN-DNS=one\\.example\\.com&ValidToGreater=" + timeRegex,
 		},
 		{
 			// test with CN and 2 DNS, should return the Common Name, 2 DNS and
 			// ValidToGreater arguments
-			name:     "CN SANS_2",
-			input:    FormatSearchCertificateArgumentsMock{
-				cn: "test.example.com",
-				sans: &certificate.Sans{DNS:[]string{"one.example.com", "two.example.com"}},
+			name: "CN SANS_2",
+			input: FormatSearchCertificateArgumentsMock{
+				cn:   "test.example.com",
+				sans: &certificate.Sans{DNS: []string{"one.example.com", "two.example.com"}},
 			},
 			expected: "^CN=test\\.example\\.com&SAN-DNS=one\\.example\\.com,two\\.example\\.com&ValidToGreater=" + timeRegex,
 		},

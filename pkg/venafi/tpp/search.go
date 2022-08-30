@@ -23,9 +23,9 @@ import (
 	"fmt"
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"net/http"
+	neturl "net/url"
 	"strings"
 	"time"
-	neturl "net/url"
 )
 
 type SearchRequest []string
