@@ -141,7 +141,7 @@ type CertificateSearchInfo struct {
 	X509        certificate.CertificateInfo
 }
 
-func ParseSearchCertificateResponse(httpStatusCode int, body []byte) (certificates *CertificateSearchResponse, err error) {
+func parseSearchCertificateResponse(httpStatusCode int, body []byte) (certificates *CertificateSearchResponse, err error) {
 	switch httpStatusCode {
 	case http.StatusOK:
 		var searchResult = &CertificateSearchResponse{}
@@ -159,9 +159,9 @@ func ParseSearchCertificateResponse(httpStatusCode int, body []byte) (certificat
 	}
 }
 
-func FormatSearchCertificateArguments(cn string, sans *certificate.Sans, valid_for time.Duration) string {
+func formatSearchCertificateArguments(cn string, sans *certificate.Sans, certMinTimeLeft time.Duration) string {
 	// get future (or past) date for certificate validation
-	date := time.Now().Add(valid_for)
+	date := time.Now().Add(certMinTimeLeft)
 	// create request arguments
 	req := make([]string, 0)
 

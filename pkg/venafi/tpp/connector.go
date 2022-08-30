@@ -1490,7 +1490,7 @@ func (c *Connector) SearchCertificates(req *certificate.SearchRequest) (*certifi
 
 func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.Sans, certMinTimeLeft time.Duration) (certificateInfo *certificate.CertificateInfo, err error) {
 	// format arguments for request
-	req := FormatSearchCertificateArguments(cn, sans, certMinTimeLeft)
+	req := formatSearchCertificateArguments(cn, sans, certMinTimeLeft)
 
 	// perform request
 	url := fmt.Sprintf("%s?%s", urlResourceCertificateSearch, req)
@@ -1498,7 +1498,7 @@ func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.
 	if err != nil {
 		return nil, err
 	}
-	searchResult, err := ParseSearchCertificateResponse(statusCode, body)
+	searchResult, err := parseSearchCertificateResponse(statusCode, body)
 	if err != nil {
 		return nil, err
 	}

@@ -1882,9 +1882,9 @@ func TestSearchValidCertificate(t *testing.T) {
 
 	// use time.Duration instead of integer
 	day := 24 * time.Hour
-	valid_for := 3 * day
+	certMinTimeLeft := 3 * day
 
-	certificate, err := conn.SearchCertificate(zone, cn, sans, valid_for)
+	certificate, err := conn.SearchCertificate(zone, cn, sans, certMinTimeLeft)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}

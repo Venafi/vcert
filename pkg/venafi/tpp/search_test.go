@@ -378,7 +378,7 @@ type FormatSearchCertificateArgumentsMock struct {
 	zone      string
 	cn        string
 	sans      *certificate.Sans
-	valid_for time.Duration
+	certMinTimeLeft time.Duration
 }
 
 // TODO: find a way to test the correct time
@@ -447,7 +447,7 @@ func TestFormatSearchCertificateArguments(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			req := FormatSearchCertificateArguments(testCase.input.cn, testCase.input.sans, testCase.input.valid_for)
+			req := formatSearchCertificateArguments(testCase.input.cn, testCase.input.sans, testCase.input.certMinTimeLeft)
 			matches, err := regexp.MatchString(testCase.expected, req)
 			if err != nil {
 				t.Fatal(err)
