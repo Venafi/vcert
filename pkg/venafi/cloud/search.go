@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Venafi/vcert/v4/pkg/certificate"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -78,28 +79,43 @@ type Certificate struct {
 	SubjectAlternativeNamesByType map[string][]string `json:"subjectAlternativeNamesByType"`
 	SerialNumber                  string              `json:"serialNumber"`
 	Fingerprint                   string              `json:"fingerprint"`
-	ValidityStart                 time.Time           `json:"validityStart"`
-	ValidityEnd                   time.Time           `json:"validityEnd"`
+	ValidityStart                 string              `json:"validityStart"`
+	ValidityEnd                   string              `json:"validityEnd"`
 	ApplicationIds                []string            `json:"applicationIds"`
 	/* ... and many more fields ... */
 }
 
 func (c Certificate) ToCertificateInfo() certificate.CertificateInfo {
+	var cn string
+	if len(c.SubjectCN) > 0 {
+		cn = c.SubjectCN[0]
+	}
+
+	start, err := time.Parse(time.RFC3339, c.ValidityStart)
+	if err != nil { //we just print the error, and let the user know.
+		log.Println(err)
+	}
+
+	end, err := time.Parse(time.RFC3339, c.ValidityEnd)
+	if err != nil { //we just print the error, and let the user know.
+		log.Println(err)
+	}
+
 	return certificate.CertificateInfo{
 		ID: c.Id,
-		CN: strings.Join(c.SubjectCN, ","),
+		CN: cn,
 		SANS: certificate.Sans{
-			// TODO: find correct field names
-			DNS: c.SubjectAlternativeNamesByType["dNSName"],
-			// Email: cert.SubjectAlternativeNamesByType["x400Address"],
-			IP:  c.SubjectAlternativeNamesByType["iPAddress"],
-			URI: c.SubjectAlternativeNamesByType["uniformResourceIdentifier"],
+			DNS:   c.SubjectAlternativeNamesByType["dNSName"],
+			Email: c.SubjectAlternativeNamesByType["rfc822Name"],
+			IP:    c.SubjectAlternativeNamesByType["iPAddress"],
+			URI:   c.SubjectAlternativeNamesByType["uniformResourceIdentifier"],
+			// currently not supported on VaaS
 			// UPN: cert.SubjectAlternativeNamesByType["x400Address"],
 		},
 		Serial:     c.SerialNumber,
 		Thumbprint: c.Fingerprint,
-		ValidFrom:  c.ValidityStart,
-		ValidTo:    c.ValidityEnd,
+		ValidFrom:  start,
+		ValidTo:    end,
 	}
 }
 
