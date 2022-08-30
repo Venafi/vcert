@@ -375,9 +375,9 @@ func TestSearchDevice(t *testing.T) {
 }
 
 type FormatSearchCertificateArgumentsMock struct {
-	zone      string
-	cn        string
-	sans      *certificate.Sans
+	zone            string
+	cn              string
+	sans            *certificate.Sans
 	certMinTimeLeft time.Duration
 }
 
