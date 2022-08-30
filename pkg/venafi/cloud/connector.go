@@ -100,7 +100,7 @@ func (c *Connector) SearchCertificates(req *certificate.SearchRequest) (*certifi
 	panic("operation is not supported yet")
 }
 
-func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.Sans, valid_for time.Duration) (certificateInfo *certificate.CertificateInfo, err error) {
+func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.Sans, certMinTimeLeft time.Duration) (certificateInfo *certificate.CertificateInfo, err error) {
 	appName := GetAppNameFromZone(zone)
 	// get application id
 	app, _, err := c.getAppDetailsByName(appName)
@@ -109,7 +109,7 @@ func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.
 	}
 
 	// convert a time.Duration to days
-	valid_for_days := math.Floor(valid_for.Hours() / 24)
+	certMinTimeDays := math.Floor(certMinTimeLeft.Hours() / 24)
 
 	// format arguments for request
 	req := &SearchRequest{
@@ -129,7 +129,7 @@ func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.
 				{
 					Field:    "validityPeriodDays",
 					Operator: GTE,
-					Value:    valid_for_days,
+					Value:    certMinTimeDays,
 				},
 			},
 		},
