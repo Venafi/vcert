@@ -275,7 +275,7 @@ func TestGetAppNameFromZone(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			appName := GetAppNameFromZone(testCase.input)
+			appName := getAppNameFromZone(testCase.input)
 			if testCase.expected != appName {
 				t.Errorf("unmatched application name\nExpected:\n%v\nGot:\n%v", testCase.expected, appName)
 			}

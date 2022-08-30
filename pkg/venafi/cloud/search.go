@@ -127,7 +127,18 @@ func ParseCertificateSearchResponse(httpStatusCode int, body []byte) (searchResu
 	}
 }
 
-func GetAppNameFromZone(zone string) string {
+// returns everything up to the last slash (if any)
+//
+// example:
+// Just The App Name
+// -> Just The App Name
+//
+// The application\\With Cit
+// -> The application
+//
+// The complex application\\name\\and the cit
+// -> The complex application\\name
+func getAppNameFromZone(zone string) string {
 	lastSlash := strings.LastIndex(zone, "\\")
 
 	// there is no backslash in zone, meaning it's just the application name,
