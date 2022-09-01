@@ -32,6 +32,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
@@ -158,6 +159,68 @@ func TestAuthenticateAuthError(t *testing.T) {
 	}
 	if !errors.Is(err, verror.AuthError) {
 		t.Errorf("expected AuthError, got %v", err)
+	}
+}
+
+func TestRetrieveSystemVersion(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, "")
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, ctx.TPPurl)
+	}
+
+	refreshToken, err := tpp.GetRefreshToken(&endpoint.Authentication{
+		User: ctx.TPPuser, Password: ctx.TPPPassword,
+		Scope: "certificate:discover,manage,revoke", ClientId: "vcert-sdk"})
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	err = tpp.Authenticate(&endpoint.Authentication{AccessToken: refreshToken.Access_token})
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	serviceVersion, err := tpp.RetrieveSystemVersion()
+	if err != nil {
+		t.Fatalf("Failed to get Venafi system version. Error: %v", err)
+	}
+
+	if serviceVersion == "" {
+		t.Fatalf("Failed to get Venafi system version. Error: %v", err)
+	}
+
+	_, err = regexp.MatchString(`^([0-9]{2})(\.[1-4]{1})(\.[0-9]{1,4})+`, serviceVersion)
+
+	if err != nil {
+		t.Fatalf("Failed due to Venafi system version's format is invalid. Error: %s", err)
+	}
+}
+
+func TestRetrieveSelfIdentity(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, "")
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, ctx.TPPurl)
+	}
+
+	refreshToken, err := tpp.GetRefreshToken(&endpoint.Authentication{
+		User: ctx.TPPuser, Password: ctx.TPPPassword,
+		Scope: "certificate:discover,manage,revoke", ClientId: "vcert-sdk"})
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	err = tpp.Authenticate(&endpoint.Authentication{AccessToken: refreshToken.Access_token})
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	identity, err := tpp.retrieveSelfIdentity()
+	if err != nil {
+		t.Fatalf("Failed to get the used user. Error: %v", err)
+	}
+
+	if identity.Name == "" {
+		t.Fatalf("Failed to get to get Self")
 	}
 }
 
