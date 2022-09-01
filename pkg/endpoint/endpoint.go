@@ -119,7 +119,6 @@ type Connector interface {
 	SearchCertificate(zone string, cn string, sans *certificate.Sans, certMinTimeLeft time.Duration) (*certificate.CertificateInfo, error)
 	RetrieveAvailableSSHTemplates() ([]certificate.SshAvaliableTemplate, error)
 	RetrieveCertificateMetaData(dn string) (*certificate.CertificateMetaData, error)
-	RetrieveSystemVersion() (string, error)
 }
 
 type Filter struct {

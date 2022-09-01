@@ -268,10 +268,6 @@ func (c *Connector) RetrieveAvailableSSHTemplates() (response []certificate.SshA
 	panic("operation is not supported yet")
 }
 
-func (c *Connector) RetrieveSystemVersion() (response string, err error) {
-	panic("operation is not supported yet")
-}
-
 func (c *Connector) GetPolicyWithRegex(name string) (*policy.PolicySpecification, error) {
 
 	cit, err := retrievePolicySpecification(c, name)
