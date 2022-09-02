@@ -47,6 +47,10 @@ func (c *Connector) SearchCertificates(req *certificate.SearchRequest) (*certifi
 	panic("operation is not supported yet")
 }
 
+func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.Sans, certMinTimeLeft time.Duration) (certificateInfo *certificate.CertificateInfo, err error) {
+	panic("operation is not supported yet")
+}
+
 func (c *Connector) IsCSRServiceGenerated(req *certificate.Request) (bool, error) {
 	panic("operation is not supported yet")
 }
@@ -64,10 +68,6 @@ func (c *Connector) RequestSSHCertificate(req *certificate.SshCertRequest) (resp
 }
 
 func (c *Connector) RetrieveAvailableSSHTemplates() (response []certificate.SshAvaliableTemplate, err error) {
-	panic("operation is not supported yet")
-}
-
-func (c *Connector) RetrieveSystemVersion() (response string, err error) {
 	panic("operation is not supported yet")
 }
 

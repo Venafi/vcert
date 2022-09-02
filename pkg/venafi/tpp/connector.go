@@ -30,7 +30,6 @@ import (
 	"time"
 
 	"github.com/Venafi/vcert/v4/pkg/policy"
-
 	"github.com/Venafi/vcert/v4/pkg/util"
 
 	"github.com/Venafi/vcert/v4/pkg/certificate"
@@ -44,7 +43,6 @@ type Connector struct {
 	apiKey      string
 	accessToken string
 	verbose     bool
-	Identity    identity
 	trust       *x509.CertPool
 	zone        string
 	client      *http.Client
@@ -143,14 +141,6 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 
 		resp := result.(authorizeResponse)
 		c.apiKey = resp.APIKey
-
-		userIdentity, err := c.retrieveSelfIdentity()
-		if err != nil {
-			return err
-		}
-
-		c.Identity = userIdentity
-
 		return nil
 
 	} else if auth.RefreshToken != "" {
@@ -163,23 +153,10 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 		resp := result.(OauthRefreshAccessTokenResponse)
 		c.accessToken = resp.Access_token
 		auth.RefreshToken = resp.Refresh_token
-
-		userIdentity, err := c.retrieveSelfIdentity()
-		if err != nil {
-			return err
-		}
-
-		c.Identity = userIdentity
 		return nil
 
 	} else if auth.AccessToken != "" {
 		c.accessToken = auth.AccessToken
-		userIdentity, err := c.retrieveSelfIdentity()
-		if err != nil {
-			return err
-		}
-
-		c.Identity = userIdentity
 		return nil
 	}
 	return fmt.Errorf("failed to authenticate: can't determine valid credentials set")
@@ -436,36 +413,8 @@ func (c *Connector) requestMetadataItems(dn string) ([]metadataKeyValueSet, erro
 	return response.Data, err
 }
 
-// Retrieve user's self identity
-func (c *Connector) retrieveSelfIdentity() (response identity, err error) {
-
-	var respIndentities = &identitiesResponse{}
-
-	statusCode, statusText, body, err := c.request("GET", urlRetrieveSelfIdentity, nil)
-	if err != nil {
-		log.Printf("Failed to get the used user. Error: %v", err)
-		return identity{}, err
-	}
-	log.Printf("Status code: %d", statusCode)
-
-	switch statusCode {
-	case http.StatusOK:
-		err = json.Unmarshal(body, respIndentities)
-		if err != nil {
-			return identity{}, fmt.Errorf("failed to parse identity response: %s, body: %s", err, body)
-		}
-
-		if (respIndentities != nil) && (len(respIndentities.Identities) > 0) {
-			return respIndentities.Identities[0], nil
-		}
-	case http.StatusUnauthorized:
-		return identity{}, verror.AuthError
-	}
-	return identity{}, fmt.Errorf("failed to get Self. Status code: %d, Status text: %s", statusCode, statusText)
-}
-
-// RetrieveSystemVersion returns the TPP system version of the connector context
-func (c *Connector) RetrieveSystemVersion() (string, error) {
+// requestSystemVersion returns the TPP system version of the connector context
+func (c *Connector) requestSystemVersion() (string, error) {
 	statusCode, status, body, err := c.request("GET", urlResourceSystemStatusVersion, "")
 	if err != nil {
 		return "", err
@@ -1537,6 +1486,50 @@ func (c *Connector) SearchCertificates(req *certificate.SearchRequest) (*certifi
 		return nil, err
 	}
 	return searchResult, nil
+}
+
+func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.Sans, certMinTimeLeft time.Duration) (certificateInfo *certificate.CertificateInfo, err error) {
+	// format arguments for request
+	req := formatSearchCertificateArguments(cn, sans, certMinTimeLeft)
+
+	// perform request
+	url := fmt.Sprintf("%s?%s", urlResourceCertificateSearch, req)
+	statusCode, _, body, err := c.request("GET", urlResource(url), nil)
+	if err != nil {
+		return nil, err
+	}
+	searchResult, err := parseSearchCertificateResponse(statusCode, body)
+	if err != nil {
+		return nil, err
+	}
+
+	// fail if no certificate is returned from api
+	if searchResult.Count == 0 {
+		return nil, verror.NoCertificateFoundError
+	}
+
+	// map (convert) response to an array of CertificateInfo, only add those
+	// certificates whose Zone matches ours
+	certificates := make([]*certificate.CertificateInfo, 0)
+	n := 0
+	policyDn := getPolicyDN(zone)
+	for _, cert := range searchResult.Certificates {
+		if cert.ParentDn == policyDn {
+			match := cert.X509
+			certificates = append(certificates, &match)
+			certificates[n].ID = cert.Guid
+			n = n + 1
+		}
+	}
+
+	// fail if no certificates found with matching zone
+	if n == 0 {
+		return nil, verror.NoCertificateWithMatchingZoneFoundError
+	}
+
+	// at this point all certificates belong to our zone, the next step is
+	// finding the newest valid certificate matching the provided sans
+	return certificate.FindNewestCertificateWithSans(certificates, sans)
 }
 
 func (c *Connector) SetHTTPClient(client *http.Client) {

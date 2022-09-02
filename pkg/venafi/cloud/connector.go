@@ -27,6 +27,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math"
 	"net/http"
 	netUrl "net/url"
 	"regexp"
@@ -96,6 +97,76 @@ func (c *Connector) RetrieveCertificateMetaData(dn string) (*certificate.Certifi
 
 func (c *Connector) SearchCertificates(req *certificate.SearchRequest) (*certificate.CertSearchResponse, error) {
 	panic("operation is not supported yet")
+}
+
+func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.Sans, certMinTimeLeft time.Duration) (certificateInfo *certificate.CertificateInfo, err error) {
+	appName := getAppNameFromZone(zone)
+	// get application id
+	app, _, err := c.getAppDetailsByName(appName)
+	if err != nil {
+		return nil, err
+	}
+
+	// convert a time.Duration to days
+	certMinTimeDays := math.Floor(certMinTimeLeft.Hours() / 24)
+
+	// format arguments for request
+	req := &SearchRequest{
+		Expression: &Expression{
+			Operator: AND,
+			Operands: []Operand{
+				{
+					Field:    "subjectCN",
+					Operator: EQ,
+					Value:    cn,
+				},
+				{
+					Field:    "subjectAlternativeNameDns",
+					Operator: IN,
+					Values:   sans.DNS,
+				},
+				{
+					Field:    "validityPeriodDays",
+					Operator: GTE,
+					Value:    certMinTimeDays,
+				},
+			},
+		},
+	}
+
+	// perform request
+	searchResult, err := c.searchCertificates(req)
+	if err != nil {
+		return nil, err
+	}
+
+	// fail if no certificate is returned from api
+	if searchResult.Count == 0 {
+		return nil, verror.NoCertificateFoundError
+	}
+
+	// map (convert) response to an array of CertificateInfo, TODO: only add
+	// those certificates whose Zone matches ours
+	certificates := make([]*certificate.CertificateInfo, 0)
+	n := 0
+	for _, cert := range searchResult.Certificates {
+		// log.Printf("looping %v\n", util.GetJsonAsString(cert))
+		// TODO: filter based on applicationId (VaaS equivalent to TPP Zone)
+		if util.ArrayContainsString(cert.ApplicationIds, app.ApplicationId) {
+			match := cert.ToCertificateInfo()
+			certificates = append(certificates, &match)
+			n = n + 1
+		}
+	}
+
+	// fail if no certificates found with matching zone
+	if n == 0 {
+		return nil, verror.NoCertificateWithMatchingZoneFoundError
+	}
+
+	// at this point all certificates belong to our zone, the next step is
+	// finding the newest valid certificate matching the provided sans
+	return certificate.FindNewestCertificateWithSans(certificates, sans)
 }
 
 func (c *Connector) IsCSRServiceGenerated(req *certificate.Request) (bool, error) {
@@ -194,10 +265,6 @@ func (c *Connector) RequestSSHCertificate(req *certificate.SshCertRequest) (resp
 }
 
 func (c *Connector) RetrieveAvailableSSHTemplates() (response []certificate.SshAvaliableTemplate, err error) {
-	panic("operation is not supported yet")
-}
-
-func (c *Connector) RetrieveSystemVersion() (response string, err error) {
 	panic("operation is not supported yet")
 }
 
@@ -1293,9 +1360,9 @@ func (c *Connector) searchCertificatesByFingerprint(fp string) (*CertificateSear
 		Expression: &Expression{
 			Operands: []Operand{
 				{
-					"fingerprint",
-					MATCH,
-					fp,
+					Field:    "fingerprint",
+					Operator: MATCH,
+					Value:    fp,
 				},
 			},
 		},
@@ -1474,7 +1541,11 @@ func (c *Connector) getCertsBatch(page, pageSize int, withExpired bool) ([]certi
 	req := &SearchRequest{
 		Expression: &Expression{
 			Operands: []Operand{
-				{"appstackIds", MATCH, appDetails.ApplicationId},
+				{
+					Field:    "appstackIds",
+					Operator: MATCH,
+					Value:    appDetails.ApplicationId,
+				},
 			},
 			Operator: AND,
 		},
@@ -1482,9 +1553,9 @@ func (c *Connector) getCertsBatch(page, pageSize int, withExpired bool) ([]certi
 	}
 	if !withExpired {
 		req.Expression.Operands = append(req.Expression.Operands, Operand{
-			"validityEnd",
-			GTE,
-			time.Now().Format(time.RFC3339),
+			Field:    "validityEnd",
+			Operator: GTE,
+			Value:    time.Now().Format(time.RFC3339),
 		})
 	}
 	r, err := c.searchCertificates(req)

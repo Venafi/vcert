@@ -34,6 +34,8 @@ import (
 	"time"
 
 	"github.com/Venafi/vcert/v4/pkg/verror"
+	"reflect"
+	"sort"
 )
 
 // EllipticCurve represents the types of supported elliptic curves
@@ -342,12 +344,18 @@ type ImportResponse struct {
 	PrivateKeyVaultId  int    `json:",omitempty"`
 }
 
+type Sans struct {
+	DNS   []string
+	Email []string `json:",omitempty"`
+	IP    []string `json:",omitempty"`
+	URI   []string `json:",omitempty"`
+	UPN   []string `json:",omitempty"`
+}
+
 type CertificateInfo struct {
-	ID   string
-	CN   string
-	SANS struct {
-		DNS, Email, IP, URI, UPN []string
-	}
+	ID         string `json:",omitempty"`
+	CN         string
+	SANS       Sans
 	Serial     string
 	Thumbprint string
 	ValidFrom  time.Time
@@ -737,4 +745,41 @@ func NewRequest(cert *x509.Certificate) *Request {
 		// vcert only works with RSA & ECDSA
 	}
 	return req
+}
+
+// find a certificate from a list of certificates whose Sans.DNS matches and is
+// the newest
+func FindNewestCertificateWithSans(certificates []*CertificateInfo, sans_ *Sans) (*CertificateInfo, error) {
+	sans := Sans{}
+
+	if sans_ != nil {
+		sans.DNS = sans_.DNS
+	}
+
+	// order provided SANS-DNS
+	sort.Strings(sans.DNS)
+
+	// create local variable to hold the newest certificate
+	var newestCertificate *CertificateInfo
+	for _, certificate := range certificates {
+		// order certificate SANS before comparison
+		if certificate.SANS.DNS != nil {
+			sort.Strings(certificate.SANS.DNS)
+		}
+		// exact match SANs
+		if reflect.DeepEqual(sans.DNS, certificate.SANS.DNS) {
+			// update the certificate to the newest match
+			if newestCertificate == nil || certificate.ValidTo.Unix() > newestCertificate.ValidTo.Unix() {
+				newestCertificate = certificate
+			}
+		}
+	}
+
+	// a valid certificate has been found, return it
+	if newestCertificate != nil {
+		return newestCertificate, nil
+	}
+
+	// fail, since no valid certificate was found at this point
+	return nil, verror.NoCertificateFoundError
 }

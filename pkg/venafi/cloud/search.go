@@ -22,6 +22,7 @@ import (
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -41,7 +42,8 @@ type Expression struct {
 type Operand struct {
 	Field    Field       `json:"field"`
 	Operator Operator    `json:"operator"`
-	Value    interface{} `json:"value"`
+	Value    interface{} `json:"value,omitempty"`
+	Values   interface{} `json:"values,omitempty"`
 }
 
 type Field string
@@ -79,6 +81,7 @@ type Certificate struct {
 	Fingerprint                   string              `json:"fingerprint"`
 	ValidityStart                 string              `json:"validityStart"`
 	ValidityEnd                   string              `json:"validityEnd"`
+	ApplicationIds                []string            `json:"applicationIds"`
 	/* ... and many more fields ... */
 }
 
@@ -98,24 +101,22 @@ func (c Certificate) ToCertificateInfo() certificate.CertificateInfo {
 		log.Println(err)
 	}
 
-	ci := certificate.CertificateInfo{
+	return certificate.CertificateInfo{
 		ID: c.Id,
 		CN: cn,
-		SANS: struct {
-			DNS, Email, IP, URI, UPN []string
-		}{
-			c.SubjectAlternativeNamesByType["dNSName"],
-			c.SubjectAlternativeNamesByType["rfc822Name"],
-			c.SubjectAlternativeNamesByType["iPAddress"],
-			c.SubjectAlternativeNamesByType["uniformResourceIdentifier"],
-			[]string{}, // todo: find correct field
+		SANS: certificate.Sans{
+			DNS:   c.SubjectAlternativeNamesByType["dNSName"],
+			Email: c.SubjectAlternativeNamesByType["rfc822Name"],
+			IP:    c.SubjectAlternativeNamesByType["iPAddress"],
+			URI:   c.SubjectAlternativeNamesByType["uniformResourceIdentifier"],
+			// currently not supported on VaaS
+			// UPN: cert.SubjectAlternativeNamesByType["x400Address"],
 		},
 		Serial:     c.SerialNumber,
 		Thumbprint: c.Fingerprint,
 		ValidFrom:  start,
 		ValidTo:    end,
 	}
-	return ci
 }
 
 func ParseCertificateSearchResponse(httpStatusCode int, body []byte) (searchResult *CertificateSearchResponse, err error) {
@@ -140,4 +141,27 @@ func ParseCertificateSearchResponse(httpStatusCode int, body []byte) (searchResu
 		}
 		return nil, fmt.Errorf("unexpected status code on Venafi Cloud certificate search. Status: %d", httpStatusCode)
 	}
+}
+
+// returns everything up to the last slash (if any)
+//
+// example:
+// Just The App Name
+// -> Just The App Name
+//
+// The application\\With Cit
+// -> The application
+//
+// The complex application\\name\\and the cit
+// -> The complex application\\name
+func getAppNameFromZone(zone string) string {
+	lastSlash := strings.LastIndex(zone, "\\")
+
+	// there is no backslash in zone, meaning it's just the application name,
+	// return it
+	if lastSlash == -1 {
+		return zone
+	}
+
+	return zone[:lastSlash]
 }

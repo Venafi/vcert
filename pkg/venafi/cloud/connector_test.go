@@ -39,6 +39,7 @@ import (
 
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
+	"github.com/Venafi/vcert/v4/pkg/util"
 	"github.com/Venafi/vcert/v4/pkg/verror"
 	"github.com/Venafi/vcert/v4/test"
 )
@@ -785,6 +786,7 @@ func TestSearchCertificate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	req := certificate.Request{}
 	req.Subject.CommonName = test.RandCN()
 	req.Timeout = time.Second * 10
@@ -1856,4 +1858,40 @@ func getBasicRequest() certificate.Request {
 	req.DNSNames = []string{req.Subject.CommonName}
 
 	return req
+}
+
+// TODO: Expand unit tests to cover more cases
+func TestSearchValidCertificate(t *testing.T) {
+	conn := getTestConnector(ctx.CloudZone)
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cn := "one.example.com"
+	// There are 2 certificates here
+	sans := &certificate.Sans{DNS: []string{cn, "two.example.com"}}
+	// and 2 more, certificates here
+	// sans := &certificate.Sans{DNS: []string{cn, "two.example.com", "three.example.com"}}
+
+	// TODO: Filter zone
+	// with this zone you should be able to find those certificates
+	zone := "Open Source Integrations\\Unrestricted"
+	// but not with this (or any non valid zone)
+	// zone := "Invalid zone\\The CIT"
+
+	// use time.Duration instead of integer
+	day := 24 * time.Hour
+	certMinTimeLeft := 3 * day
+
+	certificate, err := conn.SearchCertificate(zone, cn, sans, certMinTimeLeft)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+
+	if certificate == nil {
+		t.Fatal("Should have found a certificate")
+	}
+
+	fmt.Printf("%v\n", util.GetJsonAsString(*certificate))
 }
