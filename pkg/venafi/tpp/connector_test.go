@@ -44,8 +44,8 @@ import (
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
 	"github.com/Venafi/vcert/v4/pkg/verror"
 	"github.com/Venafi/vcert/v4/test"
-	"testing/quick"
 	"math/rand"
+	"testing/quick"
 )
 
 var ctx *test.Context
@@ -2379,11 +2379,11 @@ func AuthenticateOrDie(t *testing.T, zone string) (tpp *Connector) {
 }
 
 type Certificate struct {
-	ObjectName   string
-	cn           string
-	sans         []string
-	validity     time.Duration
-	zone         string
+	ObjectName string
+	cn         string
+	sans       []string
+	validity   time.Duration
+	zone       string
 }
 
 // represents a certificate with no CN
@@ -2397,9 +2397,9 @@ func GenerateCertificate(r *rand.Rand, size int) Certificate {
 	cn := test.RandCN()
 	return Certificate{
 		// set the generated CN as the certificate's aswell as the object's name
-		cn: cn,
+		cn:         cn,
 		ObjectName: cn,
-		validity: 3 * 24 * time.Hour,
+		validity:   3 * 24 * time.Hour,
 		// for searching certificate, this is independent of the zone it will be created
 		zone: "Open Source\\vcert\\Search Certificate",
 		// add 3 SAN-DNS prefixed with one, two and three respectively
@@ -2522,7 +2522,7 @@ func TestSearchValidCertificate(t *testing.T) {
 	// variable for creating certificates
 	tpp := AuthenticateOrDie(t, "Open Source\\vcert\\Search Certificate")
 
-	findCertificate := func (c Certificate) bool {
+	findCertificate := func(c Certificate) bool {
 		fmt.Printf("searching for certificate: %v ", c.ObjectName)
 		certificate, err := tpp._SearchCertificate(t, &c)
 		found := false
@@ -2539,13 +2539,13 @@ func TestSearchValidCertificate(t *testing.T) {
 	}
 
 	// generate a random certificate search and make sure we can't find it
-	shouldNotFindCertificate := func (c Certificate) bool {
+	shouldNotFindCertificate := func(c Certificate) bool {
 		return !findCertificate(c)
 	}
 
 	// generate a random certificate search, make sure we can't find it, then
 	// create the certificate and ensure we can find it
-	shouldCreateAndFindCertificate := func (c Certificate) bool {
+	shouldCreateAndFindCertificate := func(c Certificate) bool {
 		// a certificate should not be found, we want to manually create it to
 		// ensure there is only 1 certificate for this test, if this fails it's
 		// most likely the `test.RandCN` used in Certificate.Generator (needs to
@@ -2565,12 +2565,12 @@ func TestSearchValidCertificate(t *testing.T) {
 	}
 
 	// will create a new certificate with longer validity for the certificate you provide
-	shouldCreateAndFindNewestCertificate := func (c Certificate) bool {
+	shouldCreateAndFindNewestCertificate := func(c Certificate) bool {
 		new := c
 		// use a different ObjectName, otherwise certificate will be replaced
 		// instead of creating a new one
 		new.ObjectName = prefix("new", new.ObjectName)
-		new.validity = new.validity + 3 * 24 * time.Hour
+		new.validity = new.validity + 3*24*time.Hour
 		fmt.Printf("increasing certificate validity by 3 days, was %v, now is %v ", c.validity, new.validity)
 		// create the same certificate but with longer validity
 		tpp.CreateCertificateOrDie(t, &new)
@@ -2617,21 +2617,21 @@ func TestSearchValidCertificate(t *testing.T) {
 
 	runTest("There is no certificate", shouldNotFindCertificate)
 	t.Run("There is no certificate (No CN)", func(t *testing.T) {
-		if err := quick.Check(func (c CertificateNoCN) bool {
+		if err := quick.Check(func(c CertificateNoCN) bool {
 			return shouldNotFindCertificate(c.Certificate)
 		}, configuration); err != nil {
 			t.Error(err)
 		}
 	})
 	t.Run("There is no certificate (Shuffled SANS)", func(t *testing.T) {
-		if err := quick.Check(func (c Certificate) bool {
+		if err := quick.Check(func(c Certificate) bool {
 			return shouldNotFindCertificate(c) && shouldNotFindCertificate(c.shuffleSans())
 		}, configuration); err != nil {
 			t.Error(err)
 		}
 	})
 	t.Run("There is no certificate (No CN, Shuffled SANS)", func(t *testing.T) {
-		if err := quick.Check(func (c CertificateNoCN) bool {
+		if err := quick.Check(func(c CertificateNoCN) bool {
 			return shouldNotFindCertificate(c.Certificate) && shouldNotFindCertificate(c.Certificate.shuffleSans())
 		}, configuration); err != nil {
 			t.Error(err)
@@ -2640,21 +2640,21 @@ func TestSearchValidCertificate(t *testing.T) {
 
 	runTest("There is 1 certificate", shouldCreateAndFindCertificate)
 	t.Run("There is 1 certificate (No CN)", func(t *testing.T) {
-		if err := quick.Check(func (c CertificateNoCN) bool {
+		if err := quick.Check(func(c CertificateNoCN) bool {
 			return shouldCreateAndFindCertificate(c.Certificate)
 		}, configuration); err != nil {
 			t.Error(err)
 		}
 	})
 	t.Run("There is 1 certificate (Shuffled SANS)", func(t *testing.T) {
-		if err := quick.Check(func (c Certificate) bool {
+		if err := quick.Check(func(c Certificate) bool {
 			return shouldCreateAndFindCertificate(c) && findCertificate(c.shuffleSans())
 		}, configuration); err != nil {
 			t.Error(err)
 		}
 	})
 	t.Run("There is 1 certificate (No CN, Shuffled SANS)", func(t *testing.T) {
-		if err := quick.Check(func (c CertificateNoCN) bool {
+		if err := quick.Check(func(c CertificateNoCN) bool {
 			return shouldCreateAndFindCertificate(c.Certificate) && findCertificate(c.Certificate.shuffleSans())
 		}, configuration); err != nil {
 			t.Error(err)
@@ -2662,28 +2662,28 @@ func TestSearchValidCertificate(t *testing.T) {
 	})
 
 	t.Run("There is 1+ certificate (return newest)", func(t *testing.T) {
-		if err := quick.Check(func (c Certificate) bool {
+		if err := quick.Check(func(c Certificate) bool {
 			return shouldCreateAndFindCertificate(c) && shouldCreateAndFindNewestCertificate(c)
 		}, configuration); err != nil {
 			t.Error(err)
 		}
 	})
 	t.Run("There is 1+ certificate (No CN,return newest)", func(t *testing.T) {
-		if err := quick.Check(func (c CertificateNoCN) bool {
+		if err := quick.Check(func(c CertificateNoCN) bool {
 			return shouldCreateAndFindCertificate(c.Certificate) && shouldCreateAndFindNewestCertificate(c.Certificate)
 		}, configuration); err != nil {
 			t.Error(err)
 		}
 	})
 	t.Run("There is 1+ certificate (Shuffled SANS,return newest)", func(t *testing.T) {
-		if err := quick.Check(func (c Certificate) bool {
+		if err := quick.Check(func(c Certificate) bool {
 			return shouldCreateAndFindCertificate(c) && shouldCreateAndFindNewestCertificate(c.shuffleSans())
 		}, configuration); err != nil {
 			t.Error(err)
 		}
 	})
 	t.Run("There is 1+ certificate (No CN, Shuffled SANS,return newest)", func(t *testing.T) {
-		if err := quick.Check(func (c CertificateNoCN) bool {
+		if err := quick.Check(func(c CertificateNoCN) bool {
 			return shouldCreateAndFindCertificate(c.Certificate) && shouldCreateAndFindNewestCertificate(c.Certificate.shuffleSans())
 		}, configuration); err != nil {
 			t.Error(err)
