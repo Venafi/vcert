@@ -44,6 +44,8 @@ import (
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
 	"github.com/Venafi/vcert/v4/pkg/verror"
 	"github.com/Venafi/vcert/v4/test"
+	"testing/quick"
+	"math/rand"
 )
 
 var ctx *test.Context
@@ -2360,9 +2362,8 @@ func TestGetCertificateMetaData(t *testing.T) {
 	}
 }
 
-// TODO: Expand unit tests to cover more cases
-func TestSearchValidCertificate(t *testing.T) {
-	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+func AuthenticateOrDie(t *testing.T, zone string) (tpp *Connector) {
+	tpp, err := getTestConnector(ctx.TPPurl, zone)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
 	}
@@ -2374,25 +2375,318 @@ func TestSearchValidCertificate(t *testing.T) {
 		}
 	}
 
-	cn := "one.vfidev.com"
-	sans := &certificate.Sans{DNS: []string{cn, "two.vfidev.com"}}
-	// should find certificate with 2030 expiration date
-	zone := "Open Source\\vcert\\Search Certificate"
-	// should not find any certificate
-	// zone := "Open Source\\vcert\\Search Certificate\\Subpolicy"
+	return
+}
 
-	// use time.Duration instead of integer
-	day := 24 * time.Hour
-	certMinTimeLeft := 3 * day
+type Certificate struct {
+	ObjectName   string
+	cn           string
+	sans         []string
+	validity     time.Duration
+	zone         string
+}
 
-	certificate, err := tpp.SearchCertificate(zone, cn, sans, certMinTimeLeft)
+// represents a certificate with no CN
+type CertificateNoCN struct {
+	Certificate
+}
+
+// helper for generating certificates
+func GenerateCertificate(r *rand.Rand, size int) Certificate {
+	// generate a random CN
+	cn := test.RandCN()
+	return Certificate{
+		// set the generated CN as the certificate's aswell as the object's name
+		cn: cn,
+		ObjectName: cn,
+		validity: 3 * 24 * time.Hour,
+		// for searching certificate, this is independent of the zone it will be created
+		zone: "Open Source\\vcert\\Search Certificate",
+		// add 3 SAN-DNS prefixed with one, two and three respectively
+		sans: []string{prefix("one", cn), prefix("two", cn), prefix("three", cn), cn},
+	}
+}
+
+// GenerateCertificate wrapper for usage with quickcheck
+func (Certificate) Generate(r *rand.Rand, s int) reflect.Value {
+	return reflect.ValueOf(GenerateCertificate(r, s))
+}
+
+// GenerateCertificate wrapper for usage with quickcheck
+func (CertificateNoCN) Generate(r *rand.Rand, s int) reflect.Value {
+	c := GenerateCertificate(r, s)
+	c.cn = ""
+	return reflect.ValueOf(CertificateNoCN{c})
+}
+
+// Helper function for creating certificates needed for search tests
+func (tpp *Connector) CreateCertificateOrDie(t *testing.T, c *Certificate) {
+	config, err := tpp.ReadZoneConfiguration()
 	if err != nil {
-		t.Fatalf("%v", err)
+		t.Fatalf("error reading zone configuration: %s", err)
+	}
+
+	req := &certificate.Request{Timeout: time.Second * 30}
+	req.Subject.CommonName = c.cn
+	req.Subject.Organization = []string{"Venafi, Inc."}
+	req.Subject.OrganizationalUnit = []string{"Automated Tests"}
+	req.DNSNames = c.sans
+	// this is the name that will show up on TPP UI
+	req.FriendlyName = c.ObjectName
+
+	validHours := int(c.validity.Hours())
+	req.ValidityHours = validHours
+	req.IssuerHint = "MICROSOFT"
+
+	err = tpp.GenerateRequest(config, req)
+	if err != nil {
+		t.Fatalf("error generating request: %s", err)
+	}
+
+	req.PickupID, err = tpp.RequestCertificate(req)
+	if err != nil {
+		t.Fatalf("error requesting certificate: %s", err)
+	}
+	certCollections, err := tpp.RetrieveCertificate(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	p, _ := pem.Decode([]byte(certCollections.Certificate))
+	cert, err := x509.ParseCertificate(p.Bytes)
+	if err != nil {
+		t.Fatalf("error parsing certificate: %s", err)
+	}
+
+	certValidUntil := cert.NotAfter.Format("2006-01-02")
+
+	loc, _ := time.LoadLocation("UTC")
+	utcNow := time.Now().In(loc)
+	expectedValidDate := utcNow.AddDate(0, 0, validHours/24).Format("2006-01-02")
+
+	// ensure certificate is created with our provided time
+	if expectedValidDate != certValidUntil {
+		t.Fatalf("Expiration date is different than expected, expected: %s, but got %s: ", expectedValidDate, certValidUntil)
+	}
+
+	fmt.Println("created: true")
+}
+
+// wrapper function for SearchCertificate function that ignores certificate
+// search errors
+func (tpp *Connector) _SearchCertificate(t *testing.T, c *Certificate) (*certificate.CertificateInfo, error) {
+	sans := &certificate.Sans{DNS: c.sans}
+	// subtract 1 day from provided validity, else the search will fail
+	certificate, err := tpp.SearchCertificate(c.zone, c.cn, sans, c.validity-24*time.Hour)
+
+	// prevents test from failing by checking the error returned from the search
+	// function
+	if err != nil {
+		// check if we throw our own errors, if we don't rethrow the error
+		if !(err == verror.NoCertificateFoundError || err == verror.NoCertificateWithMatchingZoneFoundError) {
+			return nil, err
+		}
+
+		// otherwise just say we didn't find anything
+		return nil, nil
 	}
 
 	if certificate == nil {
-		t.Fatal("Should have found a certificate")
+		return nil, errors.New("something terribly wrong happened, should have found a certificate and no error was throwed")
 	}
 
-	fmt.Printf("%v\n", util.GetJsonAsString(*certificate))
+	// uncomment if you want to see the certificate info
+	// fmt.Printf("%v\n", util.GetJsonAsString(*certificate))
+	return certificate, nil
+}
+
+// adds prefix(es) `p` to a string `s`, using a dash character `-` as a delimiter
+func prefix(ps ...string) string {
+	return strings.Join(ps, "-")
+}
+
+func (_c Certificate) shuffleSans() Certificate {
+	c := _c
+	sans := c.sans
+	fmt.Printf("shuffling %v -> ", sans)
+	rand.Shuffle(len(sans), func(i, j int) { sans[i], sans[j] = sans[j], sans[i] })
+	c.sans = sans
+	fmt.Printf("%v\n", c.sans)
+	return c
+}
+
+func TestSearchValidCertificate(t *testing.T) {
+	// generate 3 certificates for each test
+	configuration := &quick.Config{MaxCount: 3}
+
+	// use this zone instead of the one provided on $TPP_ZONE environment
+	// variable for creating certificates
+	tpp := AuthenticateOrDie(t, "Open Source\\vcert\\Search Certificate")
+
+	findCertificate := func (c Certificate) bool {
+		fmt.Printf("searching for certificate: %v ", c.ObjectName)
+		certificate, err := tpp._SearchCertificate(t, &c)
+		found := false
+		if certificate != nil {
+			found = true
+		}
+		fmt.Printf("found: %v\n", found)
+
+		if err != nil {
+			fmt.Printf("%v: %+v\n", err, c)
+		}
+
+		return found
+	}
+
+	// generate a random certificate search and make sure we can't find it
+	shouldNotFindCertificate := func (c Certificate) bool {
+		return !findCertificate(c)
+	}
+
+	// generate a random certificate search, make sure we can't find it, then
+	// create the certificate and ensure we can find it
+	shouldCreateAndFindCertificate := func (c Certificate) bool {
+		// a certificate should not be found, we want to manually create it to
+		// ensure there is only 1 certificate for this test, if this fails it's
+		// most likely the `test.RandCN` used in Certificate.Generator (needs to
+		// ensure uniqueness)
+		if findCertificate(c) {
+			fmt.Printf("certificate already exists, can't ensure uniqueness, test will fail: %v\n", c.ObjectName)
+			return false
+		}
+
+		// proceed to create the certificate
+		fmt.Printf("attempting to create certificate: %v ", c.ObjectName)
+		tpp.CreateCertificateOrDie(t, &c)
+		// find the newly created certificate
+		found := findCertificate(c)
+
+		return found
+	}
+
+	// will create a new certificate with longer validity for the certificate you provide
+	shouldCreateAndFindNewestCertificate := func (c Certificate) bool {
+		new := c
+		// use a different ObjectName, otherwise certificate will be replaced
+		// instead of creating a new one
+		new.ObjectName = prefix("new", new.ObjectName)
+		new.validity = new.validity + 3 * 24 * time.Hour
+		fmt.Printf("increasing certificate validity by 3 days, was %v, now is %v ", c.validity, new.validity)
+		// create the same certificate but with longer validity
+		tpp.CreateCertificateOrDie(t, &new)
+
+		// pretty print expected validity
+		loc, _ := time.LoadLocation("UTC")
+		utcNow := time.Now().In(loc)
+		expectedValidDate := utcNow.AddDate(0, 0, int(new.validity.Hours())/24).Format("2006-01-02")
+
+		fmt.Printf("searching again and expecting certificate to have a newer validity of %v ", expectedValidDate)
+
+		// it doesn't matter if we search for `c` (the old certificate) or the
+		// `new` one, since they have the same parameters it should always
+		// return the newest
+		certificate, err := tpp._SearchCertificate(t, &c)
+		found := false
+		if certificate != nil {
+			found = true
+		}
+
+		if err != nil {
+			fmt.Printf("%v: %+v\n", err, c)
+		}
+
+		certValidUntil := certificate.ValidTo.Format("2006-01-02")
+
+		// ensure certificate is created with our provided time
+		if expectedValidDate != certValidUntil {
+			fmt.Printf("\nexpiration date is different than expected, expected: %s, but got %s\n", expectedValidDate, certValidUntil)
+			return false
+		}
+
+		fmt.Printf("found: %v\n", found)
+		return found
+	}
+
+	runTest := func(name string, testFn func(c Certificate) bool) {
+		t.Run(name, func(t *testing.T) {
+			if err := quick.Check(testFn, configuration); err != nil {
+				t.Error(err)
+			}
+		})
+	}
+
+	runTest("There is no certificate", shouldNotFindCertificate)
+	t.Run("There is no certificate (No CN)", func(t *testing.T) {
+		if err := quick.Check(func (c CertificateNoCN) bool {
+			return shouldNotFindCertificate(c.Certificate)
+		}, configuration); err != nil {
+			t.Error(err)
+		}
+	})
+	t.Run("There is no certificate (Shuffled SANS)", func(t *testing.T) {
+		if err := quick.Check(func (c Certificate) bool {
+			return shouldNotFindCertificate(c) && shouldNotFindCertificate(c.shuffleSans())
+		}, configuration); err != nil {
+			t.Error(err)
+		}
+	})
+	t.Run("There is no certificate (No CN, Shuffled SANS)", func(t *testing.T) {
+		if err := quick.Check(func (c CertificateNoCN) bool {
+			return shouldNotFindCertificate(c.Certificate) && shouldNotFindCertificate(c.Certificate.shuffleSans())
+		}, configuration); err != nil {
+			t.Error(err)
+		}
+	})
+
+	runTest("There is 1 certificate", shouldCreateAndFindCertificate)
+	t.Run("There is 1 certificate (No CN)", func(t *testing.T) {
+		if err := quick.Check(func (c CertificateNoCN) bool {
+			return shouldCreateAndFindCertificate(c.Certificate)
+		}, configuration); err != nil {
+			t.Error(err)
+		}
+	})
+	t.Run("There is 1 certificate (Shuffled SANS)", func(t *testing.T) {
+		if err := quick.Check(func (c Certificate) bool {
+			return shouldCreateAndFindCertificate(c) && findCertificate(c.shuffleSans())
+		}, configuration); err != nil {
+			t.Error(err)
+		}
+	})
+	t.Run("There is 1 certificate (No CN, Shuffled SANS)", func(t *testing.T) {
+		if err := quick.Check(func (c CertificateNoCN) bool {
+			return shouldCreateAndFindCertificate(c.Certificate) && findCertificate(c.Certificate.shuffleSans())
+		}, configuration); err != nil {
+			t.Error(err)
+		}
+	})
+
+	t.Run("There is 1+ certificate (return newest)", func(t *testing.T) {
+		if err := quick.Check(func (c Certificate) bool {
+			return shouldCreateAndFindCertificate(c) && shouldCreateAndFindNewestCertificate(c)
+		}, configuration); err != nil {
+			t.Error(err)
+		}
+	})
+	t.Run("There is 1+ certificate (No CN,return newest)", func(t *testing.T) {
+		if err := quick.Check(func (c CertificateNoCN) bool {
+			return shouldCreateAndFindCertificate(c.Certificate) && shouldCreateAndFindNewestCertificate(c.Certificate)
+		}, configuration); err != nil {
+			t.Error(err)
+		}
+	})
+	t.Run("There is 1+ certificate (Shuffled SANS,return newest)", func(t *testing.T) {
+		if err := quick.Check(func (c Certificate) bool {
+			return shouldCreateAndFindCertificate(c) && shouldCreateAndFindNewestCertificate(c.shuffleSans())
+		}, configuration); err != nil {
+			t.Error(err)
+		}
+	})
+	t.Run("There is 1+ certificate (No CN, Shuffled SANS,return newest)", func(t *testing.T) {
+		if err := quick.Check(func (c CertificateNoCN) bool {
+			return shouldCreateAndFindCertificate(c.Certificate) && shouldCreateAndFindNewestCertificate(c.Certificate.shuffleSans())
+		}, configuration); err != nil {
+			t.Error(err)
+		}
+	})
 }
