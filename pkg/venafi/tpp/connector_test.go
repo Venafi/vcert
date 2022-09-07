@@ -378,12 +378,6 @@ func TestAuthenticationAccessToken(t *testing.T) {
 	}
 
 	err = tpp.Authenticate(&endpoint.Authentication{AccessToken: "WRONGm3XPAT5nlWxd3iA=="})
-	if err != nil {
-		t.Fatalf("err is not nil, err: %s", err)
-	}
-
-	tpp.SetZone(ctx.TPPZone)
-	_, err = tpp.ReadZoneConfiguration()
 	if err == nil {
 		t.Fatalf("Auth with wrong token should fail")
 	}

@@ -143,12 +143,12 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 		resp := result.(authorizeResponse)
 		c.apiKey = resp.APIKey
 
-		userIdentity, err := c.retrieveSelfIdentity()
-		if err != nil {
-			return err
+		if c.client != nil {
+			c.Identity, err = c.retrieveSelfIdentity()
+			if err != nil {
+				return err
+			}
 		}
-
-		c.Identity = userIdentity
 		return nil
 
 	} else if auth.RefreshToken != "" {
@@ -161,22 +161,23 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 		resp := result.(OauthRefreshAccessTokenResponse)
 		c.accessToken = resp.Access_token
 		auth.RefreshToken = resp.Refresh_token
-		userIdentity, err := c.retrieveSelfIdentity()
-		if err != nil {
-			return err
+		if c.client != nil {
+			c.Identity, err = c.retrieveSelfIdentity()
+			if err != nil {
+				return err
+			}
 		}
-
-		c.Identity = userIdentity
 		return nil
 
 	} else if auth.AccessToken != "" {
 		c.accessToken = auth.AccessToken
-		userIdentity, err := c.retrieveSelfIdentity()
-		if err != nil {
-			return err
-		}
 
-		c.Identity = userIdentity
+		if c.client != nil {
+			c.Identity, err = c.retrieveSelfIdentity()
+			if err != nil {
+				return err
+			}
+		}
 		return nil
 	}
 	return fmt.Errorf("failed to authenticate: can't determine valid credentials set")
