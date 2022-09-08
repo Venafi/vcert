@@ -18,10 +18,10 @@ package cloud
 
 import (
 	"encoding/json"
-	"testing"
-	"time"
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/util"
+	"testing"
+	"time"
 )
 
 func TestSearchRequest(t *testing.T) {
@@ -301,9 +301,9 @@ func TestFormatSearchCertificateArguments(t *testing.T) {
 		{
 			// test empty arguments, should return just the validityPeriodDays
 			// argument
-			name:     "Empty",
+			name:  "Empty",
 			input: FormatSearchCertificateArgumentsMock{},
-			expected:    &SearchRequest{
+			expected: &SearchRequest{
 				Expression: &Expression{
 					Operator: AND,
 					Operands: []Operand{
@@ -319,11 +319,11 @@ func TestFormatSearchCertificateArguments(t *testing.T) {
 		{
 			// test with just CN, should return subjectCN and validityPeriodDays
 			// arguments
-			name:     "CN",
+			name: "CN",
 			input: FormatSearchCertificateArgumentsMock{
 				cn: "test.example.com",
 			},
-			expected:    &SearchRequest{
+			expected: &SearchRequest{
 				Expression: &Expression{
 					Operator: AND,
 					Operands: []Operand{
@@ -333,9 +333,9 @@ func TestFormatSearchCertificateArguments(t *testing.T) {
 							Value:    0,
 						},
 						{
-							Field: "subjectCN",
+							Field:    "subjectCN",
 							Operator: EQ,
-							Value: "test.example.com",
+							Value:    "test.example.com",
 						},
 					},
 				},
@@ -344,11 +344,11 @@ func TestFormatSearchCertificateArguments(t *testing.T) {
 		{
 			// test with just 1 DNS, should return subjectAlternativeNameDns and
 			// validityPeriodDays arguments
-			name:     "SANS_1",
+			name: "SANS_1",
 			input: FormatSearchCertificateArgumentsMock{
 				sans: &certificate.Sans{DNS: []string{"one.example.com"}},
 			},
-			expected:    &SearchRequest{
+			expected: &SearchRequest{
 				Expression: &Expression{
 					Operator: AND,
 					Operands: []Operand{
@@ -358,9 +358,9 @@ func TestFormatSearchCertificateArguments(t *testing.T) {
 							Value:    0,
 						},
 						{
-							Field: "subjectAlternativeNameDns",
+							Field:    "subjectAlternativeNameDns",
 							Operator: IN,
-							Values: []string{"one.example.com"},
+							Values:   []string{"one.example.com"},
 						},
 					},
 				},
@@ -369,11 +369,11 @@ func TestFormatSearchCertificateArguments(t *testing.T) {
 		{
 			// test with just 2 DNS, should return both subjectAlternativeNameDns and
 			// validityPeriodDays arguments
-			name:     "SANS_2",
+			name: "SANS_2",
 			input: FormatSearchCertificateArgumentsMock{
 				sans: &certificate.Sans{DNS: []string{"one.example.com", "two.example.com"}},
 			},
-			expected:    &SearchRequest{
+			expected: &SearchRequest{
 				Expression: &Expression{
 					Operator: AND,
 					Operands: []Operand{
@@ -383,9 +383,9 @@ func TestFormatSearchCertificateArguments(t *testing.T) {
 							Value:    0,
 						},
 						{
-							Field: "subjectAlternativeNameDns",
+							Field:    "subjectAlternativeNameDns",
 							Operator: IN,
-							Values: []string{"one.example.com", "two.example.com"},
+							Values:   []string{"one.example.com", "two.example.com"},
 						},
 					},
 				},
@@ -394,12 +394,12 @@ func TestFormatSearchCertificateArguments(t *testing.T) {
 		{
 			// test with CN and 1 DNS, should return the subjectCN, 1
 			// subjectAlternativeNameDns and validityPeriodDays arguments
-			name:     "CN SANS_1",
+			name: "CN SANS_1",
 			input: FormatSearchCertificateArgumentsMock{
-				cn: "one.example.com",
+				cn:   "one.example.com",
 				sans: &certificate.Sans{DNS: []string{"one.example.com"}},
 			},
-			expected:    &SearchRequest{
+			expected: &SearchRequest{
 				Expression: &Expression{
 					Operator: AND,
 					Operands: []Operand{
@@ -409,14 +409,14 @@ func TestFormatSearchCertificateArguments(t *testing.T) {
 							Value:    0,
 						},
 						{
-							Field: "subjectAlternativeNameDns",
+							Field:    "subjectAlternativeNameDns",
 							Operator: IN,
-							Values: []string{"one.example.com"},
+							Values:   []string{"one.example.com"},
 						},
 						{
-							Field: "subjectCN",
+							Field:    "subjectCN",
 							Operator: EQ,
-							Value: "one.example.com",
+							Value:    "one.example.com",
 						},
 					},
 				},
@@ -425,12 +425,12 @@ func TestFormatSearchCertificateArguments(t *testing.T) {
 		{
 			// test with CN and 2 DNS, should return the subjectCN, 2
 			// subjectAlternativeNameDns and validityPeriodDays arguments
-			name:     "CN SANS_2",
+			name: "CN SANS_2",
 			input: FormatSearchCertificateArgumentsMock{
-				cn: "one.example.com",
+				cn:   "one.example.com",
 				sans: &certificate.Sans{DNS: []string{"one.example.com", "two.example.com"}},
 			},
-			expected:    &SearchRequest{
+			expected: &SearchRequest{
 				Expression: &Expression{
 					Operator: AND,
 					Operands: []Operand{
@@ -440,14 +440,14 @@ func TestFormatSearchCertificateArguments(t *testing.T) {
 							Value:    0,
 						},
 						{
-							Field: "subjectAlternativeNameDns",
+							Field:    "subjectAlternativeNameDns",
 							Operator: IN,
-							Values: []string{"one.example.com", "two.example.com"},
+							Values:   []string{"one.example.com", "two.example.com"},
 						},
 						{
-							Field: "subjectCN",
+							Field:    "subjectCN",
 							Operator: EQ,
-							Value: "one.example.com",
+							Value:    "one.example.com",
 						},
 					},
 				},
@@ -460,7 +460,7 @@ func TestFormatSearchCertificateArguments(t *testing.T) {
 			req := formatSearchCertificateArguments(testCase.input.cn, testCase.input.sans, testCase.input.certMinTimeLeft)
 			// stringify the instances
 			expected := util.GetJsonAsString(testCase.expected)
-			request  := util.GetJsonAsString(req)
+			request := util.GetJsonAsString(req)
 			// compare as string
 			matches := expected == request
 			if !matches {
