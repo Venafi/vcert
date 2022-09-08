@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"math"
 )
 
 type SearchRequest struct {
@@ -164,4 +165,41 @@ func getAppNameFromZone(zone string) string {
 	}
 
 	return zone[:lastSlash]
+}
+
+// TODO: test this function
+func formatSearchCertificateArguments(cn string, sans *certificate.Sans, certMinTimeLeft time.Duration) *SearchRequest {
+	// convert a time.Duration to days
+	certMinTimeDays := math.Floor(certMinTimeLeft.Hours() / 24)
+
+	// generate base request
+	req := &SearchRequest{
+		Expression: &Expression{
+			Operator: AND,
+			Operands: []Operand{
+				{
+					Field:    "subjectAlternativeNameDns",
+					Operator: IN,
+					Values:   sans.DNS,
+				},
+				{
+					Field:    "validityPeriodDays",
+					Operator: GTE,
+					Value:    certMinTimeDays,
+				},
+			},
+		},
+	}
+
+	// only if a CN is provided, we add the field to the search request
+	if cn != "" {
+		subjectCN := Operand{
+			Field:    "subjectCN",
+			Operator: EQ,
+			Value:    cn,
+		}
+		req.Expression.Operands = append(req.Expression.Operands, subjectCN)
+	}
+
+	return req
 }
