@@ -178,11 +178,6 @@ func formatSearchCertificateArguments(cn string, sans *certificate.Sans, certMin
 			Operator: AND,
 			Operands: []Operand{
 				{
-					Field:    "subjectAlternativeNameDns",
-					Operator: IN,
-					Values:   sans.DNS,
-				},
-				{
 					Field:    "validityPeriodDays",
 					Operator: GTE,
 					Value:    certMinTimeDays,
@@ -191,15 +186,27 @@ func formatSearchCertificateArguments(cn string, sans *certificate.Sans, certMin
 		},
 	}
 
+	if sans != nil && sans.DNS != nil {
+		addOperand(req, Operand{
+			Field:    "subjectAlternativeNameDns",
+			Operator: IN,
+			Values:   sans.DNS,
+		})
+	}
+
 	// only if a CN is provided, we add the field to the search request
 	if cn != "" {
-		subjectCN := Operand{
+		addOperand(req, Operand{
 			Field:    "subjectCN",
 			Operator: EQ,
 			Value:    cn,
-		}
-		req.Expression.Operands = append(req.Expression.Operands, subjectCN)
+		})
 	}
 
+	return req
+}
+
+func addOperand(req *SearchRequest, o Operand) *SearchRequest {
+	req.Expression.Operands = append(req.Expression.Operands, o)
 	return req
 }
