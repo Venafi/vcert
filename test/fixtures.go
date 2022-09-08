@@ -21,6 +21,8 @@ import (
 	"github.com/Venafi/vcert/v4/pkg/policy"
 	"math/rand"
 	"os"
+	"reflect"
+	"strings"
 	"time"
 )
 
@@ -252,4 +254,60 @@ func IsArrayIntEqual(expectedValues, values []int) bool {
 
 func RandSshKeyId() string {
 	return fmt.Sprintf("vcert-go-%d-%sSSHCert", time.Now().Unix(), randRunes(4))
+}
+
+type Certificate struct {
+	ObjectName string
+	CN         string
+	Sans       []string
+	Validity   time.Duration
+	Zone       string
+}
+
+// represents a certificate with no CN
+type CertificateNoCN struct {
+	Certificate
+}
+
+// helper for generating certificates
+func GenerateCertificate(r *rand.Rand, size int) Certificate {
+	// generate a random CN
+	cn := RandCN()
+	return Certificate{
+		// set the generated CN as the certificate's aswell as the object's name
+		CN:         cn,
+		ObjectName: cn,
+		Validity:   3 * 24 * time.Hour,
+		// for searching certificate, this is independent of the zone it will be created
+		Zone: "Open Source\\vcert\\Search Certificate",
+		// add 3 SAN-DNS prefixed with one, two and three respectively
+		Sans: []string{Prefix("one", cn), Prefix("two", cn), Prefix("three", cn), cn},
+	}
+}
+
+// GenerateCertificate wrapper for usage with quickcheck
+func (Certificate) Generate(r *rand.Rand, s int) reflect.Value {
+	return reflect.ValueOf(GenerateCertificate(r, s))
+}
+
+// GenerateCertificate wrapper for usage with quickcheck
+func (CertificateNoCN) Generate(r *rand.Rand, s int) reflect.Value {
+	c := GenerateCertificate(r, s)
+	c.CN = ""
+	return reflect.ValueOf(CertificateNoCN{c})
+}
+
+// adds prefix(es) `p` to a string `s`, using a dash character `-` as a delimiter
+func Prefix(ps ...string) string {
+	return strings.Join(ps, "-")
+}
+
+func (_c Certificate) ShuffleSans() Certificate {
+	c := _c
+	sans := c.Sans
+	fmt.Printf("shuffling %v -> ", sans)
+	rand.Shuffle(len(sans), func(i, j int) { sans[i], sans[j] = sans[j], sans[i] })
+	c.Sans = sans
+	fmt.Printf("%v\n", c.Sans)
+	return c
 }
