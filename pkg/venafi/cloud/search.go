@@ -185,6 +185,7 @@ func formatSearchCertificateArguments(cn string, sans *certificate.Sans, certMin
 		},
 	}
 
+	// only if a list of SANS-DNS is provided, we add the field to the search request
 	if sans != nil && sans.DNS != nil {
 		addOperand(req, Operand{
 			Field:    "subjectAlternativeNameDns",
