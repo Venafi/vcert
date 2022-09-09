@@ -2461,13 +2461,12 @@ func TestSearchValidCertificate(t *testing.T) {
 	// generate 3 certificates for each test
 	configuration := &quick.Config{MaxCount: 3}
 
-	zone := ctx.TPPZone
+	// use this zone instead of the one provided on $TPP_ZONE environment
+	// variable for creating certificates
+	zone := "Open Source\\vcert\\Search Certificate"
 	tpp := AuthenticateOrDie(t, zone)
 
 	findCertificate := func(c test.Certificate) bool {
-		// manually set the certificate zone since the generator function
-		// doesn't have access to the $TPP_ZONE environment variable
-		c.Zone = zone
 		certificate, err := tpp._SearchCertificate(t, &c)
 		found := false
 		if certificate != nil {
@@ -2491,9 +2490,6 @@ func TestSearchValidCertificate(t *testing.T) {
 	// generate a random certificate search, make sure we can't find it, then
 	// create the certificate and ensure we can find it
 	shouldCreateAndFindCertificate := func(c test.Certificate) bool {
-		// manually set the certificate zone since the generator function
-		// doesn't have access to the $TPP_ZONE environment variable
-		c.Zone = zone
 		// a certificate should not be found, we want to manually create it to
 		// ensure there is only 1 certificate for this test, if this fails it's
 		// most likely the `test.RandCN` used in Certificate.Generator (needs to
@@ -2514,9 +2510,6 @@ func TestSearchValidCertificate(t *testing.T) {
 
 	// will create a new certificate with longer validity for the certificate you provide
 	shouldCreateAndFindNewestCertificate := func(c test.Certificate) bool {
-		// manually set the certificate zone since the generator function
-		// doesn't have access to the $TPP_ZONE environment variable
-		c.Zone = zone
 		new := c
 		// use a different ObjectName, otherwise certificate will be replaced
 		// instead of creating a new one

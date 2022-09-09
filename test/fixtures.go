@@ -278,6 +278,8 @@ func GenerateCertificate(r *rand.Rand, size int) Certificate {
 		CN:         cn,
 		ObjectName: cn,
 		Validity:   3 * 24 * time.Hour,
+		// for searching certificate, this is independent of the zone it will be created
+		Zone: "Open Source\\vcert\\Search Certificate",
 		// add 3 SAN-DNS prefixed with one, two and three respectively
 		Sans: []string{Prefix("one", cn), Prefix("two", cn), Prefix("three", cn), cn},
 	}
