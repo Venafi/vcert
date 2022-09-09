@@ -27,7 +27,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"math"
 	"net/http"
 	netUrl "net/url"
 	"regexp"
@@ -100,39 +99,16 @@ func (c *Connector) SearchCertificates(req *certificate.SearchRequest) (*certifi
 }
 
 func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.Sans, certMinTimeLeft time.Duration) (certificateInfo *certificate.CertificateInfo, err error) {
+	// retrieve application name from zone
 	appName := getAppNameFromZone(zone)
-	// get application id
+	// get application id from name
 	app, _, err := c.getAppDetailsByName(appName)
 	if err != nil {
 		return nil, err
 	}
 
-	// convert a time.Duration to days
-	certMinTimeDays := math.Floor(certMinTimeLeft.Hours() / 24)
-
 	// format arguments for request
-	req := &SearchRequest{
-		Expression: &Expression{
-			Operator: AND,
-			Operands: []Operand{
-				{
-					Field:    "subjectCN",
-					Operator: EQ,
-					Value:    cn,
-				},
-				{
-					Field:    "subjectAlternativeNameDns",
-					Operator: IN,
-					Values:   sans.DNS,
-				},
-				{
-					Field:    "validityPeriodDays",
-					Operator: GTE,
-					Value:    certMinTimeDays,
-				},
-			},
-		},
-	}
+	req := formatSearchCertificateArguments(cn, sans, certMinTimeLeft)
 
 	// perform request
 	searchResult, err := c.searchCertificates(req)
@@ -145,13 +121,10 @@ func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.
 		return nil, verror.NoCertificateFoundError
 	}
 
-	// map (convert) response to an array of CertificateInfo, TODO: only add
-	// those certificates whose Zone matches ours
+	// map (convert) response to an array of CertificateInfo
 	certificates := make([]*certificate.CertificateInfo, 0)
 	n := 0
 	for _, cert := range searchResult.Certificates {
-		// log.Printf("looping %v\n", util.GetJsonAsString(cert))
-		// TODO: filter based on applicationId (VaaS equivalent to TPP Zone)
 		if util.ArrayContainsString(cert.ApplicationIds, app.ApplicationId) {
 			match := cert.ToCertificateInfo()
 			certificates = append(certificates, &match)
