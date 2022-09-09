@@ -1973,12 +1973,12 @@ func TestSearchValidCertificate(t *testing.T) {
 	// generate 3 certificates for each test
 	configuration := &quick.Config{MaxCount: 3}
 
-	// use this zone instead of the one provided on $CLOUD_ZONE environment
-	// variable for creating certificates
-	zone := "Open Source Integrations\\Unrestricted"
+	zone := ctx.CloudZone
 	cloud := AuthenticateOrDie(t, zone)
 
 	findCertificate := func(c test.Certificate) bool {
+		// manually set the certificate zone since the generator function
+		// doesn't have access to the $CLOUD_ZONE environment variable
 		c.Zone = zone
 		certificate, err := cloud._SearchCertificate(t, &c)
 		found := false
@@ -2003,6 +2003,8 @@ func TestSearchValidCertificate(t *testing.T) {
 	// generate a random certificate search, make sure we can't find it, then
 	// create the certificate and ensure we can find it
 	shouldCreateAndFindCertificate := func(c test.Certificate) bool {
+		// manually set the certificate zone since the generator function
+		// doesn't have access to the $CLOUD_ZONE environment variable
 		c.Zone = zone
 		// a certificate should not be found, we want to manually create it to
 		// ensure there is only 1 certificate for this test, if this fails it's
@@ -2023,6 +2025,8 @@ func TestSearchValidCertificate(t *testing.T) {
 	}
 
 	shouldCreateAndFindNewestCertificate := func(c test.Certificate) bool {
+		// manually set the certificate zone since the generator function
+		// doesn't have access to the $CLOUD_ZONE environment variable
 		c.Zone = zone
 		new := c
 		// use a different ObjectName, otherwise certificate will be replaced
