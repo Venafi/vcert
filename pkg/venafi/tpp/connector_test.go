@@ -219,7 +219,7 @@ func TestRetrieveSelfIdentity(t *testing.T) {
 		t.Fatalf("Failed to get the used user. Error: %v", err)
 	}
 
-	if identity == "" {
+	if identity.Name == "" {
 		t.Fatalf("Failed to get to get Self")
 	}
 }

@@ -23,7 +23,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/policy"
 	"io"
 	"io/ioutil"
 	"log"
@@ -32,6 +31,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/Venafi/vcert/v4/pkg/policy"
 
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
@@ -319,11 +320,11 @@ type findObjectsOfClassResponse struct {
 	PolicyObjects []policyObject `json:"Objects,omitempty"`
 }
 
-type IdentitiesResponse struct {
-	Identities []Identity `json:"Identities"`
+type identitiesResponse struct {
+	Identities []identity `json:"Identities"`
 }
 
-type Identity struct {
+type identity struct {
 	FullName          string `json:"FullName"`
 	Name              string `json:"Name"`
 	Prefix            string `json:"Prefix"`

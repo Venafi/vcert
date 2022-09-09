@@ -43,7 +43,7 @@ type Connector struct {
 	apiKey      string
 	accessToken string
 	verbose     bool
-	Identity    string
+	Identity    identity
 	trust       *x509.CertPool
 	zone        string
 	client      *http.Client
@@ -435,14 +435,14 @@ func (c *Connector) requestMetadataItems(dn string) ([]metadataKeyValueSet, erro
 }
 
 // Retrieve user's self identity
-func (c *Connector) retrieveSelfIdentity() (response string, err error) {
+func (c *Connector) retrieveSelfIdentity() (response identity, err error) {
 
-	var respIndentities = &IdentitiesResponse{}
+	var respIndentities = &identitiesResponse{}
 
 	statusCode, statusText, body, err := c.request("GET", urlRetrieveSelfIdentity, nil)
 	if err != nil {
 		log.Printf("Failed to get the used user. Error: %v", err)
-		return "", err
+		return identity{}, err
 	}
 	log.Printf("Status code: %d", statusCode)
 
@@ -450,16 +450,16 @@ func (c *Connector) retrieveSelfIdentity() (response string, err error) {
 	case http.StatusOK:
 		err = json.Unmarshal(body, respIndentities)
 		if err != nil {
-			return "", fmt.Errorf("failed to parse identity response: %s, body: %s", err, body)
+			return identity{}, fmt.Errorf("failed to parse identity response: %s, body: %s", err, body)
 		}
 
 		if (respIndentities != nil) && (len(respIndentities.Identities) > 0) {
-			return respIndentities.Identities[0].Name, nil
+			return respIndentities.Identities[0], nil
 		}
 	case http.StatusUnauthorized:
-		return "", verror.AuthError
+		return identity{}, verror.AuthError
 	}
-	return "", fmt.Errorf("failed to get Self. Status code: %d, Status text: %s", statusCode, statusText)
+	return identity{}, fmt.Errorf("failed to get Self. Status code: %d, Status text: %s", statusCode, statusText)
 }
 
 // requestSystemVersion returns the TPP system version of the connector context
