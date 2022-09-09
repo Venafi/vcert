@@ -21,10 +21,10 @@ import (
 	"fmt"
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"log"
+	"math"
 	"net/http"
 	"strings"
 	"time"
-	"math"
 )
 
 type SearchRequest struct {
