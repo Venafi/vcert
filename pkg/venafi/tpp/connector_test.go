@@ -2461,7 +2461,10 @@ func TestSearchValidCertificate(t *testing.T) {
 	// generate 3 certificates for each test
 	configuration := &quick.Config{MaxCount: 3}
 
-	zone := ctx.TPPZone
+	// using ctx.TPPZone shares context with all the test suite, some of the
+	// tests modify this variable and gives trouble, get the environment
+	// variable directly instead
+	zone := os.Getenv("TPP_ZONE")
 	tpp := AuthenticateOrDie(t, zone)
 
 	findCertificate := func(c test.Certificate) bool {
