@@ -1973,10 +1973,7 @@ func TestSearchValidCertificate(t *testing.T) {
 	// generate 3 certificates for each test
 	configuration := &quick.Config{MaxCount: 3}
 
-	// using ctx.CloudZone shares context with all the test suite, some of the
-	// tests modify this variable and gives trouble, get the environment
-	// variable directly instead
-	zone := os.Getenv("CLOUD_ZONE")
+	zone := ctx.CloudZone
 	cloud := AuthenticateOrDie(t, zone)
 
 	findCertificate := func(c test.Certificate) bool {
