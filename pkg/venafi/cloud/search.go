@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"log"
+	"math"
 	"net/http"
 	"strings"
 	"time"
@@ -164,4 +165,48 @@ func getAppNameFromZone(zone string) string {
 	}
 
 	return zone[:lastSlash]
+}
+
+// TODO: test this function
+func formatSearchCertificateArguments(cn string, sans *certificate.Sans, certMinTimeLeft time.Duration) *SearchRequest {
+	// convert a time.Duration to days
+	certMinTimeDays := math.Floor(certMinTimeLeft.Hours() / 24)
+
+	// generate base request
+	req := &SearchRequest{
+		Expression: &Expression{
+			Operator: AND,
+			Operands: []Operand{
+				{
+					Field:    "validityPeriodDays",
+					Operator: GTE,
+					Value:    certMinTimeDays,
+				},
+			},
+		},
+	}
+
+	if sans != nil && sans.DNS != nil {
+		addOperand(req, Operand{
+			Field:    "subjectAlternativeNameDns",
+			Operator: IN,
+			Values:   sans.DNS,
+		})
+	}
+
+	// only if a CN is provided, we add the field to the search request
+	if cn != "" {
+		addOperand(req, Operand{
+			Field:    "subjectCN",
+			Operator: EQ,
+			Value:    cn,
+		})
+	}
+
+	return req
+}
+
+func addOperand(req *SearchRequest, o Operand) *SearchRequest {
+	req.Expression.Operands = append(req.Expression.Operands, o)
+	return req
 }
