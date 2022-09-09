@@ -605,7 +605,7 @@ func TestReadPolicyConfiguration(t *testing.T) {
 		t.Fatalf("%s", err)
 	}
 	expectedPolice := endpoint.Policy{
-		SubjectCNRegexes:         []string{"^.*.example.com$", "^.*.example.org$", "^.*.example.net$", "^.*.invalid$", "^.*.local$", "^.*.localhost$", "^.*.test$", "^.*.vfidev.com$"},
+		SubjectCNRegexes:         []string{"^.*$"},
 		SubjectORegexes:          []string{"^.*$"},
 		SubjectOURegexes:         []string{"^.*$"},
 		SubjectSTRegexes:         []string{"^.*$"},
