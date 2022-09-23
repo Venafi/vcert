@@ -32,11 +32,13 @@ Use these links to quickly jump to a relevant section lower on this page:
 
 Review these prerequistes to get started. You'll need the following:
 
-1. Verify that the Venafi as a Service REST API at [https://api.venafi.cloud](https://api.venafi.cloud/swagger-ui.html)
+1. Verify that the Venafi as a Service REST API at [https://api.venafi.cloud](https://api.venafi.cloud/vaas)
 is accessible from the system where VCert will be run.
 2. You have successfully registered for a Venafi as a Service account, have been granted at least the
-"Resource Owner" role, and know your API key.
-4. A CA Account and Issuing Template exist and have been configured with:
+"Resource Owner" role, and know your API key. You can use the `getcred` action to
+[register and obtain an API key](#registering-and-obtaining-an-api-key) but you will need an administrator
+to update your role if there are already 3 or more users registered for your company in Venafi as a Service.
+3. A CA Account and Issuing Template exist and have been configured with:
     1. Recommended Settings values for:
         1. Organizational Unit (OU)
         2. Organization (O)
@@ -44,11 +46,14 @@ is accessible from the system where VCert will be run.
         4. State/Province (ST)
         5. Country (C)
     2. Issuing Rules that:
-        1. (Recommended) Limits Common Name and Subject Alternative Name to domains that are allowed by your organization
+        1. (Recommended) Limits Common Name and Subject Alternative Names that are allowed by your organization
         2. (Recommended) Restricts the Key Length to 2048 or higher
         3. (Recommended) Does not allow Private Key Reuse
-5. An Application exists where you are among the owners, and you know the Application Name.
-6. An Issuing Template is assigned to the Application, and you know its API Alias.
+4. An Application exists where you are among the owners,
+and you know the Application Name.
+5. An Issuing Template is assigned to the Application, and you know its API Alias.
+> 📌 **NOTE**: if you're just testing, you can skip the last 3 items.  Simply specify "Default" for the issuing template alias portion
+> of your zone (e.g., "My Application\Default") and an application with the name you specified will be automatically created for you.
 
 ## General Command Line Parameters
 
