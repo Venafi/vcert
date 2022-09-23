@@ -25,6 +25,7 @@ Use these links to quickly jump to a relevant section lower on this page:
 - [Options common to the `enroll`, `pickup`, and `renew` actions](#general-command-line-parameters)
 - [Options for applying certificate policy using the `setpolicy` action](#parameters-for-applying-certificate-policy)
 - [Options for viewing certificate policy using the `getpolicy` action](#parameters-for-viewing-certificate-policy)
+- [Options for registering and obtaining a new API key using the `getcred` action](#registering-and-obtaining-an-api-key)
 - [Options for generating a new key pair and CSR using the `gencsr` action (for manual enrollment)](#generating-a-new-key-pair-and-csr)
 
 ## Prerequisites
@@ -251,6 +252,19 @@ vcert renew -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 --thumbprint file:/opt/pki/d
 ```
 
 ## Appendix
+
+### Registering and obtaining an API Key
+```
+vcert getcred --email <business email address>
+```
+Options:
+
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Command&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Description                                                  |
+| ---------------- | ------------------------------------------------------------ |
+| `--email`        | Use to specify a user's business email address. An email will be sent to this address with a link to activate the API key that is output by this action. This is required for (re)registerting with Venafi as a Service. |
+| `--format`       | Specify "json" to get more verbose JSON formatted output instead of the plain text default. |
+| `--password`     | Use to specify the user's password if it is expected the user will need to login to the [Venafi as a Service web UI](https://ui.venafi.cloud/). |
+
 
 ### Generating a new key pair and CSR
 ```
