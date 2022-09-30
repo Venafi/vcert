@@ -30,7 +30,13 @@ func TestFake(t *testing.T) {
 	})
 	ctx = logr.NewContext(ctx, log)
 
-	s := fake.New()
+	const (
+		tppUsername = "user1"
+		tppPassword = "password1"
+		tppZone     = "zone1"
+	)
+	s := fake.New(log)
+	s.WithUsername(tppUsername).WithPassword(tppPassword)
 	s.Start(ctx)
 	t.Cleanup(func() { s.Close(ctx) })
 
@@ -39,6 +45,9 @@ func TestFake(t *testing.T) {
 	cmd.Env = append(
 		os.Environ(),
 		"TPP_URL="+s.URL,
+		"TPP_USER="+tppUsername,
+		"TPP_PASSWORD="+tppPassword,
+		"TPP_ZONE="+tppZone,
 	)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
