@@ -49,8 +49,8 @@ func TestFake(t *testing.T) {
 			tppUsername,
 		)
 
-	s.Start(ctx)
-	t.Cleanup(func() { s.Close(ctx) })
+	s.Start()
+	t.Cleanup(s.Close)
 
 	cmd := exec.CommandContext(ctx, os.Getenv("MAKE"), "tpp_test")
 	cmd.Dir = "../../.."

@@ -128,15 +128,13 @@ type Fake struct {
 	log logr.Logger
 }
 
-func (o *Fake) Start(ctx context.Context) {
-	log := logFromContext(ctx)
-	log.V(1).Info("starting")
+func (o *Fake) Start() {
+	o.log.V(1).Info("starting")
 	o.Server.StartTLS()
 }
 
-func (o *Fake) Close(ctx context.Context) {
-	log := logFromContext(ctx)
-	log.V(1).Info("stopping")
+func (o *Fake) Close() {
+	o.log.V(1).Info("stopping")
 	o.Server.Close()
 }
 
