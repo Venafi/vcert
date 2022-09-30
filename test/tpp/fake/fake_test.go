@@ -7,12 +7,12 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/sync/errgroup"
-
-	"github.com/Venafi/vcert/v4/test/tpp/fake"
 	"github.com/go-logr/logr"
 	"github.com/go-logr/logr/testr"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/sync/errgroup"
+
+	"github.com/Venafi/vcert/v4/test/tpp/fake"
 )
 
 func TestFake(t *testing.T) {
@@ -33,10 +33,22 @@ func TestFake(t *testing.T) {
 	const (
 		tppUsername = "user1"
 		tppPassword = "password1"
+		tppClientID = "test-application"
 		tppZone     = "zone1"
 	)
 	s := fake.New(log)
-	s.WithUsername(tppUsername).WithPassword(tppPassword)
+	s.WithUser(tppUsername, tppPassword).
+		WithApplication(
+			"vcert-sdk",
+			"certificate:discover,manage,revoke;configuration:manage;ssh:manage",
+			tppUsername,
+		).
+		WithApplication(
+			tppClientID,
+			"certificate:discover,manage,revoke",
+			tppUsername,
+		)
+
 	s.Start(ctx)
 	t.Cleanup(func() { s.Close(ctx) })
 
@@ -48,6 +60,7 @@ func TestFake(t *testing.T) {
 		"TPP_USER="+tppUsername,
 		"TPP_PASSWORD="+tppPassword,
 		"TPP_ZONE="+tppZone,
+		"CLIENT_ID="+tppClientID,
 	)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

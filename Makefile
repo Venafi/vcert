@@ -66,7 +66,7 @@ tpp_test: get
 	go tool cover -func=cov_tpp.out
 
 fake_tpp_test: export MAKE := $(MAKE)
-fake_tpp_test: export WHAT := ^\(TestPingTPP\|TestRetrieveSelfIdentity\|TestGetRefreshToken\|TestGetRefreshTokenWithDefaultScope\|TestFailRefreshAccessToken\|TestRefreshAccessToken\)$$
+fake_tpp_test: export WHAT := ^\(TestPingTPP\|TestRetrieveSelfIdentity\|TestGetRefreshToken\|TestGetRefreshTokenWithDefaultScope\|TestFailRefreshAccessToken\|TestRefreshAccessToken\|TestRefreshAccessTokenNoClientID\|TestAuthenticationAccessToken\)$$
 fake_tpp_test:
 	go test ./test/tpp/fake/... -count=1 -v
 

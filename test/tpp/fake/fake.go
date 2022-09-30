@@ -5,32 +5,63 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync"
 	"time"
 
-	"github.com/Venafi/vcert/v4/test/tpp/fake/models"
 	"github.com/go-logr/logr"
 	"github.com/google/uuid"
+	"k8s.io/apimachinery/pkg/util/sets"
+
+	"github.com/Venafi/vcert/v4/test/tpp/fake/models"
 )
+
+type application struct {
+	clientID string
+	scope    string
+	users    sets.String
+}
+
+type user struct {
+	username string
+	password string
+}
+
+type token struct {
+	token   string
+	user    string
+	expires time.Time
+	scope   string
+}
 
 type state struct {
 	sync.RWMutex
-	username string
-	password string
-	grants   map[string]models.AuthorizeOAuthResponse
+	users        map[string]user
+	applications map[string]application
+	grants       map[string]models.AuthorizeOAuthResponse
+	accessTokens map[string]string
 }
 
-func (o *state) WithUsername(username string) *state {
+func (o *state) WithUser(username, password string) *state {
 	o.Lock()
 	defer o.Unlock()
-	o.username = username
+	user := user{
+		username: username,
+		password: password,
+	}
+	o.users[user.username] = user
 	return o
 }
 
-func (o *state) WithPassword(password string) *state {
+func (o *state) WithApplication(clientID, scope string, users ...string) *state {
 	o.Lock()
 	defer o.Unlock()
-	o.password = password
+	application := application{
+		clientID: clientID,
+		scope:    scope,
+		users:    sets.NewString(users...),
+	}
+	o.applications[application.clientID] = application
 	return o
 }
 
@@ -47,6 +78,7 @@ func (o *state) NewGrant(scope string) models.AuthorizeOAuthResponse {
 		Identity:     "",
 	}
 	o.grants[grant.RefreshToken] = grant
+	o.accessTokens[grant.AccessToken] = grant.RefreshToken
 	return grant
 }
 
@@ -58,6 +90,7 @@ func (o *state) RefreshGrant(refreshToken string) (grant models.AuthorizeOAuthRe
 		return
 	}
 	delete(o.grants, refreshToken)
+	delete(o.accessTokens, grant.AccessToken)
 	grant = models.AuthorizeOAuthResponse{
 		AccessToken:  uuid.Must(uuid.NewRandom()).String(),
 		Expires:      uint64(time.Now().UTC().Add(time.Hour).Unix()),
@@ -70,6 +103,22 @@ func (o *state) RefreshGrant(refreshToken string) (grant models.AuthorizeOAuthRe
 		Identity:     "",
 	}
 	o.grants[grant.RefreshToken] = grant
+	o.accessTokens[grant.AccessToken] = grant.RefreshToken
+	return
+}
+
+func (o *state) LookupAccessToken(accessToken string) (grant models.AuthorizeOAuthResponse, found bool) {
+	o.Lock()
+	defer o.Unlock()
+	refreshToken, found := o.accessTokens[accessToken]
+	if !found {
+		return
+	}
+	grant, found = o.grants[refreshToken]
+	if !found {
+		delete(o.accessTokens, accessToken)
+	}
+	// TODO(wallrj): Check for expired tokens
 	return
 }
 
@@ -97,14 +146,17 @@ func New(log logr.Logger) *Fake {
 	f := &Fake{
 		log: log,
 		state: &state{
-			grants: map[string]models.AuthorizeOAuthResponse{},
+			grants:       map[string]models.AuthorizeOAuthResponse{},
+			accessTokens: map[string]string{},
+			users:        map[string]user{},
+			applications: map[string]application{},
 		},
 		Server: ts,
 	}
 	mux.HandleFunc("/vedauth/authorize/oauth", f.handlerAuthorizeOAuth)
 	mux.HandleFunc("/vedauth/authorize/token", f.handlerAuthorizeToken)
-	mux.HandleFunc("/vedsdk/Identity/Self", f.handlerIdentitySelf)
-	mux.HandleFunc("/vedsdk/certificates/checkpolicy", f.handlerCertificatesCheckPolicy)
+	mux.HandleFunc("/vedsdk/Identity/Self", f.checkBearerToken(f.handlerIdentitySelf))
+	mux.HandleFunc("/vedsdk/certificates/checkpolicy", f.checkBearerToken(f.handlerCertificatesCheckPolicy))
 	mux.HandleFunc("/vedsdk/", f.handlerPing)
 	mux.HandleFunc("/", f.handlerCatchAll)
 	return f
@@ -119,13 +171,34 @@ func (o *Fake) handlerAuthorizeOAuth(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if in.Username != o.username || in.Password != o.password {
+	user, found := o.users[in.Username]
+	if !found || in.Password != user.password {
 		// Mimics the behavior of TPP 20.4 and above. See:
 		// https://github.com/jetstack/venafi-oauth-helper/issues/25#issuecomment-854037706
 		http.Error(w, `{"error":"invalid_grant","error_description":"Username\/password combination not valid"}`,
 			http.StatusBadRequest)
 		return
 	}
+	application, found := o.applications[in.ClientID]
+	if !found {
+		http.Error(w, `{"error":"invalid_grant","error_description":"Unknown client-id"}`,
+			http.StatusBadRequest)
+		return
+	}
+
+	if !application.users.Has(in.Username) {
+		http.Error(w, `{"error":"invalid_grant","error_description":"Unknown client-id"}`,
+			http.StatusBadRequest)
+		return
+	}
+
+	// TODO(wallrj): Check that requested scope is a subset of the application scope
+	// if in.Scope != application.scope {
+	// 	http.Error(w, `{"error":"invalid_grant","error_description":"scope mismatch"}`,
+	// 		http.StatusBadRequest)
+	// 	return
+	// }
+
 	grant := o.NewGrant(in.Scope)
 	encoder := json.NewEncoder(w)
 	if err := encoder.Encode(&grant); err != nil {
@@ -149,6 +222,14 @@ func (o *Fake) handlerAuthorizeToken(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "bad token", http.StatusBadRequest)
 		return
 	}
+
+	_, found = o.applications[in.ClientID]
+	if !found {
+		http.Error(w, `{"error":"invalid_grant","error_description":"Unknown client-id"}`,
+			http.StatusBadRequest)
+		return
+	}
+
 	encoder := json.NewEncoder(w)
 	if err := encoder.Encode(&grant); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -156,10 +237,25 @@ func (o *Fake) handlerAuthorizeToken(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+func (o *Fake) checkBearerToken(wrapped http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		authHeader := req.Header.Get("Authorization")
+		authParts := strings.Split(authHeader, " ")
+		accessToken := authParts[1]
+		_, found := o.LookupAccessToken(accessToken)
+		if !found {
+			http.Error(w, `{}`, http.StatusUnauthorized)
+			return
+		}
+		wrapped(w, req)
+	}
+}
+
 func (o *Fake) handlerIdentitySelf(w http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 	log := o.log.WithValues("uri", req.RequestURI).WithName("handlerIdentifySelf")
 	log.V(1).Info("request")
+
 	out := models.IdentityWebResponse{
 		Identities: []*models.IdentityEntry{
 			&models.IdentityEntry{
