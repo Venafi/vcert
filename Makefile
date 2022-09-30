@@ -63,6 +63,10 @@ tpp_test: get
 	go test -v $(GOFLAGS) -coverprofile=cov_tpp.out ./pkg/venafi/tpp
 	go tool cover -func=cov_tpp.out
 
+fake_tpp_test: export MAKE := $(MAKE)
+fake_tpp_test:
+	go test ./test/tpp/fake/...
+
 cloud_test: get
 	go test -v $(GOFLAGS) -coverprofile=cov_vaas.out ./pkg/venafi/cloud
 	go tool cover -func=cov_vaas.out
