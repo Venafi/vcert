@@ -23,6 +23,7 @@ swagger generate model \
     --model LockedListValues \
     --model LockedValue \
     --model PolicyData \
+    --model RefreshOAuthRequest \
     --model SubjectData \
     --model-package test/tpp/fake/models
 ```

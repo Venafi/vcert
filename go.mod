@@ -5,6 +5,7 @@ require (
 	github.com/go-openapi/errors v0.20.3
 	github.com/go-openapi/strfmt v0.21.3
 	github.com/go-openapi/swag v0.22.3
+	github.com/google/uuid v1.1.1
 	github.com/howeyc/gopass v0.0.0-20170109162249-bf9dde6d0d2c
 	github.com/pavel-v-chernykh/keystore-go/v4 v4.1.0
 	github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d

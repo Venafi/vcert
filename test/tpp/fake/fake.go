@@ -10,15 +10,14 @@ import (
 
 	"github.com/Venafi/vcert/v4/test/tpp/fake/models"
 	"github.com/go-logr/logr"
+	"github.com/google/uuid"
 )
 
 type state struct {
 	sync.RWMutex
-	username            string
-	password            string
-	refreshToken        string
-	accessToken         string
-	refreshTokenExpires time.Time
+	username string
+	password string
+	grants   map[string]models.AuthorizeOAuthResponse
 }
 
 func (o *state) WithUsername(username string) *state {
@@ -35,18 +34,43 @@ func (o *state) WithPassword(password string) *state {
 	return o
 }
 
-func (o *state) WithRefreshToken(token string) *state {
+func (o *state) NewGrant(scope string) models.AuthorizeOAuthResponse {
 	o.Lock()
 	defer o.Unlock()
-	o.accessToken = token
-	return o
+	grant := models.AuthorizeOAuthResponse{
+		AccessToken:  uuid.Must(uuid.NewRandom()).String(),
+		Expires:      uint64(time.Now().UTC().Add(time.Hour).Unix()),
+		RefreshToken: uuid.Must(uuid.NewRandom()).String(),
+		RefreshUntil: uint64(time.Now().Add(24 * time.Hour).Unix()),
+		Scope:        scope,
+		TokenType:    "Bearer",
+		Identity:     "",
+	}
+	o.grants[grant.RefreshToken] = grant
+	return grant
 }
 
-func (o *state) WithAccessToken(token string) *state {
+func (o *state) RefreshGrant(refreshToken string) (grant models.AuthorizeOAuthResponse, found bool) {
 	o.Lock()
 	defer o.Unlock()
-	o.accessToken = token
-	return o
+	grant, found = o.grants[refreshToken]
+	if !found {
+		return
+	}
+	delete(o.grants, refreshToken)
+	grant = models.AuthorizeOAuthResponse{
+		AccessToken:  uuid.Must(uuid.NewRandom()).String(),
+		Expires:      uint64(time.Now().UTC().Add(time.Hour).Unix()),
+		RefreshToken: uuid.Must(uuid.NewRandom()).String(),
+		// TPP does absolute refresh-token expiry rather than a sliding expiry.
+		// The expiry time is the same everytime you rotate the refresh-token.
+		RefreshUntil: grant.RefreshUntil,
+		Scope:        grant.Scope,
+		TokenType:    "Bearer",
+		Identity:     "",
+	}
+	o.grants[grant.RefreshToken] = grant
+	return
 }
 
 type Fake struct {
@@ -71,11 +95,14 @@ func New(log logr.Logger) *Fake {
 	mux := http.NewServeMux()
 	ts := httptest.NewUnstartedServer(mux)
 	f := &Fake{
-		log:    log,
-		state:  &state{},
+		log: log,
+		state: &state{
+			grants: map[string]models.AuthorizeOAuthResponse{},
+		},
 		Server: ts,
 	}
 	mux.HandleFunc("/vedauth/authorize/oauth", f.handlerAuthorizeOAuth)
+	mux.HandleFunc("/vedauth/authorize/token", f.handlerAuthorizeToken)
 	mux.HandleFunc("/vedsdk/Identity/Self", f.handlerIdentitySelf)
 	mux.HandleFunc("/vedsdk/certificates/checkpolicy", f.handlerCertificatesCheckPolicy)
 	mux.HandleFunc("/vedsdk/", f.handlerPing)
@@ -99,19 +126,31 @@ func (o *Fake) handlerAuthorizeOAuth(w http.ResponseWriter, req *http.Request) {
 			http.StatusBadRequest)
 		return
 	}
-	o.WithRefreshToken(o.refreshToken + "x")
-	o.WithAccessToken(o.accessToken + "x")
-	out := models.AuthorizeOAuthResponse{
-		AccessToken:  o.accessToken,
-		Expires:      uint64(time.Now().UTC().Add(time.Hour).Unix()),
-		RefreshToken: o.refreshToken,
-		RefreshUntil: uint64(o.refreshTokenExpires.Unix()),
-		Scope:        in.Scope,
-		TokenType:    "Bearer",
-		Identity:     "",
+	grant := o.NewGrant(in.Scope)
+	encoder := json.NewEncoder(w)
+	if err := encoder.Encode(&grant); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (o *Fake) handlerAuthorizeToken(w http.ResponseWriter, req *http.Request) {
+	defer req.Body.Close()
+	log := o.log.WithValues("uri", req.RequestURI).WithName("handlerAuthorizeToken")
+	log.V(1).Info("request")
+	decoder := json.NewDecoder(req.Body)
+	var in models.RefreshOAuthRequest
+	if err := decoder.Decode(&in); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	grant, found := o.RefreshGrant(in.RefreshToken)
+	if !found {
+		http.Error(w, "bad token", http.StatusBadRequest)
+		return
 	}
 	encoder := json.NewEncoder(w)
-	if err := encoder.Encode(&out); err != nil {
+	if err := encoder.Encode(&grant); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
