@@ -2165,7 +2165,7 @@ func TestCreateSshCertServiceGeneratedKP(t *testing.T) {
 	hours := durationFromCert.Hours()
 	intHours := int(hours)
 	if intHours != duration {
-		fmt.Errorf("certificate duration is different, expected: %v but got %v", duration, intHours)
+		t.Errorf("certificate duration is different, expected: %v but got %v", duration, intHours)
 	}
 }
 
@@ -2329,7 +2329,7 @@ func TestCreateSshCertProvidedPubKey(t *testing.T) {
 	hours := durationFromCert.Hours()
 	intHours := int(hours)
 	if intHours != duration {
-		fmt.Errorf("certificate duration is different, expected: %v but got %v", duration, intHours)
+		t.Errorf("certificate duration is different, expected: %v but got %v", duration, intHours)
 	}
 }
 
