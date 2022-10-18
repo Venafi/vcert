@@ -49,6 +49,8 @@ func (ec *EllipticCurve) String() string {
 		return "P384"
 	case EllipticCurveP256:
 		return "P256"
+	case EllipticCurveED25519:
+		return "ED25519"
 	default:
 		return ""
 	}
@@ -63,6 +65,8 @@ func (ec *EllipticCurve) Set(value string) error {
 		*ec = EllipticCurveP384
 	case "p256", "p-256":
 		*ec = EllipticCurveP256
+	case "ed25519":
+		*ec = EllipticCurveED25519
 	default:
 		*ec = EllipticCurveDefault
 	}
@@ -78,13 +82,15 @@ const (
 	EllipticCurveP256
 	// EllipticCurveP384 represents the P384 curve
 	EllipticCurveP384
+	// EllipticED25519 represents the ED25519 curve
+	EllipticCurveED25519
 	EllipticCurveDefault = EllipticCurveP256
 
 	defaultRSAlength int = 2048
 )
 
 func AllSupportedCurves() []EllipticCurve {
-	return []EllipticCurve{EllipticCurveP521, EllipticCurveP256, EllipticCurveP384}
+	return []EllipticCurve{EllipticCurveP521, EllipticCurveP256, EllipticCurveP384, EllipticCurveED25519}
 }
 func AllSupportedKeySizes() []int {
 	return []int{1024, 2048, 4096, 8192}
