@@ -33,6 +33,7 @@ type Context struct {
 	CloudUrl            string
 	CloudAPIkey         string
 	CloudZone           string
+	VAASzoneEC          string
 	CloudZoneRestricted string
 }
 
@@ -51,6 +52,7 @@ func GetEnvContext() *Context {
 	c.CloudUrl = os.Getenv("CLOUD_URL")
 	c.CloudAPIkey = os.Getenv("CLOUD_APIKEY")
 	c.CloudZone = os.Getenv("CLOUD_ZONE")
+	c.VAASzoneEC = os.Getenv("VAAS_ZONE_EC")
 	c.CloudZoneRestricted = os.Getenv("CLOUD_ZONE_RESTRICTED")
 
 	return c

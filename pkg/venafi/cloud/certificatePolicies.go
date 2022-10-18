@@ -62,6 +62,7 @@ type certificateTemplate struct {
 		Key struct {
 			Type   string
 			Length int
+			Curve  string
 		}
 		keyReuse bool
 	}
