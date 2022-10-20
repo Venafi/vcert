@@ -444,7 +444,6 @@ func (c *Connector) retrieveSelfIdentity() (response identity, err error) {
 		log.Printf("Failed to get the used user. Error: %v", err)
 		return identity{}, err
 	}
-	log.Printf("Status code: %d", statusCode)
 
 	switch statusCode {
 	case http.StatusOK:
