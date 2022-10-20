@@ -17,9 +17,11 @@
 package cloud
 
 import (
-	"github.com/Venafi/vcert/v4/pkg/endpoint"
 	"strings"
 	"time"
+
+	"github.com/Venafi/vcert/v4/pkg/certificate"
+	"github.com/Venafi/vcert/v4/pkg/endpoint"
 )
 
 type certificateTemplate struct {
@@ -60,6 +62,7 @@ type certificateTemplate struct {
 		Key struct {
 			Type   string
 			Length int
+			Curve  string
 		}
 		keyReuse bool
 	}
@@ -121,6 +124,13 @@ func (ct certificateTemplate) toPolicy() (p endpoint.Policy) {
 			panic(err)
 		}
 		keyConfiguration.KeySizes = kt.KeyLengths[:]
+		for _, keyCurve := range kt.KeyCurves {
+			v := certificate.EllipticCurve(0)
+			if err := (&v).Set(keyCurve); err != nil {
+				panic(err)
+			}
+			keyConfiguration.KeyCurves = append(keyConfiguration.KeyCurves, v)
+		}
 		p.AllowedKeyConfigurations = append(p.AllowedKeyConfigurations, keyConfiguration)
 	}
 	return

@@ -894,6 +894,11 @@ func buildPolicySpecification(cit *certificateTemplate, info *policy.Certificate
 		shouldCreateDefaultKeyPAir = true
 	}
 
+	if cit.RecommendedSettings.Key.Curve != "" {
+		defaultKP.EllipticCurve = &cit.RecommendedSettings.Key.Curve
+		shouldCreateDefaultKeyPAir = true
+	}
+
 	if shouldCreateDefaultKeyPAir {
 		if ps.Default == nil {
 			ps.Default = &policy.Default{}
