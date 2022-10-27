@@ -235,7 +235,7 @@ func getSANByType(csrAttributes *CsrAttributes) *SubjectAlternativeNamesByType {
 	return csrAttributes.SubjectAlternativeNamesByType
 }
 
-//receives a string regex and a string to test
+// receives a string regex and a string to test
 func testRegex(toTest, regex string) (bool, error) {
 	compiledRegex, err := regexp.Compile(regex)
 	if err != nil {

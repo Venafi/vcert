@@ -308,8 +308,8 @@ func retrieveCertificate(connector endpoint.Connector, req *certificate.Request,
 	}
 }
 
-/* TODO: This one utilizes req.Timeout feature that is added to connector.RetrieveCertificate(), but
-it cannot do logging in CLI context right now -- logger.Printf("Issuance of certificate is pending ...") */
+// TODO: This one utilizes req.Timeout feature that is added to connector.RetrieveCertificate(), but
+// it cannot do logging in CLI context right now -- logger.Printf("Issuance of certificate is pending ...")
 func retrieveCertificateNew(connector endpoint.Connector, req *certificate.Request, timeout time.Duration) (certificates *certificate.PEMCollection, err error) {
 	req.Timeout = timeout
 	certificates, err = connector.RetrieveCertificate(req)

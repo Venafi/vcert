@@ -128,8 +128,8 @@ type certificateRevokeRequest struct {
 	Disable       bool             `json:",omitempty"`
 }
 
-/* {Requested:true  Success:true Error:} -- means requested
-   {Requested:false Success:true Error:} -- means already revoked  */
+// {Requested:true  Success:true Error:} -- means requested
+// {Requested:false Success:true Error:} -- means already revoked
 type certificateRevokeResponse struct {
 	Requested bool   `json:",omitempty"`
 	Success   bool   `json:",omitempty"`

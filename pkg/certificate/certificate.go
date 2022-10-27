@@ -161,10 +161,11 @@ const (
 // CustomField can be used for adding additional information to certificate. For example: custom fields or Origin.
 // By default it's custom field. For adding Origin set Type: CustomFieldOrigin
 // For adding custom field with one name and few values give to request:
-//  request.CustomFields = []CustomField{
-//    {Name: "name1", Value: "value1"}
-//    {Name: "name1", Value: "value2"}
-//  }
+//
+//	request.CustomFields = []CustomField{
+//	  {Name: "name1", Value: "value1"}
+//	  {Name: "name1", Value: "value2"}
+//	}
 type CustomField struct {
 	Type  CustomFieldType
 	Name  string
@@ -215,7 +216,7 @@ type Request struct {
 //SSH Certificate structures
 
 // SshCertRequest This request is a standard one, it will hold data for tpp request
-//and in the future it will hold VaS data.
+// and in the future it will hold VaS data.
 type SshCertRequest struct {
 	Template             string
 	PolicyDN             string

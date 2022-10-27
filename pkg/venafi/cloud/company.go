@@ -54,12 +54,15 @@ func getZoneConfiguration(policy *certificateTemplate) (zoneConfig *endpoint.Zon
 
 /*
 const (
+
 	zoneKeyGeneratorDeviceKeyGeneration  = "DEVICE_KEY_GENERATION"
 	zoneKeyGeneratorCentralKeyGeneration = "CENTRAL_KEY_GENERATION"
 	zoneKeyGeneratorUnknown              = "UNKNOWN"
+
 )
 
 const (
+
 	zoneEncryptionTypeRSA        = "RSA"
 	zoneEncryptionTypeDSA        = "DSA"
 	zoneEncryptionTypeEC         = "EC"
@@ -67,6 +70,7 @@ const (
 	zoneEncryptionTypeECGOST3410 = "ECGOST3410"
 	zoneEncryptionTypeRESERVED3  = "RESERVED3"
 	zoneEncryptionTypeUnknown    = "UNKNOWN"
+
 )
 */
 const (

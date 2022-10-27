@@ -26,7 +26,6 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/policy"
 	"math/big"
 	"net"
 	"net/url"
@@ -36,6 +35,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/Venafi/vcert/v4/pkg/policy"
 
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
@@ -1753,9 +1754,7 @@ func TestSetPolicyValuesAndValidate(t *testing.T) {
 
 }
 
-/**
-This test is just for verifying that a policy can be created using ENTRUST CA.
-*/
+// This test is just for verifying that a policy can be created using ENTRUST CA.
 func TestSetPolicyEntrust(t *testing.T) {
 
 	policyName := test.RandAppName() + "\\" + test.RandCitName()
@@ -1790,7 +1789,8 @@ func TestSetPolicyEntrust(t *testing.T) {
 
 }
 
-/**
+/*
+*
 This test is just for verifying that a policy can be created using DIGICERT	 CA.
 */
 func TestSetPolicyDigicert(t *testing.T) {

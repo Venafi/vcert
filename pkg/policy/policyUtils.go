@@ -11,8 +11,8 @@ import (
 	"strings"
 )
 
-//there is no way for creating an array as constant, so creating a variable
-//this is the nearest to a constant on arrays.
+// there is no way for creating an array as constant, so creating a variable
+// this is the nearest to a constant on arrays.
 var TppKeyType = []string{"RSA", "ECDSA"}
 var TppRsaKeySize = []int{512, 1024, 2048, 3072, 4096}
 var CloudRsaKeySize = []int{1024, 2048, 3072, 4096}

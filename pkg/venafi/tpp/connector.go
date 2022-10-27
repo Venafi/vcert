@@ -102,7 +102,7 @@ func (c *Connector) GetType() endpoint.ConnectorType {
 	return endpoint.ConnectorTypeTPP
 }
 
-//Ping attempts to connect to the TPP Server WebSDK API and returns an error if it cannot
+// Ping attempts to connect to the TPP Server WebSDK API and returns an error if it cannot
 func (c *Connector) Ping() (err error) {
 
 	//Extended timeout to allow the server to wake up
@@ -1434,7 +1434,7 @@ func (c *Connector) ReadPolicyConfiguration() (policy *endpoint.Policy, err erro
 	return
 }
 
-//ReadZoneConfiguration reads the policy data from TPP to get locked and pre-configured values for certificate requests
+// ReadZoneConfiguration reads the policy data from TPP to get locked and pre-configured values for certificate requests
 func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration, err error) {
 	if c.zone == "" {
 		return nil, fmt.Errorf("empty zone")
