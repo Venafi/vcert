@@ -228,7 +228,7 @@ type ApplicationDetails struct {
 	FqDns                     []string             `json:"fqDns,omitempty"`
 }
 
-//GenerateRequest generates a CertificateRequest based on the zone configuration, and returns the request along with the private key.
+// GenerateRequest generates a CertificateRequest based on the zone configuration, and returns the request along with the private key.
 func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *certificate.Request) (err error) {
 	switch req.CsrOrigin {
 	case certificate.LocalGeneratedCSR:

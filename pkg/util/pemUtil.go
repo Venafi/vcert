@@ -1,7 +1,7 @@
-//This file contains functions that were copied from x509.pem_decrypt.go
-//in order to keep supporting X509EncryptPEMBlock and x509DecryptPEMBlock
-//the use of this is not recommended, this is just to continue supporting old
-//applications.
+// This file contains functions that were copied from x509.pem_decrypt.go
+// in order to keep supporting X509EncryptPEMBlock and x509DecryptPEMBlock
+// the use of this is not recommended, this is just to continue supporting old
+// applications.
 package util
 
 import (

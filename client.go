@@ -41,7 +41,7 @@ func (cfg *Config) NewClient(args ...interface{}) (connector endpoint.Connector,
 	return cfg.newClient(args)
 }
 
-//this function is to manage the variadic arguments
+// this function is to manage the variadic arguments
 func (cfg *Config) newClient(args []interface{}) (connector endpoint.Connector, err error) {
 
 	var clientArgs *newClientArgs

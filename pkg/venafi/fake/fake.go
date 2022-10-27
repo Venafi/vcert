@@ -22,7 +22,7 @@ import (
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
 )
 
-//GenerateRequest creates a new certificate request, based on the zone/policy configuration and the user data
+// GenerateRequest creates a new certificate request, based on the zone/policy configuration and the user data
 func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *certificate.Request) (err error) {
 
 	switch req.CsrOrigin {

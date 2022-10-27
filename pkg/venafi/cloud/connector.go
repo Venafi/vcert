@@ -667,7 +667,7 @@ func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (
 	return &c, nil
 }
 
-//normalizeURL allows overriding the default URL used to communicate with Venafi Cloud
+// normalizeURL allows overriding the default URL used to communicate with Venafi Cloud
 func normalizeURL(url string) (normalizedURL string, err error) {
 	if url == "" {
 		url = apiURL
@@ -1348,15 +1348,16 @@ func (c *Connector) searchCertificatesByFingerprint(fp string) (*CertificateSear
 }
 
 /*
-  "id": "32a656d1-69b1-11e8-93d8-71014a32ec53",
-  "companyId": "b5ed6d60-22c4-11e7-ac27-035f0608fd2c",
-  "latestCertificateRequestId": "0e546560-69b1-11e8-9102-a1f1c55d36fb",
-  "ownerUserId": "593cdba0-2124-11e8-8219-0932652c1da0",
-  "certificateIds": [
-    "32a656d0-69b1-11e8-93d8-71014a32ec53"
-  ],
-  "certificateName": "cn=svc6.venafi.example.com",
+"id": "32a656d1-69b1-11e8-93d8-71014a32ec53",
+"companyId": "b5ed6d60-22c4-11e7-ac27-035f0608fd2c",
+"latestCertificateRequestId": "0e546560-69b1-11e8-9102-a1f1c55d36fb",
+"ownerUserId": "593cdba0-2124-11e8-8219-0932652c1da0",
+"certificateIds": [
 
+	"32a656d0-69b1-11e8-93d8-71014a32ec53"
+
+],
+"certificateName": "cn=svc6.venafi.example.com",
 */
 type managedCertificate struct {
 	Id                   string `json:"id"`

@@ -139,7 +139,7 @@ type Authentication struct {
 	ClientPKCS12 bool
 }
 
-//todo: replace with verror
+// todo: replace with verror
 // ErrRetrieveCertificateTimeout provides a common error structure for a timeout while retrieving a certificate
 type ErrRetrieveCertificateTimeout struct {
 	CertificateID string
@@ -149,7 +149,7 @@ func (err ErrRetrieveCertificateTimeout) Error() string {
 	return fmt.Sprintf("Operation timed out. You may try retrieving the certificate later using Pickup ID: %s", err.CertificateID)
 }
 
-//todo: replace with verror
+// todo: replace with verror
 // ErrCertificatePending provides a common error structure for a timeout while retrieving a certificate
 type ErrCertificatePending struct {
 	CertificateID string

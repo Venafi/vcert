@@ -19,7 +19,7 @@ import (
 //
 // It enables one-line HTTPS servers:
 //
-//     log.Fatal(http.Serve(vcert.NewListener("example.com"), handler))
+//	log.Fatal(http.Serve(vcert.NewListener("example.com"), handler))
 //
 // The returned listener uses a *tls.Config that enables HTTP/2, and
 // should only be used with servers that support HTTP/2.

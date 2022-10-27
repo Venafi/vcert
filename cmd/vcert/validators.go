@@ -38,7 +38,7 @@ var RevocationReasonOptions = []string{
 	"cessation-of-operation",
 }
 
-//taken from keystore.minPasswordLen constant
+// taken from keystore.minPasswordLen constant
 const JKSMinPasswordLen = 6
 
 func readData(commandName string) error {

@@ -26,7 +26,7 @@ import (
 	"strings"
 )
 
-//ChainOption represents the options to be used with the certificate chain
+// ChainOption represents the options to be used with the certificate chain
 type ChainOption int
 
 const (
@@ -38,7 +38,7 @@ const (
 	ChainOptionIgnore
 )
 
-//ChainOptionFromString converts the string to the corresponding ChainOption
+// ChainOptionFromString converts the string to the corresponding ChainOption
 func ChainOptionFromString(order string) ChainOption {
 	switch strings.ToLower(order) {
 	case "root-first":
@@ -50,7 +50,7 @@ func ChainOptionFromString(order string) ChainOption {
 	}
 }
 
-//PEMCollection represents a collection of PEM data
+// PEMCollection represents a collection of PEM data
 type PEMCollection struct {
 	Certificate string   `json:",omitempty"`
 	PrivateKey  string   `json:",omitempty"`
@@ -58,7 +58,7 @@ type PEMCollection struct {
 	CSR         string   `json:",omitempty"`
 }
 
-//NewPEMCollection creates a PEMCollection based on the data being passed in
+// NewPEMCollection creates a PEMCollection based on the data being passed in
 func NewPEMCollection(certificate *x509.Certificate, privateKey crypto.Signer, privateKeyPassword []byte, format ...string) (*PEMCollection, error) {
 	collection := PEMCollection{}
 	currentFormat := ""
@@ -84,7 +84,7 @@ func NewPEMCollection(certificate *x509.Certificate, privateKey crypto.Signer, p
 	return &collection, nil
 }
 
-//PEMCollectionFromBytes creates a PEMCollection based on the data passed in
+// PEMCollectionFromBytes creates a PEMCollection based on the data passed in
 func PEMCollectionFromBytes(certBytes []byte, chainOrder ChainOption) (*PEMCollection, error) {
 	var (
 		current    []byte
@@ -150,7 +150,7 @@ func PEMCollectionFromBytes(certBytes []byte, chainOrder ChainOption) (*PEMColle
 	return collection, nil
 }
 
-//AddPrivateKey adds a Private Key to the PEMCollection. Note that the collection can only contain one private key
+// AddPrivateKey adds a Private Key to the PEMCollection. Note that the collection can only contain one private key
 func (col *PEMCollection) AddPrivateKey(privateKey crypto.Signer, privateKeyPassword []byte, format ...string) error {
 
 	currentFormat := ""
@@ -175,7 +175,7 @@ func (col *PEMCollection) AddPrivateKey(privateKey crypto.Signer, privateKeyPass
 	return nil
 }
 
-//AddChainElement adds a chain element to the collection
+// AddChainElement adds a chain element to the collection
 func (col *PEMCollection) AddChainElement(certificate *x509.Certificate) error {
 	if certificate == nil {
 		return fmt.Errorf("%w: certificate cannot be nil", verror.VcertError)
