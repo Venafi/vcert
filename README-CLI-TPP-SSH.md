@@ -43,7 +43,7 @@ The following options apply to the `sshenroll` and `sshpickup` actions:
 
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Command&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Description                                                  |
 | ------------------- | ------------------------------------------------------------ |
-| `--config`          | Use to specify INI configuration file containing connection details.  Available parameters:  *tpp_url*, *tpp_user*, *tpp_password*, *tpp_zone*, *trust_bundle*, *test_mode* |
+| `--config`          | Use to specify INI configuration file containing connection details.  Available parameters:  `tpp_url`, `access_token`, `tpp_user`, `tpp_password`, `tpp_zone`, `trust_bundle`, `test_mode` |
 | `--no-prompt`       | Use to exclude password prompts.  If you enable the prompt and you enter incorrect information, an error is displayed.  This option is useful with scripting. |
 | `--t`               | Use to specify the token required to authenticate with Venafi Platform 20.1 (and higher).  See the [Appendix](#obtaining-an-authorization-token) for help using VCert to obtain a new authorization token. |
 | `--test-mode`       | Use to test operations without connecting to Venafi Platform.  This option is useful for integration tests where the test environment does not have access to Venafi Platform.  Default is false. |

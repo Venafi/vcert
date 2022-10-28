@@ -61,7 +61,7 @@ The following options apply to the `enroll`, `pickup`, and `renew` actions:
 
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Command&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Description                                                  |
 | ------------------- | ------------------------------------------------------------ |
-| `--config`          | Use to specify INI configuration file containing connection details.  Available parameters: *cloud_apikey*, *cloud_zone*, *trust_bundle*, *test_mode* |
+| `--config`          | Use to specify INI configuration file containing connection details.  Available parameters: `cloud_apikey`, `cloud_zone`, `trust_bundle`, `test_mode` |
 | `--k`               | Use to specify your API key for Venafi as a Service.<br/>Example: -k aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee |
 | `--no-prompt`       | Use to exclude password prompts.  If you enable the prompt and you enter incorrect information, an error is displayed.  This option is useful with scripting. |
 | `--test-mode`       | Use to test operations without connecting to Venafi as a Service.  This option is useful for integration tests where the test environment does not have access to Venafi as a Service.  Default is false. |
