@@ -41,7 +41,6 @@ import (
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
 	"github.com/Venafi/vcert/v4/pkg/util"
-	"github.com/Venafi/vcert/v4/pkg/verror"
 	"github.com/Venafi/vcert/v4/test"
 )
 
@@ -88,7 +87,7 @@ func TestReadZoneConfiguration(t *testing.T) {
 
 	conn.SetZone("d686146b-799b-4836-8ac3-f4a2d3a38934")
 	_, err = conn.ReadZoneConfiguration()
-	if !errors.Is(err, verror.ZoneNotFoundError) {
+	if err == nil {
 		t.Fatalf("Unknown zone should have resulted in an error")
 	}
 	testCases := []struct {
@@ -293,8 +292,7 @@ func TestRequestCertificateWithValidityHours(t *testing.T) {
 
 		pcc, err = conn.RetrieveCertificate(req)
 		if err != nil {
-			_, ok := err.(endpoint.ErrCertificatePending)
-			if ok {
+			if errors.As(err, &endpoint.ErrCertificatePending{}) {
 				if time.Now().After(startTime.Add(time.Duration(600) * time.Second)) {
 					err = endpoint.ErrRetrieveCertificateTimeout{CertificateID: pickupID}
 					break
@@ -900,7 +898,7 @@ func TestSetBaseURL(t *testing.T) {
 	}
 }
 
-func TestGetURL(t *testing.T) {
+func TestNormalizeURL(t *testing.T) {
 	var err error
 	condor := Connector{}
 	url := "http://api2.projectc.venafi.com/v1/"
@@ -912,28 +910,7 @@ func TestGetURL(t *testing.T) {
 	if !strings.EqualFold(condor.baseURL, expectedURL) {
 		t.Fatalf("Base URL did not match expected value. Expected: %s Actual: %s", expectedURL, condor.baseURL)
 	}
-
-	url = condor.getURL(urlResourceUserAccounts)
-	if !strings.EqualFold(url, fmt.Sprintf("%s%s", expectedURL, urlResourceUserAccounts)) {
-		t.Fatalf("Get URL did not match expected value. Expected: %s Actual: %s", fmt.Sprintf("%s%s", expectedURL, urlResourceUserAccounts), url)
-	}
-
-	url = condor.getURL(urlResourceCertificateRequests)
-	if !strings.EqualFold(url, fmt.Sprintf("%s%s", expectedURL, urlResourceCertificateRequests)) {
-		t.Fatalf("Get URL did not match expected value. Expected: %s Actual: %s", fmt.Sprintf("%s%s", expectedURL, urlResourceCertificateRequests), url)
-	}
-
-	url = condor.getURL(urlResourceCertificateRetrievePem)
-	if !strings.EqualFold(url, fmt.Sprintf("%s%s", expectedURL, urlResourceCertificateRetrievePem)) {
-		t.Fatalf("Get URL did not match expected value. Expected: %s Actual: %s", fmt.Sprintf("%s%s", expectedURL, urlResourceCertificateRetrievePem), url)
-	}
-	condor.baseURL = ""
-	url = condor.getURL(urlResourceUserAccounts)
-	if url == "" {
-		t.Fatalf("Get URL did not return an error when the base url had not been set.")
-	}
 }
-
 func TestRetrieveCertificatesList(t *testing.T) {
 	conn := getTestConnector(ctx.CloudZone)
 	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
@@ -1266,231 +1243,6 @@ func TestSetPolicy(t *testing.T) {
 		valid := test.IsArrayStringEqual(localPolicy.Policy.SubjectAltNames.IpConstraints, ps.Policy.SubjectAltNames.IpConstraints)
 		if !valid {
 			t.Fatalf("ip constrains are different, expected %+q but get %+q", localPolicy.Policy.SubjectAltNames.IpConstraints, ps.Policy.SubjectAltNames.IpConstraints)
-		}
-	}
-
-}
-
-func TestGetPolicy(t *testing.T) {
-
-	t.Skip() //this is just for development purpose
-
-	policyName := os.Getenv("CLOUD_POLICY_MANAGEMENT_SAMPLE")
-	conn := getTestConnector(ctx.CloudZone)
-	conn.verbose = true
-
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
-
-	if err != nil {
-		t.Fatalf("%s", err)
-	}
-
-	specifiedPS := test.GetCloudPolicySpecification()
-
-	ps, err := conn.GetPolicy(policyName)
-
-	if err != nil {
-		t.Fatalf("%s", err)
-	}
-
-	//validate each attribute
-	//validate subject attributes
-
-	if ps == nil {
-		t.Fatalf("specified Policy wasn't found")
-	}
-
-	if ps.Policy.Domains != nil && specifiedPS.Policy.Domains != nil {
-		domains := policy.ConvertToRegex(specifiedPS.Policy.Domains, policy.IsWildcardAllowed(*(specifiedPS)))
-		valid := test.IsArrayStringEqual(domains, ps.Policy.Domains)
-		if !valid {
-			t.Fatalf("specified domains are different")
-		}
-	}
-
-	if *(ps.Policy.MaxValidDays) != *(specifiedPS.Policy.MaxValidDays) {
-		t.Fatalf("specified validity period is different")
-	}
-
-	//validate cert authority
-	if ps.Policy.CertificateAuthority == nil || *(ps.Policy.CertificateAuthority) == "" {
-		t.Fatalf("venafi policy doesn't have a certificate authority")
-	}
-	if *(ps.Policy.CertificateAuthority) != *(specifiedPS.Policy.CertificateAuthority) {
-		t.Fatalf("certificate authority value doesn't match, get: %s but expected: %s", *(ps.Policy.CertificateAuthority), *(specifiedPS.Policy.CertificateAuthority))
-	}
-
-	if specifiedPS.Policy.Subject.Orgs != nil {
-
-		if ps.Policy.Subject.Orgs == nil {
-			t.Fatalf("specified policy orgs are not specified")
-		}
-
-		valid := test.IsArrayStringEqual(specifiedPS.Policy.Subject.Orgs, ps.Policy.Subject.Orgs)
-		if !valid {
-			t.Fatalf("specified policy orgs are different")
-		}
-
-	}
-
-	if specifiedPS.Policy.Subject.OrgUnits != nil {
-
-		if ps.Policy.Subject.OrgUnits == nil {
-			t.Fatalf("specified policy orgs units are not specified")
-		}
-
-		valid := test.IsArrayStringEqual(specifiedPS.Policy.Subject.OrgUnits, ps.Policy.Subject.OrgUnits)
-		if !valid {
-			t.Fatalf("specified policy orgs units are different")
-		}
-
-	}
-
-	if specifiedPS.Policy.Subject.Localities != nil {
-
-		if ps.Policy.Subject.Localities == nil {
-			t.Fatalf("specified policy localities are not specified")
-		}
-
-		valid := test.IsArrayStringEqual(specifiedPS.Policy.Subject.Localities, ps.Policy.Subject.Localities)
-		if !valid {
-			t.Fatalf("specified policy localities are different")
-		}
-
-	}
-
-	if specifiedPS.Policy.Subject.States != nil {
-
-		if ps.Policy.Subject.States == nil {
-			t.Fatalf("specified policy states are not specified")
-		}
-
-		valid := test.IsArrayStringEqual(specifiedPS.Policy.Subject.States, ps.Policy.Subject.States)
-		if !valid {
-			t.Fatalf("specified policy states are different")
-		}
-
-	}
-
-	if specifiedPS.Policy.Subject.Countries != nil {
-
-		if ps.Policy.Subject.Countries == nil {
-			t.Fatalf("specified policy countries are not specified")
-		}
-
-		valid := test.IsArrayStringEqual(specifiedPS.Policy.Subject.Countries, ps.Policy.Subject.Countries)
-		if !valid {
-			t.Fatalf("specified policy countries are different")
-		}
-
-	}
-
-	//validate key pair values.
-
-	if specifiedPS.Policy.KeyPair.KeyTypes != nil {
-
-		if ps.Policy.KeyPair.KeyTypes == nil {
-			t.Fatalf("specified policy key types are not specified")
-		}
-
-		valid := test.IsArrayStringEqual(specifiedPS.Policy.KeyPair.KeyTypes, ps.Policy.KeyPair.KeyTypes)
-		if !valid {
-			t.Fatalf("specified policy key types are different")
-		}
-
-	}
-
-	if specifiedPS.Policy.KeyPair.RsaKeySizes != nil {
-
-		if ps.Policy.KeyPair.RsaKeySizes == nil {
-			t.Fatalf("specified policy rsa key sizes are not specified")
-		}
-
-		valid := test.IsArrayIntEqual(specifiedPS.Policy.KeyPair.RsaKeySizes, ps.Policy.KeyPair.RsaKeySizes)
-		if !valid {
-			t.Fatalf("specified policy rsa key sizes are different")
-		}
-
-	}
-
-	if specifiedPS.Policy.KeyPair.ReuseAllowed != nil {
-
-		if ps.Policy.KeyPair.ReuseAllowed == nil {
-			t.Fatalf("specified policy rsa key sizes are not specified")
-		}
-
-		if *(ps.Policy.KeyPair.ReuseAllowed) != *(specifiedPS.Policy.KeyPair.ReuseAllowed) {
-			t.Fatalf("specified policy rsa key sizes are different")
-		}
-
-	}
-
-	//validate default values.
-	if specifiedPS.Default.Subject.Org != nil {
-		if ps.Default.Subject.Org == nil {
-			t.Fatalf("specified policy default org is not specified")
-		}
-		if *(ps.Default.Subject.Org) != *(specifiedPS.Default.Subject.Org) {
-			t.Fatalf("specified policy default org is different")
-		}
-	}
-
-	if specifiedPS.Default.Subject.OrgUnits != nil {
-
-		if ps.Default.Subject.OrgUnits == nil {
-			t.Fatalf("specified policy default org is not specified")
-		}
-
-		valid := test.IsArrayStringEqual(specifiedPS.Default.Subject.OrgUnits, ps.Default.Subject.OrgUnits)
-
-		if !valid {
-			t.Fatalf("specified policy default org unit are different")
-		}
-
-	}
-
-	if specifiedPS.Default.Subject.Locality != nil {
-		if ps.Default.Subject.Locality == nil {
-			t.Fatalf("specified policy default locality is not specified")
-		}
-		if *(ps.Default.Subject.Locality) != *(specifiedPS.Default.Subject.Locality) {
-			t.Fatalf("specified policy default locality is different")
-		}
-	}
-
-	if specifiedPS.Default.Subject.State != nil {
-		if ps.Default.Subject.State == nil {
-			t.Fatalf("specified policy default state is not specified")
-		}
-		if *(ps.Default.Subject.State) != *(specifiedPS.Default.Subject.State) {
-			t.Fatalf("specified policy default state is different")
-		}
-	}
-
-	if specifiedPS.Default.Subject.Country != nil {
-		if ps.Default.Subject.Country == nil {
-			t.Fatalf("policy default country is not specified")
-		}
-		if *(ps.Default.Subject.Country) != *(specifiedPS.Default.Subject.Country) {
-			t.Fatalf("specified policy default country is different")
-		}
-	}
-
-	if specifiedPS.Default.KeyPair.KeyType != nil {
-		if ps.Default.KeyPair.KeyType == nil {
-			t.Fatalf("policy default key type is not specified ")
-		}
-		if *(ps.Default.KeyPair.KeyType) != *(specifiedPS.Default.KeyPair.KeyType) {
-			t.Fatalf("specified policy default key type is different")
-		}
-	}
-
-	if specifiedPS.Default.KeyPair.RsaKeySize != nil {
-		if ps.Default.KeyPair.RsaKeySize == nil {
-			t.Fatalf("policy default rsa key size is not specified")
-		}
-		if *(ps.Default.KeyPair.RsaKeySize) != *(specifiedPS.Default.KeyPair.RsaKeySize) {
-			t.Fatalf("specified policy default rsa key size is different")
 		}
 	}
 

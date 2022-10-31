@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Venafi, Inc.
+ * Copyright 2022 Venafi, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,31 @@
  * limitations under the License.
  */
 
-package cloud
+package cloud_api
 
 import (
-	"github.com/Venafi/vcert/v4/pkg/endpoint"
+	"net/http"
+
 	"github.com/Venafi/vcert/v4/pkg/venafi/cloud/cloud_api/cloud_structs"
 )
 
-func getZoneConfiguration(policy *cloud_structs.CertificateTemplate) (zoneConfig *endpoint.ZoneConfiguration) {
-	zoneConfig = endpoint.NewZoneConfiguration()
-	if policy == nil {
-		return
+func (rc *RawClient) PostCertificateSearch(certificate *cloud_structs.SearchRequest) (*cloud_structs.CertificateSearchResponse, error) {
+	url := urlCertificateSearch.Absolute(rc.BaseUrl)
+
+	req, err := newRequest(http.MethodPost, string(url), certificate)
+	if err != nil {
+		return nil, err
 	}
-	zoneConfig.Policy = certificateTemplateToPolicy(policy)
-	certificateTemplateToZoneConfig(policy, zoneConfig)
-	return
+
+	if err := rc.Authenticator(req); err != nil {
+		return nil, err
+	}
+
+	responseObject := &cloud_structs.CertificateSearchResponse{}
+
+	if err := makeRequest(rc.HttpClient, req, responseObject); err != nil {
+		return nil, err
+	}
+
+	return responseObject, nil
 }

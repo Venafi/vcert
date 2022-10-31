@@ -22,7 +22,6 @@ import (
 	"crypto/rand"
 	"crypto/x509"
 	"encoding/base64"
-	"encoding/json"
 	"encoding/pem"
 	"fmt"
 	"io/ioutil"
@@ -37,36 +36,18 @@ import (
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
 	"github.com/Venafi/vcert/v4/pkg/policy"
 	"github.com/Venafi/vcert/v4/pkg/util"
+	"github.com/Venafi/vcert/v4/pkg/venafi/cloud/cloud_api"
+	"github.com/Venafi/vcert/v4/pkg/venafi/cloud/cloud_api/cloud_convert"
+	"github.com/Venafi/vcert/v4/pkg/venafi/cloud/cloud_api/cloud_structs"
+	"github.com/Venafi/vcert/v4/pkg/venafi/cloud/cloud_api/cloud_validate"
 	"github.com/Venafi/vcert/v4/pkg/verror"
 
 	"golang.org/x/crypto/nacl/box"
 )
 
-type urlResource string
-
 const (
-	apiURL                                        = "api.venafi.cloud/"
-	apiVersion                                    = "v1/"
-	basePath                                      = "outagedetection/" + apiVersion
-	urlResourceUserAccounts           urlResource = apiVersion + "useraccounts"
-	urlResourceCertificateRequests    urlResource = basePath + "certificaterequests"
-	urlResourceCertificateStatus                  = urlResourceCertificateRequests + "/%s"
-	urlResourceCertificates           urlResource = basePath + "certificates"
-	urlResourceCertificateByID                    = urlResourceCertificates + "/%s"
-	urlResourceCertificateRetrievePem             = urlResourceCertificates + "/%s/contents"
-	urlResourceCertificateSearch      urlResource = basePath + "certificatesearch"
-	urlResourceTemplate               urlResource = basePath + "applications/%s/certificateissuingtemplates/%s"
-	urlAppDetailsByName               urlResource = basePath + "applications/name/%s"
-	urlIssuingTemplate                urlResource = apiVersion + "certificateissuingtemplates"
-	urlAppRoot                        urlResource = basePath + "applications"
-	urlCAAccounts                     urlResource = apiVersion + "certificateauthorities/%s/accounts"
-	urlCAAccountDetails                           = urlCAAccounts + "/%s"
-	urlResourceCertificateKS                      = urlResourceCertificates + "/%s/keystore"
-	urlDekPublicKey                   urlResource = apiVersion + "edgeencryptionkeys/%s"
-	urlUsers                          urlResource = apiVersion + "users"
-	urlUserById                                   = urlUsers + "/%s"
-	urlUsersByName                                = urlUsers + "/username/%s"
-	urlTeams                          urlResource = apiVersion + "teams"
+	apiURL                            = "api.venafi.cloud/"
+	urlResourceCertificateRetrievePem = "outagedetection/v1/certificates/%s/contents"
 
 	defaultAppName = "Default"
 )
@@ -81,12 +62,27 @@ const (
 // Connector contains the base data needed to communicate with the Venafi Cloud servers
 type Connector struct {
 	baseURL string
-	apiKey  string
+	client  *http.Client
+
+	apiKey string
+
 	verbose bool
-	user    *userDetails
+	user    *cloud_structs.UserDetails
 	trust   *x509.CertPool
 	zone    cloudZone
-	client  *http.Client
+}
+
+func (c *Connector) rawClient() *cloud_api.RawClient {
+	return &cloud_api.RawClient{
+		BaseUrl:    c.baseURL,
+		HttpClient: c.getHTTPClient(),
+		Authenticator: func(r *http.Request) error {
+			if c.apiKey != "" {
+				r.Header.Add("tppl-api-key", c.apiKey)
+			}
+			return nil
+		},
+	}
 }
 
 func (c *Connector) RetrieveCertificateMetaData(dn string) (*certificate.CertificateMetaData, error) {
@@ -101,7 +97,7 @@ func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.
 	// retrieve application name from zone
 	appName := getAppNameFromZone(zone)
 	// get application id from name
-	app, _, err := c.getAppDetailsByName(appName)
+	app, err := c.getAppDetailsByName(appName)
 	if err != nil {
 		return nil, err
 	}
@@ -124,8 +120,8 @@ func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.
 	certificates := make([]*certificate.CertificateInfo, 0)
 	n := 0
 	for _, cert := range searchResult.Certificates {
-		if util.ArrayContainsString(cert.ApplicationIds, app.ApplicationId) {
-			match := cert.ToCertificateInfo()
+		if util.ArrayContainsString(cert.ApplicationIds, app.Id) {
+			match := certificateToCertificateInfo(&cert)
 			certificates = append(certificates, &match)
 			n = n + 1
 		}
@@ -173,7 +169,7 @@ func (c *Connector) IsCSRServiceGenerated(req *certificate.Request) (bool, error
 		req.PickupID = certificateRequestId
 	}
 
-	var dekInfo *EdgeEncryptionKey
+	var dekInfo *cloud_structs.EdgeEncryptionKey
 	var currentId string
 	var err error
 	if req.CertID != "" {
@@ -245,7 +241,6 @@ func (c *Connector) RetrieveSystemVersion() (response string, err error) {
 }
 
 func (c *Connector) GetPolicyWithRegex(name string) (*policy.PolicySpecification, error) {
-
 	cit, err := retrievePolicySpecification(c, name)
 
 	if err != nil {
@@ -264,7 +259,7 @@ func (c *Connector) GetPolicyWithRegex(name string) (*policy.PolicySpecification
 	return ps, nil
 }
 
-func retrievePolicySpecification(c *Connector, name string) (*certificateTemplate, error) {
+func retrievePolicySpecification(c *Connector, name string) (*cloud_structs.CertificateTemplate, error) {
 	appName := policy.GetApplicationName(name)
 	if appName != "" {
 		c.zone.appName = appName
@@ -290,7 +285,6 @@ func retrievePolicySpecification(c *Connector, name string) (*certificateTemplat
 }
 
 func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) {
-
 	cit, err := retrievePolicySpecification(c, name)
 	if err != nil {
 		return nil, err
@@ -316,23 +310,24 @@ func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) 
 }
 
 func (c *Connector) getUsers() ([]string, error) {
-	var usersList []string
-	appDetails, _, error := c.getAppDetailsByName(c.zone.getApplicationName())
+	appDetails, error := c.getAppDetailsByName(c.zone.getApplicationName())
 	if error != nil {
 		return nil, error
 	}
-	var teams *teams
-	for _, owner := range appDetails.OwnerIdType {
-		if owner.OwnerType == UserType.String() {
-			user, error := c.retrieveUser(owner.OwnerId)
+
+	var usersList []string
+	var teams *cloud_structs.Teams
+	for _, owner := range appDetails.OwnerIdsAndTypes {
+		if owner.OwnerType == UserOwnerType {
+			user, error := c.rawClient().GetUserById(owner.OwnerId)
 			if error != nil {
 				return nil, error
 			}
 			usersList = append(usersList, user.Username)
 		} else {
-			if owner.OwnerType == TeamType.String() {
+			if owner.OwnerType == TeamOwnerType {
 				if teams == nil {
-					teams, error = c.retrieveTeams()
+					teams, error = c.rawClient().GetTeams()
 					if error != nil {
 						return nil, error
 					}
@@ -351,9 +346,9 @@ func (c *Connector) getUsers() ([]string, error) {
 	return usersList, nil
 }
 
-func PolicyExist(policyName string, c *Connector) (bool, error) {
-
+func policyExist(policyName string, c *Connector) (bool, error) {
 	c.zone.appName = policy.GetApplicationName(policyName)
+
 	citName := policy.GetCitName(policyName)
 	if citName != "" {
 		c.zone.templateAlias = citName
@@ -366,8 +361,7 @@ func PolicyExist(policyName string, c *Connector) (bool, error) {
 }
 
 func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (string, error) {
-
-	err := policy.ValidateCloudPolicySpecification(ps)
+	err := cloud_validate.ValidateCloudPolicySpecification(ps)
 	if err != nil {
 		return "", err
 	}
@@ -418,13 +412,11 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 
 	//at this moment we know that ps.Policy.CertificateAuthority is valid.
 
-	req, err := policy.BuildCloudCitRequest(ps, caDetails)
+	req, err := cloud_convert.BuildCloudCitRequest(ps, caDetails)
 	if err != nil {
 		return "", err
 	}
 	req.Name = citName
-
-	url := c.getURL(urlIssuingTemplate)
 
 	cit, err := getCit(c, citName)
 
@@ -434,35 +426,21 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 
 	if cit != nil {
 		log.Printf("updating issuing template: %s", citName)
-		//update cit using the new values
-		url = fmt.Sprint(url, "/", cit.ID)
-		statusCode, status, body, err := c.request("PUT", url, req)
 
-		if err != nil {
-			return "", err
-		}
-
-		cit, err = parseCitResult(http.StatusOK, statusCode, status, body)
-
+		cit, err = c.rawClient().PutCertificateIssuingTemplate(cit.ID, req)
 		if err != nil {
 			return status, err
 		}
-
 	} else {
 		log.Printf("creating issuing template: %s", citName)
-		//var body []byte
-		statusCode, status, body, err := c.request("POST", url, req)
 
-		if err != nil {
-			return "", err
-		}
-
-		cit, err = parseCitResult(http.StatusCreated, statusCode, status, body)
-
+		cits, err := c.rawClient().PostCertificateIssuingTemplate(req)
 		if err != nil {
 			return status, err
 		}
 
+		//we just get the cit we created/updated
+		cit = &cits.CertificateTemplates[0]
 	}
 
 	//validate if appName is set and if app already exist on Venafi cloud if not create it
@@ -473,21 +451,22 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 		return "", fmt.Errorf("application name is empty, please provide zone in the format: app_name\\cit_name")
 	}
 
-	appDetails, statusCode, err := c.getAppDetailsByName(appName)
+	appDetails, err := c.getAppDetailsByName(appName)
 
-	if err != nil && statusCode == 404 { //means application was not found.
+	if err != nil && cloud_api.IsHttpStatusError(err, http.StatusNotFound) { //means application was not found.
 		log.Printf("creating application: %s", appName)
 
-		_, error := c.createApplication(appName, ps, cit)
-		if error != nil {
-			return "", error
+		_, err := c.createApplication(appName, ps, cit)
+		if err != nil {
+			return "", err
 		}
-
+	} else if err != nil {
+		return "", err
 	} else { //determine if the application needs to be updated
 		log.Printf("updating application: %s", appName)
-		error := c.updateApplication(name, ps, cit, appDetails)
-		if error != nil {
-			return "", error
+		err := c.updateApplication(name, ps, cit, appDetails)
+		if err != nil {
+			return "", err
 		}
 	}
 
@@ -496,23 +475,27 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 	return status, nil
 }
 
-func (c *Connector) createApplication(appName string, ps *policy.PolicySpecification, cit *certificateTemplate) (*policy.Application, error) {
+func (c *Connector) createApplication(appName string, ps *policy.PolicySpecification, cit *cloud_structs.CertificateTemplate) (*cloud_structs.Application, error) {
 	appIssuingTemplate := make(map[string]string)
 	appIssuingTemplate[cit.Name] = cit.ID
 
-	var owners []policy.OwnerIdType
+	var owners []cloud_structs.OwnerIdAndType
 	var error error
-	var statusCode int
-	var status string
 
 	//if users were passed to the PS, then it will needed to resolve the related Owners to set them
 	if len(ps.Users) > 0 {
 		owners, error = c.resolveOwners(ps.Users)
 	} else { //if the users were not specified in PS, then the current User should be used as owner
-		var owner *policy.OwnerIdType
-		owner, error = c.getOwnerFromUserDetails()
-		if owner != nil {
-			owners = []policy.OwnerIdType{*owner}
+		userDetails, err := getUserDetails(c)
+		if err != nil {
+			return nil, err
+		}
+
+		owners = []cloud_structs.OwnerIdAndType{
+			{
+				OwnerId:   userDetails.User.ID,
+				OwnerType: UserOwnerType,
+			},
 		}
 	}
 
@@ -521,33 +504,28 @@ func (c *Connector) createApplication(appName string, ps *policy.PolicySpecifica
 	}
 
 	//create application
-	appReq := policy.Application{
+	appReq := &cloud_structs.Application{
 		OwnerIdsAndTypes:                     owners,
 		Name:                                 appName,
 		CertificateIssuingTemplateAliasIdMap: appIssuingTemplate,
 	}
 
-	url := c.getURL(urlAppRoot)
-
-	statusCode, status, _, error = c.request("POST", url, appReq)
+	err := c.rawClient().PostApplication(appReq)
 	if error != nil {
-		return nil, error
-	}
-	if statusCode != 201 {
-		return nil, fmt.Errorf("unexpected result %s attempting to create application %s", status, appName)
+		return nil, err
 	}
 
-	return &appReq, nil
+	return appReq, nil
 }
 
-func (c *Connector) updateApplication(name string, ps *policy.PolicySpecification, cit *certificateTemplate, appDetails *ApplicationDetails) error {
+func (c *Connector) updateApplication(name string, ps *policy.PolicySpecification, cit *cloud_structs.CertificateTemplate, appDetails *cloud_structs.ApplicationDetails) error {
 
 	//creating the app to use as request
 	appReq := createAppUpdateRequest(appDetails)
 
 	//determining if the relationship between application and cit exist
 	citAddedToApp := false
-	exist, err := PolicyExist(name, c)
+	exist, err := policyExist(name, c)
 	if err != nil {
 		return err
 	}
@@ -573,9 +551,7 @@ func (c *Connector) updateApplication(name string, ps *policy.PolicySpecificatio
 	//if the cit was added to the app or the owners were updated, then is required
 	//to update the application
 	if citAddedToApp || ownersUpdated {
-		url := c.getURL(urlAppRoot)
-		url = fmt.Sprint(url, "/", appDetails.ApplicationId)
-		_, _, _, err = c.request("PUT", url, appReq)
+		err = c.rawClient().PutApplication(appDetails.Id, &appReq)
 		if err != nil {
 			return err
 		}
@@ -584,7 +560,7 @@ func (c *Connector) updateApplication(name string, ps *policy.PolicySpecificatio
 	return nil
 }
 
-func (c *Connector) addCitToApp(app *policy.Application, cit *certificateTemplate) {
+func (c *Connector) addCitToApp(app *cloud_structs.Application, cit *cloud_structs.CertificateTemplate) {
 	//add cit to the map.
 	value, ok := app.CertificateIssuingTemplateAliasIdMap[cit.Name]
 	if !ok || value != cit.ID {
@@ -592,21 +568,24 @@ func (c *Connector) addCitToApp(app *policy.Application, cit *certificateTemplat
 	}
 }
 
-func (c *Connector) resolveOwners(usersList []string) ([]policy.OwnerIdType, error) {
+func (c *Connector) resolveOwners(usersList []string) ([]cloud_structs.OwnerIdAndType, error) {
 
-	var owners []policy.OwnerIdType
-	var teams *teams
+	var owners []cloud_structs.OwnerIdAndType
+	var teams *cloud_structs.Teams
 	var err error
 
 	for _, userName := range usersList {
 		//The error should be ignored in order to confirm if the userName is not a TeamName
-		users, _ := c.retrieveUsers(userName)
+		users, _ := c.rawClient().GetUsersByName(userName)
 
 		if users != nil {
-			owners = appendOwner(owners, users.Users[0].ID, UserType)
+			owners = append(owners, cloud_structs.OwnerIdAndType{
+				OwnerId:   users.Users[0].ID,
+				OwnerType: UserOwnerType,
+			})
 		} else {
 			if teams == nil {
-				teams, err = c.retrieveTeams()
+				teams, err = c.rawClient().GetTeams()
 			}
 			if err != nil {
 				return nil, err
@@ -615,7 +594,10 @@ func (c *Connector) resolveOwners(usersList []string) ([]policy.OwnerIdType, err
 				var found = false
 				for _, team := range teams.Teams {
 					if team.Name == userName {
-						owners = appendOwner(owners, team.ID, TeamType)
+						owners = append(owners, cloud_structs.OwnerIdAndType{
+							OwnerId:   team.ID,
+							OwnerType: TeamOwnerType,
+						})
 						found = true
 						break
 					}
@@ -628,29 +610,6 @@ func (c *Connector) resolveOwners(usersList []string) ([]policy.OwnerIdType, err
 	}
 
 	return owners, err
-}
-
-func appendOwner(owners []policy.OwnerIdType, ownerId string, ownerType OwnerType) []policy.OwnerIdType {
-	owner := createOwner(ownerId, ownerType)
-	return append(owners, *owner)
-}
-
-func (c *Connector) getOwnerFromUserDetails() (*policy.OwnerIdType, error) {
-	userDetails, err := getUserDetails(c)
-	if err != nil {
-		return nil, err
-	}
-	owner := createOwner(userDetails.User.ID, UserType)
-	return owner, nil
-}
-
-func createOwner(ownerId string, ownerType OwnerType) *policy.OwnerIdType {
-	ownerIdType := policy.OwnerIdType{
-		OwnerId:   ownerId,
-		OwnerType: ownerType.String(),
-	}
-
-	return &ownerIdType
 }
 
 // NewConnector creates a new Venafi Cloud Connector object used to communicate with Venafi Cloud
@@ -682,6 +641,7 @@ func normalizeURL(url string) (normalizedURL string, err error) {
 	if !strings.HasSuffix(modified, "/") {
 		modified = modified + "/"
 	}
+	modified = strings.TrimSuffix(modified, "v1/")
 	normalizedURL = modified
 	return normalizedURL, nil
 }
@@ -697,7 +657,6 @@ func (c *Connector) GetType() endpoint.ConnectorType {
 
 // Ping attempts to connect to the Venafi Cloud API and returns an errror if it cannot
 func (c *Connector) Ping() (err error) {
-
 	return nil
 }
 
@@ -707,15 +666,12 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 		return fmt.Errorf("failed to authenticate: missing credentials")
 	}
 	c.apiKey = auth.APIKey
-	url := c.getURL(urlResourceUserAccounts)
-	statusCode, status, body, err := c.request("GET", url, nil, true)
-	if err != nil {
-		return err
-	}
-	ud, err := parseUserDetailsResult(http.StatusOK, statusCode, status, body)
+
+	ud, err := c.rawClient().GetUserAccounts()
 	if err != nil {
 		return
 	}
+
 	c.user = ud
 	return
 }
@@ -731,16 +687,15 @@ func (c *Connector) ReadPolicyConfiguration() (policy *endpoint.Policy, err erro
 
 // ReadZoneConfiguration reads the Zone information needed for generating and requesting a certificate from Venafi Cloud
 func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration, err error) {
-	var template *certificateTemplate
-	var statusCode int
+	var template *cloud_structs.CertificateTemplate
 
 	// to fully support the "headless registration" use case...
 	// if application does not exist and is for the default CIT, create the application
 	citAlias := c.zone.getTemplateAlias()
 	if citAlias == "Default" {
 		appName := c.zone.getApplicationName()
-		_, statusCode, err = c.getAppDetailsByName(appName)
-		if err != nil && statusCode == 404 {
+		_, err = c.getAppDetailsByName(appName)
+		if err != nil && cloud_api.IsHttpStatusError(err, http.StatusNotFound) {
 			log.Printf("creating application %s for issuing template %s", appName, citAlias)
 
 			ps := policy.PolicySpecification{}
@@ -764,7 +719,7 @@ func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration,
 	return config, nil
 }
 
-func getCloudRequest(c *Connector, req *certificate.Request) (*certificateRequest, error) {
+func getCloudRequest(c *Connector, req *certificate.Request) (*cloud_structs.CertificateRequest, error) {
 	if c.user == nil || c.user.Company == nil {
 		return nil, fmt.Errorf("must be autheticated to request a certificate")
 	}
@@ -777,16 +732,16 @@ func getCloudRequest(c *Connector, req *certificate.Request) (*certificateReques
 		}
 	}
 
-	appDetails, _, err := c.getAppDetailsByName(c.zone.getApplicationName())
+	appDetails, err := c.getAppDetailsByName(c.zone.getApplicationName())
 	if err != nil {
 		return nil, err
 	}
-	templateId := appDetails.CitAliasToIdMap[c.zone.getTemplateAlias()]
+	templateId := appDetails.CertificateIssuingTemplateAliasIdMap[c.zone.getTemplateAlias()]
 
-	cloudReq := certificateRequest{
-		ApplicationId: appDetails.ApplicationId,
+	cloudReq := cloud_structs.CertificateRequest{
+		ApplicationId: appDetails.Id,
 		TemplateId:    templateId,
-		ApiClientInformation: certificateRequestClientInfo{
+		ApiClientInformation: cloud_structs.CertificateRequestClientInfo{
 			Type:       origin,
 			Identifier: ipAddr,
 		},
@@ -814,7 +769,7 @@ func getCloudRequest(c *Connector, req *certificate.Request) (*certificateReques
 		nodeName := req.Location.Instance
 		appName := workload
 
-		cloudReq.CertificateUsageMetadata = []certificateUsageMetadata{
+		cloudReq.CertificateUsageMetadata = []cloud_structs.CertificateUsageMetadata{
 			{
 				AppName:  appName,
 				NodeName: nodeName,
@@ -845,53 +800,28 @@ func (c *Connector) ResetCertificate(req *certificate.Request, restart bool) (er
 
 // RequestCertificate submits the CSR to the Venafi Cloud API for processing
 func (c *Connector) RequestCertificate(req *certificate.Request) (requestID string, err error) {
-
-	url := c.getURL(urlResourceCertificateRequests)
 	cloudReq, err := getCloudRequest(c, req)
 	if err != nil {
 		return "", err
 	}
 
-	statusCode, status, body, err := c.request("POST", url, cloudReq)
+	cr, err := c.rawClient().PostCertificateRequest(cloudReq)
+	if err != nil {
+		return "", err
+	}
 
-	if err != nil {
-		return "", err
-	}
-	cr, err := parseCertificateRequestResult(statusCode, status, body)
-	if err != nil {
-		return "", err
-	}
 	requestID = cr.CertificateRequests[0].ID
 	req.PickupID = requestID
 	return requestID, nil
 }
 
-func (c *Connector) getCertificateStatus(requestID string) (certStatus *certificateStatus, err error) {
-	url := c.getURL(urlResourceCertificateStatus)
-	url = fmt.Sprintf(url, requestID)
-	statusCode, _, body, err := c.request("GET", url, nil)
+func (c *Connector) getCertificateStatus(requestID string) (certStatus *cloud_structs.CertificateStatus, err error) {
+	certStatus, err = c.rawClient().GetCertificateRequestById(requestID)
 	if err != nil {
 		return nil, err
 	}
-	if statusCode == http.StatusOK {
-		certStatus = &certificateStatus{}
-		err = json.Unmarshal(body, certStatus)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse certificate request status response: %s", err)
-		}
-		return
-	}
-	respErrors, err := parseResponseErrors(body)
-	if err == nil {
-		respError := fmt.Sprintf("Unexpected status code on Venafi Cloud certificate search. Status: %d\n", statusCode)
-		for _, e := range respErrors {
-			respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
-		}
-		return nil, fmt.Errorf(respError)
-	}
 
-	return nil, fmt.Errorf("unexpected status code on Venafi Cloud certificate search. Status: %d", statusCode)
-
+	return
 }
 
 // RetrieveCertificate retrieves the certificate for the specified ID
@@ -968,10 +898,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 		return nil, fmt.Errorf("must be autheticated to retieve certificate")
 	}
 
-	url := c.getURL(urlResourceCertificateRetrievePem)
-	url = fmt.Sprintf(url, certificateId)
-
-	var dekInfo *EdgeEncryptionKey
+	var dekInfo *cloud_structs.EdgeEncryptionKey
 	var currentId string
 	if req.CertID != "" {
 		dekInfo, err = getDekInfo(c, req.CertID)
@@ -987,51 +914,48 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 
 	switch {
 	case req.CertID != "":
-		statusCode, status, body, err := c.waitForCertificate(url, req) //c.request("GET", url, nil)
+		body, err := c.rawClient().WaitForCertificateContents(certificateId, "", req.Timeout)
 		if err != nil {
 			return nil, err
 		}
-		if statusCode != http.StatusOK {
-			return nil, fmt.Errorf("failed to retrieve certificate. StatusCode: %d -- Status: %s -- Server Data: %s", statusCode, status, body)
-		}
+
 		return newPEMCollectionFromResponse(body, certificate.ChainOptionIgnore)
 	case req.PickupID != "":
-		url += "?chainOrder=%s&format=PEM"
+		query := "?chainOrder=%s&format=PEM"
 		switch req.ChainOption {
 		case certificate.ChainOptionRootFirst:
-			url = fmt.Sprintf(url, condorChainOptionRootFirst)
+			query = fmt.Sprintf(query, condorChainOptionRootFirst)
 		default:
-			url = fmt.Sprintf(url, condorChainOptionRootLast)
+			query = fmt.Sprintf(query, condorChainOptionRootLast)
 		}
-		statusCode, status, body, err := c.waitForCertificate(url, req) //c.request("GET", url, nil)
+
+		body, err := c.rawClient().WaitForCertificateContents(certificateId, query, req.Timeout)
+		if err != nil && cloud_api.IsHttpStatusError(err, http.StatusConflict) {
+			// Http Status Code 409 means the certificate has not been signed by the ca yet.
+			return nil, endpoint.ErrCertificatePending{CertificateID: req.PickupID}
+		} else if err != nil {
+			return nil, fmt.Errorf("failed to retrieve certificate: %w", err)
+		}
+
+		certificates, err = newPEMCollectionFromResponse(body, req.ChainOption)
 		if err != nil {
 			return nil, err
 		}
-		if statusCode == http.StatusOK {
-			certificates, err = newPEMCollectionFromResponse(body, req.ChainOption)
-			if err != nil {
-				return nil, err
-			}
-			err = req.CheckCertificate(certificates.Certificate)
-			return certificates, err
-		} else if statusCode == http.StatusConflict { // Http Status Code 409 means the certificate has not been signed by the ca yet.
-			return nil, endpoint.ErrCertificatePending{CertificateID: req.PickupID}
-		} else {
-			return nil, fmt.Errorf("failed to retrieve certificate. StatusCode: %d -- Status: %s", statusCode, status)
-		}
+
+		err = req.CheckCertificate(certificates.Certificate)
+		return certificates, err
 	}
 	return nil, fmt.Errorf("couldn't retrieve certificate because both PickupID and CertId are empty")
 }
 
-func retrieveServiceGeneratedCertData(c *Connector, req *certificate.Request, dekInfo *EdgeEncryptionKey) (*certificate.PEMCollection, error) {
-
+func retrieveServiceGeneratedCertData(c *Connector, req *certificate.Request, dekInfo *cloud_structs.EdgeEncryptionKey) (*certificate.PEMCollection, error) {
 	pkDecoded, err := base64.StdEncoding.DecodeString(dekInfo.Key)
 
 	if err != nil {
 		return nil, err
 	}
 
-	publicKey, err := Load32KeyByte(pkDecoded)
+	publicKey, err := load32KeyByte(pkDecoded)
 	if err != nil {
 		return nil, err
 	}
@@ -1043,24 +967,16 @@ func retrieveServiceGeneratedCertData(c *Connector, req *certificate.Request, de
 	}
 
 	//Request keystore
-	ksRequest := KeyStoreRequest{
+	ksRequest := &cloud_structs.KeyStoreRequest{
 		ExportFormat:                  "PEM",
 		EncryptedPrivateKeyPassphrase: base64.StdEncoding.EncodeToString(encrypted),
 		EncryptedKeystorePassphrase:   "",
 		CertificateLabel:              "",
 	}
 
-	url := c.getURL(urlResourceCertificateKS)
-	url = fmt.Sprintf(url, req.CertID)
-
-	statusCode, status, body, err := c.request("POST", url, ksRequest)
-
+	body, err := c.rawClient().PostCertificateKeyStore(req.CertID, ksRequest)
 	if err != nil {
 		return nil, err
-	}
-
-	if statusCode != http.StatusOK && statusCode != http.StatusCreated {
-		return nil, fmt.Errorf("failed to retrieve KeyStore on VaaS, status: %s", status)
 	}
 
 	rootFirst := false
@@ -1068,45 +984,25 @@ func retrieveServiceGeneratedCertData(c *Connector, req *certificate.Request, de
 		rootFirst = true
 	}
 
-	return ConvertZipBytesToPem(body, rootFirst)
+	return convertZipBytesToPem(body, rootFirst)
 
 }
 
-func getDekInfo(c *Connector, cerId string) (*EdgeEncryptionKey, error) {
-	//get certificate details for getting DekHash
-	url := c.getURL(urlResourceCertificateByID)
-	url = fmt.Sprintf(url, cerId)
-
-	statusCode, status, body, err := c.request("GET", url, nil)
+func getDekInfo(c *Connector, cerId string) (*cloud_structs.EdgeEncryptionKey, error) {
+	managedCert, err := c.rawClient().GetCertificateById(cerId)
 	if err != nil {
 		return nil, err
 	}
 
-	managedCert, err := parseCertificateInfo(statusCode, status, body)
-
-	if err != nil {
-		return nil, err
-	}
-
-	//get Dek info for getting DEK's key
-	url = c.getURL(urlDekPublicKey)
-	url = fmt.Sprintf(url, managedCert.DekHash)
-
-	statusCode, status, body, err = c.request("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	dekInfo, err := parseDEKInfo(statusCode, status, body)
+	dekInfo, err := c.rawClient().GetEdgeEncryptionKeyById(managedCert.DekHash)
 	if err != nil {
 		return nil, err
 	}
 
 	return dekInfo, nil
-
 }
 
-func ConvertZipBytesToPem(dataByte []byte, rootFirst bool) (*certificate.PEMCollection, error) {
+func convertZipBytesToPem(dataByte []byte, rootFirst bool) (*certificate.PEMCollection, error) {
 	collection := certificate.PEMCollection{}
 	var certificate string
 	var privateKey string
@@ -1174,29 +1070,6 @@ func ConvertZipBytesToPem(dataByte []byte, rootFirst bool) (*certificate.PEMColl
 	return &collection, nil
 }
 
-// Waits for the Certificate to be available. Fails when the timeout is exceeded
-func (c *Connector) waitForCertificate(url string, request *certificate.Request) (statusCode int, status string, body []byte, err error) {
-	startTime := time.Now()
-	for {
-		statusCode, status, body, err = c.request("GET", url, nil)
-		if err != nil {
-			return
-		}
-		if statusCode == http.StatusOK {
-			return
-		}
-		if request.Timeout == 0 {
-			err = endpoint.ErrCertificatePending{CertificateID: request.PickupID, Status: status}
-			return
-		}
-		if time.Now().After(startTime.Add(request.Timeout)) {
-			err = endpoint.ErrRetrieveCertificateTimeout{CertificateID: request.PickupID}
-			return
-		}
-		time.Sleep(2 * time.Second)
-	}
-}
-
 // RevokeCertificate attempts to revoke the certificate
 func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (err error) {
 	return fmt.Errorf("not supported by endpoint")
@@ -1209,7 +1082,6 @@ func (c *Connector) WriteLog(logReq *endpoint.LogRequest) (err error) {
 
 // RenewCertificate attempts to renew the certificate
 func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requestID string, err error) {
-
 	/* 1st step is to get CertificateRequestId which is required to lookup managedCertificateId and zoneId */
 	var certificateRequestId string
 
@@ -1281,12 +1153,11 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 	}
 
 	/* 4th step is to send renewal request */
-	url := c.getURL(urlResourceCertificateRequests)
 	if c.user == nil || c.user.Company == nil {
 		return "", fmt.Errorf("must be autheticated to request a certificate")
 	}
 
-	req := certificateRequest{
+	req := &cloud_structs.CertificateRequest{
 		ExistingCertificateId: certificateId,
 		ApplicationId:         applicationId,
 		TemplateId:            templateId,
@@ -1300,7 +1171,7 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 		nodeName := renewReq.CertificateRequest.Location.Instance
 		appName := workload
 
-		req.CertificateUsageMetadata = []certificateUsageMetadata{
+		req.CertificateUsageMetadata = []cloud_structs.CertificateUsageMetadata{
 			{
 				AppName:  appName,
 				NodeName: nodeName,
@@ -1315,44 +1186,34 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 		req.ReuseCSR = true
 		return "", fmt.Errorf("reuseCSR option is not currently available for Renew Certificate operation. A new CSR must be provided in the request")
 	}
-	statusCode, status, body, err := c.request("POST", url, req)
+
+	cr, err := c.rawClient().PostCertificateRequest(req)
 	if err != nil {
 		return
 	}
 
-	cr, err := parseCertificateRequestResult(statusCode, status, body)
-	if err != nil {
-		return "", fmt.Errorf("failed to renew certificate: %s", err)
-	}
 	return cr.CertificateRequests[0].ID, nil
 }
 
-func (c *Connector) searchCertificates(req *SearchRequest) (*CertificateSearchResponse, error) {
-
-	var err error
-
-	url := c.getURL(urlResourceCertificateSearch)
-	statusCode, _, body, err := c.request("POST", url, req)
+func (c *Connector) searchCertificates(req *cloud_structs.SearchRequest) (*cloud_structs.CertificateSearchResponse, error) {
+	searchResult, err := c.rawClient().PostCertificateSearch(req)
 	if err != nil {
 		return nil, err
 	}
-	searchResult, err := ParseCertificateSearchResponse(statusCode, body)
-	if err != nil {
-		return nil, err
-	}
+
 	return searchResult, nil
 }
 
-func (c *Connector) searchCertificatesByFingerprint(fp string) (*CertificateSearchResponse, error) {
+func (c *Connector) searchCertificatesByFingerprint(fp string) (*cloud_structs.CertificateSearchResponse, error) {
 	fp = strings.Replace(fp, ":", "", -1)
 	fp = strings.Replace(fp, ".", "", -1)
 	fp = strings.ToUpper(fp)
-	req := &SearchRequest{
-		Expression: &Expression{
-			Operands: []Operand{
+	req := &cloud_structs.SearchRequest{
+		Expression: &cloud_structs.Expression{
+			Operands: []cloud_structs.Operand{
 				{
 					Field:    "fingerprint",
-					Operator: MATCH,
+					Operator: cloud_structs.MATCH,
 					Value:    fp,
 				},
 			},
@@ -1361,55 +1222,8 @@ func (c *Connector) searchCertificatesByFingerprint(fp string) (*CertificateSear
 	return c.searchCertificates(req)
 }
 
-/*
-"id": "32a656d1-69b1-11e8-93d8-71014a32ec53",
-"companyId": "b5ed6d60-22c4-11e7-ac27-035f0608fd2c",
-"latestCertificateRequestId": "0e546560-69b1-11e8-9102-a1f1c55d36fb",
-"ownerUserId": "593cdba0-2124-11e8-8219-0932652c1da0",
-"certificateIds": [
-
-	"32a656d0-69b1-11e8-93d8-71014a32ec53"
-
-],
-"certificateName": "cn=svc6.venafi.example.com",
-*/
-type managedCertificate struct {
-	Id                   string `json:"id"`
-	CompanyId            string `json:"companyId"`
-	CertificateRequestId string `json:"certificateRequestId"`
-	DekHash              string `json:"dekHash,omitempty"`
-}
-
-func (c *Connector) getCertificate(certificateId string) (*managedCertificate, error) {
-	var err error
-	url := c.getURL(urlResourceCertificateByID)
-	url = fmt.Sprintf(url, certificateId)
-	statusCode, _, body, err := c.request("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	switch statusCode {
-	case http.StatusOK:
-		var res = &managedCertificate{}
-		err = json.Unmarshal(body, res)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse search results: %s, body: %s", err, body)
-		}
-		return res, nil
-	default:
-		if body != nil {
-			respErrors, err := parseResponseErrors(body)
-			if err == nil {
-				respError := fmt.Sprintf("unexpected status code on Venafi Cloud certificate search. Status: %d\n", statusCode)
-				for _, e := range respErrors {
-					respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
-				}
-				return nil, fmt.Errorf(respError)
-			}
-		}
-		return nil, fmt.Errorf("unexpected status code on Venafi Cloud certificate search. Status: %d", statusCode)
-	}
+func (c *Connector) getCertificate(certificateId string) (*cloud_structs.ManagedCertificate, error) {
+	return c.rawClient().GetCertificateById(certificateId)
 }
 
 func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certificate.ImportResponse, error) {
@@ -1419,11 +1233,11 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 	}
 	zone := req.PolicyDN
 	if zone == "" {
-		appDetails, _, err := c.getAppDetailsByName(c.zone.getApplicationName())
+		appDetails, err := c.getAppDetailsByName(c.zone.getApplicationName())
 		if err != nil {
 			return nil, err
 		}
-		zone = appDetails.ApplicationId
+		zone = appDetails.Id
 	}
 	ipAddr := endpoint.LocalIP
 	origin := endpoint.SDKName
@@ -1434,12 +1248,12 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 	}
 	base64.StdEncoding.EncodeToString(pBlock.Bytes)
 	fingerprint := certThumbprint(pBlock.Bytes)
-	request := importRequest{
-		Certificates: []importRequestCertInfo{
+	request := &cloud_structs.ImportRequest{
+		Certificates: []cloud_structs.ImportRequestCertInfo{
 			{
 				Certificate:    base64.StdEncoding.EncodeToString(pBlock.Bytes),
 				ApplicationIds: []string{zone},
-				ApiClientInformation: apiClientInformation{
+				ApiClientInformation: cloud_structs.ApiClientInformation{
 					Type:       origin,
 					Identifier: ipAddr,
 				},
@@ -1447,28 +1261,13 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 		},
 	}
 
-	url := c.getURL(urlResourceCertificates)
-	statusCode, status, body, err := c.request("POST", url, request)
+	_, err := c.rawClient().PostCertificate(request)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", verror.ServerTemporaryUnavailableError, err)
+		return nil, err
 	}
-	var r importResponse
-	switch statusCode {
-	case http.StatusOK, http.StatusCreated, http.StatusAccepted:
-	case http.StatusBadRequest, http.StatusForbidden, http.StatusConflict:
-		return nil, fmt.Errorf("%w: certificate can`t be imported. %d %s %s", verror.ServerBadDataResponce, statusCode, status, string(body))
-	case http.StatusInternalServerError, http.StatusBadGateway, http.StatusServiceUnavailable:
-		return nil, verror.ServerTemporaryUnavailableError
-	default:
-		return nil, verror.ServerError
-	}
-	err = json.Unmarshal(body, &r)
-	if err != nil {
-		return nil, fmt.Errorf("%w: can`t unmarshal json response %s", verror.ServerError, err)
-	} else if !(len(r.CertificateInformations) == 1) {
-		return nil, fmt.Errorf("%w: certificate was not imported on unknown reason", verror.ServerBadDataResponce)
-	}
+
 	time.Sleep(time.Second)
+
 	foundCert, err := c.searchCertificatesByFingerprint(fingerprint)
 	if err != nil {
 		return nil, err
@@ -1525,28 +1324,28 @@ func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.Cert
 
 func (c *Connector) getCertsBatch(page, pageSize int, withExpired bool) ([]certificate.CertificateInfo, error) {
 
-	appDetails, _, err := c.getAppDetailsByName(c.zone.getApplicationName())
+	appDetails, err := c.getAppDetailsByName(c.zone.getApplicationName())
 	if err != nil {
 		return nil, err
 	}
 
-	req := &SearchRequest{
-		Expression: &Expression{
-			Operands: []Operand{
+	req := &cloud_structs.SearchRequest{
+		Expression: &cloud_structs.Expression{
+			Operands: []cloud_structs.Operand{
 				{
 					Field:    "appstackIds",
-					Operator: MATCH,
-					Value:    appDetails.ApplicationId,
+					Operator: cloud_structs.MATCH,
+					Value:    appDetails.Id,
 				},
 			},
-			Operator: AND,
+			Operator: cloud_structs.AND,
 		},
-		Paging: &Paging{PageSize: pageSize, PageNumber: page},
+		Paging: &cloud_structs.Paging{PageSize: pageSize, PageNumber: page},
 	}
 	if !withExpired {
-		req.Expression.Operands = append(req.Expression.Operands, Operand{
+		req.Expression.Operands = append(req.Expression.Operands, cloud_structs.Operand{
 			Field:    "validityEnd",
-			Operator: GTE,
+			Operator: cloud_structs.GTE,
 			Value:    time.Now().Format(time.RFC3339),
 		})
 	}
@@ -1556,69 +1355,40 @@ func (c *Connector) getCertsBatch(page, pageSize int, withExpired bool) ([]certi
 	}
 	infos := make([]certificate.CertificateInfo, len(r.Certificates))
 	for i, c := range r.Certificates {
-		infos[i] = c.ToCertificateInfo()
+		infos[i] = certificateToCertificateInfo(&c)
 	}
 	return infos, nil
 }
 
-func (c *Connector) getAppDetailsByName(appName string) (*ApplicationDetails, int, error) {
-	url := c.getURL(urlAppDetailsByName)
-	if c.user == nil {
-		return nil, -1, fmt.Errorf("must be autheticated to read the zone configuration")
-	}
-	encodedAppName := netUrl.PathEscape(appName)
-	url = fmt.Sprintf(url, encodedAppName)
-	statusCode, status, body, err := c.request("GET", url, nil)
-	if err != nil {
-		return nil, statusCode, err
-	}
-	details, err := parseApplicationDetailsResult(statusCode, status, body)
-	if err != nil {
-		return nil, statusCode, err
-	}
-	return details, statusCode, nil
+func (c *Connector) getAppDetailsByName(appName string) (*cloud_structs.ApplicationDetails, error) {
+	return c.rawClient().GetApplicationByName(appName)
 }
 
 // GetZonesByParent returns a list of valid zones for a VaaS application specified by parent
 func (c *Connector) GetZonesByParent(parent string) ([]string, error) {
 	var zones []string
 
-	appDetails, _, err := c.getAppDetailsByName(parent)
+	appDetails, err := c.getAppDetailsByName(parent)
 	if err != nil {
 		return nil, err
 	}
 
-	for citAlias := range appDetails.CitAliasToIdMap {
+	for citAlias := range appDetails.CertificateIssuingTemplateAliasIdMap {
 		zone := fmt.Sprintf("%s\\%s", parent, citAlias)
 		zones = append(zones, zone)
 	}
 	return zones, nil
 }
 
-func (c *Connector) getTemplateByID() (*certificateTemplate, error) {
-	url := c.getURL(urlResourceTemplate)
+func (c *Connector) getTemplateByID() (*cloud_structs.CertificateTemplate, error) {
 	appNameEncoded := netUrl.PathEscape(c.zone.getApplicationName())
 	citAliasEncoded := netUrl.PathEscape(c.zone.getTemplateAlias())
-	url = fmt.Sprintf(url, appNameEncoded, citAliasEncoded)
-	statusCode, status, body, err := c.request("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	t, err := parseCertificateTemplateResult(statusCode, status, body)
-	return t, err
+
+	return c.rawClient().GetCertificateIssuingTemplateByApplicationAndId(appNameEncoded, citAliasEncoded)
 }
 
-func getCit(c *Connector, citName string) (*certificateTemplate, error) {
-	url := c.getURL(urlIssuingTemplate)
-	_, _, body, err := c.request("GET", url, nil)
-
-	if err != nil {
-		return nil, err
-	}
-
-	var cits CertificateTemplates
-
-	err = json.Unmarshal(body, &cits)
+func getCit(c *Connector, citName string) (*cloud_structs.CertificateTemplate, error) {
+	cits, err := c.rawClient().GetCertificateIssuingTemplates()
 	if err != nil {
 		return nil, err
 	}
@@ -1631,22 +1401,20 @@ func getCit(c *Connector, citName string) (*certificateTemplate, error) {
 				return &cit, nil
 			}
 		}
-
 	}
 
 	//no error but cit was not found.
 	return nil, nil
 }
 
-func (c *Connector) CreateAPIUserAccount(userName string, password string) (int, *userDetails, error) {
-
+func (c *Connector) CreateAPIUserAccount(userName string, password string) (int, *cloud_structs.UserDetails, error) {
 	indexOfAt := strings.Index(userName, "@")
 
 	if indexOfAt == -1 {
 		indexOfAt = len(userName)
 	}
 
-	userAccountReq := userAccount{
+	userAccountReq := cloud_structs.UserAccount{
 		UserAccountType: "API",
 		Username:        userName,
 		Password:        password,
@@ -1657,29 +1425,18 @@ func (c *Connector) CreateAPIUserAccount(userName string, password string) (int,
 	return c.CreateUserAccount(&userAccountReq)
 }
 
-func (c *Connector) CreateUserAccount(userAccount *userAccount) (int, *userDetails, error) {
+func (c *Connector) CreateUserAccount(userAccount *cloud_structs.UserAccount) (int, *cloud_structs.UserDetails, error) {
+	statusCode, ud, err := c.rawClient().PostUserAccountWithStatusCode(userAccount)
+	if err != nil {
+		return 0, nil, err
+	}
 
-	url := c.getURL(urlResourceUserAccounts)
-	statusCode, status, body, err := c.request("POST", url, userAccount, true)
-	if err != nil {
-		return statusCode, nil, err
-	}
-	ud, err := parseUserDetailsResultFromPOST(statusCode, status, body)
-	if err != nil {
-		return statusCode, nil, err
-	}
 	//c.user = ud
 	return statusCode, ud, nil
 }
 
-func getUserDetails(c *Connector) (*userDetails, error) {
-
-	url := c.getURL(urlResourceUserAccounts)
-	statusCode, status, body, err := c.request("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	ud, err := parseUserDetailsResult(http.StatusOK, statusCode, status, body)
+func getUserDetails(c *Connector) (*cloud_structs.UserDetails, error) {
+	ud, err := c.rawClient().GetUserAccounts()
 	if err != nil {
 		return nil, err
 	}
@@ -1687,81 +1444,23 @@ func getUserDetails(c *Connector) (*userDetails, error) {
 	return ud, nil
 }
 
-func (c *Connector) retrieveUser(id string) (*user, error) {
-
-	url := c.getURL(urlUserById)
-	url = fmt.Sprintf(url, id)
-
-	statusCode, status, body, err := c.request("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	user, err := parseUserByIdResult(http.StatusOK, statusCode, status, body)
-	if err != nil {
-		return nil, err
-	}
-	return user, nil
-}
-
-func (c *Connector) retrieveUsers(userName string) (*users, error) {
-
-	url := c.getURL(urlUsersByName)
-	url = fmt.Sprintf(url, userName)
-
-	statusCode, status, body, err := c.request("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	users, err := parseUsersByNameResult(http.StatusOK, statusCode, status, body)
-	if err != nil {
-		return nil, err
-	}
-	return users, nil
-}
-
-func (c *Connector) retrieveTeams() (*teams, error) {
-
-	url := c.getURL(urlTeams)
-
-	statusCode, status, body, err := c.request("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	teams, err := parseTeamsResult(http.StatusOK, statusCode, status, body)
-	if err != nil {
-		return nil, err
-	}
-	return teams, nil
-}
-
-func getAccounts(caName string, c *Connector) (*policy.Accounts, *policy.CertificateAuthorityInfo, error) {
-	info, err := policy.GetCertAuthorityInfo(caName)
+func getAccounts(caName string, c *Connector) (*cloud_structs.CaAccounts, *policy.CertificateAuthorityInfo, error) {
+	info, err := cloud_convert.GetCertAuthorityInfo(caName)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	caType := netUrl.PathEscape(info.CAType)
-	url := c.getURL(urlCAAccounts)
-	url = fmt.Sprintf(url, caType)
-	_, _, body, err := c.request("GET", url, nil)
 
+	accounts, err := c.rawClient().GetCaAccounts(caType)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	var accounts policy.Accounts
-
-	err = json.Unmarshal(body, &accounts)
-
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return &accounts, &info, nil
+	return accounts, &info, nil
 }
 
 func getCertificateAuthorityDetails(caName string, c *Connector) (*policy.CADetails, error) {
-
 	accounts, info, err := getAccounts(caName, c)
 	if err != nil {
 		return nil, err
@@ -1785,20 +1484,9 @@ func getCertificateAuthorityDetails(caName string, c *Connector) (*policy.CADeta
 }
 
 func getCertificateAuthorityInfoFromCloud(caName, caAccountId, caProductOptionId string, c *Connector) (*policy.CertificateAuthorityInfo, error) {
-
 	caName = netUrl.PathEscape(caName)
-	url := c.getURL(urlCAAccountDetails)
-	url = fmt.Sprintf(url, caName, caAccountId)
-	_, _, body, err := c.request("GET", url, nil)
 
-	if err != nil {
-		return nil, err
-	}
-
-	var accountDetails policy.AccountDetails
-
-	err = json.Unmarshal(body, &accountDetails)
-
+	accountDetails, err := c.rawClient().GetCaAccountById(caName, caAccountId)
 	if err != nil {
 		return nil, err
 	}
@@ -1811,7 +1499,7 @@ func getCertificateAuthorityInfoFromCloud(caName, caAccountId, caProductOptionId
 	info.CAType = accountDetails.Account.CertificateAuthority
 
 	if accountDetails.Account.Key == "" {
-		return nil, fmt.Errorf("Key is empty")
+		return nil, fmt.Errorf("key is empty")
 	}
 
 	info.CAAccountKey = accountDetails.Account.Key
