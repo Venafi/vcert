@@ -28,6 +28,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -35,6 +36,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -526,6 +528,229 @@ func TestRequestCertificateWithValidHours(t *testing.T) {
 		}
 	}
 	DoRequestCertificateWithValidHours(t, tpp)
+}
+
+// The reason we are using a mock HTTP server rather than the live TPP server is
+// because consistently triggering the 500 error in a stage different than 0
+// requires putting a powershell script on the TPP VM or turning the Microsoft
+// CA off, which is not something that can be done as part of the "set up" of
+// the current tests we have in vcert.
+//
+// The HTTP response samples below are based on tests performed manually with a
+// TPP 20.1 instance by inspecting the HTTP responses with curl.
+func TestRetrieveCertificate(t *testing.T) {
+	certData := "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tDQpNSUlGTWpDQ0JCcWdBd0lCQWdJVEx3QUFBVmVJV0tkUVFTbmRmd0FBQUFBQlZ6QU5CZ2txaGtpRzl3MEJBUXNGDQpBREJOTVJNd0VRWUtDWkltaVpQeUxHUUJHUllEWTI5dE1Sb3dHQVlLQ1pJbWlaUHlMR1FCR1JZS2RtVnVZV1pwDQpaR1Z0YnpFYU1CZ0dBMVVFQXhNUmRtVnVZV1pwWkdWdGJ5MVVVRkF0UTBFd0hoY05Nakl4TVRFME1UVXdOVFU0DQpXaGNOTWpReE1ERTNNVFUxTnpRNVdqQVhNUlV3RXdZRFZRUURFd3hpWlhoaGJYQnNaUzVqYjIwd2dnRWlNQTBHDQpDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXdnZ0VLQW9JQkFRQzAwZE05RjdmNk12RlpZMzgyejQvbFZiRWNROFp2DQp1VkNTL2ovaVpmNkVwbUpjMzdubnlFeDJqSVR4eTNPdXRjMmJVUmZ2a284MmV5cHFieDhlNWNCV3pwUWs0NU5pDQpUdzlhMmFqbGhPbE11c1R2RzRLc29DUGM5K29URHRmb3NvRjRSK05rbjZZa0RFenZUb1pzME5yKy9LcTl4THVPDQpOWkM3d0M1dE5TemJRT01aVVV0NGt0WXZBQkp0dHZENlNrY0Y5ZVMySGRJWFJ3aHhPV05TZjYrcGhKZko4ZnhGDQpKSWJmaU9wMktGRVlEWGJ1L0kzeUpSdHFmY211M2FqV0MyR2NkMkNGaTJxdUJ4SDdCVXZoL1ltTm10K2F5MExJDQphK21PTXduNytZdDhKbVh6TWRIVjZZSEhZanQwR0pyRjBxRlR1bjFIeENGQnRBYU1ITzJVSmZVSEFnTUJBQUdqDQpnZ0kvTUlJQ096QVhCZ05WSFJFRUVEQU9nZ3hpWlhoaGJYQnNaUzVqYjIwd0hRWURWUjBPQkJZRUZQV3d2YmE3DQp4cTVhOWZhNWw3cFRCMlVZcjV2cE1COEdBMVVkSXdRWU1CYUFGSU4xZWxSWUdMZ2lIU2gzdnUzbEtUL1lvZlgrDQpNSUhPQmdOVkhSOEVnY1l3Z2NNd2djQ2dnYjJnZ2JxR2diZHNaR0Z3T2k4dkwwTk9QWFpsYm1GbWFXUmxiVzh0DQpWRkJRTFVOQkxFTk9QWFJ3Y0N4RFRqMURSRkFzUTA0OVVIVmliR2xqSlRJd1MyVjVKVEl3VTJWeWRtbGpaWE1zDQpRMDQ5VTJWeWRtbGpaWE1zUTA0OVEyOXVabWxuZFhKaGRHbHZiaXhFUXoxMlpXNWhabWxrWlcxdkxFUkRQV052DQpiVDlqWlhKMGFXWnBZMkYwWlZKbGRtOWpZWFJwYjI1TWFYTjBQMkpoYzJVL2IySnFaV04wUTJ4aGMzTTlZMUpNDQpSR2x6ZEhKcFluVjBhVzl1VUc5cGJuUXdnY1lHQ0NzR0FRVUZCd0VCQklHNU1JRzJNSUd6QmdnckJnRUZCUWN3DQpBb2FCcG14a1lYQTZMeTh2UTA0OWRtVnVZV1pwWkdWdGJ5MVVVRkF0UTBFc1EwNDlRVWxCTEVOT1BWQjFZbXhwDQpZeVV5TUV0bGVTVXlNRk5sY25acFkyVnpMRU5PUFZObGNuWnBZMlZ6TEVOT1BVTnZibVpwWjNWeVlYUnBiMjRzDQpSRU05ZG1WdVlXWnBaR1Z0Ynl4RVF6MWpiMjAvWTBGRFpYSjBhV1pwWTJGMFpUOWlZWE5sUDI5aWFtVmpkRU5zDQpZWE56UFdObGNuUnBabWxqWVhScGIyNUJkWFJvYjNKcGRIa3dJUVlKS3dZQkJBR0NOeFFDQkJRZUVnQlhBR1VBDQpZZ0JUQUdVQWNnQjJBR1VBY2pBT0JnTlZIUThCQWY4RUJBTUNCYUF3RXdZRFZSMGxCQXd3Q2dZSUt3WUJCUVVIDQpBd0V3RFFZSktvWklodmNOQVFFTEJRQURnZ0VCQUhCWFEwTVdUU1UzcllXTWNMVDBySE5lSVBMSXJoWDNFWGpWDQpmdzIxT1RKL09MWFBFY0lhVTQrWlNUOThpZE5oRG15VkNudmVxaXpzT0tibDdQUFR4OHZrbWUwOFpmS2R1QmNODQpsL1VwOTV2YVZYU0Y4K0k4dUNNd3pQZ3dtclVRYUhkNWl3b1hHOHpmdE5ndGcxdUNqZ2ZNVk1acUVsTmtxWk5QDQpETkpvYUp5U1VzY0ZFTE5FTENDa05IR2EyenZZaDRCMjk0UDY2RlRzdkpZanl6YnkzVTV5RW9HM0RaWmxjMzArDQpJNWZXMlI3K3djcWRvRUV4R1dHZXh0N0QzU0Rqc3RYL2ZiNUV1RG1BS0NIOFZoWmFKdUQ1Qkc3L3AvbC9PaVBxDQp0aGdpcHhXb2VzOEVITERaVWVDS0xQR2lUR3pyZWtvNXdqVWxDaFdkM0Q1MkhBWjFxTTQ9DQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tDQo="
+
+	type mockResp struct {
+		status string // The HTTP status line, e.g. "400 Bad Request".
+		body   string
+	}
+
+	tests := []struct {
+		name         string
+		mockRetrieve []mockResp
+		givenTimeout time.Duration
+		expectErr    string
+	}{
+		{
+			name: "should succeed if cert immediately available",
+			mockRetrieve: []mockResp{
+				{"200 OK", `{"CertificateData":"` + certData + `","Filename":"bexample.com.cer","Format":"base64"}`},
+			},
+		},
+		{
+			name: "should fail when 400",
+			mockRetrieve: []mockResp{
+				{"400 Certificate does not exist.",
+					`{"Error":"Certificate \\VED\\Policy\\Test\\bexample.com does not exist."}`},
+			},
+			expectErr: "unable to retrieve: Unexpected status code on TPP Certificate Retrieval. Status: 400 Certificate does not exist.",
+		},
+		{
+			name: "should fail when 401",
+			mockRetrieve: []mockResp{
+				// This is an example of TPP response for which the error
+				// can only be found in the body.
+				{"401 Unauthorized",
+					`{"error": "session_error","error_description": "Invalid token format"}`},
+			},
+			expectErr: "unable to retrieve: Unexpected status code on TPP Certificate Retrieval. Status: 401 Unauthorized",
+		},
+		{
+			name: "should fail when 403",
+			mockRetrieve: []mockResp{
+				// This is an example of TPP response for which the error can
+				// only be found in the HTTP status line and not in the body.
+				{"403 Failed to issue grant: User is not authorized for the requested scope",
+					``},
+			},
+			expectErr: "unable to retrieve: Unexpected status code on TPP Certificate Retrieval. Status: 403 Failed to issue grant: User is not authorized for the requested scope",
+		},
+		{
+			name: "should succeed if cert immediately available regardless of the timeout value",
+			mockRetrieve: []mockResp{
+				{"200 OK",
+					`{"CertificateData":"` + certData + `","Filename":"bexample.com.cer","Format":"base64"}`},
+			},
+			givenTimeout: 3 * time.Second,
+		},
+		{
+			name: "should fail when cert is still pending and timeout set to 0",
+			mockRetrieve: []mockResp{
+				{`202 Certificate \VED\Policy\TLS/SSL\aexample.com being processed, Status: Post CSR, Stage: 500.`,
+					`{"Stage": 500, "Status": "Post CSR"}`},
+			},
+			expectErr: "Issuance is pending. You may try retrieving the certificate later using Pickup ID: \\VED\\Policy\\Test\\bexample.com\n\tStatus: Post CSR",
+		},
+		{
+			name: "should succeed when cert not available immediately but the timeout is set",
+			mockRetrieve: []mockResp{
+				{`202 Certificate \VED\Policy\TLS/SSL\aexample.com being processed, Status: Post CSR, Stage: 500.`,
+					`{"Stage": 500, "Status": "Post CSR"}`},
+				{"200 OK",
+					`{"CertificateData":"` + certData + `","Filename":"bexample.com.cer","Format":"base64"}`},
+			},
+			givenTimeout: 3 * time.Second,
+		},
+		{
+			name: "should fail when enrollment immediately fails",
+			mockRetrieve: []mockResp{
+				{`500 Certificate \VED\Policy\TLS/SSL\aexample.com has encountered an error while processing, Status: Post CSR failed with error: Cannot connect to the certificate authority (CA)., Stage: 500.`,
+					`{"Stage": 500, "Status": "Post CSR failed with error: Cannot connect to the certificate authority (CA)."}`},
+			},
+			expectErr: "unable to retrieve: Unexpected status code on TPP Certificate Retrieval. Status: 500 Certificate \\VED\\Policy\\TLS/SSL\\aexample.com has encountered an error while processing, Status: Post CSR failed with error: Cannot connect to the certificate authority (CA)., Stage: 500.",
+		},
+		{
+			name: "should fail on msg WebSDK CertRequest",
+			mockRetrieve: []mockResp{
+				{`500 Certificate \VED\Policy\TLS/SSL\aexample.com has encountered an error while processing, Status: WebSDK CertRequest Module Requested Certificate, Stage: 500.`,
+					`{"Stage": 500, "Status": "WebSDK CertRequest Module Requested Certificate"}`},
+			},
+			expectErr: "unable to retrieve: Unexpected status code on TPP Certificate Retrieval. Status: 500 Certificate \\VED\\Policy\\TLS/SSL\\aexample.com has encountered an error while processing, Status: WebSDK CertRequest Module Requested Certificate, Stage: 500.",
+		},
+		{
+			name: "should fail on msg Click Retry",
+			mockRetrieve: []mockResp{
+				{`500 Certificate \VED\Policy\TLS/SSL\aexample.com has encountered an error while processing, Status: This certificate cannot be processed while it is in an error state. Fix any errors, and then click Retry., Stage: 500.`,
+					`{"Stage": 500, "Status": "This certificate cannot be processed while it is in an error state. Fix any errors, and then click Retry."}`},
+			},
+			expectErr: "unable to retrieve: Unexpected status code on TPP Certificate Retrieval. Status: 500 Certificate \\VED\\Policy\\TLS/SSL\\aexample.com has encountered an error while processing, Status: This certificate cannot be processed while it is in an error state. Fix any errors, and then click Retry., Stage: 500.",
+		},
+		{
+			name: "should fail when there is a 500 after waiting for the cert",
+			mockRetrieve: []mockResp{
+				{`202 Certificate \VED\Policy\TLS/SSL\aexample.com being processed, Status: Post CSR, Stage: 500.`,
+					`{"Stage": 500, "Status": "Post CSR"}`},
+				{`500 Certificate \VED\Policy\TLS/SSL\aexample.com has encountered an error while processing, Status: Post CSR failed with error: Cannot connect to the certificate authority (CA), Stage: 500.`,
+					`{"Stage": 500, "Status": "Post CSR failed with error: Cannot connect to the certificate authority (CA)."}`},
+			},
+			givenTimeout: 3 * time.Second,
+			expectErr:    "unable to retrieve: Unexpected status code on TPP Certificate Retrieval. Status: 500 Certificate \\VED\\Policy\\TLS/SSL\\aexample.com has encountered an error while processing, Status: Post CSR failed with error: Cannot connect to the certificate authority (CA), Stage: 500.",
+		},
+		{
+			name: "should fail when timeout too small while waiting for the cert",
+			mockRetrieve: []mockResp{
+				{`202 Certificate \VED\Policy\TLS/SSL\aexample.com being processed, Status: Post CSR, Stage: 500.`,
+					`{"Stage": 500, "Status": "Post CSR"}`},
+			},
+			givenTimeout: 1 * time.Millisecond,
+			expectErr:    "Operation timed out. You may try retrieving the certificate later using Pickup ID: \\VED\\Policy\\Test\\bexample.com",
+		},
+	}
+
+	serverWith := func(mockRetrieve []mockResp) (_ *httptest.Server, retrieveCount *atomic.Int32) {
+		retrieveCount = &atomic.Int32{}
+		server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			switch {
+			case r.URL.Path == "/vedsdk/certificates/retrieve":
+				retrieveCount.Add(1)
+				if retrieveCount.Load() > int32(len(mockRetrieve)) {
+					t.Fatalf("/retrieve: expected no more than %d calls, but got %d", len(mockRetrieve), retrieveCount.Load())
+				}
+
+				req := certificateRetrieveRequest{}
+				_ = json.NewDecoder(r.Body).Decode(&req)
+				if req.CertificateDN != `\VED\Policy\Test\bexample.com` {
+					t.Fatalf("/retrieve: expected CertificateDN to be '%s' but got '%s'", `\VED\Policy\Test\bexample.com`, req.CertificateDN)
+				}
+
+				writeRespWithCustomStatus(w,
+					mockRetrieve[retrieveCount.Load()-1].status,
+					mockRetrieve[retrieveCount.Load()-1].body,
+				)
+			default:
+				t.Fatalf("mock http server: unimplemented path " + r.URL.Path)
+			}
+		}))
+		t.Cleanup(server.Close)
+		return server, retrieveCount
+	}
+	for _, tt := range tests {
+		tt := tt // Because t.Parallel.
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			server, retrieveCount := serverWith(tt.mockRetrieve)
+			trusted := x509.NewCertPool()
+			trusted.AddCert(server.Certificate())
+
+			tpp, err := NewConnector(server.URL, `\VED\Policy\Test`, true, trusted)
+			if err != nil {
+				t.Fatalf("unexpected err, err: %q, url: %s", err, expectedURL)
+			}
+
+			_, err = tpp.RetrieveCertificate(&certificate.Request{PickupID: `\VED\Policy\Test\bexample.com`, Timeout: tt.givenTimeout})
+			if retrieveCount.Load() != int32(len(tt.mockRetrieve)) {
+				t.Fatalf("tpp.RetrieveCertificate: expected %d calls to /certificates/retrieve, but got %d", len(tt.mockRetrieve), retrieveCount.Load())
+			}
+			if tt.expectErr != "" {
+				if err == nil || err.Error() != tt.expectErr {
+					t.Fatalf("tpp.RetrieveCertificate: expected err to be %q but got %q", tt.expectErr, err)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("tpp.RetrieveCertificate: no error was expected, but got %q", err)
+			}
+		})
+	}
+}
+
+// Instead of returning standard statuses such as "400 Bad Request", TPP returns
+// HTTP status lines that contain ad-hoc messages, and we need to reproduce this
+// same behavior. But Go doesn't support custom HTTP status text, the only way
+// to reproduce these HTTP status lines is to hijack the TCP stream and write
+// the HTTP/1.1 response manually. Instead of calling w.WriteHeader or w.Write,
+// we instead call MockWrite.
+//
+// Why do we need to care about the HTTP status line, you ask? Because TPP
+// sometimes returns the error message in the HTTP status line and not in the
+// response body.
+//
+// Some error messages only appear in the HTTP status line, such as this one:
+//
+//	HTTP/1.1 403 Failed to issue grant: User is not authorized for the requested scope
+//	(no body)
+//
+// Other error messages only appear in the body but not in the HTTP status line,
+// such as:
+//
+//	HTTP/1.1 401 Unauthorized
+//	{"error": "session_error","error_description": "Invalid token format"}
+//
+// In most cases, the error message appear both in the HTTP status line and in
+// the body. For example:
+//
+//	HTTP/1.1 400 Certificate does not exist.
+//	{"Error":"Certificate \\VED\\Policy\\Test\\bexample.com does not exist."}
+func writeRespWithCustomStatus(w http.ResponseWriter, status, body string) {
+	hj := w.(http.Hijacker)
+	conn, bufrw, _ := hj.Hijack()
+	defer conn.Close()
+	bufrw.WriteString("HTTP/1.1 " + status + "\n\r")
+	bufrw.WriteString("Content-Type: application/json\n\r")
+	bufrw.WriteString("\n\r")
+	bufrw.Write([]byte(body))
+	bufrw.Flush()
 }
 
 func DoRequestCertificateWithValidHours(t *testing.T, tpp *Connector) {
