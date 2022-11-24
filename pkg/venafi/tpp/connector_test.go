@@ -658,14 +658,14 @@ func TestRetrieveCertificate(t *testing.T) {
 		},
 	}
 
-	serverWith := func(mockRetrieve []mockResp) (_ *httptest.Server, retrieveCount *atomic.Int32) {
-		retrieveCount = &atomic.Int32{}
+	serverWith := func(mockRetrieve []mockResp) (_ *httptest.Server, retrieveCount *int32) {
+		retrieveCount = new(int32)
 		server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			switch {
 			case r.URL.Path == "/vedsdk/certificates/retrieve":
-				retrieveCount.Add(1)
-				if retrieveCount.Load() > int32(len(mockRetrieve)) {
-					t.Fatalf("/retrieve: expected no more than %d calls, but got %d", len(mockRetrieve), retrieveCount.Load())
+				atomic.AddInt32(retrieveCount, 1)
+				if atomic.LoadInt32(retrieveCount) > int32(len(mockRetrieve)) {
+					t.Fatalf("/retrieve: expected no more than %d calls, but got %d", len(mockRetrieve), atomic.LoadInt32(retrieveCount))
 				}
 
 				req := certificateRetrieveRequest{}
@@ -675,8 +675,8 @@ func TestRetrieveCertificate(t *testing.T) {
 				}
 
 				writeRespWithCustomStatus(w,
-					mockRetrieve[retrieveCount.Load()-1].status,
-					mockRetrieve[retrieveCount.Load()-1].body,
+					mockRetrieve[atomic.LoadInt32(retrieveCount)-1].status,
+					mockRetrieve[atomic.LoadInt32(retrieveCount)-1].body,
 				)
 			default:
 				t.Fatalf("mock http server: unimplemented path " + r.URL.Path)
@@ -699,8 +699,8 @@ func TestRetrieveCertificate(t *testing.T) {
 			}
 
 			_, err = tpp.RetrieveCertificate(&certificate.Request{PickupID: `\VED\Policy\Test\bexample.com`, Timeout: tt.givenTimeout})
-			if retrieveCount.Load() != int32(len(tt.mockRetrieve)) {
-				t.Fatalf("tpp.RetrieveCertificate: expected %d calls to /certificates/retrieve, but got %d", len(tt.mockRetrieve), retrieveCount.Load())
+			if atomic.LoadInt32(retrieveCount) != int32(len(tt.mockRetrieve)) {
+				t.Fatalf("tpp.RetrieveCertificate: expected %d calls to /certificates/retrieve, but got %d", len(tt.mockRetrieve), atomic.LoadInt32(retrieveCount))
 			}
 			if tt.expectErr != "" {
 				if err == nil || err.Error() != tt.expectErr {
