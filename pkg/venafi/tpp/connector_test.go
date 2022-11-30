@@ -663,9 +663,9 @@ func TestRetrieveCertificate(t *testing.T) {
 		server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			switch {
 			case r.URL.Path == "/vedsdk/certificates/retrieve":
-				atomic.AddInt32(retrieveCount, 1)
-				if atomic.LoadInt32(retrieveCount) > int32(len(mockRetrieve)) {
-					t.Fatalf("/retrieve: expected no more than %d calls, but got %d", len(mockRetrieve), atomic.LoadInt32(retrieveCount))
+				index := atomic.AddInt32(retrieveCount, 1) - 1
+				if index >= int32(len(mockRetrieve)) {
+					t.Fatalf("/retrieve: expected no more than %d calls, but got %d", len(mockRetrieve), index)
 				}
 
 				req := certificateRetrieveRequest{}
@@ -675,8 +675,8 @@ func TestRetrieveCertificate(t *testing.T) {
 				}
 
 				writeRespWithCustomStatus(w,
-					mockRetrieve[atomic.LoadInt32(retrieveCount)-1].status,
-					mockRetrieve[atomic.LoadInt32(retrieveCount)-1].body,
+					mockRetrieve[index].status,
+					mockRetrieve[index].body,
 				)
 			default:
 				t.Fatalf("mock http server: unimplemented path " + r.URL.Path)
