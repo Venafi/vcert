@@ -107,6 +107,11 @@ type certificateRetrieveResponse struct {
 	Stage           int    `json:",omitempty"`
 }
 
+type certificateResetRequest struct {
+	CertificateDN string `json:",omitempty"`
+	Restart       bool   `json:",omitempty"`
+}
+
 type RevocationReason int
 
 // RevocationReasonsMap maps *certificate.RevocationRequest.Reason to TPP-specific webSDK codes
@@ -352,6 +357,7 @@ const (
 	urlResourceCertificateRenew       urlResource = "vedsdk/certificates/renew"
 	urlResourceCertificateRequest     urlResource = "vedsdk/certificates/request"
 	urlResourceCertificateRetrieve    urlResource = "vedsdk/certificates/retrieve"
+	urlResourceCertificateReset       urlResource = "vedsdk/certificates/reset"
 	urlResourceCertificateRevoke      urlResource = "vedsdk/certificates/revoke"
 	urlResourceCertificatesAssociate  urlResource = "vedsdk/certificates/associate"
 	urlResourceCertificatesDissociate urlResource = "vedsdk/certificates/dissociate"
