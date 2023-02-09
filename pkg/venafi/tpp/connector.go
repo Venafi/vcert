@@ -1232,32 +1232,9 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 	}
 
 	startTime := time.Now()
-	retrieveCount := 0
 	for {
-		retrieveCount++
-
 		var retrieveResponse *certificateRetrieveResponse
 		retrieveResponse, err = c.retrieveCertificateOnce(certReq)
-
-		// As a workaround to certificates being stuck due to a past failed
-		// enrollment, we reset the certificate as part of RetrieveCertificate
-		// to avoid making an extra HTTP call when requesting a certificate. We
-		// only reset once, since it only makes sense to reset the past failed
-		// enrollment.
-		if shouldReset(err) && retrieveCount == 1 {
-			statusCode, status, _, err := c.request("POST", urlResourceCertificateReset, certificateResetRequest{
-				CertificateDN: req.PickupID,
-				Restart:       true,
-			})
-			if err != nil {
-				return nil, fmt.Errorf("while resetting certificate due to a past failed enrollment: %w", err)
-			}
-			if statusCode != http.StatusOK {
-				return nil, fmt.Errorf("while resetting certificate due to a past failed enrollment. Status: %s", status)
-			}
-
-			continue
-		}
 		if err != nil {
 			return nil, fmt.Errorf("unable to retrieve: %s", err)
 		}
@@ -1277,27 +1254,6 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 		}
 		time.Sleep(2 * time.Second)
 	}
-}
-
-// After many tests, we found that the only way to know if the current
-// certificate request is stuck due to an old failed enrollment is to look for
-// "WebSDK CertRequest" or "Fix any errors, and then click Retry." in the
-// retrieve response when it returns a 500.
-func shouldReset(err error) bool {
-	if err == nil {
-		return false
-	}
-
-	if !strings.Contains(err.Error(), "Status: 500") {
-		return false
-	}
-
-	if strings.Contains(err.Error(), "This certificate cannot be processed while it is in an error state. Fix any errors, and then click Retry.") ||
-		strings.Contains(err.Error(), "WebSDK CertRequest Module Requested Certificate") {
-		return true
-	}
-
-	return false
 }
 
 func (c *Connector) retrieveCertificateOnce(certReq certificateRetrieveRequest) (*certificateRetrieveResponse, error) {
