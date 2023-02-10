@@ -23,6 +23,7 @@ build_quick: get
 	env GOOS=linux   GOARCH=amd64 go build $(GO_LDFLAGS) -o bin/linux/vcert         ./cmd/vcert
 
 build: get
+	env GOOS=linux   GOARCH=arm64 go build $(GO_LDFLAGS) -o bin/linux/vcert_arm     ./cmd/vcert
 	env GOOS=linux   GOARCH=amd64 go build $(GO_LDFLAGS) -o bin/linux/vcert         ./cmd/vcert
 	env GOOS=linux   GOARCH=386   go build $(GO_LDFLAGS) -o bin/linux/vcert86       ./cmd/vcert
 	env GOOS=darwin  GOARCH=amd64 go build $(GO_LDFLAGS) -o bin/darwin/vcert        ./cmd/vcert
@@ -75,6 +76,7 @@ collect_artifacts:
 	rm -rf artifacts
 	mkdir -p artifacts
 	# we are assuming that signature are in the path were the make file was executed (not necessarily should be in the root of project)
+	zip -j "artifacts/vcert_$(VERSION)_linux_arm.zip" "bin/linux/vcert_arm" "vcert_linux_arm.sig" || exit 1
 	zip -j "artifacts/vcert_$(VERSION)_linux.zip" "bin/linux/vcert" "vcert_linux.sig" || exit 1
 	zip -j "artifacts/vcert_$(VERSION)_linux86.zip" "bin/linux/vcert86" "vcert_linux86.sig" || exit 1
 	zip -j "artifacts/vcert_$(VERSION)_darwin.zip" "bin/darwin/vcert" "vcert_darwin.sig" || exit 1
