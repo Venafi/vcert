@@ -656,6 +656,16 @@ func TestRetrieveCertificate(t *testing.T) {
 			givenTimeout: 1 * time.Millisecond,
 			expectErr:    "Operation timed out. You may try retrieving the certificate later using Pickup ID: \\VED\\Policy\\Test\\bexample.com",
 		},
+		{
+			name: "should succeed even without a Request Format",
+			mockRetrieve: []mockResp{
+				{`202 Certificate \VED\Policy\TLS/SSL\aexample.com being processed, Status: Post CSR, Stage: 500.`,
+					`{"Stage": 500, "Status": "Post CSR"}`},
+				{"200 OK",
+					`{"CertificateData":"` + certData + `","Filename":"bexample.com.cer"}`},
+			},
+			givenTimeout: 3 * time.Second,
+		},
 	}
 
 	serverWith := func(mockRetrieve []mockResp) (_ *httptest.Server, retrieveCount *int32) {
