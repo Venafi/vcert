@@ -87,6 +87,7 @@ type certificateRequest struct {
 	Devices                 []device        `json:",omitempty"`
 	CertificateType         string          `json:",omitempty"`
 	Reenable                bool            `json:",omitempty"`
+	WorkToDoTimeout         int             `json:",omitempty"`
 }
 
 type certificateRetrieveRequest struct {
@@ -97,6 +98,7 @@ type certificateRetrieveRequest struct {
 	IncludeChain      bool   `json:",omitempty"`
 	FriendlyName      string `json:",omitempty"`
 	RootFirstOrder    bool   `json:",omitempty"`
+	WorkToDoTimeout   int    `json:",omitempty"`
 }
 
 type certificateRetrieveResponse struct {

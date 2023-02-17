@@ -533,6 +533,8 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 	tppReq.CADN = req.CADN
 	tppReq.ObjectName = req.FriendlyName
 	tppReq.DisableAutomaticRenewal = true
+	tppReq.WorkToDoTimeout = req.WorkToDoTimeout
+
 	customFieldsMap := make(map[string][]string)
 	origin := endpoint.SDKName
 	for _, f := range req.CustomFields {
@@ -1218,10 +1220,11 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 	}
 
 	certReq := certificateRetrieveRequest{
-		CertificateDN:  req.PickupID,
-		Format:         "base64",
-		RootFirstOrder: rootFirstOrder,
-		IncludeChain:   includeChain,
+		CertificateDN:   req.PickupID,
+		Format:          "base64",
+		RootFirstOrder:  rootFirstOrder,
+		IncludeChain:    includeChain,
+		WorkToDoTimeout: req.WorkToDoTimeout,
 	}
 	if req.CsrOrigin == certificate.ServiceGeneratedCSR || req.FetchPrivateKey {
 		certReq.IncludePrivateKey = true
