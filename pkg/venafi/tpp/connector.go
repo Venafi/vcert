@@ -1204,10 +1204,10 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 
 	// if Request doesn't contain a Fornat, use defaults
 	if req.Format == "" {
+		req.Format = "base64"
 		if req.KeyType == certificate.KeyTypeRSA {
 			req.Format = "Base64 (PKCS #8)"
 		}
-		req.Format = "base64"
 	}
 
 	if req.PickupID == "" && req.Thumbprint != "" {
