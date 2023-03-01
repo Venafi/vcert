@@ -228,6 +228,10 @@ func setTLSConfig() error {
 	}
 
 	if flags.insecure {
+		// We are ignoring the following from the linter, since from:
+		// golangci-lint version 1.51.2 built from 3e8facb4 on 2023-02-19T21:43:54Z
+		// started failing
+		// #nosec G402: Look for bad TLS connection settings
 		tlsConfig.InsecureSkipVerify = true
 	}
 
