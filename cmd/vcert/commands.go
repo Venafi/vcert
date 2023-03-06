@@ -227,7 +227,7 @@ func setTLSConfig() error {
 		tlsConfig.Renegotiation = tls.RenegotiateFreelyAsClient
 	}
 
-	if flags.insecure {
+	if flags.insecure { // #nosec G402
 		tlsConfig.InsecureSkipVerify = true
 	}
 
