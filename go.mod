@@ -7,7 +7,7 @@ require (
 	github.com/spf13/viper v1.7.0
 	github.com/urfave/cli/v2 v2.1.1
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a
-	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
+	golang.org/x/crypto v0.1.0
 	gopkg.in/ini.v1 v1.51.0
 	gopkg.in/yaml.v2 v2.4.0
 	software.sslmate.com/src/go-pkcs12 v0.0.0-20180114231543-2291e8f0f237
