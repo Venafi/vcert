@@ -1203,11 +1203,8 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 	rootFirstOrder := includeChain && req.ChainOption == certificate.ChainOptionRootFirst
 
 	// if Request doesn't contain a Format, use defaults
-	if req.Format.String() == "" {
-		req.Format = certificate.CertFormatBase64
-		if req.KeyType == certificate.KeyTypeRSA {
-			req.Format = certificate.CertFormatBase64PKCS8
-		}
+	if req.KeyType == certificate.KeyTypeRSA {
+		req.Format = certificate.CertFormatBase64PKCS8
 	}
 
 	if req.PickupID == "" && req.Thumbprint != "" {
@@ -1232,7 +1229,6 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 		Format:         req.Format.String(),
 	}
 
-	fmt.Println("\n\n", certReq)
 	if req.CsrOrigin == certificate.ServiceGeneratedCSR || req.FetchPrivateKey {
 		certReq.IncludePrivateKey = true
 		certReq.Password = req.KeyPassword
