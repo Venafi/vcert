@@ -1202,11 +1202,6 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 	includeChain := req.ChainOption != certificate.ChainOptionIgnore
 	rootFirstOrder := includeChain && req.ChainOption == certificate.ChainOptionRootFirst
 
-	// if Request doesn't contain a Format, use defaults
-	if req.KeyType == certificate.KeyTypeRSA {
-		req.Format = certificate.CertFormatBase64PKCS8
-	}
-
 	if req.PickupID == "" && req.Thumbprint != "" {
 		// search cert by Thumbprint and fill pickupID
 		searchResult, err := c.searchCertificatesByFingerprint(req.Thumbprint)
@@ -1232,6 +1227,11 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 	if req.CsrOrigin == certificate.ServiceGeneratedCSR || req.FetchPrivateKey {
 		certReq.IncludePrivateKey = true
 		certReq.Password = req.KeyPassword
+	}
+
+	// if Request doesn't contain a Format, use defaults
+	if req.KeyType == certificate.KeyTypeRSA {
+		req.Format = certificate.CertFormatBase64PKCS8
 	}
 
 	startTime := time.Now()
