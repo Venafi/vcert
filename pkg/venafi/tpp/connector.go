@@ -1219,16 +1219,19 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 
 	certReq := certificateRetrieveRequest{
 		CertificateDN:  req.PickupID,
-		Format:         "base64",
 		RootFirstOrder: rootFirstOrder,
 		IncludeChain:   includeChain,
+		Format:         req.Format.String(),
 	}
+
 	if req.CsrOrigin == certificate.ServiceGeneratedCSR || req.FetchPrivateKey {
 		certReq.IncludePrivateKey = true
-		if req.KeyType == certificate.KeyTypeRSA {
-			certReq.Format = "Base64 (PKCS #8)"
-		}
 		certReq.Password = req.KeyPassword
+	}
+
+	// if Request doesn't contain a Format,  use defaults
+	if req.KeyType == certificate.KeyTypeRSA {
+		req.Format = certificate.CertFormatBase64PKCS8
 	}
 
 	startTime := time.Now()

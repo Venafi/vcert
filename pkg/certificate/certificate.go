@@ -26,16 +26,18 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/util"
-	"github.com/youmark/pkcs8"
 	"net"
 	"net/url"
 	"strings"
 	"time"
 
-	"github.com/Venafi/vcert/v4/pkg/verror"
+	"github.com/Venafi/vcert/v4/pkg/util"
+	"github.com/youmark/pkcs8"
+
 	"reflect"
 	"sort"
+
+	"github.com/Venafi/vcert/v4/pkg/verror"
 )
 
 // EllipticCurve represents the types of supported elliptic curves
@@ -177,6 +179,18 @@ type Location struct {
 	Replace                        bool
 }
 
+type CertificateFormat int
+
+const (
+	CertFormatNotSet CertificateFormat = iota
+	CertFormatBase64
+	CertFormatBase64PKCS8
+	CertFormatDER
+	CertFormatJKS
+	CertFormatPKCS7
+	CertFormatPKCS12
+)
+
 // Request contains data needed to generate a certificate request
 // CSR is a PEM-encoded Certificate Signing Request
 type Request struct {
@@ -211,6 +225,7 @@ type Request struct {
 	Location      *Location
 	ValidityHours int
 	IssuerHint    string
+	Format        CertificateFormat
 }
 
 //SSH Certificate structures
@@ -789,4 +804,25 @@ func FindNewestCertificateWithSans(certificates []*CertificateInfo, sans_ *Sans)
 
 	// fail, since no valid certificate was found at this point
 	return nil, verror.NoCertificateFoundError
+}
+
+func (f CertificateFormat) String() string {
+	switch f {
+	case CertFormatBase64PKCS8:
+		return "base64 (pkcs #8)"
+	case CertFormatDER:
+		return "der"
+	case CertFormatJKS:
+		return "jks"
+	case CertFormatPKCS7:
+		return "pkcs #7"
+	case CertFormatPKCS12:
+		return "pkcs #12"
+	case CertFormatBase64:
+		fallthrough
+	case CertFormatNotSet:
+		fallthrough
+	default:
+		return "base64"
+	}
 }
