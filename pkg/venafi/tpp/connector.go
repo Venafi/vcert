@@ -1229,7 +1229,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 		certReq.Password = req.KeyPassword
 	}
 
-	// if Request doesn't contain a Format, use defaults
+	// if Request doesn't contain a Format,  use defaults
 	if req.KeyType == certificate.KeyTypeRSA {
 		req.Format = certificate.CertFormatBase64PKCS8
 	}
