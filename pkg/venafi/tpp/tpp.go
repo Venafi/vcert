@@ -808,6 +808,8 @@ func (sp serverPolicy) toZoneConfig(zc *endpoint.ZoneConfiguration) {
 }
 
 func (sp serverPolicy) toPolicy() (p endpoint.Policy) {
+	const allAllowedRegex = ".*"
+
 	addStartEnd := func(s string) string {
 		if !strings.HasPrefix(s, "^") {
 			s = "^" + s
@@ -827,19 +829,42 @@ func (sp serverPolicy) toPolicy() (p endpoint.Policy) {
 		}
 		return escaped
 	}
-	const allAllowedRegex = ".*"
-	if len(sp.WhitelistedDomains) == 0 {
-		p.SubjectCNRegexes = []string{allAllowedRegex}
-	} else {
-		p.SubjectCNRegexes = make([]string, len(sp.WhitelistedDomains))
-		for i, d := range sp.WhitelistedDomains {
-			if sp.WildcardsAllowed {
-				p.SubjectCNRegexes[i] = addStartEnd(`([\p{L}\p{N}-*]+\.)*` + regexp.QuoteMeta(d))
-			} else {
-				p.SubjectCNRegexes[i] = addStartEnd(`([\p{L}\p{N}-]+\.)*` + regexp.QuoteMeta(d))
-			}
+	domainRegex := func(domain string, wildcardsAllowed bool) string {
+		requiresPrefix := false
+		if len(domain) > 0 && domain[0] == '.' {
+			domain = domain[1:]
+			requiresPrefix = true
 		}
+
+		switch {
+		case wildcardsAllowed && requiresPrefix:
+			return addStartEnd(`([\p{L}\p{N}-*]+\.)+` + regexp.QuoteMeta(domain))
+		case wildcardsAllowed && !requiresPrefix:
+			return addStartEnd(`([\p{L}\p{N}-*]+\.)*` + regexp.QuoteMeta(domain))
+		case !wildcardsAllowed && requiresPrefix:
+			return addStartEnd(`([\p{L}\p{N}-]+\.)+` + regexp.QuoteMeta(domain))
+		case !wildcardsAllowed && !requiresPrefix:
+			return addStartEnd(`([\p{L}\p{N}-]+\.)*` + regexp.QuoteMeta(domain))
+		}
+
+		panic("unreachable")
 	}
+	domainRegexes := func(domains []string, wildcardsAllowed bool, defaultAllowAll bool) []string {
+		if len(domains) == 0 {
+			if defaultAllowAll {
+				return []string{allAllowedRegex}
+			}
+			return []string{}
+		}
+
+		regexes := make([]string, len(domains))
+		for i, d := range domains {
+			regexes[i] = domainRegex(d, wildcardsAllowed)
+		}
+		return regexes
+	}
+
+	p.SubjectCNRegexes = domainRegexes(sp.WhitelistedDomains, sp.WildcardsAllowed, true)
 	if sp.Subject.OrganizationalUnit.Locked {
 		p.SubjectOURegexes = escapeArray(sp.Subject.OrganizationalUnit.Values)
 	} else {
@@ -865,22 +890,7 @@ func (sp serverPolicy) toPolicy() (p endpoint.Policy) {
 	} else {
 		p.SubjectCRegexes = []string{allAllowedRegex}
 	}
-	if sp.SubjAltNameDnsAllowed {
-		if len(sp.WhitelistedDomains) == 0 {
-			p.DnsSanRegExs = []string{allAllowedRegex}
-		} else {
-			p.DnsSanRegExs = make([]string, len(sp.WhitelistedDomains))
-			for i, d := range sp.WhitelistedDomains {
-				if sp.WildcardsAllowed {
-					p.DnsSanRegExs[i] = addStartEnd(`([\p{L}\p{N}-*]+\.)*` + regexp.QuoteMeta(d))
-				} else {
-					p.DnsSanRegExs[i] = addStartEnd(`([\p{L}\p{N}-]+\.)*` + regexp.QuoteMeta(d))
-				}
-			}
-		}
-	} else {
-		p.DnsSanRegExs = []string{}
-	}
+	p.DnsSanRegExs = domainRegexes(sp.WhitelistedDomains, sp.WildcardsAllowed, sp.SubjAltNameDnsAllowed)
 	if sp.SubjAltNameIpAllowed {
 		p.IpSanRegExs = []string{allAllowedRegex}
 	} else {

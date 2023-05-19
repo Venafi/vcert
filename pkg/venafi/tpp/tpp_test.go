@@ -409,4 +409,24 @@ func TestConvertServerPolicyToInternalPolicy(t *testing.T) {
 		t.Fatal("bad key curve")
 	}
 
+	sp = serverPolicy{
+		WhitelistedDomains: []string{
+			"test1.com",
+			"test2.com",
+			".test3.com",
+		},
+	}
+	p = sp.toPolicy()
+	if len(p.SubjectCNRegexes) != 3 {
+		t.Fatalf("invalid SubjectCNRegexes length, expected 3, got %d", len(p.SubjectCNRegexes))
+	}
+	if p.SubjectCNRegexes[0] != "^([\\p{L}\\p{N}-]+\\.)*test1\\.com$" {
+		t.Fatalf("invalid SubjectCNRegexes[0], expected ^([\\p{L}\\p{N}-*]+\\.)*test1\\.com$, got %s", p.SubjectCNRegexes[0])
+	}
+	if p.SubjectCNRegexes[1] != "^([\\p{L}\\p{N}-]+\\.)*test2\\.com$" {
+		t.Fatalf("invalid SubjectCNRegexes[1], expected ^([\\p{L}\\p{N}-*]+\\.)*test2\\.com$, got %s", p.SubjectCNRegexes[1])
+	}
+	if p.SubjectCNRegexes[2] != "^([\\p{L}\\p{N}-]+\\.)+test3\\.com$" {
+		t.Fatalf("invalid SubjectCNRegexes[2], expected ^([\\p{L}\\p{N}-*]+\\.)+test3\\.com$, got %s", p.SubjectCNRegexes[2])
+	}
 }
