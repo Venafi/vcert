@@ -30,7 +30,6 @@ import (
 	"net/http"
 	netUrl "net/url"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
@@ -824,10 +823,8 @@ func getCloudRequest(c *Connector, req *certificate.Request) (*certificateReques
 		}
 	}
 
-	if req.ValidityHours > 0 {
-		hoursStr := strconv.Itoa(req.ValidityHours)
-		validityHoursStr := "PT" + hoursStr + "H"
-		cloudReq.ValidityPeriod = validityHoursStr
+	if req.ValidityDuration != nil {
+		cloudReq.ValidityPeriod = "PT" + strings.ToUpper((*req.ValidityDuration).Truncate(time.Second).String())
 	}
 
 	return &cloudReq, nil

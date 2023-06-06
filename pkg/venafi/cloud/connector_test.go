@@ -195,9 +195,9 @@ func TestRequestCertificateWithValidDays(t *testing.T) {
 	req.Subject.Organization = []string{"Venafi, Inc."}
 	req.Subject.OrganizationalUnit = []string{"Automated Tests"}
 
-	validHours := 144
-	req.ValidityHours = validHours
-	req.IssuerHint = "MICROSOFT"
+	validDuration := 144 * time.Hour * 24
+	req.ValidityDuration = &validDuration
+	req.IssuerHint = util.IssuerHintMicrosoft
 
 	err = conn.GenerateRequest(zoneConfig, req)
 	if err != nil {
@@ -244,8 +244,7 @@ func TestRequestCertificateWithValidDays(t *testing.T) {
 	//need to convert local date on utc, since the certificate' NotAfter value we got on previous step, is on utc
 	//so for comparing them we need to have both dates on utc.
 	loc, _ := time.LoadLocation("UTC")
-	utcNow := time.Now().In(loc)
-	expectedValidDate := utcNow.AddDate(0, 0, validHours/24).Format("2006-01-02")
+	expectedValidDate := time.Now().Add(validDuration).In(loc).Format("2006-01-02")
 
 	if expectedValidDate != certValidUntil {
 		t.Fatalf("Expiration date is different than expected, expected: %s, but got %s: ", expectedValidDate, certValidUntil)
