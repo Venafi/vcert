@@ -195,7 +195,7 @@ func TestRequestCertificateWithValidDays(t *testing.T) {
 	req.Subject.Organization = []string{"Venafi, Inc."}
 	req.Subject.OrganizationalUnit = []string{"Automated Tests"}
 
-	validDuration := 144 * time.Hour * 24
+	validDuration := 144 * time.Hour
 	req.ValidityDuration = &validDuration
 	req.IssuerHint = util.IssuerHintMicrosoft
 
