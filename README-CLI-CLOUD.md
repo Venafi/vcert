@@ -18,15 +18,21 @@ This article applies to the latest version of VCert CLI, which you can [download
 
 Use these links to quickly jump to a relevant section lower on this page:
 
-- [Detailed usage examples](#examples)
-- [Options for requesting a certificate using the `enroll` action](#certificate-request-parameters)
-- [Options for downloading a certificate using the `pickup` action](#certificate-retrieval-parameters)
-- [Options for renewing a certificate using the `renew` action](#certificate-renewal-parameters)
-- [Options common to the `enroll`, `pickup`, and `renew` actions](#general-command-line-parameters)
-- [Options for applying certificate policy using the `setpolicy` action](#parameters-for-applying-certificate-policy)
-- [Options for viewing certificate policy using the `getpolicy` action](#parameters-for-viewing-certificate-policy)
-- [Options for registering and obtaining a new API key using the `getcred` action](#registering-and-obtaining-an-api-key)
-- [Options for generating a new key pair and CSR using the `gencsr` action (for manual enrollment)](#generating-a-new-key-pair-and-csr)
+- [VCert CLI for Venafi as a Service](#vcert-cli-for-venafi-as-a-service)
+  - [Quick Links](#quick-links)
+  - [Prerequisites](#prerequisites)
+  - [General Command Line Parameters](#general-command-line-parameters)
+    - [Environment Variables](#environment-variables)
+  - [Certificate Request Parameters](#certificate-request-parameters)
+  - [Certificate Retrieval Parameters](#certificate-retrieval-parameters)
+  - [Certificate Renewal Parameters](#certificate-renewal-parameters)
+  - [Certificate Retire Parameters](#certificate-retire-parameters)
+  - [Parameters for Applying Certificate Policy](#parameters-for-applying-certificate-policy)
+  - [Parameters for Viewing Certificate Policy](#parameters-for-viewing-certificate-policy)
+  - [Examples](#examples)
+  - [Appendix](#appendix)
+    - [Registering and obtaining an API Key](#registering-and-obtaining-an-api-key)
+    - [Generating a new key pair and CSR](#generating-a-new-key-pair-and-csr)
 
 ## Prerequisites
 
@@ -155,6 +161,18 @@ Options:
 | `--san-uri`          | Use to specify a Uniform Resource Indicator Subject Alternative Name.  To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-uri spiffe://workload1.example.com` `--san-uri spiffe://workload2.example.com` |
 | `--thumbprint`     | Use to specify the SHA1 thumbprint of the certificate to renew. Value may be specified as a string or read from the certificate file using the `file:` prefix. |
 
+
+
+## Certificate Retire Parameters
+```
+vcert retire -k <api key> [--id <request id> | --thumbprint <sha1 thumb>]
+```
+Options:
+
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Command&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Description                                                  |
+| -------------- | ------------------------------------------------------------ |
+| `--id`         | Use to specify the unique identifier of the certificate to revoke.  Value may be specified as a string or read from a file using the `file:` prefix. |
+| `--thumbprint` | Use to specify the SHA1 thumbprint of the certificate to revoke. Value may be specified as a string or read from the certificate file using the `file:` prefix. |
 
 ## Parameters for Applying Certificate Policy
 ```

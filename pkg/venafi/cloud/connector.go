@@ -51,6 +51,7 @@ const (
 	basePath                                      = "outagedetection/" + apiVersion
 	urlResourceUserAccounts           urlResource = apiVersion + "useraccounts"
 	urlResourceCertificateRequests    urlResource = basePath + "certificaterequests"
+	urlResourceCertificatesRetirement             = urlResourceCertificates + "/retirement"
 	urlResourceCertificateStatus                  = urlResourceCertificateRequests + "/%s"
 	urlResourceCertificates           urlResource = basePath + "certificates"
 	urlResourceCertificateByID                    = urlResourceCertificates + "/%s"
@@ -1250,7 +1251,7 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 	}
 
 	/* 3rd step is to get Certificate Object by id
-	   and check if latestCertificateRequestId there equals to certificateRequestId from 1st step */
+	and check if latestCertificateRequestId there equals to certificateRequestId from 1st step */
 	managedCertificate, err := c.getCertificate(certificateId)
 	if err != nil {
 		return "", fmt.Errorf("failed to renew certificate: %s", err)
@@ -1313,6 +1314,57 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 	return cr.CertificateRequests[0].ID, nil
 }
 
+// RetireCertificate attempts to retire the certificate
+func (c *Connector) RetireCertificate(retireReq *certificate.RetireRequest) error {
+	url := c.getURL(urlResourceCertificatesRetirement)
+	/* 1st step is to get CertificateRequestId which is required to retire certificate */
+	var certificateID string
+	if retireReq.Thumbprint != "" {
+		// by Thumbprint (aka Fingerprint)
+		searchResult, err := c.searchCertificatesByFingerprint(retireReq.Thumbprint)
+		if err != nil {
+			return fmt.Errorf("failed to create retire request: %s", err)
+		}
+		if len(searchResult.Certificates) == 0 {
+			return fmt.Errorf("no certifiate found using fingerprint %s", retireReq.Thumbprint)
+		}
+
+		var reqIds []string
+		isOnlyOneCertificateRequestId := true
+		for _, c := range searchResult.Certificates {
+			reqIds = append(reqIds, c.CertificateRequestId)
+			if certificateID != "" && certificateID != c.Id {
+				isOnlyOneCertificateRequestId = false
+			}
+			certificateID = c.Id
+		}
+		if !isOnlyOneCertificateRequestId {
+			return fmt.Errorf("error: more than one CertificateRequestId was found with the same Fingerprint: %s", reqIds)
+		}
+	} else if retireReq.CertificateDN != "" {
+		// by CertificateDN (which is the same as CertificateRequestId for current implementation)
+		certificateID = retireReq.CertificateDN
+	} else {
+		return fmt.Errorf("failed to create retire request: CertificateDN or Thumbprint required")
+	}
+
+	retRequest := certificateRetireRequest{
+		CertificateIds: []string{certificateID},
+	}
+
+	statusCode, status, response, err := c.request("POST", url, retRequest)
+	if err != nil {
+		return err
+	}
+
+	err = checkCertificateRetireResults(statusCode, status, response)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (c *Connector) searchCertificates(req *SearchRequest) (*CertificateSearchResponse, error) {
 
 	var err error
@@ -1348,16 +1400,16 @@ func (c *Connector) searchCertificatesByFingerprint(fp string) (*CertificateSear
 }
 
 /*
-"id": "32a656d1-69b1-11e8-93d8-71014a32ec53",
-"companyId": "b5ed6d60-22c4-11e7-ac27-035f0608fd2c",
-"latestCertificateRequestId": "0e546560-69b1-11e8-9102-a1f1c55d36fb",
-"ownerUserId": "593cdba0-2124-11e8-8219-0932652c1da0",
-"certificateIds": [
+	 "id": "32a656d1-69b1-11e8-93d8-71014a32ec53",
+	 "companyId": "b5ed6d60-22c4-11e7-ac27-035f0608fd2c",
+	 "latestCertificateRequestId": "0e546560-69b1-11e8-9102-a1f1c55d36fb",
+	 "ownerUserId": "593cdba0-2124-11e8-8219-0932652c1da0",
+	 "certificateIds": [
 
-	"32a656d0-69b1-11e8-93d8-71014a32ec53"
+		 "32a656d0-69b1-11e8-93d8-71014a32ec53"
 
-],
-"certificateName": "cn=svc6.venafi.example.com",
+	 ],
+	 "certificateName": "cn=svc6.venafi.example.com",
 */
 type managedCertificate struct {
 	Id                   string `json:"id"`

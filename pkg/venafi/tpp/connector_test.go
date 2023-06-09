@@ -1141,6 +1141,67 @@ func TestReEnrollRevokedAndDisabledCertificate(t *testing.T) {
 	t.Logf("The certificate was re-enabled successfully")
 }
 
+func TestRetireCertificate(t *testing.T) {
+
+	cn := "www-1.venqa.venafi.com"
+
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+	config, err := tpp.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	req := &certificate.Request{}
+	req.Subject.CommonName = cn
+	req.Subject.Organization = []string{"Venafi, Inc."}
+	req.Subject.OrganizationalUnit = []string{"Automated Tests"}
+	req.Subject.Locality = []string{"Las Vegas"}
+	req.Subject.Province = []string{"Nevada"}
+	req.Subject.Country = []string{"US"}
+	// req.FriendlyName = fmt.Sprintf("vcert integration test - %d", time.Now().Unix())
+	err = tpp.GenerateRequest(config, req)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	certDN, err := tpp.RequestCertificate(req)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+	req.PickupID = certDN
+	req.ChainOption = certificate.ChainOptionIgnore
+
+	t.Logf("waiting for %s to be ready", certDN)
+
+	var isPending = true
+	for isPending {
+		t.Logf("%s is pending...", certDN)
+		time.Sleep(time.Second * 1)
+		_, err = tpp.RetrieveCertificate(req)
+		_, isPending = err.(endpoint.ErrCertificatePending)
+	}
+	if err != nil {
+		t.Fatalf("Error should not be nil, certificate has not been issued. err: %s", err)
+	}
+
+	t.Logf("Start retire for %s", certDN)
+	retireReq := &certificate.RetireRequest{CertificateDN: certDN}
+	err = tpp.RetireCertificate(retireReq)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+}
+
 func TestRevokeAndDisableCertificate(t *testing.T) {
 
 	//cn := test.RandCN()

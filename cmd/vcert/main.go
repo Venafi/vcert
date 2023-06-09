@@ -58,7 +58,7 @@ func main() {
 	app := &cli.App{
 		Usage: UtilityName,
 		UsageText: `vcert action [action options]
-   for command help run: vcert action -h`,
+	for command help run: vcert action -h`,
 		Version:  vcert.GetFormattedVersionString(), //todo: replace with plain version
 		Compiled: time.Now(),                        //todo: replace with parsing vcert.versionBuildTimeStamp
 		Commands: []*cli.Command{
@@ -70,6 +70,7 @@ func main() {
 			commandPickup,
 			commandRenew,
 			commandRevoke,
+			commandRetire,
 			commandCreatePolicy,
 			commandGetPolicy,
 			commandSshPickup,
@@ -79,67 +80,68 @@ func main() {
 		EnableBashCompletion: true, //todo: write BashComplete function for options
 		//HideHelp:             true,
 		Copyright: `2018-2022 Venafi, Inc.
-	 Licensed under the Apache License, Version 2.0`,
+	  Licensed under the Apache License, Version 2.0`,
 	}
 
 	sort.Sort(cli.CommandsByName(app.Commands))
 
 	cli.AppHelpTemplate = fmt.Sprintf(`Venafi Certificate Utility
-   Version: %s
-   Build Timestamp: %s
-
-USAGE:
-   {{.HelpName}} {{if .VisibleFlags}}[global options]{{end}}{{if .Commands}} command [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}[arguments...]{{end}}
-   {{if len .Authors}}
-AUTHOR:
-   {{range .Authors}}{{ . }}{{end}}
-   {{end}}{{if .Commands}}
-ACTIONS:
-
-   gencsr       To generate a certificate signing request (CSR)
-   enroll       To enroll a certificate
-   pickup       To retrieve a certificate
-   renew        To renew a certificate
-   revoke       To revoke a certificate
-
-   getpolicy    To retrieve the certificate policy of a zone
-   setpolicy    To apply a certificate policy specification to a zone
-
-   getcred      To obtain a new TPP authentication token or register for a new VaaS user API key
-   checkcred    To check the validity of a token and grant
-   voidcred     To invalidate an authentication grant
-
-   sshenroll    To enroll a SSH certificate
-   sshpickup    To retrieve a SSH certificate
-   sshgetconfig To get the SSH CA public key and default principals
-
-OPTIONS:
-   {{range .VisibleFlags}}{{.}}
-   {{end}}
-COPYRIGHT:
-   {{.Copyright}}
-   {{end}}{{if .Version}}
-SUPPORT:
-   opensource@venafi.com
-   {{end}}
-`, vcert.GetFormattedVersionString(), vcert.GetFormatedBuildTimeStamp())
+	Version: %s
+	Build Timestamp: %s
+ 
+ USAGE:
+	{{.HelpName}} {{if .VisibleFlags}}[global options]{{end}}{{if .Commands}} command [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}[arguments...]{{end}}
+	{{if len .Authors}}
+ AUTHOR:
+	{{range .Authors}}{{ . }}{{end}}
+	{{end}}{{if .Commands}}
+ ACTIONS:
+ 
+	gencsr       To generate a certificate signing request (CSR)
+	enroll       To enroll a certificate
+	pickup       To retrieve a certificate
+	renew        To renew a certificate
+	revoke       To revoke a certificate
+	retire       To retire a certificate
+ 
+	getpolicy    To retrieve the certificate policy of a zone
+	setpolicy    To apply a certificate policy specification to a zone
+ 
+	getcred      To obtain a new TPP authentication token or register for a new VaaS user API key
+	checkcred    To check the validity of a token and grant
+	voidcred     To invalidate an authentication grant
+ 
+	sshenroll    To enroll a SSH certificate
+	sshpickup    To retrieve a SSH certificate
+	sshgetconfig To get the SSH CA public key and default principals
+ 
+ OPTIONS:
+	{{range .VisibleFlags}}{{.}}
+	{{end}}
+ COPYRIGHT:
+	{{.Copyright}}
+	{{end}}{{if .Version}}
+ SUPPORT:
+	opensource@venafi.com
+	{{end}}
+ `, vcert.GetFormattedVersionString(), vcert.GetFormatedBuildTimeStamp())
 
 	cli.CommandHelpTemplate = `NAME:
-   {{.HelpName}} - {{.Usage}}
-
-USAGE:
-   {{if .UsageText}}{{.UsageText}}{{else}}{{.HelpName}}{{if .VisibleFlags}} [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}[arguments...]{{end}}{{end}}{{if .Category}}
-
-CATEGORY:
-   {{.Category}}{{end}}{{if .Description}}
-
-DESCRIPTION:
-   {{.Description}}{{end}}{{if .VisibleFlags}}
-
-OPTIONS:
-   {{range .VisibleFlags}}{{.}}
-   {{end}}{{end}}
-`
+	{{.HelpName}} - {{.Usage}}
+ 
+ USAGE:
+	{{if .UsageText}}{{.UsageText}}{{else}}{{.HelpName}}{{if .VisibleFlags}} [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}[arguments...]{{end}}{{end}}{{if .Category}}
+ 
+ CATEGORY:
+	{{.Category}}{{end}}{{if .Description}}
+ 
+ DESCRIPTION:
+	{{.Description}}{{end}}{{if .VisibleFlags}}
+ 
+ OPTIONS:
+	{{range .VisibleFlags}}{{.}}
+	{{end}}{{end}}
+ `
 	err := app.Run(os.Args)
 	if err != nil {
 		//TODO: we need to make logger a global package

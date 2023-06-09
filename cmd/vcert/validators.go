@@ -19,11 +19,12 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/util"
 	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/Venafi/vcert/v4/pkg/util"
 
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 )
@@ -612,6 +613,31 @@ func validateRevokeFlags1(commandName string) error {
 		if !isValidReason {
 			return fmt.Errorf("%s is not valid revocation reason. it should be one of %v", flags.revocationReason, RevocationReasonOptions)
 		}
+	}
+
+	return nil
+}
+
+func validateRetireFlags1(commandName string) error {
+
+	err := validateConnectionFlags(commandName)
+	if err != nil {
+		return err
+	}
+	err = validateCommonFlags(commandName)
+	if err != nil {
+		return err
+	}
+	err = readData(commandName)
+	if err != nil {
+		return err
+	}
+	if flags.distinguishedName == "" && flags.thumbprint == "" {
+		return fmt.Errorf("Certificate DN or Thumbprint is required to revoke the certificate")
+	}
+
+	if flags.distinguishedName != "" && flags.thumbprint != "" {
+		return fmt.Errorf("Either -id or -thumbprint can be used")
 	}
 
 	return nil

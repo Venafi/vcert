@@ -94,6 +94,7 @@ type Connector interface {
 	IsCSRServiceGenerated(req *certificate.Request) (bool, error)
 	RevokeCertificate(req *certificate.RevocationRequest) error
 	RenewCertificate(req *certificate.RenewalRequest) (requestID string, err error)
+	RetireCertificate(req *certificate.RetireRequest) error
 	// ImportCertificate adds an existing certificate to Venafi Platform even if the certificate was not issued by Venafi Cloud or Venafi Platform. For information purposes.
 	ImportCertificate(req *certificate.ImportRequest) (*certificate.ImportResponse, error)
 	// SetHTTPClient allows to set custom http.Client to this Connector.
