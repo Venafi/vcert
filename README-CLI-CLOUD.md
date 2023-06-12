@@ -177,8 +177,8 @@ Options:
 
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Command&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Description                                                  |
 | -------------- | ------------------------------------------------------------ |
-| `--id`         | Use to specify the unique identifier of the certificate to revoke.  Value may be specified as a string or read from a file using the `file:` prefix. |
-| `--thumbprint` | Use to specify the SHA1 thumbprint of the certificate to revoke. Value may be specified as a string or read from the certificate file using the `file:` prefix. |
+| `--id`         | Use to specify the unique identifier of the certificate to retire.  Value may be specified as a string or read from a file using the `file:` prefix. |
+| `--thumbprint` | Use to specify the SHA1 thumbprint of the certificate to retire. Value may be specified as a string or read from the certificate file using the `file:` prefix. |
 
 ## Parameters for Applying Certificate Policy
 ```

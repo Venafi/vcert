@@ -338,7 +338,7 @@ func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (er
 	return fmt.Errorf("revocation is not supported in -test-mode")
 }
 
-// RevokeCertificate attempts to revoke the certificate
+// RetireCertificate attempts to retire the certificate
 func (c *Connector) RetireCertificate(revReq *certificate.RetireRequest) (err error) {
 	return fmt.Errorf("retire is not supported in -test-mode")
 }
