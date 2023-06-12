@@ -1460,6 +1460,29 @@ func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (er
 	return
 }
 
+func (c *Connector) RetireCertificate(req *certificate.RetireRequest) (err error) {
+
+	if req.CertificateDN == "" && req.Thumbprint != "" {
+		// search cert by Thumbprint and fill pickupID
+		searchResult, err := c.searchCertificatesByFingerprint(req.Thumbprint)
+		if err != nil {
+			return fmt.Errorf("Failed to create renewal request: %s", err)
+		}
+		if len(searchResult.Certificates) == 0 {
+			return fmt.Errorf("No certifiate found using fingerprint %s", req.Thumbprint)
+		}
+		if len(searchResult.Certificates) > 1 {
+			return fmt.Errorf("Error: more than one CertificateRequestId was found with the same thumbprint")
+		}
+		req.CertificateDN = searchResult.Certificates[0].CertificateRequestId
+	}
+
+	retireSliceValuePair := []nameSliceValuePair{{Name: "Disabled", Value: []string{"1"}}}
+
+	err = c.putCertificateInfo(req.CertificateDN, retireSliceValuePair)
+	return err
+}
+
 var zoneNonFoundregexp = regexp.MustCompile("PolicyDN: .+ does not exist")
 
 func (c *Connector) ReadPolicyConfiguration() (policy *endpoint.Policy, err error) {

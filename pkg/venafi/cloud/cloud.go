@@ -22,8 +22,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/policy"
-	"github.com/Venafi/vcert/v4/pkg/util"
 	"io"
 	"io/ioutil"
 	"log"
@@ -33,6 +31,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Venafi/vcert/v4/pkg/policy"
+	"github.com/Venafi/vcert/v4/pkg/util"
 
 	"github.com/Venafi/vcert/v4/pkg/verror"
 
@@ -99,6 +100,11 @@ type certificateRequestClientInfo struct {
 	Identifier string `json:"identifier"`
 }
 
+type certificateRetireResponse struct {
+	Count        int           `count:"id,omitempty"`
+	Certificates []Certificate `json:"certificates,omitempty"`
+}
+
 type certificateRequest struct {
 	CSR                      string                       `json:"certificateSigningRequest,omitempty"`
 	ApplicationId            string                       `json:"applicationId,omitempty"`
@@ -112,6 +118,11 @@ type certificateRequest struct {
 	IsVaaSGenerated          bool                         `json:"isVaaSGenerated,omitempty"`
 	CsrAttributes            CsrAttributes                `json:"csrAttributes,omitempty"`
 	ApplicationServerTypeId  string                       `json:"applicationServerTypeId,omitempty"`
+}
+
+type certificateRetireRequest struct {
+	CertificateIds []string `json:"certificateIds,omitempty"`
+	AddToBlocklist bool     `json:"addToBlocklist,omitempty"`
 }
 
 type CsrAttributes struct {
@@ -570,6 +581,41 @@ func parseCertificateRequestResult(httpStatusCode int, httpStatus string, body [
 
 func parseCertificateRequestData(b []byte) (*certificateRequestResponse, error) {
 	var data certificateRequestResponse
+	err := json.Unmarshal(b, &data)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %v", verror.ServerError, err)
+	}
+
+	return &data, nil
+}
+
+func checkCertificateRetireResults(httpStatusCode int, httpStatus string, body []byte) error {
+	switch httpStatusCode {
+	case 200:
+		resp, err := parseCertificateRetireData(body)
+		if err != nil {
+			return err
+		} else if resp.Count == 0 {
+			return fmt.Errorf("Invalid thumbprint or certificate ID. No certificates were retired")
+		} else {
+			return nil
+		}
+	default:
+		respErrors, err := parseResponseErrors(body)
+		if err != nil {
+			return err
+		}
+
+		respError := fmt.Sprintf("Unexpected status code on Venafi Cloud zone read. Status: %s\n", httpStatus)
+		for _, e := range respErrors {
+			respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
+		}
+		return fmt.Errorf("%w: %v", verror.ServerError, respError)
+	}
+}
+
+func parseCertificateRetireData(b []byte) (*certificateRetireResponse, error) {
+	var data certificateRetireResponse
 	err := json.Unmarshal(b, &data)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", verror.ServerError, err)

@@ -696,6 +696,66 @@ func TestReadPolicyConfiguration(t *testing.T) {
 	}
 }
 
+func TestRetireCertificate(t *testing.T) {
+	conn := getTestConnector(ctx.CloudZone)
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	zoneConfig, err := conn.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	req := &certificate.Request{}
+	req.Subject.CommonName = test.RandCN()
+	req.Subject.Organization = []string{"Venafi, Inc."}
+	req.Subject.OrganizationalUnit = []string{"Automated Tests"}
+	err = conn.GenerateRequest(zoneConfig, req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	pickupID, err := conn.RequestCertificate(req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	req.PickupID = pickupID
+	req.ChainOption = certificate.ChainOptionRootLast
+
+	pcc, _ := certificate.NewPEMCollection(nil, nil, nil)
+	startTime := time.Now()
+	for {
+
+		pcc, err = conn.RetrieveCertificate(req)
+		if err != nil {
+			_, ok := err.(endpoint.ErrCertificatePending)
+			if ok {
+				if time.Now().After(startTime.Add(time.Duration(600) * time.Second)) {
+					err = endpoint.ErrRetrieveCertificateTimeout{CertificateID: pickupID}
+					break
+				}
+				time.Sleep(time.Duration(10) * time.Second)
+				continue
+			}
+			break
+		}
+		break
+	}
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	p, _ := pem.Decode([]byte(pcc.Certificate))
+	cert, err := x509.ParseCertificate(p.Bytes)
+	retireReq := &certificate.RetireRequest{}
+	thumbprint := sha1.Sum(cert.Raw)
+	hexThumbprint := hex.EncodeToString((thumbprint[:]))
+	retireReq.Thumbprint = string(hexThumbprint)
+
+	err = conn.RetireCertificate(retireReq)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+}
+
 func TestReadPolicyConfigurationOnlyEC(t *testing.T) {
 	//todo: add more zones
 	conn := getTestConnector(ctx.VAASzoneEC)

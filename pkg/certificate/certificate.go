@@ -332,6 +332,12 @@ type RevocationRequest struct {
 	Disable       bool
 }
 
+type RetireRequest struct {
+	CertificateDN string
+	Thumbprint    string
+	Description   string
+}
+
 type RenewalRequest struct {
 	CertificateDN      string // these fields are for certificate lookup on remote
 	Thumbprint         string

@@ -32,6 +32,7 @@ Use these links to quickly jump to a relevant section lower on this page:
   - [Certificate Request Parameters](#certificate-request-parameters)
   - [Certificate Retrieval Parameters](#certificate-retrieval-parameters)
   - [Certificate Renewal Parameters](#certificate-renewal-parameters)
+  - [Certificate Retire Parameters](#certificate-retire-parameters)
   - [Parameters for Applying Certificate Policy](#parameters-for-applying-certificate-policy)
   - [Parameters for Viewing Certificate Policy](#parameters-for-viewing-certificate-policy)
   - [Examples](#examples)
@@ -166,6 +167,18 @@ Options:
 | `--san-uri`          | Use to specify a Uniform Resource Indicator Subject Alternative Name.  To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-uri spiffe://workload1.example.com` `--san-uri spiffe://workload2.example.com` |
 | `--thumbprint`     | Use to specify the SHA1 thumbprint of the certificate to renew. Value may be specified as a string or read from the certificate file using the `file:` prefix. |
 
+
+
+## Certificate Retire Parameters
+```
+vcert retire -k <api key> [--id <request id> | --thumbprint <sha1 thumb>]
+```
+Options:
+
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Command&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Description                                                  |
+| -------------- | ------------------------------------------------------------ |
+| `--id`         | Use to specify the unique identifier of the certificate to revoke.  Value may be specified as a string or read from a file using the `file:` prefix. |
+| `--thumbprint` | Use to specify the SHA1 thumbprint of the certificate to revoke. Value may be specified as a string or read from the certificate file using the `file:` prefix. |
 
 ## Parameters for Applying Certificate Policy
 ```

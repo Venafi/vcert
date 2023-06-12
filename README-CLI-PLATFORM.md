@@ -34,6 +34,7 @@ Use these to quickly jump to a relevant section lower on this page:
   - [Certificate Retrieval Parameters](#certificate-retrieval-parameters)
   - [Certificate Renewal Parameters](#certificate-renewal-parameters)
   - [Certificate Revocation Parameters](#certificate-revocation-parameters)
+  - [Certificate Retire Parameters](#certificate-retire-parameters)
   - [Parameters for Applying Certificate Policy](#parameters-for-applying-certificate-policy)
   - [Parameters for Viewing Certificate Policy](#parameters-for-viewing-certificate-policy)
   - [Examples](#examples)
@@ -191,6 +192,17 @@ Options:
 | `--id`         | Use to specify the unique identifier of the certificate to revoke.  Value may be specified as a string or read from a file using the `file:` prefix. |
 | `--no-retire`  | Do not disable certificate. Use this option if you intend to enroll a new version of the certificate later.  Works only with `--id` |
 | `--reason`     | Use to specify the revocation reason.<br/>Options: `none` (default), `key-compromise`, `ca-compromise`, `affiliation-changed`, `superseded`, `cessation-of-operation` |
+| `--thumbprint` | Use to specify the SHA1 thumbprint of the certificate to revoke. Value may be specified as a string or read from the certificate file using the `file:` prefix. |
+
+## Certificate Retire Parameters
+```
+vcert retire -u <tpp url> -t <auth token> [--id <request id> | --thumbprint <sha1 thumb>]
+```
+Options:
+
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Command&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Description                                                  |
+| -------------- | ------------------------------------------------------------ |
+| `--id`         | Use to specify the unique identifier of the certificate to revoke.  Value may be specified as a string or read from a file using the `file:` prefix. |
 | `--thumbprint` | Use to specify the SHA1 thumbprint of the certificate to revoke. Value may be specified as a string or read from the certificate file using the `file:` prefix. |
 
 
