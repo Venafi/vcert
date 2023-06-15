@@ -178,7 +178,81 @@ func TestRequestCertificateWithUsageMetadata(t *testing.T) {
 	}
 }
 
-func TestRequestCertificateWithValidDays(t *testing.T) {
+func TestRequestCertificateWithValidityHours(t *testing.T) {
+	conn := getTestConnector(ctx.CloudZone)
+	conn.verbose = true
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	zoneConfig, err := conn.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	req := &certificate.Request{}
+	req.Subject.CommonName = test.RandCN()
+	req.Subject.Organization = []string{"Venafi, Inc."}
+	req.Subject.OrganizationalUnit = []string{"Automated Tests"}
+
+	nrHours := 144
+	req.ValidityHours = nrHours
+	req.IssuerHint = util.IssuerHintMicrosoft
+
+	err = conn.GenerateRequest(zoneConfig, req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	pickupID, err := conn.RequestCertificate(req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	req.PickupID = pickupID
+	req.ChainOption = certificate.ChainOptionRootLast
+
+	pcc, _ := certificate.NewPEMCollection(nil, nil, nil)
+	startTime := time.Now()
+	for {
+
+		pcc, err = conn.RetrieveCertificate(req)
+		if err != nil {
+			_, ok := err.(endpoint.ErrCertificatePending)
+			if ok {
+				if time.Now().After(startTime.Add(time.Duration(600) * time.Second)) {
+					err = endpoint.ErrRetrieveCertificateTimeout{CertificateID: pickupID}
+					break
+				}
+				time.Sleep(time.Duration(10) * time.Second)
+				continue
+			}
+			break
+		}
+		break
+	}
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	p, _ := pem.Decode([]byte(pcc.Certificate))
+	cert, err := x509.ParseCertificate(p.Bytes)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	certValidUntil := cert.NotAfter.Format("2006-01-02")
+
+	//need to convert local date on utc, since the certificate' NotAfter value we got on previous step, is on utc
+	//so for comparing them we need to have both dates on utc.
+	loc, _ := time.LoadLocation("UTC")
+	expectedValidDate := time.Now().Add(time.Duration(nrHours) * time.Hour).In(loc).Format("2006-01-02")
+
+	if expectedValidDate != certValidUntil {
+		t.Fatalf("Expiration date is different than expected, expected: %s, but got %s: ", expectedValidDate, certValidUntil)
+	}
+
+}
+
+func TestRequestCertificateWithValidityDuration(t *testing.T) {
 	conn := getTestConnector(ctx.CloudZone)
 	conn.verbose = true
 	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})

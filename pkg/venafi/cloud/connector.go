@@ -823,8 +823,17 @@ func getCloudRequest(c *Connector, req *certificate.Request) (*certificateReques
 		}
 	}
 
-	if req.ValidityDuration != nil {
-		cloudReq.ValidityPeriod = "PT" + strings.ToUpper((*req.ValidityDuration).Truncate(time.Second).String())
+	validityDuration := req.ValidityDuration
+
+	// DEPRECATED: ValidityHours is deprecated in favor of ValidityDuration, but we
+	// still support it for backwards compatibility.
+	if validityDuration == nil && req.ValidityHours > 0 {
+		duration := time.Duration(req.ValidityHours) * time.Hour
+		validityDuration = &duration
+	}
+
+	if validityDuration != nil {
+		cloudReq.ValidityPeriod = "PT" + strings.ToUpper((*validityDuration).Truncate(time.Second).String())
 	}
 
 	return &cloudReq, nil

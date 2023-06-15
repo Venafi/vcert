@@ -213,6 +213,9 @@ type Request struct {
 	Location         *Location
 	ValidityDuration *time.Duration
 	IssuerHint       util.IssuerHint
+
+	// DEPRECATED: use ValidityDuration instead, this field is ignored if ValidityDuration is set
+	ValidityHours int
 }
 
 //SSH Certificate structures

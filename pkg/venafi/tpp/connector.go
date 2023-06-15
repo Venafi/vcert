@@ -546,8 +546,17 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 	tppReq.CASpecificAttributes = append(tppReq.CASpecificAttributes, nameValuePair{Name: "Origin", Value: origin})
 	tppReq.Origin = origin
 
-	if req.ValidityDuration != nil {
-		formattedExpirationDate := time.Now().Add(*req.ValidityDuration).Format(time.RFC3339)
+	validityDuration := req.ValidityDuration
+
+	// DEPRECATED: ValidityHours is deprecated in favor of ValidityDuration, but we
+	// still support it for backwards compatibility.
+	if validityDuration == nil && req.ValidityHours > 0 {
+		duration := time.Duration(req.ValidityHours) * time.Hour
+		validityDuration = &duration
+	}
+
+	if validityDuration != nil {
+		formattedExpirationDate := time.Now().Add(*validityDuration).Format(time.RFC3339)
 
 		var attributeNames []string
 
