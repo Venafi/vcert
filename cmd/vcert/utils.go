@@ -2,6 +2,7 @@
  * Copyright 2018-2021 Venafi, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
+
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -183,32 +184,26 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 	}
 
 	if cf.validDays != "" {
-		validDays := cf.validDays
-
-		data := strings.Split(validDays, "#")
+		data := strings.Split(cf.validDays, "#")
 		days, _ := strconv.ParseInt(data[0], 10, 64)
-		hours := days * 24
+		duration := time.Duration(days) * time.Hour * 24
 
-		req.ValidityHours = int(hours)
+		req.ValidityDuration = &duration
 
-		issuerHint := ""
-		if len(data) > 1 { //means that issuer hint is set
+		if len(data) > 1 { // means that issuer hint is set
+			var issuerHint util.IssuerHint
 
-			option := strings.ToLower(data[1])
-
-			switch option {
-
+			switch strings.ToLower(data[1]) {
 			case "m":
 				issuerHint = util.IssuerHintMicrosoft
 			case "d":
 				issuerHint = util.IssuerHintDigicert
 			case "e":
 				issuerHint = util.IssuerHintEntrust
-
 			}
-		}
 
-		req.IssuerHint = issuerHint
+			req.IssuerHint = issuerHint
+		}
 	}
 
 	return req

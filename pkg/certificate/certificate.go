@@ -26,16 +26,18 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/util"
-	"github.com/youmark/pkcs8"
 	"net"
 	"net/url"
 	"strings"
 	"time"
 
-	"github.com/Venafi/vcert/v4/pkg/verror"
+	"github.com/Venafi/vcert/v4/pkg/util"
+	"github.com/youmark/pkcs8"
+
 	"reflect"
 	"sort"
+
+	"github.com/Venafi/vcert/v4/pkg/verror"
 )
 
 // EllipticCurve represents the types of supported elliptic curves
@@ -205,12 +207,15 @@ type Request struct {
 	FetchPrivateKey bool
 	/*	Thumbprint is here because *Request is used in RetrieveCertificate().
 		Code should be refactored so that RetrieveCertificate() uses some abstract search object, instead of *Request{PickupID} */
-	Thumbprint    string
-	Timeout       time.Duration
-	CustomFields  []CustomField
-	Location      *Location
+	Thumbprint       string
+	Timeout          time.Duration
+	CustomFields     []CustomField
+	Location         *Location
+	ValidityDuration *time.Duration
+	IssuerHint       util.IssuerHint
+
+	// DEPRECATED: use ValidityDuration instead, this field is ignored if ValidityDuration is set
 	ValidityHours int
-	IssuerHint    string
 }
 
 //SSH Certificate structures

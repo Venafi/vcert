@@ -30,7 +30,6 @@ import (
 	"net/http"
 	netUrl "net/url"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
@@ -766,7 +765,6 @@ func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration,
 }
 
 func getCloudRequest(c *Connector, req *certificate.Request) (*certificateRequest, error) {
-
 	if c.user == nil || c.user.Company == nil {
 		return nil, fmt.Errorf("must be autheticated to request a certificate")
 	}
@@ -824,14 +822,20 @@ func getCloudRequest(c *Connector, req *certificate.Request) (*certificateReques
 		}
 	}
 
-	if req.ValidityHours > 0 {
-		hoursStr := strconv.Itoa(req.ValidityHours)
-		validityHoursStr := "PT" + hoursStr + "H"
-		cloudReq.ValidityPeriod = validityHoursStr
+	validityDuration := req.ValidityDuration
+
+	// DEPRECATED: ValidityHours is deprecated in favor of ValidityDuration, but we
+	// still support it for backwards compatibility.
+	if validityDuration == nil && req.ValidityHours > 0 {
+		duration := time.Duration(req.ValidityHours) * time.Hour
+		validityDuration = &duration
+	}
+
+	if validityDuration != nil {
+		cloudReq.ValidityPeriod = "PT" + strings.ToUpper((*validityDuration).Truncate(time.Second).String())
 	}
 
 	return &cloudReq, nil
-
 }
 
 // RequestCertificate submits the CSR to the Venafi Cloud API for processing
