@@ -14,22 +14,34 @@ Venafi VCert is a command line tool designed to generate keys and simplify certi
 
 This article applies to the latest version of VCert CLI, which you can [download here](https://github.com/Venafi/vcert/releases/latest).
 
+On macOS and Linux, if you have [Homebrew](https://brew.sh) you can install VCert with:
+
+```shell
+brew install venafi/tap/vcert
+```
+
 ## Quick Links
 
 Use these to quickly jump to a relevant section lower on this page:
 
-- [Detailed usage examples](#examples)
-- [Options for requesting a certificate using the `enroll` action](#certificate-request-parameters)
-- [Options for downloading a certificate using the `pickup` action](#certificate-retrieval-parameters)
-- [Options for renewing a certificate using the `renew` action](#certificate-renewal-parameters)
-- [Options for revoking a certificate using the `revoke` action](#certificate-revocation-parameters)
-- [Options common to the `enroll`, `pickup`, `renew`, and `revoke` actions](#general-command-line-parameters)
-- [Options for applying certificate policy using the `setpolicy` action](#parameters-for-applying-certificate-policy)
-- [Options for viewing certificate policy using the `getpolicy` action](#parameters-for-viewing-certificate-policy)
-- [Options for obtaining a new authorization token using the `getcred` action](#obtaining-an-authorization-token)
-- [Options for checking the validity of an authorization token using the `checkcred` action](#checking-the-validity-of-an-authorization-token)
-- [Options for invalidating an authorization token using the `voidcred` action](#invalidating-an-authorization-token)
-- [Options for generating a new key pair and CSR using the `gencsr` action (for manual enrollment)](#generating-a-new-key-pair-and-csr)
+- [VCert CLI for Venafi Trust Protection Platform](#vcert-cli-for-venafi-trust-protection-platform)
+  - [Quick Links](#quick-links)
+  - [Prerequisites](#prerequisites)
+    - [Compatibility](#compatibility)
+  - [General Command Line Parameters](#general-command-line-parameters)
+    - [Environment Variables](#environment-variables)
+  - [Certificate Request Parameters](#certificate-request-parameters)
+  - [Certificate Retrieval Parameters](#certificate-retrieval-parameters)
+  - [Certificate Renewal Parameters](#certificate-renewal-parameters)
+  - [Certificate Revocation Parameters](#certificate-revocation-parameters)
+  - [Parameters for Applying Certificate Policy](#parameters-for-applying-certificate-policy)
+  - [Parameters for Viewing Certificate Policy](#parameters-for-viewing-certificate-policy)
+  - [Examples](#examples)
+  - [Appendix](#appendix)
+    - [Obtaining an Authorization Token](#obtaining-an-authorization-token)
+    - [Checking the validity of an Authorization Token](#checking-the-validity-of-an-authorization-token)
+    - [Invalidating an Authorization Token](#invalidating-an-authorization-token)
+    - [Generating a new key pair and CSR](#generating-a-new-key-pair-and-csr)
 
 ## Prerequisites
 
