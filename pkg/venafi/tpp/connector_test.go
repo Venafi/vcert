@@ -515,7 +515,7 @@ func TestRequestCertificateToken(t *testing.T) {
 	DoRequestCertificate(t, tpp)
 }
 
-func TestRequestCertificateWithValidHours(t *testing.T) {
+func TestRequestCertificateWithValidityHours(t *testing.T) {
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
@@ -527,7 +527,22 @@ func TestRequestCertificateWithValidHours(t *testing.T) {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
 	}
-	DoRequestCertificateWithValidHours(t, tpp)
+	DoRequestCertificateWithValidityHours(t, tpp)
+}
+
+func TestRequestCertificateWithValidityDuration(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+	DoRequestCertificateWithValidityDuration(t, tpp)
 }
 
 // The reason we are using a mock HTTP server rather than the live TPP server is
