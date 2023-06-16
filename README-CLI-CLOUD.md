@@ -14,19 +14,30 @@ Venafi VCert is a command line tool designed to generate keys and simplify certi
 
 This article applies to the latest version of VCert CLI, which you can [download here](https://github.com/Venafi/vcert/releases/latest).
 
+On macOS and Linux, if you have [Homebrew](https://brew.sh) you can install VCert with:
+
+```shell
+brew install venafi/tap/vcert
+```
+
 ## Quick Links
 
 Use these links to quickly jump to a relevant section lower on this page:
 
-- [Detailed usage examples](#examples)
-- [Options for requesting a certificate using the `enroll` action](#certificate-request-parameters)
-- [Options for downloading a certificate using the `pickup` action](#certificate-retrieval-parameters)
-- [Options for renewing a certificate using the `renew` action](#certificate-renewal-parameters)
-- [Options common to the `enroll`, `pickup`, and `renew` actions](#general-command-line-parameters)
-- [Options for applying certificate policy using the `setpolicy` action](#parameters-for-applying-certificate-policy)
-- [Options for viewing certificate policy using the `getpolicy` action](#parameters-for-viewing-certificate-policy)
-- [Options for registering and obtaining a new API key using the `getcred` action](#registering-and-obtaining-an-api-key)
-- [Options for generating a new key pair and CSR using the `gencsr` action (for manual enrollment)](#generating-a-new-key-pair-and-csr)
+- [VCert CLI for Venafi as a Service](#vcert-cli-for-venafi-as-a-service)
+  - [Quick Links](#quick-links)
+  - [Prerequisites](#prerequisites)
+  - [General Command Line Parameters](#general-command-line-parameters)
+    - [Environment Variables](#environment-variables)
+  - [Certificate Request Parameters](#certificate-request-parameters)
+  - [Certificate Retrieval Parameters](#certificate-retrieval-parameters)
+  - [Certificate Renewal Parameters](#certificate-renewal-parameters)
+  - [Parameters for Applying Certificate Policy](#parameters-for-applying-certificate-policy)
+  - [Parameters for Viewing Certificate Policy](#parameters-for-viewing-certificate-policy)
+  - [Examples](#examples)
+  - [Appendix](#appendix)
+    - [Registering and obtaining an API Key](#registering-and-obtaining-an-api-key)
+    - [Generating a new key pair and CSR](#generating-a-new-key-pair-and-csr)
 
 ## Prerequisites
 
