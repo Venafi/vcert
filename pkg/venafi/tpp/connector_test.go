@@ -515,7 +515,7 @@ func TestRequestCertificateToken(t *testing.T) {
 	DoRequestCertificate(t, tpp)
 }
 
-func TestRequestCertificateWithValidHours(t *testing.T) {
+func TestRequestCertificateWithValidityHours(t *testing.T) {
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
@@ -527,7 +527,22 @@ func TestRequestCertificateWithValidHours(t *testing.T) {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
 	}
-	DoRequestCertificateWithValidHours(t, tpp)
+	DoRequestCertificateWithValidityHours(t, tpp)
+}
+
+func TestRequestCertificateWithValidityDuration(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+	DoRequestCertificateWithValidityDuration(t, tpp)
 }
 
 // The reason we are using a mock HTTP server rather than the live TPP server is
@@ -753,7 +768,7 @@ func writeRespWithCustomStatus(w http.ResponseWriter, status, body string) {
 	bufrw.Flush()
 }
 
-func DoRequestCertificateWithValidHours(t *testing.T, tpp *Connector) {
+func DoRequestCertificateWithValidityHours(t *testing.T, tpp *Connector) {
 	config, err := tpp.ReadZoneConfiguration()
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
@@ -774,9 +789,9 @@ func DoRequestCertificateWithValidHours(t *testing.T, tpp *Connector) {
 		{Name: "custom", Value: "2019-10-10"},
 	}
 
-	validHours := 144
-	req.ValidityHours = validHours
-	req.IssuerHint = "MICROSOFT"
+	nrHours := 144
+	req.ValidityHours = nrHours
+	req.IssuerHint = util.IssuerHintMicrosoft
 
 	err = tpp.GenerateRequest(config, req)
 	if err != nil {
@@ -803,8 +818,65 @@ func DoRequestCertificateWithValidHours(t *testing.T, tpp *Connector) {
 	//need to convert local date on utc, since the certificate' NotAfter value we got on previous step, is on utc
 	//so for comparing them we need to have both dates on utc.
 	loc, _ := time.LoadLocation("UTC")
-	utcNow := time.Now().In(loc)
-	expectedValidDate := utcNow.AddDate(0, 0, validHours/24).Format("2006-01-02")
+	expectedValidDate := time.Now().Add(time.Duration(nrHours) * time.Hour).In(loc).Format("2006-01-02")
+
+	if expectedValidDate != certValidUntil {
+		t.Fatalf("Expiration date is different than expected, expected: %s, but got %s: ", expectedValidDate, certValidUntil)
+	}
+
+}
+
+func DoRequestCertificateWithValidityDuration(t *testing.T, tpp *Connector) {
+	config, err := tpp.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	cn := test.RandCN()
+	req := &certificate.Request{Timeout: time.Second * 30}
+	req.Subject.CommonName = cn
+	req.Subject.Organization = []string{"Venafi, Inc."}
+	req.Subject.OrganizationalUnit = []string{"Automated Tests"}
+	req.Subject.Locality = []string{"Las Vegas"}
+	req.Subject.Province = []string{"Nevada"}
+	req.Subject.Country = []string{"US"}
+	u := url.URL{Scheme: "https", Host: "example.com", Path: "/test"}
+	req.URIs = []*url.URL{&u}
+	req.FriendlyName = cn
+	req.CustomFields = []certificate.CustomField{
+		{Name: "custom", Value: "2019-10-10"},
+	}
+
+	validDuration := 144 * time.Hour
+	req.ValidityDuration = &validDuration
+	req.IssuerHint = util.IssuerHintMicrosoft
+
+	err = tpp.GenerateRequest(config, req)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	t.Logf("getPolicyDN(ctx.TPPZone) = %s", getPolicyDN(ctx.TPPZone))
+	req.PickupID, err = tpp.RequestCertificate(req)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+	certCollections, err := tpp.RetrieveCertificate(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	p, _ := pem.Decode([]byte(certCollections.Certificate))
+	cert, err := x509.ParseCertificate(p.Bytes)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	certValidUntil := cert.NotAfter.Format("2006-01-02")
+
+	//need to convert local date on utc, since the certificate' NotAfter value we got on previous step, is on utc
+	//so for comparing them we need to have both dates on utc.
+	loc, _ := time.LoadLocation("UTC")
+	expectedValidDate := time.Now().Add(validDuration).In(loc).Format("2006-01-02")
 
 	if expectedValidDate != certValidUntil {
 		t.Fatalf("Expiration date is different than expected, expected: %s, but got %s: ", expectedValidDate, certValidUntil)

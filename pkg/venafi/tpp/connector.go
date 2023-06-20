@@ -546,39 +546,46 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 	tppReq.CASpecificAttributes = append(tppReq.CASpecificAttributes, nameValuePair{Name: "Origin", Value: origin})
 	tppReq.Origin = origin
 
-	if req.ValidityHours > 0 {
+	validityDuration := req.ValidityDuration
 
-		expirationDateAttribute := ""
+	// DEPRECATED: ValidityHours is deprecated in favor of ValidityDuration, but we
+	// still support it for backwards compatibility.
+	if validityDuration == nil && req.ValidityHours > 0 {
+		duration := time.Duration(req.ValidityHours) * time.Hour
+		validityDuration = &duration
+	}
+
+	if validityDuration != nil {
+		formattedExpirationDate := time.Now().Add(*validityDuration).Format(time.RFC3339)
+
+		var attributeNames []string
 
 		switch req.IssuerHint {
-		case util.IssuerHintMicrosoft:
-			expirationDateAttribute = "Microsoft CA:Specific End Date"
 		case util.IssuerHintDigicert:
-			expirationDateAttribute = "DigiCert CA:Specific End Date"
+			attributeNames = []string{"DigiCert CA:Specific End Date"}
+		case util.IssuerHintMicrosoft:
+			attributeNames = []string{"Microsoft CA:Specific End Date"}
 		case util.IssuerHintEntrust:
-			expirationDateAttribute = "EntrustNET CA:Specific End Date"
+			attributeNames = []string{"EntrustNET CA:Specific End Date"}
+		case util.IssuerHintAllIssuers:
+			attributeNames = []string{
+				"Microsoft CA:Specific End Date",
+				"DigiCert CA:Specific End Date",
+				"EntrustNET CA:Specific End Date",
+				"Specific End Date",
+			}
+		case util.IssuerHintGeneric:
+			attributeNames = []string{"Specific End Date"}
 		default:
-			expirationDateAttribute = "Specific End Date"
+			return tppReq, fmt.Errorf("invalid issuer hint: %s", req.IssuerHint)
 		}
 
-		loc, _ := time.LoadLocation("UTC")
-		utcNow := time.Now().In(loc)
-
-		//if the days have decimal parts then round it to next day.
-		validityDays := req.ValidityHours / 24
-
-		if req.ValidityHours%24 > 0 {
-
-			validityDays = validityDays + 1
-
+		for _, attributeName := range attributeNames {
+			tppReq.CASpecificAttributes = append(tppReq.CASpecificAttributes, nameValuePair{
+				Name:  attributeName,
+				Value: formattedExpirationDate,
+			})
 		}
-
-		expirationDate := utcNow.AddDate(0, 0, validityDays)
-
-		formattedExpirationDate := fmt.Sprintf("%d-%02d-%02d %02d:%02d:%02d",
-			expirationDate.Year(), expirationDate.Month(), expirationDate.Day(), expirationDate.Hour(), expirationDate.Minute(), expirationDate.Second())
-
-		tppReq.CASpecificAttributes = append(tppReq.CASpecificAttributes, nameValuePair{Name: expirationDateAttribute, Value: formattedExpirationDate})
 	}
 
 	for name, value := range customFieldsMap {
