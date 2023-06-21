@@ -20,6 +20,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -763,6 +764,60 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 		log.Println(err)
 	}
 	return
+}
+
+type ErrCertNotFound struct {
+	error
+}
+
+func (e *ErrCertNotFound) Error() string {
+	return e.error.Error()
+}
+
+func (e *ErrCertNotFound) Unwrap() error {
+	return e.error
+}
+
+func IsCertNotFound(err error) bool {
+	return errors.Is(err, &ErrCertNotFound{})
+}
+
+// This function is idempotent, i.e., it won't fail if there is nothing to be
+// reset. It returns an error of type *errCertNotFound if the certificate is not
+// found.
+func (c *Connector) ResetCertificate(req *certificate.Request, restart bool) (err error) {
+	certificateDN := getCertificateDN(c.zone, req.FriendlyName, req.Subject.CommonName)
+
+	statusCode, status, body, err := c.request("POST", urlResourceCertificateReset, certificateResetRequest{
+		CertificateDN: certificateDN,
+		Restart:       restart,
+	})
+	if err != nil {
+		return fmt.Errorf("while resetting: %w", err)
+	}
+
+	switch {
+	case statusCode == http.StatusOK:
+		return nil
+	case statusCode == http.StatusBadRequest:
+		var decodedResetResponse certificateRequestResponse
+		if err := json.Unmarshal(body, &decodedResetResponse); err != nil {
+			return fmt.Errorf("failed to decode reset response: HTTP %d: %s: %s", statusCode, status, body)
+		}
+
+		// No need to error out if the certificate was already reset.
+		if decodedResetResponse.Error == "Reset is not completed. No reset is required for the certificate." {
+			return nil
+		}
+
+		if strings.HasSuffix(decodedResetResponse.Error, "does not exist or you do not have sufficient rights to the object.") {
+			return &ErrCertNotFound{fmt.Errorf(decodedResetResponse.Error)}
+		}
+
+		return fmt.Errorf("while resetting: %s", decodedResetResponse.Error)
+	default:
+		return fmt.Errorf("while resetting. Status: %s, Body: %s", status, string(body))
+	}
 }
 
 func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) {

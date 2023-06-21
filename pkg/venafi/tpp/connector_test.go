@@ -545,6 +545,161 @@ func TestRequestCertificateWithValidityDuration(t *testing.T) {
 	DoRequestCertificateWithValidityDuration(t, tpp)
 }
 
+// The mocked HTTP interactions have been recorded using TPP 22.4.
+func TestResetCertificate(t *testing.T) {
+	type mockCall struct {
+		expectReqPath string
+		expectReqBody string
+		mockStatus    string // The HTTP status line, e.g. "400 Bad Request".
+		mockBody      string
+	}
+
+	tests := []struct {
+		name               string
+		request            *certificate.Request
+		mockCall           mockCall
+		expCertNotFoundErr bool
+		expectErr          string
+	}{
+		{
+			name:    "happy path",
+			request: &certificate.Request{Subject: pkix.Name{CommonName: "app1.example.com"}},
+			mockCall: mockCall{
+				"/vedsdk/certificates/reset",
+				`{"CertificateDN":"\\VED\\Policy\\application-team-1\\app1.example.com"}`,
+				"200 OK",
+				`{"ProcessingResetCompleted":true}`,
+			},
+		}, {
+			name:    "happy path, with FriendlyName",
+			request: &certificate.Request{FriendlyName: "test"},
+			mockCall: mockCall{
+				"/vedsdk/certificates/reset",
+				`{"CertificateDN":"\\VED\\Policy\\application-team-1\\test"}`,
+				"200 OK",
+				`{"ProcessingResetCompleted":true}`,
+			},
+		}, {
+			name:    "should return an error if we cannot find the cert",
+			request: &certificate.Request{Subject: pkix.Name{CommonName: "app1.example.com"}},
+			mockCall: mockCall{
+				"/vedsdk/certificates/reset",
+				`{"CertificateDN":"\\VED\\Policy\\application-team-1\\app1.example.com"}`,
+				"400 Bad request. Check the error in the response for details.",
+				`{"Error":"CertificateDN error. CertificateDN: \"\\VED\\Policy\\application-team-1\\app1.example.com\" does not exist or you do not have sufficient rights to the object."}`,
+			},
+			expCertNotFoundErr: true,
+			expectErr:          "CertificateDN error. CertificateDN: \"\\VED\\Policy\\application-team-1\\app1.example.com\" does not exist or you do not have sufficient rights to the object.",
+		}, {
+			name:    "should return no error if the reset was not required",
+			request: &certificate.Request{Subject: pkix.Name{CommonName: "app1.example.com"}},
+			mockCall: mockCall{
+				"/vedsdk/certificates/reset",
+				`{"CertificateDN":"\\VED\\Policy\\application-team-1\\app1.example.com"}`,
+				"400 Bad request. Check the error in the response for details.",
+				`{"Error":"Reset is not completed. No reset is required for the certificate."}`,
+			},
+		}, {
+			name:    "should return an error if reset fails with an unexpected 400",
+			request: &certificate.Request{Subject: pkix.Name{CommonName: "app1.example.com"}},
+			mockCall: mockCall{
+				"/vedsdk/certificates/reset",
+				`{"CertificateDN":"\\VED\\Policy\\application-team-1\\app1.example.com"}`,
+				"400 Bad request. Check the error in the response for details.",
+				`{"Error":"Invalid CertificateDN format. The Certificate DN contained null or white spaces for (CertificateDN)."}`,
+			},
+			expectErr: "while resetting: Invalid CertificateDN format. The Certificate DN contained null or white spaces for (CertificateDN).",
+		}, {
+			name:    "should return an error if reset fails with an unexpected 403",
+			request: &certificate.Request{Subject: pkix.Name{CommonName: "app1.example.com"}},
+			mockCall: mockCall{
+				"/vedsdk/certificates/reset",
+				`{"CertificateDN":"\\VED\\Policy\\application-team-1\\app1.example.com"}`,
+				"403 Forbidden",
+				`{"error":"insufficient_scope","error_description":"Grant rejected scope 'certificate:delete'. Call POST Authorize\/OAuth with the correct scope and restriction. Update the header with the new token and retry."}`,
+			},
+			expectErr: "while resetting. Status: 403 Forbidden, Body: {\"error\":\"insufficient_scope\",\"error_description\":\"Grant rejected scope 'certificate:delete'. Call POST Authorize\\/OAuth with the correct scope and restriction. Update the header with the new token and retry.\"}",
+		},
+	}
+
+	identicalJSON := func(t *testing.T, expect, got []byte) {
+		t.Helper()
+		var expectJSON, gotJSON interface{}
+		err := json.Unmarshal([]byte(expect), &expectJSON)
+		if err != nil {
+			t.Errorf("failed to unmarshal expect JSON: %v", err)
+		}
+		err = json.Unmarshal(got, &gotJSON)
+		if err != nil {
+			t.Errorf("failed to unmarshal got JSON: %v", err)
+		}
+		if !reflect.DeepEqual(expectJSON, gotJSON) {
+			t.Errorf("expected JSON %v but got %v", expectJSON, gotJSON)
+		}
+	}
+
+	serverWith := func(t *testing.T, mockCalls []mockCall) (_ *httptest.Server, ca *x509.CertPool) {
+		callCount := new(int32)
+		server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			i := atomic.AddInt32(callCount, 1) - 1
+			if i >= int32(len(mockCalls)) {
+				t.Errorf("expected %d calls to %s but got %d", len(mockCalls), r.URL.Path, i+1)
+				return
+			}
+
+			if mockCalls[i].expectReqPath != r.URL.Path {
+				t.Errorf("expected request path %q but got %q", mockCalls[i].expectReqPath, r.URL.Path)
+			}
+
+			bytes, err := ioutil.ReadAll(r.Body)
+			if err != nil {
+				t.Errorf("failed to read request body: %s", err)
+			}
+
+			identicalJSON(t, []byte(mockCalls[i].expectReqBody), bytes)
+			writeRespWithCustomStatus(w, mockCalls[i].mockStatus, mockCalls[i].mockBody)
+		}))
+		t.Cleanup(server.Close)
+		t.Cleanup(func() {
+			if len(mockCalls) != int(atomic.LoadInt32(callCount)) {
+				t.Errorf("expected %d calls but got %d", len(mockCalls), atomic.LoadInt32(callCount))
+			}
+		})
+		ca = x509.NewCertPool()
+		ca.AddCert(server.Certificate())
+		return server, ca
+	}
+	for _, tt := range tests {
+		tt := tt // Because t.Parallel.
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			server, ca := serverWith(t, []mockCall{tt.mockCall})
+
+			tpp, err := NewConnector(server.URL, `\VED\Policy\application-team-1`, true, ca)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			err = tpp.ResetCertificate(tt.request, false)
+			if tt.expCertNotFoundErr {
+				errType := &ErrCertNotFound{}
+				if err == nil || !errors.As(err, &errType) {
+					t.Errorf("expected error of type %T but got %T", &ErrCertNotFound{}, err)
+				}
+			}
+			if tt.expectErr != "" {
+				if err == nil || !strings.Contains(err.Error(), tt.expectErr) {
+					t.Errorf("expected error to contain %q but got %q", tt.expectErr, err)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
+}
+
 // The reason we are using a mock HTTP server rather than the live TPP server is
 // because consistently triggering the 500 error in a stage different than 0
 // requires putting a powershell script on the TPP VM or turning the Microsoft
@@ -761,9 +916,9 @@ func writeRespWithCustomStatus(w http.ResponseWriter, status, body string) {
 	hj := w.(http.Hijacker)
 	conn, bufrw, _ := hj.Hijack()
 	defer conn.Close()
-	bufrw.WriteString("HTTP/1.1 " + status + "\n\r")
-	bufrw.WriteString("Content-Type: application/json\n\r")
-	bufrw.WriteString("\n\r")
+	bufrw.WriteString("HTTP/1.1 " + status + "\r\n")
+	bufrw.WriteString("Content-Type: application/json\r\n")
+	bufrw.WriteString("\r\n")
 	bufrw.Write([]byte(body))
 	bufrw.Flush()
 }
