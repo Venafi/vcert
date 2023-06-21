@@ -19,6 +19,7 @@ package certificate
 import (
 	"crypto"
 	"crypto/ecdsa"
+	"crypto/ed25519"
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/rsa"
@@ -752,9 +753,13 @@ func NewRequest(cert *x509.Certificate) *Request {
 	case *ecdsa.PublicKey:
 		req.KeyType = KeyTypeECDSA
 		req.KeyLength = pub.Curve.Params().BitSize
-		// TODO: req.KeyCurve = pub.Curve.Params().Name ...
-	default: // case *dsa.PublicKey
-		// vcert only works with RSA & ECDSA
+		_ = req.KeyCurve.Set(pub.Curve.Params().Name)
+	case ed25519.PublicKey:
+		req.KeyType = KeyTypeECDSA
+		req.KeyLength = 256
+		_ = req.KeyCurve.Set("ed25519")
+	default:
+		// vcert only works with RSA, ECDSA & Ed25519 keys
 	}
 	return req
 }
