@@ -699,13 +699,22 @@ func GetCertificateRequestPEMBlock(request []byte) *pem.Block {
 }
 
 // GenerateECDSAPrivateKey generates a new ecdsa private key using the curve specified
-func GenerateECDSAPrivateKey(curve EllipticCurve) (*ecdsa.PrivateKey, error) {
-	var priv *ecdsa.PrivateKey
+func GenerateECDSAPrivateKey(curve EllipticCurve) (crypto.Signer, error) {
+	var priv crypto.Signer
 	var c elliptic.Curve
 	var err error
 	if curve == EllipticCurveNotSet {
 		curve = EllipticCurveDefault
 	}
+
+	if curve == EllipticCurveED25519 {
+		_, priv, err = ed25519.GenerateKey(rand.Reader)
+		if err != nil {
+			return nil, err
+		}
+		return priv, nil
+	}
+
 	switch curve {
 	case EllipticCurveP521:
 		c = elliptic.P521()

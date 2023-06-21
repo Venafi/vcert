@@ -22,7 +22,6 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
-	"github.com/Venafi/vcert/v4/pkg/util"
 	"math/big"
 	"net"
 	"os"
@@ -30,6 +29,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/Venafi/vcert/v4/pkg/util"
 )
 
 func getCertificateRequestForTest() *Request {
@@ -524,6 +525,60 @@ func TestRequest_CheckCertificate(t *testing.T) {
 			}
 			if !c.valid && !strings.Contains(err.Error(), c.errorMessage) {
 				t.Fatalf("unexpected error '%s' (should conatins %s)", err.Error(), c.errorMessage)
+			}
+		})
+	}
+}
+
+func Test_NewRequest(t *testing.T) {
+	rsaPk, err := GenerateRSAPrivateKey(512)
+	if err != nil {
+		t.Fatalf("Error generating RSA Private Key\nError: %s", err)
+	}
+
+	ecdsaPk, err := GenerateECDSAPrivateKey(EllipticCurveP256)
+	if err != nil {
+		t.Fatalf("Error generating ECDSA Private Key\nError: %s", err)
+	}
+
+	ed25519Pk, err := GenerateECDSAPrivateKey(EllipticCurveED25519)
+	if err != nil {
+		t.Fatalf("Error generating ECDSA Private Key\nError: %s", err)
+	}
+
+	cases := []struct {
+		name        string
+		certificate *x509.Certificate
+		expRequest  Request
+	}{
+		{
+			name: "rsa key",
+			certificate: &x509.Certificate{
+				PublicKey: rsaPk.Public(),
+			},
+			expRequest: Request{KeyType: KeyTypeRSA, KeyLength: 512},
+		},
+		{
+			name: "ecdsa key",
+			certificate: &x509.Certificate{
+				PublicKey: ecdsaPk.Public(),
+			},
+			expRequest: Request{KeyType: KeyTypeECDSA, KeyCurve: EllipticCurveP256, KeyLength: 256},
+		},
+		{
+			name: "ed25519 key",
+			certificate: &x509.Certificate{
+				PublicKey: ed25519Pk.Public(),
+			},
+			expRequest: Request{KeyType: KeyTypeECDSA, KeyCurve: EllipticCurveED25519, KeyLength: 256},
+		},
+	}
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			req := NewRequest(c.certificate)
+			if !reflect.DeepEqual(req, &c.expRequest) {
+				t.Fatalf("expected request to be %v, got %v", c.expRequest, req)
 			}
 		})
 	}
