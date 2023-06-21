@@ -20,14 +20,15 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/certificate"
-	"github.com/Venafi/vcert/v4/pkg/endpoint"
-	"github.com/Venafi/vcert/v4/test"
 	"net/url"
 	"regexp"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/Venafi/vcert/v4/pkg/certificate"
+	"github.com/Venafi/vcert/v4/pkg/endpoint"
+	"github.com/Venafi/vcert/v4/test"
 )
 
 func TestParseCertificateSearchResponse(t *testing.T) {
@@ -252,7 +253,7 @@ func TestRequestAndSearchCertificate(t *testing.T) {
 	}
 
 	configReq := ConfigReadDNRequest{
-		ObjectDN:      getCertificateDN(ctx.TPPZone, cn),
+		ObjectDN:      getCertificateDN(ctx.TPPZone, "", cn),
 		AttributeName: "Origin",
 	}
 

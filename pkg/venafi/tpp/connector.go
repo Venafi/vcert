@@ -642,7 +642,7 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 }
 
 func (c *Connector) proccessLocation(req *certificate.Request) error {
-	certDN := getCertificateDN(c.zone, req.Subject.CommonName)
+	certDN := getCertificateDN(c.zone, req.FriendlyName, req.Subject.CommonName)
 	guid, err := c.configDNToGuid(certDN)
 	if err != nil {
 		return fmt.Errorf("unable to retrieve certificate guid: %s", err)

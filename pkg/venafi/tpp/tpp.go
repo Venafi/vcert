@@ -575,7 +575,11 @@ func getDeviceDN(zone string, location certificate.Location) string {
 	return getPolicyDN(zone + "\\" + location.Instance + "\\" + workload)
 }
 
-func getCertificateDN(zone, cn string) string {
+func getCertificateDN(zone, friendlyName string, cn string) string {
+	if friendlyName != "" {
+		return getPolicyDN(zone + "\\" + friendlyName)
+	}
+
 	return getPolicyDN(zone + "\\" + cn)
 }
 
