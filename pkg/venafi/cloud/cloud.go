@@ -371,7 +371,13 @@ func parseUserDetailsResult(expectedStatusCode int, httpStatusCode int, httpStat
 	}
 	respErrors, err := parseResponseErrors(body)
 	if err != nil {
-		return nil, err // parseResponseErrors always return verror.ServerError
+		// Parsing the error failed, return the original error
+		bodyText := strings.TrimSpace(string(body))
+		if bodyText == "" {
+			return nil, fmt.Errorf("%w: %s", verror.ServerError, httpStatus)
+		}
+
+		return nil, fmt.Errorf("%w: %s, %s", verror.ServerError, httpStatus, bodyText)
 	}
 	respError := fmt.Sprintf("unexpected status code on Venafi Cloud registration. Status: %s\n", httpStatus)
 	for _, e := range respErrors {
