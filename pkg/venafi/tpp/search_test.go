@@ -20,14 +20,15 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/certificate"
-	"github.com/Venafi/vcert/v4/pkg/endpoint"
-	"github.com/Venafi/vcert/v4/test"
 	"net/url"
 	"regexp"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/Venafi/vcert/v4/pkg/certificate"
+	"github.com/Venafi/vcert/v4/pkg/endpoint"
+	"github.com/Venafi/vcert/v4/test"
 )
 
 func TestParseCertificateSearchResponse(t *testing.T) {
@@ -252,7 +253,187 @@ func TestRequestAndSearchCertificate(t *testing.T) {
 	}
 
 	configReq := ConfigReadDNRequest{
-		ObjectDN:      getCertificateDN(ctx.TPPZone, cn),
+		ObjectDN:      getCertificateDN(ctx.TPPZone, "", cn),
+		AttributeName: "Origin",
+	}
+
+	configResp, err := tpp.configReadDN(configReq)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if configResp.Values[0] != appInfo {
+		t.Fatalf("Origin attribute value should be %s, but it is %s", appInfo, configResp.Values[0])
+	}
+
+	//add one more device
+	req.Location = &certificate.Location{
+		Instance:   instance,
+		Workload:   workload + "-1",
+		TLSAddress: "wwww.example.com:443",
+	}
+
+	err = tpp.GenerateRequest(config, req)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	req.PickupID, err = tpp.RequestCertificate(req)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	//to wait until cert will be aprooved so we can check list of devices
+	_, err = tpp.RetrieveCertificate(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	details, err = tpp.searchCertificateDetails(guid)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(details.Consumers) < 1 {
+		t.Fatal("There should be at least two devices in consumers")
+	}
+	//check installed location device
+	if !strings.HasSuffix(details.Consumers[1], instance+"\\"+workload+"-1") {
+		t.Fatalf("Consumer %s should end on %s", details.Consumers[1], instance+"\\"+workload+"-1")
+	}
+
+	//replace first device, second must be kept
+	req.Location = &certificate.Location{
+		Instance:   instance,
+		Workload:   workload,
+		TLSAddress: "wwww.example.com:443",
+		Replace:    true,
+	}
+
+	err = tpp.GenerateRequest(config, req)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	req.PickupID, err = tpp.RequestCertificate(req)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	//to wait until cert will be aprooved so we can check list of devices
+	_, err = tpp.RetrieveCertificate(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	details, err = tpp.searchCertificateDetails(guid)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(details.Consumers) < 1 {
+		t.Fatal("There should be at least two devices in consumers")
+	}
+
+	//check installed location device
+	if !strings.HasSuffix(details.Consumers[0], instance+"\\"+workload+"-1") {
+		t.Fatalf("Consumer %s should end on %s", details.Consumers[0], instance+"\\"+workload+"-1")
+	}
+}
+
+func TestRequestAndSearchCertificateWithFriendlyName(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+
+	config, err := tpp.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	cn := test.RandCN()
+	appInfo := "APP Info " + cn
+	workload := fmt.Sprintf("workload-%d", time.Now().Unix())
+	instance := "devops-instance"
+	cfValue := cn
+	req := &certificate.Request{Timeout: time.Second * 30}
+	req.Subject.CommonName = cn
+	req.Subject.Organization = []string{"Venafi, Inc."}
+	req.Subject.OrganizationalUnit = []string{"Automated Tests"}
+	req.Subject.Locality = []string{"Las Vegas"}
+	req.Subject.Province = []string{"Nevada"}
+	req.Subject.Country = []string{"US"}
+	u := url.URL{Scheme: "https", Host: "example.com", Path: "/test"}
+	req.URIs = []*url.URL{&u}
+	req.FriendlyName = fmt.Sprintf("friendly.%s", cn)
+	req.CustomFields = []certificate.CustomField{
+		{Name: "custom", Value: cfValue},
+		{Type: certificate.CustomFieldOrigin, Value: appInfo},
+	}
+	req.Location = &certificate.Location{
+		Instance:   instance,
+		Workload:   workload,
+		TLSAddress: "wwww.example.com:443",
+	}
+
+	req.KeyLength = 1024
+
+	err = tpp.GenerateRequest(config, req)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
+	req.PickupID, err = tpp.RequestCertificate(req)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+	certCollections, err := tpp.RetrieveCertificate(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	p, _ := pem.Decode([]byte(certCollections.Certificate))
+	cert, err := x509.ParseCertificate(p.Bytes)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+	if cert.Subject.CommonName != cn {
+		t.Fatalf("mismatched common names: %v and %v", cn, cert.Subject.CommonName)
+	}
+	if cert.URIs[0].String() != u.String() {
+		t.Fatalf("mismatched URIs: %v and %v", u.String(), cert.URIs[0].String())
+	}
+
+	thumbprint := calcThumbprint(certCollections.Certificate)
+	searchResult, err := tpp.searchCertificatesByFingerprint(thumbprint)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	guid := searchResult.Certificates[0].CertificateRequestGuid
+	details, err := tpp.searchCertificateDetails(guid)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	//check custom fields
+	if details.CustomFields[0].Value[0] != cfValue {
+		t.Fatalf("mismtached custom field valud: want %s but got %s", details.CustomFields[0].Value[0], cfValue)
+	}
+
+	//check installed location device
+	if !strings.HasSuffix(details.Consumers[0], instance+"\\"+workload) {
+		t.Fatalf("Consumer %s should end on %s", details.Consumers[0], instance+"\\"+workload)
+	}
+
+	configReq := ConfigReadDNRequest{
+		ObjectDN:      getCertificateDN(ctx.TPPZone, req.FriendlyName, cn),
 		AttributeName: "Origin",
 	}
 
