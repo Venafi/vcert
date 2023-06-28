@@ -194,6 +194,35 @@ func TestGenerateCertificateRequestWithECDSAKey(t *testing.T) {
 	}
 }
 
+func TestGenerateCertificateRequestWithED25519Key(t *testing.T) {
+	req := getCertificateRequestForTest()
+	var err error
+	req.PrivateKey, err = GenerateECDSAPrivateKey(EllipticCurveED25519)
+	if err != nil {
+		t.Fatalf("Error generating RSA Private Key\nError: %s", err)
+	}
+
+	err = req.GenerateCSR()
+	if err != nil {
+		t.Fatalf("Error generating Certificate Request\nError: %s", err)
+	}
+
+	pemBlock, _ := pem.Decode(req.GetCSR())
+	if pemBlock == nil {
+		t.Fatalf("Failed to decode CSR as PEM")
+	}
+
+	parsedReq, err := x509.ParseCertificateRequest(pemBlock.Bytes)
+	if err != nil {
+		t.Fatalf("Error parsing generated Certificate Request\nError: %s", err)
+	}
+
+	err = parsedReq.CheckSignature()
+	if err != nil {
+		t.Fatalf("Error checking signature of generated Certificate Request\nError: %s", err)
+	}
+}
+
 func TestEllipticCurveString(t *testing.T) {
 	curve := EllipticCurveP521
 	stringCurve := curve.String()
