@@ -1466,7 +1466,7 @@ func (c *Connector) RetireCertificate(req *certificate.RetireRequest) (err error
 		// search cert by Thumbprint and fill pickupID
 		searchResult, err := c.searchCertificatesByFingerprint(req.Thumbprint)
 		if err != nil {
-			return fmt.Errorf("Failed to create renewal request: %s", err)
+			return fmt.Errorf("Failed to create retire request: %s", err)
 		}
 		if len(searchResult.Certificates) == 0 {
 			return fmt.Errorf("No certifiate found using fingerprint %s", req.Thumbprint)
@@ -1475,6 +1475,8 @@ func (c *Connector) RetireCertificate(req *certificate.RetireRequest) (err error
 			return fmt.Errorf("Error: more than one CertificateRequestId was found with the same thumbprint")
 		}
 		req.CertificateDN = searchResult.Certificates[0].CertificateRequestId
+	} else if req.CertificateDN == "" && req.Thumbprint == "" {
+		return fmt.Errorf("failed to create retire request: CertificateDN or Thumbprint required")
 	}
 
 	retireSliceValuePair := []nameSliceValuePair{{Name: "Disabled", Value: []string{"1"}}}
