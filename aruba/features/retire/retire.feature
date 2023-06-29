@@ -40,3 +40,4 @@ Feature: certificate retirement
       | endpoint |
       | TPP      | 
       | Cloud    |
+
