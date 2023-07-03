@@ -146,6 +146,15 @@ type certificateRenewResponse struct {
 	Error   string `json:",omitempty"`
 }
 
+type certificateResetRequest struct {
+	CertificateDN string `json:",omitempty"`
+	Restart       bool   `json:",omitempty"`
+}
+
+type certificateResetResponse struct {
+	Error string `json:"Error"`
+}
+
 type sanItem struct {
 	Type int    `json:""`
 	Name string `json:""`
@@ -355,6 +364,7 @@ const (
 	urlResourceCertificateRevoke      urlResource = "vedsdk/certificates/revoke"
 	urlResourceCertificatesAssociate  urlResource = "vedsdk/certificates/associate"
 	urlResourceCertificatesDissociate urlResource = "vedsdk/certificates/dissociate"
+	urlResourceCertificateReset       urlResource = "vedsdk/certificates/reset"
 	urlResourceCertificate            urlResource = "vedsdk/certificates/"
 	urlResourceCertificateSearch                  = urlResourceCertificate
 	urlResourceCertificatesList                   = urlResourceCertificate

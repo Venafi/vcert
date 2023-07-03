@@ -838,6 +838,11 @@ func getCloudRequest(c *Connector, req *certificate.Request) (*certificateReques
 	return &cloudReq, nil
 }
 
+// ResetCertificate resets the state of a certificate.
+func (c *Connector) ResetCertificate(req *certificate.Request, restart bool) (err error) {
+	return fmt.Errorf("not supported by endpoint")
+}
+
 // RequestCertificate submits the CSR to the Venafi Cloud API for processing
 func (c *Connector) RequestCertificate(req *certificate.Request) (requestID string, err error) {
 
