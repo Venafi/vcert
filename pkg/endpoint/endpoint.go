@@ -89,7 +89,7 @@ type Connector interface {
 	GenerateRequest(config *ZoneConfiguration, req *certificate.Request) (err error)
 	// ResetCertificate resets the state of a TPP certificate.
 	// This function is idempotent, i.e., it won't fail if there is nothing to be reset.
-	// It returns an error of type *errCertNotFound if the certificate is not found.
+	// It returns an error of type *tpp.ErrCertNotFound if the certificate is not found.
 	ResetCertificate(req *certificate.Request, restart bool) (err error)
 	// RequestCertificate makes a request to the server with data for enrolling the certificate.
 	RequestCertificate(req *certificate.Request) (requestID string, err error)
