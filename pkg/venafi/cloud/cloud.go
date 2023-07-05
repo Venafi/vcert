@@ -22,8 +22,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/policy"
-	"github.com/Venafi/vcert/v4/pkg/util"
 	"io"
 	"io/ioutil"
 	"log"
@@ -33,6 +31,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Venafi/vcert/v4/pkg/policy"
+	"github.com/Venafi/vcert/v4/pkg/util"
 
 	"github.com/Venafi/vcert/v4/pkg/verror"
 
@@ -251,6 +252,9 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 		return nil
 
 	case certificate.ServiceGeneratedCSR:
+		if req.KeyType == certificate.KeyTypeED25519 {
+			return fmt.Errorf("%w: ED25519 keys are not yet supported for Service Generated CSR", verror.UserDataError)
+		}
 		return nil
 
 	default:

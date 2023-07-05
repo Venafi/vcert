@@ -524,6 +524,10 @@ func (c *Connector) getHTTPClient() *http.Client {
 
 // GenerateRequest creates a new certificate request, based on the zone/policy configuration and the user data
 func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *certificate.Request) (err error) {
+	if req.KeyType == certificate.KeyTypeED25519 {
+		return fmt.Errorf("Unable to request certificate from TPP, ed25519 key type is not for TPP")
+	}
+
 	if config == nil {
 		config, err = c.ReadZoneConfiguration()
 		if err != nil {
@@ -537,7 +541,6 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 	}
 
 	config.UpdateCertificateRequest(req)
-
 	switch req.CsrOrigin {
 	case certificate.LocalGeneratedCSR:
 		if config.CustomAttributeValues[tppAttributeManualCSR] == "0" {

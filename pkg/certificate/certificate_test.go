@@ -197,7 +197,7 @@ func TestGenerateCertificateRequestWithECDSAKey(t *testing.T) {
 func TestGenerateCertificateRequestWithED25519Key(t *testing.T) {
 	req := getCertificateRequestForTest()
 	var err error
-	req.PrivateKey, err = GenerateECDSAPrivateKey(EllipticCurveED25519)
+	req.PrivateKey, err = GenerateED25519PrivateKey()
 	if err != nil {
 		t.Fatalf("Error generating RSA Private Key\nError: %s", err)
 	}
@@ -570,7 +570,7 @@ func Test_NewRequest(t *testing.T) {
 		t.Fatalf("Error generating ECDSA Private Key\nError: %s", err)
 	}
 
-	ed25519Pk, err := GenerateECDSAPrivateKey(EllipticCurveED25519)
+	ed25519Pk, err := GenerateED25519PrivateKey()
 	if err != nil {
 		t.Fatalf("Error generating ECDSA Private Key\nError: %s", err)
 	}
@@ -592,14 +592,14 @@ func Test_NewRequest(t *testing.T) {
 			certificate: &x509.Certificate{
 				PublicKey: ecdsaPk.Public(),
 			},
-			expRequest: Request{KeyType: KeyTypeECDSA, KeyCurve: EllipticCurveP256, KeyLength: 256},
+			expRequest: Request{KeyType: KeyTypeECDSA, KeyCurve: EllipticCurveP256},
 		},
 		{
 			name: "ed25519 key",
 			certificate: &x509.Certificate{
 				PublicKey: ed25519Pk.Public(),
 			},
-			expRequest: Request{KeyType: KeyTypeECDSA, KeyCurve: EllipticCurveED25519, KeyLength: 256},
+			expRequest: Request{KeyType: KeyTypeED25519, KeyCurve: EllipticCurveED25519},
 		},
 	}
 	for _, c := range cases {
