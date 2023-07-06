@@ -709,16 +709,33 @@ func TestReadPolicyConfigurationOnlyEC(t *testing.T) {
 		t.Fatalf("%s", err)
 	}
 	expectedPolice := endpoint.Policy{
-		SubjectCNRegexes:         []string{"^[a-z]{1}[a-z0-9.-]*\\.vfidev\\.com$"},
-		SubjectORegexes:          []string{"^Venafi Inc.$"},
-		SubjectOURegexes:         []string{"^Integrations$", "^Integration$"},
-		SubjectSTRegexes:         []string{"^Utah$"},
-		SubjectLRegexes:          []string{"^Salt Lake$"},
-		SubjectCRegexes:          []string{"^US$"},
-		AllowedKeyConfigurations: []endpoint.AllowedKeyConfiguration{{certificate.KeyTypeECDSA, nil, []certificate.EllipticCurve{certificate.EllipticCurveP256, certificate.EllipticCurveP384, certificate.EllipticCurveP521, certificate.EllipticCurveED25519}}},
-		DnsSanRegExs:             []string{"^[a-z]{1}[a-z0-9.-]*\\.vfidev\\.com$"},
-		AllowWildcards:           false,
-		AllowKeyReuse:            false,
+		SubjectCNRegexes: []string{"^[a-z]{1}[a-z0-9.-]*\\.vfidev\\.com$"},
+		SubjectORegexes:  []string{"^Venafi Inc.$"},
+		SubjectOURegexes: []string{"^Integrations$", "^Integration$"},
+		SubjectSTRegexes: []string{"^Utah$"},
+		SubjectLRegexes:  []string{"^Salt Lake$"},
+		SubjectCRegexes:  []string{"^US$"},
+		AllowedKeyConfigurations: []endpoint.AllowedKeyConfiguration{
+			{
+				KeyType:  certificate.KeyTypeECDSA,
+				KeySizes: nil,
+				KeyCurves: []certificate.EllipticCurve{
+					certificate.EllipticCurveP256,
+					certificate.EllipticCurveP384,
+					certificate.EllipticCurveP521,
+				},
+			},
+			{
+				KeyType:  certificate.KeyTypeED25519,
+				KeySizes: nil,
+				KeyCurves: []certificate.EllipticCurve{
+					certificate.EllipticCurveED25519,
+				},
+			},
+		},
+		DnsSanRegExs:   []string{"^[a-z]{1}[a-z0-9.-]*\\.vfidev\\.com$"},
+		AllowWildcards: false,
+		AllowKeyReuse:  false,
 	}
 
 	if !reflect.DeepEqual(*policy, expectedPolice) {
