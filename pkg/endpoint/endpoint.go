@@ -18,6 +18,7 @@ package endpoint
 
 import (
 	"crypto/ecdsa"
+	"crypto/ed25519"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
@@ -307,6 +308,13 @@ func (p *Policy) ValidateCertificateRequest(request *certificate.Request) error 
 				} else {
 					return fmt.Errorf("invalid key in csr")
 				}
+			} else if parsedCSR.PublicKeyAlgorithm == x509.Ed25519 {
+				_, ok := parsedCSR.PublicKey.(*ed25519.PublicKey)
+				if ok {
+					keyValid = checkKey(certificate.KeyTypeECDSA, 0, "ed25519", p.AllowedKeyConfigurations)
+				} else {
+					return fmt.Errorf("invalid key in csr")
+				}
 			}
 			if !keyValid {
 				return fmt.Errorf(keyError)
@@ -377,7 +385,7 @@ func checkKey(kt certificate.KeyType, bitsize int, curveStr string, allowed []Al
 			switch allowedKey.KeyType {
 			case certificate.KeyTypeRSA:
 				return intInSlice(bitsize, allowedKey.KeySizes)
-			case certificate.KeyTypeECDSA:
+			case certificate.KeyTypeECDSA, certificate.KeyTypeED25519:
 				var curve certificate.EllipticCurve
 				if err := curve.Set(curveStr); err != nil {
 					return false

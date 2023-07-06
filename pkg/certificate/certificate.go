@@ -108,6 +108,8 @@ func (kt *KeyType) String() string {
 		return "RSA"
 	case KeyTypeECDSA:
 		return "ECDSA"
+	case KeyTypeED25519:
+		return "ED25519"
 	default:
 		return ""
 	}
@@ -126,12 +128,19 @@ func (kt *KeyType) X509Type() x509.PublicKeyAlgorithm {
 }
 
 // Set the key type via a string
-func (kt *KeyType) Set(value string) error {
+func (kt *KeyType) Set(value, curveValue string) error {
 	switch strings.ToLower(value) {
 	case "rsa":
 		*kt = KeyTypeRSA
 		return nil
 	case "ecdsa", "ec", "ecc":
+		curve := EllipticCurveNotSet
+		curve.Set(curveValue)
+		if curve == EllipticCurveED25519 {
+			*kt = KeyTypeED25519
+			return nil
+		}
+
 		*kt = KeyTypeECDSA
 		return nil
 	}
@@ -143,7 +152,7 @@ const (
 	KeyTypeRSA KeyType = iota
 	// KeyTypeECDSA represents a key type of ECDSA
 	KeyTypeECDSA
-	// KeyTypeED25519 represents a ket ype of ED25519
+	// KeyTypeED25519 represents a key type of ED25519
 	KeyTypeED25519
 )
 
@@ -749,6 +758,8 @@ func GenerateECDSAPrivateKey(curve EllipticCurve) (crypto.Signer, error) {
 		c = elliptic.P384()
 	case EllipticCurveP256:
 		c = elliptic.P256()
+	case EllipticCurveED25519:
+		return nil, fmt.Errorf("%w: unable to generate ECDSA key. ED25519 curve is not supported, use GenerateED25519PrivateKey instead", verror.VcertError)
 	}
 
 	priv, err = ecdsa.GenerateKey(c, rand.Reader)

@@ -289,21 +289,33 @@ func TestKeyTypeString(t *testing.T) {
 
 func TestKeyTypeSetByString(t *testing.T) {
 	keyType := KeyTypeRSA
-	keyType.Set("rsa")
+	keyType.Set("rsa", "")
 	if keyType != KeyTypeRSA {
 		t.Fatalf("Unexpected string value was returned.  Expected: RSA Actual: %s", keyType.String())
 	}
-	keyType.Set("RSA")
+	keyType.Set("RSA", "")
 	if keyType != KeyTypeRSA {
 		t.Fatalf("Unexpected string value was returned.  Expected: RSA Actual: %s", keyType.String())
 	}
-	keyType.Set("ecdsa")
+	keyType.Set("ecdsa", "")
 	if keyType != KeyTypeECDSA {
 		t.Fatalf("Unexpected string value was returned.  Expected: ECDSA Actual: %s", keyType.String())
 	}
-	keyType.Set("ECDSA")
+	keyType.Set("ECDSA", "p384")
 	if keyType != KeyTypeECDSA {
 		t.Fatalf("Unexpected string value was returned.  Expected: ECDSA Actual: %s", keyType.String())
+	}
+	keyType.Set("ECDSA", "p384")
+	if keyType != KeyTypeECDSA {
+		t.Fatalf("Unexpected string value was returned.  Expected: ECDSA Actual: %s", keyType.String())
+	}
+	keyType.Set("EC", "p384")
+	if keyType != KeyTypeECDSA {
+		t.Fatalf("Unexpected string value was returned.  Expected: ECDSA Actual: %s", keyType.String())
+	}
+	keyType.Set("EC", "ed25519")
+	if keyType != KeyTypeED25519 {
+		t.Fatalf("Unexpected string value was returned.  Expected: ED25519 Actual: %s", keyType.String())
 	}
 }
 

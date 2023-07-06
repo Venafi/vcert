@@ -118,21 +118,42 @@ func (ct certificateTemplate) toPolicy() (p endpoint.Policy) {
 		}
 	}
 	p.AllowWildcards = allowWildCards
+
+	// We seperate the EC keys into two groups, ED25519 and the rest
+	ed25519KeyConfiguration := endpoint.AllowedKeyConfiguration{
+		KeyType: certificate.KeyTypeED25519,
+	}
+
 	for _, kt := range ct.KeyTypes {
 		keyConfiguration := endpoint.AllowedKeyConfiguration{}
-		if err := keyConfiguration.KeyType.Set(string(kt.KeyType)); err != nil {
+		if err := keyConfiguration.KeyType.Set(string(kt.KeyType), ""); err != nil {
 			panic(err)
 		}
+
 		keyConfiguration.KeySizes = kt.KeyLengths[:]
 		for _, keyCurve := range kt.KeyCurves {
-			v := certificate.EllipticCurve(0)
+			v := certificate.EllipticCurveNotSet
 			if err := (&v).Set(keyCurve); err != nil {
 				panic(err)
 			}
+
+			if v == certificate.EllipticCurveED25519 {
+				ed25519KeyConfiguration.KeyCurves = append(ed25519KeyConfiguration.KeyCurves, v)
+				continue
+			}
+
 			keyConfiguration.KeyCurves = append(keyConfiguration.KeyCurves, v)
 		}
-		p.AllowedKeyConfigurations = append(p.AllowedKeyConfigurations, keyConfiguration)
+
+		if len(keyConfiguration.KeySizes) > 0 || len(keyConfiguration.KeyCurves) > 0 {
+			p.AllowedKeyConfigurations = append(p.AllowedKeyConfigurations, keyConfiguration)
+		}
 	}
+
+	if len(ed25519KeyConfiguration.KeyCurves) > 0 {
+		p.AllowedKeyConfigurations = append(p.AllowedKeyConfigurations, ed25519KeyConfiguration)
+	}
+
 	return
 }
 
@@ -146,7 +167,7 @@ func (ct certificateTemplate) toZoneConfig(zc *endpoint.ZoneConfiguration) {
 		zc.OrganizationalUnit = []string{r.SubjectOUValue}
 	}
 	key := endpoint.AllowedKeyConfiguration{}
-	err := key.KeyType.Set(r.Key.Type)
+	err := key.KeyType.Set(r.Key.Type, r.Key.Curve)
 	if err != nil {
 		return
 	}

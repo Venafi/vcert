@@ -807,7 +807,7 @@ func (sp serverPolicy) toZoneConfig(zc *endpoint.ZoneConfiguration) {
 	zc.Province = sp.Subject.State.Value
 	zc.Locality = sp.Subject.City.Value
 	key := endpoint.AllowedKeyConfiguration{}
-	err := key.KeyType.Set(sp.KeyPair.KeyAlgorithm.Value)
+	err := key.KeyType.Set(sp.KeyPair.KeyAlgorithm.Value, sp.KeyPair.EllipticCurve.Value)
 	if err != nil {
 		return
 	}
@@ -930,7 +930,7 @@ func (sp serverPolicy) toPolicy() (p endpoint.Policy) {
 	}
 	if sp.KeyPair.KeyAlgorithm.Locked {
 		var keyType certificate.KeyType
-		if err := keyType.Set(sp.KeyPair.KeyAlgorithm.Value); err != nil {
+		if err := keyType.Set(sp.KeyPair.KeyAlgorithm.Value, sp.KeyPair.EllipticCurve.Value); err != nil {
 			panic(err)
 		}
 		key := endpoint.AllowedKeyConfiguration{KeyType: keyType}
