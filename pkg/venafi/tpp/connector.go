@@ -1647,7 +1647,7 @@ func (c *Connector) SetHTTPClient(client *http.Client) {
 }
 
 func (c *Connector) WriteLog(logReq *endpoint.LogRequest) error {
-	statusCode, httpStatus, body, err := c.request("POST", urlResourseLog, logReq)
+	statusCode, httpStatus, body, err := c.request("POST", urlResourceLog, logReq)
 	if err != nil {
 		return err
 	}

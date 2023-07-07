@@ -395,7 +395,7 @@ const (
 	urlResourceSshTemplateAvaliable   urlResource = "vedsdk/SSHCertificates/Template/Available"
 	urlResourceDNToGUID               urlResource = "vedsdk/Config/DnToGuid"
 	urlResourceFindObjectsOfClass     urlResource = "vedsdk/config/findobjectsofclass"
-	urlResourseLog                    urlResource = "vedsdk/Log"
+	urlResourceLog                    urlResource = "vedsdk/Log"
 )
 
 const (
