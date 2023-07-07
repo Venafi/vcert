@@ -135,7 +135,9 @@ func (kt *KeyType) Set(value, curveValue string) error {
 		return nil
 	case "ecdsa", "ec", "ecc":
 		curve := EllipticCurveNotSet
-		curve.Set(curveValue)
+		if err := curve.Set(curveValue); err != nil {
+			return err
+		}
 		if curve == EllipticCurveED25519 {
 			*kt = KeyTypeED25519
 			return nil
