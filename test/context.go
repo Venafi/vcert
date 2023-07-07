@@ -48,6 +48,7 @@ func GetEnvContext() *Context {
 	c.TPPZone = os.Getenv("TPP_ZONE")
 	c.TPPZoneRestricted = os.Getenv("TPP_ZONE_RESTRICTED")
 	c.TPPZoneECDSA = os.Getenv("TPP_ZONE_ECDSA")
+	c.TPPaccessToken = os.Getenv("TPP_ACCESS_TOKEN")
 
 	c.CloudUrl = os.Getenv("CLOUD_URL")
 	c.CloudAPIkey = os.Getenv("CLOUD_APIKEY")

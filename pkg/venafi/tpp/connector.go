@@ -1646,6 +1646,19 @@ func (c *Connector) SetHTTPClient(client *http.Client) {
 	c.client = client
 }
 
+func (c *Connector) WriteLog(logReq *endpoint.LogRequest) error {
+	statusCode, httpStatus, body, err := c.request("POST", urlResourseLog, logReq)
+	if err != nil {
+		return err
+	}
+
+	err = checkLogResponse(statusCode, httpStatus, body)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.CertificateInfo, error) {
 	if c.zone == "" {
 		return nil, fmt.Errorf("empty zone")
@@ -2097,6 +2110,22 @@ func (c *Connector) RetrieveCertificateMetaData(dn string) (*certificate.Certifi
 
 	return data, nil
 
+}
+
+func checkLogResponse(httpStatusCode int, httpStatus string, body []byte) error {
+	switch httpStatusCode {
+	case http.StatusOK:
+		logData, err := parseLogResponse(body)
+		if err != nil {
+			return err
+		} else if logData.LogResult == 1 {
+			return fmt.Errorf("The Log Server failed to store the event in the event log")
+		} else {
+			return nil
+		}
+	default:
+		return fmt.Errorf("Unexpected status code on TPP Post Log request.\n Status:\n %s. \n Body:\n %s\n", httpStatus, body)
+	}
 }
 
 func parseDNToGUIDRequestResponse(httpStatusCode int, httpStatus string, body []byte) (*DNToGUIDResponse, error) {
