@@ -271,7 +271,7 @@ func TestBadKeyTypeValiateRequest(t *testing.T) {
 	}
 }
 
-func TestBadKeySizeValiateRequest(t *testing.T) {
+func TestBadKeySizeValidateRequest(t *testing.T) {
 	req := new(certificate.Request)
 	req.KeyType = certificate.KeyTypeRSA
 	req.KeyLength = 8192
@@ -288,7 +288,7 @@ func TestBadKeySizeValiateRequest(t *testing.T) {
 	}
 }
 
-func TestED25519KeyValiateRequest(t *testing.T) {
+func TestED25519KeyValidateRequest(t *testing.T) {
 	req := new(certificate.Request)
 	req.KeyType = certificate.KeyTypeED25519
 	req.KeyCurve = certificate.EllipticCurveED25519
@@ -297,9 +297,6 @@ func TestED25519KeyValiateRequest(t *testing.T) {
 	z.AllowedKeyConfigurations = []AllowedKeyConfiguration{
 		{
 			KeyType: certificate.KeyTypeED25519,
-			KeyCurves: []certificate.EllipticCurve{
-				certificate.EllipticCurveED25519,
-			},
 		},
 	}
 

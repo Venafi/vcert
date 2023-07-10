@@ -385,15 +385,37 @@ func checkKey(kt certificate.KeyType, bitsize int, curveStr string, allowed []Al
 			switch allowedKey.KeyType {
 			case certificate.KeyTypeRSA:
 				return intInSlice(bitsize, allowedKey.KeySizes)
-			case certificate.KeyTypeECDSA, certificate.KeyTypeED25519:
+			case certificate.KeyTypeECDSA:
 				var curve certificate.EllipticCurve
 				if err := curve.Set(curveStr); err != nil {
 					return false
 				}
 				return curveInSlice(curve, allowedKey.KeyCurves)
+			case certificate.KeyTypeED25519:
+				// ED25519 Key is fixed by its own on size.
+				// Currently, as VaaS sees ED25519 as another curve, we do two things:
+				// 1. If from flow of:
+				// -> cfg = ReadZoneConfiguration()
+				// -> cfg.ValidateCertificateRequest(enrollRequest)
+				// -> cfg.UpdateCertificateRequest(enrollReq)
+				// we allow the user on setting the EllipticCurve or to leave it empty
+				auxCurve := certificate.EllipticCurveED25519
+				if curveStr == "" || curveStr == auxCurve.String() {
+					return true
+				}
 			default:
 				return
 			}
+		} else if kt == certificate.KeyTypeED25519 && allowedKey.KeyType == certificate.KeyTypeECDSA {
+			// 2. else we validate as policy returns to us ED25199 as an elliptic curve from ECDSA from VaaS
+			// flow - You already have a configuration, you read from it and you validate the policy against it:
+			// -> policy = cfg.ReadPolicyConfiguration()
+			// -> err = policy.ValidateCertificateRequest(enrollRequest)
+			var curve certificate.EllipticCurve
+			if err := curve.Set("ed25519"); err != nil {
+				return false
+			}
+			return curveInSlice(curve, allowedKey.KeyCurves)
 		}
 	}
 	return

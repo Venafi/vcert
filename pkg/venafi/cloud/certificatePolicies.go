@@ -119,11 +119,6 @@ func (ct certificateTemplate) toPolicy() (p endpoint.Policy) {
 	}
 	p.AllowWildcards = allowWildCards
 
-	// We seperate the EC keys into two groups, ED25519 and the rest
-	ed25519KeyConfiguration := endpoint.AllowedKeyConfiguration{
-		KeyType: certificate.KeyTypeED25519,
-	}
-
 	for _, kt := range ct.KeyTypes {
 		keyConfiguration := endpoint.AllowedKeyConfiguration{}
 		if err := keyConfiguration.KeyType.Set(string(kt.KeyType), ""); err != nil {
@@ -137,23 +132,10 @@ func (ct certificateTemplate) toPolicy() (p endpoint.Policy) {
 				panic(err)
 			}
 
-			if v == certificate.EllipticCurveED25519 {
-				ed25519KeyConfiguration.KeyCurves = append(ed25519KeyConfiguration.KeyCurves, v)
-				continue
-			}
-
 			keyConfiguration.KeyCurves = append(keyConfiguration.KeyCurves, v)
 		}
-
-		if len(keyConfiguration.KeySizes) > 0 || len(keyConfiguration.KeyCurves) > 0 {
-			p.AllowedKeyConfigurations = append(p.AllowedKeyConfigurations, keyConfiguration)
-		}
+		p.AllowedKeyConfigurations = append(p.AllowedKeyConfigurations, keyConfiguration)
 	}
-
-	if len(ed25519KeyConfiguration.KeyCurves) > 0 {
-		p.AllowedKeyConfigurations = append(p.AllowedKeyConfigurations, ed25519KeyConfiguration)
-	}
-
 	return
 }
 
