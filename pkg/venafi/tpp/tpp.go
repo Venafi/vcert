@@ -524,6 +524,10 @@ func (c *Connector) getHTTPClient() *http.Client {
 
 // GenerateRequest creates a new certificate request, based on the zone/policy configuration and the user data
 func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *certificate.Request) (err error) {
+	if req.KeyType == certificate.KeyTypeED25519 {
+		return fmt.Errorf("Unable to request certificate from TPP, ed25519 key type is not for TPP")
+	}
+
 	if config == nil {
 		config, err = c.ReadZoneConfiguration()
 		if err != nil {
@@ -537,7 +541,6 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 	}
 
 	config.UpdateCertificateRequest(req)
-
 	switch req.CsrOrigin {
 	case certificate.LocalGeneratedCSR:
 		if config.CustomAttributeValues[tppAttributeManualCSR] == "0" {
@@ -804,7 +807,7 @@ func (sp serverPolicy) toZoneConfig(zc *endpoint.ZoneConfiguration) {
 	zc.Province = sp.Subject.State.Value
 	zc.Locality = sp.Subject.City.Value
 	key := endpoint.AllowedKeyConfiguration{}
-	err := key.KeyType.Set(sp.KeyPair.KeyAlgorithm.Value)
+	err := key.KeyType.Set(sp.KeyPair.KeyAlgorithm.Value, sp.KeyPair.EllipticCurve.Value)
 	if err != nil {
 		return
 	}
@@ -927,7 +930,7 @@ func (sp serverPolicy) toPolicy() (p endpoint.Policy) {
 	}
 	if sp.KeyPair.KeyAlgorithm.Locked {
 		var keyType certificate.KeyType
-		if err := keyType.Set(sp.KeyPair.KeyAlgorithm.Value); err != nil {
+		if err := keyType.Set(sp.KeyPair.KeyAlgorithm.Value, sp.KeyPair.EllipticCurve.Value); err != nil {
 			panic(err)
 		}
 		key := endpoint.AllowedKeyConfiguration{KeyType: keyType}

@@ -147,6 +147,82 @@ func TestRequestCertificate(t *testing.T) {
 	}
 }
 
+func TestRequestCertificateED25519WithValidation(t *testing.T) {
+	conn := getTestConnector(ctx.VAASzoneEC)
+	conn.verbose = true
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	req := certificate.Request{}
+	req.Subject.CommonName = test.RandSpecificCN("vfidev.com")
+	req.Subject.Organization = []string{"Venafi Inc."}
+	req.Subject.OrganizationalUnit = []string{"Integrations"}
+	req.Subject.Locality = []string{"Salt Lake"}
+	req.Subject.Province = []string{"Utah"}
+	req.Subject.Country = []string{"US"}
+	req.KeyType = certificate.KeyTypeED25519
+
+	zoneConfig, err := conn.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	err = zoneConfig.ValidateCertificateRequest(&req)
+	if err != nil {
+		t.Fatalf("could not validate certificate request: %s", err)
+	}
+
+	zoneConfig.UpdateCertificateRequest(&req)
+
+	err = conn.GenerateRequest(zoneConfig, &req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	_, err = conn.RequestCertificate(&req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+}
+
+func TestRequestCertificateED25519WithPolicyValidation(t *testing.T) {
+	conn := getTestConnector(ctx.VAASzoneEC)
+	conn.verbose = true
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	req := certificate.Request{}
+	req.Subject.CommonName = test.RandSpecificCN("vfidev.com")
+	req.Subject.Organization = []string{"Venafi Inc."}
+	req.Subject.OrganizationalUnit = []string{"Integrations"}
+	req.Subject.Locality = []string{"Salt Lake"}
+	req.Subject.Province = []string{"Utah"}
+	req.Subject.Country = []string{"US"}
+	req.KeyType = certificate.KeyTypeED25519
+
+	policy, err := conn.ReadPolicyConfiguration()
+	if err != nil {
+		t.Fatalf("could not read policy config certificate request: %s", err)
+	}
+
+	err = policy.ValidateCertificateRequest(&req)
+	if err != nil {
+		t.Fatalf("could not validate certificate request from policy: %s", err)
+	}
+
+	err = conn.GenerateRequest(nil, &req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	_, err = conn.RequestCertificate(&req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+}
+
 func TestRequestCertificateWithUsageMetadata(t *testing.T) {
 	conn := getTestConnector(ctx.CloudZone)
 	conn.verbose = true
@@ -697,6 +773,9 @@ func TestReadPolicyConfiguration(t *testing.T) {
 }
 
 func TestReadPolicyConfigurationOnlyEC(t *testing.T) {
+	// IMPORTANT NOTE: Now in VCert, we are treating ED25519 Keys, as per it's a different algorithm from ECDSA, as another
+	// type of key. This is conflicting with how VaaS handles EC Keys, as it considers ED25519 as another curve, which is
+	// it shouldn't, this test may need to change in the future once this is solved
 	//todo: add more zones
 	conn := getTestConnector(ctx.VAASzoneEC)
 	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})

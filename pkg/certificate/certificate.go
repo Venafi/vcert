@@ -19,6 +19,7 @@ package certificate
 import (
 	"crypto"
 	"crypto/ecdsa"
+	"crypto/ed25519"
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/rsa"
@@ -107,6 +108,8 @@ func (kt *KeyType) String() string {
 		return "RSA"
 	case KeyTypeECDSA:
 		return "ECDSA"
+	case KeyTypeED25519:
+		return "ED25519"
 	default:
 		return ""
 	}
@@ -118,17 +121,28 @@ func (kt *KeyType) X509Type() x509.PublicKeyAlgorithm {
 		return x509.RSA
 	case KeyTypeECDSA:
 		return x509.ECDSA
+	case KeyTypeED25519:
+		return x509.Ed25519
 	}
 	return x509.UnknownPublicKeyAlgorithm
 }
 
 // Set the key type via a string
-func (kt *KeyType) Set(value string) error {
+func (kt *KeyType) Set(value, curveValue string) error {
 	switch strings.ToLower(value) {
 	case "rsa":
 		*kt = KeyTypeRSA
 		return nil
 	case "ecdsa", "ec", "ecc":
+		curve := EllipticCurveNotSet
+		if err := curve.Set(curveValue); err != nil {
+			return err
+		}
+		if curve == EllipticCurveED25519 {
+			*kt = KeyTypeED25519
+			return nil
+		}
+
 		*kt = KeyTypeECDSA
 		return nil
 	}
@@ -140,6 +154,8 @@ const (
 	KeyTypeRSA KeyType = iota
 	// KeyTypeECDSA represents a key type of ECDSA
 	KeyTypeECDSA
+	// KeyTypeED25519 represents a key type of ED25519
+	KeyTypeED25519
 )
 
 type CSrOriginOption int
@@ -520,6 +536,8 @@ func (request *Request) GeneratePrivateKey() error {
 	switch request.KeyType {
 	case KeyTypeECDSA:
 		request.PrivateKey, err = GenerateECDSAPrivateKey(request.KeyCurve)
+	case KeyTypeED25519:
+		request.PrivateKey, err = GenerateED25519PrivateKey()
 	case KeyTypeRSA:
 		if request.KeyLength == 0 {
 			request.KeyLength = defaultRSAlength
@@ -570,6 +588,15 @@ func (request *Request) CheckCertificate(certPEM string) error {
 			}
 			if certPubkey.X.Cmp(reqPubkey.X) != 0 {
 				return fmt.Errorf("%w: unmatched X for elliptic keys", verror.CertificateCheckError)
+			}
+		case x509.Ed25519:
+			certPubkey := cert.PublicKey.(ed25519.PublicKey)
+			reqPubkey, ok := request.PrivateKey.Public().(ed25519.PublicKey)
+			if !ok {
+				return fmt.Errorf("%w: request KeyType not matched with real PrivateKey type", verror.CertificateCheckError)
+			}
+			if !certPubkey.Equal(reqPubkey) {
+				return fmt.Errorf("%w: unmatched elliptic ed25519 keys", verror.CertificateCheckError)
 			}
 		default:
 			return fmt.Errorf("%w: unknown key algorythm %d", verror.CertificateCheckError, cert.PublicKeyAlgorithm)
@@ -646,6 +673,16 @@ func GetPrivateKeyPEMBock(key crypto.Signer, format ...string) (*pem.Block, erro
 			}
 			return &pem.Block{Type: "PRIVATE KEY", Bytes: dataBytes}, err
 		}
+	case ed25519.PrivateKey:
+		if currentFormat == "legacy-pem" {
+			return nil, fmt.Errorf("%w: unable to format Key. Legacy format for ed25519 is not supported", verror.VcertError)
+		} else {
+			dataBytes, err := pkcs8.MarshalPrivateKey(key.(ed25519.PrivateKey), nil, nil)
+			if err != nil {
+				return nil, err
+			}
+			return &pem.Block{Type: "PRIVATE KEY", Bytes: dataBytes}, err
+		}
 	default:
 		return nil, fmt.Errorf("%w: unable to format Key", verror.VcertError)
 	}
@@ -682,6 +719,16 @@ func GetEncryptedPrivateKeyPEMBock(key crypto.Signer, password []byte, format ..
 			}
 			return &pem.Block{Type: "ENCRYPTED PRIVATE KEY", Bytes: dataBytes}, err
 		}
+	case ed25519.PrivateKey:
+		if currentFormat == "legacy-pem" {
+			return nil, fmt.Errorf("%w: unable to format Key. Legacy format for ed25519 is not supported", verror.VcertError)
+		} else {
+			dataBytes, err := pkcs8.MarshalPrivateKey(key.(ed25519.PrivateKey), password, nil)
+			if err != nil {
+				return nil, err
+			}
+			return &pem.Block{Type: "ENCRYPTED PRIVATE KEY", Bytes: dataBytes}, err
+		}
 	default:
 		return nil, fmt.Errorf("%w: unable to format Key", verror.VcertError)
 	}
@@ -698,13 +745,14 @@ func GetCertificateRequestPEMBlock(request []byte) *pem.Block {
 }
 
 // GenerateECDSAPrivateKey generates a new ecdsa private key using the curve specified
-func GenerateECDSAPrivateKey(curve EllipticCurve) (*ecdsa.PrivateKey, error) {
-	var priv *ecdsa.PrivateKey
+func GenerateECDSAPrivateKey(curve EllipticCurve) (crypto.Signer, error) {
+	var priv crypto.Signer
 	var c elliptic.Curve
 	var err error
 	if curve == EllipticCurveNotSet {
 		curve = EllipticCurveDefault
 	}
+
 	switch curve {
 	case EllipticCurveP521:
 		c = elliptic.P521()
@@ -712,6 +760,8 @@ func GenerateECDSAPrivateKey(curve EllipticCurve) (*ecdsa.PrivateKey, error) {
 		c = elliptic.P384()
 	case EllipticCurveP256:
 		c = elliptic.P256()
+	case EllipticCurveED25519:
+		return nil, fmt.Errorf("%w: unable to generate ECDSA key. ED25519 curve is not supported, use GenerateED25519PrivateKey instead", verror.VcertError)
 	}
 
 	priv, err = ecdsa.GenerateKey(c, rand.Reader)
@@ -719,6 +769,14 @@ func GenerateECDSAPrivateKey(curve EllipticCurve) (*ecdsa.PrivateKey, error) {
 		return nil, err
 	}
 
+	return priv, nil
+}
+
+func GenerateED25519PrivateKey() (crypto.Signer, error) {
+	_, priv, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		return nil, err
+	}
 	return priv, nil
 }
 
@@ -751,10 +809,12 @@ func NewRequest(cert *x509.Certificate) *Request {
 		req.KeyLength = pub.N.BitLen()
 	case *ecdsa.PublicKey:
 		req.KeyType = KeyTypeECDSA
-		req.KeyLength = pub.Curve.Params().BitSize
-		// TODO: req.KeyCurve = pub.Curve.Params().Name ...
-	default: // case *dsa.PublicKey
-		// vcert only works with RSA & ECDSA
+		_ = req.KeyCurve.Set(pub.Curve.Params().Name)
+	case ed25519.PublicKey:
+		req.KeyType = KeyTypeED25519
+		_ = req.KeyCurve.Set("ed25519")
+	default:
+		// vcert only works with RSA, ECDSA & Ed25519 keys
 	}
 	return req
 }
