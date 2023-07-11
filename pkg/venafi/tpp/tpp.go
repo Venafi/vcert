@@ -310,6 +310,10 @@ type DNToGUIDRequest struct {
 	ObjectDN string `json:"ObjectDN"`
 }
 
+type LogPostResponse struct {
+	LogResult int `json:"LogResult"`
+}
+
 type policyObject struct {
 	AbsoluteGUID string `json:"AbsoluteGUID"`
 	DN           string `json:"DN"`
@@ -391,6 +395,7 @@ const (
 	urlResourceSshTemplateAvaliable   urlResource = "vedsdk/SSHCertificates/Template/Available"
 	urlResourceDNToGUID               urlResource = "vedsdk/Config/DnToGuid"
 	urlResourceFindObjectsOfClass     urlResource = "vedsdk/config/findobjectsofclass"
+	urlResourceLog                    urlResource = "vedsdk/Log"
 )
 
 const (
@@ -688,6 +693,11 @@ func parseRenewResult(httpStatusCode int, httpStatus string, body []byte) (resp 
 }
 
 func parseRenewData(b []byte) (data certificateRenewResponse, err error) {
+	err = json.Unmarshal(b, &data)
+	return
+}
+
+func parseLogResponse(b []byte) (data LogPostResponse, err error) {
 	err = json.Unmarshal(b, &data)
 	return
 }

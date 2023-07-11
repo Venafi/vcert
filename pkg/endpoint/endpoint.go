@@ -125,6 +125,7 @@ type Connector interface {
 	RetrieveAvailableSSHTemplates() ([]certificate.SshAvaliableTemplate, error)
 	RetrieveCertificateMetaData(dn string) (*certificate.CertificateMetaData, error)
 	RetrieveSystemVersion() (string, error)
+	WriteLog(req *LogRequest) error
 }
 
 type Filter struct {
@@ -214,6 +215,17 @@ type ZoneConfiguration struct {
 	HashAlgorithm         x509.SignatureAlgorithm
 	CustomAttributeValues map[string]string
 	KeyConfiguration      *AllowedKeyConfiguration
+}
+
+type LogRequest struct {
+	LogID     string `json:"ID,omitempty"`
+	Component string `json:",omitempty"`
+	Text1     string `json:",omitempty"`
+	Text2     string `json:",omitempty"`
+	Value1    string `json:",omitempty"`
+	Value2    string `json:",omitempty"`
+	SourceIp  string `json:",omitempty"`
+	Severity  string `json:",omitempty"`
 }
 
 // AllowedKeyConfiguration contains an allowed key type with its sizes or curves
