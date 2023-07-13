@@ -24,8 +24,9 @@ import (
 	"os/user"
 	"path/filepath"
 
-	"github.com/Venafi/vcert/v4/pkg/endpoint"
 	"gopkg.in/ini.v1"
+
+	"github.com/Venafi/vcert/v4/pkg/endpoint"
 )
 
 // Config is a basic structure for high level initiating connector to Trust Platform (TPP)/Venafi Cloud

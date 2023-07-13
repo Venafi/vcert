@@ -3,10 +3,11 @@ package cloud
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/certificate"
-	"github.com/Venafi/vcert/v4/pkg/util"
 	"net/http"
 	"regexp"
+
+	"github.com/Venafi/vcert/v4/pkg/certificate"
+	"github.com/Venafi/vcert/v4/pkg/util"
 )
 
 func parseCertificateInfo(httpStatusCode int, httpStatus string, body []byte) (*managedCertificate, error) {

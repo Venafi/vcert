@@ -1,0 +1,30 @@
+# Run static checks
+#
+# These actions are skipped for draft PRs.
+# See https://github.community/t/dont-run-actions-on-draft-pull-requests/16817/19
+name: lint
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+jobs:
+  golangci-lint:
+    # See https://github.com/golangci/golangci-lint-action
+    # TODO(wallrj) Timeout is increased to 3m because the action sometimes takes
+    # a long time. Remove this when the upstream issue is resolved.
+    # See https://github.com/golangci/golangci-lint-action/issues/297
+    name: golangci-lint
+    runs-on: ubuntu-22.04
+    if: github.event.pull_request.draft == false
+    steps:
+      - uses: actions/checkout@v3
+      # Set up Go so that golangci-lint has the right $GOROOT and can find
+      # the right standard libraries. See:
+      # https://github.com/reviewdog/action-golangci-lint/issues/73#issuecomment-813386935
+      - uses: actions/setup-go@v4
+        with:
+          go-version-file: go.mod
+      - uses: golangci/golangci-lint-action@v3.4.0
+        with:
+          args: --verbose --timeout=3m

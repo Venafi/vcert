@@ -23,8 +23,9 @@ import (
 	"sort"
 	"time"
 
-	"github.com/Venafi/vcert/v4"
 	"github.com/urfave/cli/v2"
+
+	"github.com/Venafi/vcert/v4"
 )
 
 var (

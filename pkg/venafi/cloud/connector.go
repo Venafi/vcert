@@ -33,13 +33,13 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/crypto/nacl/box"
+
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
 	"github.com/Venafi/vcert/v4/pkg/policy"
 	"github.com/Venafi/vcert/v4/pkg/util"
 	"github.com/Venafi/vcert/v4/pkg/verror"
-
-	"golang.org/x/crypto/nacl/box"
 )
 
 type urlResource string

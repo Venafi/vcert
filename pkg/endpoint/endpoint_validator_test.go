@@ -2,8 +2,9 @@ package endpoint
 
 import (
 	"crypto/x509/pkix"
-	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"testing"
+
+	"github.com/Venafi/vcert/v4/pkg/certificate"
 )
 
 var any = []string{`.*`}

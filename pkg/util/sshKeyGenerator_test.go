@@ -2,8 +2,9 @@ package util
 
 import (
 	"fmt"
-	"github.com/smartystreets/assertions"
 	"testing"
+
+	"github.com/smartystreets/assertions"
 )
 
 func TestGenerateSshKeyPair(t *testing.T) {

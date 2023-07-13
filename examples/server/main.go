@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/Venafi/vcert/v4"
-	"github.com/Venafi/vcert/v4/pkg/endpoint"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/Venafi/vcert/v4"
+	"github.com/Venafi/vcert/v4/pkg/endpoint"
 )
 
 func main() {
