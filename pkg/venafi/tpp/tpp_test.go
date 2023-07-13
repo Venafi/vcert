@@ -18,11 +18,12 @@ package tpp
 
 import (
 	"crypto/x509"
-	"github.com/Venafi/vcert/v4/pkg/certificate"
-	"github.com/Venafi/vcert/v4/pkg/endpoint"
 	"net/http"
 	"strings"
 	"testing"
+
+	"github.com/Venafi/vcert/v4/pkg/certificate"
+	"github.com/Venafi/vcert/v4/pkg/endpoint"
 )
 
 const (

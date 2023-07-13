@@ -22,8 +22,9 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/verror"
 	"strings"
+
+	"github.com/Venafi/vcert/v4/pkg/verror"
 )
 
 // ChainOption represents the options to be used with the certificate chain

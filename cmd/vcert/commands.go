@@ -22,9 +22,6 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/venafi/cloud"
-	"github.com/Venafi/vcert/v4/pkg/venafi/fake"
-	"github.com/Venafi/vcert/v4/pkg/venafi/tpp"
 	"io/ioutil"
 	"log"
 	"net"
@@ -34,15 +31,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Venafi/vcert/v4/pkg/policy"
-	"github.com/Venafi/vcert/v4/pkg/util"
+	"github.com/urfave/cli/v2"
+	"golang.org/x/crypto/pkcs12"
 	"gopkg.in/yaml.v2"
 
 	"github.com/Venafi/vcert/v4"
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
-	"github.com/urfave/cli/v2"
-	"golang.org/x/crypto/pkcs12"
+	"github.com/Venafi/vcert/v4/pkg/policy"
+	"github.com/Venafi/vcert/v4/pkg/util"
+	"github.com/Venafi/vcert/v4/pkg/venafi/cloud"
+	"github.com/Venafi/vcert/v4/pkg/venafi/fake"
+	"github.com/Venafi/vcert/v4/pkg/venafi/tpp"
 )
 
 var (

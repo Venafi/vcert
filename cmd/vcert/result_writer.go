@@ -23,15 +23,16 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/util"
 	"io/ioutil"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/pavel-v-chernykh/keystore-go/v4"
 	"software.sslmate.com/src/go-pkcs12"
+
+	"github.com/Venafi/vcert/v4/pkg/certificate"
+	"github.com/Venafi/vcert/v4/pkg/util"
 )
 
 type Config struct {

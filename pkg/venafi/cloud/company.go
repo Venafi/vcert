@@ -17,8 +17,9 @@
 package cloud
 
 import (
-	"github.com/Venafi/vcert/v4/pkg/endpoint"
 	"time"
+
+	"github.com/Venafi/vcert/v4/pkg/endpoint"
 )
 
 type company struct {

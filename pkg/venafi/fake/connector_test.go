@@ -18,9 +18,10 @@ package fake
 
 import (
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"testing"
 	"time"
+
+	"github.com/Venafi/vcert/v4/pkg/certificate"
 )
 
 func TestRetrieveCertificate(t *testing.T) {

@@ -3,12 +3,13 @@ package policy
 import (
 	"encoding/json"
 	"fmt"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"gopkg.in/yaml.v2"
 )
 
 // there is no way for creating an array as constant, so creating a variable

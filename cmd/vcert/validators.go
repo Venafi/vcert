@@ -19,13 +19,13 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/util"
 	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
 
 	"github.com/Venafi/vcert/v4/pkg/certificate"
+	"github.com/Venafi/vcert/v4/pkg/util"
 )
 
 // RevocationReasonOptions is an array of strings containing reasons for certificate revocation

@@ -29,15 +29,14 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"reflect"
+	"sort"
 	"strings"
 	"time"
 
-	"github.com/Venafi/vcert/v4/pkg/util"
 	"github.com/youmark/pkcs8"
 
-	"reflect"
-	"sort"
-
+	"github.com/Venafi/vcert/v4/pkg/util"
 	"github.com/Venafi/vcert/v4/pkg/verror"
 )
 
