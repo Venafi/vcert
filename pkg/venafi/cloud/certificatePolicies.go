@@ -18,72 +18,13 @@ package cloud
 
 import (
 	"strings"
-	"time"
 
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
+	"github.com/Venafi/vcert/v4/pkg/venafi/cloud/cloud_api/cloud_structs"
 )
 
-type certificateTemplate struct {
-	ID                                  string `json:"id,omitempty"`
-	CompanyID                           string `json:"companyId,omitempty"`
-	CertificateAuthority                string `json:"certificateAuthority"`
-	Name                                string `json:"name,omitempty"`
-	CertificateAuthorityAccountId       string `json:"certificateAuthorityAccountId"`
-	CertificateAuthorityProductOptionId string `json:"certificateAuthorityProductOptionId"`
-	Product                             struct {
-		CertificateAuthority string `json:"certificateAuthority"`
-		ProductName          string `json:"productName"`
-	} `json:"product"`
-	Priority                            int              `json:"priority"`
-	SystemGenerated                     bool             `json:"systemGenerated,omitempty"`
-	CreationDateString                  string           `json:"creationDate,omitempty"`
-	CreationDate                        time.Time        `json:"-"`
-	ModificationDateString              string           `json:"modificationDate"`
-	ModificationDate                    time.Time        `json:"-"`
-	Status                              string           `json:"status"`
-	Reason                              string           `json:"reason"`
-	SubjectCNRegexes                    []string         `json:"subjectCNRegexes,omitempty"`
-	SubjectORegexes                     []string         `json:"subjectORegexes,omitempty"`
-	SubjectOURegexes                    []string         `json:"subjectOURegexes,omitempty"`
-	SubjectSTRegexes                    []string         `json:"subjectSTRegexes,omitempty"`
-	SubjectLRegexes                     []string         `json:"subjectLRegexes,omitempty"`
-	SubjectCValues                      []string         `json:"subjectCValues,omitempty"`
-	SANRegexes                          []string         `json:"sanRegexes,omitempty"`
-	SanRfc822NameRegexes                []string         `json:"sanRfc822NameRegexes,omitempty"`
-	SanIpAddressRegexes                 []string         `json:"sanIpAddressRegexes,omitempty"`
-	SanUniformResourceIdentifierRegexes []string         `json:"sanUniformResourceIdentifierRegexes,omitempty"`
-	KeyTypes                            []allowedKeyType `json:"keyTypes,omitempty"`
-	KeyReuse                            bool             `json:"keyReuse,omitempty"`
-	RecommendedSettings                 struct {
-		SubjectOValue, SubjectOUValue,
-		SubjectSTValue, SubjectLValue,
-		SubjectCValue string
-		Key struct {
-			Type   string
-			Length int
-			Curve  string
-		}
-		keyReuse bool
-	}
-	ValidityPeriod              string `json:"validityPeriod,omitempty"`
-	CsrUploadAllowed            bool   `json:"csrUploadAllowed"`
-	KeyGeneratedByVenafiAllowed bool   `json:"keyGeneratedByVenafiAllowed"`
-}
-
-type CertificateTemplates struct {
-	CertificateTemplates []certificateTemplate `json:"certificateIssuingTemplates"`
-}
-
-type allowedKeyType struct {
-	KeyType    keyType
-	KeyLengths []int
-	KeyCurves  []string `json:"keyCurves,omitempty"`
-}
-
-type keyType string
-
-func (ct certificateTemplate) toPolicy() (p endpoint.Policy) {
+func certificateTemplateToPolicy(ct *cloud_structs.CertificateTemplate) (p endpoint.Policy) {
 	addStartEnd := func(s string) string {
 		if !strings.HasPrefix(s, "^") {
 			s = "^" + s
@@ -139,7 +80,7 @@ func (ct certificateTemplate) toPolicy() (p endpoint.Policy) {
 	return
 }
 
-func (ct certificateTemplate) toZoneConfig(zc *endpoint.ZoneConfiguration) {
+func certificateTemplateToZoneConfig(ct *cloud_structs.CertificateTemplate, zc *endpoint.ZoneConfiguration) {
 	r := ct.RecommendedSettings
 	zc.Country = r.SubjectCValue
 	zc.Province = r.SubjectSTValue
@@ -159,8 +100,3 @@ func (ct certificateTemplate) toZoneConfig(zc *endpoint.ZoneConfiguration) {
 	key.KeySizes = []int{r.Key.Length}
 	zc.KeyConfiguration = &key
 }
-
-/*
-"signatureAlgorithm":{"type":"string","enum":["MD2_WITH_RSA_ENCRYPTION","MD5_WITH_RSA_ENCRYPTION","SHA1_WITH_RSA_ENCRYPTION","SHA1_WITH_RSA_ENCRYPTION2","SHA256_WITH_RSA_ENCRYPTION","SHA384_WITH_RSA_ENCRYPTION","SHA512_WITH_RSA_ENCRYPTION","ID_DSA_WITH_SHA1","dsaWithSHA1","EC_DSA_WITH_SHA1","EC_DSA_WITH_SHA224","EC_DSA_WITH_SHA256","EC_DSA_WITH_SHA384","EC_DSA_WITH_SHA512","UNKNOWN","SHA1_WITH_RSAandMGF1","GOST_R3411_94_WITH_GOST_R3410_2001","GOST_R3411_94_WITH_GOST_R3410_94"]},
-"signatureHashAlgorithm":{"type":"string","enum":["MD5","SHA1","MD2","SHA224","SHA256","SHA384","SHA512","UNKNOWN","GOSTR3411_94"]}
-*/

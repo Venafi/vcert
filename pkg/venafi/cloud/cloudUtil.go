@@ -1,69 +1,21 @@
 package cloud
 
 import (
-	"encoding/json"
 	"fmt"
+	"regexp"
+
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/util"
-	"net/http"
-	"regexp"
+	"github.com/Venafi/vcert/v4/pkg/venafi/cloud/cloud_api/cloud_structs"
 )
 
-func parseCertificateInfo(httpStatusCode int, httpStatus string, body []byte) (*managedCertificate, error) {
-	switch httpStatusCode {
-	case http.StatusOK:
-		var res = &managedCertificate{}
-		err := json.Unmarshal(body, res)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse search results: %s, body: %s", err, body)
-		}
-		return res, nil
-	default:
-		if body != nil {
-			respErrors, err := parseResponseErrors(body)
-			if err == nil {
-				respError := fmt.Sprintf("unexpected status code on Venafi Cloud certificate search. Status: %s\n", httpStatus)
-				for _, e := range respErrors {
-					respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
-				}
-				return nil, fmt.Errorf(respError)
-			}
-		}
-		return nil, fmt.Errorf("unexpected status code on Venafi Cloud certificate search. Status: %s", httpStatus)
-	}
-}
-
-func parseDEKInfo(httpStatusCode int, httpStatus string, body []byte) (*EdgeEncryptionKey, error) {
-	switch httpStatusCode {
-	case http.StatusOK:
-		var res = &EdgeEncryptionKey{}
-		err := json.Unmarshal(body, res)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse DEK info results: %s, body: %s", err, body)
-		}
-		return res, nil
-	default:
-		if body != nil {
-			respErrors, err := parseResponseErrors(body)
-			if err == nil {
-				respError := fmt.Sprintf("unexpected status code on VaaS retrieving DEK's info. Status: %s\n", httpStatus)
-				for _, e := range respErrors {
-					respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
-				}
-				return nil, fmt.Errorf(respError)
-			}
-		}
-		return nil, fmt.Errorf("unexpected status code on VaaS retrieving DEK's info. Status. Status: %s", httpStatus)
-	}
-}
-
-func Load32KeyByte(keyBytes []byte) (*[32]byte, error) {
+func load32KeyByte(keyBytes []byte) (*[32]byte, error) {
 	key := new([32]byte)
 	copy(key[:], keyBytes)
 	return key, nil
 }
 
-func getCsrAttributes(c *Connector, req *certificate.Request) (*CsrAttributes, error) {
+func getCsrAttributes(c *Connector, req *certificate.Request) (*cloud_structs.CsrAttributes, error) {
 	zone := c.zone.zone
 	policy, err := c.GetPolicyWithRegex(zone)
 
@@ -71,7 +23,7 @@ func getCsrAttributes(c *Connector, req *certificate.Request) (*CsrAttributes, e
 		return nil, err
 	}
 
-	csrAttr := CsrAttributes{}
+	csrAttr := cloud_structs.CsrAttributes{}
 	valid := false
 
 	if req.Subject.CommonName != "" {
@@ -204,7 +156,7 @@ func getCsrAttributes(c *Connector, req *certificate.Request) (*CsrAttributes, e
 		sanByType.UniformResourceIdentifiers = sArray
 	}
 
-	keyTypeParam := &KeyTypeParameters{}
+	keyTypeParam := &cloud_structs.KeyTypeParameters{}
 	if req.KeyType == certificate.KeyTypeRSA {
 		keyTypeParam.KeyType = "RSA"
 		if req.KeyLength > 0 {
@@ -228,9 +180,9 @@ func getCsrAttributes(c *Connector, req *certificate.Request) (*CsrAttributes, e
 	return &csrAttr, nil
 }
 
-func getSANByType(csrAttributes *CsrAttributes) *SubjectAlternativeNamesByType {
+func getSANByType(csrAttributes *cloud_structs.CsrAttributes) *cloud_structs.SubjectAlternativeNamesByType {
 	if csrAttributes.SubjectAlternativeNamesByType == nil {
-		csrAttributes.SubjectAlternativeNamesByType = &SubjectAlternativeNamesByType{}
+		csrAttributes.SubjectAlternativeNamesByType = &cloud_structs.SubjectAlternativeNamesByType{}
 	}
 	return csrAttributes.SubjectAlternativeNamesByType
 }

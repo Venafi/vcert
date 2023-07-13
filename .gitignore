@@ -16,3 +16,6 @@ aruba/log.log
 credentials
 *.DS_Store
 vendor
+*.out
+.envrc
+.vscode

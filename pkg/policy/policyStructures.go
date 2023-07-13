@@ -41,89 +41,6 @@ type PolicyGetAttributeResponse struct {
 	Values []string `json:"Values"`
 }
 
-type CloudPolicyRequest struct {
-	Name                                string               `json:"name"`
-	CertificateAuthority                string               `json:"certificateAuthority"`
-	CertificateAuthorityProductOptionId string               `json:"certificateAuthorityProductOptionId"`
-	Product                             Product              `json:"product"`
-	TrackingData                        *TrackingData        `json:"trackingData"`
-	SubjectCNRegexes                    []string             `json:"subjectCNRegexes"`
-	SubjectORegexes                     []string             `json:"subjectORegexes"`
-	SubjectOURegexes                    []string             `json:"subjectOURegexes"`
-	SubjectLRegexes                     []string             `json:"subjectLRegexes"`
-	SubjectSTRegexes                    []string             `json:"subjectSTRegexes"`
-	SubjectCValues                      []string             `json:"subjectCValues"`
-	SanRegexes                          []string             `json:"sanRegexes"`
-	SanIpAddressRegexes                 []string             `json:"sanIpAddressRegexes"`
-	SanRfc822NameRegexes                []string             `json:"sanRfc822NameRegexes"`
-	SanUniformResourceIdentifierRegexes []string             `json:"sanUniformResourceIdentifierRegexes"`
-	KeyTypes                            []KeyType            `json:"keyTypes"`
-	KeyReuse                            *bool                `json:"keyReuse"`
-	RecommendedSettings                 *RecommendedSettings `json:"recommendedSettings"`
-	CsrUploadAllowed                    bool                 `json:"csrUploadAllowed"`
-	KeyGeneratedByVenafiAllowed         bool                 `json:"keyGeneratedByVenafiAllowed"`
-}
-
-type Product struct {
-	CertificateAuthority string  `json:"certificateAuthority"`
-	ProductName          string  `json:"productName"`
-	ValidityPeriod       string  `json:"validityPeriod"`
-	HashAlgorithm        *string `json:"hashAlgorithm,omitempty"`
-	AutoRenew            *bool   `json:"autoRenew,omitempty"`
-	OrganizationId       *int64  `json:"organizationId,omitempty"`
-}
-
-type KeyType struct {
-	KeyType    string   `json:"keyType"`
-	KeyLengths []int    `json:"keyLengths,omitempty"`
-	KeyCurves  []string `json:"keyCurves,omitempty"`
-}
-
-type TrackingData struct {
-	CertificateAuthority string `json:"certificateAuthority"`
-	RequesterName        string `json:"requesterName"`
-	RequesterEmail       string `json:"requesterEmail"`
-	RequesterPhone       string `json:"requesterPhone"`
-}
-
-type RecommendedSettings struct {
-	SubjectCNRegexes []string `json:"subjectCNRegexes"`
-	SubjectOValue    *string  `json:"subjectOValue"`
-	SubjectOUValue   *string  `json:"subjectOUValue"`
-	SubjectLValue    *string  `json:"subjectLValue"`
-	SubjectSTValue   *string  `json:"subjectSTValue"`
-	SubjectCValue    *string  `json:"subjectCValue"`
-	SanRegexes       []string `json:"sanRegexes"`
-	Key              *Key     `json:"key"`
-}
-
-type Key struct {
-	Type   string `json:"type"`
-	Length int    `json:"length,omitempty"`
-	Curve  string `json:"curve,omitempty"`
-}
-
-type Application struct {
-	OwnerIdsAndTypes                     []OwnerIdType     `json:"ownerIdsAndTypes"`
-	Name                                 string            `json:"name"`
-	Description                          string            `json:"description"`
-	Fqdns                                []string          `json:"fqdns"`
-	InternalFqdns                        []string          `json:"internalFqdns"`
-	InternalIpRanges                     []string          `json:"internalIpRanges"`
-	ExternalIpRanges                     []string          `json:"externalIpRanges"`
-	InternalPorts                        []string          `json:"internalPorts"`
-	FullyQualifiedDomainNames            []string          `json:"fullyQualifiedDomainNames"`
-	IpRanges                             []string          `json:"ipRanges"`
-	Ports                                []string          `json:"ports"`
-	CertificateIssuingTemplateAliasIdMap map[string]string `json:"certificateIssuingTemplateAliasIdMap"`
-	StartTargetedDiscovery               bool              `json:"startTargetedDiscovery"`
-}
-
-type OwnerIdType struct {
-	OwnerId   string `json:"ownerId"`
-	OwnerType string `json:"ownerType"`
-}
-
 type TppPolicy struct {
 	//general values
 	Name *string
@@ -208,35 +125,6 @@ type CertificateAuthorityInfo struct {
 	CAType            string
 	CAAccountKey      string
 	VendorProductName string
-}
-
-type Accounts struct {
-	Accounts []AccountDetails
-}
-
-type AccountDetails struct {
-	Account       Account         `json:"account"`
-	ProductOption []ProductOption `json:"productOptions"`
-}
-
-type Account struct {
-	Id                   string `json:"id"`
-	Key                  string `json:"Key"`
-	CertificateAuthority string `json:"certificateAuthority"`
-}
-
-type ProductOption struct {
-	ProductName    string         `json:"productName"`
-	Id             string         `json:"id"`
-	ProductDetails ProductDetails `json:"productDetails"`
-}
-
-type ProductDetails struct {
-	ProductTemplate ProductTemplate `json:"productTemplate"`
-}
-
-type ProductTemplate struct {
-	OrganizationId int64 `json:"organizationId"`
 }
 
 type PolicyObject struct {

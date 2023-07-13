@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Venafi, Inc.
+ * Copyright 2022 Venafi, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,30 +14,14 @@
  * limitations under the License.
  */
 
-package cloud
+package cloud_structs
 
-import (
-	"encoding/json"
-	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/verror"
-)
+type ResponseErrors struct {
+	Errors []responseError `json:"errors,omitempty"`
+}
 
 type responseError struct {
 	Code    int         `json:"code,omitempty"`
 	Message string      `json:"message,omitempty"`
 	Args    interface{} `json:"args,omitempty"`
-}
-
-type jsonData struct {
-	Errors []responseError `json:"errors,omitempty"`
-}
-
-func parseResponseErrors(b []byte) ([]responseError, error) {
-	var data jsonData
-	err := json.Unmarshal(b, &data)
-	if err != nil {
-		return nil, fmt.Errorf("%w: %v", verror.ServerError, err)
-	}
-
-	return data.Errors, nil
 }

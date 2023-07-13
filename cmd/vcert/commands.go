@@ -22,9 +22,6 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/venafi/cloud"
-	"github.com/Venafi/vcert/v4/pkg/venafi/fake"
-	"github.com/Venafi/vcert/v4/pkg/venafi/tpp"
 	"io/ioutil"
 	"log"
 	"net"
@@ -33,6 +30,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Venafi/vcert/v4/pkg/venafi/cloud"
+	"github.com/Venafi/vcert/v4/pkg/venafi/fake"
+	"github.com/Venafi/vcert/v4/pkg/venafi/tpp"
 
 	"github.com/Venafi/vcert/v4/pkg/policy"
 	"github.com/Venafi/vcert/v4/pkg/util"
@@ -1056,45 +1057,13 @@ func doCommandCreatePolicy(c *cli.Context) error {
 
 	logf("Loading policy specification from %s", policySpecLocation)
 
-	file, bytes, err := policy.GetFileAndBytes(policySpecLocation)
-
+	policySpecification, err := policy.GetPolicySpecificationFromFile(policySpecLocation, flags.verifyPolicyConfig)
 	if err != nil {
 		return err
 	}
 
 	if flags.verbose {
-		logf("Policy specification file was successfully opened")
-	}
-
-	fileExt := policy.GetFileType(policySpecLocation)
-	fileExt = strings.ToLower(fileExt)
-
-	if flags.verifyPolicyConfig {
-		err = policy.VerifyPolicySpec(bytes, fileExt)
-		if err != nil {
-			err = fmt.Errorf("policy specification file is not valid: %s", err)
-			return err
-		} else {
-			logf("policy specification %s is valid", policySpecLocation)
-			return nil
-		}
-	}
-
-	//based on the extension call the appropriate method to feed the policySpecification
-	//structure.
-	var policySpecification policy.PolicySpecification
-	if fileExt == policy.JsonExtension {
-		err = json.Unmarshal(bytes, &policySpecification)
-		if err != nil {
-			return err
-		}
-	} else if fileExt == policy.YamlExtension {
-		err = yaml.Unmarshal(bytes, &policySpecification)
-		if err != nil {
-			return err
-		}
-	} else {
-		return fmt.Errorf("the specified file is not supported")
+		logf("Policy specification file was successfully read")
 	}
 
 	cfg, err := buildConfig(c, &flags)
@@ -1108,9 +1077,7 @@ func doCommandCreatePolicy(c *cli.Context) error {
 		return err
 	}
 
-	_, err = connector.SetPolicy(policyName, &policySpecification)
-
-	defer file.Close()
+	_, err = connector.SetPolicy(policyName, policySpecification)
 
 	return err
 }

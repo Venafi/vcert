@@ -1,83 +1,11 @@
 package policy
 
 import (
-	"encoding/json"
-	"fmt"
-	"github.com/smartystreets/assertions"
-	"gopkg.in/yaml.v2"
-	t "log"
 	"path/filepath"
-	"strings"
 	"testing"
+
+	"github.com/smartystreets/assertions"
 )
-
-func getPolicySpecificationFromFile(f string) *PolicySpecification {
-
-	file, bytes, err := GetFileAndBytes(f)
-
-	fileExt := GetFileType(f)
-	fileExt = strings.ToLower(fileExt)
-
-	err = VerifyPolicySpec(bytes, fileExt)
-	if err != nil {
-		t.Fatalf("Error verifying policy specification\nError: %s", err)
-	}
-
-	//based on the extension call the appropriate method to feed the policySpecification
-	//structure.
-	var policySpecification PolicySpecification
-	if fileExt == JsonExtension {
-		err = json.Unmarshal(bytes, &policySpecification)
-		if err != nil {
-			t.Fatalf("Error Unmarshalling policy specification\nError: %s", err)
-		}
-	} else if fileExt == YamlExtension {
-		err = yaml.Unmarshal(bytes, &policySpecification)
-		if err != nil {
-			t.Fatalf("Error unmarshalling policy specification\nError: %s", err)
-		}
-	} else {
-		err = fmt.Errorf("the specified file is not supported")
-		t.Fatalf("Error unmarshalling policy specification\nError: %s", err)
-
-	}
-	if &policySpecification == nil {
-		err = fmt.Errorf("policy specification is nil")
-		t.Fatalf("Error openning policy specification\nError: %s", err)
-	}
-	defer file.Close()
-	return &policySpecification
-}
-
-func TestValidateGetSpecificationFromYml(t *testing.T) {
-	absPath, err := filepath.Abs("../../test-files/policy_specification.yml")
-
-	if err != nil {
-		t.Fatalf("Error opening policy specification\nError: %s", err)
-	}
-
-	policySpecification := getPolicySpecificationFromFile(absPath)
-
-	err = ValidateCloudPolicySpecification(policySpecification)
-	if err != nil {
-		t.Fatalf("Error validating policy specification\nError: %s", err)
-	}
-}
-
-func TestValidateCloudPolicySpecification(t *testing.T) {
-	absPath, err := filepath.Abs("../../test-files/policy_specification_cloud.json")
-
-	if err != nil {
-		t.Fatalf("Error opening policy specification\nError: %s", err)
-	}
-
-	policySpecification := getPolicySpecificationFromFile(absPath)
-
-	err = ValidateCloudPolicySpecification(policySpecification)
-	if err != nil {
-		t.Fatalf("Error validating policy specification\nError: %s", err)
-	}
-}
 
 func TestValidateTPPPolicyData(t *testing.T) {
 	absPath, err := filepath.Abs("../../test-files/policy_specification_cloud.json")
@@ -86,7 +14,10 @@ func TestValidateTPPPolicyData(t *testing.T) {
 		t.Fatalf("Error opening policy specification\nError: %s", err)
 	}
 
-	policySpecification := getPolicySpecificationFromFile(absPath)
+	policySpecification, err := GetPolicySpecificationFromFile(absPath, true)
+	if err != nil {
+		t.Fatalf("Error loading specification \nError: %s", err)
+	}
 
 	err = validateDefaultKeyPair(policySpecification)
 	if err != nil {
@@ -107,7 +38,10 @@ func TestBuildTppPolicy(t *testing.T) {
 		t.Fatalf("Error opening policy specification\nError: %s", err)
 	}
 
-	policySpecification := getPolicySpecificationFromFile(absPath)
+	policySpecification, err := GetPolicySpecificationFromFile(absPath, true)
+	if err != nil {
+		t.Fatalf("Error loading specification \nError: %s", err)
+	}
 
 	tppPol := BuildTppPolicy(policySpecification)
 
@@ -140,7 +74,10 @@ func TestBuildTppPolicyWithDefaults(t *testing.T) {
 		t.Fatalf("Error opening policy specification\nError: %s", err)
 	}
 
-	policySpecification := getPolicySpecificationFromFile(absPath)
+	policySpecification, err := GetPolicySpecificationFromFile(absPath, true)
+	if err != nil {
+		t.Fatalf("Error loading specification \nError: %s", err)
+	}
 
 	tppPol := BuildTppPolicy(policySpecification)
 
@@ -155,7 +92,10 @@ func TestValidateTppPolicySpecification(t *testing.T) {
 		t.Fatalf("Error opening policy specification\nError: %s", err)
 	}
 
-	policySpecification := getPolicySpecificationFromFile(absPath)
+	policySpecification, err := GetPolicySpecificationFromFile(absPath, true)
+	if err != nil {
+		t.Fatalf("Error loading specification \nError: %s", err)
+	}
 
 	err = ValidateTppPolicySpecification(policySpecification)
 	if err != nil {
@@ -170,7 +110,10 @@ func TestEmptyPolicy(t *testing.T) {
 		t.Fatalf("Error opening policy specification\nError: %s", err)
 	}
 
-	policySpecification := getPolicySpecificationFromFile(absPath)
+	policySpecification, err := GetPolicySpecificationFromFile(absPath, true)
+	if err != nil {
+		t.Fatalf("Error loading specification \nError: %s", err)
+	}
 
 	isEmpty := IsPolicyEmpty(policySpecification)
 	if !isEmpty {
@@ -180,52 +123,6 @@ func TestEmptyPolicy(t *testing.T) {
 	isEmpty = IsDefaultEmpty(policySpecification)
 	if !isEmpty {
 		t.Fatalf("Default in policy specification is not empty")
-	}
-}
-
-func TestBuildCloudCitRequest(t *testing.T) {
-	absPath, err := filepath.Abs("../../test-files/policy_specification_cloud.json")
-
-	if err != nil {
-		t.Fatalf("Error opening policy specification\nError: %s", err)
-	}
-
-	policySpecification := getPolicySpecificationFromFile(absPath)
-	prodId := "testiong"
-	var orgId int64
-	orgId = 1234
-	cd := CADetails{
-		CertificateAuthorityProductOptionId: &prodId,
-		CertificateAuthorityOrganizationId:  &orgId,
-	}
-
-	_, err = BuildCloudCitRequest(policySpecification, &cd)
-
-	if err != nil {
-		t.Fatalf("Error building cit \nError: %s", err)
-	}
-}
-
-func TestBuildCloudCitRequestWithEmptyPS(t *testing.T) {
-	absPath, err := filepath.Abs("../../test-files/empty_policy.json")
-
-	if err != nil {
-		t.Fatalf("Error opening policy specification\nError: %s", err)
-	}
-
-	policySpecification := getPolicySpecificationFromFile(absPath)
-	prodId := "testiong"
-	var orgId int64
-	orgId = 1234
-	cd := CADetails{
-		CertificateAuthorityProductOptionId: &prodId,
-		CertificateAuthorityOrganizationId:  &orgId,
-	}
-
-	_, err = BuildCloudCitRequest(policySpecification, &cd)
-
-	if err != nil {
-		t.Fatalf("Error building cit \nError: %s", err)
 	}
 }
 

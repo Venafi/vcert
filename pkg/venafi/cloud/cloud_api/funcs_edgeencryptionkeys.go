@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Venafi, Inc.
+ * Copyright 2022 Venafi, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,31 @@
  * limitations under the License.
  */
 
-package cloud
+package cloud_api
 
 import (
-	"github.com/Venafi/vcert/v4/pkg/endpoint"
+	"net/http"
+
 	"github.com/Venafi/vcert/v4/pkg/venafi/cloud/cloud_api/cloud_structs"
 )
 
-func getZoneConfiguration(policy *cloud_structs.CertificateTemplate) (zoneConfig *endpoint.ZoneConfiguration) {
-	zoneConfig = endpoint.NewZoneConfiguration()
-	if policy == nil {
-		return
+func (rc *RawClient) GetEdgeEncryptionKeyById(keyId string) (*cloud_structs.EdgeEncryptionKey, error) {
+	url := urlEdgeEncryptionKeyById.Absolute(rc.BaseUrl).Params(keyId)
+
+	req, err := newRequest(http.MethodGet, string(url), nil)
+	if err != nil {
+		return nil, err
 	}
-	zoneConfig.Policy = certificateTemplateToPolicy(policy)
-	certificateTemplateToZoneConfig(policy, zoneConfig)
-	return
+
+	if err := rc.Authenticator(req); err != nil {
+		return nil, err
+	}
+
+	responseObject := &cloud_structs.EdgeEncryptionKey{}
+
+	if err := makeRequest(rc.HttpClient, req, responseObject); err != nil {
+		return nil, err
+	}
+
+	return responseObject, nil
 }
