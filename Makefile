@@ -60,9 +60,16 @@ test: get linter
 	go test -v -coverprofile=cov_cmd.out ./cmd/vcert
 	go tool cover -func=cov_cmd.out
 
+WHAT ?= .
+
 tpp_test: get
-	go test -v $(GOFLAGS) -coverprofile=cov_tpp.out ./pkg/venafi/tpp
+	go test -v $(GOFLAGS) -coverprofile=cov_tpp.out ./pkg/venafi/tpp  -run $(WHAT)
 	go tool cover -func=cov_tpp.out
+
+fake_tpp_test: export MAKE := $(MAKE)
+fake_tpp_test: export WHAT := ^\(TestPingTPP\|TestRetrieveSelfIdentity\|TestGetRefreshToken\|TestGetRefreshTokenWithDefaultScope\|TestFailRefreshAccessToken\|TestRefreshAccessToken\|TestRefreshAccessTokenNoClientID\|TestAuthenticationAccessToken\)$$
+fake_tpp_test:
+	go test ./test/tpp/fake/... -count=1 -v
 
 cloud_test: get
 	go test -v $(GOFLAGS) -coverprofile=cov_vaas.out ./pkg/venafi/cloud

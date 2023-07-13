@@ -207,11 +207,11 @@ type oauthGetRefreshTokenRequest struct {
 }
 type OauthGetRefreshTokenResponse struct {
 	Access_token  string `json:"access_token,omitempty"`
-	Expires       int    `json:"expires,omitempty"`
-	ExpiresIn     int    `json:"expires_in,omitempty"` //Attribute added as it's used on vSSH
+	Expires       uint64 `json:"expires,omitempty"`
+	ExpiresIn     uint64 `json:"expires_in,omitempty"` //Attribute added as it's used on vSSH
 	Identity      string `json:"identity,omitempty"`
 	Refresh_token string `json:"refresh_token,omitempty"`
-	Refresh_until int    `json:"refresh_until,omitempty"`
+	Refresh_until uint64 `json:"refresh_until,omitempty"`
 	Scope         string `json:"scope,omitempty"`
 	Token_type    string `json:"token_type,omitempty"`
 }
@@ -228,10 +228,10 @@ type oauthCertificateTokenRequest struct {
 
 type OauthRefreshAccessTokenResponse struct {
 	Access_token  string `json:"access_token,omitempty"`
-	Expires       int    `json:"expires,omitempty"`
+	Expires       uint64 `json:"expires,omitempty"`
 	Identity      string `json:"identity,omitempty"`
 	Refresh_token string `json:"refresh_token,omitempty"`
-	Refresh_until int    `json:"refresh_until,omitempty"`
+	Refresh_until uint64 `json:"refresh_until,omitempty"`
 	Token_type    string `json:"token_type,omitempty"`
 }
 
