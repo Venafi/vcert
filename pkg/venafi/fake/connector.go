@@ -399,3 +399,7 @@ func (c *Connector) SetHTTPClient(client *http.Client) {
 func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.CertificateInfo, error) {
 	return nil, nil
 }
+
+func (c *Connector) WriteLog(logReq *endpoint.LogRequest) (err error) {
+	return fmt.Errorf("Logging is not supported in -test-mode")
+}

@@ -1203,6 +1203,11 @@ func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (er
 	return fmt.Errorf("not supported by endpoint")
 }
 
+// Custom Logging not currently supported by VaaS
+func (c *Connector) WriteLog(logReq *endpoint.LogRequest) (err error) {
+	return fmt.Errorf("Outbound logging not supported by endpoint")
+}
+
 // RenewCertificate attempts to renew the certificate
 func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requestID string, err error) {
 

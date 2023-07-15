@@ -118,17 +118,20 @@ func (ct certificateTemplate) toPolicy() (p endpoint.Policy) {
 		}
 	}
 	p.AllowWildcards = allowWildCards
+
 	for _, kt := range ct.KeyTypes {
 		keyConfiguration := endpoint.AllowedKeyConfiguration{}
-		if err := keyConfiguration.KeyType.Set(string(kt.KeyType)); err != nil {
+		if err := keyConfiguration.KeyType.Set(string(kt.KeyType), ""); err != nil {
 			panic(err)
 		}
+
 		keyConfiguration.KeySizes = kt.KeyLengths[:]
 		for _, keyCurve := range kt.KeyCurves {
-			v := certificate.EllipticCurve(0)
+			v := certificate.EllipticCurveNotSet
 			if err := (&v).Set(keyCurve); err != nil {
 				panic(err)
 			}
+
 			keyConfiguration.KeyCurves = append(keyConfiguration.KeyCurves, v)
 		}
 		p.AllowedKeyConfigurations = append(p.AllowedKeyConfigurations, keyConfiguration)
@@ -146,7 +149,7 @@ func (ct certificateTemplate) toZoneConfig(zc *endpoint.ZoneConfiguration) {
 		zc.OrganizationalUnit = []string{r.SubjectOUValue}
 	}
 	key := endpoint.AllowedKeyConfiguration{}
-	err := key.KeyType.Set(r.Key.Type)
+	err := key.KeyType.Set(r.Key.Type, r.Key.Curve)
 	if err != nil {
 		return
 	}

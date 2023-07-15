@@ -262,6 +262,9 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 		return nil
 
 	case certificate.ServiceGeneratedCSR:
+		if req.KeyType == certificate.KeyTypeED25519 {
+			return fmt.Errorf("%w: ED25519 keys are not yet supported for Service Generated CSR", verror.UserDataError)
+		}
 		return nil
 
 	default:

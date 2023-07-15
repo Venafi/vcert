@@ -3056,3 +3056,33 @@ func TestSearchValidCertificate(t *testing.T) {
 
 	fmt.Printf("%v\n", util.GetJsonAsString(*certificate))
 }
+
+func TestWriteLog(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+
+	hostname, err := os.Hostname()
+	if err != nil {
+		hostname = "unknown"
+	}
+
+	logReq := endpoint.LogRequest{
+		LogID:     "26808595",
+		Text1:     hostname,
+		Component: getPolicyDN(ctx.TPPZone),
+	}
+
+	err = tpp.WriteLog(&logReq)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+}

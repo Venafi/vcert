@@ -18,10 +18,11 @@ package endpoint
 
 import (
 	"crypto/x509"
-	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"sort"
 	"strings"
 	"testing"
+
+	"github.com/Venafi/vcert/v4/pkg/certificate"
 )
 
 func TestNewZoneConfiguration(t *testing.T) {
@@ -153,6 +154,9 @@ func TestBadCNValiateRequest(t *testing.T) {
 	if err == nil {
 		t.Fatalf("CN should not have matched")
 	}
+	if !strings.HasSuffix(err.Error(), "common name vcert.test.bonjo.com is not allowed in this policy: [.*.vfidev.com .*.venafi.com]") {
+		t.Fatalf("Got unexpected error: %s", err)
+	}
 }
 
 func TestBadOValiateRequest(t *testing.T) {
@@ -165,6 +169,9 @@ func TestBadOValiateRequest(t *testing.T) {
 	err := z.ValidateCertificateRequest(req)
 	if err == nil {
 		t.Fatalf("O should not have matched")
+	}
+	if !strings.HasSuffix(err.Error(), "organization [Bonjo Org] doesn't match regular expressions: [Venafi.*]") {
+		t.Fatalf("Got unexpected error: %s", err)
 	}
 }
 
@@ -179,6 +186,9 @@ func TestBadOUValiateRequest(t *testing.T) {
 	if err == nil {
 		t.Fatalf("OU should not have matched")
 	}
+	if !strings.HasSuffix(err.Error(), "organization unit [Oddballs Squares] doesn't match regular expressions: [Venafi Venafi, Inc.]") {
+		t.Fatalf("Got unexpected error: %s", err)
+	}
 }
 
 func TestBadLValiateRequest(t *testing.T) {
@@ -191,6 +201,9 @@ func TestBadLValiateRequest(t *testing.T) {
 	err := z.ValidateCertificateRequest(req)
 	if err == nil {
 		t.Fatalf("L should not have matched")
+	}
+	if !strings.HasSuffix(err.Error(), "location [Not in SLC] doesn't match regular expressions: [^(SLC|Salt Lake City)]") {
+		t.Fatalf("Got unexpected error: %s", err)
 	}
 }
 
@@ -205,6 +218,9 @@ func TestBadSTValiateRequest(t *testing.T) {
 	if err == nil {
 		t.Fatalf("ST should not have matched")
 	}
+	if !strings.HasSuffix(err.Error(), "state (province) [CO] doesn't match regular expressions: [(UT|Utah)]") {
+		t.Fatalf("Got unexpected error: %s", err)
+	}
 }
 
 func TestBadCValiateRequest(t *testing.T) {
@@ -217,6 +233,9 @@ func TestBadCValiateRequest(t *testing.T) {
 	err := z.ValidateCertificateRequest(req)
 	if err == nil {
 		t.Fatalf("C should not have matched")
+	}
+	if !strings.HasSuffix(err.Error(), "country [USA] doesn't match regular expressions: [^US$]") {
+		t.Fatalf("Got unexpected error: %s", err)
 	}
 }
 
@@ -231,6 +250,9 @@ func TestBadSANValiateRequest(t *testing.T) {
 	if err == nil {
 		t.Fatalf("SANs should not have matched")
 	}
+	if !strings.HasSuffix(err.Error(), "DNS SANs [vcert.test.venafi.com vcert.test1.venafi.com] do not match regular expressions: [.*.vfidev.com]") {
+		t.Fatalf("Got unexpected error: %s", err)
+	}
 }
 
 func TestBadKeyTypeValiateRequest(t *testing.T) {
@@ -244,9 +266,12 @@ func TestBadKeyTypeValiateRequest(t *testing.T) {
 	if err == nil {
 		t.Fatalf("Key type ECDSA should not have been ok")
 	}
+	if !strings.HasSuffix(err.Error(), "the requested Key Type and Size do not match any of the allowed Key Types and Sizes") {
+		t.Fatalf("Got unexpected error: %s", err)
+	}
 }
 
-func TestBadKeySizeValiateRequest(t *testing.T) {
+func TestBadKeySizeValidateRequest(t *testing.T) {
 	req := new(certificate.Request)
 	req.KeyType = certificate.KeyTypeRSA
 	req.KeyLength = 8192
@@ -257,6 +282,27 @@ func TestBadKeySizeValiateRequest(t *testing.T) {
 	err := z.ValidateCertificateRequest(req)
 	if err == nil {
 		t.Fatalf("Key size 8192 should not have been ok")
+	}
+	if !strings.HasSuffix(err.Error(), "the requested Key Type and Size do not match any of the allowed Key Types and Sizes") {
+		t.Fatalf("Got unexpected error: %s", err)
+	}
+}
+
+func TestED25519KeyValidateRequest(t *testing.T) {
+	req := new(certificate.Request)
+	req.KeyType = certificate.KeyTypeED25519
+	req.KeyCurve = certificate.EllipticCurveED25519
+
+	z := getBaseZoneConfiguration()
+	z.AllowedKeyConfigurations = []AllowedKeyConfiguration{
+		{
+			KeyType: certificate.KeyTypeED25519,
+		},
+	}
+
+	err := z.ValidateCertificateRequest(req)
+	if err != nil {
+		t.Fatalf("Got unexpected error: %s", err)
 	}
 }
 
@@ -270,5 +316,12 @@ func getBaseZoneConfiguration() *ZoneConfiguration {
 	z.AllowedKeyConfigurations = []AllowedKeyConfiguration{{KeyType: certificate.KeyTypeRSA, KeySizes: []int{2048, 4096}}}
 	z.KeyConfiguration = &AllowedKeyConfiguration{KeyType: certificate.KeyTypeRSA, KeySizes: []int{4096}}
 	z.HashAlgorithm = x509.SHA512WithRSA
+
+	z.SubjectCNRegexes = []string{".*"}
+	z.SubjectORegexes = []string{".*"}
+	z.SubjectOURegexes = []string{".*"}
+	z.SubjectSTRegexes = []string{".*"}
+	z.SubjectLRegexes = []string{".*"}
+	z.SubjectCRegexes = []string{".*"}
 	return &z
 }

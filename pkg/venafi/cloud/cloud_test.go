@@ -17,9 +17,11 @@
 package cloud
 
 import (
-	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"net/http"
+	"regexp"
 	"testing"
+
+	"github.com/Venafi/vcert/v4/pkg/certificate"
 )
 
 var (
@@ -81,39 +83,101 @@ func TestUpdateRequest(t *testing.T) {
 }
 
 func TestGenerateRequest(t *testing.T) {
-	req := certificate.Request{}
-	req.Subject.CommonName = "vcert.test.vfidev.com"
-	req.Subject.Organization = []string{"Venafi, Inc."}
-	req.Subject.OrganizationalUnit = []string{"Automated Tests"}
-	req.Subject.Locality = []string{"Las Vegas"}
-	req.Subject.Province = []string{"Nevada"}
-	req.Subject.Country = []string{"US"}
 
-	zoneConfig := getZoneConfiguration(nil)
+	keyTypeRSA := certificate.KeyTypeRSA
+	keyTypeEC := certificate.KeyTypeECDSA
+	keyTypeED25519 := certificate.KeyTypeED25519
+	csrOriginServiceGenerated := certificate.ServiceGeneratedCSR
 
-	zoneConfig.UpdateCertificateRequest(&req)
-
-	conn := Connector{}
-	err := conn.GenerateRequest(zoneConfig, &req)
-	if err != nil {
-		t.Fatalf("err is not nil, err: %s", err)
+	cases := []struct {
+		name          string
+		keyType       *certificate.KeyType
+		csrOrigin     *certificate.CSrOriginOption
+		request       *certificate.Request
+		expectedError string
+	}{
+		{
+			"GenerateRequest-RSA-NotProvided",
+			nil,
+			nil,
+			&certificate.Request{},
+			"",
+		},
+		{
+			"GenerateRequest-RSA",
+			&keyTypeRSA,
+			nil,
+			&certificate.Request{},
+			"",
+		},
+		{
+			"GenerateRequest-EC",
+			&keyTypeEC,
+			nil,
+			&certificate.Request{},
+			"",
+		},
+		{
+			"GenerateRequest-ED25519",
+			&keyTypeED25519,
+			nil,
+			&certificate.Request{},
+			"",
+		},
+		{
+			"GenerateRequest-ED25519",
+			&keyTypeED25519,
+			&csrOriginServiceGenerated,
+			&certificate.Request{},
+			"ED25519 keys are not yet supported for Service Generated CSR",
+		},
 	}
 
-	req = certificate.Request{}
-	req.Subject.CommonName = "vcert.test.vfidev.com"
-	req.Subject.Organization = []string{"Venafi, Inc."}
-	req.Subject.OrganizationalUnit = []string{"Automated Tests"}
-	req.Subject.Locality = []string{"Las Vegas"}
-	req.Subject.Province = []string{"Nevada"}
-	req.Subject.Country = []string{"US"}
-	req.KeyType = certificate.KeyTypeECDSA
+	// filling every request
+	for _, testCase := range cases {
+		testCase.request.Subject.CommonName = "vcert.test.vfidev.com"
+		testCase.request.Subject.Organization = []string{"Venafi, Inc."}
+		testCase.request.Subject.OrganizationalUnit = []string{"Automated Tests"}
+		testCase.request.Subject.Locality = []string{"Las Vegas"}
+		testCase.request.Subject.Province = []string{"Nevada"}
+		testCase.request.Subject.Country = []string{"US"}
 
-	zoneConfig.UpdateCertificateRequest(&req)
-	err = conn.GenerateRequest(zoneConfig, &req)
-	if err != nil {
-		t.Fatalf("err is not nil, err: %s", err)
+		if testCase.keyType != nil {
+			testCase.request.KeyType = *testCase.keyType
+		}
+
+		if testCase.csrOrigin != nil {
+			testCase.request.CsrOrigin = *testCase.csrOrigin
+		}
 	}
 
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+
+			zoneConfig := getZoneConfiguration(nil)
+
+			req := c.request
+			zoneConfig.UpdateCertificateRequest(req)
+
+			conn := Connector{}
+			err := conn.GenerateRequest(zoneConfig, req)
+			if err != nil {
+				if c.expectedError != "" {
+					regexErr := regexp.MustCompile(c.expectedError)
+					if !regexErr.MatchString(err.Error()) {
+						t.Fatalf("didn't get expected error, expected: %s, got: %s", c.expectedError, err.Error())
+					}
+				} else {
+					t.Fatalf("err is not nil, err: %s", err)
+				}
+			} else {
+				if c.expectedError != "" {
+					t.Fatalf("got nil error, expected: %s", c.expectedError)
+				}
+			}
+		})
+	}
 }
 
 func TestParseCertificateRequestResponse(t *testing.T) {

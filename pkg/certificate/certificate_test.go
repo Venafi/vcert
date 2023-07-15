@@ -22,7 +22,6 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
-	"github.com/Venafi/vcert/v4/pkg/util"
 	"math/big"
 	"net"
 	"os"
@@ -30,6 +29,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/Venafi/vcert/v4/pkg/util"
 )
 
 func getCertificateRequestForTest() *Request {
@@ -193,6 +194,35 @@ func TestGenerateCertificateRequestWithECDSAKey(t *testing.T) {
 	}
 }
 
+func TestGenerateCertificateRequestWithED25519Key(t *testing.T) {
+	req := getCertificateRequestForTest()
+	var err error
+	req.PrivateKey, err = GenerateED25519PrivateKey()
+	if err != nil {
+		t.Fatalf("Error generating RSA Private Key\nError: %s", err)
+	}
+
+	err = req.GenerateCSR()
+	if err != nil {
+		t.Fatalf("Error generating Certificate Request\nError: %s", err)
+	}
+
+	pemBlock, _ := pem.Decode(req.GetCSR())
+	if pemBlock == nil {
+		t.Fatalf("Failed to decode CSR as PEM")
+	}
+
+	parsedReq, err := x509.ParseCertificateRequest(pemBlock.Bytes)
+	if err != nil {
+		t.Fatalf("Error parsing generated Certificate Request\nError: %s", err)
+	}
+
+	err = parsedReq.CheckSignature()
+	if err != nil {
+		t.Fatalf("Error checking signature of generated Certificate Request\nError: %s", err)
+	}
+}
+
 func TestEllipticCurveString(t *testing.T) {
 	curve := EllipticCurveP521
 	stringCurve := curve.String()
@@ -259,21 +289,33 @@ func TestKeyTypeString(t *testing.T) {
 
 func TestKeyTypeSetByString(t *testing.T) {
 	keyType := KeyTypeRSA
-	keyType.Set("rsa")
+	keyType.Set("rsa", "")
 	if keyType != KeyTypeRSA {
 		t.Fatalf("Unexpected string value was returned.  Expected: RSA Actual: %s", keyType.String())
 	}
-	keyType.Set("RSA")
+	keyType.Set("RSA", "")
 	if keyType != KeyTypeRSA {
 		t.Fatalf("Unexpected string value was returned.  Expected: RSA Actual: %s", keyType.String())
 	}
-	keyType.Set("ecdsa")
+	keyType.Set("ecdsa", "")
 	if keyType != KeyTypeECDSA {
 		t.Fatalf("Unexpected string value was returned.  Expected: ECDSA Actual: %s", keyType.String())
 	}
-	keyType.Set("ECDSA")
+	keyType.Set("ECDSA", "p384")
 	if keyType != KeyTypeECDSA {
 		t.Fatalf("Unexpected string value was returned.  Expected: ECDSA Actual: %s", keyType.String())
+	}
+	keyType.Set("ECDSA", "p384")
+	if keyType != KeyTypeECDSA {
+		t.Fatalf("Unexpected string value was returned.  Expected: ECDSA Actual: %s", keyType.String())
+	}
+	keyType.Set("EC", "p384")
+	if keyType != KeyTypeECDSA {
+		t.Fatalf("Unexpected string value was returned.  Expected: ECDSA Actual: %s", keyType.String())
+	}
+	keyType.Set("EC", "ed25519")
+	if keyType != KeyTypeED25519 {
+		t.Fatalf("Unexpected string value was returned.  Expected: ED25519 Actual: %s", keyType.String())
 	}
 }
 
@@ -524,6 +566,60 @@ func TestRequest_CheckCertificate(t *testing.T) {
 			}
 			if !c.valid && !strings.Contains(err.Error(), c.errorMessage) {
 				t.Fatalf("unexpected error '%s' (should conatins %s)", err.Error(), c.errorMessage)
+			}
+		})
+	}
+}
+
+func Test_NewRequest(t *testing.T) {
+	rsaPk, err := GenerateRSAPrivateKey(512)
+	if err != nil {
+		t.Fatalf("Error generating RSA Private Key\nError: %s", err)
+	}
+
+	ecdsaPk, err := GenerateECDSAPrivateKey(EllipticCurveP256)
+	if err != nil {
+		t.Fatalf("Error generating ECDSA Private Key\nError: %s", err)
+	}
+
+	ed25519Pk, err := GenerateED25519PrivateKey()
+	if err != nil {
+		t.Fatalf("Error generating ECDSA Private Key\nError: %s", err)
+	}
+
+	cases := []struct {
+		name        string
+		certificate *x509.Certificate
+		expRequest  Request
+	}{
+		{
+			name: "rsa key",
+			certificate: &x509.Certificate{
+				PublicKey: rsaPk.Public(),
+			},
+			expRequest: Request{KeyType: KeyTypeRSA, KeyLength: 512},
+		},
+		{
+			name: "ecdsa key",
+			certificate: &x509.Certificate{
+				PublicKey: ecdsaPk.Public(),
+			},
+			expRequest: Request{KeyType: KeyTypeECDSA, KeyCurve: EllipticCurveP256},
+		},
+		{
+			name: "ed25519 key",
+			certificate: &x509.Certificate{
+				PublicKey: ed25519Pk.Public(),
+			},
+			expRequest: Request{KeyType: KeyTypeED25519, KeyCurve: EllipticCurveED25519},
+		},
+	}
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			req := NewRequest(c.certificate)
+			if !reflect.DeepEqual(req, &c.expRequest) {
+				t.Fatalf("expected request to be %v, got %v", c.expRequest, req)
 			}
 		})
 	}
