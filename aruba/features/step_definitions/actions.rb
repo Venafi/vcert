@@ -52,11 +52,11 @@ When(/^I revoke(?: the)? certificate (?:from|in|using) (\S+)(?: using)?( the sam
 end
 
 # retire via PickupId
-When(/^I retire(?: the)? certificate (?:from|in|using) (\S+)(?: using)?( the same Pickup ID)?(?: with)?(.+)?$/) do |endpoint, same_pickup_id|
+When(/^I retire(?: the)? certificate (?:from|in|using) (\S+)(?: using)?( the same Pickup ID)?(?: with)?(.+)?$/) do |endpoint, same_pickup_id, flags|
   if same_pickup_id
     id_value = " -id '#{@pickup_id}'"
   end
-  cmd = "vcert retire #{ENDPOINTS[endpoint]}#{id_value}"
+  cmd = "vcert retire #{ENDPOINTS[endpoint]}#{id_value}#{flags}"
   steps %{Then I try to run `#{cmd}`}
 end
 

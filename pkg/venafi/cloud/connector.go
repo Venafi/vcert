@@ -1327,7 +1327,7 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 func (c *Connector) RetireCertificate(retireReq *certificate.RetireRequest) error {
 	url := c.getURL(urlResourceCertificatesRetirement)
 	/* 1st step is to get CertificateRequestId which is required to retire certificate */
-	var certificateID string
+	var certificateRequestId string
 	if retireReq.Thumbprint != "" {
 		// by Thumbprint (aka Fingerprint)
 		searchResult, err := c.searchCertificatesByFingerprint(retireReq.Thumbprint)
@@ -1342,23 +1342,34 @@ func (c *Connector) RetireCertificate(retireReq *certificate.RetireRequest) erro
 		isOnlyOneCertificateRequestId := true
 		for _, c := range searchResult.Certificates {
 			reqIds = append(reqIds, c.CertificateRequestId)
-			if certificateID != "" && certificateID != c.Id {
+			if certificateRequestId != "" && certificateRequestId != c.CertificateRequestId {
 				isOnlyOneCertificateRequestId = false
 			}
-			certificateID = c.Id
+			certificateRequestId = c.CertificateRequestId
 		}
 		if !isOnlyOneCertificateRequestId {
 			return fmt.Errorf("error: more than one CertificateRequestId was found with the same Fingerprint: %s", reqIds)
 		}
 	} else if retireReq.CertificateDN != "" {
 		// by CertificateDN (which is the same as CertificateRequestId for current implementation)
-		certificateID = retireReq.CertificateDN
+		certificateRequestId = retireReq.CertificateDN
 	} else {
 		return fmt.Errorf("failed to create retire request: CertificateDN or Thumbprint required")
 	}
 
+	/* 2nd step is to get ManagedCertificateId & ZoneId by looking up certificate request record */
+	previousRequest, err := c.getCertificateStatus(certificateRequestId)
+	if err != nil {
+		if strings.Contains(err.Error(), "Unable to find certificateRequest") {
+			return fmt.Errorf("Invalid thumbprint or certificate ID. No certificates were retired")
+		}
+		return fmt.Errorf("certificate retirement failed: error on getting Certificate ID: %s", err)
+	}
+	certificateId := previousRequest.CertificateIdsList[0]
+
+	/* Now we do retirement*/
 	retRequest := certificateRetireRequest{
-		CertificateIds: []string{certificateID},
+		CertificateIds: []string{certificateId},
 	}
 
 	statusCode, status, response, err := c.request("POST", url, retRequest)

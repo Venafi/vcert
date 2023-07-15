@@ -135,7 +135,7 @@ var (
 		Before: runBeforeCommand,
 		Name:   commandRetireName,
 		Flags:  retireFlags,
-		Action: doCommandRetire1,
+		Action: doCommandRetire,
 		Usage:  "To retire a certificate",
 		UsageText: ` vcert retire <Required Venafi as a Service -OR- Trust Protection Platform Config> <Options>
 		 vcert retire -u https://tpp.example.com -t <TPP access token> --id <ID value>
@@ -1050,8 +1050,8 @@ func doCommandRevoke1(c *cli.Context) error {
 	return nil
 }
 
-func doCommandRetire1(c *cli.Context) error {
-	err := validateRetireFlags1(c.Command.Name)
+func doCommandRetire(c *cli.Context) error {
+	err := validateRetireFlags(c.Command.Name)
 	if err != nil {
 		return err
 	}
@@ -1098,7 +1098,7 @@ func doCommandRetire1(c *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("Failed to retire certificate: %s", err)
 	}
-	logf("Successfully created retire request for %s", requestedFor)
+	logf("Successfully retired certificate for %s", requestedFor)
 
 	return nil
 }

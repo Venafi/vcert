@@ -80,7 +80,7 @@ func main() {
 		EnableBashCompletion: true, //todo: write BashComplete function for options
 		//HideHelp:             true,
 		Copyright: `2018-2022 Venafi, Inc.
-	  Licensed under the Apache License, Version 2.0`,
+     Licensed under the Apache License, Version 2.0`,
 	}
 
 	sort.Sort(cli.CommandsByName(app.Commands))

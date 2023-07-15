@@ -618,7 +618,7 @@ func validateRevokeFlags1(commandName string) error {
 	return nil
 }
 
-func validateRetireFlags1(commandName string) error {
+func validateRetireFlags(commandName string) error {
 
 	err := validateConnectionFlags(commandName)
 	if err != nil {
