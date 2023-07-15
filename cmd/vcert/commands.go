@@ -127,8 +127,8 @@ var (
 		Action: doCommandRenew1,
 		Usage:  "To renew a certificate",
 		UsageText: ` vcert renew <Required Venafi as a Service -OR- Trust Protection Platform Config> <Options>
-		 vcert renew -u https://tpp.example.com -t <TPP access token> --id <ID value>
-		 vcert renew -k <VaaS API key> --thumbprint <cert SHA1 fingerprint>`,
+        vcert renew -u https://tpp.example.com -t <TPP access token> --id <ID value>
+		vcert renew -k <VaaS API key> --thumbprint <cert SHA1 fingerprint>`,
 	}
 
 	commandRetire = &cli.Command{
@@ -149,8 +149,8 @@ var (
 		Action: doCommandCreatePolicy,
 		Usage:  "To apply a certificate policy specification to a zone",
 		UsageText: ` vcert setpolicy <Required Venafi as a Service -OR- Trust Protection Platform Config> <Options>
-		 vcert setpolicy -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --file /path-to/policy.spec
-		 vcert setpolicy -k <VaaS API key> -z "<app name>\<CIT alias>" --file /path-to/policy.spec`,
+        vcert setpolicy -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --file /path-to/policy.spec
+		vcert setpolicy -k <VaaS API key> -z "<app name>\<CIT alias>" --file /path-to/policy.spec`,
 	}
 
 	commandGetPolicy = &cli.Command{
@@ -160,8 +160,8 @@ var (
 		Action: doCommandGetPolicy,
 		Usage:  "To retrieve the certificate policy of a zone",
 		UsageText: ` vcert getpolicy <Required Venafi as a Service -OR- Trust Protection Platform Config> <Options>
-		 vcert getpolicy -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>"
-		 vcert getpolicy -k <VaaS API key> -z "<app name>\<CIT alias>"`,
+        vcert getpolicy -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>"
+		vcert getpolicy -k <VaaS API key> -z "<app name>\<CIT alias>"`,
 	}
 
 	commandSshPickup = &cli.Command{

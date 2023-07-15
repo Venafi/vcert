@@ -1533,8 +1533,8 @@ func TestRetireCertificateTwice(t *testing.T) {
 	t.Logf("Start retire for second time same cert with DN: %s", certDN)
 	retireReqSecond := &certificate.RetireRequest{CertificateDN: certDN}
 	err = tpp.RetireCertificate(retireReqSecond)
-	if err == nil {
-		t.Fatalf("It should NOT retire an already retired certificate at %s", certDN)
+	if err != nil {
+		t.Fatalf("%s", err)
 	}
 }
 

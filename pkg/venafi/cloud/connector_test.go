@@ -832,6 +832,78 @@ func TestRetireCertificate(t *testing.T) {
 	}
 }
 
+func TestRetireCertificateWithPickUpID(t *testing.T) {
+	conn := getTestConnector(ctx.CloudZone)
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	zoneConfig, err := conn.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	req := &certificate.Request{}
+	req.Subject.CommonName = test.RandCN()
+	req.Subject.Organization = []string{"Venafi, Inc."}
+	req.Subject.OrganizationalUnit = []string{"Automated Tests"}
+	err = conn.GenerateRequest(zoneConfig, req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	pickupID, err := conn.RequestCertificate(req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	retireReq := &certificate.RetireRequest{}
+	retireReq.CertificateDN = pickupID
+
+	err = conn.RetireCertificate(retireReq)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+}
+
+func TestRetireCertificateTwice(t *testing.T) {
+	conn := getTestConnector(ctx.CloudZone)
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	zoneConfig, err := conn.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	req := &certificate.Request{}
+	req.Subject.CommonName = test.RandCN()
+	req.Subject.Organization = []string{"Venafi, Inc."}
+	req.Subject.OrganizationalUnit = []string{"Automated Tests"}
+	err = conn.GenerateRequest(zoneConfig, req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	pickupID, err := conn.RequestCertificate(req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	retireReq := &certificate.RetireRequest{}
+	retireReq.CertificateDN = pickupID
+
+	err = conn.RetireCertificate(retireReq)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	t.Log("Trying to retire the certificate a second time")
+	retireReqSecond := &certificate.RetireRequest{}
+	retireReqSecond.CertificateDN = pickupID
+
+	err = conn.RetireCertificate(retireReqSecond)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+}
+
 func TestReadPolicyConfigurationOnlyEC(t *testing.T) {
 	// IMPORTANT NOTE: Now in VCert, we are treating ED25519 Keys, as per it's a different algorithm from ECDSA, as another
 	// type of key. This is conflicting with how VaaS handles EC Keys, as it considers ED25519 as another curve, which is
