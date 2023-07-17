@@ -23,8 +23,9 @@ import (
 	"sort"
 	"time"
 
-	"github.com/Venafi/vcert/v4"
 	"github.com/urfave/cli/v2"
+
+	"github.com/Venafi/vcert/v4"
 )
 
 var (
@@ -76,9 +77,10 @@ func main() {
 			commandSshPickup,
 			commandSshEnroll,
 			commandSshGetConfig,
+			commandRunPlaybook,
 		},
 		EnableBashCompletion: true, //todo: write BashComplete function for options
-		//HideHelp:             true,
+		Authors:              authors,
 		Copyright: `2018-2022 Venafi, Inc.
 	 Licensed under the Apache License, Version 2.0`,
 	}
@@ -86,23 +88,23 @@ func main() {
 	sort.Sort(cli.CommandsByName(app.Commands))
 
 	cli.AppHelpTemplate = fmt.Sprintf(`Venafi Certificate Utility
-   Version: %s
-   Build Timestamp: %s
+	Version: %s
+	Build Timestamp: %s
 
 USAGE:
-   {{.HelpName}} {{if .VisibleFlags}}[global options]{{end}}{{if .Commands}} command [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}[arguments...]{{end}}
-   {{if len .Authors}}
+	{{.HelpName}} {{if .VisibleFlags}}[global options]{{end}}{{if .Commands}} command [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}[arguments...]{{end}}
+{{if len .Authors}}
 AUTHOR:
-   {{range .Authors}}{{ . }}{{end}}
-   {{end}}{{if .Commands}}
+	{{range .Authors}}{{ . }}
+	{{end}}{{end}}{{if .Commands}}
 ACTIONS:
-
    gencsr       To generate a certificate signing request (CSR)
    enroll       To enroll a certificate
    pickup       To retrieve a certificate
    renew        To renew a certificate
-   revoke       To revoke a certificate
    retire       To retire a certificate
+   revoke       To revoke a certificate
+   run          To retrieve and install certificates using a vcert playbook file
 
    getpolicy    To retrieve the certificate policy of a zone
    setpolicy    To apply a certificate policy specification to a zone
@@ -120,10 +122,10 @@ OPTIONS:
    {{end}}
 COPYRIGHT:
    {{.Copyright}}
-   {{end}}{{if .Version}}
+{{end}}{{if .Version}}
 SUPPORT:
    opensource@venafi.com
-   {{end}}
+{{end}}
 `, vcert.GetFormattedVersionString(), vcert.GetFormatedBuildTimeStamp())
 
 	cli.CommandHelpTemplate = `NAME:
@@ -148,4 +150,23 @@ OPTIONS:
 		logger := log.New(os.Stderr, UtilityShortName+": ", log.LstdFlags)
 		logger.Panicf("%s", err)
 	}
+}
+
+var authors = []*cli.Author{
+	{
+		Name:  "Ryan Treat",
+		Email: "ryan.treat@venafi.com",
+	},
+	{
+		Name:  "Russel Vela",
+		Email: "russel.vela@venafi.com",
+	},
+	{
+		Name:  "Luis Presuel",
+		Email: "luis.presuel@venafi.com",
+	},
+	{
+		Name:  "Marcos Albornoz",
+		Email: "marcos.albornoz@venafi.com",
+	},
 }
