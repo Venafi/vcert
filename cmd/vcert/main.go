@@ -70,6 +70,7 @@ func main() {
 			commandPickup,
 			commandRenew,
 			commandRevoke,
+			commandRetire,
 			commandCreatePolicy,
 			commandGetPolicy,
 			commandSshPickup,
@@ -101,6 +102,7 @@ ACTIONS:
    pickup       To retrieve a certificate
    renew        To renew a certificate
    revoke       To revoke a certificate
+   retire       To retire a certificate
 
    getpolicy    To retrieve the certificate policy of a zone
    setpolicy    To apply a certificate policy specification to a zone

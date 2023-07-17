@@ -26,6 +26,7 @@ const (
 	commandPickupName       = "pickup"
 	commandRevokeName       = "revoke"
 	commandRenewName        = "renew"
+	commandRetireName       = "retire"
 	commandGetCredName      = "getcred"
 	commandCheckCredName    = "checkcred"
 	commandVoidCredName     = "voidcred"
