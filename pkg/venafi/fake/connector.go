@@ -338,6 +338,11 @@ func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (er
 	return fmt.Errorf("revocation is not supported in -test-mode")
 }
 
+// RetireCertificate attempts to retire the certificate
+func (c *Connector) RetireCertificate(revReq *certificate.RetireRequest) (err error) {
+	return fmt.Errorf("retire is not supported in -test-mode")
+}
+
 func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration, err error) {
 	config = endpoint.NewZoneConfiguration()
 	policy, err := c.ReadPolicyConfiguration()
@@ -393,4 +398,8 @@ func (c *Connector) SetHTTPClient(client *http.Client) {
 
 func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.CertificateInfo, error) {
 	return nil, nil
+}
+
+func (c *Connector) WriteLog(logReq *endpoint.LogRequest) (err error) {
+	return fmt.Errorf("Logging is not supported in -test-mode")
 }

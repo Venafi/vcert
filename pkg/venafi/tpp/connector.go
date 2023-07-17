@@ -1272,7 +1272,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 			return nil, fmt.Errorf("Failed to create renewal request: %s", err)
 		}
 		if len(searchResult.Certificates) == 0 {
-			return nil, fmt.Errorf("No certifiate found using fingerprint %s", req.Thumbprint)
+			return nil, fmt.Errorf("No certificate found using fingerprint %s", req.Thumbprint)
 		}
 		if len(searchResult.Certificates) > 1 {
 			return nil, fmt.Errorf("Error: more than one CertificateRequestId was found with the same thumbprint")
@@ -1384,7 +1384,7 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 			return "", fmt.Errorf("Failed to create renewal request: %s", err)
 		}
 		if len(searchResult.Certificates) == 0 {
-			return "", fmt.Errorf("No certifiate found using fingerprint %s", renewReq.Thumbprint)
+			return "", fmt.Errorf("No certificate found using fingerprint %s", renewReq.Thumbprint)
 		}
 		if len(searchResult.Certificates) > 1 {
 			return "", fmt.Errorf("Error: more than one CertificateRequestId was found with the same thumbprint")
@@ -1459,6 +1459,31 @@ func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (er
 		return fmt.Errorf("Revocation error: %s", revokeResponse.Error)
 	}
 	return
+}
+
+func (c *Connector) RetireCertificate(req *certificate.RetireRequest) (err error) {
+
+	if req.CertificateDN == "" && req.Thumbprint != "" {
+		// search cert by Thumbprint and fill pickupID
+		searchResult, err := c.searchCertificatesByFingerprint(req.Thumbprint)
+		if err != nil {
+			return fmt.Errorf("Failed to create retire request: %s", err)
+		}
+		if len(searchResult.Certificates) == 0 {
+			return fmt.Errorf("No certificate found using fingerprint %s", req.Thumbprint)
+		}
+		if len(searchResult.Certificates) > 1 {
+			return fmt.Errorf("Error: more than one CertificateRequestId was found with the same thumbprint")
+		}
+		req.CertificateDN = searchResult.Certificates[0].CertificateRequestId
+	} else if req.CertificateDN == "" && req.Thumbprint == "" {
+		return fmt.Errorf("failed to create retire request: CertificateDN or Thumbprint required")
+	}
+
+	retireSliceValuePair := []nameSliceValuePair{{Name: "Disabled", Value: []string{"1"}}}
+
+	err = c.putCertificateInfo(req.CertificateDN, retireSliceValuePair)
+	return err
 }
 
 var zoneNonFoundregexp = regexp.MustCompile("PolicyDN: .+ does not exist")
@@ -1645,6 +1670,19 @@ func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.
 
 func (c *Connector) SetHTTPClient(client *http.Client) {
 	c.client = client
+}
+
+func (c *Connector) WriteLog(logReq *endpoint.LogRequest) error {
+	statusCode, httpStatus, body, err := c.request("POST", urlResourceLog, logReq)
+	if err != nil {
+		return err
+	}
+
+	err = checkLogResponse(statusCode, httpStatus, body)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.CertificateInfo, error) {
@@ -2098,6 +2136,22 @@ func (c *Connector) RetrieveCertificateMetaData(dn string) (*certificate.Certifi
 
 	return data, nil
 
+}
+
+func checkLogResponse(httpStatusCode int, httpStatus string, body []byte) error {
+	switch httpStatusCode {
+	case http.StatusOK:
+		logData, err := parseLogResponse(body)
+		if err != nil {
+			return err
+		} else if logData.LogResult == 1 {
+			return fmt.Errorf("The Log Server failed to store the event in the event log")
+		} else {
+			return nil
+		}
+	default:
+		return fmt.Errorf("Unexpected status code on TPP Post Log request.\n Status:\n %s. \n Body:\n %s\n", httpStatus, body)
+	}
 }
 
 func parseDNToGUIDRequestResponse(httpStatusCode int, httpStatus string, body []byte) (*DNToGUIDResponse, error) {
