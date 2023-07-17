@@ -1271,7 +1271,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 			return nil, fmt.Errorf("Failed to create renewal request: %s", err)
 		}
 		if len(searchResult.Certificates) == 0 {
-			return nil, fmt.Errorf("No certifiate found using fingerprint %s", req.Thumbprint)
+			return nil, fmt.Errorf("No certificate found using fingerprint %s", req.Thumbprint)
 		}
 		if len(searchResult.Certificates) > 1 {
 			return nil, fmt.Errorf("Error: more than one CertificateRequestId was found with the same thumbprint")
@@ -1383,7 +1383,7 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 			return "", fmt.Errorf("Failed to create renewal request: %s", err)
 		}
 		if len(searchResult.Certificates) == 0 {
-			return "", fmt.Errorf("No certifiate found using fingerprint %s", renewReq.Thumbprint)
+			return "", fmt.Errorf("No certificate found using fingerprint %s", renewReq.Thumbprint)
 		}
 		if len(searchResult.Certificates) > 1 {
 			return "", fmt.Errorf("Error: more than one CertificateRequestId was found with the same thumbprint")

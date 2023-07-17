@@ -1221,7 +1221,7 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 			return "", fmt.Errorf("failed to create renewal request: %s", err)
 		}
 		if len(searchResult.Certificates) == 0 {
-			return "", fmt.Errorf("no certifiate found using fingerprint %s", renewReq.Thumbprint)
+			return "", fmt.Errorf("no certificate found using fingerprint %s", renewReq.Thumbprint)
 		}
 
 		var reqIds []string
@@ -1340,7 +1340,7 @@ func (c *Connector) RetireCertificate(retireReq *certificate.RetireRequest) erro
 			return fmt.Errorf("failed to create retire request: %s", err)
 		}
 		if len(searchResult.Certificates) == 0 {
-			return fmt.Errorf("no certifiate found using fingerprint %s", retireReq.Thumbprint)
+			return fmt.Errorf("no certificate found using fingerprint %s", retireReq.Thumbprint)
 		}
 
 		var reqIds []string
