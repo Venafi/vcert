@@ -800,7 +800,6 @@ func TestRetireCertificate(t *testing.T) {
 	pcc, _ := certificate.NewPEMCollection(nil, nil, nil)
 	startTime := time.Now()
 	for {
-
 		pcc, err = conn.RetrieveCertificate(req)
 		if err != nil {
 			_, ok := err.(endpoint.ErrCertificatePending)
@@ -819,13 +818,18 @@ func TestRetireCertificate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
+
 	p, _ := pem.Decode([]byte(pcc.Certificate))
 	cert, err := x509.ParseCertificate(p.Bytes)
 	retireReq := &certificate.RetireRequest{}
 	thumbprint := sha1.Sum(cert.Raw)
 	hexThumbprint := hex.EncodeToString((thumbprint[:]))
-	retireReq.Thumbprint = string(hexThumbprint)
+	retireReq.Thumbprint = hexThumbprint
 
+	// Letting VaaS some time to load certificate into inventory.
+	// VaaS may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
+	// or even stuck into it
+	time.Sleep(time.Duration(2) * time.Second)
 	err = conn.RetireCertificate(retireReq)
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -858,6 +862,10 @@ func TestRetireCertificateWithPickUpID(t *testing.T) {
 	retireReq := &certificate.RetireRequest{}
 	retireReq.CertificateDN = pickupID
 
+	// Letting VaaS some time to load certificate into inventory.
+	// VaaS may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
+	// or even stuck into it
+	time.Sleep(time.Duration(2) * time.Second)
 	err = conn.RetireCertificate(retireReq)
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -890,6 +898,10 @@ func TestRetireCertificateTwice(t *testing.T) {
 	retireReq := &certificate.RetireRequest{}
 	retireReq.CertificateDN = pickupID
 
+	// Letting VaaS some time to load certificate into inventory.
+	// VaaS may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
+	// or even stuck into it
+	time.Sleep(time.Duration(2) * time.Second)
 	err = conn.RetireCertificate(retireReq)
 	if err != nil {
 		t.Fatalf("%s", err)
