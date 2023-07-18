@@ -88,15 +88,15 @@ func main() {
 	sort.Sort(cli.CommandsByName(app.Commands))
 
 	cli.AppHelpTemplate = fmt.Sprintf(`Venafi Certificate Utility
-	Version: %s
-	Build Timestamp: %s
+   Version: %s
+   Build Timestamp: %s
 
 USAGE:
-	{{.HelpName}} {{if .VisibleFlags}}[global options]{{end}}{{if .Commands}} command [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}[arguments...]{{end}}
+   {{.HelpName}} {{if .VisibleFlags}}[global options]{{end}}{{if .Commands}} command [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}[arguments...]{{end}}
 {{if len .Authors}}
-AUTHOR:
-	{{range .Authors}}{{ . }}
-	{{end}}{{end}}{{if .Commands}}
+AUTHORS:
+   {{range .Authors}}{{ . }}
+   {{end}}{{end}}{{if .Commands}}
 ACTIONS:
    gencsr       To generate a certificate signing request (CSR)
    enroll       To enroll a certificate
