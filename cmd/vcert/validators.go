@@ -19,11 +19,13 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/util"
 	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/Venafi/vcert/v4/pkg/util"
+	"github.com/Venafi/vcert/v4/pkg/venafi"
 
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 )
@@ -122,7 +124,7 @@ func validateCommonFlags(commandName string) error {
 func validateConnectionFlags(commandName string) error {
 	if flags.config != "" {
 		if flags.apiKey != "" ||
-			flags.tppUser != "" ||
+			flags.userName != "" ||
 			flags.password != "" ||
 			flags.tppToken != "" ||
 			flags.url != "" ||
@@ -142,7 +144,7 @@ func validateConnectionFlags(commandName string) error {
 		if flags.testMode {
 			return nil
 		}
-		if flags.tppUser == "" && tppToken == "" {
+		if flags.userName == "" && tppToken == "" {
 			// should be SaaS endpoint
 			if commandName != "sshgetconfig" && flags.apiKey == "" && getPropertyFromEnvironment(vCertApiKey) == "" {
 				return fmt.Errorf("An API key is required for communicating with Venafi as a Service")
@@ -153,7 +155,7 @@ func validateConnectionFlags(commandName string) error {
 				return fmt.Errorf("missing -u (URL) parameter")
 			}
 			if flags.noPrompt && flags.password == "" && tppToken == "" {
-				return fmt.Errorf("An access token or password is required for communicating with Trust Protection Platform")
+				return fmt.Errorf("An access token or password is required for communicating with Trust Protection Platform or Firefly")
 			}
 
 			// mutual TLS with TPP service
@@ -281,7 +283,7 @@ func validateEnrollFlags(commandName string) error {
 			zone = getPropertyFromEnvironment(vCertZone)
 		}
 
-		if flags.tppUser == "" && tppToken == "" {
+		if flags.userName == "" && tppToken == "" {
 			// should be SaaS endpoint
 			if apiKey == "" {
 				return fmt.Errorf("An API key is required for enrollment with Venafi as a Service")
@@ -291,7 +293,7 @@ func validateEnrollFlags(commandName string) error {
 			}
 		} else {
 			// should be TPP service
-			if flags.tppUser == "" && tppToken == "" {
+			if flags.userName == "" && tppToken == "" {
 				return fmt.Errorf("An access token or username is required for communicating with Trust Protection Platform")
 			}
 			if flags.noPrompt && flags.password == "" && tppToken == "" {
@@ -334,7 +336,7 @@ func validateEnrollFlags(commandName string) error {
 		return err
 	}
 
-	if flags.tppUser != "" || flags.password != "" {
+	if flags.userName != "" || flags.password != "" {
 		logf("Warning: User\\Password authentication is deprecated, please use access token instead.")
 	}
 
@@ -377,7 +379,7 @@ func validateCredMgmtFlags1(commandName string) error {
 
 	if flags.config != "" {
 		if flags.apiKey != "" ||
-			flags.tppUser != "" ||
+			flags.userName != "" ||
 			flags.password != "" ||
 			tppTokenS != "" ||
 			flags.url != "" ||
@@ -404,18 +406,28 @@ func validateCredMgmtFlags1(commandName string) error {
 				getCredForVaaS = true
 			}
 
+			//TODO the platform validation should moved into an upper level to use it in other commands
+			if flags.platformString != "" {
+				flags.platform = venafi.GetPlatformType(flags.platformString)
+			}
+
 		} else {
 			if tppTokenS == "" {
 				return fmt.Errorf("missing -t (access token) parameter")
 			}
 		}
 
-		if flags.url == "" && getPropertyFromEnvironment(vCertURL) == "" && !getCredForVaaS {
+		//doing this validation if the platform was not set to Firefly
+		if flags.platform != venafi.Firefly && flags.url == "" && getPropertyFromEnvironment(vCertURL) == "" && !getCredForVaaS {
 			return fmt.Errorf("missing -u (URL) parameter")
 		}
 
-		if flags.noPrompt && flags.password == "" && tppTokenS == "" {
-			return fmt.Errorf("An access token or password is required for communicating with Trust Protection Platform")
+		if flags.platform == venafi.Firefly && flags.tokenURL == "" {
+			return fmt.Errorf("missing -token-url parameter")
+		}
+
+		if flags.noPrompt && flags.password == "" && tppTokenS == "" && flags.clientSecret == "" {
+			return fmt.Errorf("An access token or password or client secret is required for communicating with Trust Protection Platform or Firefly")
 		}
 
 		// mutual TLS with TPP service
@@ -479,7 +491,7 @@ func validateRenewFlags1(commandName string) error {
 	}
 
 	if flags.csrOption == "service" {
-		if !(flags.noPickup) && flags.noPrompt && len(flags.keyPassword) == 0 && (flags.tppUser != "" || flags.tppToken != "") {
+		if !(flags.noPickup) && flags.noPrompt && len(flags.keyPassword) == 0 && (flags.userName != "" || flags.tppToken != "") {
 			return fmt.Errorf("-key-password cannot be empty in -csr service mode for TPP unless -no-pickup specified")
 		}
 		if flags.commonName != "" ||
@@ -622,6 +634,12 @@ func validateOverWritingEnviromentVariables() {
 	colorYellow := "\033[33m"
 	colorReset := "\033[0m"
 
+	if getPropertyFromEnvironment(vCertPlatform) != "" {
+		if flags.platformString != "" {
+			logger.Println(colorYellow, "Warning Command line parameter -platformString has overridden environment variable VCERT_PLATFORM", colorReset)
+		}
+	}
+
 	if getPropertyFromEnvironment(vCertURL) != "" {
 		if flags.url != "" {
 			logger.Println(colorYellow, "Warning Command line parameter -u has overridden environment variable VCERT_URL", colorReset)
@@ -661,12 +679,12 @@ func validateOverWritingEnviromentVariables() {
 func validateGetPolicyFlags(commandName string) error {
 	isPolicyConfigStarter := flags.policyConfigStarter
 	if isPolicyConfigStarter {
-		if flags.tppUser != "" || flags.password != "" || flags.tppToken != "" || flags.apiKey != "" {
+		if flags.userName != "" || flags.password != "" || flags.tppToken != "" || flags.apiKey != "" {
 			return fmt.Errorf("starter flag and credentials are set, please remove credentials to be able to use starter flag")
 		}
 
 	} else {
-		if flags.tppUser != "" && flags.password != "" && flags.tppToken != "" && flags.apiKey != "" {
+		if flags.userName != "" && flags.password != "" && flags.tppToken != "" && flags.apiKey != "" {
 			return fmt.Errorf("credentials are required")
 		}
 
@@ -683,13 +701,13 @@ func validateSetPolicyFlags(commandName string) error {
 
 	if isVerifyPolicy {
 
-		if flags.tppUser != "" || flags.password != "" || flags.tppToken != "" || flags.apiKey != "" {
+		if flags.userName != "" || flags.password != "" || flags.tppToken != "" || flags.apiKey != "" {
 			return fmt.Errorf("starter flag and credentials are set, please remove credentials to be able to use starter flag")
 		}
 
 	} else {
 
-		if flags.tppUser != "" && flags.password != "" && flags.tppToken != "" && flags.apiKey != "" {
+		if flags.userName != "" && flags.password != "" && flags.tppToken != "" && flags.apiKey != "" {
 			return fmt.Errorf("credentials are required")
 		}
 

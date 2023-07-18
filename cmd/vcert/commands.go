@@ -22,9 +22,6 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/venafi/cloud"
-	"github.com/Venafi/vcert/v4/pkg/venafi/fake"
-	"github.com/Venafi/vcert/v4/pkg/venafi/tpp"
 	"io/ioutil"
 	"log"
 	"net"
@@ -33,6 +30,11 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Venafi/vcert/v4/pkg/venafi/cloud"
+	"github.com/Venafi/vcert/v4/pkg/venafi/fake"
+	"github.com/Venafi/vcert/v4/pkg/venafi/firefly"
+	"github.com/Venafi/vcert/v4/pkg/venafi/tpp"
 
 	"github.com/Venafi/vcert/v4/pkg/policy"
 	"github.com/Venafi/vcert/v4/pkg/util"
@@ -644,6 +646,7 @@ func doCommandCredMgmt1(c *cli.Context) error {
 	//getting the concrete connector
 	var vaasConnector *cloud.Connector
 	var tppConnector *tpp.Connector
+	var fireflyConnector *firefly.Connector
 	var okCasting bool
 
 	//trying to cast to cloud.Connector
@@ -653,13 +656,18 @@ func doCommandCredMgmt1(c *cli.Context) error {
 		//trying to cast to tpp.Connector
 		tppConnector, okCasting = connector.(*tpp.Connector)
 		if !okCasting { // if the connector is not a tpp.Connector
-			_, okCasting = connector.(*fake.Connector) //trying to cast to fake.Connector
 
-			// if the connector is a fake.Connector
-			if okCasting {
-				panic("operation is not supported yet")
-			} else { // if the connector is not a fake.Connector
-				panic("it was not possible to get a supported connector")
+			//trying to cast to firefly.Connector
+			fireflyConnector, okCasting = connector.(*firefly.Connector)
+			if !okCasting { // if the connector is not a firefly.Connector
+				_, okCasting = connector.(*fake.Connector) //trying to cast to fake.Connector
+
+				// if the connector is a fake.Connector
+				if okCasting {
+					panic("operation is not supported yet")
+				} else { // if the connector is not a fake.Connector
+					panic("it was not possible to get a supported connector")
+				}
 			}
 		}
 	}
@@ -668,8 +676,10 @@ func doCommandCredMgmt1(c *cli.Context) error {
 	case commandGetCredName:
 		if vaasConnector != nil {
 			return getVaaSCredentials(vaasConnector, &cfg)
-		} else {
+		} else if tppConnector != nil {
 			return getTppCredentials(tppConnector, &cfg, clientP12)
+		} else {
+			return getFireflyCredentials(fireflyConnector, &cfg)
 		}
 	case commandCheckCredName:
 		//TODO: quick workaround to supress logs when output is in JSON.
@@ -841,6 +851,31 @@ func getVaaSCredentials(vaasConnector *cloud.Connector, cfg *vcert.Config) error
 		}
 	} else {
 		return fmt.Errorf("failed to determine credentials set")
+	}
+
+	return nil
+}
+
+func getFireflyCredentials(fireflyConnector *firefly.Connector, cfg *vcert.Config) error {
+	//TODO: quick workaround to suppress logs when output is in JSON.
+	if flags.credFormat != "json" {
+		logf("Getting credentials...")
+	}
+
+	token, err := fireflyConnector.Authorize(cfg.Credentials)
+
+	if err != nil {
+		return err
+	}
+	if flags.credFormat == "json" {
+		if err := outputJSON(token); err != nil {
+			return err
+		}
+	} else {
+		fmt.Println("access_token: ", token.AccessToken)
+		fmt.Println("refresh_token: ", token.RefreshToken)
+		fmt.Println("token_type: ", token.TokenType)
+		fmt.Println("access_token_expires: ", token.Expiry)
 	}
 
 	return nil

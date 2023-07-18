@@ -18,6 +18,7 @@ package main
 
 import (
 	"github.com/Venafi/vcert/v4/pkg/certificate"
+	"github.com/Venafi/vcert/v4/pkg/venafi"
 )
 
 const (
@@ -48,6 +49,7 @@ type commandFlags struct {
 	chainFile            string
 	chainOption          string
 	clientId             string
+	clientSecret         string
 	clientP12            string
 	clientP12PW          string
 	commonName           string
@@ -65,6 +67,7 @@ type commandFlags struct {
 	insecure             bool
 	instance             string
 	ipSans               ipSlice
+	issuer               string
 	jksAlias             string
 	jksPassword          string
 	keyCurve             certificate.EllipticCurve
@@ -97,17 +100,20 @@ type commandFlags struct {
 	email                string
 	password             string
 	tppToken             string
-	tppUser              string
+	userName             string
 	trustBundle          string
 	upnSans              rfc822NameSlice
 	uriSans              uriSlice
 	url                  string
+	tokenURL             string
 	verbose              bool
 	zone                 string
 	omitSans             bool
 	csrFormat            string
 	credFormat           string
 	validDays            string
+	platformString       string
+	platform             venafi.PlatformType
 	policyName           string
 	policySpecLocation   string
 	policyConfigStarter  bool

@@ -43,8 +43,9 @@ import (
 )
 
 const (
-	vCertURL  = "VCERT_URL"
-	vCertZone = "VCERT_ZONE"
+	vCertPlatform = "VCERT_PLATFORM"
+	vCertURL      = "VCERT_URL"
+	vCertZone     = "VCERT_ZONE"
 	/* #nosec */
 	vCertToken = "VCERT_TOKEN"
 	/* #nosec */
@@ -628,7 +629,7 @@ func getUserParameterProvidedForGetCred() (string, error) {
 	}
 
 	identityParameters := map[string]bool{
-		flagTPPUser.Name:   flags.tppUser != "",
+		flagUser.Name:      flags.userName != "",
 		flagTPPToken.Name:  tppTokenS != "",
 		flagClientP12.Name: flags.clientP12 != "",
 		flagEmail.Name:     flags.email != "",

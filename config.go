@@ -45,7 +45,7 @@ type Config struct {
 	Client *http.Client
 }
 
-// LoadConfigFromFile is deprecated. In the future will be rewrited.
+// LoadConfigFromFile is deprecated. In the future will be rewritten.
 func LoadConfigFromFile(path, section string) (cfg Config, err error) {
 
 	if section == "" {

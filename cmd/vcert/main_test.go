@@ -267,7 +267,7 @@ func TestValidateFlagsForTPPMissingData(t *testing.T) {
 	flags = commandFlags{}
 
 	flags.url = "https://localhost/vedsdk"
-	flags.tppUser = ""
+	flags.userName = ""
 
 	err := validateEnrollFlags(commandEnrollName)
 	if err == nil {
@@ -275,7 +275,7 @@ func TestValidateFlagsForTPPMissingData(t *testing.T) {
 	}
 
 	flags.url = "https://localhost/vedsdk"
-	flags.tppUser = "admin"
+	flags.userName = "admin"
 	flags.password = "xxxx"
 	flags.noPrompt = true
 	flags.zone = "Test Policy"
@@ -288,7 +288,7 @@ func TestValidateFlagsForTPPMissingData(t *testing.T) {
 	}
 
 	flags.url = "https://localhost/vedsdk"
-	flags.tppUser = "admin"
+	flags.userName = "admin"
 	flags.noPrompt = true
 	flags.commonName = "test"
 	flags.zone = "Test"
@@ -301,7 +301,7 @@ func TestValidateFlagsForTPPMissingData(t *testing.T) {
 	flags = commandFlags{}
 
 	flags.url = "https://localhost/vedsdk"
-	flags.tppUser = "admin"
+	flags.userName = "admin"
 	flags.password = "secret"
 	flags.commonName = "test"
 	flags.noPickup = true

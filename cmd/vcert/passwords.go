@@ -39,8 +39,8 @@ func readPasswordsFromInputFlags(commandName string, cf *commandFlags) error {
 				return err
 			}
 			cf.clientP12PW = string(input)
-		} else if cf.password == "" && !cf.noPrompt && cf.tppToken == "" && cf.tppUser != "" {
-			fmt.Printf("Enter password for %s:", cf.tppUser)
+		} else if cf.password == "" && !cf.noPrompt && cf.tppToken == "" && cf.userName != "" {
+			fmt.Printf("Enter password for %s:", cf.userName)
 			input, err := gopass.GetPasswdMasked()
 			if err != nil {
 				return err

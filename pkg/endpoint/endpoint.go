@@ -49,6 +49,8 @@ const (
 	ConnectorTypeCloud
 	// ConnectorTypeTPP represents the TPP connector type
 	ConnectorTypeTPP
+	// ConnectorTypeFirefly represents the Firefly connector type
+	ConnectorTypeFirefly
 )
 
 func init() {
@@ -66,6 +68,8 @@ func (t ConnectorType) String() string {
 		return "Venafi as a Service"
 	case ConnectorTypeTPP:
 		return "Trust Protection Platform"
+	case ConnectorTypeFirefly:
+		return "Firefly"
 	default:
 		return fmt.Sprintf("unexpected connector type: %d", t)
 	}
@@ -133,7 +137,8 @@ type Filter struct {
 	WithExpired bool
 }
 
-// Authentication provides a struct for authentication data. Either specify User and Password for Trust Platform or specify an APIKey for Cloud.
+// Authentication provides a struct for authentication data. Either specify User and Password for Trust Protection Platform
+// or Firefly or ClientId and ClientSecret for Firefly or specify an APIKey for TLS Protect Cloud.
 type Authentication struct {
 	User         string
 	Password     string
@@ -141,8 +146,18 @@ type Authentication struct {
 	RefreshToken string
 	Scope        string
 	ClientId     string
+	ClientSecret string
 	AccessToken  string
 	ClientPKCS12 bool
+	// IdentityProvider specify the OAuth 2.0 which VCert will be working for authorization purposes
+	IdentityProvider *OAuthProvider
+}
+
+// OAuthProvider provides a struct for the OAuth 2.0 providers information
+type OAuthProvider struct {
+	OAuthProviderType string
+	AuthURL           string
+	TokenURL          string
 }
 
 // todo: replace with verror

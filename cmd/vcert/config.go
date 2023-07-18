@@ -22,6 +22,7 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/Venafi/vcert/v4/pkg/venafi"
 	"github.com/urfave/cli/v2"
 
 	"github.com/Venafi/vcert/v4"
@@ -42,8 +43,9 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 		var connectorType endpoint.ConnectorType
 		var baseURL string
 		var auth = &endpoint.Authentication{}
+		var identityProvider = &endpoint.OAuthProvider{}
 
-		//case when access token can come from enviroment variable.
+		//case when access token can come from environment variable.
 		tppTokenS := flags.tppToken
 
 		if tppTokenS == "" {
@@ -60,15 +62,20 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 					time.Sleep(1 * time.Second)
 				}
 			}
-		} else if flags.tppUser != "" || tppTokenS != "" || flags.clientP12 != "" || c.Command.Name == "sshgetconfig" {
-			connectorType = endpoint.ConnectorTypeTPP
+		} else if flags.platform == venafi.Firefly || (flags.userName != "" || tppTokenS != "" || flags.clientP12 != "" || c.Command.Name == "sshgetconfig") {
 
-			//add support for using enviroment variables begins
+			if flags.platform == venafi.Firefly {
+				connectorType = endpoint.ConnectorTypeFirefly
+			} else {
+				connectorType = endpoint.ConnectorTypeTPP
+			}
+
+			//add support for using environment variables begins
 			baseURL = flags.url
 			if baseURL == "" {
 				baseURL = getPropertyFromEnvironment(vCertURL)
 			}
-			//add support for using enviroment variables ends
+			//add support for using environment variables ends
 
 			if tppTokenS == "" && flags.password == "" && flags.clientP12 == "" && c.Command.Name != "sshgetconfig" {
 				return cfg, fmt.Errorf("A password is required to communicate with TPP")
@@ -80,8 +87,8 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 				} else {
 					auth.AccessToken = flags.tppToken
 				}
-			} else if flags.tppUser != "" && flags.password != "" {
-				auth.User = flags.tppUser
+			} else if flags.userName != "" && flags.password != "" {
+				auth.User = flags.userName
 				auth.Password = flags.password
 			} else {
 				tokenS := getPropertyFromEnvironment(vCertToken)
@@ -92,6 +99,13 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 						auth.AccessToken = tokenS
 					}
 				}
+			}
+
+			if flags.platform == venafi.Firefly && c.Command.Name == commandGetCredName {
+				auth.ClientId = flags.clientId
+				auth.ClientSecret = flags.clientSecret
+				identityProvider.TokenURL = flags.tokenURL
+				auth.IdentityProvider = identityProvider
 			}
 		} else {
 			apiKey := flags.apiKey
