@@ -779,11 +779,12 @@ func (e *ErrCertNotFound) Unwrap() error {
 }
 
 func IsCertNotFound(err error) bool {
-	return errors.Is(err, &ErrCertNotFound{})
+	notFoundErr := &ErrCertNotFound{}
+	return errors.As(err, &notFoundErr)
 }
 
 // This function is idempotent, i.e., it won't fail if there is nothing to be
-// reset. It returns an error of type *errCertNotFound if the certificate is not
+// reset. It returns an error of type *ErrCertNotFound if the certificate is not
 // found.
 func (c *Connector) ResetCertificate(req *certificate.Request, restart bool) (err error) {
 	certificateDN := getCertificateDN(c.zone, req.FriendlyName, req.Subject.CommonName)

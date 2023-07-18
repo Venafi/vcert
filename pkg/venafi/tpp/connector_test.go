@@ -684,8 +684,7 @@ func TestResetCertificate(t *testing.T) {
 
 			err = tpp.ResetCertificate(tt.request, false)
 			if tt.expCertNotFoundErr {
-				errType := &ErrCertNotFound{}
-				if err == nil || !errors.As(err, &errType) {
+				if err == nil || !IsCertNotFound(err) {
 					t.Errorf("expected error of type %T but got %T", &ErrCertNotFound{}, err)
 				}
 			}
