@@ -67,7 +67,6 @@ type commandFlags struct {
 	insecure             bool
 	instance             string
 	ipSans               ipSlice
-	issuer               string
 	jksAlias             string
 	jksPassword          string
 	keyCurve             certificate.EllipticCurve

@@ -199,7 +199,7 @@ func (c *Connector) Authorize(auth *endpoint.Authentication) (token *oauth2.Toke
 		config := oauth2.Config{
 			ClientID:     auth.ClientId,
 			ClientSecret: auth.ClientSecret,
-			Scopes:       []string{"all"},
+			Scopes:       strings.Split(auth.Scope, " "),
 			//RedirectURL:  "http://localhost:9094/oauth2",
 			// This points to our Authorization Server
 			// if our Client ID and Client Secret are valid
@@ -219,6 +219,7 @@ func (c *Connector) Authorize(auth *endpoint.Authentication) (token *oauth2.Toke
 			ClientID:     auth.ClientId,
 			ClientSecret: auth.ClientSecret,
 			TokenURL:     auth.IdentityProvider.TokenURL,
+			Scopes:       strings.Split(auth.Scope, " "),
 		}
 
 		return config.Token(context.Background())
