@@ -12,7 +12,6 @@ import (
 	vreq "github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
 	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain"
-	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain/certrequest"
 	"github.com/Venafi/vcert/v4/pkg/util"
 	"github.com/Venafi/vcert/v4/pkg/venafi/tpp"
 )
@@ -20,7 +19,7 @@ import (
 // EnrollCertificate takes a Request object and requests a certificate to the Venafi platform defined by config.
 //
 // Then it retrieves the certificate and returns it along with the certificate chain and the private key used.
-func EnrollCertificate(config domain.Config, request certrequest.Request) (*vreq.PEMCollection, *vreq.Request, error) {
+func EnrollCertificate(config domain.Config, request domain.PlaybookRequest) (*vreq.PEMCollection, *vreq.Request, error) {
 	client, err := buildClient(config, request.Zone)
 	if err != nil {
 		return nil, nil, err
@@ -81,7 +80,7 @@ func buildClient(config domain.Config, zone string) (endpoint.Connector, error) 
 	return client, nil
 }
 
-func buildRequest(request certrequest.Request) vreq.Request {
+func buildRequest(request domain.PlaybookRequest) vreq.Request {
 
 	vcertRequest := vreq.Request{
 		CADN: request.CADN,
@@ -100,15 +99,15 @@ func buildRequest(request certrequest.Request) vreq.Request {
 		URIs:            getURIs(request.URIs),
 		UPNs:            request.UPNs,
 		FriendlyName:    request.FriendlyName,
-		CsrOrigin:       request.CsrOrigin.ToVCert(),
-		ChainOption:     request.ChainOption.ToVCert(),
+		CsrOrigin:       request.CsrOrigin,
+		ChainOption:     request.ChainOption,
 		KeyPassword:     request.KeyPassword,
 		FetchPrivateKey: request.FetchPrivateKey,
-		CustomFields:    request.CustomFields.ToVCert(),
-
-		Location: request.Location.ToVCert(),
+		CustomFields:    request.CustomFields,
 	}
 
+	//Set Location
+	setLocationWorkload(request, &vcertRequest)
 	//Set KeyType
 	setKeyType(request, &vcertRequest)
 	//Set Origin

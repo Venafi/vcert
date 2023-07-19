@@ -3,18 +3,16 @@ package domain
 import (
 	"errors"
 	"fmt"
-
-	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain/certrequest"
 )
 
 // CertificateTask represents a task to be run:
 // A certificate to be requested/renewed and installed in one (or more) location(s)
 type CertificateTask struct {
-	Name          string              `yaml:"name,omitempty"`
-	Request       certrequest.Request `yaml:"request,omitempty"`
-	Installations Installations       `yaml:"installations,omitempty"`
-	RenewBefore   string              `yaml:"renewBefore,omitempty"`
-	SetEnvVars    []string            `yaml:"setenvvars,omitempty"`
+	Name          string          `yaml:"name,omitempty"`
+	Request       PlaybookRequest `yaml:"request,omitempty"`
+	Installations Installations   `yaml:"installations,omitempty"`
+	RenewBefore   string          `yaml:"renewBefore,omitempty"`
+	SetEnvVars    []string        `yaml:"setenvvars,omitempty"`
 }
 
 // CertificateTasks is a slice of CertificateTask

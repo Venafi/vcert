@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain"
-	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain/certrequest"
 )
 
 type ServiceSuite struct {
@@ -27,10 +27,10 @@ type ServiceSuite struct {
 
 func (s *ServiceSuite) SetupTest() {
 
-	request := certrequest.Request{
+	request := domain.PlaybookRequest{
 		CADN:            "",
-		ChainOption:     certrequest.ChainOptionRootLast,
-		CsrOrigin:       certrequest.CSRServiceGenerated,
+		ChainOption:     certificate.ChainOptionRootLast,
+		CsrOrigin:       certificate.ServiceGeneratedCSR,
 		CustomFields:    nil,
 		DNSNames:        nil,
 		EmailAddresses:  nil,
@@ -38,14 +38,14 @@ func (s *ServiceSuite) SetupTest() {
 		FriendlyName:    "",
 		IPAddresses:     nil,
 		IssuerHint:      "",
-		KeyCurve:        certrequest.EccUnknown,
+		KeyCurve:        certificate.EllipticCurveNotSet,
 		KeyLength:       2048,
 		KeyPassword:     "foobar123",
-		KeyType:         certrequest.KeyTypeRSA,
-		Location:        certrequest.Location{},
+		KeyType:         certificate.KeyTypeRSA,
+		Location:        certificate.Location{},
 		OmitSANs:        false,
 		Origin:          "",
-		Subject: certrequest.Subject{
+		Subject: domain.Subject{
 			CommonName:   "foo.bar.rvela.com",
 			Country:      "US",
 			Locality:     "Salt Lake City",

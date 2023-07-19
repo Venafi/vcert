@@ -1,4 +1,4 @@
-package certrequest
+package domain
 
 // Subject represents the X.509 distinguished names of the certificate.
 // This only includes the common elements of a DN

@@ -1,10 +1,9 @@
-package certrequest
+package certificate
 
 import (
 	"fmt"
 	"testing"
 
-	vcert "github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/yaml.v3"
 )
@@ -13,23 +12,20 @@ type EllipticCurveSuite struct {
 	suite.Suite
 	testYaml  string
 	testCases []struct {
-		keyCurve   EllipticCurve
-		strValue   string
-		vcertValue vcert.EllipticCurve
+		keyCurve EllipticCurve
+		strValue string
 	}
 }
 
 func (s *EllipticCurveSuite) SetupTest() {
 	s.testCases = []struct {
-		keyCurve   EllipticCurve
-		strValue   string
-		vcertValue vcert.EllipticCurve
+		keyCurve EllipticCurve
+		strValue string
 	}{
-		{keyCurve: EccP256, strValue: strEccP256, vcertValue: vcert.EllipticCurveP256},
-		{keyCurve: EccP384, strValue: strEccP384, vcertValue: vcert.EllipticCurveP384},
-		{keyCurve: EccP521, strValue: strEccP521, vcertValue: vcert.EllipticCurveP521},
-		{keyCurve: EccED25519, strValue: strEccED25519, vcertValue: vcert.EllipticCurveED25519},
-		{keyCurve: EccUnknown, strValue: strEccUnknown, vcertValue: vcert.EllipticCurveDefault},
+		{keyCurve: EllipticCurveP256, strValue: strEccP256},
+		{keyCurve: EllipticCurveP384, strValue: strEccP384},
+		{keyCurve: EllipticCurveP521, strValue: strEccP521},
+		{keyCurve: EllipticCurveED25519, strValue: strEccED25519},
 	}
 
 	s.testYaml = `---
@@ -61,24 +57,18 @@ func (s *EllipticCurveSuite) TestEllipticCurve_String() {
 	}
 }
 
-func (s *EllipticCurveSuite) TestEllipticCurve_ToVCert() {
-	for _, tc := range s.testCases {
-		s.Run(tc.strValue, func() {
-			vcertEcc := tc.keyCurve.ToVCert()
-			s.Equal(tc.vcertValue, vcertEcc)
-		})
-	}
-}
-
 func (s *EllipticCurveSuite) TestEllipticCurve_UnmarshalYAML() {
 	for _, tc := range s.testCases {
 		s.Run(tc.strValue, func() {
-			var r Request
+			result := struct {
+				Cn       string        `yaml:"cn"`
+				KeyCurve EllipticCurve `yaml:"keyCurve"`
+			}{}
 			parsedYaml := fmt.Sprintf(s.testYaml, tc.strValue)
-			err := yaml.Unmarshal([]byte(parsedYaml), &r)
+			err := yaml.Unmarshal([]byte(parsedYaml), &result)
 
 			s.Nil(err)
-			s.Equal(tc.keyCurve, r.KeyCurve)
+			s.Equal(tc.keyCurve, result.KeyCurve)
 		})
 	}
 }

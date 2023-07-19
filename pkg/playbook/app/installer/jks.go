@@ -13,7 +13,6 @@ import (
 
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain"
-	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain/certrequest"
 	"github.com/Venafi/vcert/v4/pkg/playbook/util"
 )
 
@@ -31,7 +30,7 @@ func NewJKSInstaller(inst domain.Installation) JKSInstaller {
 // 1. Does the certificate exists? > Install if it doesn't.
 // 2. Does the certificate is about to expire? Renew if about to expire.
 // Returns true if the certificate needs to be installed.
-func (r JKSInstaller) Check(_ string, renewBefore string, request certrequest.Request) (bool, error) {
+func (r JKSInstaller) Check(_ string, renewBefore string, request domain.PlaybookRequest) (bool, error) {
 	zap.L().Debug(fmt.Sprintf("checking certificate at: %s", r.Location))
 
 	// Check certificate file exists

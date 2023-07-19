@@ -7,8 +7,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain"
-	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain/certrequest"
 )
 
 type WriterSuite struct {
@@ -21,20 +21,20 @@ func (s *WriterSuite) SetupTest() {
 		CertificateTasks: domain.CertificateTasks{
 			{
 				Name: "testTask",
-				Request: certrequest.Request{
-					ChainOption: certrequest.ChainOptionRootFirst,
-					CsrOrigin:   certrequest.CSRServiceGenerated,
-					CustomFields: certrequest.CustomFields{
+				Request: domain.PlaybookRequest{
+					ChainOption: certificate.ChainOptionRootFirst,
+					CsrOrigin:   certificate.ServiceGeneratedCSR,
+					CustomFields: []certificate.CustomField{
 						{
-							Type:  certrequest.CFTypeOrigin,
+							Type:  certificate.CustomFieldOrigin,
 							Name:  fmt.Sprintf("cf_%s", RandomString(5)),
 							Value: RandomString(10),
 						},
 					},
-					KeyCurve:    certrequest.EccP521,
+					KeyCurve:    certificate.EllipticCurveP521,
 					KeyPassword: "newPassword!",
-					KeyType:     certrequest.KeyTypeRSA,
-					Subject: certrequest.Subject{
+					KeyType:     certificate.KeyTypeRSA,
+					Subject: domain.Subject{
 						CommonName:   "foo.bar.123.venafi.com",
 						Country:      "US",
 						Locality:     "Salt Lake City",

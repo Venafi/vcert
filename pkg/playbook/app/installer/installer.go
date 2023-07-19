@@ -2,7 +2,7 @@ package installer
 
 import (
 	"github.com/Venafi/vcert/v4/pkg/certificate"
-	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain/certrequest"
+	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain"
 )
 
 // Installer represents the interface for all installers.
@@ -12,7 +12,7 @@ type Installer interface {
 	// 1. Does the certificate exists? > Install if it doesn't.
 	// 2. Does the certificate is about to expire? Renew if about to expire.
 	// Returns true if the certificate needs to be installed.
-	Check(certFile string, renewBefore string, request certrequest.Request) (bool, error)
+	Check(certFile string, renewBefore string, request domain.PlaybookRequest) (bool, error)
 
 	// Prepare takes the certificate, chain and private key and converts them to the specific format required for the installer
 	Prepare(request certificate.Request, pcc certificate.PEMCollection) (*certificate.PEMCollection, error)

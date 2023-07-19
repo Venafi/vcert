@@ -10,11 +10,12 @@ import (
 	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain"
 	"github.com/Venafi/vcert/v4/pkg/playbook/app/parser"
 	"github.com/Venafi/vcert/v4/pkg/playbook/app/service"
-	"github.com/Venafi/vcert/v4/pkg/playbook/options"
 	"github.com/Venafi/vcert/v4/pkg/playbook/util"
 )
 
-const commandRunPlaybookName = "run"
+const (
+	commandRunPlaybookName = "run"
+)
 
 var commandRunPlaybook = &cli.Command{
 	Name: commandRunPlaybookName,
@@ -22,7 +23,6 @@ var commandRunPlaybook = &cli.Command{
 	install them as either CAPI, JKS, PEM, or PKCS#12, run after-install operations 
 	(script, command-line instruction, etc.), and monitor certificate(s) for renewal 
 	on subsequent runs.`,
-	//"Retrieve and install certificates using a vcert playbook file",
 	UsageText: `vcert run
    vcert run -f /path/to/my/file.yml
    vcert run -f ./myFile.yaml --force-renew
@@ -31,17 +31,31 @@ var commandRunPlaybook = &cli.Command{
 	Flags:  playbookFlags,
 }
 
+type runOptions struct {
+	debug    bool
+	filepath string
+	force    bool
+}
+
 var (
-	playbookOptions options.RunOptions
-	globalOptions   options.GlobalOptions
+	playbookOptions = runOptions{}
+
+	PBFlagDebug = &cli.BoolFlag{
+		Name:        "debug",
+		Aliases:     []string{"d"},
+		Usage:       "Enables debug log messages",
+		Required:    false,
+		Value:       false,
+		Destination: &playbookOptions.debug,
+	}
 
 	PBFlagFilepath = &cli.StringFlag{
 		Name:        "file",
 		Aliases:     []string{"f"},
 		Usage:       "the path to the playbook file to be run",
 		Required:    true,
-		Value:       options.DefaultFilepath,
-		Destination: &playbookOptions.Filepath,
+		Value:       domain.DefaultFilepath,
+		Destination: &playbookOptions.filepath,
 	}
 
 	PBFlagForce = &cli.BoolFlag{
@@ -50,34 +64,25 @@ var (
 		Usage:       "forces certificate renewal regardless of expiration date or renew window",
 		Required:    false,
 		Value:       false,
-		Destination: &playbookOptions.Force,
-	}
-
-	PBFlagDebug = &cli.BoolFlag{
-		Name:        "debug",
-		Aliases:     []string{"d"},
-		Usage:       "Enables debug log messages",
-		Required:    false,
-		Value:       false,
-		Destination: &globalOptions.Debug,
+		Destination: &playbookOptions.force,
 	}
 
 	playbookFlags = flagsApppend(
+		PBFlagDebug,
 		PBFlagFilepath,
 		PBFlagForce,
-		PBFlagDebug,
 	)
 )
 
 func doRunPlaybook(c *cli.Context) error {
-	err := util.ConfigureLogger(globalOptions.Debug)
+	err := util.ConfigureLogger(playbookOptions.debug)
 	if err != nil {
 		return err
 	}
-	zap.L().Info(fmt.Sprintf("running with playbook file at %s", playbookOptions.Filepath))
+	zap.L().Info(fmt.Sprintf("running with playbook file at %s", playbookOptions.filepath))
 	zap.L().Debug("debug is enabled")
 
-	playbook, err := parser.ReadPlaybook(playbookOptions.Filepath)
+	playbook, err := parser.ReadPlaybook(playbookOptions.filepath)
 	if err != nil {
 		zap.L().Error(fmt.Errorf("%w", err).Error())
 		os.Exit(1)
@@ -85,12 +90,12 @@ func doRunPlaybook(c *cli.Context) error {
 
 	_, err = playbook.IsValid()
 	if err != nil {
-		zap.L().Error(fmt.Errorf("playbook '%v' is invalid: \n%w", playbookOptions.Filepath, err).Error())
+		zap.L().Error(fmt.Errorf("playbook '%v' is invalid: \n%w", playbookOptions.filepath, err).Error())
 		os.Exit(1)
 	}
 
 	//Set the forceRenew variable
-	playbook.Config.ForceRenew = playbookOptions.Force
+	playbook.Config.ForceRenew = playbookOptions.force
 
 	if len(playbook.CertificateTasks) == 0 {
 		zap.L().Info("no tasks in the playbook. Nothing to do")

@@ -8,10 +8,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain"
 	"go.uber.org/zap"
 
 	vreq "github.com/Venafi/vcert/v4/pkg/certificate"
-	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain/certrequest"
 	"github.com/Venafi/vcert/v4/pkg/util"
 )
 
@@ -58,25 +58,28 @@ func getURIs(uris []string) []*url.URL {
 	return urls
 }
 
-func setKeyType(request certrequest.Request, vcertRequest *vreq.Request) {
+func setKeyType(request domain.PlaybookRequest, vcertRequest *vreq.Request) {
 	switch request.KeyType {
-	case certrequest.KeyTypeRSA:
-		vcertRequest.KeyType = request.KeyType.ToVCert()
+	case vreq.KeyTypeRSA:
+		vcertRequest.KeyType = request.KeyType
 		if request.KeyLength <= 0 {
 			vcertRequest.KeyLength = DefaultRSALength
 		} else {
 			vcertRequest.KeyLength = request.KeyLength
 		}
-	case certrequest.KeyTypeECDSA:
-		vcertRequest.KeyType = request.KeyType.ToVCert()
-		vcertRequest.KeyCurve = request.KeyCurve.ToVCert()
+	case vreq.KeyTypeECDSA:
+		vcertRequest.KeyType = request.KeyType
+		vcertRequest.KeyCurve = request.KeyCurve
+	case vreq.KeyTypeED25519:
+		vcertRequest.KeyType = request.KeyType
+		vcertRequest.KeyCurve = vreq.EllipticCurveED25519
 	default:
 		vcertRequest.KeyType = vreq.KeyTypeRSA
 		vcertRequest.KeyLength = DefaultRSALength
 	}
 }
 
-func setOrigin(request certrequest.Request, vcertRequest *vreq.Request) {
+func setOrigin(request domain.PlaybookRequest, vcertRequest *vreq.Request) {
 	origin := OriginName
 	if request.Origin != "" {
 		origin = request.Origin
@@ -114,4 +117,25 @@ func setValidity(validDays string, vcertRequest *vreq.Request) {
 		}
 	}
 	vcertRequest.IssuerHint = issuerHint
+}
+
+func setLocationWorkload(playbookRequest domain.PlaybookRequest, vcertRequest *vreq.Request) {
+	if playbookRequest.Location.Instance == "" {
+		return
+	}
+
+	segments := strings.Split(playbookRequest.Location.Instance, ":")
+	instance := segments[0]
+	workload := ""
+	if len(segments) > 1 {
+		workload = segments[1]
+	}
+
+	newLocation := vreq.Location{
+		Instance:   instance,
+		Workload:   workload,
+		TLSAddress: playbookRequest.Location.TLSAddress,
+		Replace:    playbookRequest.Location.Replace,
+	}
+	vcertRequest.Location = &newLocation
 }

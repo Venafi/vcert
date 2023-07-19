@@ -1,10 +1,9 @@
-package certrequest
+package certificate
 
 import (
 	"fmt"
 	"testing"
 
-	vcert "github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/yaml.v3"
 )
@@ -15,7 +14,7 @@ type CustomFieldTypeSuite struct {
 	testCases []struct {
 		customFieldType CustomFieldType
 		strValue        string
-		vcertValue      vcert.CustomFieldType
+		vcertValue      CustomFieldType
 	}
 }
 
@@ -23,11 +22,11 @@ func (s *CustomFieldTypeSuite) SetupTest() {
 	s.testCases = []struct {
 		customFieldType CustomFieldType
 		strValue        string
-		vcertValue      vcert.CustomFieldType
+		vcertValue      CustomFieldType
 	}{
-		{customFieldType: CFTypePlain, strValue: strCFTypePlain, vcertValue: vcert.CustomFieldPlain},
-		{customFieldType: CFTypeOrigin, strValue: strCFTypeOrigin, vcertValue: vcert.CustomFieldOrigin},
-		{customFieldType: CFTypeUnknown, strValue: strCFTypeUnknown, vcertValue: vcert.CustomFieldPlain},
+		{customFieldType: CustomFieldPlain, strValue: strCFTypePlain},
+		{customFieldType: CustomFieldOrigin, strValue: strCFTypeOrigin},
+		{customFieldType: CustomFieldUnknown, strValue: strCFTypeUnknown},
 	}
 
 	s.testYaml = `---
@@ -56,15 +55,6 @@ func (s *CustomFieldTypeSuite) TestCustomFieldType_String() {
 		s.Run(tc.strValue, func() {
 			str := tc.customFieldType.String()
 			s.Equal(tc.strValue, str)
-		})
-	}
-}
-
-func (s *CustomFieldTypeSuite) TestCustomFieldType_ToVCert() {
-	for _, tc := range s.testCases {
-		s.Run(tc.strValue, func() {
-			vcertCft := tc.customFieldType.ToVCert()
-			s.Equal(tc.vcertValue, vcertCft)
 		})
 	}
 }
