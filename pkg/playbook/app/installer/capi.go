@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Venafi/vcert/v4/pkg/playbook/util/capistore"
 	"go.uber.org/zap"
 
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain"
 	"github.com/Venafi/vcert/v4/pkg/playbook/util"
+	"github.com/Venafi/vcert/v4/pkg/playbook/util/capistore"
 )
 
 // CAPIInstaller represents an installation that will happen in the Windows CAPI store
@@ -79,6 +79,7 @@ func (r CAPIInstaller) Prepare(request certificate.Request, pcc certificate.PEMC
 	return prepareCertificateForBundle(request, pcc)
 }
 
+// Backup takes the certificate request and backs up the current version prior to overwriting
 func (r CAPIInstaller) Backup(_ string, request certificate.Request) error {
 	//Certificates are backed up by default for CAPI
 	return nil
@@ -133,7 +134,7 @@ func (r CAPIInstaller) AfterInstallActions() error {
 
 // InstallValidationActions runs any instructions declared in the Installer on a terminal and expects
 // "0" for successful validation and "1" for a validation failure
-// No validations happen over the content of the InsatllValidation string, so caution is advised
+// No validations happen over the content of the InstallValidation string, so caution is advised
 func (r CAPIInstaller) InstallValidationActions() (string, error) {
 	validationResult, err := util.ExecuteScript(r.InstallValidation)
 	if err != nil {

@@ -9,7 +9,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/Venafi/vcert/v4"
-	vreq "github.com/Venafi/vcert/v4/pkg/certificate"
+	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
 	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain"
 	"github.com/Venafi/vcert/v4/pkg/util"
@@ -19,7 +19,7 @@ import (
 // EnrollCertificate takes a Request object and requests a certificate to the Venafi platform defined by config.
 //
 // Then it retrieves the certificate and returns it along with the certificate chain and the private key used.
-func EnrollCertificate(config domain.Config, request domain.PlaybookRequest) (*vreq.PEMCollection, *vreq.Request, error) {
+func EnrollCertificate(config domain.Config, request domain.PlaybookRequest) (*certificate.PEMCollection, *certificate.Request, error) {
 	client, err := buildClient(config, request.Zone)
 	if err != nil {
 		return nil, nil, err
@@ -80,9 +80,9 @@ func buildClient(config domain.Config, zone string) (endpoint.Connector, error) 
 	return client, nil
 }
 
-func buildRequest(request domain.PlaybookRequest) vreq.Request {
+func buildRequest(request domain.PlaybookRequest) certificate.Request {
 
-	vcertRequest := vreq.Request{
+	vcertRequest := certificate.Request{
 		CADN: request.CADN,
 		Subject: pkix.Name{
 			CommonName:         request.Subject.CommonName,
@@ -123,12 +123,6 @@ func buildRequest(request domain.PlaybookRequest) vreq.Request {
 // The private key must be in PKCS8 format.
 func DecryptPrivateKey(privateKey string, password string) (string, error) {
 	privateKey, err := util.DecryptPkcs8PrivateKey(privateKey, password)
-	return privateKey, err
-}
-
-// EncryptPrivateKeyPKCS1 takes a decrypted PKCS8 private key and encrypts it back in PKCS1 format
-func EncryptPrivateKeyPKCS1(privateKey string, password string) (string, error) {
-	privateKey, err := util.EncryptPkcs1PrivateKey(privateKey, password)
 	return privateKey, err
 }
 

@@ -8,10 +8,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain"
 	"go.uber.org/zap"
 
-	vreq "github.com/Venafi/vcert/v4/pkg/certificate"
+	"github.com/Venafi/vcert/v4/pkg/certificate"
+	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain"
 	"github.com/Venafi/vcert/v4/pkg/util"
 )
 
@@ -58,42 +58,42 @@ func getURIs(uris []string) []*url.URL {
 	return urls
 }
 
-func setKeyType(request domain.PlaybookRequest, vcertRequest *vreq.Request) {
+func setKeyType(request domain.PlaybookRequest, vcertRequest *certificate.Request) {
 	switch request.KeyType {
-	case vreq.KeyTypeRSA:
+	case certificate.KeyTypeRSA:
 		vcertRequest.KeyType = request.KeyType
 		if request.KeyLength <= 0 {
 			vcertRequest.KeyLength = DefaultRSALength
 		} else {
 			vcertRequest.KeyLength = request.KeyLength
 		}
-	case vreq.KeyTypeECDSA:
+	case certificate.KeyTypeECDSA:
 		vcertRequest.KeyType = request.KeyType
 		vcertRequest.KeyCurve = request.KeyCurve
-	case vreq.KeyTypeED25519:
+	case certificate.KeyTypeED25519:
 		vcertRequest.KeyType = request.KeyType
-		vcertRequest.KeyCurve = vreq.EllipticCurveED25519
+		vcertRequest.KeyCurve = certificate.EllipticCurveED25519
 	default:
-		vcertRequest.KeyType = vreq.KeyTypeRSA
+		vcertRequest.KeyType = certificate.KeyTypeRSA
 		vcertRequest.KeyLength = DefaultRSALength
 	}
 }
 
-func setOrigin(request domain.PlaybookRequest, vcertRequest *vreq.Request) {
+func setOrigin(request domain.PlaybookRequest, vcertRequest *certificate.Request) {
 	origin := OriginName
 	if request.Origin != "" {
 		origin = request.Origin
 	}
-	originCustomField := vreq.CustomField{
+	originCustomField := certificate.CustomField{
 		Name:  "Origin",
 		Value: origin,
-		Type:  vreq.CustomFieldOrigin,
+		Type:  certificate.CustomFieldOrigin,
 	}
 	vcertRequest.CustomFields = append(vcertRequest.CustomFields, originCustomField)
 
 }
 
-func setValidity(validDays string, vcertRequest *vreq.Request) {
+func setValidity(validDays string, vcertRequest *certificate.Request) {
 	if validDays == "" {
 		return
 	}
@@ -119,7 +119,7 @@ func setValidity(validDays string, vcertRequest *vreq.Request) {
 	vcertRequest.IssuerHint = issuerHint
 }
 
-func setLocationWorkload(playbookRequest domain.PlaybookRequest, vcertRequest *vreq.Request) {
+func setLocationWorkload(playbookRequest domain.PlaybookRequest, vcertRequest *certificate.Request) {
 	if playbookRequest.Location.Instance == "" {
 		return
 	}
@@ -131,7 +131,7 @@ func setLocationWorkload(playbookRequest domain.PlaybookRequest, vcertRequest *v
 		workload = segments[1]
 	}
 
-	newLocation := vreq.Location{
+	newLocation := certificate.Location{
 		Instance:   instance,
 		Workload:   workload,
 		TLSAddress: playbookRequest.Location.TLSAddress,

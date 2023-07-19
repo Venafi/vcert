@@ -59,7 +59,7 @@ func (r PKCS12Installer) Prepare(request certificate.Request, pcc certificate.PE
 }
 
 // Backup takes the certificate request and backs up the current version prior to overwriting
-func (r PKCS12Installer) Backup(_ string, request certificate.Request) error {
+func (r PKCS12Installer) Backup(_ string, _ certificate.Request) error {
 	// Check certificate file exists
 	certExists, err := util.FileExists(r.Location)
 	if err != nil {
@@ -103,7 +103,7 @@ func (r PKCS12Installer) AfterInstallActions() error {
 
 // InstallValidationActions runs any instructions declared in the Installer on a terminal and expects
 // "0" for successful validation and "1" for a validation failure
-// No validations happen over the content of the InsatllValidation string, so caution is advised
+// No validations happen over the content of the InstallValidation string, so caution is advised
 func (r PKCS12Installer) InstallValidationActions() (string, error) {
 	validationResult, err := util.ExecuteScript(r.InstallValidation)
 	if err != nil {

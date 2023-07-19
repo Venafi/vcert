@@ -19,7 +19,7 @@ func ValidateTPPCredentials(playbook *domain.Playbook) error {
 	//Validate TPP tokens
 	if playbook.Config.Connection.Credentials.AccessToken != "" {
 		isValid, err := vcertutil.IsValidAccessToken(playbook.Config)
-		// Return any error besides 401 Unauthorized - need to properly handle errors unlrelated to the state of the token (connectivity)
+		// Return any error besides 401 Unauthorized - need to properly handle errors unrelated to the state of the token (connectivity)
 		if err != nil && err.Error() != "failed to verify token. Message: 401 Unauthorized" {
 			return err
 		}

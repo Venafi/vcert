@@ -41,6 +41,7 @@ func WriteFile(location string, content []byte) error {
 	return nil
 }
 
+// CopyFile makes a copy of the given source to the given destination using Go's native copy function io.Copy
 func CopyFile(source string, destination string) error {
 	zap.L().Debug(fmt.Sprintf("checking certificate at: %s", source))
 

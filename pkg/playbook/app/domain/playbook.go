@@ -38,9 +38,10 @@ func NewPlaybook() Playbook {
 	}
 }
 
+// IsValid returns true if the playbook object has the minimum required values to run
 func (p Playbook) IsValid() (bool, error) {
 	var rErr error = nil
-	var rValid bool = true
+	rValid := true
 
 	// Check that the specified config is valid
 	valid, err := p.Config.IsValid()

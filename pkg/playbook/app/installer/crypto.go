@@ -15,7 +15,7 @@ import (
 
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/playbook/app/vcertutil"
-	vutil "github.com/Venafi/vcert/v4/pkg/util"
+	"github.com/Venafi/vcert/v4/pkg/util"
 )
 
 // DayDuration represents a day (24 hours) in the Duration type
@@ -36,8 +36,8 @@ func getPrivateKey(privateKeyStr string, keyPassword string) (interface{}, error
 	var err error
 	//Decrypting Private Key
 	pkDER := pkBlock.Bytes
-	if vutil.X509IsEncryptedPEMBlock(pkBlock) {
-		pkDER, err = vutil.X509DecryptPEMBlock(pkBlock, []byte(keyPassword))
+	if util.X509IsEncryptedPEMBlock(pkBlock) {
+		pkDER, err = util.X509DecryptPEMBlock(pkBlock, []byte(keyPassword))
 		if err != nil {
 			return nil, fmt.Errorf("private key decryption error: %w", err)
 		}
@@ -147,18 +147,17 @@ func needRenewal(cert *x509.Certificate, renewBefore string) bool {
 		return true
 	}
 
-	var renewDuration time.Duration
 	var timeToRenew time.Time
 
 	switch timePostfix {
 	case "d":
 		// operation happens in integers to avoid issues with linter and time.Duration struct
 		ns := DayDuration.Nanoseconds()
-		renewDuration = time.Duration(ns * renewValue)
+		renewDuration := time.Duration(ns * renewValue)
 		timeToRenew = cert.NotAfter.Add(-renewDuration)
 	case "h":
 		ns := time.Hour.Nanoseconds()
-		renewDuration = time.Duration(ns * renewValue)
+		renewDuration := time.Duration(ns * renewValue)
 		timeToRenew = cert.NotAfter.Add(-renewDuration)
 	case "%":
 		// Total # of ns in the whole certificate lifetime
@@ -189,8 +188,8 @@ func needRenewal(cert *x509.Certificate, renewBefore string) bool {
 	return false
 }
 
-// Take a PEMCollection and create an x509.Certificate object from it
-// Could also add the x509.Certificate object directly to the PEM collenction in the original constructor
+// CreateX509Cert takes a PEMCollection and creates an x509.Certificate object from it
+// Could also add the x509.Certificate object directly to the PEM collection in the original constructor
 func CreateX509Cert(pcc *certificate.PEMCollection, certReq *certificate.Request) (*Certificate, *certificate.PEMCollection, error) {
 	preparedPcc, err := prepareCertificateForBundle(*certReq, *pcc)
 
@@ -205,9 +204,9 @@ func CreateX509Cert(pcc *certificate.PEMCollection, certReq *certificate.Request
 		return nil, preparedPcc, err
 	}
 	thumbprint := sha1.Sum(x509Cert.Raw)
-	hexThumbprint := hex.EncodeToString((thumbprint[:]))
+	hexThumbprint := hex.EncodeToString(thumbprint[:])
 
-	certificate := Certificate{*x509Cert, hexThumbprint}
+	cert := Certificate{*x509Cert, hexThumbprint}
 
-	return &certificate, preparedPcc, nil
+	return &cert, preparedPcc, nil
 }

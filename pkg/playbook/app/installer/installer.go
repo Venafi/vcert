@@ -30,6 +30,6 @@ type Installer interface {
 
 	// InstallValidationActions runs any instructions declared in the Installer on a terminal and expects
 	// "0" for successful validation and "1" for a validation failure
-	// No validations happen over the content of the InsatllValidation string, so caution is advised
+	// No validations happen over the content of the InstallValidation string, so caution is advised
 	InstallValidationActions() (string, error)
 }
