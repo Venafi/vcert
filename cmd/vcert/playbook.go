@@ -74,7 +74,7 @@ var (
 	)
 )
 
-func doRunPlaybook(c *cli.Context) error {
+func doRunPlaybook(_ *cli.Context) error {
 	err := util.ConfigureLogger(playbookOptions.debug)
 	if err != nil {
 		return err

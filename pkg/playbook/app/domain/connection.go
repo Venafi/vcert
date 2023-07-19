@@ -43,6 +43,8 @@ func (c Connection) validateTrustBundle() error {
 	return nil
 }
 
+// IsValid returns true if the Connection is supported by vcert
+// and has the necessary values to connect to the given platform
 func (c Connection) IsValid() (bool, error) {
 	switch c.Type {
 	case CTypeTPP:
@@ -58,7 +60,7 @@ func (c Connection) IsValid() (bool, error) {
 
 func isValidTpp(c Connection) (bool, error) {
 	var rErr error = nil
-	var rValid bool = true
+	rValid := true
 
 	// Credentials are not empty
 	if c.Credentials.IsEmpty() {

@@ -12,15 +12,16 @@ type CertificateTask struct {
 	Request       PlaybookRequest `yaml:"request,omitempty"`
 	Installations Installations   `yaml:"installations,omitempty"`
 	RenewBefore   string          `yaml:"renewBefore,omitempty"`
-	SetEnvVars    []string        `yaml:"setenvvars,omitempty"`
+	SetEnvVars    []string        `yaml:"setEnvVars,omitempty"`
 }
 
 // CertificateTasks is a slice of CertificateTask
 type CertificateTasks []CertificateTask
 
+// IsValid returns true if the CertificateTask has the minimum required fields to be run
 func (task CertificateTask) IsValid() (bool, error) {
 	var rErr error = nil
-	var rValid bool = true
+	rValid := true
 
 	// Each certificate request needs a zone, required field
 	if task.Request.Zone == "" {

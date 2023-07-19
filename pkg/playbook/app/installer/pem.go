@@ -13,9 +13,6 @@ import (
 	"github.com/Venafi/vcert/v4/pkg/playbook/util"
 )
 
-// FormatLegacyPEM represents the legacy format used by TPP or TLSPC to return the certificates
-const FormatLegacyPEM = "legacy-pem"
-
 // PEMInstaller represents an installation that will use the PEM format for the certificate bundle
 type PEMInstaller struct {
 	domain.Installation
@@ -61,7 +58,7 @@ func (r PEMInstaller) Prepare(request certificate.Request, pcc certificate.PEMCo
 }
 
 // Backup takes the certificate request and backs up the current version prior to overwriting
-func (r PEMInstaller) Backup(_ string, request certificate.Request) error {
+func (r PEMInstaller) Backup(_ string, _ certificate.Request) error {
 	certPath := filepath.Join(r.Location, r.PEMCertFilename)
 	keyPath := filepath.Join(r.Location, r.PEMKeyFilename)
 	chainPath := filepath.Join(r.Location, r.PEMChainFilename)
@@ -142,7 +139,7 @@ func (r PEMInstaller) AfterInstallActions() error {
 
 // InstallValidationActions runs any instructions declared in the Installer on a terminal and expects
 // "0" for successful validation and "1" for a validation failure
-// No validations happen over the content of the InsatllValidation string, so caution is advised
+// No validations happen over the content of the InstallValidation string, so caution is advised
 func (r PEMInstaller) InstallValidationActions() (string, error) {
 	validationResult, err := util.ExecuteScript(r.InstallValidation)
 	if err != nil {

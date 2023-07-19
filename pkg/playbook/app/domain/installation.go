@@ -6,6 +6,17 @@ import (
 	"strings"
 )
 
+const (
+	// JKSMinPasswordLength represents the minimum length a JKS password must have per the JKS specification
+	JKSMinPasswordLength = 6
+
+	capiLocationCurrentUser  = "currentuser"
+	capiLocationLocalMachine = "localmachine"
+)
+
+var validStoreNames = []string{"addressbook", "authroot", "certificateauthority", "disallowed", "my", "root",
+	"trustedpeople", "trustedpublisher"}
+
 // Installation represents a location in which a certificate will be installed,
 // along with the format in which it will be installed
 type Installation struct {
@@ -25,6 +36,7 @@ type Installation struct {
 // Installations is a slice of Installation
 type Installations []Installation
 
+// IsValid returns true if the Installation type is supported by vcert
 func (installation Installation) IsValid() (bool, error) {
 	switch installation.Type {
 	case TypeJKS:
@@ -51,13 +63,6 @@ func (installation Installation) IsValid() (bool, error) {
 
 	return true, nil
 }
-
-const (
-	capiLocationCurrentUser  = "currentuser"
-	capiLocationLocalMachine = "localmachine"
-)
-
-var validStoreNames = []string{"addressbook", "authroot", "certificateauthority", "disallowed", "my", "root", "trustedpeople", "trustedpublisher"}
 
 func validateCAPI(installation Installation) error {
 	if installation.Location == "" {
@@ -97,9 +102,6 @@ func validateCAPI(installation Installation) error {
 
 	return nil
 }
-
-// JKSMinPasswordLength represents the minimum length a JKS password must have per the JKS specification
-const JKSMinPasswordLength = 6
 
 func validateJKS(installation Installation) error {
 	if installation.Location == "" {

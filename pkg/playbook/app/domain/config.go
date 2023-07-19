@@ -6,7 +6,7 @@ type Config struct {
 	ForceRenew bool       `yaml:"-"`
 }
 
-// Ensure the provide connection configuration is valid and logical
+// IsValid Ensures the provided connection configuration is valid and logical
 func (c Config) IsValid() (bool, error) {
 	return c.Connection.IsValid()
 }
