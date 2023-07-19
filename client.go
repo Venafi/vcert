@@ -19,12 +19,14 @@ package vcert
 import (
 	"crypto/x509"
 	"fmt"
+	"log"
+
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
 	"github.com/Venafi/vcert/v4/pkg/venafi/cloud"
 	"github.com/Venafi/vcert/v4/pkg/venafi/fake"
+	"github.com/Venafi/vcert/v4/pkg/venafi/firefly"
 	"github.com/Venafi/vcert/v4/pkg/venafi/tpp"
 	"github.com/Venafi/vcert/v4/pkg/verror"
-	"log"
 )
 
 type newClientArgs struct {
@@ -65,6 +67,8 @@ func (cfg *Config) newClient(args []interface{}) (connector endpoint.Connector, 
 		connector, err = cloud.NewConnector(cfg.BaseUrl, cfg.Zone, cfg.LogVerbose, connectionTrustBundle)
 	case endpoint.ConnectorTypeTPP:
 		connector, err = tpp.NewConnector(cfg.BaseUrl, cfg.Zone, cfg.LogVerbose, connectionTrustBundle)
+	case endpoint.ConnectorTypeFirefly:
+		connector, err = firefly.NewConnector(cfg.LogVerbose, connectionTrustBundle)
 	case endpoint.ConnectorTypeFake:
 		connector = fake.NewConnector(cfg.LogVerbose, connectionTrustBundle)
 	default:
