@@ -1,10 +1,9 @@
-package certrequest
+package certificate
 
 import (
 	"fmt"
 	"testing"
 
-	vcert "github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/yaml.v3"
 )
@@ -13,21 +12,19 @@ type KeyTypeSuite struct {
 	suite.Suite
 	testYaml  string
 	testCases []struct {
-		keyType    KeyType
-		strValue   string
-		vcertValue vcert.KeyType
+		keyType  KeyType
+		strValue string
 	}
 }
 
 func (s *KeyTypeSuite) SetupTest() {
 	s.testCases = []struct {
-		keyType    KeyType
-		strValue   string
-		vcertValue vcert.KeyType
+		keyType  KeyType
+		strValue string
 	}{
-		{keyType: KeyTypeECDSA, strValue: strKeyTypeECDSA, vcertValue: vcert.KeyTypeECDSA},
-		{keyType: KeyTypeRSA, strValue: strKeyTypeRSA, vcertValue: vcert.KeyTypeRSA},
-		{keyType: KeyTypeUnknown, strValue: strKeyTypeUnknown, vcertValue: vcert.KeyTypeRSA},
+		{keyType: KeyTypeECDSA, strValue: strKeyTypeECDSA},
+		{keyType: KeyTypeRSA, strValue: strKeyTypeRSA},
+		{keyType: KeyTypeED25519, strValue: strKeyTypeED25519},
 	}
 
 	s.testYaml = `---
@@ -59,24 +56,18 @@ func (s *KeyTypeSuite) TestKeyType_String() {
 	}
 }
 
-func (s *KeyTypeSuite) TestEllipticCurve_ToVCert() {
-	for _, tc := range s.testCases {
-		s.Run(tc.strValue, func() {
-			vcertEcc := tc.keyType.ToVCert()
-			s.Equal(tc.vcertValue, vcertEcc)
-		})
-	}
-}
-
 func (s *KeyTypeSuite) TestEllipticCurve_UnmarshalYAML() {
 	for _, tc := range s.testCases {
 		s.Run(tc.strValue, func() {
-			var r Request
+			result := struct {
+				Cn      string  `yaml:"cn"`
+				KeyType KeyType `yaml:"keyType"`
+			}{}
 			parsedYaml := fmt.Sprintf(s.testYaml, tc.strValue)
-			err := yaml.Unmarshal([]byte(parsedYaml), &r)
+			err := yaml.Unmarshal([]byte(parsedYaml), &result)
 
 			s.Nil(err)
-			s.Equal(tc.keyType, r.KeyType)
+			s.Equal(tc.keyType, result.KeyType)
 		})
 	}
 }

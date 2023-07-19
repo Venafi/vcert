@@ -1,22 +1,17 @@
-package certrequest
+package certificate
 
 import (
 	"strings"
 
-	vcert "github.com/Venafi/vcert/v4/pkg/certificate"
 	"gopkg.in/yaml.v3"
 )
 
-// CustomFieldType represents the different types a CustomField can be
 type CustomFieldType int
 
 const (
-	// CFTypeUnknown represents an invalid option
-	CFTypeUnknown CustomFieldType = iota
-	// CFTypePlain represents an ordinary CustomField
-	CFTypePlain
-	// CFTypeOrigin represents a CustomField of type Origin
-	CFTypeOrigin
+	CustomFieldPlain CustomFieldType = 0 + iota
+	CustomFieldOrigin
+	CustomFieldUnknown
 
 	// String representations of the CustomFieldType types
 	strCFTypeOrigin  = "origin"
@@ -27,23 +22,23 @@ const (
 // String returns a string representation of this object
 func (cft *CustomFieldType) String() string {
 	switch *cft {
-	case CFTypeOrigin:
+	case CustomFieldOrigin:
 		return strCFTypeOrigin
-	case CFTypePlain:
+	case CustomFieldPlain:
 		return strCFTypePlain
 	default:
 		return strCFTypeUnknown
 	}
 }
 
-func parseCustomFieldType(value string) (CustomFieldType, error) {
+func parseCustomFieldType(value string) CustomFieldType {
 	switch strings.ToLower(value) {
 	case strCFTypeOrigin:
-		return CFTypeOrigin, nil
+		return CustomFieldOrigin
 	case strCFTypePlain:
-		return CFTypePlain, nil
+		return CustomFieldPlain
 	default:
-		return CFTypeUnknown, nil
+		return CustomFieldUnknown
 	}
 }
 
@@ -60,21 +55,8 @@ func (cft *CustomFieldType) UnmarshalYAML(value *yaml.Node) error {
 	if err != nil {
 		return err
 	}
-	*cft, err = parseCustomFieldType(strValue)
-	if err != nil {
-		return err
-	}
-	return nil
-}
 
-// ToVCert returns the representation in vcert of this value
-func (cft *CustomFieldType) ToVCert() vcert.CustomFieldType {
-	switch *cft {
-	case CFTypeOrigin:
-		return vcert.CustomFieldOrigin
-	case CFTypePlain:
-		return vcert.CustomFieldPlain
-	default:
-		return vcert.CustomFieldPlain
-	}
+	*cft = parseCustomFieldType(strValue)
+
+	return nil
 }

@@ -6,7 +6,6 @@ require (
 	github.com/pavel-v-chernykh/keystore-go/v4 v4.1.0
 	github.com/pkg/errors v0.8.1
 	github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d
-	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.7.0
 	github.com/stretchr/testify v1.8.1
 	github.com/urfave/cli/v2 v2.1.1
@@ -22,12 +21,13 @@ require (
 
 require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.4.7 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/magiconair/properties v1.8.1 // indirect
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
 	github.com/pelletier/go-toml v1.2.0 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/spf13/afero v1.1.2 // indirect
 	github.com/spf13/cast v1.3.0 // indirect

@@ -1,9 +1,24 @@
-package certrequest
+/*
+ * Copyright 2018 Venafi, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package certificate
 
 import (
 	"strings"
 
-	vcert "github.com/Venafi/vcert/v4/pkg/certificate"
 	"gopkg.in/yaml.v3"
 )
 
@@ -11,14 +26,12 @@ import (
 type ChainOption int
 
 const (
-	// ChainOptionUnknown represents an invalid option
-	ChainOptionUnknown ChainOption = iota
-	// ChainOptionIgnore specifies the chain should be ignored
-	ChainOptionIgnore
-	// ChainOptionRootFirst specifies the root certificate should be in the first position of the chain
+	//ChainOptionRootLast specifies the root certificate should be in the last position of the chain
+	ChainOptionRootLast ChainOption = iota
+	//ChainOptionRootFirst specifies the root certificate should be in the first position of the chain
 	ChainOptionRootFirst
-	// ChainOptionRootLast specifies the root certificate should be in the last position of the chain
-	ChainOptionRootLast
+	//ChainOptionIgnore specifies the chain should be ignored
+	ChainOptionIgnore
 
 	// String representations of the ChainOption types
 	strChainOptionIgnore    = "ignore"
@@ -41,16 +54,15 @@ func (co *ChainOption) String() string {
 	}
 }
 
-func parseChainOption(value string) (ChainOption, error) {
-	switch strings.ToLower(value) {
-	case strChainOptionIgnore:
-		return ChainOptionIgnore, nil
+// ChainOptionFromString converts the string to the corresponding ChainOption
+func ChainOptionFromString(order string) ChainOption {
+	switch strings.ToLower(order) {
 	case strChainOptionRootFirst:
-		return ChainOptionRootFirst, nil
-	case strChainOptionRootLast:
-		return ChainOptionRootLast, nil
+		return ChainOptionRootFirst
+	case strChainOptionIgnore:
+		return ChainOptionIgnore
 	default:
-		return ChainOptionUnknown, nil
+		return ChainOptionRootLast
 	}
 }
 
@@ -67,23 +79,6 @@ func (co *ChainOption) UnmarshalYAML(value *yaml.Node) error {
 	if err != nil {
 		return err
 	}
-	*co, err = parseChainOption(strValue)
-	if err != nil {
-		return err
-	}
+	*co = ChainOptionFromString(strValue)
 	return nil
-}
-
-// ToVCert returns the representation in vcert of this value
-func (co *ChainOption) ToVCert() vcert.ChainOption {
-	switch *co {
-	case ChainOptionRootFirst:
-		return vcert.ChainOptionRootFirst
-	case ChainOptionRootLast:
-		return vcert.ChainOptionRootLast
-	case ChainOptionIgnore:
-		return vcert.ChainOptionIgnore
-	default:
-		return vcert.ChainOptionRootLast
-	}
 }

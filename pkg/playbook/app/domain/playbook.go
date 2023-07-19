@@ -3,8 +3,11 @@ package domain
 import (
 	"errors"
 	"fmt"
+)
 
-	"github.com/Venafi/vcert/v4/pkg/playbook/options"
+const (
+	DefaultFilepath = "./playbook.yaml"
+	tlspcURL        = "api.venafi.cloud"
 )
 
 // Playbook represents a set of tasks  to run.
@@ -27,11 +30,11 @@ func NewPlaybook() Playbook {
 		Config: Config{
 			Connection: Connection{
 				Type:            CTypeVaaS,
-				URL:             options.TlspcURL,
+				URL:             tlspcURL,
 				TrustBundlePath: "",
 			},
 		},
-		Location: options.DefaultFilepath,
+		Location: DefaultFilepath,
 	}
 }
 

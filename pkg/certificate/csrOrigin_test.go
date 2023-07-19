@@ -1,10 +1,9 @@
-package certrequest
+package certificate
 
 import (
 	"fmt"
 	"testing"
 
-	vcert "github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/yaml.v3"
 )
@@ -13,22 +12,20 @@ type CSROriginSuite struct {
 	suite.Suite
 	testYaml  string
 	testCases []struct {
-		csrOrigin  CsrOriginOption
-		strValue   string
-		vcertValue vcert.CSrOriginOption
+		csrOrigin CSrOriginOption
+		strValue  string
 	}
 }
 
 func (s *CSROriginSuite) SetupTest() {
 	s.testCases = []struct {
-		csrOrigin  CsrOriginOption
-		strValue   string
-		vcertValue vcert.CSrOriginOption
+		csrOrigin CSrOriginOption
+		strValue  string
 	}{
-		{csrOrigin: CSRLocalGenerated, strValue: strCSRLocalGenerated, vcertValue: vcert.LocalGeneratedCSR},
-		{csrOrigin: CSRServiceGenerated, strValue: strCSRServiceGenerated, vcertValue: vcert.ServiceGeneratedCSR},
-		{csrOrigin: CSRUserProvided, strValue: strCSRUserProvided, vcertValue: vcert.UserProvidedCSR},
-		{csrOrigin: CSRUnknown, strValue: strCSRUnknown, vcertValue: vcert.ServiceGeneratedCSR},
+		{csrOrigin: LocalGeneratedCSR, strValue: strLocalGeneratedCSR},
+		{csrOrigin: ServiceGeneratedCSR, strValue: strServiceGeneratedCSR},
+		{csrOrigin: UserProvidedCSR, strValue: strUserProvidedCSR},
+		{csrOrigin: UnknownCSR, strValue: strUnknownCSR},
 	}
 
 	s.testYaml = `---
@@ -60,24 +57,19 @@ func (s *CSROriginSuite) TestCSROrigin_String() {
 	}
 }
 
-func (s *CSROriginSuite) TestCSROrigin_ToVCert() {
-	for _, tc := range s.testCases {
-		s.Run(tc.strValue, func() {
-			vcertCsro := tc.csrOrigin.ToVCert()
-			s.Equal(tc.vcertValue, vcertCsro)
-		})
-	}
-}
-
 func (s *CSROriginSuite) TestCSROrigin_UnmarshalYAML() {
+
 	for _, tc := range s.testCases {
 		s.Run(tc.strValue, func() {
-			var r Request
+			result := struct {
+				Cn        string          `yaml:"cn"`
+				CsrOrigin CSrOriginOption `yaml:"csrOrigin"`
+			}{}
 			parsedYaml := fmt.Sprintf(s.testYaml, tc.strValue)
-			err := yaml.Unmarshal([]byte(parsedYaml), &r)
+			err := yaml.Unmarshal([]byte(parsedYaml), &result)
 
 			s.Nil(err)
-			s.Equal(tc.csrOrigin, r.CsrOrigin)
+			s.Equal(tc.csrOrigin, result.CsrOrigin)
 		})
 	}
 }

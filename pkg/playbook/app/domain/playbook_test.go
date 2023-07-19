@@ -6,9 +6,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-
-	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain/certrequest"
-	"github.com/Venafi/vcert/v4/pkg/playbook/options"
 )
 
 type PlaybookSuite struct {
@@ -26,9 +23,9 @@ type testCase struct {
 
 func (s *PlaybookSuite) SetupTest() {
 
-	req := certrequest.Request{
+	req := PlaybookRequest{
 		Zone: "My\\App",
-		Subject: certrequest.Subject{
+		Subject: Subject{
 			CommonName: "foo.bar.venafi.com",
 		},
 	}
@@ -119,7 +116,7 @@ func (s *PlaybookSuite) SetupTest() {
 				Config: config,
 				CertificateTasks: CertificateTasks{
 					{
-						Request: certrequest.Request{},
+						Request: PlaybookRequest{},
 					},
 				},
 			},
@@ -131,7 +128,7 @@ func (s *PlaybookSuite) SetupTest() {
 				Config: config,
 				CertificateTasks: CertificateTasks{
 					{
-						Request: certrequest.Request{
+						Request: PlaybookRequest{
 							Zone: "My\\App",
 						},
 					},
@@ -463,7 +460,7 @@ func TestPlaybook(t *testing.T) {
 func (s *PlaybookSuite) TestPlaybook_New() {
 	pb := NewPlaybook()
 
-	s.Equal(options.DefaultFilepath, pb.Location)
+	s.Equal(DefaultFilepath, pb.Location)
 	s.Empty(pb.CertificateTasks)
 }
 
