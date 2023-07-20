@@ -30,7 +30,13 @@ import (
 )
 
 // DefaultRenew represents the duration before certificate expiration in which renewal should be attempted
-const DefaultRenew = "10%"
+const (
+	DefaultRenew = "10%"
+
+	envVarThumbprint = "thumbprint"
+	envVarSerial     = "serial"
+	envVarBase64     = "base64"
+)
 
 // Execute takes the task and requests the certificate specified,
 // then it installs it in the locations defined by the installers.
@@ -51,11 +57,11 @@ func Execute(config domain.Config, task domain.CertificateTask) []error {
 		changed := false
 		// check if any installs have changed
 		for _, install := range task.Installations {
-			insChanged, err := installer.GetInstaller(install).Check(task.Name, task.RenewBefore, task.Request)
+			isChanged, err := installer.GetInstaller(install).Check(task.Name, task.RenewBefore, task.Request)
 			if err != nil {
 				return []error{fmt.Errorf("error checking for certificate %s: %w", task.Name, err)}
 			}
-			if insChanged {
+			if isChanged {
 				changed = true
 			}
 		}
@@ -157,13 +163,13 @@ func setEnvVars(task domain.CertificateTask, cert *installer.Certificate, preped
 		varName := ""
 		varValue := ""
 		switch strings.ToLower(envVar) {
-		case "thumbprint":
+		case envVarThumbprint:
 			varName = fmt.Sprintf("VCERT_%s_THUMBPRINT", strings.ToUpper(task.Name))
 			varValue = cert.Thumbprint
-		case "serial":
+		case envVarSerial:
 			varName = fmt.Sprintf("VCERT_%s_SERIAL", strings.ToUpper(task.Name))
 			varValue = cert.X509cert.Subject.SerialNumber
-		case "base64":
+		case envVarBase64:
 			varName = fmt.Sprintf("VCERT_%s_BASE64", strings.ToUpper(task.Name))
 			varValue = prepedPcc.Certificate
 		default:

@@ -97,6 +97,7 @@ func (s *ServiceSuite) SetupTest() {
 					},
 				},
 				RenewBefore: "30d",
+				SetEnvVars:  []string{envVarThumbprint, envVarBase64, envVarSerial},
 			},
 		},
 		{
@@ -110,9 +111,9 @@ func (s *ServiceSuite) SetupTest() {
 						Type:        domain.TypeJKS,
 						Location:    "./jks/testjks.jks",
 						AfterAction: "",
+						BackupFiles: true,
 					},
 				},
-				RenewBefore: "30d",
 			},
 		},
 		{
@@ -129,6 +130,7 @@ func (s *ServiceSuite) SetupTest() {
 					},
 				},
 				RenewBefore: "30d",
+				SetEnvVars:  []string{"hostname"},
 			},
 		},
 		{
@@ -153,14 +155,38 @@ func (s *ServiceSuite) SetupTest() {
 			},
 		},
 	}
+
+	s.errTestCases = []struct {
+		name   string
+		config domain.Config
+		task   domain.CertificateTask
+		err    error
+	}{
+		{
+			name:   "PEM",
+			config: domain.Config{ForceRenew: true},
+			task: domain.CertificateTask{
+				Name:    "testcertpem",
+				Request: request,
+				Installations: domain.Installations{
+					{
+						Type:             domain.TypePEM,
+						Location:         "./pem",
+						AfterAction:      "echo Success!",
+						PEMCertFilename:  "cert.cert",
+						PEMChainFilename: "cert.chain",
+						PEMKeyFilename:   "pk.pem",
+					},
+				},
+				RenewBefore: "30d",
+				SetEnvVars:  []string{envVarThumbprint, envVarBase64, envVarSerial},
+			},
+		},
+	}
 }
 
 func TestService(t *testing.T) {
 	suite.Run(t, new(ServiceSuite))
-}
-
-func (s *ServiceSuite) TestService_ValidateCredentials() {
-
 }
 
 func (s *ServiceSuite) TestService_Execute() {

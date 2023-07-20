@@ -182,9 +182,10 @@ func (s *PlaybookSuite) SetupTest() {
 				},
 			},
 		},
+
 		{
 			err:  ErrNoInstallationLocation,
-			name: "NoInstallationLocation",
+			name: "NoJKSLocation",
 			pb: Playbook{
 				Config: config,
 				CertificateTasks: CertificateTasks{
@@ -192,14 +193,13 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							{
-								Type: TypePEM,
+								Type: TypeJKS,
 							},
 						},
 					},
 				},
 			},
 		},
-
 		{
 			err:  ErrNoJKSAlias,
 			name: "NoJKSAlias",
@@ -262,6 +262,23 @@ func (s *PlaybookSuite) SetupTest() {
 		},
 
 		{
+			err:  ErrNoInstallationLocation,
+			name: "NoPEMLocation",
+			pb: Playbook{
+				Config: config,
+				CertificateTasks: CertificateTasks{
+					{
+						Request: req,
+						Installations: Installations{
+							{
+								Type: TypePEM,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
 			err:  ErrNoPEMCertFilename,
 			name: "NoPEMCertFilename",
 			pb: Playbook{
@@ -323,6 +340,24 @@ func (s *PlaybookSuite) SetupTest() {
 		},
 
 		{
+			err:  ErrNoInstallationLocation,
+			name: "NoPKCS12Location",
+			pb: Playbook{
+				Config: config,
+				CertificateTasks: CertificateTasks{
+					{
+						Request: req,
+						Installations: Installations{
+							{
+								Type: TypePKCS12,
+							},
+						},
+					},
+				},
+			},
+		},
+
+		{
 			err:  nil,
 			name: "ValidPEMConfig",
 			pb: Playbook{
@@ -365,9 +400,45 @@ func (s *PlaybookSuite) SetupTest() {
 				},
 			},
 		},
+		{
+			err:  nil,
+			name: "ValidPKCS12Config",
+			pb: Playbook{
+				Config: config,
+				CertificateTasks: CertificateTasks{
+					{
+						Name:    "testTask",
+						Request: req,
+						Installations: Installations{
+							{
+								Type:     TypePKCS12,
+								Location: "somewhere",
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 
 	s.nonWindowsTestCases = []testCase{
+		{
+			err:  ErrNoInstallationLocation,
+			name: "NoCAPILocation",
+			pb: Playbook{
+				Config: config,
+				CertificateTasks: CertificateTasks{
+					{
+						Request: req,
+						Installations: Installations{
+							{
+								Type: TypeCAPI,
+							},
+						},
+					},
+				},
+			},
+		},
 		{
 			err:  ErrCAPIOnNonWindows,
 			name: "CAPIOnNonWindows",
@@ -390,6 +461,23 @@ func (s *PlaybookSuite) SetupTest() {
 	}
 
 	s.windowsTestCases = []testCase{
+		{
+			err:  ErrNoInstallationLocation,
+			name: "NoCAPILocation",
+			pb: Playbook{
+				Config: config,
+				CertificateTasks: CertificateTasks{
+					{
+						Request: req,
+						Installations: Installations{
+							{
+								Type: TypeCAPI,
+							},
+						},
+					},
+				},
+			},
+		},
 		{
 			err:  ErrMalformedCAPILocation,
 			name: "MalformedCAPILocation",
@@ -480,7 +568,7 @@ func (s *PlaybookSuite) TestPlaybook_New() {
 	s.Empty(pb.CertificateTasks)
 }
 
-func (s *PlaybookSuite) TestPlaybook_Validate() {
+func (s *PlaybookSuite) TestPlaybook_IsValid() {
 	testCases := s.testCases
 	if runtime.GOOS == "windows" {
 		fmt.Print("Windows environment")

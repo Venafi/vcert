@@ -41,7 +41,7 @@ type ReaderSuite struct {
 }
 
 func (s *ReaderSuite) SetupTest() {
-	s.playbookFolder = "../../../test"
+	s.playbookFolder = "../../../../test/playbook"
 	s.accessToken = RandomString(12)
 	s.refreshToken = RandomString(12)
 

@@ -36,14 +36,15 @@ type Connection struct {
 
 // GetConnectorType returns the type of vcert Connector this config will create
 func (c Connection) GetConnectorType() endpoint.ConnectorType {
-	if c.Type == CTypeVaaS {
-		return endpoint.ConnectorTypeCloud
-	} else if c.Type == CTypeTPP {
-		return endpoint.ConnectorTypeTPP
-	} else if c.Type == CTypeFirefly {
+	switch c.Type {
+	case CTypeFirefly:
 		// This is not implemented in vCertSDK yet
 		return endpoint.ConnectorTypeFake
-	} else {
+	case CTypeTPP:
+		return endpoint.ConnectorTypeTPP
+	case CTypeVaaS:
+		return endpoint.ConnectorTypeCloud
+	default:
 		return endpoint.ConnectorTypeFake
 	}
 }
@@ -118,9 +119,4 @@ func isValidFirefly(c Connection) (bool, error) {
 	}
 
 	return true, nil
-}
-
-// IsEmpty returns true if no URL, TrustBundlePath and Credentials are defined
-func (c Connection) IsEmpty() bool {
-	return c.Credentials.IsEmpty() && c.URL == "" && c.TrustBundlePath == ""
 }

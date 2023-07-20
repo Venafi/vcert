@@ -94,7 +94,10 @@ func TestWriter(t *testing.T) {
 }
 
 func (s *WriterSuite) TestWriter_WritePlaybook() {
-	err := WritePlaybook(s.playbook, s.playbook.Location)
+	err := WritePlaybook(s.playbook, "C:/foo/bar.yaml")
+	s.Error(err)
+
+	err = WritePlaybook(s.playbook, s.playbook.Location)
 	s.Nil(err)
 
 	pb, err := ReadPlaybook(s.playbook.Location)

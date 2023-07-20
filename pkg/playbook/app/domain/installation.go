@@ -72,7 +72,7 @@ func (installation Installation) IsValid() (bool, error) {
 			return false, fmt.Errorf("\t\t\t%w", err)
 		}
 	case TypeUnknown:
-		return false, fmt.Errorf("\t\t\t%w", ErrUndefinedInstallationType)
+		fallthrough
 	default:
 		return false, fmt.Errorf("\t\t\t%w", ErrUndefinedInstallationType)
 	}
