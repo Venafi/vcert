@@ -1,3 +1,19 @@
+/*
+ * Copyright 2023 Venafi, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package domain
 
 import (
@@ -166,9 +182,10 @@ func (s *PlaybookSuite) SetupTest() {
 				},
 			},
 		},
+
 		{
 			err:  ErrNoInstallationLocation,
-			name: "NoInstallationLocation",
+			name: "NoJKSLocation",
 			pb: Playbook{
 				Config: config,
 				CertificateTasks: CertificateTasks{
@@ -176,14 +193,13 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							{
-								Type: TypePEM,
+								Type: TypeJKS,
 							},
 						},
 					},
 				},
 			},
 		},
-
 		{
 			err:  ErrNoJKSAlias,
 			name: "NoJKSAlias",
@@ -246,6 +262,23 @@ func (s *PlaybookSuite) SetupTest() {
 		},
 
 		{
+			err:  ErrNoInstallationLocation,
+			name: "NoPEMLocation",
+			pb: Playbook{
+				Config: config,
+				CertificateTasks: CertificateTasks{
+					{
+						Request: req,
+						Installations: Installations{
+							{
+								Type: TypePEM,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
 			err:  ErrNoPEMCertFilename,
 			name: "NoPEMCertFilename",
 			pb: Playbook{
@@ -307,6 +340,24 @@ func (s *PlaybookSuite) SetupTest() {
 		},
 
 		{
+			err:  ErrNoInstallationLocation,
+			name: "NoPKCS12Location",
+			pb: Playbook{
+				Config: config,
+				CertificateTasks: CertificateTasks{
+					{
+						Request: req,
+						Installations: Installations{
+							{
+								Type: TypePKCS12,
+							},
+						},
+					},
+				},
+			},
+		},
+
+		{
 			err:  nil,
 			name: "ValidPEMConfig",
 			pb: Playbook{
@@ -349,9 +400,45 @@ func (s *PlaybookSuite) SetupTest() {
 				},
 			},
 		},
+		{
+			err:  nil,
+			name: "ValidPKCS12Config",
+			pb: Playbook{
+				Config: config,
+				CertificateTasks: CertificateTasks{
+					{
+						Name:    "testTask",
+						Request: req,
+						Installations: Installations{
+							{
+								Type:     TypePKCS12,
+								Location: "somewhere",
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 
 	s.nonWindowsTestCases = []testCase{
+		{
+			err:  ErrNoInstallationLocation,
+			name: "NoCAPILocation",
+			pb: Playbook{
+				Config: config,
+				CertificateTasks: CertificateTasks{
+					{
+						Request: req,
+						Installations: Installations{
+							{
+								Type: TypeCAPI,
+							},
+						},
+					},
+				},
+			},
+		},
 		{
 			err:  ErrCAPIOnNonWindows,
 			name: "CAPIOnNonWindows",
@@ -374,6 +461,23 @@ func (s *PlaybookSuite) SetupTest() {
 	}
 
 	s.windowsTestCases = []testCase{
+		{
+			err:  ErrNoInstallationLocation,
+			name: "NoCAPILocation",
+			pb: Playbook{
+				Config: config,
+				CertificateTasks: CertificateTasks{
+					{
+						Request: req,
+						Installations: Installations{
+							{
+								Type: TypeCAPI,
+							},
+						},
+					},
+				},
+			},
+		},
 		{
 			err:  ErrMalformedCAPILocation,
 			name: "MalformedCAPILocation",
@@ -464,7 +568,7 @@ func (s *PlaybookSuite) TestPlaybook_New() {
 	s.Empty(pb.CertificateTasks)
 }
 
-func (s *PlaybookSuite) TestPlaybook_Validate() {
+func (s *PlaybookSuite) TestPlaybook_IsValid() {
 	testCases := s.testCases
 	if runtime.GOOS == "windows" {
 		fmt.Print("Windows environment")

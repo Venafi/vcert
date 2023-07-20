@@ -1,3 +1,19 @@
+/*
+ * Copyright 2023 Venafi, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package service
 
 import (
@@ -14,7 +30,13 @@ import (
 )
 
 // DefaultRenew represents the duration before certificate expiration in which renewal should be attempted
-const DefaultRenew = "10%"
+const (
+	DefaultRenew = "10%"
+
+	envVarThumbprint = "thumbprint"
+	envVarSerial     = "serial"
+	envVarBase64     = "base64"
+)
 
 // Execute takes the task and requests the certificate specified,
 // then it installs it in the locations defined by the installers.
@@ -35,11 +57,11 @@ func Execute(config domain.Config, task domain.CertificateTask) []error {
 		changed := false
 		// check if any installs have changed
 		for _, install := range task.Installations {
-			insChanged, err := installer.GetInstaller(install).Check(task.Name, task.RenewBefore, task.Request)
+			isChanged, err := installer.GetInstaller(install).Check(task.Name, task.RenewBefore, task.Request)
 			if err != nil {
 				return []error{fmt.Errorf("error checking for certificate %s: %w", task.Name, err)}
 			}
-			if insChanged {
+			if isChanged {
 				changed = true
 			}
 		}
@@ -135,19 +157,34 @@ func runInstaller(taskName string, installation domain.Installation, vcertReques
 	return nil
 }
 
-func setEnvVars(task domain.CertificateTask, certificate *installer.Certificate, prepedPcc *certificate.PEMCollection) {
+func setEnvVars(task domain.CertificateTask, cert *installer.Certificate, prepedPcc *certificate.PEMCollection) {
 	//todo case sensitivity. upper the name
 	for _, envVar := range task.SetEnvVars {
+		varName := ""
+		varValue := ""
 		switch strings.ToLower(envVar) {
-		case "thumbprint":
-			varName := fmt.Sprintf("VCERT_%s_THUMBPRINT", strings.ToUpper(task.Name))
-			os.Setenv(varName, certificate.Thumbprint)
-		case "serial":
-			varName := fmt.Sprintf("VCERT_%s_SERIAL", strings.ToUpper(task.Name))
-			os.Setenv(varName, certificate.X509cert.Subject.SerialNumber)
-		case "base64":
-			varName := fmt.Sprintf("VCERT_%s_BASE64", strings.ToUpper(task.Name))
-			os.Setenv(varName, string(prepedPcc.Certificate))
+		case envVarThumbprint:
+			varName = fmt.Sprintf("VCERT_%s_THUMBPRINT", strings.ToUpper(task.Name))
+			varValue = cert.Thumbprint
+		case envVarSerial:
+			varName = fmt.Sprintf("VCERT_%s_SERIAL", strings.ToUpper(task.Name))
+			varValue = cert.X509cert.Subject.SerialNumber
+		case envVarBase64:
+			varName = fmt.Sprintf("VCERT_%s_BASE64", strings.ToUpper(task.Name))
+			varValue = prepedPcc.Certificate
+		default:
+			zap.L().Error("environment variable not supported", zap.String("envVar", envVar))
+			continue
+		}
+
+		if varValue == "" {
+			zap.L().Error("environment variable value not found", zap.String("envVar", varName))
+			continue
+		}
+
+		err := os.Setenv(varName, varValue)
+		if err != nil {
+			zap.L().Error("failed to set environment variable", zap.String("envVar", varName), zap.Error(err))
 		}
 	}
 }

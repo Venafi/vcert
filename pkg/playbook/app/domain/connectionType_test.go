@@ -24,66 +24,64 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type InstallationTypeSuite struct {
+type ConnectionTypeSuite struct {
 	suite.Suite
 	testYaml  string
 	testCases []struct {
-		it       InstallationType
+		ct       ConnectionType
 		strValue string
 	}
 }
 
-func (s *InstallationTypeSuite) SetupTest() {
+func (s *ConnectionTypeSuite) SetupTest() {
 	s.testCases = []struct {
-		it       InstallationType
+		ct       ConnectionType
 		strValue string
 	}{
-		{it: TypeCAPI, strValue: stringCAPI},
-		{it: TypeJKS, strValue: stringJKS},
-		{it: TypePEM, strValue: stringPEM},
-		{it: TypePKCS12, strValue: stringPKCS12},
-		{it: TypeUnknown, strValue: stringUnknown},
+		{ct: CTypeUnknown, strValue: stringCTypeUnknown},
+		{ct: CTypeTPP, strValue: stringCTypeTPP},
+		{ct: CTypeVaaS, strValue: stringCTypeVaaS},
+		{ct: CTypeFirefly, strValue: stringCTypeFirefly},
 	}
 
 	s.testYaml = `---
 type: %s
-location: "my/folder"
-afterAction: "foo bar kwan"
+url: https://something.com
 `
 }
 
-func TestInstallationType(t *testing.T) {
-	suite.Run(t, new(InstallationTypeSuite))
+func TestConnectionType(t *testing.T) {
+	suite.Run(t, new(ConnectionTypeSuite))
 }
 
-func (s *InstallationTypeSuite) TestInstallationType_MarshalYAML() {
+func (s *ConnectionTypeSuite) TestConnectionType_MarshalYAML() {
 	for _, tc := range s.testCases {
 		s.Run(tc.strValue, func() {
-			data, err := tc.it.MarshalYAML()
+			data, err := tc.ct.MarshalYAML()
 			s.Nil(err)
 			s.Equal(tc.strValue, data.(string))
 		})
 	}
 }
 
-func (s *InstallationTypeSuite) TestInstallationType_String() {
+func (s *ConnectionTypeSuite) TestConnectionType_String() {
 	for _, tc := range s.testCases {
 		s.Run(tc.strValue, func() {
-			str := tc.it.String()
+			str := tc.ct.String()
 			s.Equal(tc.strValue, str)
 		})
 	}
 }
 
-func (s *InstallationTypeSuite) TestInstallationType_UnmarshalYAML() {
+func (s *ConnectionTypeSuite) TestConnectionType_UnmarshalYAML() {
 	for _, tc := range s.testCases {
 		s.Run(tc.strValue, func() {
-			var i Installation
+			var c Connection
 			parsedYaml := fmt.Sprintf(s.testYaml, tc.strValue)
-			err := yaml.Unmarshal([]byte(parsedYaml), &i)
+			err := yaml.Unmarshal([]byte(parsedYaml), &c)
 
 			s.Nil(err)
-			s.Equal(tc.it, i.Type)
+			s.Equal(tc.ct, c.Type)
 		})
 	}
 }

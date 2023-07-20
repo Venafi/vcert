@@ -1,3 +1,19 @@
+/*
+ * Copyright 2023 Venafi, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package service
 
 import (
@@ -81,6 +97,7 @@ func (s *ServiceSuite) SetupTest() {
 					},
 				},
 				RenewBefore: "30d",
+				SetEnvVars:  []string{envVarThumbprint, envVarBase64, envVarSerial},
 			},
 		},
 		{
@@ -94,9 +111,9 @@ func (s *ServiceSuite) SetupTest() {
 						Type:        domain.TypeJKS,
 						Location:    "./jks/testjks.jks",
 						AfterAction: "",
+						BackupFiles: true,
 					},
 				},
-				RenewBefore: "30d",
 			},
 		},
 		{
@@ -113,6 +130,7 @@ func (s *ServiceSuite) SetupTest() {
 					},
 				},
 				RenewBefore: "30d",
+				SetEnvVars:  []string{"hostname"},
 			},
 		},
 		{
@@ -137,14 +155,38 @@ func (s *ServiceSuite) SetupTest() {
 			},
 		},
 	}
+
+	s.errTestCases = []struct {
+		name   string
+		config domain.Config
+		task   domain.CertificateTask
+		err    error
+	}{
+		{
+			name:   "PEM",
+			config: domain.Config{ForceRenew: true},
+			task: domain.CertificateTask{
+				Name:    "testcertpem",
+				Request: request,
+				Installations: domain.Installations{
+					{
+						Type:             domain.TypePEM,
+						Location:         "./pem",
+						AfterAction:      "echo Success!",
+						PEMCertFilename:  "cert.cert",
+						PEMChainFilename: "cert.chain",
+						PEMKeyFilename:   "pk.pem",
+					},
+				},
+				RenewBefore: "30d",
+				SetEnvVars:  []string{envVarThumbprint, envVarBase64, envVarSerial},
+			},
+		},
+	}
 }
 
 func TestService(t *testing.T) {
 	suite.Run(t, new(ServiceSuite))
-}
-
-func (s *ServiceSuite) TestService_ValidateCredentials() {
-
 }
 
 func (s *ServiceSuite) TestService_Execute() {
