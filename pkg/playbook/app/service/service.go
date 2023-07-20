@@ -1,3 +1,19 @@
+/*
+ * Copyright 2023 Venafi, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package service
 
 import (
@@ -135,19 +151,34 @@ func runInstaller(taskName string, installation domain.Installation, vcertReques
 	return nil
 }
 
-func setEnvVars(task domain.CertificateTask, certificate *installer.Certificate, prepedPcc *certificate.PEMCollection) {
+func setEnvVars(task domain.CertificateTask, cert *installer.Certificate, prepedPcc *certificate.PEMCollection) {
 	//todo case sensitivity. upper the name
 	for _, envVar := range task.SetEnvVars {
+		varName := ""
+		varValue := ""
 		switch strings.ToLower(envVar) {
 		case "thumbprint":
-			varName := fmt.Sprintf("VCERT_%s_THUMBPRINT", strings.ToUpper(task.Name))
-			os.Setenv(varName, certificate.Thumbprint)
+			varName = fmt.Sprintf("VCERT_%s_THUMBPRINT", strings.ToUpper(task.Name))
+			varValue = cert.Thumbprint
 		case "serial":
-			varName := fmt.Sprintf("VCERT_%s_SERIAL", strings.ToUpper(task.Name))
-			os.Setenv(varName, certificate.X509cert.Subject.SerialNumber)
+			varName = fmt.Sprintf("VCERT_%s_SERIAL", strings.ToUpper(task.Name))
+			varValue = cert.X509cert.Subject.SerialNumber
 		case "base64":
-			varName := fmt.Sprintf("VCERT_%s_BASE64", strings.ToUpper(task.Name))
-			os.Setenv(varName, string(prepedPcc.Certificate))
+			varName = fmt.Sprintf("VCERT_%s_BASE64", strings.ToUpper(task.Name))
+			varValue = prepedPcc.Certificate
+		default:
+			zap.L().Error("environment variable not supported", zap.String("envVar", envVar))
+			continue
+		}
+
+		if varValue == "" {
+			zap.L().Error("environment variable value not found", zap.String("envVar", varName))
+			continue
+		}
+
+		err := os.Setenv(varName, varValue)
+		if err != nil {
+			zap.L().Error("failed to set environment variable", zap.String("envVar", varName), zap.Error(err))
 		}
 	}
 }
