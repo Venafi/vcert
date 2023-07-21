@@ -117,7 +117,7 @@ func setValidity(validDays string, vcertRequest *certificate.Request) {
 	days, _ := strconv.ParseInt(data[0], 10, 64)
 	hours := days * 24
 
-	vcertRequest.ValidityHours = int(hours)
+	vcertRequest.ValidityHours = int(hours) //nolint:staticcheck
 
 	var issuerHint util.IssuerHint
 	if len(data) > 1 { // means that issuer hint is set

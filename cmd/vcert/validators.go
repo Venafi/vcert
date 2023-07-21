@@ -19,7 +19,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
@@ -39,13 +38,13 @@ var RevocationReasonOptions = []string{
 	"cessation-of-operation",
 }
 
-// taken from keystore.minPasswordLen constant
+// JKSMinPasswordLen taken from keystore.minPasswordLen constant
 const JKSMinPasswordLen = 6
 
 func readData(commandName string) error {
 	if strings.HasPrefix(flags.distinguishedName, "file:") {
 		fileName := flags.distinguishedName[5:]
-		bytes, err := ioutil.ReadFile(fileName)
+		bytes, err := os.ReadFile(fileName)
 		if err != nil {
 			return fmt.Errorf("Failed to read Certificate DN: %s", err)
 		}
@@ -53,7 +52,7 @@ func readData(commandName string) error {
 	}
 	if strings.HasPrefix(flags.keyPassword, "file:") {
 		fileName := flags.keyPassword[5:]
-		bytes, err := ioutil.ReadFile(fileName)
+		bytes, err := os.ReadFile(fileName)
 		if err != nil {
 			return fmt.Errorf("Failed to read password from file: %s", err)
 		}

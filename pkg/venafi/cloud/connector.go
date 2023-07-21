@@ -25,7 +25,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	netUrl "net/url"
@@ -33,13 +33,13 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/crypto/nacl/box"
+
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
 	"github.com/Venafi/vcert/v4/pkg/policy"
 	"github.com/Venafi/vcert/v4/pkg/util"
 	"github.com/Venafi/vcert/v4/pkg/verror"
-
-	"golang.org/x/crypto/nacl/box"
 )
 
 type urlResource string
@@ -827,8 +827,8 @@ func getCloudRequest(c *Connector, req *certificate.Request) (*certificateReques
 
 	// DEPRECATED: ValidityHours is deprecated in favor of ValidityDuration, but we
 	// still support it for backwards compatibility.
-	if validityDuration == nil && req.ValidityHours > 0 {
-		duration := time.Duration(req.ValidityHours) * time.Hour
+	if validityDuration == nil && req.ValidityHours > 0 { //nolint:staticcheck
+		duration := time.Duration(req.ValidityHours) * time.Hour //nolint:staticcheck
 		validityDuration = &duration
 	}
 
@@ -1127,7 +1127,7 @@ func ConvertZipBytesToPem(dataByte []byte, rootFirst bool) (*certificate.PEMColl
 				continue
 			}
 			defer f.Close()
-			fileBytes, err := ioutil.ReadAll(f)
+			fileBytes, err := io.ReadAll(f)
 			if err != nil {
 				return nil, err
 			}
@@ -1143,7 +1143,7 @@ func ConvertZipBytesToPem(dataByte []byte, rootFirst bool) (*certificate.PEMColl
 			}
 
 			defer f.Close()
-			fileBytes, err := ioutil.ReadAll(f)
+			fileBytes, err := io.ReadAll(f)
 			if err != nil {
 				return nil, err
 			}
