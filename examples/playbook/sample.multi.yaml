@@ -1,0 +1,43 @@
+# This is an unlikely scenario. Mostly to showcase the tool capabilities.
+config:
+  connection:
+    type: tpp
+    credentials:
+      accessToken: '{{ Env "TPP_ACCESS_TOKEN" }}'
+      refreshToken: '{{ Env "TPP_REFRESH_TOKEN" }}'
+      clientId: vcert-sdk
+    trustBundle: /path/to/my/trustbundle.pem
+    url: https://supertreat.venqa.venafi.com
+certificates:
+  - name: myCertificate # Task Identifier, no relevance in tool run
+    request:
+      csrOrigin: service
+      keyPassword: "newPassword!"
+      subject:
+        # Templating needs to go between single quotes to avoid issues when refreshing tokens and saving back
+        commonName: '{{ Hostname | ToLower -}}.{{- Env "USERDNSDOMAIN" | ToLower }}'
+        country: US
+        locality: Salt Lake City
+        province: Utah
+        organization: Venafi Inc
+        orgUnits:
+          - engineering
+          - marketing
+      zone: "Open Source\\vcert"
+    installations:
+      - type: PEM
+        afterInstallAction: "echo Success!!!"
+        # Notice this is a folder path. Certificate, Chain and Private Key files will be created here
+        location: "/path/to/my/certificate/folder"
+        pemCertFilename: "cert.cer"
+        pemChainFilename: "chain.cer"
+        pemKeyFilename: "key.pem"
+      - type: JKS
+        afterInstallAction: "echo Success!!!"
+        jksAlias: venafi
+        jksPassword: foobar123 # Minimum six characters length
+        location: "/path/to/my/certificate/cert.jks"
+      - type: PKCS12
+        location: "/path/to/my/certificate/cert.p12"
+        afterInstallAction: "echo Success!!!"
+    renewBefore: 31d

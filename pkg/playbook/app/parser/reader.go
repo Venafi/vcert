@@ -110,7 +110,7 @@ func parseConfigTemplate(b []byte) ([]byte, error) {
 		"Hostname": func() string {
 			hostname, err := os.Hostname()
 			if err != nil {
-				zap.L().Warn(fmt.Sprintf("failed to automatically determine hostname %v", err))
+				zap.L().Warn("failed to automatically determine hostname", zap.Error(err))
 				return ""
 			}
 			return hostname

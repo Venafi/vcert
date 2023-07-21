@@ -45,7 +45,7 @@ const (
 func Execute(config domain.Config, task domain.CertificateTask) []error {
 	//If forceRenew is set, then no need to check the certificate status
 	if config.ForceRenew {
-		zap.L().Info("force-renew flag is set. All certificates will be requested/renewed regardless of status")
+		zap.L().Info("Flag [force-renew] is set. All certificates will be requested/renewed regardless of status")
 	} else {
 
 		if task.RenewBefore == "" {
@@ -68,10 +68,11 @@ func Execute(config domain.Config, task domain.CertificateTask) []error {
 
 		// Config has not changed. Do nothing
 		if !changed {
-			zap.L().Info(fmt.Sprintf("certificate %s in good health. No actions needed", task.Name))
+			zap.L().Info("Certificate in good health. No actions needed",
+				zap.String("certificate", task.Request.Subject.CommonName))
 			return nil
 		}
-		zap.L().Info(fmt.Sprintf("certificate %s needs action", task.Request.Subject.CommonName))
+		zap.L().Info("Certificate needs action", zap.String("certificate", task.Request.Subject.CommonName))
 	}
 
 	//Config changed or certificate needs renewal. Do request
@@ -79,13 +80,13 @@ func Execute(config domain.Config, task domain.CertificateTask) []error {
 	if err != nil {
 		return []error{fmt.Errorf("error requesting certificate %s: %w", task.Name, err)}
 	}
-	zap.L().Info(fmt.Sprintf("successfully enrolled certificate %s", task.Request.Subject.CommonName))
+	zap.L().Info("Successfully enrolled certificate", zap.String("certificate", task.Request.Subject.CommonName))
 
 	x509Certificate, prepedPcc, err := installer.CreateX509Cert(pcc, vRequest)
 	if err != nil {
-		e := fmt.Errorf("error preparing certificate for installation: %w", err)
-		zap.L().Error(e.Error())
-		return []error{e}
+		e := "error preparing certificate for installation"
+		zap.L().Error(e, zap.Error(err))
+		return []error{fmt.Errorf("%s: %w", e, err)}
 	}
 	zap.L().Info("successfully prepared certificate for installation")
 
@@ -107,52 +108,54 @@ func Execute(config domain.Config, task domain.CertificateTask) []error {
 
 func runInstaller(taskName string, installation domain.Installation, vcertRequest *certificate.Request, prepedPcc *certificate.PEMCollection) error {
 	instlr := installer.GetInstaller(installation)
-	zap.L().Info(fmt.Sprintf("running Installer: %s. Location: %s", installation.Type.String(), installation.Location))
+	zap.L().Info("Running Installer", zap.String("installer", installation.Type.String()),
+		zap.String("location", installation.Location))
 
 	var err error
 
-	if installation.BackupFiles == true {
-		zap.L().Info(fmt.Sprintf("backing up certificate for Installer: %s. Location: %s", installation.Type.String(), installation.Location))
+	if installation.BackupFiles {
+		zap.L().Info("Backing up certificate for Installer", zap.String("installer", installation.Type.String()),
+			zap.String("location", installation.Location))
 		err = instlr.Backup(taskName, *vcertRequest)
 		if err != nil {
-			e := fmt.Errorf("error backing up certificate at location %s: %w", installation.Location, err)
-			zap.L().Error(e.Error())
-			return e
+			e := "error backing up certificate"
+			zap.L().Error(e, zap.String("location", installation.Location), zap.Error(err))
+			return fmt.Errorf("%s at location %s: %w", e, installation.Location, err)
 		}
 	}
 
 	err = instlr.Install(taskName, *vcertRequest, *prepedPcc)
 	if err != nil {
-		e := fmt.Errorf("error installing certificate at location %s: %w", installation.Location, err)
-		zap.L().Error(e.Error())
-		return e
+		e := "error installing certificate"
+		zap.L().Error(e, zap.String("location", installation.Location), zap.Error(err))
+		return fmt.Errorf("%s at location %s: %w", e, installation.Location, err)
 	}
-	zap.L().Info(fmt.Sprintf("successfully installed certificate at %s.", installation.Location))
+	zap.L().Info("Successfully installed certificate", zap.String("location", installation.Location))
 
 	if installation.AfterAction == "" {
-		zap.L().Info("no after-install actions declared")
+		zap.L().Info("No after-install actions declared")
 		return nil
 	}
 
 	err = instlr.AfterInstallActions()
 	if err != nil {
-		e := fmt.Errorf("error running after-install actions at location %s: %w", installation.Location, err)
-		zap.L().Error(e.Error())
-		return e
+		e := "error running after-install actions" // at location %s: %w", installation.Location, err)
+		zap.L().Error(e, zap.String("location", installation.Location), zap.Error(err))
+		return fmt.Errorf("%s at location %s: %w", e, installation.Location, err)
 	}
 	zap.L().Info("successfully executed after-install actions")
 
 	validationResults, err := instlr.InstallValidationActions()
-	zap.L().Debug(fmt.Sprintf("install validation result is: %s", validationResults))
+	zap.L().Debug("install validation result", zap.String("result", validationResults))
 
 	if err != nil {
-		e := fmt.Errorf("error running after-install actions at location %s: %w", installation.Location, err)
-		zap.L().Error(e.Error())
-		return e
+		e := "error running after-install actions"
+		zap.L().Error(e, zap.String("location", installation.Location), zap.Error(err))
+		return fmt.Errorf("%s at location %s: %w", e, installation.Location, err)
 	} else if strings.TrimSpace(validationResults) == "1" {
-		zap.L().Info("installation validation actions failed")
+		zap.L().Info("Installation validation actions failed")
 	}
-	zap.L().Info("successfully executed installation validation actions")
+	zap.L().Info("Successfully executed installation validation actions")
 
 	return nil
 }

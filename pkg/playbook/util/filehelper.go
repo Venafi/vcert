@@ -32,7 +32,7 @@ func FileExists(certPath string) (bool, error) {
 	if err != nil {
 		// Certificate does not exist in location. Install
 		if errors.Is(err, os.ErrNotExist) {
-			zap.L().Debug(fmt.Sprintf("certificate file does not exist at location %s", certPath))
+			zap.L().Debug("certificate file does not exist at location", zap.String("location", certPath))
 			return false, nil
 		}
 		return false, err
@@ -45,13 +45,14 @@ func WriteFile(location string, content []byte) error {
 	dirPath := filepath.Dir(location)
 	err := os.MkdirAll(dirPath, 0750)
 	if err != nil {
-		zap.L().Error(fmt.Sprintf("could not create certificate directory path %s: %s", location, err.Error()))
+		zap.L().Error("could not create certificate directory path", zap.String("location", location),
+			zap.Error(err))
 		return err
 	}
 
 	err = os.WriteFile(location, content, 0600)
 	if err != nil {
-		zap.L().Error(fmt.Sprintf("could not write certificate to file %s: %s", location, err.Error()))
+		zap.L().Error("could not write certificate to file", zap.String("file", location), zap.Error(err))
 		return err
 	}
 	return nil
@@ -59,29 +60,42 @@ func WriteFile(location string, content []byte) error {
 
 // CopyFile makes a copy of the given source to the given destination using Go's native copy function io.Copy
 func CopyFile(source string, destination string) error {
-	zap.L().Debug(fmt.Sprintf("checking certificate at: %s", source))
+	zap.L().Debug("checking file", zap.String("location", source))
 
-	zap.L().Debug(fmt.Sprintf("Copying file from %s to %s", source, destination))
 	sourceFileStat, err := os.Stat(source)
 	if err != nil {
+		zap.L().Error("failed to stat file", zap.String("file", source), zap.Error(err))
 		return err
 	}
 
 	if !sourceFileStat.Mode().IsRegular() {
-		return fmt.Errorf("%s is not a regular file", source)
+		m := "file is not a regular file"
+		zap.L().Error(m, zap.String("file", source))
+		return fmt.Errorf("%s: %s", m, source)
 	}
 
 	sourceFile, err := os.Create(source)
 	if err != nil {
+		zap.L().Error("failed to create/truncate file", zap.String("file", source), zap.Error(err))
 		return err
 	}
 	defer sourceFile.Close()
 
 	destinationFile, err := os.Create(destination)
 	if err != nil {
+		zap.L().Error("failed to create/truncate file", zap.String("file", destination), zap.Error(err))
 		return err
 	}
 	defer destinationFile.Close()
+
 	_, err = io.Copy(destinationFile, sourceFile)
-	return err
+	if err != nil {
+		zap.L().Error("failed to copy file", zap.String("source", source),
+			zap.String("destination", destination), zap.Error(err))
+		return err
+	}
+	zap.L().Debug("file successfully copied", zap.String("source", source),
+		zap.String("destination", destination))
+
+	return nil
 }

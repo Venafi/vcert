@@ -45,7 +45,7 @@ func NewCAPIInstaller(inst domain.Installation) CAPIInstaller {
 // 2. Does the certificate is about to expire? Renew if about to expire.
 // Returns true if the certificate needs to be installed.
 func (r CAPIInstaller) Check(_ string, renewBefore string, request domain.PlaybookRequest) (bool, error) {
-	zap.L().Debug(fmt.Sprintf("checking certificate at: %s", r.Location))
+	zap.L().Debug("checking certificate", zap.String("location", r.Location))
 
 	friendlyName := request.Subject.CommonName
 	if request.FriendlyName != "" {
@@ -54,7 +54,7 @@ func (r CAPIInstaller) Check(_ string, renewBefore string, request domain.Playbo
 
 	storeLocation, storeName, err := getCertStore(r.Location)
 	if err != nil {
-		zap.L().Error(err.Error())
+		zap.L().Error("failed to get certificate store", zap.Error(err))
 		return true, err
 	}
 
@@ -68,7 +68,7 @@ func (r CAPIInstaller) Check(_ string, renewBefore string, request domain.Playbo
 
 	certPem, err := ps.RetrieveCertificateFromCAPI(config)
 	if err != nil {
-		zap.L().Error(fmt.Sprintf("failed to retrieve cetificate from CAPI store: %s", err.Error()))
+		zap.L().Error("failed to retrieve certificate from CAPI store", zap.Error(err))
 		return true, err
 	}
 
@@ -92,20 +92,25 @@ func (r CAPIInstaller) Check(_ string, renewBefore string, request domain.Playbo
 
 // Prepare takes the certificate, chain and private key and converts them to the specific format required for the installer
 func (r CAPIInstaller) Prepare(request certificate.Request, pcc certificate.PEMCollection) (*certificate.PEMCollection, error) {
+	zap.L().Debug("preparing certificate", zap.String("location", r.Location))
+
 	return prepareCertificateForBundle(request, pcc)
 }
 
 // Backup takes the certificate request and backs up the current version prior to overwriting
 func (r CAPIInstaller) Backup(_ string, request certificate.Request) error {
-	//Certificates are backed up by default for CAPI
+	zap.L().Debug("Certificate is backed up by default for CAPI")
+
 	return nil
 }
 
 // Install takes the certificate bundle and moves it to the location specified in the installer
 func (r CAPIInstaller) Install(_ string, request certificate.Request, pcc certificate.PEMCollection) error {
+	zap.L().Debug("installing certificate", zap.String("location", r.Location))
+
 	content, err := packageAsPKCS12(pcc, request.KeyPassword)
 	if err != nil {
-		zap.L().Error("could not package certificate as PKCS12")
+		zap.L().Error("could not package certificate as PKCS12", zap.Error(err))
 		return err
 	}
 
@@ -116,7 +121,7 @@ func (r CAPIInstaller) Install(_ string, request certificate.Request, pcc certif
 
 	storeLocation, storeName, err := getCertStore(r.Location)
 	if err != nil {
-		zap.L().Error(err.Error())
+		zap.L().Error("failed to get certificate store", zap.Error(err))
 		return err
 	}
 
@@ -133,7 +138,7 @@ func (r CAPIInstaller) Install(_ string, request certificate.Request, pcc certif
 
 	err = ps.InstallCertificateToCAPI(config)
 	if err != nil {
-		zap.L().Error(fmt.Sprintf("failed to install cetificate in CAPI store: %s", err.Error()))
+		zap.L().Error("failed to install certificate in CAPI store", zap.Error(err))
 		return err
 	}
 
@@ -144,6 +149,8 @@ func (r CAPIInstaller) Install(_ string, request certificate.Request, pcc certif
 //
 // No validations happen over the content of the AfterAction string, so caution is advised
 func (r CAPIInstaller) AfterInstallActions() error {
+	zap.L().Debug("running after-install actions", zap.String("location", r.Location))
+
 	_, err := util.ExecuteScript(r.AfterAction)
 	return err
 }
@@ -152,6 +159,7 @@ func (r CAPIInstaller) AfterInstallActions() error {
 // "0" for successful validation and "1" for a validation failure
 // No validations happen over the content of the InstallValidation string, so caution is advised
 func (r CAPIInstaller) InstallValidationActions() (string, error) {
+	zap.L().Debug("running install validation actions", zap.String("location", r.Location))
 	validationResult, err := util.ExecuteScript(r.InstallValidation)
 	if err != nil {
 		return "", err

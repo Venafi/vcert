@@ -94,7 +94,7 @@ func doRunPlaybook(_ *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	zap.L().Info(fmt.Sprintf("running with playbook file at %s", playbookOptions.filepath))
+	zap.L().Info("running playbook file", zap.String("file", playbookOptions.filepath))
 	zap.L().Debug("debug is enabled")
 
 	playbook, err := parser.ReadPlaybook(playbookOptions.filepath)
@@ -105,7 +105,7 @@ func doRunPlaybook(_ *cli.Context) error {
 
 	_, err = playbook.IsValid()
 	if err != nil {
-		zap.L().Error(fmt.Errorf("playbook '%v' is invalid: \n%w", playbookOptions.filepath, err).Error())
+		zap.L().Error("invalid playbook file", zap.String("file", playbookOptions.filepath), zap.Error(err))
 		os.Exit(1)
 	}
 
@@ -120,24 +120,24 @@ func doRunPlaybook(_ *cli.Context) error {
 	// emulate the setTLSConfig from vcert
 	err = setTLSConfig()
 	if err != nil {
-		zap.L().Error(fmt.Sprintf("%v", err))
+		zap.L().Error("tls config error", zap.Error(err))
 		os.Exit(1)
 	}
 
 	if playbook.Config.Connection.Type == domain.CTypeTPP {
 		err = service.ValidateTPPCredentials(&playbook)
 		if err != nil {
-			zap.L().Error(fmt.Sprintf("%v", err))
+			zap.L().Error("invalid tpp credentials", zap.Error(err))
 			os.Exit(1)
 		}
 	}
 
 	for _, certTask := range playbook.CertificateTasks {
-		zap.L().Info(fmt.Sprintf("running task: %s", certTask.Name))
+		zap.L().Info("running playbook task", zap.String("task", certTask.Name))
 		errors := service.Execute(playbook.Config, certTask)
 		if len(errors) > 0 {
 			for _, err2 := range errors {
-				zap.L().Error(fmt.Sprintf("error running task '%s': %v", certTask.Name, err2))
+				zap.L().Error("error running task", zap.String("task", certTask.Name), zap.Error(err2))
 			}
 			os.Exit(1)
 		}
