@@ -1,0 +1,30 @@
+config:
+  connection:
+    type: tpp
+    credentials:
+      clientId: vcert-sdk
+      accessToken: '{{ Env "TPP_ACCESS_TOKEN" }}'
+      refreshToken: '{{ Env "TPP_REFRESH_TOKEN" }}'
+    trustBundle: /path/to/my/trustbundle.pem # TrustBundle for TPP connection
+    url: https://supertreat.venqa.venafi.com # URL to TPP instance
+certificates:
+  - name: myCertificate # Task Identifier, no relevance in tool run
+    request:
+      csrOrigin: service
+      keyPassword: "newPassword!"
+      subject:
+        # Templating needs to go between single quotes to avoid issues when refreshing tokens and saving back
+        commonName: '{{ Hostname | ToLower -}}.{{- Env "USERDNSDOMAIN" | ToLower }}'
+        country: US
+        locality: Salt Lake City
+        province: Utah
+        organization: Venafi Inc
+        orgUnits:
+          - engineering
+          - marketing
+      zone: "Open Source\\vcert"
+    installations:
+      - type: PKCS12
+        location: "/path/to/my/certificate/cert.p12"
+        afterInstallAction: "echo Success!!!"
+    renewBefore: 31d

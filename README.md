@@ -145,6 +145,10 @@ make cucumber FEATURE=./features/basic/version.feature
 When run, these tests will be executed in their own Docker container using the Ruby version of Cucumber.  
 The completed test run will report on the number of test "scenarios" and "steps" that passed, failed, or were skipped. 
 
+## Playbook functionality
+
+For detailed explanations about the playbook and how it is build please check here: [Readme Playbook](./README-PLAYBOOK.md)
+
 ## Contributing to VCert
 
 Venafi welcomes contributions from the developer community.

@@ -23,7 +23,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -32,13 +31,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Venafi/vcert/v4/pkg/policy"
-	"github.com/Venafi/vcert/v4/pkg/util"
-
-	"github.com/Venafi/vcert/v4/pkg/verror"
-
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
+	"github.com/Venafi/vcert/v4/pkg/policy"
+	"github.com/Venafi/vcert/v4/pkg/util"
+	"github.com/Venafi/vcert/v4/pkg/verror"
 )
 
 type apiKey struct {
@@ -358,7 +355,7 @@ func (c *Connector) request(method string, url string, data interface{}, authNot
 	statusText = res.Status
 
 	defer res.Body.Close()
-	body, err = ioutil.ReadAll(res.Body)
+	body, err = io.ReadAll(res.Body)
 	if err != nil {
 		err = fmt.Errorf("%w: %v", verror.ServerError, err)
 	}
