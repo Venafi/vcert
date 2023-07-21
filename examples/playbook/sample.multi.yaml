@@ -7,7 +7,7 @@ config:
       refreshToken: '{{ Env "TPP_REFRESH_TOKEN" }}'
       clientId: vcert-sdk
     trustBundle: /path/to/my/trustbundle.pem
-    url: https://supertreat.venqa.venafi.com
+    url: https://my-tpp-instance.com
 certificates:
   - name: myCertificate # Task Identifier, no relevance in tool run
     request:
