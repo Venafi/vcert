@@ -136,7 +136,9 @@ func parsePEMCertificate(certData []byte) (*x509.Certificate, error) {
 func needRenewal(cert *x509.Certificate, renewBefore string) bool {
 	// if duration is 0 anything, then return false, auto-renewal is disabled
 	if renewBefore == "0" || strings.ToLower(renewBefore) == "disabled" {
-		zap.L().Warn(fmt.Sprintf("certificate %s will expire on %s but has automatic renewal disabled", cert.Subject.CommonName, cert.NotAfter))
+		zap.L().Warn("certificate expiring soon but automatic renewal disabled",
+			zap.String("certificate", cert.Subject.CommonName),
+			zap.String("expirationDate", cert.NotAfter.String()))
 		return false
 	}
 
@@ -145,7 +147,8 @@ func needRenewal(cert *x509.Certificate, renewBefore string) bool {
 	renew := renewBefore[:len(renewBefore)-1]
 	renewValue, err := strconv.ParseInt(renew, 10, 32)
 	if err != nil {
-		zap.L().Error(fmt.Sprintf("could not parse RenewBefore value. Using default renewBefore 10%% instead. %s: %s", renewBefore, err.Error()))
+		zap.L().Error("could not parse renewBefore value. Using default value [10%] instead",
+			zap.String("renewBefore", renewBefore), zap.Error(err))
 		// TODO: use real global default duration
 		timePostfix = "%"
 		renewValue = 10
@@ -153,13 +156,15 @@ func needRenewal(cert *x509.Certificate, renewBefore string) bool {
 
 	// if duration is 0 anything, then return false, auto-renewal is disabled
 	if renewValue == 0 {
-		zap.L().Warn(fmt.Sprintf("certificate %s will expire on %s but has automatic renewal disabled", cert.Subject.CommonName, cert.NotAfter))
+		zap.L().Warn("certificate expiring soon but automatic renewal disabled",
+			zap.String("certificate", cert.Subject.CommonName),
+			zap.String("expirationDate", cert.NotAfter.String()))
 		return false
 	}
 
 	// Cert expired, renew
 	if cert.NotAfter.Before(time.Now()) {
-		zap.L().Debug(fmt.Sprintf("certificate %s is expired", cert.Subject.CommonName))
+		zap.L().Debug("certificate is expired", zap.String("certificate", cert.Subject.CommonName))
 		return true
 	}
 
@@ -184,7 +189,8 @@ func needRenewal(cert *x509.Certificate, renewBefore string) bool {
 		renewDuration := time.Duration(float64(nsCertValidity) * pct)
 		timeToRenew = cert.NotAfter.Add(-renewDuration)
 	default:
-		zap.L().Warn(fmt.Sprintf("unknown duration postfix %s. Valid postfixes are: d (Days) and h (Hours): Using default 10%%", timePostfix))
+		zap.L().Warn("unknown duration postfix. Valid postfixes are: d (Days) and h (Hours): Using default [10%]",
+			zap.String("postfix", timePostfix))
 		// Total # of ns in the whole certificate lifetime
 		nsCertValidity := cert.NotAfter.Sub(cert.NotBefore).Nanoseconds()
 
@@ -196,11 +202,12 @@ func needRenewal(cert *x509.Certificate, renewBefore string) bool {
 	// Check certificate renew window
 	//Time now + renew window is bigger than cert expiration day? Then renew
 	if time.Now().After(timeToRenew) {
-		zap.L().Debug(fmt.Sprintf("certificate %s in renew window", cert.Subject.CommonName))
+		zap.L().Debug("certificate in renew window", zap.String("certificate", cert.Subject.CommonName))
 		return true
 	}
 
-	zap.L().Info(fmt.Sprintf("cert expires on %s and will auto-renew on %s", cert.NotAfter, timeToRenew))
+	zap.L().Info(fmt.Sprintf("cert expires on %s and will auto-renew on %s", cert.NotAfter, timeToRenew),
+		zap.String("expirationDate", cert.NotAfter.String()), zap.String("renewDate", timeToRenew.String()))
 	return false
 }
 

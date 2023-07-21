@@ -47,7 +47,7 @@ func NewJKSInstaller(inst domain.Installation) JKSInstaller {
 // 2. Does the certificate is about to expire? Renew if about to expire.
 // Returns true if the certificate needs to be installed.
 func (r JKSInstaller) Check(_ string, renewBefore string, request domain.PlaybookRequest) (bool, error) {
-	zap.L().Debug(fmt.Sprintf("checking certificate at: %s", r.Location))
+	zap.L().Debug("checking certificate:", zap.String("location", r.Location))
 
 	// Check certificate file exists
 	certExists, err := util.FileExists(r.Location)
@@ -78,13 +78,14 @@ func (r JKSInstaller) Check(_ string, renewBefore string, request domain.Playboo
 
 // Prepare takes the certificate, chain and private key and converts them to the specific format required for the installer
 func (r JKSInstaller) Prepare(request certificate.Request, pcc certificate.PEMCollection) (*certificate.PEMCollection, error) {
+	zap.L().Debug("preparing certificate", zap.String("location", r.Location))
+
 	return prepareCertificateForBundle(request, pcc)
 }
 
 // Backup takes the certificate request and backs up the current version prior to overwriting
 func (r JKSInstaller) Backup(_ string, request certificate.Request) error {
-
-	zap.L().Debug(fmt.Sprintf("backing up certificate at: %s", r.Location))
+	zap.L().Debug("backing up certificate", zap.String("location", r.Location))
 
 	// Check certificate file exists
 	certExists, err := util.FileExists(r.Location)
@@ -92,28 +93,28 @@ func (r JKSInstaller) Backup(_ string, request certificate.Request) error {
 		return err
 	}
 	if !certExists {
-		zap.L().Info(fmt.Sprintf("new certificate location specified, no back up taken"))
+		zap.L().Info("New certificate location specified, no back up taken")
 		return nil
-	}
-
-	//If no jksPassword set, use keyPassword
-	jksPass := r.JKSPassword
-	if jksPass == "" {
-		jksPass = request.KeyPassword
 	}
 
 	newLocation := fmt.Sprintf("%s.bak", r.Location)
 
 	err = util.CopyFile(r.Location, newLocation)
+	if err != nil {
+		return err
+	}
 
-	return err
+	zap.L().Info("Certificate backed up", zap.String("location", r.Location), zap.String("backupLocation", newLocation))
+	return nil
 }
 
 // Install takes the certificate bundle and moves it to the location specified in the installer
 func (r JKSInstaller) Install(_ string, request certificate.Request, pcc certificate.PEMCollection) error {
+	zap.L().Debug("installing certificate", zap.String("location", r.Location))
+
 	content, err := packageAsJKS(pcc, request.KeyPassword, r.JKSAlias, r.JKSPassword)
 	if err != nil {
-		zap.L().Error("could not package certificate as JKS")
+		zap.L().Error("could not package certificate as JKS", zap.Error(err))
 		return err
 	}
 
@@ -129,6 +130,8 @@ func (r JKSInstaller) Install(_ string, request certificate.Request, pcc certifi
 //
 // No validations happen over the content of the AfterAction string, so caution is advised
 func (r JKSInstaller) AfterInstallActions() error {
+	zap.L().Debug("running after-install actions", zap.String("location", r.Location))
+
 	_, err := util.ExecuteScript(r.AfterAction)
 	return err
 }
@@ -137,6 +140,8 @@ func (r JKSInstaller) AfterInstallActions() error {
 // "0" for successful validation and "1" for a validation failure
 // No validations happen over the content of the InstallValidation string, so caution is advised
 func (r JKSInstaller) InstallValidationActions() (string, error) {
+	zap.L().Debug("running install validation actions", zap.String("location", r.Location))
+
 	validationResult, err := util.ExecuteScript(r.InstallValidation)
 	if err != nil {
 		return "", err
@@ -149,12 +154,12 @@ func loadJKS(jksFile string, jksAlias string, jksPassword string, pkPassword str
 	//Open file
 	f, err := os.Open(jksFile)
 	if err != nil {
-		zap.L().Error(fmt.Sprintf("could not read JKS file at: %s", jksFile))
+		zap.L().Error("could not read JKS file", zap.String("jksFile", jksFile), zap.Error(err))
 		return nil, err
 	}
 	defer func() {
 		if err = f.Close(); err != nil {
-			zap.L().Fatal(fmt.Sprintf("could not close JKS file at %s", jksFile))
+			zap.L().Fatal("could not close JKS file", zap.String("jksFile", jksFile))
 		}
 	}()
 
@@ -162,14 +167,14 @@ func loadJKS(jksFile string, jksAlias string, jksPassword string, pkPassword str
 	ks := keystore.New()
 	err = ks.Load(f, []byte(jksPassword))
 	if err != nil {
-		zap.L().Error(fmt.Sprintf("could not load JKS resource at: %s", jksFile))
+		zap.L().Error("could not load JKS resource", zap.String("jksFile", jksFile))
 		return nil, err
 	}
 
 	//Load Private Key and Certificate chain
 	pkEntry, err := ks.GetPrivateKeyEntry(jksAlias, []byte(pkPassword))
 	if err != nil {
-		zap.L().Error(fmt.Sprintf("could not retrieve Private Key with alias %s from JKS", jksAlias))
+		zap.L().Error("could not retrieve Private Key from JKS", zap.String("jksAlias", jksAlias))
 		return nil, err
 	}
 

@@ -1,0 +1,35 @@
+certificates:
+  - installations:
+      - location: '{{ Env "HOME" }}/.vcp/vcpAuth.p12'
+        type: PKCS12
+    name: apiP12  # Ref to pkcs12 authentication!
+    renewBefore: 5%
+    request:
+      csrOrigin: local
+      keyPassword: '{{ Env "APIP12PASS" }}'
+      subject: 
+        # An AD computer account can use a certificate to get Access/Refresh tokens from TPP
+        # - Use either HOSTNAME$ (the sAMAccountName) or HOSTNAME@example.com in either the 
+        #   CN or UPN (depending on your TPP config). AD doesn't set UPNs on computer accounts
+        #   by default, so either add it to the computer account, or use the sAMAccountName.
+        # - Computer accounts can't be granted access to API applications by default. However, 
+        #   a group can be setup (or leverage "Domain Computers" for all computer accounts)
+        commonName: '{{ Hostname | ToLower -}}$' # Example of using the sAMAccountName
+      upns:
+        - '{{ Hostname | ToLower -}}@lab.securafi.net'
+      zone: Certificates\ClientAuth # Grant permissions in this folder to "Domain Computers"
+config:
+  connection:
+    credentials:
+      accessToken:  
+      # if the access_token is invalid, the refresh token / certificate will be used to refresh it (in that order)
+      # A valid accessToken (or refreshToken) can be provided when the pkcs12 certificate does not exist yet (think one time token?) to fetch a certificate 
+      #  to be used in the future
+      refreshToken: 
+      # If the refresh token is invalid or missing, the cert will be used to get a new accessToken
+      clientId: vcert-plus  # API application with "Domain Computers" added as valid user
+      pkcs12: apiP12
+      scope: certificate:manage
+    type: tpp
+    url: https://jhtpp231.lab.securafi.net
+  options: null

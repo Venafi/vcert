@@ -47,7 +47,7 @@ type PowerShell struct {
 func NewPowerShell() *PowerShell {
 	ps, err := exec.LookPath("powershell.exe")
 	if err != nil {
-		zap.L().Fatal(fmt.Sprintf("could not find powershell path: %s", err.Error()))
+		zap.L().Fatal("could not find powershell path", zap.Error(err))
 	}
 	return &PowerShell{
 		powerShell: ps,
@@ -61,12 +61,14 @@ func (ps PowerShell) InstallCertificateToCAPI(config InstallationConfig) error {
 	// verify friendly name doesn't have command injection
 	err := containsInjectableData(config.FriendlyName)
 	if err != nil {
-		return errors.WithMessagef(err, "failed to install certificate because of invalid characters in friendlyName")
+		m := "failed to install certificate because of invalid characters in friendlyName"
+		zap.L().Error(m)
+		return errors.WithMessagef(err, m)
 	}
 
 	err = os.WriteFile(pfxPath, config.PFX, 0600)
 	if err != nil {
-		zap.L().Error(fmt.Sprintf("could not create certificate temp file %s: %s", pfxPath, err.Error()))
+		zap.L().Error("could not create certificate temp file", zap.Error(err))
 		return err
 	}
 
@@ -88,7 +90,9 @@ func (ps PowerShell) InstallCertificateToCAPI(config InstallationConfig) error {
 
 	stdout, err := ps.executeScript(installCertScript, "install-cert", params)
 	if err != nil {
-		return errors.WithMessagef(err, "failed to install certificate into CAPI, stdout: '%s'", stdout)
+		m := "failed to install certificate into CAPI"
+		zap.L().Error(m, zap.String("stdout", stdout), zap.Error(err))
+		return errors.WithMessagef(err, "%s, stdout: '%s'", m, stdout)
 	}
 
 	return err
@@ -97,12 +101,14 @@ func (ps PowerShell) InstallCertificateToCAPI(config InstallationConfig) error {
 // RetrieveCertificateFromCAPI looks for a certificate in the CAPI store config.CertStore that matches the given config.FriendlyName.
 // If found, it returns the certificate in PEM format as a string
 func (ps PowerShell) RetrieveCertificateFromCAPI(config InstallationConfig) (string, error) {
-	zap.L().Info(fmt.Sprintf("retrieving certificate from CAPI Store: %s", config.FriendlyName))
+	zap.L().Info("retrieving certificate from CAPI Store", zap.String("friendlyName", config.FriendlyName))
 
 	// verify friendly name doesn't have command injection
 	err := containsInjectableData(config.FriendlyName)
 	if err != nil {
-		return "", errors.WithMessagef(err, "failed to retrieve certificate because of invalid characters in friendlyName")
+		m := "failed to retrieve certificate because of invalid characters in friendlyName"
+		zap.L().Error(m)
+		return "", errors.WithMessagef(err, m)
 	}
 
 	params := map[string]string{
@@ -113,7 +119,9 @@ func (ps PowerShell) RetrieveCertificateFromCAPI(config InstallationConfig) (str
 
 	stdout, err := ps.executeScript(retrieveCertScript, "retrieve-cert", params)
 	if err != nil {
-		return "", errors.WithMessagef(err, "failed to install certificate into CAPI, stdout: '%s'", stdout)
+		m := "failed to install certificate into CAPI"
+		zap.L().Error(m, zap.String("stdout", stdout), zap.Error(err))
+		return "", errors.WithMessagef(err, "%s, stdout: '%s'", m, stdout)
 	}
 
 	//Certificate not found, return empty string
@@ -135,7 +143,9 @@ func (ps PowerShell) executeScript(script, functionName string, parameters map[s
 
 	err := copyScript(script, scriptPath)
 	if err != nil {
-		return "", errors.WithMessagef(err, "failed to copy script")
+		m := "failed to copy script"
+		zap.L().Error(m)
+		return "", errors.WithMessagef(err, m)
 	}
 	defer func() {
 		if removeErr := os.RemoveAll(scriptPath); removeErr != nil {
@@ -145,7 +155,9 @@ func (ps PowerShell) executeScript(script, functionName string, parameters map[s
 
 	stdout, err := ps.runScript(scriptPath, functionName, parameters)
 	if err != nil {
-		return "", errors.WithMessagef(err, "failed to run script function %q", functionName)
+		m := "failed to run script function"
+		zap.L().Error(m, zap.String("functionName", functionName), zap.String("stdout", stdout), zap.Error(err))
+		return "", errors.WithMessagef(err, "%s %q", m, functionName)
 	}
 
 	return stdout, nil
@@ -159,7 +171,6 @@ func (ps PowerShell) runScript(scriptPath, functionName string, parameters map[s
 		builder.WriteString(fmt.Sprintf(" -%s %s", paramName, quoteIfNeeded(value)))
 	}
 	builder.WriteString("\"")
-	//builder.WriteString("-NoProfile -NonInteractive")
 
 	script := builder.String()
 
@@ -169,15 +180,15 @@ func (ps PowerShell) runScript(scriptPath, functionName string, parameters map[s
 	cmd.Stderr = &stdError
 	err := cmd.Run()
 
-	errString := "failed to run script file: %s"
+	errString := "failed to run script file"
 	if len(stdError.String()) != 0 {
-		zap.L().Error(fmt.Sprintf(errString, stdError.String()))
-		return "", fmt.Errorf(errString, stdError.String())
+		zap.L().Error(errString, zap.String("stderr", stdError.String()))
+		return "", fmt.Errorf("%s: %s", errString, stdError.String())
 	}
 
 	if err != nil {
-		zap.L().Error(fmt.Sprintf(errString, err.Error()))
-		return "", fmt.Errorf("failed to run script file: %w", err)
+		zap.L().Error(errString, zap.Error(err))
+		return "", fmt.Errorf("%s: %w", errString, err)
 	}
 
 	return stdOut.String(), nil

@@ -47,7 +47,7 @@ func EnrollCertificate(config domain.Config, request domain.PlaybookRequest) (*c
 	if err != nil {
 		return nil, nil, err
 	}
-	zap.L().Debug(fmt.Sprintf("successfully read zone config: %s", request.Zone))
+	zap.L().Debug("successfully read zone config", zap.String("zone", request.Zone))
 
 	err = client.GenerateRequest(zoneCfg, &vRequest)
 	if err != nil {
@@ -59,7 +59,7 @@ func EnrollCertificate(config domain.Config, request domain.PlaybookRequest) (*c
 	if err != nil {
 		return nil, nil, err
 	}
-	zap.L().Debug(fmt.Sprintf("successfully requested certificate: %s", reqID))
+	zap.L().Debug("successfully requested certificate", zap.String("requestID", reqID))
 
 	vRequest.PickupID = reqID
 	vRequest.Timeout = 180 * time.Second
@@ -68,7 +68,7 @@ func EnrollCertificate(config domain.Config, request domain.PlaybookRequest) (*c
 	if err != nil {
 		return nil, nil, err
 	}
-	zap.L().Debug(fmt.Sprintf("successfully retrieved certificate: %s", request.Subject.CommonName))
+	zap.L().Debug("successfully retrieved certificate", zap.String("certificate", request.Subject.CommonName))
 
 	return pcc, &vRequest, nil
 }

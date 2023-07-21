@@ -55,7 +55,7 @@ func copyScript(script, scriptPath string) error {
 
 	err := os.WriteFile(scriptPath, input, 0644)
 	if err != nil {
-		zap.L().Error("Error creating script file")
+		zap.L().Error("error creating script file")
 		return err
 	}
 

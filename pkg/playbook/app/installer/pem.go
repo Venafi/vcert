@@ -44,8 +44,9 @@ func NewPEMInstaller(inst domain.Installation) PEMInstaller {
 // 2. Does the certificate is about to expire? Renew if about to expire.
 // Returns true if the certificate needs to be installed.
 func (r PEMInstaller) Check(_ string, renewBefore string, _ domain.PlaybookRequest) (bool, error) {
+
 	certPath := filepath.Join(r.Location, r.PEMCertFilename)
-	zap.L().Debug(fmt.Sprintf("checking certificate at: %s", certPath))
+	zap.L().Debug("checking certificate:", zap.String("location", certPath))
 
 	// Check certificate file exists
 	certExists, err := util.FileExists(certPath)
@@ -70,11 +71,15 @@ func (r PEMInstaller) Check(_ string, renewBefore string, _ domain.PlaybookReque
 
 // Prepare takes the certificate, chain and private key and converts them to the specific format required for the installer
 func (r PEMInstaller) Prepare(request certificate.Request, pcc certificate.PEMCollection) (*certificate.PEMCollection, error) {
+	zap.L().Debug("preparing certificate", zap.String("location", r.Location))
+
 	return prepareCertificateForBundle(request, pcc)
 }
 
 // Backup takes the certificate request and backs up the current version prior to overwriting
 func (r PEMInstaller) Backup(_ string, _ certificate.Request) error {
+	zap.L().Debug("backing up certificate", zap.String("location", r.Location))
+
 	certPath := filepath.Join(r.Location, r.PEMCertFilename)
 	keyPath := filepath.Join(r.Location, r.PEMKeyFilename)
 	chainPath := filepath.Join(r.Location, r.PEMChainFilename)
@@ -85,7 +90,7 @@ func (r PEMInstaller) Backup(_ string, _ certificate.Request) error {
 		return err
 	}
 	if !certExists {
-		zap.L().Info(fmt.Sprintf("new certificate location specified, no backup taken"))
+		zap.L().Info("New certificate location specified, no back up taken")
 		return nil
 	}
 
@@ -110,6 +115,7 @@ func (r PEMInstaller) Backup(_ string, _ certificate.Request) error {
 		if err != nil {
 			return err
 		}
+		zap.L().Info("Certificate resource backed up", zap.String("location", resource.oldLocation), zap.String("backupLocation", resource.newLocation))
 	}
 
 	return nil
@@ -117,6 +123,8 @@ func (r PEMInstaller) Backup(_ string, _ certificate.Request) error {
 
 // Install takes the certificate bundle and moves it to the location specified in the installer
 func (r PEMInstaller) Install(_ string, _ certificate.Request, pcc certificate.PEMCollection) error {
+	zap.L().Debug("installing certificate", zap.String("location", r.Location))
+
 	err := os.MkdirAll(r.Location, 0750)
 	if err != nil {
 		zap.L().Error(fmt.Sprintf("could not create certificate directory path %s: %s", r.Location, err.Error()))
@@ -149,6 +157,8 @@ func (r PEMInstaller) Install(_ string, _ certificate.Request, pcc certificate.P
 //
 // No validations happen over the content of the AfterAction string, so caution is advised
 func (r PEMInstaller) AfterInstallActions() error {
+	zap.L().Debug("running after-install actions", zap.String("location", r.Location))
+
 	_, err := util.ExecuteScript(r.AfterAction)
 	return err
 }
@@ -157,6 +167,8 @@ func (r PEMInstaller) AfterInstallActions() error {
 // "0" for successful validation and "1" for a validation failure
 // No validations happen over the content of the InstallValidation string, so caution is advised
 func (r PEMInstaller) InstallValidationActions() (string, error) {
+	zap.L().Debug("running install validation actions", zap.String("location", r.Location))
+
 	validationResult, err := util.ExecuteScript(r.InstallValidation)
 	if err != nil {
 		return "", err

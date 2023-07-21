@@ -20,7 +20,6 @@ package util
 
 import (
 	"bytes"
-	"fmt"
 	"os/exec"
 
 	"go.uber.org/zap"
@@ -30,16 +29,16 @@ import (
 //
 // No validation is done over the afterAction string, so caution is advised.
 func ExecuteScript(afterAction string) (string, error) {
-	zap.L().Debug(fmt.Sprintf("running after-install actions: %s", afterAction))
+	zap.L().Debug("running After-install actions", zap.String("action", afterAction))
 
 	cmd := exec.Command("powershell.exe", afterAction)
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()
 	if err != nil {
-		zap.L().Error(fmt.Sprintf("could not run after-install action: %s", err.Error()))
+		zap.L().Error("could not run after-install action", zap.Error(err))
 		return "", err
 	}
-	zap.L().Debug(fmt.Sprintf("after-install output: %s", out.String()))
+	zap.L().Debug("after-install output", zap.String("stdout", out.String()))
 	return out.String(), nil
 }

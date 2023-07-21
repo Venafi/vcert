@@ -44,12 +44,12 @@ func ValidateTPPCredentials(playbook *domain.Playbook) error {
 		}
 	}
 
-	zap.L().Info("access token is invalid, missing, or expired")
+	zap.L().Info("Access token is invalid, missing, or expired")
 	if playbook.Config.Connection.Credentials.RefreshToken == "" && playbook.Config.Connection.Credentials.PKCS12 == "" {
 		return fmt.Errorf("access token no longer valid and no authorization methods specified - cannot get a new access token")
 	}
 
-	zap.L().Info("using refresh token")
+	zap.L().Info("Using refresh token")
 
 	// Read the playbook first, to make sure we can, before refreshing the tokens
 	// and blowing things up!
@@ -60,22 +60,23 @@ func ValidateTPPCredentials(playbook *domain.Playbook) error {
 
 	accessToken, refreshToken, err := vcertutil.RefreshTPPTokens(playbook.Config)
 	if err != nil {
-		zap.L().Error("failed to refresh TPP Tokens")
+		zap.L().Error("failed to refresh TPP Tokens", zap.Error(err))
 		return err
 	}
-	zap.L().Info("successfully retrieved new refresh token")
+	zap.L().Info("Successfully retrieved new refresh token")
 
 	playbook.Config.Connection.Credentials.AccessToken = accessToken
 	playbook.Config.Connection.Credentials.RefreshToken = refreshToken
 
 	err = replaceTokensInFile(pbData, accessToken, refreshToken)
 	if err != nil {
+		zap.L().Error("failed to replace tokens in playbook file", zap.Error(err))
 		return err
 	}
 
 	err = parser.WritePlaybook(pbData, playbook.Location)
 	if err != nil {
-		zap.L().Error("failed to serialize new tokens to playbook file")
+		zap.L().Error("failed to serialize new tokens to playbook file", zap.Error(err))
 		return err
 	}
 

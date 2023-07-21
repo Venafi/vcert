@@ -17,7 +17,6 @@
 package vcertutil
 
 import (
-	"fmt"
 	"net"
 	"net/url"
 	"os"
@@ -42,7 +41,7 @@ func loadTrustBundle(path string) string {
 	if path != "" {
 		buf, err := os.ReadFile(path)
 		if err != nil {
-			zap.L().Fatal(fmt.Sprintf("could not read TrustBundle at %s: %s", path, err.Error()))
+			zap.L().Fatal("could not read TrustBundle", zap.String("location", path), zap.Error(err))
 		}
 		return string(buf)
 	}
@@ -66,7 +65,7 @@ func getURIs(uris []string) []*url.URL {
 	for _, uriStr := range uris {
 		uri, err := url.Parse(uriStr)
 		if err != nil {
-			zap.L().Error(fmt.Sprintf("could not parse URI %s: %s", uriStr, err.Error()))
+			zap.L().Error("could not parse URI", zap.String("uri", uriStr), zap.Error(err))
 			continue
 		}
 		urls = append(urls, uri)
