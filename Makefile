@@ -72,6 +72,10 @@ cmd_test: get
 	go test -v $(GOFLAGS) -coverprofile=cov_cmd.out ./cmd/vcert
 	go tool cover -func=cov_cmd.out
 
+playbook_test: get
+	go test -v $(GOFLAGS) -coverprofile=cov_playbook.out ./pkg/playbook/...
+	go tool cover -func=cov_playbook.out
+
 collect_artifacts:
 	rm -rf artifacts
 	mkdir -p artifacts
