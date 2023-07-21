@@ -551,8 +551,8 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 
 	// DEPRECATED: ValidityHours is deprecated in favor of ValidityDuration, but we
 	// still support it for backwards compatibility.
-	if validityDuration == nil && req.ValidityHours > 0 {
-		duration := time.Duration(req.ValidityHours) * time.Hour
+	if validityDuration == nil && req.ValidityHours > 0 { //nolint:staticcheck
+		duration := time.Duration(req.ValidityHours) * time.Hour //nolint:staticcheck
 		validityDuration = &duration
 	}
 

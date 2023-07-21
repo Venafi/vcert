@@ -22,11 +22,11 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -249,7 +249,7 @@ func setTLSConfig() error {
 
 	if flags.clientP12 != "" {
 		// Load client PKCS#12 archive
-		p12, err := ioutil.ReadFile(flags.clientP12)
+		p12, err := os.ReadFile(flags.clientP12)
 		if err != nil {
 			return fmt.Errorf("Error reading PKCS#12 archive file: %s", err)
 		}
@@ -824,10 +824,10 @@ func getVaaSCredentials(vaasConnector *cloud.Connector, cfg *vcert.Config) error
 
 	if cfg.Credentials.User != "" {
 
-		statusCode, userDetails, error := vaasConnector.CreateAPIUserAccount(cfg.Credentials.User, cfg.Credentials.Password)
+		statusCode, userDetails, err := vaasConnector.CreateAPIUserAccount(cfg.Credentials.User, cfg.Credentials.Password)
 
-		if error != nil {
-			return fmt.Errorf("failed to create a User Account/rotate API Key in VaaS: %s", error)
+		if err != nil {
+			return fmt.Errorf("failed to create a User Account/rotate API Key in VaaS: %s", err)
 		}
 
 		apiKey := userDetails.APIKey
@@ -908,7 +908,7 @@ func doCommandPickup1(c *cli.Context) error {
 	}
 
 	if flags.pickupIDFile != "" {
-		bytes, err := ioutil.ReadFile(flags.pickupIDFile)
+		bytes, err := os.ReadFile(flags.pickupIDFile)
 		if err != nil {
 			return fmt.Errorf("Failed to read Pickup ID value: %s", err)
 		}
@@ -1226,19 +1226,19 @@ func doCommandGetPolicy(c *cli.Context) error {
 
 	}
 
-	var byte []byte
+	var b []byte
 
 	if policySpecLocation != "" {
 
 		fileExt := policy.GetFileType(policySpecLocation)
 		fileExt = strings.ToLower(fileExt)
 		if fileExt == policy.JsonExtension {
-			byte, _ = json.MarshalIndent(ps, "", "  ")
+			b, _ = json.MarshalIndent(ps, "", "  ")
 			if err != nil {
 				return err
 			}
 		} else if fileExt == policy.YamlExtension {
-			byte, _ = yaml.Marshal(ps)
+			b, _ = yaml.Marshal(ps)
 			if err != nil {
 				return err
 			}
@@ -1246,7 +1246,7 @@ func doCommandGetPolicy(c *cli.Context) error {
 			return fmt.Errorf("the specified byte is not supported")
 		}
 
-		err = ioutil.WriteFile(policySpecLocation, byte, 0600)
+		err = os.WriteFile(policySpecLocation, b, 0600)
 		if err != nil {
 			return err
 		}
@@ -1254,13 +1254,13 @@ func doCommandGetPolicy(c *cli.Context) error {
 
 	} else {
 
-		byte, _ = json.MarshalIndent(ps, "", "  ")
+		b, _ = json.MarshalIndent(ps, "", "  ")
 
 		if err != nil {
 			return err
 		}
 		log.Println("Policy is:")
-		fmt.Println(string(byte))
+		fmt.Println(string(b))
 	}
 
 	return nil
@@ -1435,11 +1435,11 @@ func doCommandRenew1(c *cli.Context) error {
 	// check if previous and renewed certificates are of the same private key
 	newCertBlock, _ := pem.Decode([]byte(pcc.Certificate))
 	if newCertBlock != nil && newCertBlock.Type == "CERTIFICATE" {
-		newCert, err := x509.ParseCertificate([]byte(newCertBlock.Bytes))
+		newCert, err := x509.ParseCertificate(newCertBlock.Bytes)
 		if err == nil {
 			old, _ := json.Marshal(oldCert.PublicKey)
-			new, _ := json.Marshal(newCert.PublicKey)
-			if len(old) > 0 && string(old) == string(new) {
+			newCrt, _ := json.Marshal(newCert.PublicKey)
+			if len(old) > 0 && string(old) == string(newCrt) {
 				logf("WARNING: private key reused")
 			}
 		}

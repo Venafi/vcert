@@ -18,9 +18,9 @@ package vcert
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"os/user"
 	"path/filepath"
 
@@ -124,7 +124,7 @@ func LoadConfigFromFile(path, section string) (cfg Config, err error) {
 		if err != nil {
 			return cfg, fmt.Errorf("failed to load trust-bundle: %s", err)
 		}
-		data, err := ioutil.ReadFile(fname)
+		data, err := os.ReadFile(fname)
 		if err != nil {
 			return cfg, fmt.Errorf("failed to load trust-bundle: %s", err)
 		}

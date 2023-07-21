@@ -17,25 +17,24 @@
 package test
 
 import (
+	"crypto/rand"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/certificate"
-	"github.com/Venafi/vcert/v4/pkg/policy"
-	"math/rand"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/Venafi/vcert/v4/pkg/certificate"
+	"github.com/Venafi/vcert/v4/pkg/policy"
 )
 
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
-
 func randRunes(n int) string {
-	var letterRunes = []rune("abcdefghijklmnopqrstuvwxyz")
-	b := make([]rune, n)
-	for i := range b {
-		/* #nosec */
-		b[i] = letterRunes[rand.Intn(len(letterRunes))]
+	letterRunes := "abcdefghijklmnopqrstuvwxyz"
+
+	b := make([]byte, n)
+	_, _ = rand.Read(b)
+
+	for i, v := range b {
+		b[i] = letterRunes[v%byte(len(letterRunes))]
 	}
 	return string(b)
 }
