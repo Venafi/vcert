@@ -493,6 +493,13 @@ var (
 		Destination: &flags.clientSecret,
 	}
 
+	flagAudience = &cli.StringFlag{
+		Name: "audience",
+		Usage: "Use to specify the audience param to get an access token for OAuth 2.0 identity providers\n" +
+			"\t supporting it like auth0. The audience values must be separated by blank spaces",
+		Destination: &flags.audience,
+	}
+
 	flagCustomField = &cli.StringSliceFlag{
 		Name:  "field",
 		Usage: "Use to specify custom fields in format 'key=value'. If many values for the same key are required, use syntax '--field key1=value1 --field key1=value2'",
@@ -805,6 +812,7 @@ var (
 		flagCredPm,
 		flagClientId,
 		flagClientSecret,
+		flagAudience,
 		flagTokenURL,
 		commonFlags,
 	))

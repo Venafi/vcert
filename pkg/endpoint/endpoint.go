@@ -158,6 +158,7 @@ type OAuthProvider struct {
 	//OAuthProviderType string
 	//AuthURL           string
 	TokenURL string
+	Audience string
 }
 
 // todo: replace with verror

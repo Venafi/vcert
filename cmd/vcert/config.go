@@ -105,6 +105,7 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 				auth.ClientId = flags.clientId
 				auth.ClientSecret = flags.clientSecret
 				identityProvider.TokenURL = flags.tokenURL
+				identityProvider.Audience = flags.audience
 				auth.IdentityProvider = identityProvider
 			}
 		} else {

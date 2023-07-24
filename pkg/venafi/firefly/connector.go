@@ -21,6 +21,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -108,11 +109,21 @@ func (c *Connector) Authorize(auth *endpoint.Authentication) (token *oauth2.Toke
 
 	// if it's a client credentials flow grant
 	if auth.ClientSecret != "" {
+
 		config := clientcredentials.Config{
 			ClientID:     auth.ClientId,
 			ClientSecret: auth.ClientSecret,
 			TokenURL:     auth.IdentityProvider.TokenURL,
-			//Scopes:       strings.Split(auth.Scope, " "),
+			Scopes:       strings.Split(auth.Scope, " "),
+		}
+		//if the audience was provided, then it's required to set it to the config.
+		if auth.IdentityProvider.Audience != "" {
+			audienceList := strings.Split(auth.IdentityProvider.Audience, " ")
+			if len(audienceList) > 0 {
+				config.EndpointParams = url.Values{
+					"audience": audienceList,
+				}
+			}
 		}
 
 		return config.Token(context.Background())

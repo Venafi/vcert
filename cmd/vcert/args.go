@@ -44,6 +44,7 @@ var (
 type commandFlags struct {
 	apiKey               string
 	appInfo              string
+	audience             string
 	caDN                 string
 	certFile             string
 	chainFile            string
