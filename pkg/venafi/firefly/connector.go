@@ -75,7 +75,7 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 	panic("operation is not supported yet")
 }
 
-// Authorize Get OAuth refresh and access token
+// Authorize Get an OAuth access token
 func (c *Connector) Authorize(auth *endpoint.Authentication) (token *oauth2.Token, err error) {
 	defer func() {
 		if err != nil {
@@ -112,7 +112,7 @@ func (c *Connector) Authorize(auth *endpoint.Authentication) (token *oauth2.Toke
 			ClientID:     auth.ClientId,
 			ClientSecret: auth.ClientSecret,
 			TokenURL:     auth.IdentityProvider.TokenURL,
-			Scopes:       strings.Split(auth.Scope, " "),
+			//Scopes:       strings.Split(auth.Scope, " "),
 		}
 
 		return config.Token(context.Background())

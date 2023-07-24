@@ -155,9 +155,9 @@ type Authentication struct {
 
 // OAuthProvider provides a struct for the OAuth 2.0 providers information
 type OAuthProvider struct {
-	OAuthProviderType string
-	AuthURL           string
-	TokenURL          string
+	//OAuthProviderType string
+	//AuthURL           string
+	TokenURL string
 }
 
 // todo: replace with verror

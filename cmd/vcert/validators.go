@@ -395,22 +395,21 @@ func validateCredMgmtFlags1(commandName string) error {
 		}
 		getCredForVaaS := false
 		if commandName == commandGetCredName {
-
-			userParameterProvided, err := getUserParameterProvidedForGetCred()
-
-			if err != nil {
-				return err
-			}
-
-			if userParameterProvided == flagEmail.Name {
-				getCredForVaaS = true
-			}
-
 			//TODO the platform validation should moved into an upper level to use it in other commands
 			if flags.platformString != "" {
 				flags.platform = venafi.GetPlatformType(flags.platformString)
 			}
+			if flags.platform != venafi.Firefly {
+				userParameterProvided, err := getUserParameterProvidedForGetCred()
 
+				if err != nil {
+					return err
+				}
+
+				if userParameterProvided == flagEmail.Name {
+					getCredForVaaS = true
+				}
+			}
 		} else {
 			if tppTokenS == "" {
 				return fmt.Errorf("missing -t (access token) parameter")

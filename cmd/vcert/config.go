@@ -77,7 +77,7 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 			}
 			//add support for using environment variables ends
 
-			if tppTokenS == "" && flags.password == "" && flags.clientP12 == "" && c.Command.Name != "sshgetconfig" {
+			if tppTokenS == "" && flags.password == "" && flags.clientP12 == "" && flags.clientSecret == "" && c.Command.Name != "sshgetconfig" {
 				return cfg, fmt.Errorf("A password is required to communicate with TPP")
 			}
 
