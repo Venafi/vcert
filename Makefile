@@ -93,7 +93,7 @@ release:
 	cd artifacts; sha1sum * >> ../release.txt
 	echo '```' >> release.txt
 	go install github.com/tcnksm/ghr@latest
-	export PATH=$PATH:$(go env GOPATH)/bin && ghr -prerelease -n $$RELEASE_VERSION -body="$$(cat ./release.txt)" $$RELEASE_VERSION artifacts/
+	export "PATH=$(PATH):$(shell go env GOPATH)/bin" && ghr -prerelease -n $$RELEASE_VERSION -body="$$(cat ./release.txt)" $$RELEASE_VERSION artifacts/
 
 linter:
 	@golangci-lint --version || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b /go/bin
