@@ -36,9 +36,9 @@ cucumber:
 	mkdir -p ./aruba/bin/ && cp ./bin/linux/vcert ./aruba/bin/vcert
 	docker build --tag vcert.auto aruba/
 	if [ -z "$(FEATURE)" ]; then \
-		cd aruba && ./cucumber.sh; \
+		cd aruba && ./cucumber.sh $(PLATFORM); \
 	else \
-		cd aruba && ./cucumber.sh $(FEATURE); \
+		cd aruba && ./cucumber.sh $(FEATURE) $(PLATFORM);\
 	fi
 
 gofmt:

@@ -25,9 +25,15 @@ Feature: renew action by -thumbprint
     Then private key in "k1.pem" and certificate in "c1.pem" should have the same modulus
     And certificate in "c.pem" and certificate in "c1.pem" should not have the same modulus
     And certificate in "c.pem" and certificate in "c1.pem" should not have the same serial
+
+    @TPP
     Examples:
       | endpoint  |
       | TPP       |
+
+    @VAAS
+    Examples:
+      | endpoint  |
       | Cloud     |
 
   Scenario Outline: TPP - renew by CertificateDN using -thumbprint file:cert.pem
@@ -41,8 +47,14 @@ Feature: renew action by -thumbprint
     Then private key in "k1.pem" and certificate in "c1.pem" should have the same modulus
     And certificate in "c.pem" and certificate in "c1.pem" should not have the same modulus
     And certificate in "c.pem" and certificate in "c1.pem" should not have the same serial
+
+    @TPP
     Examples:
       | endpoint  |
       | TPP       |
+
+    @VAAS
+    Examples:
+      | endpoint  |
       | Cloud     |
 

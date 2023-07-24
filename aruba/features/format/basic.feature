@@ -1,3 +1,4 @@
+@INTERNAL
 Feature: -format output option
 
   As a user

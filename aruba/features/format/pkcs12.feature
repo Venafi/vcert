@@ -47,59 +47,119 @@ Feature: PKCS#12 format output
     When I enroll random certificate in <endpoint> with -format pkcs12 -file all.p12 -key-password newPassw0rd!
     Then the exit status should be 0
     And "all.p12" should be PKCS#12 archive with password "newPassw0rd!"
+    @INTERNAL
     Examples:
       | endpoint  |
       | test-mode |
+
+    @TPP
+    Examples:
+      | endpoint  |
       | TPP       |
+
+    @VAAS
+    Examples:
+      | endpoint  |
       | Cloud     |
 
   Scenario Outline: where it outputs error when trying to pickup local-generated certificate and output it in PKCS#12 format
     When I enroll random certificate using <endpoint> with -no-prompt -no-pickup
     And I retrieve the certificate using <endpoint> using the same Pickup ID with -timeout 180 -no-prompt -file all.p12 -format pkcs12
     And it should fail with "key password must be provided"
+
+    @INTERNAL
     Examples:
       | endpoint  |
       | test-mode |
+
+    @TPP
+    Examples:
+      | endpoint  |
       | TPP       |
+
+    @VAAS
+    Examples:
+      | endpoint  |
       | Cloud     |
 
   Scenario Outline: where it outputs error when trying to enroll certificate in -csr file: mode and output it in PKCS#12 format
     Given I generate random CSR with -no-prompt -csr-file csr.pem -key-file k.pem
     When I enroll certificate using <endpoint> with -no-prompt -csr file:csr.pem -file all.p12 -format pkcs12
     And it should fail with "The --csr \"file\" option may not be used with the enroll or renew actions when --format is \"pkcs12\""
+
+    @INTERNAL
     Examples:
       | endpoint  |
       | test-mode |
+
+    @TPP
+    Examples:
+      | endpoint  |
       | TPP       |
+
+    @VAAS
+    Examples:
+      | endpoint  |
       | Cloud     |
 
   Scenario Outline: where it outputs error when trying to enroll certificate in -csr local (by default), -no-pickup and output it in PKCS#12 format
     When I enroll random certificate using <endpoint> with -no-prompt -file all.p12 -format pkcs12 -no-pickup
     And it should fail with "The --csr \"local\" option may not be used with the enroll or renew actions when --format is \"pkcs12\" and --no-pickup is specified"
+
+    @INTERNAL
     Examples:
       | endpoint  |
       | test-mode |
+
+    @TPP
+    Examples:
+      | endpoint  |
       | TPP       |
+
+    @VAAS
+    Examples:
+      | endpoint  |
       | Cloud     |
 
   Scenario Outline: where it outputs error when trying to enroll certificate in -csr local (specified), -no-pickup and output it in PKCS#12 format
     When I enroll random certificate using <endpoint> with -no-prompt -file all.p12 -format pkcs12 -no-pickup -csr local
     And it should fail with "The --csr \"local\" option may not be used with the enroll or renew actions when --format is \"pkcs12\" and --no-pickup is specified"
+
+    @INTERNAL
     Examples:
       | endpoint  |
       | test-mode |
+
+    @TPP
+    Examples:
+      | endpoint  |
       | TPP       |
+
+    @VAAS
+    Examples:
+      | endpoint  |
       | Cloud     |
 
   Scenario Outline: where it pickups up service-generated certificate and outputs it in PKCS#12 format
     When I enroll random certificate using <endpoint> with -no-prompt -no-pickup -csr service
     And I retrieve the certificate using <endpoint> using the same Pickup ID with -timeout 180 -key-password newPassw0rd! -file all.p12 -format pkcs12
     And "all.p12" should be PKCS#12 archive with password "newPassw0rd!"
+
+    @INTERNAL
     Examples:
       | endpoint  |
       | test-mode |
+
+    @TPP
+    Examples:
+      | endpoint  |
       | TPP       |
-      # | Cloud     | # -csr service is not supported by Cloud
+
+# TODO: Now VaaS supports CSR, but we need to verify this behavior for this test
+#    @VAAS
+#    Examples:
+#      | endpoint  |
+#      | Cloud     | # -csr service is not supported by Cloud
 
 #  Scenario Outline: Pickup PKCS12 with typing pass phrases
 #    When I enroll random certificate using <endpoint> with -no-prompt -no-pickup -csr service
@@ -120,8 +180,14 @@ Feature: PKCS#12 format output
     Then I retrieve the certificate using <endpoint> using the same Pickup ID with -key-password newPassw0rd! -timeout 59
       And it should retrieve certificate
       And it should output encrypted private key
+
+    @INTERNAL
     Examples:
       | endpoint  |
       | test-mode |
+
+    @TPP
+    Examples:
+      | endpoint  |
       | TPP       |
 

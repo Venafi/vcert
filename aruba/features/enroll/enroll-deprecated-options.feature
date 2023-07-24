@@ -1,3 +1,4 @@
+@TPP
 Feature: Tests with deprecated TPP options
 
   As a user
@@ -26,6 +27,7 @@ Feature: Tests with deprecated TPP options
 # VCert pickup -tpp-url %TPP_URL% -tpp-user %TPP_USER% -tpp-password %TPP_PASS% -pickup-id %PICKUP_ID% -key-password %KEY_PASS%
 # if ERRORLEVEL 1 goto :DONE
 # timeout /t 10
+
   Scenario: ~ Service Generated CSR pickup later ID as param ~
     When I enroll certificate using TPPdeprecated with -csr service -cn service-gen-pickup-id-as-param.vcert.example -no-pickup
     Then it should post certificate request

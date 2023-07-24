@@ -1,3 +1,4 @@
+@INTERNAL
 Feature: Showing usage text page
 
   As a user

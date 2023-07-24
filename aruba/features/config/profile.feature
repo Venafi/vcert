@@ -9,8 +9,20 @@ Feature: -profile option
   Scenario Outline: Where it enrolls a certificate using different profiles
     When I try to run `vcert enroll -config all.ini -profile <profile> -cn cfg.venafi.example.com -no-prompt -insecure`
     Then it should retrieve certificate
+
+    @INTERNAL
     Examples:
       | profile         |
       | mock-profile    |
       | tpp-profile     |
+      | cloud-profile   |
+
+    @TPP
+    Examples:
+      | profile         |
+      | tpp-profile     |
+
+    @VAAS
+    Examples:
+      | profile         |
       | cloud-profile   |

@@ -12,9 +12,19 @@ Feature: Enrolling certificates with -config option
   Scenario Outline: Where it enrolls a certificate using different endpoints
     When I try to run `vcert enroll -config <config-file> -cn cfg.venafi.example.com -no-prompt -insecure`
     Then it should retrieve certificate
+
+    @INTERNAL
     Examples:
       | config-file |
       | test.ini    |
+
+    @TPP
+    Examples:
+      | config-file |
       | tpp.ini     |
-      | cloud.ini   |
       |tpp-deprecated.ini|
+
+    @VAAS
+    Examples:
+      | config-file |
+      | cloud.ini   |
