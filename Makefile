@@ -35,11 +35,11 @@ cucumber:
 	rm -rf ./aruba/bin/
 	mkdir -p ./aruba/bin/ && cp ./bin/linux/vcert ./aruba/bin/vcert
 	docker build --tag vcert.auto aruba/
-	if [ -z "$(FEATURE)" ]; then \
-		cd aruba && ./cucumber.sh $(PLATFORM); \
+	if [ -n "$(FEATURE)" ]; then \
+		cd aruba && ./cucumber.sh $(FEATURE) $(PLATFORM); \
 	else \
-		cd aruba && ./cucumber.sh $(FEATURE) $(PLATFORM);\
-	fi
+    	cd aruba && ./cucumber.sh $(PLATFORM); \
+    fi
 
 gofmt:
 	! gofmt -l . | grep -v ^vendor/ | grep .

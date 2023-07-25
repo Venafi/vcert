@@ -25,6 +25,7 @@ Feature: PKCS#12 format output
   Background:
     And the default aruba exit timeout is 180 seconds
 
+  @INTERNAL
   Scenario: where it outputs error if PKCS#12 format is specified, but STDOUT output is used (default output)
     When I enroll random certificate in test-mode with -no-prompt -format pkcs12
       Then it should fail with "PKCS#12 format requires certificate, private key, and chain to be written to a single file; specify using --file"
@@ -33,11 +34,13 @@ Feature: PKCS#12 format output
     When I renew the certificate in TPP with flags -id xxx -no-prompt -format pkcs12
       Then it should fail with "PKCS#12 format requires certificate, private key, and chain to be written to a single file; specify using --file"
 
+  @INTERNAL
   Scenario: where all objects are written to one PKCS#12 archive
     When I enroll random certificate in test-mode with -no-prompt -format pkcs12 -file all.p12
     Then the exit status should be 0
     And "all.p12" should be PKCS#12 archive with password ""
 
+  @INTERNAL
   Scenario: where all objects are written to one PKCS#12 archive with ecdsa key
     When I enroll random certificate in test-mode with -no-prompt -format pkcs12 -file all.p12 -key-type ecdsa
     Then the exit status should be 0
