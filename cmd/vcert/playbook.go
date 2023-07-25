@@ -16,11 +16,16 @@
 package main
 
 import (
+	"crypto/tls"
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
+	"net/http"
 	"os"
 
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
+	"golang.org/x/crypto/pkcs12"
 
 	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain"
 	"github.com/Venafi/vcert/v4/pkg/playbook/app/parser"
@@ -118,7 +123,7 @@ func doRunPlaybook(_ *cli.Context) error {
 	}
 
 	// emulate the setTLSConfig from vcert
-	err = setTLSConfig()
+	err = setPlaybookTLSConfig(playbook)
 	if err != nil {
 		zap.L().Error("tls config error", zap.Error(err))
 		os.Exit(1)
@@ -144,5 +149,85 @@ func doRunPlaybook(_ *cli.Context) error {
 	}
 
 	zap.L().Info("playbook run finished")
+	return nil
+}
+
+func setPlaybookTLSConfig(playbook domain.Playbook) error {
+	// NOTE: This should use the standard setTLSConfig from vCert once incorporated into vCert
+	//  added here mostly to deal with TPP servers that are enabled for certificate authentication
+	//  and to enable certificate authentication
+
+	// Set RenegotiateFreelyAsClient in case of we're communicating with MTLS enabled TPP server
+	if playbook.Config.Connection.Type == domain.CTypeTPP {
+		tlsConfig.Renegotiation = tls.RenegotiateFreelyAsClient
+	}
+
+	if playbook.Config.Connection.Insecure {
+		tlsConfig.InsecureSkipVerify = true // #nosec G402
+	}
+
+	// Try to set up certificate authentication if enabled
+	if playbook.Config.Connection.Type == domain.CTypeTPP && playbook.Config.Connection.Credentials.PKCS12 != "" {
+		zap.L().Info("attempting to enable certificate authentication to TPP")
+		var p12FileLocation string
+		var p12Password string
+
+		// Figure out which certificate task in the playbook the PKCS12 authentication should use
+		for _, task := range playbook.CertificateTasks {
+			if task.Name == playbook.Config.Connection.Credentials.PKCS12 {
+				for _, inst := range task.Installations {
+					// Find the first installation that is of type P12
+					if inst.Type == domain.TypePKCS12 {
+						p12FileLocation = inst.Location
+						p12Password = task.Request.KeyPassword
+						break
+					}
+				}
+			}
+
+			// If we found a correct association, stop looking
+			if p12FileLocation != "" && p12Password != "" {
+				break
+			}
+		}
+
+		// Load client PKCS#12 archive
+		p12, err := os.ReadFile(p12FileLocation)
+		if err != nil {
+			// This is a warning only... our playbook may define a PKCS12 to use for authentication
+			//  but use an access_token / refresh_token to get it for the first time
+			zap.L().Warn("unable to read PKCS#12 file", zap.String("file", p12FileLocation), zap.Error(err))
+		} else {
+			// We have a PKCS12 file to use, set it up for cert authentication
+			blocks, err := pkcs12.ToPEM(p12, p12Password)
+			if err != nil {
+				return fmt.Errorf("failed converting PKCS#12 archive file to PEM blocks: %w", err)
+			}
+
+			var pemData []byte
+			for _, b := range blocks {
+				pemData = append(pemData, pem.EncodeToMemory(b)...)
+			}
+
+			// Construct TLS certificate from PEM data
+			cert, err := tls.X509KeyPair(pemData, pemData)
+			if err != nil {
+				return fmt.Errorf("failed reading PEM data to build X.509 certificate: %w", err)
+			}
+
+			caCertPool := x509.NewCertPool()
+			caCertPool.AppendCertsFromPEM(pemData)
+
+			// Setup HTTPS client
+			tlsConfig.Certificates = []tls.Certificate{cert}
+			tlsConfig.RootCAs = caCertPool
+			tlsConfig.BuildNameToCertificate() // nolint:staticcheck
+		}
+
+	}
+
+	//Setting TLS configuration
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tlsConfig
+
 	return nil
 }
