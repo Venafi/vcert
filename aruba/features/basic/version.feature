@@ -1,4 +1,4 @@
-@INTERNAL
+@COMMON
 Feature: showing version
 
   As a user, I want to know version number of the app

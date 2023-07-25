@@ -6,13 +6,13 @@ Feature: Enroll certificate
   Background:
     Given the default aruba exit timeout is 180 seconds
 
-  @INTERNAL
+  @FAKE
   Scenario: Simple enroll in test mode
     When I successfully run `vcert enroll -test-mode -test-mode-delay 0 -cn vfidev.example.com -no-prompt` for up to 10 seconds
     Then it should post certificate request
       And it should retrieve certificate
 
-  @INTERNAL
+  @FAKE
   Scenario: Enroll with interactive mode
     When I run `vcert enroll -test-mode -test-mode-delay 0 -cn vfidev.example.com` interactively
     And I type ""
@@ -20,78 +20,78 @@ Feature: Enroll certificate
     Then it should post certificate request
     And it should retrieve certificate
 
-  @INTERNAL
+  @FAKE
   Scenario: Passphrases don't match
     When I run `vcert enroll -test-mode -test-mode-delay 0 -cn vfidev.example.com` interactively
       And I type "newPassw0rd!"
       And I type "different password"
     Then it should fail with "Passphrases don't match"
 
-  @INTERNAL
+  @FAKE
   Scenario: request a certificate with default arguments
     When I run `vcert enroll -test-mode -test-mode-delay 0 -cn vfidev.example.com -no-prompt -no-pickup`
     Then it should output private key
       And it should post certificate request
 
-  @INTERNAL
+  @FAKE
   Scenario: request a certificate with default arguments with -key-password
     When I run `vcert enroll -test-mode -test-mode-delay 0 -cn vfidev.example.com -no-prompt -no-pickup -key-password 1234`
     Then it should output encrypted private key
       And it should post certificate request
 
-  @INTERNAL
+  @FAKE
   Scenario: enroll a certificate with default arguments
     When I enroll a certificate in test-mode with -cn vfidev.example.com -no-pickup -no-prompt
     Then it should post certificate request
       And it should output private key
 
-  @INTERNAL
+  @FAKE
   Scenario: writing private key to file
     When I enroll a certificate in test-mode with -cn vfidev.example.com -no-pickup -no-prompt -key-file k.pem
     Then it should post certificate request
       And it should not output private key
       And the file named "k.pem" should exist
 
-  @INTERNAL
+  @FAKE
   Scenario: writing encrypted private key to file
     When I enroll a certificate in test-mode with -cn vfidev.example.com -no-pickup -no-prompt -key-file k.pem -key-password 1234
     Then it should post certificate request
       And "k.pem" should be RSA private key with password "1234"
 
-  @INTERNAL
+  @FAKE
   Scenario: writing encrypted private key to file with password readed from file
     Given a file named "password.txt" with "1234"
     When I enroll a certificate in test-mode with -cn vfidev.example.com -no-pickup -no-prompt -key-file k.pem -key-password file:password.txt
     Then it should post certificate request
       And "k.pem" should be RSA private key with password "1234"
 
-  @INTERNAL
+  @FAKE
   Scenario: request a certificate with 1024 key size
     Given I successfully run `vcert enroll -test-mode -test-mode-delay 0 -cn vfidev.example.com -no-prompt -cert-file c.pem -key-size 1024`
     Then "c.pem" should be a certificate with key size 1024 bits
 
-  @INTERNAL
+  @FAKE
   Scenario: request a certificate with default key size
     Given I enroll a certificate in test-mode with -cn vfidev.example.com -no-prompt -cert-file c.pem
     Then "c.pem" should be a certificate with key size 2048 bits
 
-  @INTERNAL
+  @FAKE
   Scenario: request a certificate with 3072 bit key size
     Given I enroll a certificate in test-mode with -cn vfidev.example.com -no-prompt -cert-file c.pem -key-size 3072
     Then "c.pem" should be a certificate with key size 3072 bits
 
-  @INTERNAL
+  @FAKE
   Scenario: when -chain-file option is not specified, then the chain is written to -cert-file
     Given I enroll a certificate in test-mode with -no-prompt -cn vfidev.example.com -cert-file c.pem
     Then the file "c.pem" should match /(-----BEGIN CERTIFICATE-----.+){2}/
 
-  @INTERNAL
+  @FAKE
   Scenario: when the chain is written to -chain-file
     Given I enroll a certificate in test-mode with -no-prompt -cn vfidev.example.com -cert-file c.pem -chain-file ch.pem
     Then the file "c.pem" should match /(-----BEGIN CERTIFICATE-----.+){1}/
     Then the file "ch.pem" should match /(-----BEGIN CERTIFICATE-----.+){1}/
 
-  @INTERNAL
+  @FAKE
   Scenario: enroll with wrong csr option should return error
     Given I enroll a certificate in test-mode with -cn vfidev.example.com -csr sservice -no-prompt
     Then the exit status should not be 0

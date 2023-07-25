@@ -1,4 +1,4 @@
-@INTERNAL
+@FAKE
 Feature: pickup is an action for retrieving certificates
 
   As a user

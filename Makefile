@@ -36,15 +36,16 @@ cucumber:
 	mkdir -p ./aruba/bin/ && cp ./bin/linux/vcert ./aruba/bin/vcert
 	docker build --tag vcert.auto aruba/
 	if [ -n "$(FEATURE)" ] && [ -n "$(PLATFORM)" ]; then \
-		echo "executing both feature and platform"; \
+		echo "running cucumber tests for both feature $(FEATURE) and platform $(PLATFORM)"; \
 		cd aruba && ./cucumber.sh -a $(FEATURE) -b $(PLATFORM); \
 	elif [ -n "$(FEATURE)" ]; then \
-		echo "executing feature"; \
+		echo "running cucumber tests for feature $(FEATURE)"; \
 		cd aruba && ./cucumber.sh -a $(FEATURE); \
 	elif [ -n "$(PLATFORM)" ]; then \
-		echo "executing platform"; \
+		echo "running cucumber tests for platform $(PLATFORM)"; \
 		cd aruba && ./cucumber.sh -b $(PLATFORM); \
 	else \
+		echo "running all cucumber tests"; \
 		cd aruba && ./cucumber.sh; \
     fi
 

@@ -7,7 +7,7 @@ Feature: certificate retirement
     And the default aruba exit timeout is 180 seconds
 
   Scenario Outline: retire certificate using empty -id
-    Then I retire the certificate from <endpoint>
+    When I retire the certificate from <endpoint>
     Then the output should contain "Certificate DN or Thumbprint is required to revoke the certificate"
 
     @TPP

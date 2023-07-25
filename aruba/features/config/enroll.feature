@@ -13,7 +13,7 @@ Feature: Enrolling certificates with -config option
     When I try to run `vcert enroll -config <config-file> -cn cfg.venafi.example.com -no-prompt -insecure`
     Then it should retrieve certificate
 
-    @INTERNAL
+    @FAKE
     Examples:
       | config-file |
       | test.ini    |

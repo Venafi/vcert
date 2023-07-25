@@ -10,7 +10,7 @@ Feature: -profile option
     When I enroll random certificate -config "all.ini" -profile <profile> with -no-prompt -insecure
     Then it should retrieve certificate
 
-    @INTERNAL
+    @FAKE
     Examples:
       | profile         |
       | mock-profile    |

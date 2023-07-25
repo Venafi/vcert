@@ -25,7 +25,7 @@ Feature: PKCS#12 format output
   Background:
     And the default aruba exit timeout is 180 seconds
 
-  @INTERNAL
+  @FAKE
   Scenario: where it outputs error if PKCS#12 format is specified, but STDOUT output is used (default output)
     When I enroll random certificate in test-mode with -no-prompt -format pkcs12
       Then it should fail with "PKCS#12 format requires certificate, private key, and chain to be written to a single file; specify using --file"
@@ -34,13 +34,13 @@ Feature: PKCS#12 format output
     When I renew the certificate in TPP with flags -id xxx -no-prompt -format pkcs12
       Then it should fail with "PKCS#12 format requires certificate, private key, and chain to be written to a single file; specify using --file"
 
-  @INTERNAL
+  @FAKE
   Scenario: where all objects are written to one PKCS#12 archive
     When I enroll random certificate in test-mode with -no-prompt -format pkcs12 -file all.p12
     Then the exit status should be 0
     And "all.p12" should be PKCS#12 archive with password ""
 
-  @INTERNAL
+  @FAKE
   Scenario: where all objects are written to one PKCS#12 archive with ecdsa key
     When I enroll random certificate in test-mode with -no-prompt -format pkcs12 -file all.p12 -key-type ecdsa
     Then the exit status should be 0
@@ -50,7 +50,8 @@ Feature: PKCS#12 format output
     When I enroll random certificate in <endpoint> with -format pkcs12 -file all.p12 -key-password newPassw0rd!
     Then the exit status should be 0
     And "all.p12" should be PKCS#12 archive with password "newPassw0rd!"
-    @INTERNAL
+
+    @FAKE
     Examples:
       | endpoint  |
       | test-mode |
@@ -70,7 +71,7 @@ Feature: PKCS#12 format output
     And I retrieve the certificate using <endpoint> using the same Pickup ID with -timeout 180 -no-prompt -file all.p12 -format pkcs12
     And it should fail with "key password must be provided"
 
-    @INTERNAL
+    @FAKE
     Examples:
       | endpoint  |
       | test-mode |
@@ -90,7 +91,7 @@ Feature: PKCS#12 format output
     When I enroll certificate using <endpoint> with -no-prompt -csr file:csr.pem -file all.p12 -format pkcs12
     And it should fail with "The --csr \"file\" option may not be used with the enroll or renew actions when --format is \"pkcs12\""
 
-    @INTERNAL
+    @FAKE
     Examples:
       | endpoint  |
       | test-mode |
@@ -109,7 +110,7 @@ Feature: PKCS#12 format output
     When I enroll random certificate using <endpoint> with -no-prompt -file all.p12 -format pkcs12 -no-pickup
     And it should fail with "The --csr \"local\" option may not be used with the enroll or renew actions when --format is \"pkcs12\" and --no-pickup is specified"
 
-    @INTERNAL
+    @FAKE
     Examples:
       | endpoint  |
       | test-mode |
@@ -128,7 +129,7 @@ Feature: PKCS#12 format output
     When I enroll random certificate using <endpoint> with -no-prompt -file all.p12 -format pkcs12 -no-pickup -csr local
     And it should fail with "The --csr \"local\" option may not be used with the enroll or renew actions when --format is \"pkcs12\" and --no-pickup is specified"
 
-    @INTERNAL
+    @FAKE
     Examples:
       | endpoint  |
       | test-mode |
@@ -148,7 +149,7 @@ Feature: PKCS#12 format output
     And I retrieve the certificate using <endpoint> using the same Pickup ID with -timeout 180 -key-password newPassw0rd! -file all.p12 -format pkcs12
     And "all.p12" should be PKCS#12 archive with password "newPassw0rd!"
 
-    @INTERNAL
+    @FAKE
     Examples:
       | endpoint  |
       | test-mode |
@@ -184,7 +185,7 @@ Feature: PKCS#12 format output
       And it should retrieve certificate
       And it should output encrypted private key
 
-    @INTERNAL
+    @FAKE
     Examples:
       | endpoint  |
       | test-mode |

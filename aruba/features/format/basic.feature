@@ -1,4 +1,4 @@
-@INTERNAL
+@FAKE
 Feature: -format output option
 
   As a user

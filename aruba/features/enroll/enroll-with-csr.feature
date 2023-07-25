@@ -12,7 +12,7 @@ Feature: enrolling certificates with -csr option (VEN-40652)
     Then the exit status should not be 0
     And the output should contain "The '-cn' option cannot be used in -csr file: provided mode"
 
-    @INTERNAL
+    @FAKE
     Examples:
       | endpoint  |
       | test-mode |
@@ -38,7 +38,7 @@ Feature: enrolling certificates with -csr option (VEN-40652)
       And it should not output private key
       And CSR in "csr.pem" and private key in "k.pem" and certificate in "c.pem" should have the same modulus
 
-    @INTERNAL
+    @FAKE
     Examples:
       | endpoint  |
       | test-mode |
@@ -59,7 +59,7 @@ Feature: enrolling certificates with -csr option (VEN-40652)
     Then it should retrieve certificate
     And it should output private key
 
-    @INTERNAL
+    @FAKE
     Examples:
       | endpoint  |
       | test-mode |
@@ -80,7 +80,7 @@ Feature: enrolling certificates with -csr option (VEN-40652)
     Then it should retrieve certificate
     And it should output encrypted private key
 
-    @INTERNAL
+    @FAKE
     Examples:
       | endpoint  |
       | test-mode |
@@ -101,7 +101,7 @@ Feature: enrolling certificates with -csr option (VEN-40652)
     When I enroll random certificate using <endpoint> with -csr service -no-prompt -no-pickup
     Then it should post certificate request
 
-    @INTERNAL
+    @FAKE
     Examples:
       | endpoint  |
       | test-mode |
@@ -122,7 +122,7 @@ Feature: enrolling certificates with -csr option (VEN-40652)
       And it should retrieve certificate
       And it should output encrypted private key
 
-    @INTERNAL
+    @FAKE
     Examples:
       | endpoint  |
       | test-mode |
@@ -142,7 +142,7 @@ Feature: enrolling certificates with -csr option (VEN-40652)
       And it should retrieve certificate
       And it should output encrypted private key
 
-    @INTERNAL
+    @FAKE
     Examples:
       | endpoint  |
       | test-mode |

@@ -1,4 +1,4 @@
-@INTERNAL
+@COMMON
 Feature: Generating certificate request using options
 
   As a user I want to generate certificate requests with various properties
