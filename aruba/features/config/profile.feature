@@ -14,8 +14,6 @@ Feature: -profile option
     Examples:
       | profile         |
       | mock-profile    |
-      | tpp-profile     |
-      | cloud-profile   |
 
     @TPP
     Examples:

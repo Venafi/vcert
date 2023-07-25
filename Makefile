@@ -35,10 +35,17 @@ cucumber:
 	rm -rf ./aruba/bin/
 	mkdir -p ./aruba/bin/ && cp ./bin/linux/vcert ./aruba/bin/vcert
 	docker build --tag vcert.auto aruba/
-	if [ -n "$(FEATURE)" ]; then \
-		cd aruba && ./cucumber.sh $(FEATURE) $(PLATFORM); \
+	if [ -n "$(FEATURE)" ] && [ -n "$(PLATFORM)" ]; then \
+		echo "executing both feature and platform"; \
+		cd aruba && ./cucumber.sh -a $(FEATURE) -b $(PLATFORM); \
+	elif [ -n "$(FEATURE)" ]; then \
+		echo "executing feature"; \
+		cd aruba && ./cucumber.sh -a $(FEATURE); \
+	elif [ -n "$(PLATFORM)" ]; then \
+		echo "executing platform"; \
+		cd aruba && ./cucumber.sh -b $(PLATFORM); \
 	else \
-    	cd aruba && ./cucumber.sh $(PLATFORM); \
+		cd aruba && ./cucumber.sh; \
     fi
 
 gofmt:

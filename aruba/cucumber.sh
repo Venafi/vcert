@@ -1,6 +1,6 @@
 #!/bin/bash
+set -ex
 echo "Using token $TPP_ACCESS_TOKEN"
-
 
 RUN_COMMAND="docker run -t --rm \
           -e TPP_URL \
@@ -15,33 +15,40 @@ RUN_COMMAND="docker run -t --rm \
           -e TPP_IP \
           -e TPP_CN"
 
-if [ -n "$1" ] && [ -n "$2" ] ; then
-  export PLATFORM=$2
+# Use getopts to handle command-line options
+while getopts "a:b:" opt; do
+  case "$opt" in
+    a) FEATURE="$OPTARG";;
+    b) PLATFORM="$OPTARG";;
+    \?) echo "Invalid option -$OPTARG" >&2
+        exit 1;;
+  esac
+done
+
+if [ "$PLATFORM" != "" ] ; then
+  export TAGS="--tags @$PLATFORM"
   RUN_COMMAND="${RUN_COMMAND} \
-  -e PLATFORM"
-elif [ -n "$1" ] && [ ! -n "$2" ]; then
-  export PLATFORM=$1
-  RUN_COMMAND="${RUN_COMMAND} \
-  -e PLATFORM"
+  -e TAGS"
 fi
 
 RUN_COMMAND="${RUN_COMMAND} \
 -e FILE_PATH vcert.auto"
 
-set -ex
 # which has been replaced with command -v. This is because which is not as portable as command -v
 # when it comes to locating executables, especially in non-interactive shells.
+PARALLEL_PATH=""
+if [ "$(command -v parallel)" ]; then
 PARALLEL_PATH=$(command -v parallel)
+fi
 
-# only if second parameter is passed we assume the first one is the file path
-if [ x$1 != x ] && [ -n "$2" ]; then
+if [ "$FEATURE" != "" ]; then
     echo One-feature run
-    export FILE_PATH=$1
-    $RUN_COMMAND $1
+    export FILE_PATH=$FEATURE
+    $RUN_COMMAND "$FEATURE"
 # if "GNU parallel" is installed and Parallel is enabled (you must export the PARALLEL_SET env variable,
 # so it can reach at the shell execution)
 # This will create a heavy load of certificates in parallel. TPP is not able to handle those yet.
-elif [ $PARALLEL_PATH != "" ] && [ $PARALLEL_SET == "true" ]; then
+elif [ "$PARALLEL_PATH" != "" ] && [ "$PARALLEL_SET" == "true" ]; then
     echo Parallel...
     # here we are are invoking parallel
     which parallel
@@ -49,7 +56,7 @@ elif [ $PARALLEL_PATH != "" ] && [ $PARALLEL_SET == "true" ]; then
     for F in `find features/ -type f -name '*.feature'`; do
         FEATURES="$FEATURES $F"
     done
-    parallel -j 20 $RUN_COMMAND ::: $FEATURES
+    parallel -j 20 "$RUN_COMMAND" ::: "$FEATURES"
 else
     echo Sequential...
     hostname;
