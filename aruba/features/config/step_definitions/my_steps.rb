@@ -19,3 +19,10 @@ When(/^I have file named "([^"]*)" with all endpoints connection details$/) do |
           """
         }
 end
+
+When(/^I enroll random certificate \-config "([^"]*)" \-profile (.*) with (.+)?$/) do |config, profile, flags|
+  cn = " -cn " + random_cn
+  cmd = "vcert enroll -config #{config} -profile #{profile} #{cn} #{flags}"
+
+  steps %{Then I try to run `#{cmd}`}
+end
