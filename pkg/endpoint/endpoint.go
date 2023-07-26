@@ -92,9 +92,8 @@ type Connector interface {
 	ReadZoneConfiguration() (config *ZoneConfiguration, err error)
 	// GenerateRequest update certificate.Request with data from zone configuration.
 	GenerateRequest(config *ZoneConfiguration, req *certificate.Request) (err error)
-	// ResetCertificate resets the state of a TPP certificate.
+	// ResetCertificate resets the state of a certificate.
 	// This function is idempotent, i.e., it won't fail if there is nothing to be reset.
-	// It returns an error of type *errCertNotFound if the certificate is not found.
 	ResetCertificate(req *certificate.Request, restart bool) (err error)
 	// RequestCertificate makes a request to the server with data for enrolling the certificate.
 	RequestCertificate(req *certificate.Request) (requestID string, err error)
@@ -103,6 +102,7 @@ type Connector interface {
 	IsCSRServiceGenerated(req *certificate.Request) (bool, error)
 	RevokeCertificate(req *certificate.RevocationRequest) error
 	RenewCertificate(req *certificate.RenewalRequest) (requestID string, err error)
+	RetireCertificate(req *certificate.RetireRequest) error
 	// ImportCertificate adds an existing certificate to Venafi Platform even if the certificate was not issued by Venafi Cloud or Venafi Platform. For information purposes.
 	ImportCertificate(req *certificate.ImportRequest) (*certificate.ImportResponse, error)
 	// SetHTTPClient allows to set custom http.Client to this Connector.

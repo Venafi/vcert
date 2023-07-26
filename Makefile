@@ -6,6 +6,28 @@ ifdef BUILD_NUMBER
 VERSION:=$(VERSION)+$(BUILD_NUMBER)
 endif
 
+define cucumber_image_build
+    rm -rf ./aruba/bin/
+	mkdir -p ./aruba/bin/ && cp ./bin/linux/vcert ./aruba/bin/vcert
+	docker build --tag vcert.auto aruba/
+endef
+
+define cucumber_tests_run
+    if [ -n "$(FEATURE)" ] && [ -n "$(PLATFORM)" ]; then \
+		echo "running cucumber tests for both feature $(FEATURE) and platform $(PLATFORM)"; \
+		cd aruba && ./cucumber.sh -a $(FEATURE) -b $(PLATFORM); \
+	elif [ -n "$(FEATURE)" ]; then \
+		echo "running cucumber tests for feature $(FEATURE)"; \
+		cd aruba && ./cucumber.sh -a $(FEATURE); \
+	elif [ -n "$(PLATFORM)" ]; then \
+		echo "running cucumber tests for platform $(PLATFORM)"; \
+		cd aruba && ./cucumber.sh -b $(PLATFORM); \
+	else \
+		echo "running all cucumber tests"; \
+		cd aruba && ./cucumber.sh; \
+    fi
+endef
+
 ifdef RELEASE_VERSION
 ifneq ($(RELEASE_VERSION),none)
 VERSION=$(RELEASE_VERSION)
@@ -31,15 +53,15 @@ build: get
 	env GOOS=windows GOARCH=amd64 go build $(GO_LDFLAGS) -o bin/windows/vcert.exe   ./cmd/vcert
 	env GOOS=windows GOARCH=386   go build $(GO_LDFLAGS) -o bin/windows/vcert86.exe ./cmd/vcert
 
+cucumber_build:
+	$(call cucumber_image_build)
+
+cucumber_test:
+	$(call cucumber_tests_run)
+
 cucumber:
-	rm -rf ./aruba/bin/
-	mkdir -p ./aruba/bin/ && cp ./bin/linux/vcert ./aruba/bin/vcert
-	docker build --tag vcert.auto aruba/
-	if [ -z "$(FEATURE)" ]; then \
-		cd aruba && ./cucumber.sh; \
-	else \
-		cd aruba && ./cucumber.sh $(FEATURE); \
-	fi
+	$(call cucumber_image_build)
+	$(call cucumber_tests_run)
 
 gofmt:
 	! gofmt -l . | grep -v ^vendor/ | grep .
@@ -72,6 +94,10 @@ cmd_test: get
 	go test -v $(GOFLAGS) -coverprofile=cov_cmd.out ./cmd/vcert
 	go tool cover -func=cov_cmd.out
 
+playbook_test: get
+	go test -v $(GOFLAGS) -coverprofile=cov_playbook.out ./pkg/playbook/...
+	go tool cover -func=cov_playbook.out
+
 collect_artifacts:
 	rm -rf artifacts
 	mkdir -p artifacts
@@ -88,8 +114,8 @@ release:
 	echo '```' > release.txt
 	cd artifacts; sha1sum * >> ../release.txt
 	echo '```' >> release.txt
-	go get -u github.com/tcnksm/ghr
-	ghr -prerelease -n $$RELEASE_VERSION -body="$$(cat ./release.txt)" $$RELEASE_VERSION artifacts/
+	go install github.com/tcnksm/ghr@latest
+	export "PATH=$(PATH):$(shell go env GOPATH)/bin" && ghr -prerelease -n $$RELEASE_VERSION -body="$$(cat ./release.txt)" $$RELEASE_VERSION artifacts/
 
 linter:
 	@golangci-lint --version || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b /go/bin

@@ -25,6 +25,7 @@ Feature: PKCS#12 format output
   Background:
     And the default aruba exit timeout is 180 seconds
 
+  @FAKE
   Scenario: where it outputs error if PKCS#12 format is specified, but STDOUT output is used (default output)
     When I enroll random certificate in test-mode with -no-prompt -format pkcs12
       Then it should fail with "PKCS#12 format requires certificate, private key, and chain to be written to a single file; specify using --file"
@@ -33,11 +34,13 @@ Feature: PKCS#12 format output
     When I renew the certificate in TPP with flags -id xxx -no-prompt -format pkcs12
       Then it should fail with "PKCS#12 format requires certificate, private key, and chain to be written to a single file; specify using --file"
 
+  @FAKE
   Scenario: where all objects are written to one PKCS#12 archive
     When I enroll random certificate in test-mode with -no-prompt -format pkcs12 -file all.p12
     Then the exit status should be 0
     And "all.p12" should be PKCS#12 archive with password ""
 
+  @FAKE
   Scenario: where all objects are written to one PKCS#12 archive with ecdsa key
     When I enroll random certificate in test-mode with -no-prompt -format pkcs12 -file all.p12 -key-type ecdsa
     Then the exit status should be 0
@@ -47,59 +50,120 @@ Feature: PKCS#12 format output
     When I enroll random certificate in <endpoint> with -format pkcs12 -file all.p12 -key-password newPassw0rd!
     Then the exit status should be 0
     And "all.p12" should be PKCS#12 archive with password "newPassw0rd!"
+
+    @FAKE
     Examples:
       | endpoint  |
       | test-mode |
+
+    @TPP
+    Examples:
+      | endpoint  |
       | TPP       |
+
+    @VAAS
+    Examples:
+      | endpoint  |
       | Cloud     |
 
   Scenario Outline: where it outputs error when trying to pickup local-generated certificate and output it in PKCS#12 format
     When I enroll random certificate using <endpoint> with -no-prompt -no-pickup
     And I retrieve the certificate using <endpoint> using the same Pickup ID with -timeout 180 -no-prompt -file all.p12 -format pkcs12
     And it should fail with "key password must be provided"
+
+    @FAKE
     Examples:
       | endpoint  |
       | test-mode |
+
+    @TPP
+    Examples:
+      | endpoint  |
       | TPP       |
+
+    @VAAS
+    Examples:
+      | endpoint  |
       | Cloud     |
 
   Scenario Outline: where it outputs error when trying to enroll certificate in -csr file: mode and output it in PKCS#12 format
     Given I generate random CSR with -no-prompt -csr-file csr.pem -key-file k.pem
     When I enroll certificate using <endpoint> with -no-prompt -csr file:csr.pem -file all.p12 -format pkcs12
     And it should fail with "The --csr \"file\" option may not be used with the enroll or renew actions when --format is \"pkcs12\""
+
+    @FAKE
     Examples:
       | endpoint  |
       | test-mode |
+
+    @TPP
+    Examples:
+      | endpoint  |
       | TPP       |
+
+    @VAAS
+    Examples:
+      | endpoint  |
       | Cloud     |
 
   Scenario Outline: where it outputs error when trying to enroll certificate in -csr local (by default), -no-pickup and output it in PKCS#12 format
     When I enroll random certificate using <endpoint> with -no-prompt -file all.p12 -format pkcs12 -no-pickup
     And it should fail with "The --csr \"local\" option may not be used with the enroll or renew actions when --format is \"pkcs12\" and --no-pickup is specified"
+
+    @FAKE
     Examples:
       | endpoint  |
       | test-mode |
+
+    @TPP
+    Examples:
+      | endpoint  |
       | TPP       |
+
+    @VAAS
+    Examples:
+      | endpoint  |
       | Cloud     |
 
   Scenario Outline: where it outputs error when trying to enroll certificate in -csr local (specified), -no-pickup and output it in PKCS#12 format
     When I enroll random certificate using <endpoint> with -no-prompt -file all.p12 -format pkcs12 -no-pickup -csr local
     And it should fail with "The --csr \"local\" option may not be used with the enroll or renew actions when --format is \"pkcs12\" and --no-pickup is specified"
+
+    @FAKE
     Examples:
       | endpoint  |
       | test-mode |
+
+    @TPP
+    Examples:
+      | endpoint  |
       | TPP       |
+
+    @VAAS
+    Examples:
+      | endpoint  |
       | Cloud     |
 
   Scenario Outline: where it pickups up service-generated certificate and outputs it in PKCS#12 format
     When I enroll random certificate using <endpoint> with -no-prompt -no-pickup -csr service
     And I retrieve the certificate using <endpoint> using the same Pickup ID with -timeout 180 -key-password newPassw0rd! -file all.p12 -format pkcs12
     And "all.p12" should be PKCS#12 archive with password "newPassw0rd!"
+
+    @FAKE
     Examples:
       | endpoint  |
       | test-mode |
+
+    @TPP
+    Examples:
+      | endpoint  |
       | TPP       |
-      # | Cloud     | # -csr service is not supported by Cloud
+
+# TODO: Now VaaS supports CSR, but we need to verify this behavior for this test
+#    @VAAS
+#    Examples:
+#      | endpoint  |
+#      | Cloud     | # -csr service is not supported by Cloud
 
 #  Scenario Outline: Pickup PKCS12 with typing pass phrases
 #    When I enroll random certificate using <endpoint> with -no-prompt -no-pickup -csr service
@@ -120,8 +184,14 @@ Feature: PKCS#12 format output
     Then I retrieve the certificate using <endpoint> using the same Pickup ID with -key-password newPassw0rd! -timeout 59
       And it should retrieve certificate
       And it should output encrypted private key
+
+    @FAKE
     Examples:
       | endpoint  |
       | test-mode |
+
+    @TPP
+    Examples:
+      | endpoint  |
       | TPP       |
 

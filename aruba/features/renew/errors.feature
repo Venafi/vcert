@@ -1,3 +1,4 @@
+@TPP
 Feature: renew action returns error if incorrect options are used
 
   Background:

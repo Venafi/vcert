@@ -451,7 +451,7 @@ var (
 	flagRevocationReason = &cli.StringFlag{
 		Name: "reason",
 		Usage: `The revocation reason. Options include: 
-	"none", "key-compromise", "ca-compromise", "affiliation-changed", "superseded", "cessation-of-operation"`,
+        "none", "key-compromise", "ca-compromise", "affiliation-changed", "superseded", "cessation-of-operation"`,
 		Destination: &flags.revocationReason,
 	}
 
@@ -793,6 +793,16 @@ var (
 			sortableCredentialsFlags,
 			flagPickupIDFile,
 			flagOmitSans,
+		)),
+	)
+
+	retireFlags = flagsApppend(
+		credentialsFlags,
+		flagThumbprint,
+		flagDistinguishedName,
+		sortedFlags(flagsApppend(
+			commonFlags,
+			sortableCredentialsFlags,
 		)),
 	)
 

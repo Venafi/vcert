@@ -1,0 +1,27 @@
+config:
+  connection:
+    type: TLSPC
+    credentials:
+      apikey: foobar123
+certificates:
+  - name: mtls
+    request:
+      zone: "Open Source\\vcert"
+      subject:
+        commonName: '{{ NonExist | ToLower -}}.{{- Env "USERDNSDOMAIN" | ToLower }}'
+        country: US
+        locality: Salt Lake City
+        province: Utah
+        organization: Venafi Inc
+        orgUnits:
+          - engineering
+          - marketing
+      csrOrigin: service
+      keyPassword: "newPassword!"
+    installations:
+      - type: JKS
+        location: "/Users/rvela/venafi/supertreat/jks/foo.jks"
+        afterInstallAction: "sh -c 'mySweetScrip.sh'"
+        jksAlias: "kwan"
+        jksPassword: "foobar123"
+    renewBefore: 31d

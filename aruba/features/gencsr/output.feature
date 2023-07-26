@@ -1,3 +1,4 @@
+@COMMON
 Feature: Generating simple certificate request
 
   As a user I want to generate certificate requests (CSR)

@@ -551,8 +551,8 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 
 	// DEPRECATED: ValidityHours is deprecated in favor of ValidityDuration, but we
 	// still support it for backwards compatibility.
-	if validityDuration == nil && req.ValidityHours > 0 {
-		duration := time.Duration(req.ValidityHours) * time.Hour
+	if validityDuration == nil && req.ValidityHours > 0 { //nolint:staticcheck
+		duration := time.Duration(req.ValidityHours) * time.Hour //nolint:staticcheck
 		validityDuration = &duration
 	}
 
@@ -779,11 +779,12 @@ func (e *ErrCertNotFound) Unwrap() error {
 }
 
 func IsCertNotFound(err error) bool {
-	return errors.Is(err, &ErrCertNotFound{})
+	notFoundErr := &ErrCertNotFound{}
+	return errors.As(err, &notFoundErr)
 }
 
 // This function is idempotent, i.e., it won't fail if there is nothing to be
-// reset. It returns an error of type *errCertNotFound if the certificate is not
+// reset. It returns an error of type *ErrCertNotFound if the certificate is not
 // found.
 func (c *Connector) ResetCertificate(req *certificate.Request, restart bool) (err error) {
 	certificateDN := getCertificateDN(c.zone, req.FriendlyName, req.Subject.CommonName)
@@ -1271,7 +1272,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 			return nil, fmt.Errorf("Failed to create renewal request: %s", err)
 		}
 		if len(searchResult.Certificates) == 0 {
-			return nil, fmt.Errorf("No certifiate found using fingerprint %s", req.Thumbprint)
+			return nil, fmt.Errorf("No certificate found using fingerprint %s", req.Thumbprint)
 		}
 		if len(searchResult.Certificates) > 1 {
 			return nil, fmt.Errorf("Error: more than one CertificateRequestId was found with the same thumbprint")
@@ -1383,7 +1384,7 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 			return "", fmt.Errorf("Failed to create renewal request: %s", err)
 		}
 		if len(searchResult.Certificates) == 0 {
-			return "", fmt.Errorf("No certifiate found using fingerprint %s", renewReq.Thumbprint)
+			return "", fmt.Errorf("No certificate found using fingerprint %s", renewReq.Thumbprint)
 		}
 		if len(searchResult.Certificates) > 1 {
 			return "", fmt.Errorf("Error: more than one CertificateRequestId was found with the same thumbprint")
@@ -1458,6 +1459,31 @@ func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (er
 		return fmt.Errorf("Revocation error: %s", revokeResponse.Error)
 	}
 	return
+}
+
+func (c *Connector) RetireCertificate(req *certificate.RetireRequest) (err error) {
+
+	if req.CertificateDN == "" && req.Thumbprint != "" {
+		// search cert by Thumbprint and fill pickupID
+		searchResult, err := c.searchCertificatesByFingerprint(req.Thumbprint)
+		if err != nil {
+			return fmt.Errorf("Failed to create retire request: %s", err)
+		}
+		if len(searchResult.Certificates) == 0 {
+			return fmt.Errorf("No certificate found using fingerprint %s", req.Thumbprint)
+		}
+		if len(searchResult.Certificates) > 1 {
+			return fmt.Errorf("Error: more than one CertificateRequestId was found with the same thumbprint")
+		}
+		req.CertificateDN = searchResult.Certificates[0].CertificateRequestId
+	} else if req.CertificateDN == "" && req.Thumbprint == "" {
+		return fmt.Errorf("failed to create retire request: CertificateDN or Thumbprint required")
+	}
+
+	retireSliceValuePair := []nameSliceValuePair{{Name: "Disabled", Value: []string{"1"}}}
+
+	err = c.putCertificateInfo(req.CertificateDN, retireSliceValuePair)
+	return err
 }
 
 var zoneNonFoundregexp = regexp.MustCompile("PolicyDN: .+ does not exist")

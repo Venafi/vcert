@@ -22,18 +22,17 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Venafi/vcert/v4/pkg/venafi/cloud"
 	"github.com/Venafi/vcert/v4/pkg/venafi/fake"
-	"github.com/Venafi/vcert/v4/pkg/venafi/firefly"
 	"github.com/Venafi/vcert/v4/pkg/venafi/tpp"
 
 	"github.com/Venafi/vcert/v4/pkg/policy"
@@ -57,12 +56,12 @@ var (
 		Name:   commandEnrollName,
 		Usage:  "To enroll a certificate",
 		UsageText: ` vcert enroll <Required Venafi as a Service -OR- Trust Protection Platform Config> <Options>
-		vcert enroll -k <VaaS API key> -z "<app name>\<CIT alias>" --cn <common name>
-		vcert enroll -k <VaaS API key> -z "<app name>\<CIT alias>" --cn <common name> --key-type rsa --key-size 4096 --san-dns <alt name> --san-dns <alt name2>
-		vcert enroll -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --cn <common name>
-		vcert enroll -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --cn <common name> --key-size 4096 --san-dns <alt name> --san-dns <alt name2>
-		vcert enroll -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --cn <common name> --key-type ecdsa --key-curve p384 --san-dns <alt name> -san-dns <alt name2>
-		vcert enroll -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --p12-file <PKCS#12 client cert> --p12-password <PKCS#12 password> --cn <common name>`,
+		 vcert enroll -k <VaaS API key> -z "<app name>\<CIT alias>" --cn <common name>
+		 vcert enroll -k <VaaS API key> -z "<app name>\<CIT alias>" --cn <common name> --key-type rsa --key-size 4096 --san-dns <alt name> --san-dns <alt name2>
+		 vcert enroll -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --cn <common name>
+		 vcert enroll -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --cn <common name> --key-size 4096 --san-dns <alt name> --san-dns <alt name2>
+		 vcert enroll -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --cn <common name> --key-type ecdsa --key-curve p384 --san-dns <alt name> -san-dns <alt name2>
+		 vcert enroll -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --p12-file <PKCS#12 client cert> --p12-password <PKCS#12 password> --cn <common name>`,
 	}
 	commandGetCred = &cli.Command{
 		Before: runBeforeCommand,
@@ -71,12 +70,12 @@ var (
 		Action: doCommandCredMgmt1,
 		Usage:  "To obtain a new credential (token) for authentication",
 		UsageText: ` vcert getcred -u https://tpp.example.com --username <TPP user> --password <TPP user password>
-		vcert getcred --email <email address for VaaS headless registration> [--password <password>] [--format (text|json)]
-		vcert getcred -u https://tpp.example.com --p12-file <PKCS#12 client cert> --p12-password <PKCS#12 password> --trust-bundle /path-to/bundle.pem
-		vcert getcred -u https://tpp.example.com -t <TPP refresh token>
-		vcert getcred -u https://tpp.example.com -t <TPP refresh token> --scope <scopes and restrictions>
-		vcert getcred --platform firefly --token-url https://authorization-server.com/oauth/token --username <okta user> --password <okta user password> -- scope okta.behaviors.manage
-		vcert getcred --platform firefly --token-url https://authorization-server.com/oauth/token --client-id <okta client id> --client-secret <okta client secret> -- scope okta.behaviors.manage`,
+		 vcert getcred --email <email address for VaaS headless registration> [--password <password>] [--format (text|json)]
+		 vcert getcred -u https://tpp.example.com --p12-file <PKCS#12 client cert> --p12-password <PKCS#12 password> --trust-bundle /path-to/bundle.pem
+		 vcert getcred -u https://tpp.example.com -t <TPP refresh token>
+		 vcert getcred -u https://tpp.example.com -t <TPP refresh token> --scope <scopes and restrictions>
+		 vcert getcred --platform firefly --token-url https://authorization-server.com/oauth/token --username <okta user> --password <okta user password> -- scope okta.behaviors.manage
+		 vcert getcred --platform firefly --token-url https://authorization-server.com/oauth/token --client-id <okta client id> --client-secret <okta client secret> -- scope okta.behaviors.manage`,
 	}
 	commandCheckCred = &cli.Command{
 		Before:    runBeforeCommand,
@@ -101,7 +100,7 @@ var (
 		Action: doCommandGenCSR1,
 		Usage:  "To generate a certificate signing request (CSR)",
 		UsageText: ` vcert gencsr --cn <common name> -o <organization> --ou <organizational unit> -l <locality> --st <state> -c <country> --key-file <key output file> --csr-file <csr output file>
-		vcert gencsr --cn <common name> -o <organization> --ou <organizational unit> --ou <organizational unit2> -l <locality> --st <state> -c <country> --key-file <key output file> --csr-file <csr output file>`,
+		 vcert gencsr --cn <common name> -o <organization> --ou <organizational unit> --ou <organizational unit2> -l <locality> --st <state> -c <country> --key-file <key output file> --csr-file <csr output file>`,
 	}
 	commandPickup = &cli.Command{
 		Before: runBeforeCommand,
@@ -110,8 +109,8 @@ var (
 		Action: doCommandPickup1,
 		Usage:  "To download a certificate",
 		UsageText: ` vcert pickup <Required Venafi as a Service -OR- Trust Protection Platform Config> <Options>
-		vcert pickup -k <VaaS API key> [--pickup-id <ID value> | --pickup-id-file <file containing ID value>]
-		vcert pickup -u https://tpp.example.com -t <TPP access token> --pickup-id <ID value>`,
+		 vcert pickup -k <VaaS API key> [--pickup-id <ID value> | --pickup-id-file <file containing ID value>]
+		 vcert pickup -u https://tpp.example.com -t <TPP access token> --pickup-id <ID value>`,
 	}
 	commandRevoke = &cli.Command{
 		Before: runBeforeCommand,
@@ -120,8 +119,8 @@ var (
 		Action: doCommandRevoke1,
 		Usage:  "To revoke a certificate",
 		UsageText: ` vcert revoke <Required Trust Protection Platform Config> <Options>
-		vcert revoke -u https://tpp.example.com -t <TPP access token> --thumbprint <cert SHA1 thumbprint>
-		vcert revoke -u https://tpp.example.com -t <TPP access token> --id <ID value>`,
+		 vcert revoke -u https://tpp.example.com -t <TPP access token> --thumbprint <cert SHA1 thumbprint>
+		 vcert revoke -u https://tpp.example.com -t <TPP access token> --id <ID value>`,
 	}
 	commandRenew = &cli.Command{
 		Before: runBeforeCommand,
@@ -130,8 +129,19 @@ var (
 		Action: doCommandRenew1,
 		Usage:  "To renew a certificate",
 		UsageText: ` vcert renew <Required Venafi as a Service -OR- Trust Protection Platform Config> <Options>
-		vcert renew -u https://tpp.example.com -t <TPP access token> --id <ID value>
+        vcert renew -u https://tpp.example.com -t <TPP access token> --id <ID value>
 		vcert renew -k <VaaS API key> --thumbprint <cert SHA1 fingerprint>`,
+	}
+
+	commandRetire = &cli.Command{
+		Before: runBeforeCommand,
+		Name:   commandRetireName,
+		Flags:  retireFlags,
+		Action: doCommandRetire,
+		Usage:  "To retire a certificate",
+		UsageText: ` vcert retire <Required Venafi as a Service -OR- Trust Protection Platform Config> <Options>
+		 vcert retire -u https://tpp.example.com -t <TPP access token> --id <ID value>
+		 vcert retire -k <VaaS API key> --thumbprint <cert SHA1 fingerprint>`,
 	}
 
 	commandCreatePolicy = &cli.Command{
@@ -141,7 +151,7 @@ var (
 		Action: doCommandCreatePolicy,
 		Usage:  "To apply a certificate policy specification to a zone",
 		UsageText: ` vcert setpolicy <Required Venafi as a Service -OR- Trust Protection Platform Config> <Options>
-		vcert setpolicy -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --file /path-to/policy.spec
+        vcert setpolicy -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --file /path-to/policy.spec
 		vcert setpolicy -k <VaaS API key> -z "<app name>\<CIT alias>" --file /path-to/policy.spec`,
 	}
 
@@ -152,7 +162,7 @@ var (
 		Action: doCommandGetPolicy,
 		Usage:  "To retrieve the certificate policy of a zone",
 		UsageText: ` vcert getpolicy <Required Venafi as a Service -OR- Trust Protection Platform Config> <Options>
-		vcert getpolicy -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>"
+        vcert getpolicy -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>"
 		vcert getpolicy -k <VaaS API key> -z "<app name>\<CIT alias>"`,
 	}
 
@@ -241,7 +251,7 @@ func setTLSConfig() error {
 
 	if flags.clientP12 != "" {
 		// Load client PKCS#12 archive
-		p12, err := ioutil.ReadFile(flags.clientP12)
+		p12, err := os.ReadFile(flags.clientP12)
 		if err != nil {
 			return fmt.Errorf("Error reading PKCS#12 archive file: %s", err)
 		}
@@ -824,10 +834,10 @@ func getVaaSCredentials(vaasConnector *cloud.Connector, cfg *vcert.Config) error
 
 	if cfg.Credentials.User != "" {
 
-		statusCode, userDetails, error := vaasConnector.CreateAPIUserAccount(cfg.Credentials.User, cfg.Credentials.Password)
+		statusCode, userDetails, err := vaasConnector.CreateAPIUserAccount(cfg.Credentials.User, cfg.Credentials.Password)
 
-		if error != nil {
-			return fmt.Errorf("failed to create a User Account/rotate API Key in VaaS: %s", error)
+		if err != nil {
+			return fmt.Errorf("failed to create a User Account/rotate API Key in VaaS: %s", err)
 		}
 
 		apiKey := userDetails.APIKey
@@ -933,7 +943,7 @@ func doCommandPickup1(c *cli.Context) error {
 	}
 
 	if flags.pickupIDFile != "" {
-		bytes, err := ioutil.ReadFile(flags.pickupIDFile)
+		bytes, err := os.ReadFile(flags.pickupIDFile)
 		if err != nil {
 			return fmt.Errorf("Failed to read Pickup ID value: %s", err)
 		}
@@ -1075,6 +1085,59 @@ func doCommandRevoke1(c *cli.Context) error {
 	return nil
 }
 
+func doCommandRetire(c *cli.Context) error {
+	err := validateRetireFlags(c.Command.Name)
+	if err != nil {
+		return err
+	}
+	err = setTLSConfig()
+	if err != nil {
+		return err
+	}
+
+	validateOverWritingEnviromentVariables()
+
+	cfg, err := buildConfig(c, &flags)
+	if err != nil {
+		return fmt.Errorf("Failed to build vcert config: %s", err)
+	}
+
+	connector, err := vcert.NewClient(&cfg) // Everything else requires an endpoint connection
+	if err != nil {
+		logf("Unable to connect to %s: %s", cfg.ConnectorType, err)
+	} else {
+		logf("Successfully connected to %s", cfg.ConnectorType)
+	}
+
+	var retReq = &certificate.RetireRequest{}
+	switch true {
+	case flags.distinguishedName != "":
+		retReq.CertificateDN = flags.distinguishedName
+	case flags.thumbprint != "":
+		retReq.Thumbprint = flags.thumbprint
+	default:
+		return fmt.Errorf("Certificate DN or Thumbprint is required")
+	}
+
+	requestedFor := func() string {
+		if flags.distinguishedName != "" {
+			return flags.distinguishedName
+		}
+		if flags.thumbprint != "" {
+			return flags.thumbprint
+		}
+		return ""
+	}()
+
+	err = connector.RetireCertificate(retReq)
+	if err != nil {
+		return fmt.Errorf("Failed to retire certificate: %s", err)
+	}
+	logf("Successfully retired certificate for %s", requestedFor)
+
+	return nil
+}
+
 func doCommandCreatePolicy(c *cli.Context) error {
 
 	err := validateSetPolicyFlags(c.Command.Name)
@@ -1198,19 +1261,19 @@ func doCommandGetPolicy(c *cli.Context) error {
 
 	}
 
-	var byte []byte
+	var b []byte
 
 	if policySpecLocation != "" {
 
 		fileExt := policy.GetFileType(policySpecLocation)
 		fileExt = strings.ToLower(fileExt)
 		if fileExt == policy.JsonExtension {
-			byte, _ = json.MarshalIndent(ps, "", "  ")
+			b, _ = json.MarshalIndent(ps, "", "  ")
 			if err != nil {
 				return err
 			}
 		} else if fileExt == policy.YamlExtension {
-			byte, _ = yaml.Marshal(ps)
+			b, _ = yaml.Marshal(ps)
 			if err != nil {
 				return err
 			}
@@ -1218,7 +1281,7 @@ func doCommandGetPolicy(c *cli.Context) error {
 			return fmt.Errorf("the specified byte is not supported")
 		}
 
-		err = ioutil.WriteFile(policySpecLocation, byte, 0600)
+		err = os.WriteFile(policySpecLocation, b, 0600)
 		if err != nil {
 			return err
 		}
@@ -1226,13 +1289,13 @@ func doCommandGetPolicy(c *cli.Context) error {
 
 	} else {
 
-		byte, _ = json.MarshalIndent(ps, "", "  ")
+		b, _ = json.MarshalIndent(ps, "", "  ")
 
 		if err != nil {
 			return err
 		}
 		log.Println("Policy is:")
-		fmt.Println(string(byte))
+		fmt.Println(string(b))
 	}
 
 	return nil
@@ -1407,11 +1470,11 @@ func doCommandRenew1(c *cli.Context) error {
 	// check if previous and renewed certificates are of the same private key
 	newCertBlock, _ := pem.Decode([]byte(pcc.Certificate))
 	if newCertBlock != nil && newCertBlock.Type == "CERTIFICATE" {
-		newCert, err := x509.ParseCertificate([]byte(newCertBlock.Bytes))
+		newCert, err := x509.ParseCertificate(newCertBlock.Bytes)
 		if err == nil {
 			old, _ := json.Marshal(oldCert.PublicKey)
-			new, _ := json.Marshal(newCert.PublicKey)
-			if len(old) > 0 && string(old) == string(new) {
+			newCrt, _ := json.Marshal(newCert.PublicKey)
+			if len(old) > 0 && string(old) == string(newCrt) {
 				logf("WARNING: private key reused")
 			}
 		}

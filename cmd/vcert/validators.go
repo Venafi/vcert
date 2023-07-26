@@ -19,14 +19,12 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
 
 	"github.com/Venafi/vcert/v4/pkg/util"
 	"github.com/Venafi/vcert/v4/pkg/venafi"
-
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 )
 
@@ -40,13 +38,13 @@ var RevocationReasonOptions = []string{
 	"cessation-of-operation",
 }
 
-// taken from keystore.minPasswordLen constant
+// JKSMinPasswordLen taken from keystore.minPasswordLen constant
 const JKSMinPasswordLen = 6
 
 func readData(commandName string) error {
 	if strings.HasPrefix(flags.distinguishedName, "file:") {
 		fileName := flags.distinguishedName[5:]
-		bytes, err := ioutil.ReadFile(fileName)
+		bytes, err := os.ReadFile(fileName)
 		if err != nil {
 			return fmt.Errorf("Failed to read Certificate DN: %s", err)
 		}
@@ -54,7 +52,7 @@ func readData(commandName string) error {
 	}
 	if strings.HasPrefix(flags.keyPassword, "file:") {
 		fileName := flags.keyPassword[5:]
-		bytes, err := ioutil.ReadFile(fileName)
+		bytes, err := os.ReadFile(fileName)
 		if err != nil {
 			return fmt.Errorf("Failed to read password from file: %s", err)
 		}
@@ -623,6 +621,31 @@ func validateRevokeFlags1(commandName string) error {
 		if !isValidReason {
 			return fmt.Errorf("%s is not valid revocation reason. it should be one of %v", flags.revocationReason, RevocationReasonOptions)
 		}
+	}
+
+	return nil
+}
+
+func validateRetireFlags(commandName string) error {
+
+	err := validateConnectionFlags(commandName)
+	if err != nil {
+		return err
+	}
+	err = validateCommonFlags(commandName)
+	if err != nil {
+		return err
+	}
+	err = readData(commandName)
+	if err != nil {
+		return err
+	}
+	if flags.distinguishedName == "" && flags.thumbprint == "" {
+		return fmt.Errorf("Certificate DN or Thumbprint is required to revoke the certificate")
+	}
+
+	if flags.distinguishedName != "" && flags.thumbprint != "" {
+		return fmt.Errorf("Either -id or -thumbprint can be used")
 	}
 
 	return nil
