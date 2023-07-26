@@ -9,11 +9,12 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"golang.org/x/crypto/pkcs12"
+
+	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain"
 )
 
 type logLine struct {
