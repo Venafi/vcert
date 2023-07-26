@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"golang.org/x/crypto/pkcs12"
@@ -23,7 +23,19 @@ type logLine struct {
 	Message string `json:"M"`
 }
 
-func TestSetPlaybookTLSConfig(t *testing.T) {
+type PlaybookSuite struct {
+	suite.Suite
+}
+
+func (s *PlaybookSuite) SetupTest() {
+	tlsConfig = tls.Config{}
+}
+
+func TestPlaybook(t *testing.T) {
+	suite.Run(t, new(PlaybookSuite))
+}
+
+func (s *PlaybookSuite) TestPlaybook_SetTLSConfig() {
 	p12FileLocation := "../../test-files/playbook/cert.p12"
 	p12Password := "newPassword!"
 
@@ -49,41 +61,41 @@ func TestSetPlaybookTLSConfig(t *testing.T) {
 	}
 
 	err := setPlaybookTLSConfig(playbook)
-	assert.NoError(t, err)
+	s.NoError(err)
 
 	tlsCfg := http.DefaultTransport.(*http.Transport).TLSClientConfig
 
-	assert.Equal(t, tls.RenegotiateFreelyAsClient, tlsCfg.Renegotiation)
-	assert.False(t, tlsCfg.InsecureSkipVerify)
+	s.Equal(tls.RenegotiateFreelyAsClient, tlsCfg.Renegotiation)
+	s.False(tlsCfg.InsecureSkipVerify)
 
 	p12, err := os.ReadFile(p12FileLocation)
-	assert.NoError(t, err)
+	s.NoError(err)
 
 	blocks, err := pkcs12.ToPEM(p12, p12Password)
-	assert.NoError(t, err)
+	s.NoError(err)
 
 	var pemData []byte
 	for _, b := range blocks {
 		pemData = append(pemData, pem.EncodeToMemory(b)...)
 	}
 
-	assert.NotEmpty(t, tlsCfg.Certificates)
-	assert.Equal(t, 1, len(tlsCfg.Certificates))
-	assert.Equal(t, 2, len(tlsCfg.Certificates[0].Certificate))
-	assert.Equal(t, blocks[0].Bytes, tlsCfg.Certificates[0].Certificate[0])
-	assert.Equal(t, blocks[1].Bytes, tlsCfg.Certificates[0].Certificate[1])
-	assert.NotNil(t, tlsCfg.RootCAs)
+	s.NotEmpty(tlsCfg.Certificates)
+	s.Equal(1, len(tlsCfg.Certificates))
+	s.Equal(2, len(tlsCfg.Certificates[0].Certificate))
+	s.Equal(blocks[0].Bytes, tlsCfg.Certificates[0].Certificate[0])
+	s.Equal(blocks[1].Bytes, tlsCfg.Certificates[0].Certificate[1])
+	s.NotNil(tlsCfg.RootCAs)
 
 }
 
-func TestSetPlaybookTLSConfig_noP12Certificate(t *testing.T) {
+func (s *PlaybookSuite) TestPlaybook_SetTLSConfig_noP12Certificate() {
 	logName := "./logout.log"
 
 	zc := zap.NewDevelopmentConfig()
 	zc.Encoding = "json"
 	zc.OutputPaths = []string{logName}
 	l, err := zc.Build()
-	assert.NoError(t, err)
+	s.NoError(err)
 	zap.ReplaceGlobals(l)
 
 	playbook := domain.Playbook{
@@ -109,17 +121,17 @@ func TestSetPlaybookTLSConfig_noP12Certificate(t *testing.T) {
 	}
 
 	err = setPlaybookTLSConfig(playbook)
-	assert.NoError(t, err)
+	s.NoError(err)
 
 	tlsCfg := http.DefaultTransport.(*http.Transport).TLSClientConfig
 
-	assert.Equal(t, tls.RenegotiateFreelyAsClient, tlsCfg.Renegotiation)
-	assert.True(t, tlsCfg.InsecureSkipVerify)
-	assert.Empty(t, tlsCfg.Certificates)
-	assert.Nil(t, tlsCfg.RootCAs)
+	s.Equal(tls.RenegotiateFreelyAsClient, tlsCfg.Renegotiation)
+	s.True(tlsCfg.InsecureSkipVerify)
+	s.Empty(tlsCfg.Certificates)
+	s.Nil(tlsCfg.RootCAs)
 
 	f, err := os.Open("./logout.log")
-	assert.NoError(t, err)
+	s.NoError(err)
 
 	warningFound := false
 	scanner := bufio.NewScanner(f)
@@ -127,27 +139,27 @@ func TestSetPlaybookTLSConfig_noP12Certificate(t *testing.T) {
 		data := scanner.Bytes()
 		line := logLine{}
 		err = json.Unmarshal(data, &line)
-		assert.NoError(t, err)
+		s.NoError(err)
 
 		level, err := zapcore.ParseLevel(line.Level)
-		assert.NoError(t, err)
+		s.NoError(err)
 
 		if level == zapcore.WarnLevel {
-			assert.Equal(t, "unable to read PKCS#12 file", line.Message)
+			s.Equal("unable to read PKCS#12 file", line.Message)
 			warningFound = true
 			break
 		}
 	}
 	err = f.Close()
-	assert.NoError(t, err)
+	s.NoError(err)
 
 	err = os.Remove(logName)
-	assert.NoError(t, err)
+	s.NoError(err)
 
-	assert.True(t, warningFound)
+	s.True(warningFound)
 }
 
-func TestSetPlaybookTLSConfig_noCertAuth(t *testing.T) {
+func (s *PlaybookSuite) TestPlaybook_SetTLSConfig_noCertAuth() {
 	playbook := domain.Playbook{
 		CertificateTasks: nil,
 		Config: domain.Config{
@@ -159,17 +171,17 @@ func TestSetPlaybookTLSConfig_noCertAuth(t *testing.T) {
 	}
 
 	err := setPlaybookTLSConfig(playbook)
-	assert.NoError(t, err)
+	s.NoError(err)
 
 	tlsCfg := http.DefaultTransport.(*http.Transport).TLSClientConfig
 
-	assert.NotEqual(t, tls.RenegotiateFreelyAsClient, tlsCfg.Renegotiation)
-	assert.False(t, tlsCfg.InsecureSkipVerify)
-	assert.Empty(t, tlsCfg.Certificates)
-	assert.Nil(t, tlsCfg.RootCAs)
+	s.NotEqual(tls.RenegotiateFreelyAsClient, tlsCfg.Renegotiation)
+	s.False(tlsCfg.InsecureSkipVerify)
+	s.Empty(tlsCfg.Certificates)
+	s.Nil(tlsCfg.RootCAs)
 }
 
-func TestSetPlaybookTLSConfig_Insecure(t *testing.T) {
+func (s *PlaybookSuite) TestPlaybook_SetTLSConfig_Insecure() {
 	playbook := domain.Playbook{
 		CertificateTasks: nil,
 		Config: domain.Config{
@@ -180,8 +192,8 @@ func TestSetPlaybookTLSConfig_Insecure(t *testing.T) {
 	}
 
 	err := setPlaybookTLSConfig(playbook)
-	assert.NoError(t, err)
+	s.NoError(err)
 
 	tlsCfg := http.DefaultTransport.(*http.Transport).TLSClientConfig
-	assert.True(t, tlsCfg.InsecureSkipVerify)
+	s.True(tlsCfg.InsecureSkipVerify)
 }
