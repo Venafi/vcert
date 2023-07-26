@@ -25,12 +25,13 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/clientcredentials"
+
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
 	"github.com/Venafi/vcert/v4/pkg/policy"
 	"github.com/Venafi/vcert/v4/pkg/verror"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/clientcredentials"
 )
 
 // Connector contains the base data needed to communicate with a Firefly Server
@@ -41,11 +42,11 @@ type Connector struct {
 	client      *http.Client
 }
 
-func (c *Connector) IsCSRServiceGenerated(req *certificate.Request) (bool, error) {
+func (c *Connector) IsCSRServiceGenerated(_ *certificate.Request) (bool, error) {
 	panic("operation is not supported yet")
 }
 
-func (c *Connector) RetrieveSshConfig(ca *certificate.SshCaTemplateRequest) (*certificate.SshConfig, error) {
+func (c *Connector) RetrieveSshConfig(_ *certificate.SshCaTemplateRequest) (*certificate.SshConfig, error) {
 	panic("operation is not supported yet")
 }
 
@@ -58,7 +59,7 @@ func NewConnector(verbose bool, trust *x509.CertPool) (*Connector, error) {
 	return &Connector{verbose: verbose, trust: trust}, nil
 }
 
-func (c *Connector) SetZone(z string) {
+func (c *Connector) SetZone(_ string) {
 	//Given the method vcert.newClient() is generically calling the SetZone() method
 	//of the created Connector, then we need to leave this empty because for now the zone is not
 	//required
@@ -72,7 +73,7 @@ func (c *Connector) Ping() (err error) {
 	panic("operation is not supported yet")
 }
 
-func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
+func (c *Connector) Authenticate(_ *endpoint.Authentication) (err error) {
 	panic("operation is not supported yet")
 }
 
@@ -136,7 +137,7 @@ func (c *Connector) RetrieveSystemVersion() (string, error) {
 	panic("operation is not supported yet")
 }
 
-func (c *Connector) RequestCertificate(req *certificate.Request) (requestID string, err error) {
+func (c *Connector) RequestCertificate(_ *certificate.Request) (requestID string, err error) {
 	panic("operation is not supported yet")
 }
 
@@ -152,31 +153,31 @@ func (e *ErrCertNotFound) Unwrap() error {
 	return e.error
 }
 
-func (c *Connector) ResetCertificate(req *certificate.Request, restart bool) (err error) {
+func (c *Connector) ResetCertificate(_ *certificate.Request, restart bool) (err error) {
 	panic("operation is not supported yet")
 }
 
-func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) {
+func (c *Connector) GetPolicy(_ string) (*policy.PolicySpecification, error) {
 	panic("operation is not supported yet")
 }
 
-func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (string, error) {
+func (c *Connector) SetPolicy(_ string, _ *policy.PolicySpecification) (string, error) {
 	panic("operation is not supported yet")
 }
 
-func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *certificate.Request) (err error) {
+func (c *Connector) GenerateRequest(_ *endpoint.ZoneConfiguration, _ *certificate.Request) (err error) {
 	panic("operation is not supported yet")
 }
 
-func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates *certificate.PEMCollection, err error) {
+func (c *Connector) RetrieveCertificate(_ *certificate.Request) (certificates *certificate.PEMCollection, err error) {
 	panic("operation is not supported yet")
 }
 
-func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requestID string, err error) {
+func (c *Connector) RenewCertificate(_ *certificate.RenewalRequest) (requestID string, err error) {
 	panic("operation is not supported yet")
 }
 
-func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (err error) {
+func (c *Connector) RevokeCertificate(_ *certificate.RevocationRequest) (err error) {
 	panic("operation is not supported yet")
 }
 
@@ -188,15 +189,15 @@ func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration,
 	panic("operation is not supported yet")
 }
 
-func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certificate.ImportResponse, error) {
+func (c *Connector) ImportCertificate(_ *certificate.ImportRequest) (*certificate.ImportResponse, error) {
 	panic("operation is not supported yet")
 }
 
-func (c *Connector) SearchCertificates(req *certificate.SearchRequest) (*certificate.CertSearchResponse, error) {
+func (c *Connector) SearchCertificates(_ *certificate.SearchRequest) (*certificate.CertSearchResponse, error) {
 	panic("operation is not supported yet")
 }
 
-func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.Sans, certMinTimeLeft time.Duration) (certificateInfo *certificate.CertificateInfo, err error) {
+func (c *Connector) SearchCertificate(_ string, _ string, _ *certificate.Sans, _ time.Duration) (certificateInfo *certificate.CertificateInfo, err error) {
 	panic("operation is not supported yet")
 }
 
@@ -204,26 +205,30 @@ func (c *Connector) SetHTTPClient(client *http.Client) {
 	c.client = client
 }
 
-func (c *Connector) WriteLog(logReq *endpoint.LogRequest) error {
+func (c *Connector) WriteLog(_ *endpoint.LogRequest) error {
 	panic("operation is not supported yet")
 }
 
-func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.CertificateInfo, error) {
+func (c *Connector) ListCertificates(_ endpoint.Filter) ([]certificate.CertificateInfo, error) {
 	panic("operation is not supported yet")
 }
 
-func (c *Connector) GetZonesByParent(parent string) ([]string, error) {
+func (c *Connector) GetZonesByParent(_ string) ([]string, error) {
 	panic("operation is not supported yet")
 }
 
-func (c *Connector) RequestSSHCertificate(req *certificate.SshCertRequest) (response *certificate.SshCertificateObject, err error) {
+func (c *Connector) RequestSSHCertificate(_ *certificate.SshCertRequest) (response *certificate.SshCertificateObject, err error) {
 	panic("operation is not supported yet")
 }
 
-func (c *Connector) RetrieveSSHCertificate(req *certificate.SshCertRequest) (response *certificate.SshCertificateObject, err error) {
+func (c *Connector) RetrieveSSHCertificate(_ *certificate.SshCertRequest) (response *certificate.SshCertificateObject, err error) {
 	panic("operation is not supported yet")
 }
 
-func (c *Connector) RetrieveCertificateMetaData(dn string) (*certificate.CertificateMetaData, error) {
+func (c *Connector) RetrieveCertificateMetaData(_ string) (*certificate.CertificateMetaData, error) {
+	panic("operation is not supported yet")
+}
+
+func (c *Connector) RetireCertificate(_ *certificate.RetireRequest) error {
 	panic("operation is not supported yet")
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 Venafi, Inc.
+ * Copyright 2020-2023 Venafi, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,9 +23,9 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/util"
 	"github.com/Venafi/vcert/v4/pkg/venafi"
-	"github.com/Venafi/vcert/v4/pkg/certificate"
 )
 
 // RevocationReasonOptions is an array of strings containing reasons for certificate revocation

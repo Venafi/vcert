@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2021 Venafi, Inc.
+ * Copyright 2018-2023 Venafi, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
 
@@ -32,13 +32,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/spf13/viper"
+	"github.com/urfave/cli/v2"
+
 	"github.com/Venafi/vcert/v4"
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/endpoint"
 	"github.com/Venafi/vcert/v4/pkg/util"
-
-	"github.com/spf13/viper"
-	"github.com/urfave/cli/v2"
 )
 
 const (

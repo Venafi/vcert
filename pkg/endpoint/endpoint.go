@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Venafi, Inc.
+ * Copyright 2018-2023 Venafi, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,9 +29,8 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/Venafi/vcert/v4/pkg/policy"
-
 	"github.com/Venafi/vcert/v4/pkg/certificate"
+	"github.com/Venafi/vcert/v4/pkg/policy"
 )
 
 const SDKName = "Venafi VCert-Go"

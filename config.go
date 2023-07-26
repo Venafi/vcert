@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Venafi, Inc.
+ * Copyright 2018-2023 Venafi, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,8 +24,9 @@ import (
 	"os/user"
 	"path/filepath"
 
-	"github.com/Venafi/vcert/v4/pkg/endpoint"
 	"gopkg.in/ini.v1"
+
+	"github.com/Venafi/vcert/v4/pkg/endpoint"
 )
 
 // Config is a basic structure for high level initiating connector to Trust Platform (TPP)/Venafi Cloud
@@ -49,8 +50,7 @@ type Config struct {
 func LoadConfigFromFile(path, section string) (cfg Config, err error) {
 
 	if section == "" {
-		// nolint:staticcheck
-		section = ini.DEFAULT_SECTION
+		section = ini.DefaultSection
 	}
 	log.Printf("Loading configuration from %s section %s", path, section)
 
