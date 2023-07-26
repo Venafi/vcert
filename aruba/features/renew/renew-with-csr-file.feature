@@ -24,9 +24,15 @@ Feature: renew action with -csr file:csr.pem option
       But it should not output private key
     Then certificate in "c.pem" and certificate in "c1.pem" should have the same modulus
     And certificate in "c.pem" and certificate in "c1.pem" should not have the same serial
+
+    @TPP
     Examples:
       | endpoint  |
       | TPP       |
+
+    @VAAS
+    Examples:
+      | endpoint  |
       | Cloud     |
 
   Scenario Outline: where different CSR is sent for renew
@@ -44,7 +50,13 @@ Feature: renew action with -csr file:csr.pem option
 
     Then certificate in "c.pem" and certificate in "c1.pem" should not have the same modulus
     And certificate in "c.pem" and certificate in "c1.pem" should not have the same serial
+
+    @TPP
     Examples:
       | endpoint  |
       | TPP       |
+
+    @VAAS
+    Examples:
+      | endpoint  |
       | Cloud     |

@@ -1,3 +1,4 @@
+@TPP
 Feature: Managing credentials tokens from TPP
 
   As a user

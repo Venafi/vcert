@@ -11,11 +11,21 @@ Feature: enrolling certificates with -csr option (VEN-40652)
     When I enroll a certificate in <endpoint> with -cn vdidev.example.com -csr file:csr.pem
     Then the exit status should not be 0
     And the output should contain "The '-cn' option cannot be used in -csr file: provided mode"
+
+    @FAKE
     Examples:
-    | endpoint  |
-    | test-mode |
-    | TPP       |
-    | Cloud     |
+      | endpoint  |
+      | test-mode |
+
+    @TPP
+    Examples:
+      | endpoint  |
+      | TPP       |
+
+    @VAAS
+    Examples:
+      | endpoint  |
+      | Cloud     |
 
   Scenario Outline: where it enrolls certificates with -csr file:csr.pem option
     Given I generate random CSR with -no-prompt -csr-file csr.pem -key-file k.pem
@@ -27,10 +37,20 @@ Feature: enrolling certificates with -csr option (VEN-40652)
     Then it should retrieve certificate
       And it should not output private key
       And CSR in "csr.pem" and private key in "k.pem" and certificate in "c.pem" should have the same modulus
+
+    @FAKE
     Examples:
       | endpoint  |
       | test-mode |
+
+    @TPP
+    Examples:
+      | endpoint  |
       | TPP       |
+
+    @VAAS
+    Examples:
+      | endpoint  |
       | Cloud     |
 
   Scenario Outline: where it enrolls certificates with -csr local -no-prompt
@@ -38,10 +58,20 @@ Feature: enrolling certificates with -csr option (VEN-40652)
     And it should post certificate request
     Then it should retrieve certificate
     And it should output private key
+
+    @FAKE
     Examples:
       | endpoint  |
       | test-mode |
+
+    @TPP
+    Examples:
+      | endpoint  |
       | TPP       |
+
+    @VAAS
+    Examples:
+      | endpoint  |
       | Cloud     |
 
   Scenario Outline: where it enrolls certificates with -csr local -no-prompt -key-password ...
@@ -49,10 +79,20 @@ Feature: enrolling certificates with -csr option (VEN-40652)
     And it should post certificate request
     Then it should retrieve certificate
     And it should output encrypted private key
+
+    @FAKE
     Examples:
       | endpoint  |
       | test-mode |
+
+    @TPP
+    Examples:
+      | endpoint  |
       | TPP       |
+
+    @VAAS
+    Examples:
+      | endpoint  |
       | Cloud     |
 
 
@@ -60,19 +100,36 @@ Feature: enrolling certificates with -csr option (VEN-40652)
   Scenario Outline: where it should however enroll a certificate with -csr service, empty -key-password and -no-pickup
     When I enroll random certificate using <endpoint> with -csr service -no-prompt -no-pickup
     Then it should post certificate request
+
+    @FAKE
     Examples:
       | endpoint  |
       | test-mode |
+
+    @TPP
+    Examples:
+      | endpoint  |
       | TPP       |
+
+    @VAAS
+    Examples:
+      | endpoint  |
+      | Cloud     |
 
   Scenario Outline: where it should enroll a certificate with -csr service -no-prompt -key-password ...
     When I enroll random certificate using <endpoint> with -csr service -no-prompt -key-password newPassw0rd!
     Then it should post certificate request
       And it should retrieve certificate
       And it should output encrypted private key
+
+    @FAKE
     Examples:
       | endpoint  |
       | test-mode |
+
+    @TPP
+    Examples:
+      | endpoint  |
       | TPP       |
 
   Scenario Outline: where it should enroll a certificate with -csr service -no-prompt
@@ -84,8 +141,14 @@ Feature: enrolling certificates with -csr option (VEN-40652)
     Then I retrieve the certificate using <endpoint> using the same Pickup ID with -key-password newPassw0rd! -timeout 180
       And it should retrieve certificate
       And it should output encrypted private key
+
+    @FAKE
     Examples:
       | endpoint  |
       | test-mode |
+
+    @TPP
+    Examples:
+      | endpoint  |
       | TPP       |
 
