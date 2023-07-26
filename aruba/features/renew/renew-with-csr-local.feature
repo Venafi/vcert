@@ -29,9 +29,15 @@ Feature: renew action with -csr local (default) option
     Then private key in "k1.pem" and certificate in "c1.pem" should have the same modulus
     And certificate in "c.pem" and certificate in "c1.pem" should not have the same modulus
     And certificate in "c.pem" and certificate in "c1.pem" should not have the same serial
+
+    @TPP
     Examples:
       | endpoint  |
       | TPP       |
+
+    @VAAS
+    Examples:
+      | endpoint  |
       | Cloud     |
 
   Scenario Outline: renew certificate using -id using `-csr local`
@@ -47,24 +53,36 @@ Feature: renew action with -csr local (default) option
     Then private key in "k1.pem" and certificate in "c1.pem" should have the same modulus
     And certificate in "c.pem" and certificate in "c1.pem" should not have the same modulus
     And certificate in "c.pem" and certificate in "c1.pem" should not have the same serial
+
+    @TPP
     Examples:
       | endpoint  |
       | TPP       |
+
+    @VAAS
+    Examples:
+      | endpoint  |
       | Cloud     |
 
   Scenario Outline: renew certificate using -id using `-csr local` with PKCS12 flag
-      Given I enroll random certificate using <endpoint> with -key-password Passcode123! -key-file k.pem -cert-file c.pem -csr local
-        And it should write private key to the file "k.pem"
-        And it should write certificate to the file "c.pem"
-        And it should output Pickup ID
-      And I decode certificate from file "c.pem"
-      Then I renew the certificate in <endpoint> using the same Pickup ID with flags -key-password Passcode123! -file all.p12 -format pkcs12
-        And it should retrieve certificate
-        And "all.p12" should be PKCS#12 archive with password "Passcode123!"
-      Examples:
-        | endpoint  |
-        | TPP       |
-        | VaaS      |
+    Given I enroll random certificate using <endpoint> with -key-password Passcode123! -key-file k.pem -cert-file c.pem -csr local
+      And it should write private key to the file "k.pem"
+      And it should write certificate to the file "c.pem"
+      And it should output Pickup ID
+    And I decode certificate from file "c.pem"
+    Then I renew the certificate in <endpoint> using the same Pickup ID with flags -key-password Passcode123! -file all.p12 -format pkcs12
+      And it should retrieve certificate
+      And "all.p12" should be PKCS#12 archive with password "Passcode123!"
+
+    @TPP
+    Examples:
+      | endpoint  |
+      | TPP       |
+
+    @VAAS
+    Examples:
+      | endpoint  |
+      | Cloud     |
 
     Scenario: where renewed certificate may have new  -key-size, -san-dns
       Given I implement that later

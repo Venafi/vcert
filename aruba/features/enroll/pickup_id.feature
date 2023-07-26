@@ -1,3 +1,4 @@
+@@FAKE
 Feature: -pickup-id feature
 
   VEN-41305

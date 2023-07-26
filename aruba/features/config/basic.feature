@@ -67,6 +67,7 @@ Feature: -config option
   Background:
     Given the default aruba exit timeout is 180 seconds
 
+  @FAKE
   Scenario: Simple enroll with -config test.ini
     Given a file named "test.ini" with:
     """
@@ -76,15 +77,18 @@ Feature: -config option
     Then it should post certificate request
       And it should retrieve certificate
 
+  @COMMON
   Scenario: Where it returns error if ini-file doesn't exist
     When I try to run `vcert enroll -config does-not-exist.ini -cn cfg.venafi.example.com -no-prompt`
     Then it should fail with "failed to load config"
 
+  @COMMON
   Scenario: Where it returns error when ini-file is empty
     Given an empty file named "empty.ini"
     When I try to run `vcert enroll -config empty.ini -cn cfg.venafi.example.com -no-prompt`
     Then it should fail with "looks empty"
 
+  @COMMON
   Scenario: Where it returns error when ini-file contains both TPP and Cloud connection deprecated details
     Given a file named "mixed.ini" with:
     """
@@ -97,6 +101,7 @@ Feature: -config option
     When I try to run `vcert enroll -config mixed.ini -cn cfg.venafi.example.com -no-prompt`
     Then it should fail with "illegal key 'cloud_apikey'"
 
+  @COMMON
   Scenario: Where it returns error when ini-file contains both TPP and Cloud connection details
     Given a file named "mixed2.ini" with:
     """
@@ -107,6 +112,7 @@ Feature: -config option
     When I try to run `vcert enroll -config mixed2.ini -cn cfg.venafi.example.com -no-prompt`
     Then it should fail with "could not set both TPP token and cloud api key"
 
+  @TPP
   Scenario: Where it returns error when TPP configuration doesn't contain user
     Given a file named "incomplete.ini" with:
     """
@@ -118,6 +124,7 @@ Feature: -config option
     When I try to run `vcert enroll -config incomplete.ini -cn cfg.venafi.example.com -no-prompt`
     Then it should fail with "missing TPP user"
 
+  @TPP
   Scenario: Where it returns error when TPP configuration doesn't contain password
     Given a file named "incomplete.ini" with:
     """
@@ -129,7 +136,7 @@ Feature: -config option
     When I try to run `vcert enroll -config incomplete.ini -cn cfg.venafi.example.com -no-prompt`
     Then it should fail with "missing TPP password"
 
-
+  @TPP
   Scenario: Where it returns error when TPP configuration doesn't contain access token
     Given a file named "incomplete.ini" with:
     """
