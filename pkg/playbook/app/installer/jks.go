@@ -46,7 +46,7 @@ func NewJKSInstaller(inst domain.Installation) JKSInstaller {
 // 1. Does the certificate exists? > Install if it doesn't.
 // 2. Does the certificate is about to expire? Renew if about to expire.
 // Returns true if the certificate needs to be installed.
-func (r JKSInstaller) Check(_ string, renewBefore string, request domain.PlaybookRequest) (bool, error) {
+func (r JKSInstaller) Check(renewBefore string, request domain.PlaybookRequest) (bool, error) {
 	zap.L().Debug("checking certificate:", zap.String("location", r.Location))
 
 	// Check certificate file exists
@@ -76,15 +76,8 @@ func (r JKSInstaller) Check(_ string, renewBefore string, request domain.Playboo
 	return renew, nil
 }
 
-// Prepare takes the certificate, chain and private key and converts them to the specific format required for the installer
-func (r JKSInstaller) Prepare(request certificate.Request, pcc certificate.PEMCollection) (*certificate.PEMCollection, error) {
-	zap.L().Debug("preparing certificate", zap.String("location", r.Location))
-
-	return prepareCertificateForBundle(request, pcc)
-}
-
 // Backup takes the certificate request and backs up the current version prior to overwriting
-func (r JKSInstaller) Backup(_ string, request certificate.Request) error {
+func (r JKSInstaller) Backup() error {
 	zap.L().Debug("backing up certificate", zap.String("location", r.Location))
 
 	// Check certificate file exists
@@ -109,7 +102,7 @@ func (r JKSInstaller) Backup(_ string, request certificate.Request) error {
 }
 
 // Install takes the certificate bundle and moves it to the location specified in the installer
-func (r JKSInstaller) Install(_ string, request certificate.Request, pcc certificate.PEMCollection) error {
+func (r JKSInstaller) Install(request domain.PlaybookRequest, pcc certificate.PEMCollection) error {
 	zap.L().Debug("installing certificate", zap.String("location", r.Location))
 
 	content, err := packageAsJKS(pcc, request.KeyPassword, r.JKSAlias, r.JKSPassword)
