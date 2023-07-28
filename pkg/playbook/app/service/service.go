@@ -57,7 +57,7 @@ func Execute(config domain.Config, task domain.CertificateTask) []error {
 		changed := false
 		// check if any installs have changed
 		for _, install := range task.Installations {
-			isChanged, err := installer.GetInstaller(install).Check(task.Name, task.RenewBefore, task.Request)
+			isChanged, err := installer.GetInstaller(install).Check(task.RenewBefore, task.Request)
 			if err != nil {
 				return []error{fmt.Errorf("error checking for certificate %s: %w", task.Name, err)}
 			}
@@ -76,13 +76,13 @@ func Execute(config domain.Config, task domain.CertificateTask) []error {
 	}
 
 	//Config changed or certificate needs renewal. Do request
-	pcc, vRequest, err := vcertutil.EnrollCertificate(config, task.Request)
+	pcc, certRequest, err := vcertutil.EnrollCertificate(config, task.Request)
 	if err != nil {
 		return []error{fmt.Errorf("error requesting certificate %s: %w", task.Name, err)}
 	}
 	zap.L().Info("Successfully enrolled certificate", zap.String("certificate", task.Request.Subject.CommonName))
 
-	x509Certificate, prepedPcc, err := installer.CreateX509Cert(pcc, vRequest)
+	x509Certificate, prepedPcc, err := installer.CreateX509Cert(pcc, certRequest)
 	if err != nil {
 		e := "error preparing certificate for installation"
 		zap.L().Error(e, zap.Error(err))
@@ -97,7 +97,7 @@ func Execute(config domain.Config, task domain.CertificateTask) []error {
 
 	errorList := make([]error, 0)
 	for _, installation := range task.Installations {
-		e := runInstaller(task.Name, installation, vRequest, prepedPcc)
+		e := runInstaller(installation, task.Request, prepedPcc)
 		if e != nil {
 			errorList = append(errorList, e)
 		}
@@ -106,7 +106,7 @@ func Execute(config domain.Config, task domain.CertificateTask) []error {
 
 }
 
-func runInstaller(taskName string, installation domain.Installation, vcertRequest *certificate.Request, prepedPcc *certificate.PEMCollection) error {
+func runInstaller(installation domain.Installation, request domain.PlaybookRequest, prepedPcc *certificate.PEMCollection) error {
 	instlr := installer.GetInstaller(installation)
 	zap.L().Info("Running Installer", zap.String("installer", installation.Type.String()),
 		zap.String("location", installation.Location))
@@ -116,7 +116,7 @@ func runInstaller(taskName string, installation domain.Installation, vcertReques
 	if installation.BackupFiles {
 		zap.L().Info("Backing up certificate for Installer", zap.String("installer", installation.Type.String()),
 			zap.String("location", installation.Location))
-		err = instlr.Backup(taskName, *vcertRequest)
+		err = instlr.Backup()
 		if err != nil {
 			e := "error backing up certificate"
 			zap.L().Error(e, zap.String("location", installation.Location), zap.Error(err))
@@ -124,7 +124,7 @@ func runInstaller(taskName string, installation domain.Installation, vcertReques
 		}
 	}
 
-	err = instlr.Install(taskName, *vcertRequest, *prepedPcc)
+	err = instlr.Install(request, *prepedPcc)
 	if err != nil {
 		e := "error installing certificate"
 		zap.L().Error(e, zap.String("location", installation.Location), zap.Error(err))

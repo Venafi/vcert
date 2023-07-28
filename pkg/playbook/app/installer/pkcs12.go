@@ -45,7 +45,7 @@ func NewPKCS12Installer(inst domain.Installation) PKCS12Installer {
 // 1. Does the certificate exists? > Install if it doesn't.
 // 2. Does the certificate is about to expire? Renew if about to expire.
 // Returns true if the certificate needs to be installed.
-func (r PKCS12Installer) Check(_ string, renewBefore string, request domain.PlaybookRequest) (bool, error) {
+func (r PKCS12Installer) Check(renewBefore string, request domain.PlaybookRequest) (bool, error) {
 	zap.L().Debug("checking certificate:", zap.String("location", r.Location))
 
 	// Check certificate file exists
@@ -69,15 +69,8 @@ func (r PKCS12Installer) Check(_ string, renewBefore string, request domain.Play
 	return renew, nil
 }
 
-// Prepare takes the certificate, chain and private key and converts them to the specific format required for the installer
-func (r PKCS12Installer) Prepare(request certificate.Request, pcc certificate.PEMCollection) (*certificate.PEMCollection, error) {
-	zap.L().Debug("preparing certificate", zap.String("location", r.Location))
-
-	return prepareCertificateForBundle(request, pcc)
-}
-
 // Backup takes the certificate request and backs up the current version prior to overwriting
-func (r PKCS12Installer) Backup(_ string, _ certificate.Request) error {
+func (r PKCS12Installer) Backup() error {
 	zap.L().Debug("backing up certificate", zap.String("location", r.Location))
 
 	// Check certificate file exists
@@ -102,7 +95,7 @@ func (r PKCS12Installer) Backup(_ string, _ certificate.Request) error {
 }
 
 // Install takes the certificate bundle and moves it to the location specified in the installer
-func (r PKCS12Installer) Install(_ string, request certificate.Request, pcc certificate.PEMCollection) error {
+func (r PKCS12Installer) Install(request domain.PlaybookRequest, pcc certificate.PEMCollection) error {
 	zap.L().Debug("installing certificate", zap.String("location", r.Location))
 
 	content, err := packageAsPKCS12(pcc, request.KeyPassword)

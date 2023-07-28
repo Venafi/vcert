@@ -39,14 +39,11 @@ type PlaybookRequest struct {
 	KeyType         certificate.KeyType         `yaml:"keyType,omitempty"`
 	Location        certificate.Location        `yaml:"location,omitempty"`
 	OmitSANs        bool                        `yaml:"omitSans,omitempty"`
-
-	Origin string `yaml:"origin,omitempty"`
-
-	Subject Subject  `yaml:"subject,omitempty"`
-	Timeout int      `yaml:"timeout"`
-	UPNs    []string `yaml:"upns,omitempty"`
-	URIs    []string `yaml:"uris,omitempty"`
-
-	ValidDays string `yaml:"validDays,omitempty"`
-	Zone      string `yaml:"zone,omitempty"`
+	Origin          string                      `yaml:"origin,omitempty"`
+	Subject         Subject                     `yaml:"subject,omitempty"`
+	Timeout         int                         `yaml:"timeout"`
+	UPNs            []string                    `yaml:"upns,omitempty"`
+	URIs            []string                    `yaml:"uris,omitempty"`
+	ValidDays       string                      `yaml:"validDays,omitempty"`
+	Zone            string                      `yaml:"zone,omitempty"`
 }

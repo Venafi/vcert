@@ -142,6 +142,12 @@ func DecryptPrivateKey(privateKey string, password string) (string, error) {
 	return privateKey, err
 }
 
+// EncryptPrivateKeyPKCS1 takes a decrypted PKCS8 private key and encrypts it back in PKCS1 format
+func EncryptPrivateKeyPKCS1(privateKey string, password string) (string, error) {
+	privateKey, err := util.EncryptPkcs1PrivateKey(privateKey, password)
+	return privateKey, err
+}
+
 // IsValidAccessToken checks that the accessToken in config is not expired.
 func IsValidAccessToken(config domain.Config) (bool, error) {
 	// No access token provided. Use refresh token to get new access token right away

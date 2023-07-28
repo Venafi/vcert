@@ -24,20 +24,18 @@ import (
 // Installer represents the interface for all installers.
 // A new Installer must implement this interface to be picked up.
 type Installer interface {
+
 	// Check is the method in charge of making the validations to install a new certificate:
 	// 1. Does the certificate exists? > Install if it doesn't.
 	// 2. Does the certificate is about to expire? Renew if about to expire.
 	// Returns true if the certificate needs to be installed.
-	Check(certFile string, renewBefore string, request domain.PlaybookRequest) (bool, error)
-
-	// Prepare takes the certificate, chain and private key and converts them to the specific format required for the installer
-	Prepare(request certificate.Request, pcc certificate.PEMCollection) (*certificate.PEMCollection, error)
+	Check(renewBefore string, request domain.PlaybookRequest) (bool, error)
 
 	// Backup takes the certificate request and backs up the current version prior to overwriting
-	Backup(filename string, request certificate.Request) error
+	Backup() error
 
 	// Install takes the certificate bundle and moves it to the location specified in the installer
-	Install(filename string, request certificate.Request, pcc certificate.PEMCollection) error
+	Install(request domain.PlaybookRequest, pcc certificate.PEMCollection) error
 
 	// AfterInstallActions runs any instructions declared in the Installer on a terminal.
 	//
