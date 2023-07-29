@@ -401,7 +401,7 @@ func (s *PlaybookSuite) SetupTest() {
 
 	s.nonWindowsTestCases = []testCase{
 		{
-			err:  ErrNoInstallationFile,
+			err:  ErrNoCAPILocation,
 			name: "NoCAPILocation",
 			pb: Playbook{
 				Config: config,
@@ -428,8 +428,8 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							Installation{
-								Type: FormatCAPI,
-								File: "somewhere",
+								Type:     FormatCAPI,
+								Location: "somewhere",
 							},
 						},
 					},
@@ -440,7 +440,7 @@ func (s *PlaybookSuite) SetupTest() {
 
 	s.windowsTestCases = []testCase{
 		{
-			err:  ErrNoInstallationFile,
+			err:  ErrNoCAPILocation,
 			name: "NoCAPILocation",
 			pb: Playbook{
 				Config: config,
@@ -467,8 +467,8 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							Installation{
-								Type: FormatCAPI,
-								File: "somewhere",
+								Type:     FormatCAPI,
+								Location: "somewhere",
 							},
 						},
 					},
@@ -486,8 +486,8 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							Installation{
-								Type: FormatCAPI,
-								File: "somewhere\\MY",
+								Type:     FormatCAPI,
+								Location: "somewhere\\MY",
 							},
 						},
 					},
@@ -505,8 +505,8 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							Installation{
-								Type: FormatCAPI,
-								File: "LocalMachine\\foo",
+								Type:     FormatCAPI,
+								Location: "LocalMachine\\foo",
 							},
 						},
 					},
@@ -524,8 +524,8 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							Installation{
-								Type: FormatCAPI,
-								File: "LocalMachine\\MY",
+								Type:     FormatCAPI,
+								Location: "LocalMachine\\MY",
 							},
 						},
 					},

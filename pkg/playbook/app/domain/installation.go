@@ -39,12 +39,13 @@ type Installation struct {
 	AfterAction         string             `yaml:"afterInstallAction,omitempty"`
 	BackupFiles         bool               `yaml:"backupFiles,omitempty"`
 	CAPIIsNonExportable bool               `yaml:"capiIsNonExportable,omitempty"`
+	ChainFile           string             `yaml:"chainFile,omitempty"`
+	File                string             `yaml:"file,omitempty"`
 	InstallValidation   string             `yaml:"installValidationAction,omitempty"`
 	JKSAlias            string             `yaml:"jksAlias,omitempty"`
 	JKSPassword         string             `yaml:"jksPassword,omitempty"`
-	File                string             `yaml:"file,omitempty"`
-	ChainFile           string             `yaml:"chainFile,omitempty"`
 	KeyFile             string             `yaml:"keyFile,omitempty"`
+	Location            string             `yaml:"location,omitempty"`
 	Type                InstallationFormat `yaml:"format,omitempty"`
 }
 
@@ -80,8 +81,8 @@ func (installation Installation) IsValid() (bool, error) {
 }
 
 func validateCAPI(installation Installation) error {
-	if installation.File == "" {
-		return ErrNoInstallationFile
+	if installation.Location == "" {
+		return ErrNoCAPILocation
 	}
 
 	if runtime.GOOS != "windows" {
@@ -89,7 +90,7 @@ func validateCAPI(installation Installation) error {
 	}
 
 	// Ensure proper location specified
-	segments := strings.Split(installation.File, "\\")
+	segments := strings.Split(installation.Location, "\\")
 
 	// CAPI Location must be in form of <string>\<string>
 	if len(segments) != 2 {

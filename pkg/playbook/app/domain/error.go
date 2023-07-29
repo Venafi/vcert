@@ -21,8 +21,8 @@ import "fmt"
 var (
 	// ErrNoConfig is thrown when the Playbook has no config section
 	ErrNoConfig = fmt.Errorf("no config found on playbook")
-	// ErrNoTasks is thrown when the Playbook has no certificates section
-	ErrNoTasks = fmt.Errorf("no tasks found on playbook")
+	// ErrNoTasks is thrown when the Playbook has no certificateTasks section
+	ErrNoTasks = fmt.Errorf("no certificate tasks found on playbook")
 	// ErrNoInstallations is thrown when any task (item in Certificates section) has no installations defined
 	ErrNoInstallations = fmt.Errorf("no installations found on certificate task")
 
@@ -59,6 +59,8 @@ var (
 
 	// ErrCAPIOnNonWindows is thrown when certificates.installations[].type is CAPI but running on a non-windows build
 	ErrCAPIOnNonWindows = fmt.Errorf("unable to specify CAPI installation type on non-windows system")
+	// ErrNoCAPILocation is thrown when certificates.installations[].format is CAPI but certificates.installations[].location is not set
+	ErrNoCAPILocation = fmt.Errorf("CAPI installation location not specified")
 	// ErrMalformedCAPILocation is thrown when certificates.installations[].type is CAPI but the location is malformed
 	ErrMalformedCAPILocation = fmt.Errorf("invalid CAPI location. Should be in form of 'StoreLocation\\StoreName' (i.e. 'LocalMachine\\My')")
 	// ErrInvalidCAPILocation is thrown when certificates.installations[].type is CAPI but the location is malformed
