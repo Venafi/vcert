@@ -24,6 +24,7 @@ import (
 
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain"
+	"github.com/Venafi/vcert/v4/pkg/util"
 )
 
 type ServiceSuite struct {
@@ -44,23 +45,22 @@ type ServiceSuite struct {
 func (s *ServiceSuite) SetupTest() {
 
 	request := domain.PlaybookRequest{
-		CADN:            "",
-		ChainOption:     certificate.ChainOptionRootLast,
-		CsrOrigin:       certificate.ServiceGeneratedCSR,
-		CustomFields:    nil,
-		DNSNames:        nil,
-		EmailAddresses:  nil,
-		FetchPrivateKey: false,
-		FriendlyName:    "",
-		IPAddresses:     nil,
-		IssuerHint:      "",
-		KeyCurve:        certificate.EllipticCurveNotSet,
-		KeyLength:       2048,
-		KeyPassword:     "foobar123",
-		KeyType:         certificate.KeyTypeRSA,
-		Location:        certificate.Location{},
-		OmitSANs:        false,
-		Origin:          "",
+		CADN:           "",
+		ChainOption:    certificate.ChainOptionRootLast,
+		CsrOrigin:      certificate.ServiceGeneratedCSR,
+		CustomFields:   nil,
+		DNSNames:       nil,
+		EmailAddresses: nil,
+		FriendlyName:   "",
+		IPAddresses:    nil,
+		IssuerHint:     util.IssuerHintGeneric,
+		KeyCurve:       certificate.EllipticCurveNotSet,
+		KeyLength:      2048,
+		KeyPassword:    "foobar123",
+		KeyType:        certificate.KeyTypeRSA,
+		Location:       certificate.Location{},
+		OmitSANs:       false,
+		Origin:         "",
 		Subject: domain.Subject{
 			CommonName:   "foo.bar.rvela.com",
 			Country:      "US",

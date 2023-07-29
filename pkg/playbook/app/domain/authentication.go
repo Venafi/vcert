@@ -19,7 +19,7 @@ package domain
 // Authentication holds the credentials to connect to Venafi platforms: TPP and TLSPC
 type Authentication struct {
 	AccessToken  string `yaml:"accessToken,omitempty"`
-	Apikey       string `yaml:"apikey,omitempty"`
+	Apikey       string `yaml:"apiKey,omitempty"`
 	ClientID     string `yaml:"clientId,omitempty"`
 	RefreshToken string `yaml:"refreshToken,omitempty"`
 	Scope        string `yaml:"scope,omitempty"`

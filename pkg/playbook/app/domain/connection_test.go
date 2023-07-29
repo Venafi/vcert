@@ -47,7 +47,7 @@ func (s *ConnectionSuite) SetupTest() {
 		{
 			name: "Firefly_valid",
 			c: Connection{
-				Type: CTypeFirefly,
+				Platform: CTypeFirefly,
 				Credentials: Authentication{
 					Apikey: "asdasdadsd",
 				},
@@ -58,7 +58,7 @@ func (s *ConnectionSuite) SetupTest() {
 		{
 			name: "Firefly_invalid_empty_credentials",
 			c: Connection{
-				Type:        CTypeFirefly,
+				Platform:    CTypeFirefly,
 				Credentials: Authentication{},
 			},
 			expectedCType: endpoint.ConnectorTypeFake,
@@ -68,7 +68,7 @@ func (s *ConnectionSuite) SetupTest() {
 		{
 			name: "TPP_valid",
 			c: Connection{
-				Type: CTypeTPP,
+				Platform: CTypeTPP,
 				Credentials: Authentication{
 					AccessToken: "123abc###",
 				},
@@ -82,7 +82,7 @@ func (s *ConnectionSuite) SetupTest() {
 		{
 			name: "TPP_invalid_empty_credentials",
 			c: Connection{
-				Type:        CTypeTPP,
+				Platform:    CTypeTPP,
 				Credentials: Authentication{},
 				URL:         "https://my.tpp.instance.com",
 			},
@@ -93,7 +93,7 @@ func (s *ConnectionSuite) SetupTest() {
 		{
 			name: "TPP_invalid_no_url",
 			c: Connection{
-				Type: CTypeTPP,
+				Platform: CTypeTPP,
 				Credentials: Authentication{
 					AccessToken: "123abc###",
 				},
@@ -105,7 +105,7 @@ func (s *ConnectionSuite) SetupTest() {
 		{
 			name: "TPP_invalid_trustbundle_not_exist",
 			c: Connection{
-				Type: CTypeTPP,
+				Platform: CTypeTPP,
 				Credentials: Authentication{
 					AccessToken: "123abc###",
 				},
@@ -119,7 +119,7 @@ func (s *ConnectionSuite) SetupTest() {
 		{
 			name: "VaaS_valid",
 			c: Connection{
-				Type: CTypeVaaS,
+				Platform: CTypeVaaS,
 				Credentials: Authentication{
 					Apikey: "xxx-XXX-xxx",
 				},
@@ -130,7 +130,7 @@ func (s *ConnectionSuite) SetupTest() {
 		{
 			name: "VaaS_invalid_empty_credentials",
 			c: Connection{
-				Type:        CTypeVaaS,
+				Platform:    CTypeVaaS,
 				Credentials: Authentication{},
 			},
 			expectedCType: endpoint.ConnectorTypeCloud,
@@ -140,7 +140,7 @@ func (s *ConnectionSuite) SetupTest() {
 		{
 			name: "Unknown_invalid",
 			c: Connection{
-				Type: CTypeUnknown,
+				Platform: CTypeUnknown,
 			},
 			expectedCType: endpoint.ConnectorTypeFake,
 			expectedValid: false,

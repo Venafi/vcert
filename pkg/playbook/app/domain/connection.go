@@ -27,16 +27,16 @@ import (
 // Connection represents the issuer that vCert will connect to
 // in order to issue certificates
 type Connection struct {
-	Type            ConnectionType `yaml:"type,omitempty"`
 	Credentials     Authentication `yaml:"credentials,omitempty"`
-	URL             string         `yaml:"url,omitempty"`
-	TrustBundlePath string         `yaml:"trustBundle,omitempty"`
 	Insecure        bool           `yaml:"insecure,omitempty"`
+	Platform        Platform       `yaml:"platform,omitempty"`
+	TrustBundlePath string         `yaml:"trustBundle,omitempty"`
+	URL             string         `yaml:"url,omitempty"`
 }
 
 // GetConnectorType returns the type of vcert Connector this config will create
 func (c Connection) GetConnectorType() endpoint.ConnectorType {
-	switch c.Type {
+	switch c.Platform {
 	case CTypeFirefly:
 		// This is not implemented in vCertSDK yet
 		return endpoint.ConnectorTypeFake
@@ -63,7 +63,7 @@ func (c Connection) validateTrustBundle() error {
 // IsValid returns true if the Connection is supported by vcert
 // and has the necessary values to connect to the given platform
 func (c Connection) IsValid() (bool, error) {
-	switch c.Type {
+	switch c.Platform {
 	case CTypeTPP:
 		return isValidTpp(c)
 	case CTypeVaaS:
@@ -71,7 +71,7 @@ func (c Connection) IsValid() (bool, error) {
 	case CTypeFirefly:
 		return isValidFirefly(c)
 	default:
-		return false, fmt.Errorf("invalid connection type %v", c.Type)
+		return false, fmt.Errorf("invalid connection type %v", c.Platform)
 	}
 }
 

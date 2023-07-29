@@ -45,7 +45,7 @@ func NewPlaybook() Playbook {
 		CertificateTasks: make(CertificateTasks, 0),
 		Config: Config{
 			Connection: Connection{
-				Type:            CTypeVaaS,
+				Platform:        CTypeVaaS,
 				URL:             tlspcURL,
 				TrustBundlePath: "",
 			},

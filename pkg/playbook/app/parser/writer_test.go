@@ -42,7 +42,6 @@ func (s *WriterSuite) SetupTest() {
 					CsrOrigin:   certificate.ServiceGeneratedCSR,
 					CustomFields: []certificate.CustomField{
 						{
-							Type:  certificate.CustomFieldOrigin,
 							Name:  fmt.Sprintf("cf_%s", RandomString(5)),
 							Value: RandomString(10),
 						},

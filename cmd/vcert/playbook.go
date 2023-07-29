@@ -129,7 +129,7 @@ func doRunPlaybook(_ *cli.Context) error {
 		os.Exit(1)
 	}
 
-	if playbook.Config.Connection.Type == domain.CTypeTPP {
+	if playbook.Config.Connection.Platform == domain.CTypeTPP {
 		err = service.ValidateTPPCredentials(&playbook)
 		if err != nil {
 			zap.L().Error("invalid tpp credentials", zap.Error(err))
@@ -158,7 +158,7 @@ func setPlaybookTLSConfig(playbook domain.Playbook) error {
 	//  and to enable certificate authentication
 
 	// Set RenegotiateFreelyAsClient in case of we're communicating with MTLS enabled TPP server
-	if playbook.Config.Connection.Type == domain.CTypeTPP {
+	if playbook.Config.Connection.Platform == domain.CTypeTPP {
 		tlsConfig.Renegotiation = tls.RenegotiateFreelyAsClient
 	}
 
@@ -167,7 +167,7 @@ func setPlaybookTLSConfig(playbook domain.Playbook) error {
 	}
 
 	// Try to set up certificate authentication if enabled
-	if playbook.Config.Connection.Type == domain.CTypeTPP && playbook.Config.Connection.Credentials.PKCS12 != "" {
+	if playbook.Config.Connection.Platform == domain.CTypeTPP && playbook.Config.Connection.Credentials.PKCS12 != "" {
 		zap.L().Info("attempting to enable certificate authentication to TPP")
 		var p12FileLocation string
 		var p12Password string

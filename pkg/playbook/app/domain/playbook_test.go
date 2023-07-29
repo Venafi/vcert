@@ -48,7 +48,7 @@ func (s *PlaybookSuite) SetupTest() {
 
 	config := Config{
 		Connection: Connection{
-			Type: CTypeVaaS,
+			Platform: CTypeVaaS,
 			Credentials: Authentication{
 				Apikey: "foobarGibberish123",
 			},
