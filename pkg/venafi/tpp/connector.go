@@ -578,7 +578,7 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 		case util.IssuerHintGeneric:
 			attributeNames = []string{"Specific End Date"}
 		default:
-			return tppReq, fmt.Errorf("invalid issuer hint: %s", req.IssuerHint)
+			return tppReq, fmt.Errorf("invalid issuer hint: %s", req.IssuerHint.String())
 		}
 
 		for _, attributeName := range attributeNames {
