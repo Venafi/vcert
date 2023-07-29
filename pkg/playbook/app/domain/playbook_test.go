@@ -174,7 +174,7 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							{
-								Type:     TypeUnknown,
+								Type:     FormatUnknown,
 								Location: "something",
 							},
 						},
@@ -193,7 +193,7 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							{
-								Type: TypeJKS,
+								Type: FormatJKS,
 							},
 						},
 					},
@@ -211,7 +211,7 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							Installation{
-								Type:     TypeJKS,
+								Type:     FormatJKS,
 								Location: "somewhere",
 							},
 						},
@@ -230,7 +230,7 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							Installation{
-								Type:     TypeJKS,
+								Type:     FormatJKS,
 								Location: "somewhere",
 								JKSAlias: "someAlias",
 							},
@@ -250,7 +250,7 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							Installation{
-								Type:        TypeJKS,
+								Type:        FormatJKS,
 								Location:    "somewhere",
 								JKSAlias:    "alias",
 								JKSPassword: "abc12",
@@ -271,7 +271,7 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							{
-								Type: TypePEM,
+								Type: FormatPEM,
 							},
 						},
 					},
@@ -289,7 +289,7 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							Installation{
-								Type:     TypePEM,
+								Type:     FormatPEM,
 								Location: "somewhere",
 							},
 						},
@@ -308,7 +308,7 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							Installation{
-								Type:            TypePEM,
+								Type:            FormatPEM,
 								Location:        "somewhere",
 								PEMCertFilename: "cert.cer",
 							},
@@ -328,7 +328,7 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							Installation{
-								Type:             TypePEM,
+								Type:             FormatPEM,
 								Location:         "somewhere",
 								PEMCertFilename:  "cert.pem",
 								PEMChainFilename: "chain.pem",
@@ -349,7 +349,7 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							{
-								Type: TypePKCS12,
+								Type: FormatPKCS12,
 							},
 						},
 					},
@@ -368,7 +368,7 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							{
-								Type:             TypePEM,
+								Type:             FormatPEM,
 								Location:         "/foo/bar/pem",
 								PEMCertFilename:  "cert.pem",
 								PEMChainFilename: "chain.pem",
@@ -390,7 +390,7 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							{
-								Type:        TypeJKS,
+								Type:        FormatJKS,
 								Location:    "somewhere",
 								JKSAlias:    "alias",
 								JKSPassword: "abc123",
@@ -411,7 +411,7 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							{
-								Type:     TypePKCS12,
+								Type:     FormatPKCS12,
 								Location: "somewhere",
 							},
 						},
@@ -432,7 +432,7 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							{
-								Type: TypeCAPI,
+								Type: FormatCAPI,
 							},
 						},
 					},
@@ -450,7 +450,7 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							Installation{
-								Type:     TypeCAPI,
+								Type:     FormatCAPI,
 								Location: "somewhere",
 							},
 						},
@@ -471,7 +471,7 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							{
-								Type: TypeCAPI,
+								Type: FormatCAPI,
 							},
 						},
 					},
@@ -489,7 +489,7 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							Installation{
-								Type:     TypeCAPI,
+								Type:     FormatCAPI,
 								Location: "somewhere",
 							},
 						},
@@ -508,7 +508,7 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							Installation{
-								Type:     TypeCAPI,
+								Type:     FormatCAPI,
 								Location: "somewhere\\MY",
 							},
 						},
@@ -527,7 +527,7 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							Installation{
-								Type:     TypeCAPI,
+								Type:     FormatCAPI,
 								Location: "LocalMachine\\foo",
 							},
 						},
@@ -546,7 +546,7 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							Installation{
-								Type:     TypeCAPI,
+								Type:     FormatCAPI,
 								Location: "LocalMachine\\MY",
 							},
 						},

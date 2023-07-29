@@ -36,17 +36,17 @@ var validStoreNames = []string{"addressbook", "authroot", "certificateauthority"
 // Installation represents a location in which a certificate will be installed,
 // along with the format in which it will be installed
 type Installation struct {
-	AfterAction         string           `yaml:"afterInstallAction,omitempty"`
-	BackupFiles         bool             `yaml:"backupFiles,omitempty"`
-	CAPIIsNonExportable bool             `yaml:"capiIsNonExportable,omitempty"`
-	InstallValidation   string           `yaml:"installValidationAction,omitempty"`
-	JKSAlias            string           `yaml:"jksAlias,omitempty"`
-	JKSPassword         string           `yaml:"jksPassword,omitempty"`
-	Location            string           `yaml:"location,omitempty"`
-	PEMCertFilename     string           `yaml:"pemCertFilename,omitempty"`
-	PEMChainFilename    string           `yaml:"pemChainFilename,omitempty"`
-	PEMKeyFilename      string           `yaml:"pemKeyFilename,omitempty"`
-	Type                InstallationType `yaml:"type,omitempty"`
+	AfterAction         string             `yaml:"afterInstallAction,omitempty"`
+	BackupFiles         bool               `yaml:"backupFiles,omitempty"`
+	CAPIIsNonExportable bool               `yaml:"capiIsNonExportable,omitempty"`
+	InstallValidation   string             `yaml:"installValidationAction,omitempty"`
+	JKSAlias            string             `yaml:"jksAlias,omitempty"`
+	JKSPassword         string             `yaml:"jksPassword,omitempty"`
+	Location            string             `yaml:"location,omitempty"`
+	PEMCertFilename     string             `yaml:"pemCertFilename,omitempty"`
+	PEMChainFilename    string             `yaml:"pemChainFilename,omitempty"`
+	PEMKeyFilename      string             `yaml:"pemKeyFilename,omitempty"`
+	Type                InstallationFormat `yaml:"format,omitempty"`
 }
 
 // Installations is a slice of Installation
@@ -55,23 +55,23 @@ type Installations []Installation
 // IsValid returns true if the Installation type is supported by vcert
 func (installation Installation) IsValid() (bool, error) {
 	switch installation.Type {
-	case TypeJKS:
+	case FormatJKS:
 		if err := validateJKS(installation); err != nil {
 			return false, fmt.Errorf("\t\t\t%w", err)
 		}
-	case TypePEM:
+	case FormatPEM:
 		if err := validatePEM(installation); err != nil {
 			return false, fmt.Errorf("\t\t\t%w", err)
 		}
-	case TypePKCS12:
+	case FormatPKCS12:
 		if err := validateP12(installation); err != nil {
 			return false, fmt.Errorf("\t\t\t%w", err)
 		}
-	case TypeCAPI:
+	case FormatCAPI:
 		if err := validateCAPI(installation); err != nil {
 			return false, fmt.Errorf("\t\t\t%w", err)
 		}
-	case TypeUnknown:
+	case FormatUnknown:
 		fallthrough
 	default:
 		return false, fmt.Errorf("\t\t\t%w", ErrUndefinedInstallationType)

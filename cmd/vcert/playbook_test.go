@@ -48,7 +48,7 @@ func (s *PlaybookSuite) TestPlaybook_SetTLSConfig() {
 				Installations: domain.Installations{
 					domain.Installation{
 						Location: p12FileLocation,
-						Type:     domain.TypePKCS12,
+						Type:     domain.FormatPKCS12,
 					},
 				},
 			},
@@ -107,7 +107,7 @@ func (s *PlaybookSuite) TestPlaybook_SetTLSConfig_noP12Certificate() {
 				Installations: domain.Installations{
 					domain.Installation{
 						Location: "./bad/location.p12",
-						Type:     domain.TypePKCS12,
+						Type:     domain.FormatPKCS12,
 					},
 				},
 			},

@@ -88,7 +88,7 @@ func (s *ServiceSuite) SetupTest() {
 				Request: request,
 				Installations: domain.Installations{
 					{
-						Type:             domain.TypePEM,
+						Type:             domain.FormatPEM,
 						Location:         "./pem",
 						AfterAction:      "echo Success!",
 						PEMCertFilename:  "cert.cert",
@@ -108,7 +108,7 @@ func (s *ServiceSuite) SetupTest() {
 				Request: request,
 				Installations: domain.Installations{
 					{
-						Type:        domain.TypeJKS,
+						Type:        domain.FormatJKS,
 						Location:    "./jks/testjks.jks",
 						AfterAction: "",
 						BackupFiles: true,
@@ -124,7 +124,7 @@ func (s *ServiceSuite) SetupTest() {
 				Request: request,
 				Installations: domain.Installations{
 					{
-						Type:        domain.TypePKCS12,
+						Type:        domain.FormatPKCS12,
 						Location:    "./pkcs12/testp12.p12",
 						AfterAction: "",
 					},
@@ -141,12 +141,12 @@ func (s *ServiceSuite) SetupTest() {
 				Request: request,
 				Installations: domain.Installations{
 					{
-						Type:        domain.TypePKCS12,
+						Type:        domain.FormatPKCS12,
 						Location:    "./pkcs12/testp12.p12",
 						AfterAction: "",
 					},
 					{
-						Type:        domain.TypeJKS,
+						Type:        domain.FormatJKS,
 						Location:    "./jks/testjks.jks",
 						AfterAction: "",
 					},
@@ -170,7 +170,7 @@ func (s *ServiceSuite) SetupTest() {
 				Request: request,
 				Installations: domain.Installations{
 					{
-						Type:             domain.TypePEM,
+						Type:             domain.FormatPEM,
 						Location:         "./pem",
 						AfterAction:      "echo Success!",
 						PEMCertFilename:  "cert.cert",

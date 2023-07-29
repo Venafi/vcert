@@ -177,7 +177,7 @@ func setPlaybookTLSConfig(playbook domain.Playbook) error {
 			if task.Name == playbook.Config.Connection.Credentials.PKCS12 {
 				for _, inst := range task.Installations {
 					// Find the first installation that is of type P12
-					if inst.Type == domain.TypePKCS12 {
+					if inst.Type == domain.FormatPKCS12 {
 						p12FileLocation = inst.Location
 						p12Password = task.Request.KeyPassword
 						break

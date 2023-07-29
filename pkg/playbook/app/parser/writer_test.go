@@ -60,7 +60,7 @@ func (s *WriterSuite) SetupTest() {
 				},
 				Installations: []domain.Installation{
 					{
-						Type:        domain.TypePEM,
+						Type:        domain.FormatPEM,
 						Location:    "path/to/my/pem/folder",
 						AfterAction: "echo Success!",
 					},
