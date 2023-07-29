@@ -39,7 +39,7 @@ func (s *WriterSuite) SetupTest() {
 				Name: "testTask",
 				Request: domain.PlaybookRequest{
 					ChainOption: certificate.ChainOptionRootFirst,
-					CsrOrigin:   certificate.ServiceGeneratedCSR,
+					CsrOrigin:   certificate.StrServiceGeneratedCSR,
 					CustomFields: []certificate.CustomField{
 						{
 							Name:  fmt.Sprintf("cf_%s", RandomString(5)),

@@ -47,7 +47,7 @@ func (s *ServiceSuite) SetupTest() {
 	request := domain.PlaybookRequest{
 		CADN:           "",
 		ChainOption:    certificate.ChainOptionRootLast,
-		CsrOrigin:      certificate.ServiceGeneratedCSR,
+		CsrOrigin:      certificate.StrServiceGeneratedCSR,
 		CustomFields:   nil,
 		DNSNames:       nil,
 		EmailAddresses: nil,

@@ -22,9 +22,9 @@ func (s *CSROriginSuite) SetupTest() {
 		csrOrigin CSrOriginOption
 		strValue  string
 	}{
-		{csrOrigin: LocalGeneratedCSR, strValue: strLocalGeneratedCSR},
-		{csrOrigin: ServiceGeneratedCSR, strValue: strServiceGeneratedCSR},
-		{csrOrigin: UserProvidedCSR, strValue: strUserProvidedCSR},
+		{csrOrigin: LocalGeneratedCSR, strValue: StrLocalGeneratedCSR},
+		{csrOrigin: ServiceGeneratedCSR, strValue: StrServiceGeneratedCSR},
+		{csrOrigin: UserProvidedCSR, strValue: StrUserProvidedCSR},
 		{csrOrigin: UnknownCSR, strValue: strUnknownCSR},
 	}
 
