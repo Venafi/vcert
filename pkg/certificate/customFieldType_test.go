@@ -1,11 +1,9 @@
 package certificate
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-	"gopkg.in/yaml.v3"
 )
 
 type CustomFieldTypeSuite struct {
@@ -30,7 +28,6 @@ func (s *CustomFieldTypeSuite) SetupTest() {
 	}
 
 	s.testYaml = `---
-type: %s
 name: foo
 value: 123
 `
@@ -55,19 +52,6 @@ func (s *CustomFieldTypeSuite) TestCustomFieldType_String() {
 		s.Run(tc.strValue, func() {
 			str := tc.customFieldType.String()
 			s.Equal(tc.strValue, str)
-		})
-	}
-}
-
-func (s *CustomFieldTypeSuite) TestCustomFieldType_UnmarshalYAML() {
-	for _, tc := range s.testCases {
-		s.Run(tc.strValue, func() {
-			var cf CustomField
-			parsedYaml := fmt.Sprintf(s.testYaml, tc.strValue)
-			err := yaml.Unmarshal([]byte(parsedYaml), &cf)
-
-			s.Nil(err)
-			s.Equal(tc.customFieldType, cf.Type)
 		})
 	}
 }
