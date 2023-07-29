@@ -3,7 +3,7 @@ config:
     type: TLSPC
     credentials:
       apikey: foobar123
-certificates:
+certificateTasks:
   - name: mtls
     request:
       zone: "Open Source\\vcert"

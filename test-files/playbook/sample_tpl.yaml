@@ -6,7 +6,7 @@ config:
       refreshToken: '{{ Env "TPP_REFRESH_TOKEN" }}'
     trustBundle: /Users/rvela/venafi/supertreat/bundle.cer
     url: https://supertreat.venqa.venafi.com
-certificates:
+certificateTasks:
   - name: mtls
     request:
       zone: "Open Source\\vcert"

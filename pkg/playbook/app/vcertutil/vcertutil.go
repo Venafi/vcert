@@ -205,7 +205,7 @@ func RefreshTPPTokens(config domain.Config) (string, string, error) {
 
 	auth := endpoint.Authentication{
 		RefreshToken: config.Connection.Credentials.RefreshToken,
-		ClientPKCS12: config.Connection.Credentials.PKCS12 != "",
+		ClientPKCS12: config.Connection.Credentials.P12Task != "",
 		Scope:        config.Connection.Credentials.Scope,
 		ClientId:     config.Connection.Credentials.ClientID,
 	}

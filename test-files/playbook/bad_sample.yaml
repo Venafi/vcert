@@ -4,7 +4,7 @@ config:
     credentials:
       apikey:
       clientId: vcert-sdk
-certificates:
+certificateTasks:
   - name: mtls
     request:
       zone: "Open Source\\vcert"

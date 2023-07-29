@@ -56,7 +56,7 @@ func (s *PlaybookSuite) TestPlaybook_SetTLSConfig() {
 		Config: domain.Config{
 			Connection: domain.Connection{
 				Platform:    domain.CTypeTPP,
-				Credentials: domain.Authentication{PKCS12: "p12Auth"},
+				Credentials: domain.Authentication{P12Task: "p12Auth"},
 			},
 		},
 	}
@@ -115,7 +115,7 @@ func (s *PlaybookSuite) TestPlaybook_SetTLSConfig_noP12Certificate() {
 		Config: domain.Config{
 			Connection: domain.Connection{
 				Platform:    domain.CTypeTPP,
-				Credentials: domain.Authentication{PKCS12: "p12Auth"},
+				Credentials: domain.Authentication{P12Task: "p12Auth"},
 				Insecure:    true,
 			},
 		},

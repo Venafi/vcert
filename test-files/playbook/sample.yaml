@@ -1,7 +1,7 @@
 config:
   credentials:
     apikey: fooo123bar!
-certificates:
+certificateTasks:
   - name: mtls
     request:
       zone: "Open Source\\vcert"

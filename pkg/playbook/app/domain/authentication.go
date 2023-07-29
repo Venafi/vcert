@@ -23,13 +23,13 @@ type Authentication struct {
 	ClientID     string `yaml:"clientId,omitempty"`
 	RefreshToken string `yaml:"refreshToken,omitempty"`
 	Scope        string `yaml:"scope,omitempty"`
-	PKCS12       string `yaml:"pkcs12,omitempty"`
+	P12Task      string `yaml:"p12Task,omitempty"`
 }
 
 // IsEmpty returns true if not credentials are set
 func (a Authentication) IsEmpty() bool {
 	// TODO: This is very hacky.. need specifics based on connection type
-	if a.Apikey == "" && a.AccessToken == "" && a.RefreshToken == "" && a.PKCS12 == "" {
+	if a.Apikey == "" && a.AccessToken == "" && a.RefreshToken == "" && a.P12Task == "" {
 		return true
 	}
 	return false
