@@ -46,10 +46,10 @@ func NewPKCS12Installer(inst domain.Installation) PKCS12Installer {
 // 2. Does the certificate is about to expire? Renew if about to expire.
 // Returns true if the certificate needs to be installed.
 func (r PKCS12Installer) Check(renewBefore string, request domain.PlaybookRequest) (bool, error) {
-	zap.L().Debug("checking certificate:", zap.String("location", r.Location))
+	zap.L().Debug("checking certificate:", zap.String("location", r.File))
 
 	// Check certificate file exists
-	certExists, err := util.FileExists(r.Location)
+	certExists, err := util.FileExists(r.File)
 	if err != nil {
 		return false, err
 	}
@@ -58,7 +58,7 @@ func (r PKCS12Installer) Check(renewBefore string, request domain.PlaybookReques
 	}
 
 	// Load Certificate
-	cert, err := loadPKCS12(r.Location, request.KeyPassword)
+	cert, err := loadPKCS12(r.File, request.KeyPassword)
 	if err != nil {
 		return false, err
 	}
@@ -71,10 +71,10 @@ func (r PKCS12Installer) Check(renewBefore string, request domain.PlaybookReques
 
 // Backup takes the certificate request and backs up the current version prior to overwriting
 func (r PKCS12Installer) Backup() error {
-	zap.L().Debug("backing up certificate", zap.String("location", r.Location))
+	zap.L().Debug("backing up certificate", zap.String("location", r.File))
 
 	// Check certificate file exists
-	certExists, err := util.FileExists(r.Location)
+	certExists, err := util.FileExists(r.File)
 	if err != nil {
 		return err
 	}
@@ -83,20 +83,20 @@ func (r PKCS12Installer) Backup() error {
 		return nil
 	}
 
-	newLocation := fmt.Sprintf("%s.bak", r.Location)
+	newLocation := fmt.Sprintf("%s.bak", r.File)
 
-	err = util.CopyFile(r.Location, newLocation)
+	err = util.CopyFile(r.File, newLocation)
 	if err != nil {
 		return err
 	}
 
-	zap.L().Info("Certificate backed up", zap.String("location", r.Location), zap.String("backupLocation", newLocation))
+	zap.L().Info("Certificate backed up", zap.String("location", r.File), zap.String("backupLocation", newLocation))
 	return err
 }
 
 // Install takes the certificate bundle and moves it to the location specified in the installer
 func (r PKCS12Installer) Install(request domain.PlaybookRequest, pcc certificate.PEMCollection) error {
-	zap.L().Debug("installing certificate", zap.String("location", r.Location))
+	zap.L().Debug("installing certificate", zap.String("location", r.File))
 
 	content, err := packageAsPKCS12(pcc, request.KeyPassword)
 	if err != nil {
@@ -104,7 +104,7 @@ func (r PKCS12Installer) Install(request domain.PlaybookRequest, pcc certificate
 		return err
 	}
 
-	err = util.WriteFile(r.Location, content)
+	err = util.WriteFile(r.File, content)
 	if err != nil {
 		return err
 	}
@@ -116,7 +116,7 @@ func (r PKCS12Installer) Install(request domain.PlaybookRequest, pcc certificate
 //
 // No validations happen over the content of the AfterAction string, so caution is advised
 func (r PKCS12Installer) AfterInstallActions() error {
-	zap.L().Debug("running after-install actions", zap.String("location", r.Location))
+	zap.L().Debug("running after-install actions", zap.String("location", r.File))
 
 	_, err := util.ExecuteScript(r.AfterAction)
 	return err
@@ -126,7 +126,7 @@ func (r PKCS12Installer) AfterInstallActions() error {
 // "0" for successful validation and "1" for a validation failure
 // No validations happen over the content of the InstallValidation string, so caution is advised
 func (r PKCS12Installer) InstallValidationActions() (string, error) {
-	zap.L().Debug("running install validation actions", zap.String("location", r.Location))
+	zap.L().Debug("running install validation actions", zap.String("location", r.File))
 
 	validationResult, err := util.ExecuteScript(r.InstallValidation)
 	if err != nil {

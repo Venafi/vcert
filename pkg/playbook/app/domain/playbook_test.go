@@ -165,7 +165,7 @@ func (s *PlaybookSuite) SetupTest() {
 			},
 		},
 		{
-			err:  ErrUndefinedInstallationType,
+			err:  ErrUndefinedInstallationFormat,
 			name: "InvalidInstallationType",
 			pb: Playbook{
 				Config: config,
@@ -174,8 +174,8 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							{
-								Type:     FormatUnknown,
-								Location: "something",
+								Type: FormatUnknown,
+								File: "something",
 							},
 						},
 					},
@@ -184,7 +184,7 @@ func (s *PlaybookSuite) SetupTest() {
 		},
 
 		{
-			err:  ErrNoInstallationLocation,
+			err:  ErrNoInstallationFile,
 			name: "NoJKSLocation",
 			pb: Playbook{
 				Config: config,
@@ -211,8 +211,8 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							Installation{
-								Type:     FormatJKS,
-								Location: "somewhere",
+								Type: FormatJKS,
+								File: "somewhere",
 							},
 						},
 					},
@@ -231,7 +231,7 @@ func (s *PlaybookSuite) SetupTest() {
 						Installations: Installations{
 							Installation{
 								Type:     FormatJKS,
-								Location: "somewhere",
+								File:     "somewhere",
 								JKSAlias: "someAlias",
 							},
 						},
@@ -251,7 +251,7 @@ func (s *PlaybookSuite) SetupTest() {
 						Installations: Installations{
 							Installation{
 								Type:        FormatJKS,
-								Location:    "somewhere",
+								File:        "somewhere",
 								JKSAlias:    "alias",
 								JKSPassword: "abc12",
 							},
@@ -262,7 +262,7 @@ func (s *PlaybookSuite) SetupTest() {
 		},
 
 		{
-			err:  ErrNoInstallationLocation,
+			err:  ErrNoInstallationFile,
 			name: "NoPEMLocation",
 			pb: Playbook{
 				Config: config,
@@ -279,8 +279,8 @@ func (s *PlaybookSuite) SetupTest() {
 			},
 		},
 		{
-			err:  ErrNoPEMCertFilename,
-			name: "NoPEMCertFilename",
+			err:  ErrNoChainFile,
+			name: "NoPEMChainFile",
 			pb: Playbook{
 				Config: config,
 				CertificateTasks: CertificateTasks{
@@ -289,8 +289,8 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							Installation{
-								Type:     FormatPEM,
-								Location: "somewhere",
+								Type: FormatPEM,
+								File: "path/to/cert.cer",
 							},
 						},
 					},
@@ -298,8 +298,8 @@ func (s *PlaybookSuite) SetupTest() {
 			},
 		},
 		{
-			err:  ErrNoPEMChainFilename,
-			name: "NoPEMChainFilename",
+			err:  ErrNoKeyFile,
+			name: "NoPEMKeyFile",
 			pb: Playbook{
 				Config: config,
 				CertificateTasks: CertificateTasks{
@@ -308,30 +308,9 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							Installation{
-								Type:            FormatPEM,
-								Location:        "somewhere",
-								PEMCertFilename: "cert.cer",
-							},
-						},
-					},
-				},
-			},
-		},
-		{
-			err:  ErrNoPEMKeyFilename,
-			name: "NoPEMKeyFilename",
-			pb: Playbook{
-				Config: config,
-				CertificateTasks: CertificateTasks{
-					CertificateTask{
-						Name:    "testTask",
-						Request: req,
-						Installations: Installations{
-							Installation{
-								Type:             FormatPEM,
-								Location:         "somewhere",
-								PEMCertFilename:  "cert.pem",
-								PEMChainFilename: "chain.pem",
+								Type:      FormatPEM,
+								File:      "somewhere",
+								ChainFile: "chain.pem",
 							},
 						},
 					},
@@ -340,7 +319,7 @@ func (s *PlaybookSuite) SetupTest() {
 		},
 
 		{
-			err:  ErrNoInstallationLocation,
+			err:  ErrNoInstallationFile,
 			name: "NoPKCS12Location",
 			pb: Playbook{
 				Config: config,
@@ -368,11 +347,10 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							{
-								Type:             FormatPEM,
-								Location:         "/foo/bar/pem",
-								PEMCertFilename:  "cert.pem",
-								PEMChainFilename: "chain.pem",
-								PEMKeyFilename:   "key.pem",
+								Type:      FormatPEM,
+								File:      "/foo/bar/pem/cer.cer",
+								ChainFile: "/foo/bar/pem/chain.pem",
+								KeyFile:   "/foo/bar/pem/key.pem",
 							},
 						},
 					},
@@ -391,7 +369,7 @@ func (s *PlaybookSuite) SetupTest() {
 						Installations: Installations{
 							{
 								Type:        FormatJKS,
-								Location:    "somewhere",
+								File:        "somewhere",
 								JKSAlias:    "alias",
 								JKSPassword: "abc123",
 							},
@@ -411,8 +389,8 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							{
-								Type:     FormatPKCS12,
-								Location: "somewhere",
+								Type: FormatPKCS12,
+								File: "somewhere",
 							},
 						},
 					},
@@ -423,7 +401,7 @@ func (s *PlaybookSuite) SetupTest() {
 
 	s.nonWindowsTestCases = []testCase{
 		{
-			err:  ErrNoInstallationLocation,
+			err:  ErrNoInstallationFile,
 			name: "NoCAPILocation",
 			pb: Playbook{
 				Config: config,
@@ -450,8 +428,8 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							Installation{
-								Type:     FormatCAPI,
-								Location: "somewhere",
+								Type: FormatCAPI,
+								File: "somewhere",
 							},
 						},
 					},
@@ -462,7 +440,7 @@ func (s *PlaybookSuite) SetupTest() {
 
 	s.windowsTestCases = []testCase{
 		{
-			err:  ErrNoInstallationLocation,
+			err:  ErrNoInstallationFile,
 			name: "NoCAPILocation",
 			pb: Playbook{
 				Config: config,
@@ -489,8 +467,8 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							Installation{
-								Type:     FormatCAPI,
-								Location: "somewhere",
+								Type: FormatCAPI,
+								File: "somewhere",
 							},
 						},
 					},
@@ -508,8 +486,8 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							Installation{
-								Type:     FormatCAPI,
-								Location: "somewhere\\MY",
+								Type: FormatCAPI,
+								File: "somewhere\\MY",
 							},
 						},
 					},
@@ -527,8 +505,8 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							Installation{
-								Type:     FormatCAPI,
-								Location: "LocalMachine\\foo",
+								Type: FormatCAPI,
+								File: "LocalMachine\\foo",
 							},
 						},
 					},
@@ -546,8 +524,8 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							Installation{
-								Type:     FormatCAPI,
-								Location: "LocalMachine\\MY",
+								Type: FormatCAPI,
+								File: "LocalMachine\\MY",
 							},
 						},
 					},

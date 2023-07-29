@@ -47,17 +47,15 @@ var (
 	// ErrJKSPasswordLength is thrown when certificates.installations[].type is JKS but the jksPassword length is shorter than the minimum required
 	ErrJKSPasswordLength = fmt.Errorf("jksPassword must be at least 6 characters long")
 
-	// ErrNoPEMCertFilename is thrown when certificates.installations[].type is PEM but no pemCertFilename is set
-	ErrNoPEMCertFilename = fmt.Errorf("pemCertFilename should not be empty when installing a certificate in PEM format")
-	// ErrNoPEMChainFilename is thrown when certificates.installations[].type is PEM but no pemChainFilename is set
-	ErrNoPEMChainFilename = fmt.Errorf("pemChainFilename should not be empty when installing a certificate in PEM format")
-	// ErrNoPEMKeyFilename is thrown when certificates.installations[].type is PEM but no pemKeyFilename is set
-	ErrNoPEMKeyFilename = fmt.Errorf("pemKeyFilename should not be empty when installing a certificate in PEM format")
+	// ErrNoChainFile is thrown when certificates.installations[].type is PEM but no pemChainFilename is set
+	ErrNoChainFile = fmt.Errorf("chainFile should not be empty when installing a certificate in PEM format")
+	// ErrNoKeyFile is thrown when certificates.installations[].type is PEM but no pemKeyFilename is set
+	ErrNoKeyFile = fmt.Errorf("keyFile should not be empty when installing a certificate in PEM format")
 
-	// ErrUndefinedInstallationType is thrown when certificates.installations[].type is unknown
-	ErrUndefinedInstallationType = fmt.Errorf("unknown installation type specified")
-	// ErrNoInstallationLocation is thrown when certificates.installations[].Location is not set
-	ErrNoInstallationLocation = fmt.Errorf("installation location not specified")
+	// ErrUndefinedInstallationFormat is thrown when certificates.installations[].type is unknown
+	ErrUndefinedInstallationFormat = fmt.Errorf("unknown installation format specified")
+	// ErrNoInstallationFile is thrown when certificates.installations[].File is not set
+	ErrNoInstallationFile = fmt.Errorf("installation file not specified")
 
 	// ErrCAPIOnNonWindows is thrown when certificates.installations[].type is CAPI but running on a non-windows build
 	ErrCAPIOnNonWindows = fmt.Errorf("unable to specify CAPI installation type on non-windows system")

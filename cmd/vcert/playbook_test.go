@@ -47,8 +47,8 @@ func (s *PlaybookSuite) TestPlaybook_SetTLSConfig() {
 				Request: domain.PlaybookRequest{KeyPassword: p12Password},
 				Installations: domain.Installations{
 					domain.Installation{
-						Location: p12FileLocation,
-						Type:     domain.FormatPKCS12,
+						File: p12FileLocation,
+						Type: domain.FormatPKCS12,
 					},
 				},
 			},
@@ -106,8 +106,8 @@ func (s *PlaybookSuite) TestPlaybook_SetTLSConfig_noP12Certificate() {
 				Request: domain.PlaybookRequest{KeyPassword: "foo123"},
 				Installations: domain.Installations{
 					domain.Installation{
-						Location: "./bad/location.p12",
-						Type:     domain.FormatPKCS12,
+						File: "./bad/location.p12",
+						Type: domain.FormatPKCS12,
 					},
 				},
 			},

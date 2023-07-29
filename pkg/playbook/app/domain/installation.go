@@ -42,10 +42,9 @@ type Installation struct {
 	InstallValidation   string             `yaml:"installValidationAction,omitempty"`
 	JKSAlias            string             `yaml:"jksAlias,omitempty"`
 	JKSPassword         string             `yaml:"jksPassword,omitempty"`
-	Location            string             `yaml:"location,omitempty"`
-	PEMCertFilename     string             `yaml:"pemCertFilename,omitempty"`
-	PEMChainFilename    string             `yaml:"pemChainFilename,omitempty"`
-	PEMKeyFilename      string             `yaml:"pemKeyFilename,omitempty"`
+	File                string             `yaml:"file,omitempty"`
+	ChainFile           string             `yaml:"chainFile,omitempty"`
+	KeyFile             string             `yaml:"keyFile,omitempty"`
 	Type                InstallationFormat `yaml:"format,omitempty"`
 }
 
@@ -74,15 +73,15 @@ func (installation Installation) IsValid() (bool, error) {
 	case FormatUnknown:
 		fallthrough
 	default:
-		return false, fmt.Errorf("\t\t\t%w", ErrUndefinedInstallationType)
+		return false, fmt.Errorf("\t\t\t%w", ErrUndefinedInstallationFormat)
 	}
 
 	return true, nil
 }
 
 func validateCAPI(installation Installation) error {
-	if installation.Location == "" {
-		return ErrNoInstallationLocation
+	if installation.File == "" {
+		return ErrNoInstallationFile
 	}
 
 	if runtime.GOOS != "windows" {
@@ -90,7 +89,7 @@ func validateCAPI(installation Installation) error {
 	}
 
 	// Ensure proper location specified
-	segments := strings.Split(installation.Location, "\\")
+	segments := strings.Split(installation.File, "\\")
 
 	// CAPI Location must be in form of <string>\<string>
 	if len(segments) != 2 {
@@ -120,8 +119,8 @@ func validateCAPI(installation Installation) error {
 }
 
 func validateJKS(installation Installation) error {
-	if installation.Location == "" {
-		return ErrNoInstallationLocation
+	if installation.File == "" {
+		return ErrNoInstallationFile
 	}
 
 	if installation.JKSAlias == "" {
@@ -137,25 +136,22 @@ func validateJKS(installation Installation) error {
 }
 
 func validatePEM(installation Installation) error {
-	if installation.Location == "" {
-		return ErrNoInstallationLocation
+	if installation.File == "" {
+		return ErrNoInstallationFile
 	}
 
-	if installation.PEMCertFilename == "" {
-		return ErrNoPEMCertFilename
+	if installation.ChainFile == "" {
+		return ErrNoChainFile
 	}
-	if installation.PEMChainFilename == "" {
-		return ErrNoPEMChainFilename
-	}
-	if installation.PEMKeyFilename == "" {
-		return ErrNoPEMKeyFilename
+	if installation.KeyFile == "" {
+		return ErrNoKeyFile
 	}
 	return nil
 }
 
 func validateP12(installation Installation) error {
-	if installation.Location == "" {
-		return ErrNoInstallationLocation
+	if installation.File == "" {
+		return ErrNoInstallationFile
 	}
 	return nil
 }

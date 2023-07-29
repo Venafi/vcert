@@ -88,12 +88,11 @@ func (s *ServiceSuite) SetupTest() {
 				Request: request,
 				Installations: domain.Installations{
 					{
-						Type:             domain.FormatPEM,
-						Location:         "./pem",
-						AfterAction:      "echo Success!",
-						PEMCertFilename:  "cert.cert",
-						PEMChainFilename: "cert.chain",
-						PEMKeyFilename:   "pk.pem",
+						Type:        domain.FormatPEM,
+						File:        "./pem/cert.cert",
+						ChainFile:   "./pem/cert.chain",
+						KeyFile:     "./pem/pk.pem",
+						AfterAction: "echo Success!",
 					},
 				},
 				RenewBefore: "30d",
@@ -109,7 +108,7 @@ func (s *ServiceSuite) SetupTest() {
 				Installations: domain.Installations{
 					{
 						Type:        domain.FormatJKS,
-						Location:    "./jks/testjks.jks",
+						File:        "./jks/testjks.jks",
 						AfterAction: "",
 						BackupFiles: true,
 					},
@@ -125,7 +124,7 @@ func (s *ServiceSuite) SetupTest() {
 				Installations: domain.Installations{
 					{
 						Type:        domain.FormatPKCS12,
-						Location:    "./pkcs12/testp12.p12",
+						File:        "./pkcs12/testp12.p12",
 						AfterAction: "",
 					},
 				},
@@ -142,12 +141,12 @@ func (s *ServiceSuite) SetupTest() {
 				Installations: domain.Installations{
 					{
 						Type:        domain.FormatPKCS12,
-						Location:    "./pkcs12/testp12.p12",
+						File:        "./pkcs12/testp12.p12",
 						AfterAction: "",
 					},
 					{
 						Type:        domain.FormatJKS,
-						Location:    "./jks/testjks.jks",
+						File:        "./jks/testjks.jks",
 						AfterAction: "",
 					},
 				},
@@ -170,12 +169,11 @@ func (s *ServiceSuite) SetupTest() {
 				Request: request,
 				Installations: domain.Installations{
 					{
-						Type:             domain.FormatPEM,
-						Location:         "./pem",
-						AfterAction:      "echo Success!",
-						PEMCertFilename:  "cert.cert",
-						PEMChainFilename: "cert.chain",
-						PEMKeyFilename:   "pk.pem",
+						Type:        domain.FormatPEM,
+						File:        "./pem/cert.cert",
+						AfterAction: "echo Success!",
+						ChainFile:   "./pem/cert.chain",
+						KeyFile:     "./pem/pk.pem",
 					},
 				},
 				RenewBefore: "30d",

@@ -61,7 +61,7 @@ func (s *WriterSuite) SetupTest() {
 				Installations: []domain.Installation{
 					{
 						Type:        domain.FormatPEM,
-						Location:    "path/to/my/pem/folder",
+						File:        "path/to/my/pem/folder",
 						AfterAction: "echo Success!",
 					},
 				},
@@ -138,6 +138,6 @@ func (s *WriterSuite) TestWriter_WritePlaybook() {
 	targetInst := targetTask.Installations[0]
 
 	s.Equal(inst.Type, targetInst.Type)
-	s.Equal(inst.Location, targetInst.Location)
+	s.Equal(inst.File, targetInst.File)
 	s.Equal(inst.AfterAction, targetInst.AfterAction)
 }
