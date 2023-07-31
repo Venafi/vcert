@@ -2,16 +2,17 @@
 config:
   connection:
     type: tpp
+    url: https://my-tpp-instance.com
+    trustBundle: /path/to/my/trustbundle.pem
     credentials:
       accessToken: '{{ Env "TPP_ACCESS_TOKEN" }}'
       refreshToken: '{{ Env "TPP_REFRESH_TOKEN" }}'
       clientId: vcert-sdk
-    trustBundle: /path/to/my/trustbundle.pem
-    url: https://my-tpp-instance.com
-certificates:
+certificateTasks:
   - name: myCertificate # Task Identifier, no relevance in tool run
+    renewBefore: 31d
     request:
-      csrOrigin: service
+      csr: service
       keyPassword: "newPassword!"
       subject:
         # Templating needs to go between single quotes to avoid issues when refreshing tokens and saving back
@@ -25,19 +26,16 @@ certificates:
           - marketing
       zone: "Open Source\\vcert"
     installations:
-      - type: PEM
+      - format: PEM
+        file: "/path/to/my/certificate/cert.cer"
+        chainFile: "/path/to/my/certificate/chain.cer"
+        keyFile: "/path/to/my/certificate/key.pem"
         afterInstallAction: "echo Success!!!"
-        # Notice this is a folder path. Certificate, Chain and Private Key files will be created here
-        location: "/path/to/my/certificate/folder"
-        pemCertFilename: "cert.cer"
-        pemChainFilename: "chain.cer"
-        pemKeyFilename: "key.pem"
-      - type: JKS
-        afterInstallAction: "echo Success!!!"
+      - format: JKS
+        file: "/path/to/my/certificate/cert.jks"
         jksAlias: venafi
         jksPassword: foobar123 # Minimum six characters length
-        location: "/path/to/my/certificate/cert.jks"
-      - type: PKCS12
-        location: "/path/to/my/certificate/cert.p12"
         afterInstallAction: "echo Success!!!"
-    renewBefore: 31d
+      - format: PKCS12
+        file: "/path/to/my/certificate/cert.p12"
+        afterInstallAction: "echo Success!!!"
