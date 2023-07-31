@@ -1,6 +1,8 @@
 require 'aruba/cucumber'
 require "json_spec/cucumber"
 
+$path_separator = "/"
+
 def last_json
   last_command_started.stdout.to_s
 end

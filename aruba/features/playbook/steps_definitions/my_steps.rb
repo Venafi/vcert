@@ -9,6 +9,7 @@ Given(/^I have playbook with (\S+) connection details$/) do |platform|
   }
 
   if platform == "TPP"
+    validate_tpp_envs
     connection_tpp = {
       type: "tpp",
       url: ENV['TPP_URL'],
@@ -21,6 +22,7 @@ Given(/^I have playbook with (\S+) connection details$/) do |platform|
     connection_tpp['credentials'] = credentials
     @playbook_data[:config][:connection] = connection_tpp
   elsif platform == "VaaS"
+    validate_vaas_envs
     connection_vaas = {
       type: "vaas"
     }
@@ -208,4 +210,12 @@ And(/^task named "(.*)" has request with friendlyName based on commonName$/) do 
     fail(ArgumentError.new("Error while trying to set friendlyName based on commonName: no commonName defined"))
   end
   current_certificate_task.request.friendlyName = "friendly.#{current_certificate_task.request.subject.commonName}"
+end
+
+And(/^I uninstall file named "(.*)"$/) do |file_name|
+  path_name = "tmp"
+  file_path = Dir.pwd + $path_separator + path_name + $path_separator + file_name
+  steps %{
+    Then a file named "#{file_path}" does not exist
+  }
 end

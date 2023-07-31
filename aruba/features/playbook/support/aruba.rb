@@ -118,7 +118,7 @@ def request_key_should_be_array_of_strings(key)
 end
 
 def request_subject_key_should_be_string(key)
-  request_subject_string_keys = %w[ commonName country locality organization province ]
+  request_subject_string_keys = %w[commonName country locality organization province]
   request_subject_string_keys.include?(key)
 end
 
@@ -155,5 +155,37 @@ def to_integer(key, value)
     integer_value
   else
     fail(ArgumentError.new("Wrong type of value provided for key: #{key}, expected an Boolean but got: #{value}"))
+  end
+end
+
+def env_variable_exists_and_set(variable_name)
+  if ENV[variable_name].nil?
+    return false
+  else
+    if ENV[variable_name].to_s.empty?
+      return false
+    else
+      return true
+    end
+  end
+end
+
+def validate_tpp_envs
+  tpp_envs = %w[TPP_URL TPP_CN TPP_USER TPP_PASSWORD TPP_ZONE TPP_ACCESS_TOKEN TPP_ZONE_ECDSA TPP_IP TPP_TRUST_BUNDLE]
+
+  tpp_envs.each do |tpp_env|
+    unless env_variable_exists_and_set(tpp_env)
+      fail(ArgumentError.new("ENV variable #{tpp_env} is not set"))
+    end
+  end
+end
+
+def validate_vaas_envs
+  vaas_envs = %w[CLOUD_URL CLOUD_APIKEY CLOUD_ZONE]
+
+  vaas_envs.each do |vaas_env|
+    unless env_variable_exists_and_set(vaas_env)
+      fail(ArgumentError.new("ENV variable #{vaas_env} is not set"))
+    end
   end
 end

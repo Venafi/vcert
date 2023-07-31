@@ -49,6 +49,11 @@ Feature: playbook
     And I run `vcert run -f <config-file> --force-renew`
     Then the output should contain "Successfully executed installation validation actions"
     And the output should contain "playbook run finished"
+    And I uninstall file named "cert.cer"
+    And I uninstall file named "chain.cer"
+    And I uninstall file named "key.pem"
+    And I uninstall file named "cert.jks"
+    And I uninstall file named "cert.p12"
 
     Examples:
     | config-file     |
