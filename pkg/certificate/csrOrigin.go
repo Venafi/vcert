@@ -33,34 +33,37 @@ const (
 	UserProvidedCSR
 	UnknownCSR
 
-	// String representations of the CSrOriginOption types
-	strLocalGeneratedCSR   = "local"
-	strServiceGeneratedCSR = "service"
-	strUserProvidedCSR     = "user"
-	strUnknownCSR          = "unknown"
+	// StrLocalGeneratedCSR is the string representations of the LocalGeneratedCSR constant
+	StrLocalGeneratedCSR = "local"
+	// StrServiceGeneratedCSR is the string representations of the ServiceGeneratedCSR constant
+	StrServiceGeneratedCSR = "service"
+	// StrUserProvidedCSR is the string representations of the UserProvidedCSR constant
+	StrUserProvidedCSR = "file"
+	strUnknownCSR      = "unknown"
 )
 
 // String returns a string representation of this object
 func (csr *CSrOriginOption) String() string {
 	switch *csr {
 	case LocalGeneratedCSR:
-		return strLocalGeneratedCSR
+		return StrLocalGeneratedCSR
 	case ServiceGeneratedCSR:
-		return strServiceGeneratedCSR
+		return StrServiceGeneratedCSR
 	case UserProvidedCSR:
-		return strUserProvidedCSR
+		return StrUserProvidedCSR
 	default:
 		return strUnknownCSR
 	}
 }
 
-func parseCSROrigin(value string) CSrOriginOption {
+// ParseCSROrigin returns a CSrOriginOption from a valid string representation
+func ParseCSROrigin(value string) CSrOriginOption {
 	switch strings.ToLower(value) {
-	case strLocalGeneratedCSR:
+	case StrLocalGeneratedCSR:
 		return LocalGeneratedCSR
-	case strServiceGeneratedCSR:
+	case StrServiceGeneratedCSR:
 		return ServiceGeneratedCSR
-	case strUserProvidedCSR:
+	case StrUserProvidedCSR:
 		return UserProvidedCSR
 	default:
 		return UnknownCSR
@@ -80,7 +83,7 @@ func (csr *CSrOriginOption) UnmarshalYAML(value *yaml.Node) error {
 	if err != nil {
 		return err
 	}
-	*csr = parseCSROrigin(strValue)
+	*csr = ParseCSROrigin(strValue)
 	if err != nil {
 		return err
 	}

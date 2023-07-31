@@ -17,6 +17,8 @@
 package vcertutil
 
 import (
+	"encoding/pem"
+	"fmt"
 	"net"
 	"net/url"
 	"os"
@@ -40,6 +42,8 @@ const (
 
 	// OriginName represents the Origin of the Request set in a Custom Field
 	OriginName = "Venafi VCertplus"
+
+	userProvidedCSRPrefix = "file:"
 )
 
 func loadTrustBundle(path string) string {
@@ -177,4 +181,52 @@ func setTimeout(playbookRequest domain.PlaybookRequest, vcertRequest *certificat
 		timeout = playbookRequest.Timeout
 	}
 	vcertRequest.Timeout = time.Duration(timeout) * time.Second
+}
+
+func setCSR(playbookRequest domain.PlaybookRequest, vcertRequest *certificate.Request) {
+	vcertRequest.CsrOrigin = certificate.LocalGeneratedCSR
+
+	//CSR is user provided. Load CSR from file
+	if strings.HasPrefix(playbookRequest.CsrOrigin, userProvidedCSRPrefix) {
+		file := playbookRequest.CsrOrigin[len(userProvidedCSRPrefix):]
+		csr, err := readCSRFromFile(file)
+		if err != nil {
+			zap.L().Warn("Failed to read CSR from file", zap.String("file", file), zap.Error(err))
+			vcertRequest.CsrOrigin = certificate.LocalGeneratedCSR
+			return
+		}
+		err = vcertRequest.SetCSR(csr)
+		if err != nil {
+			zap.L().Warn("Failed to set CSR", zap.Error(err))
+			vcertRequest.CsrOrigin = certificate.LocalGeneratedCSR
+			return
+		}
+
+		vcertRequest.CsrOrigin = certificate.UserProvidedCSR
+		return
+	}
+
+	origin := certificate.ParseCSROrigin(playbookRequest.CsrOrigin)
+	if origin == certificate.UnknownCSR {
+		vcertRequest.CsrOrigin = certificate.LocalGeneratedCSR
+	} else {
+		vcertRequest.CsrOrigin = origin
+	}
+}
+
+func readCSRFromFile(fileName string) ([]byte, error) {
+	bytes, err := os.ReadFile(fileName)
+	if err != nil {
+		return nil, err
+	}
+	for {
+		block, rest := pem.Decode(bytes)
+		if block != nil && strings.HasSuffix(block.Type, "CERTIFICATE REQUEST") {
+			return pem.EncodeToMemory(block), nil
+		}
+		if block == nil || len(rest) == 0 {
+			return nil, fmt.Errorf("failed to find CSR in file: %s", fileName)
+		}
+		bytes = rest
+	}
 }

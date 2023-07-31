@@ -115,7 +115,6 @@ func buildRequest(request domain.PlaybookRequest) certificate.Request {
 		URIs:           getURIs(request.URIs),
 		UPNs:           request.UPNs,
 		FriendlyName:   request.FriendlyName,
-		CsrOrigin:      request.CsrOrigin,
 		ChainOption:    request.ChainOption,
 		KeyPassword:    request.KeyPassword,
 		CustomFields:   request.CustomFields,
@@ -137,6 +136,8 @@ func buildRequest(request domain.PlaybookRequest) certificate.Request {
 	setOrigin(request, &vcertRequest)
 	//Set Validity
 	setValidity(request, &vcertRequest)
+	//Set CSR
+	setCSR(request, &vcertRequest)
 
 	return vcertRequest
 }
