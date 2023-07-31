@@ -1,7 +1,7 @@
 Feature: playbook
 
   As a user
-  I want to issuie certificates using playbook and perform installation
+  I want to issue certificates using playbook and perform installation
 
   Background:
     And the default aruba exit timeout is 180 seconds
