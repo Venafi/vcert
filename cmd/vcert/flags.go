@@ -25,9 +25,10 @@ import (
 
 var (
 	flagUrl = &cli.StringFlag{
-		Name:        "u",
+		Name:        "url",
 		Usage:       "REQUIRED/TPP. The URL of the Trust Protection Platform WebSDK. Example: -u https://tpp.example.com",
 		Destination: &flags.url,
+		Aliases:     []string{"u"},
 	}
 
 	flagUrlDeprecated = &cli.StringFlag{
@@ -39,9 +40,10 @@ var (
 	}
 
 	flagKey = &cli.StringFlag{
-		Name:        "k",
+		Name:        "apiKey",
 		Usage:       "REQUIRED/VAAS. Your API key for Venafi as a Service.  Example: -k aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
 		Destination: &flags.apiKey,
+		Aliases:     []string{"k"},
 	}
 
 	flagTPPUser = &cli.StringFlag{
@@ -78,10 +80,11 @@ var (
 	}
 
 	flagTPPToken = &cli.StringFlag{
-		Name: "t",
+		Name: "token",
 		Usage: "REQUIRED/TPP. Your access token (or refresh token for getcred) for Trust Protection Platform. " +
 			"Example: -t Ab01Cd23Ef45Uv67Wx89Yz==",
 		Destination: &flags.tppToken,
+		Aliases:     []string{"t"},
 	}
 
 	flagTrustBundle = &cli.StringFlag{
@@ -90,12 +93,13 @@ var (
 		Destination: &flags.trustBundle,
 	}
 	flagZone = &cli.StringFlag{
-		Name:        "z",
+		Name:        "zone",
 		Destination: &flags.zone,
 		Usage: "REQUIRED. The zone that defines the enrollment configuration. In Trust Protection Platform this is " +
 			"equivalent to the policy folder path where the certificate object will be placed. " + UtilityShortName +
 			" prepends \\VED\\Policy\\, so you only need to specify child folders under the root Policy folder. " +
 			"Example: -z Corp\\Engineering",
+		Aliases: []string{"z"},
 	}
 
 	flagCADN = &cli.StringFlag{
@@ -133,39 +137,45 @@ var (
 	}
 
 	flagCommonName = &cli.StringFlag{
-		Name:        "cn",
+		Name:        "commonName",
 		Usage:       "Use to specify the `common name` (CN). This is required for enrollment except when providing a CSR file.",
 		Destination: &flags.commonName,
+		Aliases:     []string{"cn"},
 	}
 
 	flagOrg = &cli.StringFlag{
-		Name:        "o",
+		Name:        "org",
 		Usage:       "Use to specify organization (O)",
 		Destination: &flags.org,
+		Aliases:     []string{"o"},
 	}
 
 	flagState = &cli.StringFlag{
-		Name:        "st",
+		Name:        "state",
 		Usage:       "Use to specify state/province (ST)",
 		Destination: &flags.state,
+		Aliases:     []string{"st"},
 	}
 
 	flagCountry = &cli.StringFlag{
-		Name:        "c",
+		Name:        "country",
 		Usage:       "Use to specify country (C)",
 		Destination: &flags.country,
+		Aliases:     []string{"c"},
 	}
 
 	flagLocality = &cli.StringFlag{
-		Name:        "l",
+		Name:        "locality",
 		Usage:       "Use to specify city/locality (L)",
 		Destination: &flags.locality,
+		Aliases:     []string{"l"},
 	}
 
 	flagOrgUnits = &cli.StringSliceFlag{
-		Name:  "ou",
+		Name:  "orgUnit",
 		Usage: "Use to specify an organizational unit (OU)",
 		//Destination: &flags.orgUnits,
+		Aliases: []string{"ou"},
 	}
 
 	flagDNSSans = &cli.StringSliceFlag{
@@ -508,12 +518,13 @@ var (
 	}
 
 	flagPolicyName = &cli.StringFlag{
-		Name: "z",
+		Name: "zone",
 		Usage: "REQUIRED. Use to specify target zone for applying or retrieving certificate policy. " +
 			"In Trust Protection Platform this is the path (DN) of a policy folder and in Venafi as a Service " +
 			"this is the name of an Application and Issuing Template separated by a backslash. " +
 			"Example: -z Engineering\\Internal Certs",
 		Destination: &flags.policyName,
+		Aliases:     []string{"z"},
 	}
 
 	flagPolicyConfigFile = &cli.StringFlag{
