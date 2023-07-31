@@ -28,25 +28,25 @@ type InstallationTypeSuite struct {
 	suite.Suite
 	testYaml  string
 	testCases []struct {
-		it       InstallationType
+		it       InstallationFormat
 		strValue string
 	}
 }
 
 func (s *InstallationTypeSuite) SetupTest() {
 	s.testCases = []struct {
-		it       InstallationType
+		it       InstallationFormat
 		strValue string
 	}{
-		{it: TypeCAPI, strValue: stringCAPI},
-		{it: TypeJKS, strValue: stringJKS},
-		{it: TypePEM, strValue: stringPEM},
-		{it: TypePKCS12, strValue: stringPKCS12},
-		{it: TypeUnknown, strValue: stringUnknown},
+		{it: FormatCAPI, strValue: stringCAPI},
+		{it: FormatJKS, strValue: stringJKS},
+		{it: FormatPEM, strValue: stringPEM},
+		{it: FormatPKCS12, strValue: stringPKCS12},
+		{it: FormatUnknown, strValue: stringUnknown},
 	}
 
 	s.testYaml = `---
-type: %s
+format: %s
 location: "my/folder"
 afterAction: "foo bar kwan"
 `

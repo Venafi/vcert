@@ -47,16 +47,16 @@ func (s *PlaybookSuite) TestPlaybook_SetTLSConfig() {
 				Request: domain.PlaybookRequest{KeyPassword: p12Password},
 				Installations: domain.Installations{
 					domain.Installation{
-						Location: p12FileLocation,
-						Type:     domain.TypePKCS12,
+						File: p12FileLocation,
+						Type: domain.FormatPKCS12,
 					},
 				},
 			},
 		},
 		Config: domain.Config{
 			Connection: domain.Connection{
-				Type:        domain.CTypeTPP,
-				Credentials: domain.Authentication{PKCS12: "p12Auth"},
+				Platform:    domain.CTypeTPP,
+				Credentials: domain.Authentication{P12Task: "p12Auth"},
 			},
 		},
 	}
@@ -106,16 +106,16 @@ func (s *PlaybookSuite) TestPlaybook_SetTLSConfig_noP12Certificate() {
 				Request: domain.PlaybookRequest{KeyPassword: "foo123"},
 				Installations: domain.Installations{
 					domain.Installation{
-						Location: "./bad/location.p12",
-						Type:     domain.TypePKCS12,
+						File: "./bad/location.p12",
+						Type: domain.FormatPKCS12,
 					},
 				},
 			},
 		},
 		Config: domain.Config{
 			Connection: domain.Connection{
-				Type:        domain.CTypeTPP,
-				Credentials: domain.Authentication{PKCS12: "p12Auth"},
+				Platform:    domain.CTypeTPP,
+				Credentials: domain.Authentication{P12Task: "p12Auth"},
 				Insecure:    true,
 			},
 		},
@@ -165,7 +165,7 @@ func (s *PlaybookSuite) TestPlaybook_SetTLSConfig_noCertAuth() {
 		CertificateTasks: nil,
 		Config: domain.Config{
 			Connection: domain.Connection{
-				Type:        domain.CTypeVaaS,
+				Platform:    domain.CTypeVaaS,
 				Credentials: domain.Authentication{},
 			},
 		},

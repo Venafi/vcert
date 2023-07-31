@@ -1,11 +1,5 @@
 package certificate
 
-import (
-	"strings"
-
-	"gopkg.in/yaml.v3"
-)
-
 type CustomFieldType int
 
 const (
@@ -31,32 +25,8 @@ func (cft *CustomFieldType) String() string {
 	}
 }
 
-func parseCustomFieldType(value string) CustomFieldType {
-	switch strings.ToLower(value) {
-	case strCFTypeOrigin:
-		return CustomFieldOrigin
-	case strCFTypePlain:
-		return CustomFieldPlain
-	default:
-		return CustomFieldUnknown
-	}
-}
-
 // MarshalYAML customizes the behavior of ChainOption when being marshaled into a YAML document.
 // The returned value is marshaled in place of the original value implementing Marshaller
 func (cft CustomFieldType) MarshalYAML() (interface{}, error) {
 	return cft.String(), nil
-}
-
-// UnmarshalYAML customizes the behavior when being unmarshalled from a YAML document
-func (cft *CustomFieldType) UnmarshalYAML(value *yaml.Node) error {
-	var strValue string
-	err := value.Decode(&strValue)
-	if err != nil {
-		return err
-	}
-
-	*cft = parseCustomFieldType(strValue)
-
-	return nil
 }

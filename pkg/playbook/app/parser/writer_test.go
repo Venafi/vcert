@@ -42,7 +42,6 @@ func (s *WriterSuite) SetupTest() {
 					CsrOrigin:   certificate.ServiceGeneratedCSR,
 					CustomFields: []certificate.CustomField{
 						{
-							Type:  certificate.CustomFieldOrigin,
 							Name:  fmt.Sprintf("cf_%s", RandomString(5)),
 							Value: RandomString(10),
 						},
@@ -61,8 +60,8 @@ func (s *WriterSuite) SetupTest() {
 				},
 				Installations: []domain.Installation{
 					{
-						Type:        domain.TypePEM,
-						Location:    "path/to/my/pem/folder",
+						Type:        domain.FormatPEM,
+						File:        "path/to/my/pem/folder",
 						AfterAction: "echo Success!",
 					},
 				},
@@ -139,6 +138,6 @@ func (s *WriterSuite) TestWriter_WritePlaybook() {
 	targetInst := targetTask.Installations[0]
 
 	s.Equal(inst.Type, targetInst.Type)
-	s.Equal(inst.Location, targetInst.Location)
+	s.Equal(inst.File, targetInst.File)
 	s.Equal(inst.AfterAction, targetInst.AfterAction)
 }

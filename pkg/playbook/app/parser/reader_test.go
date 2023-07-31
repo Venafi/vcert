@@ -87,6 +87,7 @@ func (s *ReaderSuite) TestReader_ReadPlaybook() {
 		pb, err := ReadPlaybook(filepath.Join(s.playbookFolder, "sample.yaml"))
 		s.Nil(err)
 		s.NotNil(pb)
+		s.NotEmpty(pb.CertificateTasks)
 	})
 }
 
@@ -94,12 +95,13 @@ func (s *ReaderSuite) TestReader_ReadPlaybookTpl() {
 	pb, err := ReadPlaybook(filepath.Join(s.playbookFolder, "sample_tpl.yaml"))
 	s.Nil(err)
 	s.NotNil(pb)
+	s.NotEmpty(pb.CertificateTasks)
 	s.Equal(s.accessToken, pb.Config.Connection.Credentials.AccessToken)
 	s.Equal(s.refreshToken, pb.Config.Connection.Credentials.RefreshToken)
 
 }
 
-func (s *ReaderSuite) TestReader_ReadRawPlaybook() {
+func (s *ReaderSuite) TestReader_ReadPlaybookRaw() {
 	dataMap, err := ReadPlaybookRaw(filepath.Join(s.playbookFolder, "sample_tpl.yaml"))
 	s.Nil(err)
 	s.NotNil(dataMap)

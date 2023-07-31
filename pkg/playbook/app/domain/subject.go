@@ -24,5 +24,5 @@ type Subject struct {
 	Locality     string   `yaml:"locality,omitempty"`
 	Organization string   `yaml:"organization,omitempty"`
 	OrgUnits     []string `yaml:"orgUnits,omitempty"`
-	Province     string   `yaml:"province,omitempty"`
+	Province     string   `yaml:"state,omitempty"`
 }

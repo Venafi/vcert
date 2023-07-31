@@ -108,20 +108,27 @@ func buildRequest(request domain.PlaybookRequest) certificate.Request {
 			Locality:           []string{request.Subject.Locality},
 			Province:           []string{request.Subject.Province},
 		},
-		DNSNames:        request.DNSNames,
-		OmitSANs:        request.OmitSANs,
-		EmailAddresses:  request.EmailAddresses,
-		IPAddresses:     getIPAddresses(request.IPAddresses),
-		URIs:            getURIs(request.URIs),
-		UPNs:            request.UPNs,
-		FriendlyName:    request.FriendlyName,
-		CsrOrigin:       request.CsrOrigin,
-		ChainOption:     request.ChainOption,
-		KeyPassword:     request.KeyPassword,
-		FetchPrivateKey: request.FetchPrivateKey,
-		CustomFields:    request.CustomFields,
+		DNSNames:       request.DNSNames,
+		OmitSANs:       request.OmitSANs,
+		EmailAddresses: request.EmailAddresses,
+		IPAddresses:    getIPAddresses(request.IPAddresses),
+		URIs:           getURIs(request.URIs),
+		UPNs:           request.UPNs,
+		FriendlyName:   request.FriendlyName,
+		CsrOrigin:      request.CsrOrigin,
+		ChainOption:    request.ChainOption,
+		KeyPassword:    request.KeyPassword,
+		CustomFields:   request.CustomFields,
 	}
 
+	// Only fetch private key if a key password is provided
+	// Check vcert/cmd/vcert/commands.go doCommandPickup1() for a similar behavior
+	if request.KeyPassword != "" {
+		vcertRequest.FetchPrivateKey = true
+	}
+
+	// Set timeout for cert retrieval
+	setTimeout(request, &vcertRequest)
 	//Set Location
 	setLocationWorkload(request, &vcertRequest)
 	//Set KeyType
@@ -129,7 +136,7 @@ func buildRequest(request domain.PlaybookRequest) certificate.Request {
 	//Set Origin
 	setOrigin(request, &vcertRequest)
 	//Set Validity
-	setValidity(request.ValidDays, &vcertRequest)
+	setValidity(request, &vcertRequest)
 
 	return vcertRequest
 }
@@ -198,7 +205,7 @@ func RefreshTPPTokens(config domain.Config) (string, string, error) {
 
 	auth := endpoint.Authentication{
 		RefreshToken: config.Connection.Credentials.RefreshToken,
-		ClientPKCS12: config.Connection.Credentials.PKCS12 != "",
+		ClientPKCS12: config.Connection.Credentials.P12Task != "",
 		Scope:        config.Connection.Credentials.Scope,
 		ClientId:     config.Connection.Credentials.ClientID,
 	}

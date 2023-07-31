@@ -145,28 +145,28 @@ func generateKeyPassword() string {
 func runInstaller(installation domain.Installation, request domain.PlaybookRequest, prepedPcc *certificate.PEMCollection) error {
 	instlr := installer.GetInstaller(installation)
 	zap.L().Info("Running Installer", zap.String("installer", installation.Type.String()),
-		zap.String("location", installation.Location))
+		zap.String("location", installation.File))
 
 	var err error
 
 	if installation.BackupFiles {
 		zap.L().Info("Backing up certificate for Installer", zap.String("installer", installation.Type.String()),
-			zap.String("location", installation.Location))
+			zap.String("location", installation.File))
 		err = instlr.Backup()
 		if err != nil {
 			e := "error backing up certificate"
-			zap.L().Error(e, zap.String("location", installation.Location), zap.Error(err))
-			return fmt.Errorf("%s at location %s: %w", e, installation.Location, err)
+			zap.L().Error(e, zap.String("location", installation.File), zap.Error(err))
+			return fmt.Errorf("%s at location %s: %w", e, installation.File, err)
 		}
 	}
 
 	err = instlr.Install(request, *prepedPcc)
 	if err != nil {
 		e := "error installing certificate"
-		zap.L().Error(e, zap.String("location", installation.Location), zap.Error(err))
-		return fmt.Errorf("%s at location %s: %w", e, installation.Location, err)
+		zap.L().Error(e, zap.String("location", installation.File), zap.Error(err))
+		return fmt.Errorf("%s at location %s: %w", e, installation.File, err)
 	}
-	zap.L().Info("Successfully installed certificate", zap.String("location", installation.Location))
+	zap.L().Info("Successfully installed certificate", zap.String("location", installation.File))
 
 	if installation.AfterAction == "" {
 		zap.L().Info("No after-install actions declared")
@@ -175,9 +175,9 @@ func runInstaller(installation domain.Installation, request domain.PlaybookReque
 
 	err = instlr.AfterInstallActions()
 	if err != nil {
-		e := "error running after-install actions" // at location %s: %w", installation.Location, err)
-		zap.L().Error(e, zap.String("location", installation.Location), zap.Error(err))
-		return fmt.Errorf("%s at location %s: %w", e, installation.Location, err)
+		e := "error running after-install actions"
+		zap.L().Error(e, zap.String("location", installation.File), zap.Error(err))
+		return fmt.Errorf("%s at location %s: %w", e, installation.File, err)
 	}
 	zap.L().Info("successfully executed after-install actions")
 
@@ -186,8 +186,8 @@ func runInstaller(installation domain.Installation, request domain.PlaybookReque
 
 	if err != nil {
 		e := "error running after-install actions"
-		zap.L().Error(e, zap.String("location", installation.Location), zap.Error(err))
-		return fmt.Errorf("%s at location %s: %w", e, installation.Location, err)
+		zap.L().Error(e, zap.String("location", installation.File), zap.Error(err))
+		return fmt.Errorf("%s at location %s: %w", e, installation.File, err)
 	} else if strings.TrimSpace(validationResults) == "1" {
 		zap.L().Info("Installation validation actions failed")
 	}

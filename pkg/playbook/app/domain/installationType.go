@@ -22,23 +22,23 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// InstallationType represents the type of installation to be done:
+// InstallationFormat represents the type of installation to be done:
 // PEM, PKCS12, JKS or CAPI (only on Windows environments)
-type InstallationType int64
+type InstallationFormat int64
 
 const (
-	// TypeUnknown represents an invalid InstallationType
-	TypeUnknown InstallationType = iota
-	// TypeCAPI represents an installation in CAPI store
-	TypeCAPI
-	// TypeJKS represents an installation with the Java KeyStore format
-	TypeJKS
-	// TypePEM represents an installation with PEM format
-	TypePEM
-	// TypePKCS12 represents an installation with the PKCS12 format
-	TypePKCS12
+	// FormatUnknown represents an invalid InstallationFormat
+	FormatUnknown InstallationFormat = iota
+	// FormatCAPI represents an installation in CAPI store
+	FormatCAPI
+	// FormatJKS represents an installation with the Java KeyStore format
+	FormatJKS
+	// FormatPEM represents an installation with PEM format
+	FormatPEM
+	// FormatPKCS12 represents an installation with the PKCS12 format
+	FormatPKCS12
 
-	// String representations of the InstallationType types
+	// String representations of the InstallationFormat types
 	stringCAPI    = "CAPI"
 	stringJKS     = "JKS"
 	stringPEM     = "PEM"
@@ -47,15 +47,15 @@ const (
 )
 
 // String returns a string representation of this object
-func (it *InstallationType) String() string {
+func (it *InstallationFormat) String() string {
 	switch *it {
-	case TypePEM:
+	case FormatPEM:
 		return stringPEM
-	case TypePKCS12:
+	case FormatPKCS12:
 		return stringPKCS12
-	case TypeJKS:
+	case FormatJKS:
 		return stringJKS
-	case TypeCAPI:
+	case FormatCAPI:
 		return stringCAPI
 	default:
 		return stringUnknown
@@ -64,12 +64,12 @@ func (it *InstallationType) String() string {
 
 // MarshalYAML customizes the behavior of ChainOption when being marshaled into a YAML document.
 // The returned value is marshaled in place of the original value implementing Marshaller
-func (it InstallationType) MarshalYAML() (interface{}, error) {
+func (it InstallationFormat) MarshalYAML() (interface{}, error) {
 	return it.String(), nil
 }
 
 // UnmarshalYAML customizes the behavior when being unmarshalled from a YAML document
-func (it *InstallationType) UnmarshalYAML(value *yaml.Node) error {
+func (it *InstallationFormat) UnmarshalYAML(value *yaml.Node) error {
 	var strValue string
 	err := value.Decode(&strValue)
 	if err != nil {
@@ -82,17 +82,17 @@ func (it *InstallationType) UnmarshalYAML(value *yaml.Node) error {
 	return nil
 }
 
-func parseInstallationType(installationType string) (InstallationType, error) {
+func parseInstallationType(installationType string) (InstallationFormat, error) {
 	switch strings.ToUpper(installationType) {
 	case stringCAPI:
-		return TypeCAPI, nil
+		return FormatCAPI, nil
 	case stringJKS:
-		return TypeJKS, nil
+		return FormatJKS, nil
 	case stringPEM:
-		return TypePEM, nil
+		return FormatPEM, nil
 	case stringPKCS12:
-		return TypePKCS12, nil
+		return FormatPKCS12, nil
 	default:
-		return TypeUnknown, nil
+		return FormatUnknown, nil
 	}
 }

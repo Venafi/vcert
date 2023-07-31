@@ -22,6 +22,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"go.uber.org/zap"
 
@@ -33,8 +34,12 @@ import (
 const (
 	// DefaultRSALength represents the default length of an RSA Private Key
 	DefaultRSALength = 2048
+
+	// DefaultTimeout represents the default time in seconds vcert will try to retrieve a certificate
+	DefaultTimeout = 180
+
 	// OriginName represents the Origin of the Request set in a Custom Field
-	OriginName = "Venafi VCertplus "
+	OriginName = "Venafi VCertplus"
 )
 
 func loadTrustBundle(path string) string {
@@ -108,12 +113,12 @@ func setOrigin(request domain.PlaybookRequest, vcertRequest *certificate.Request
 
 }
 
-func setValidity(validDays string, vcertRequest *certificate.Request) {
-	if validDays == "" {
+func setValidity(request domain.PlaybookRequest, vcertRequest *certificate.Request) {
+	if request.ValidDays == "" {
 		return
 	}
 
-	data := strings.Split(validDays, "#")
+	data := strings.Split(request.ValidDays, "#")
 	days, _ := strconv.ParseInt(data[0], 10, 64)
 	hours := days * 24
 
@@ -132,6 +137,11 @@ func setValidity(validDays string, vcertRequest *certificate.Request) {
 		}
 	}
 	vcertRequest.IssuerHint = issuerHint
+
+	// If IssuerHint is declared in playbook, override issuerHint from validDays string
+	if request.IssuerHint != util.IssuerHintGeneric {
+		vcertRequest.IssuerHint = request.IssuerHint
+	}
 }
 
 func setLocationWorkload(playbookRequest domain.PlaybookRequest, vcertRequest *certificate.Request) {
@@ -142,8 +152,14 @@ func setLocationWorkload(playbookRequest domain.PlaybookRequest, vcertRequest *c
 	segments := strings.Split(playbookRequest.Location.Instance, ":")
 	instance := segments[0]
 	workload := ""
+	// take workload from instance string
 	if len(segments) > 1 {
 		workload = segments[1]
+	}
+	// take workload from attribute.
+	// workload attribute has priority over workload string declared in request.Location.Instance
+	if playbookRequest.Location.Workload != "" {
+		workload = playbookRequest.Location.Workload
 	}
 
 	newLocation := certificate.Location{
@@ -153,4 +169,12 @@ func setLocationWorkload(playbookRequest domain.PlaybookRequest, vcertRequest *c
 		Replace:    playbookRequest.Location.Replace,
 	}
 	vcertRequest.Location = &newLocation
+}
+
+func setTimeout(playbookRequest domain.PlaybookRequest, vcertRequest *certificate.Request) {
+	timeout := DefaultTimeout
+	if playbookRequest.Timeout > 0 {
+		timeout = playbookRequest.Timeout
+	}
+	vcertRequest.Timeout = time.Duration(timeout) * time.Second
 }

@@ -29,11 +29,11 @@ import (
 // GetInstaller returns a proper installer according to the type defined in inst
 func GetInstaller(inst domain.Installation) Installer {
 	switch inst.Type {
-	case domain.TypeJKS:
+	case domain.FormatJKS:
 		return NewJKSInstaller(inst)
-	case domain.TypePEM:
+	case domain.FormatPEM:
 		return NewPEMInstaller(inst)
-	case domain.TypePKCS12:
+	case domain.FormatPKCS12:
 		return NewPKCS12Installer(inst)
 	default:
 		zap.L().Fatal(fmt.Sprintf("Runner not found for installation type: %s", inst.Type.String()))

@@ -24,6 +24,7 @@ import (
 
 	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain"
+	"github.com/Venafi/vcert/v4/pkg/util"
 )
 
 type ServiceSuite struct {
@@ -44,23 +45,22 @@ type ServiceSuite struct {
 func (s *ServiceSuite) SetupTest() {
 
 	request := domain.PlaybookRequest{
-		CADN:            "",
-		ChainOption:     certificate.ChainOptionRootLast,
-		CsrOrigin:       certificate.ServiceGeneratedCSR,
-		CustomFields:    nil,
-		DNSNames:        nil,
-		EmailAddresses:  nil,
-		FetchPrivateKey: false,
-		FriendlyName:    "",
-		IPAddresses:     nil,
-		IssuerHint:      "",
-		KeyCurve:        certificate.EllipticCurveNotSet,
-		KeyLength:       2048,
-		KeyPassword:     "foobar123",
-		KeyType:         certificate.KeyTypeRSA,
-		Location:        certificate.Location{},
-		OmitSANs:        false,
-		Origin:          "",
+		CADN:           "",
+		ChainOption:    certificate.ChainOptionRootLast,
+		CsrOrigin:      certificate.ServiceGeneratedCSR,
+		CustomFields:   nil,
+		DNSNames:       nil,
+		EmailAddresses: nil,
+		FriendlyName:   "",
+		IPAddresses:    nil,
+		IssuerHint:     util.IssuerHintGeneric,
+		KeyCurve:       certificate.EllipticCurveNotSet,
+		KeyLength:      2048,
+		KeyPassword:    "foobar123",
+		KeyType:        certificate.KeyTypeRSA,
+		Location:       certificate.Location{},
+		OmitSANs:       false,
+		Origin:         "",
 		Subject: domain.Subject{
 			CommonName:   "foo.bar.rvela.com",
 			Country:      "US",
@@ -88,12 +88,11 @@ func (s *ServiceSuite) SetupTest() {
 				Request: request,
 				Installations: domain.Installations{
 					{
-						Type:             domain.TypePEM,
-						Location:         "./pem",
-						AfterAction:      "echo Success!",
-						PEMCertFilename:  "cert.cert",
-						PEMChainFilename: "cert.chain",
-						PEMKeyFilename:   "pk.pem",
+						Type:        domain.FormatPEM,
+						File:        "./pem/cert.cert",
+						ChainFile:   "./pem/cert.chain",
+						KeyFile:     "./pem/pk.pem",
+						AfterAction: "echo Success!",
 					},
 				},
 				RenewBefore: "30d",
@@ -108,8 +107,8 @@ func (s *ServiceSuite) SetupTest() {
 				Request: request,
 				Installations: domain.Installations{
 					{
-						Type:        domain.TypeJKS,
-						Location:    "./jks/testjks.jks",
+						Type:        domain.FormatJKS,
+						File:        "./jks/testjks.jks",
 						AfterAction: "",
 						BackupFiles: true,
 					},
@@ -124,8 +123,8 @@ func (s *ServiceSuite) SetupTest() {
 				Request: request,
 				Installations: domain.Installations{
 					{
-						Type:        domain.TypePKCS12,
-						Location:    "./pkcs12/testp12.p12",
+						Type:        domain.FormatPKCS12,
+						File:        "./pkcs12/testp12.p12",
 						AfterAction: "",
 					},
 				},
@@ -141,13 +140,13 @@ func (s *ServiceSuite) SetupTest() {
 				Request: request,
 				Installations: domain.Installations{
 					{
-						Type:        domain.TypePKCS12,
-						Location:    "./pkcs12/testp12.p12",
+						Type:        domain.FormatPKCS12,
+						File:        "./pkcs12/testp12.p12",
 						AfterAction: "",
 					},
 					{
-						Type:        domain.TypeJKS,
-						Location:    "./jks/testjks.jks",
+						Type:        domain.FormatJKS,
+						File:        "./jks/testjks.jks",
 						AfterAction: "",
 					},
 				},
@@ -170,12 +169,11 @@ func (s *ServiceSuite) SetupTest() {
 				Request: request,
 				Installations: domain.Installations{
 					{
-						Type:             domain.TypePEM,
-						Location:         "./pem",
-						AfterAction:      "echo Success!",
-						PEMCertFilename:  "cert.cert",
-						PEMChainFilename: "cert.chain",
-						PEMKeyFilename:   "pk.pem",
+						Type:        domain.FormatPEM,
+						File:        "./pem/cert.cert",
+						AfterAction: "echo Success!",
+						ChainFile:   "./pem/cert.chain",
+						KeyFile:     "./pem/pk.pem",
 					},
 				},
 				RenewBefore: "30d",

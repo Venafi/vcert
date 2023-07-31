@@ -34,7 +34,7 @@ const (
 //   - a Request object that defines the values of the certificate to request
 //   - a list of locations where the certificate will be installed
 type Playbook struct {
-	CertificateTasks CertificateTasks `yaml:"certificates,omitempty"`
+	CertificateTasks CertificateTasks `yaml:"certificateTasks,omitempty"`
 	Config           Config           `yaml:"config,omitempty"`
 	Location         string           `yaml:"-"`
 }
@@ -45,7 +45,7 @@ func NewPlaybook() Playbook {
 		CertificateTasks: make(CertificateTasks, 0),
 		Config: Config{
 			Connection: Connection{
-				Type:            CTypeVaaS,
+				Platform:        CTypeVaaS,
 				URL:             tlspcURL,
 				TrustBundlePath: "",
 			},

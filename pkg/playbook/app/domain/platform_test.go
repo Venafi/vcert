@@ -28,14 +28,14 @@ type ConnectionTypeSuite struct {
 	suite.Suite
 	testYaml  string
 	testCases []struct {
-		ct       ConnectionType
+		ct       Platform
 		strValue string
 	}
 }
 
 func (s *ConnectionTypeSuite) SetupTest() {
 	s.testCases = []struct {
-		ct       ConnectionType
+		ct       Platform
 		strValue string
 	}{
 		{ct: CTypeUnknown, strValue: stringCTypeUnknown},
@@ -45,7 +45,7 @@ func (s *ConnectionTypeSuite) SetupTest() {
 	}
 
 	s.testYaml = `---
-type: %s
+platform: %s
 url: https://something.com
 `
 }
@@ -81,7 +81,7 @@ func (s *ConnectionTypeSuite) TestConnectionType_UnmarshalYAML() {
 			err := yaml.Unmarshal([]byte(parsedYaml), &c)
 
 			s.Nil(err)
-			s.Equal(tc.ct, c.Type)
+			s.Equal(tc.ct, c.Platform)
 		})
 	}
 }
