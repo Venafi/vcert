@@ -1,10 +1,10 @@
 # Helper method to recursively convert symbol keys to string keys
 def stringify_keys(hash)
-  hash.each_with_object({}) do |(key, value), new_hash|
-    new_key = key.is_a?(Symbol) ? key.to_s : key
-    new_value = value.is_a?(Hash) ? stringify_keys(value) : value
-    new_hash[new_key] = new_value
-  end
+    hash.each_with_object({}) do |(key, value), new_hash|
+      new_key = key.is_a?(Symbol) ? key.to_s : key
+      new_value = value.is_a?(Hash) ? stringify_keys(value) : value
+      new_hash[new_key] = new_value
+    end
 end
 
 class Installation;
@@ -18,19 +18,14 @@ class Installation;
   attr_accessor :pemKeyFilename
   attr_accessor :type
 
-  def initialize
-    @capiIsNonExportable=false
-  end
 end
 
 class Location
   attr_accessor :instance
+  attr_accessor :workload
   attr_accessor :tlsAddress
   attr_accessor :replace
 
-  def initialize
-    @replace=false
-  end
 end
 
 class Subject
@@ -41,9 +36,6 @@ class Subject
   attr_accessor :orgUnits
   attr_accessor :province
 
-  def initialize
-    @orgUnits = Array.new
-  end
 end
 
 class Request
@@ -79,47 +71,63 @@ class PlaybookTask
   attr_accessor :installations
   attr_accessor :request
 
-  def initialize
-    @installations = []
-    @request = Request
-  end
-end
-
-def objects_to_hashes(objects)
-  objects.map { |obj| obj.instance_variables.each_with_object({}) { |var, hash| hash[var.to_s.delete("@")] = obj.instance_variable_get(var) } }
 end
 
 def object_to_hash(obj)
-  obj.instance_variables.each_with_object({}) do |var, hash|
-    key = var.to_s.delete("@")
-    value = obj.instance_variable_get(var)
-    hash[key] = value
+  if obj.is_a?(Array)
+    obj.map { |item| object_to_hash(item) }
+  elsif obj.is_a?(Hash)
+    obj.transform_values { |value| object_to_hash(value) }
+  elsif obj.is_a?(Integer) or [true, false].include? obj
+    return obj
+  elsif obj.is_a?(String)
+    return obj
+  elsif obj.is_a?(Object)
+    obj.instance_variables.each_with_object({}) do |var, hash|
+      key = var.to_s.delete("@")
+      value = obj.instance_variable_get(var)
+      hash[key] = value
+
+      if value.is_a?(Object)
+        hash[key] = object_to_hash(value) # Recursively convert nested objects to hashes
+      end
+    end
+  else
+    obj
   end
 end
 
-
-
 def request_key_should_be_string(key)
-  request_string_keys= %w[cadn chainOption csrOrigin friendlyName issuerHint keyCurve keyPassword keyType origin validDays zone]
+  request_string_keys = %w[cadn chainOption csrOrigin friendlyName issuerHint keyCurve keyPassword keyType origin validDays zone]
   request_string_keys.include?(key)
 end
 
 def request_key_should_be_integer(key)
-  request_integer_keys= %w[keyLength]
+  request_integer_keys = %w[keyLength]
   request_integer_keys.include?(key)
 end
 
 def request_key_should_be_boolean(key)
-  request_boolean_keys= %w[fetchPrivateKey omitSans]
+  request_boolean_keys = %w[fetchPrivateKey omitSans]
   request_boolean_keys.include?(key)
 end
 
 def request_key_should_be_array_of_strings(key)
-  request_array_string_keys=  %w[dnsNames emails ips upns uris]
+  request_array_string_keys =  %w[customFields dnsNames emails ips upns uris]
   request_array_string_keys.include?(key)
 end
 
-def to_boolean(key, value)
+def request_subject_key_should_be_string(key)
+  request_subject_string_keys = %w[ commonName country locality organization province ]
+  request_subject_string_keys.include?(key)
+end
+
+def request_subject_key_should_be_array_of_strings(key)
+  request_subject_array_string_keys = %w[ orgUnits ]
+  request_subject_array_string_keys.include?(key)
+end
+
+def to_boolean_kv(key, value)
   case value.downcase.strip
   when 'true'
     true
@@ -127,6 +135,17 @@ def to_boolean(key, value)
     false
   else
     fail(ArgumentError.new("Wrong type of value provided for key: #{key}, expected an Boolean but got: #{value}"))
+  end
+end
+
+def to_boolean(value)
+  case value.downcase.strip
+  when 'true'
+    true
+  when 'false'
+    false
+  else
+    fail(ArgumentError.new("Wrong type of value, expected an Boolean but got: #{value}"))
   end
 end
 
