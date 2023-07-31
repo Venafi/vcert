@@ -1,16 +1,17 @@
 config:
   connection:
-    type: tpp
+    platform: tpp
+    url: https://my.tpp.instance.company.com # URL to TPP instance
+    trustBundle: /path/to/my/trustbundle.pem # TrustBundle for TPP connection
     credentials:
-      clientId: vcert-sdk
       accessToken: '{{ Env "TPP_ACCESS_TOKEN" }}'
       refreshToken: '{{ Env "TPP_REFRESH_TOKEN" }}'
-    trustBundle: /path/to/my/trustbundle.pem # TrustBundle for TPP connection
-    url: https://supertreat.venqa.venafi.com # URL to TPP instance
-certificates:
+      clientId: vcert-sdk
+certificateTasks:
   - name: myCertificate # Task Identifier, no relevance in tool run
+    renewBefore: 31d
     request:
-      csrOrigin: service
+      csr: service
       keyPassword: "newPassword!"
       subject:
         # Templating needs to go between quotes to avoid issues when refreshing tokens
@@ -24,8 +25,7 @@ certificates:
           - marketing
       zone: "Open Source\\vcert"
     installations:
-      - type: CAPI
-        capiIsNonExportable: True
+      - format: CAPI
         location: "LocalMachine\MY"
+        capiIsNonExportable: True
         afterInstallAction: "echo Success!!!"
-    renewBefore: 31d
