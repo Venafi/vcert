@@ -17,8 +17,8 @@
 package installer
 
 import (
-	"github.com/Venafi/vcert/v4/pkg/certificate"
-	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain"
+	"github.com/Venafi/vcert/v5/pkg/certificate"
+	"github.com/Venafi/vcert/v5/pkg/playbook/app/domain"
 )
 
 // Installer represents the interface for all installers.

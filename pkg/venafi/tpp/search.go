@@ -21,11 +21,12 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"net/http"
 	neturl "net/url"
 	"strings"
 	"time"
+
+	"github.com/Venafi/vcert/v5/pkg/certificate"
 )
 
 type SearchRequest []string

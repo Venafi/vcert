@@ -23,8 +23,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Venafi/vcert/v4/pkg/certificate"
-	"github.com/Venafi/vcert/v4/pkg/policy"
+	"github.com/Venafi/vcert/v5/pkg/certificate"
+	"github.com/Venafi/vcert/v5/pkg/policy"
 )
 
 func randRunes(n int) string {

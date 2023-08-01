@@ -30,12 +30,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Venafi/vcert/v4/pkg/policy"
-	"github.com/Venafi/vcert/v4/pkg/util"
-
-	"github.com/Venafi/vcert/v4/pkg/certificate"
-	"github.com/Venafi/vcert/v4/pkg/endpoint"
-	"github.com/Venafi/vcert/v4/pkg/verror"
+	"github.com/Venafi/vcert/v5/pkg/certificate"
+	"github.com/Venafi/vcert/v5/pkg/endpoint"
+	"github.com/Venafi/vcert/v5/pkg/policy"
+	"github.com/Venafi/vcert/v5/pkg/util"
+	"github.com/Venafi/vcert/v5/pkg/verror"
 )
 
 // Connector contains the base data needed to communicate with a TPP Server

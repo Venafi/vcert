@@ -22,10 +22,10 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/Venafi/vcert/v4/pkg/certificate"
-	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain"
-	"github.com/Venafi/vcert/v4/pkg/playbook/app/vcertutil"
-	"github.com/Venafi/vcert/v4/pkg/playbook/util"
+	"github.com/Venafi/vcert/v5/pkg/certificate"
+	"github.com/Venafi/vcert/v5/pkg/playbook/app/domain"
+	"github.com/Venafi/vcert/v5/pkg/playbook/app/vcertutil"
+	"github.com/Venafi/vcert/v5/pkg/playbook/util"
 )
 
 // PEMInstaller represents an installation that will use the PEM format for the certificate bundle

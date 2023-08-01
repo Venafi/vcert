@@ -25,10 +25,10 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/Venafi/vcert/v4/pkg/certificate"
-	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain"
-	"github.com/Venafi/vcert/v4/pkg/playbook/app/installer"
-	"github.com/Venafi/vcert/v4/pkg/playbook/app/vcertutil"
+	"github.com/Venafi/vcert/v5/pkg/certificate"
+	"github.com/Venafi/vcert/v5/pkg/playbook/app/domain"
+	"github.com/Venafi/vcert/v5/pkg/playbook/app/installer"
+	"github.com/Venafi/vcert/v5/pkg/playbook/app/vcertutil"
 )
 
 // DefaultRenew represents the duration before certificate expiration in which renewal should be attempted

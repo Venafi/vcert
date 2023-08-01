@@ -32,8 +32,8 @@ import (
 
 	"github.com/youmark/pkcs8"
 
-	"github.com/Venafi/vcert/v4/pkg/util"
-	"github.com/Venafi/vcert/v4/pkg/verror"
+	"github.com/Venafi/vcert/v5/pkg/util"
+	"github.com/Venafi/vcert/v5/pkg/verror"
 )
 
 const (

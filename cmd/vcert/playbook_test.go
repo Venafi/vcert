@@ -14,7 +14,7 @@ import (
 	"go.uber.org/zap/zapcore"
 	"golang.org/x/crypto/pkcs12"
 
-	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain"
+	"github.com/Venafi/vcert/v5/pkg/playbook/app/domain"
 )
 
 type logLine struct {

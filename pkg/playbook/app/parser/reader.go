@@ -26,7 +26,7 @@ import (
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 
-	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain"
+	"github.com/Venafi/vcert/v5/pkg/playbook/app/domain"
 )
 
 var errorTemplate = "%w: %s"

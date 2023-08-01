@@ -23,9 +23,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/Venafi/vcert/v4/pkg/util"
-
-	"github.com/Venafi/vcert/v4/pkg/certificate"
+	"github.com/Venafi/vcert/v5/pkg/certificate"
+	"github.com/Venafi/vcert/v5/pkg/util"
 )
 
 // RevocationReasonOptions is an array of strings containing reasons for certificate revocation

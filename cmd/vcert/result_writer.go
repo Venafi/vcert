@@ -30,8 +30,8 @@ import (
 	"github.com/pavel-v-chernykh/keystore-go/v4"
 	"software.sslmate.com/src/go-pkcs12"
 
-	"github.com/Venafi/vcert/v4/pkg/certificate"
-	"github.com/Venafi/vcert/v4/pkg/util"
+	"github.com/Venafi/vcert/v5/pkg/certificate"
+	"github.com/Venafi/vcert/v5/pkg/util"
 )
 
 type Config struct {
