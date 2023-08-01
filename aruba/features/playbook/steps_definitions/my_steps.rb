@@ -214,7 +214,10 @@ end
 
 And(/^I uninstall file named "(.*)"$/) do |file_name|
   path_name = "tmp"
-  file_path = Dir.pwd + $path_separator + path_name + $path_separator + file_name
+  # Aruba will automatically take this as relative path from WORKDIR
+  # WORKDIR as context for our Dockerfile
+  # "tmp" directory is automatically generated for aruba during our file generation
+  file_path = + path_name + $path_separator + file_name
   steps %{
     Then a file named "#{file_path}" does not exist
   }
