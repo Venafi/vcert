@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Venafi/vcert/v4/pkg/verror"
 	"gopkg.in/yaml.v3"
+
+	"github.com/Venafi/vcert/v5/pkg/verror"
 )
 
 // KeyType represents the types of supported keys

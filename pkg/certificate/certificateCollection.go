@@ -23,7 +23,7 @@ import (
 	"encoding/pem"
 	"fmt"
 
-	"github.com/Venafi/vcert/v4/pkg/verror"
+	"github.com/Venafi/vcert/v5/pkg/verror"
 )
 
 // PEMCollection represents a collection of PEM data

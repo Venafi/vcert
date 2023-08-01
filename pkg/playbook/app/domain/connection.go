@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Venafi/vcert/v4/pkg/endpoint"
+	"github.com/Venafi/vcert/v5/pkg/endpoint"
 )
 
 // Connection represents the issuer that vCert will connect to

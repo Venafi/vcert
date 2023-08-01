@@ -1,4 +1,4 @@
-module github.com/Venafi/vcert/v4
+module github.com/Venafi/vcert/v5
 
 require (
 	github.com/google/uuid v1.3.0

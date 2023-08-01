@@ -17,8 +17,8 @@
 package domain
 
 import (
-	"github.com/Venafi/vcert/v4/pkg/certificate"
-	"github.com/Venafi/vcert/v4/pkg/util"
+	"github.com/Venafi/vcert/v5/pkg/certificate"
+	"github.com/Venafi/vcert/v5/pkg/util"
 )
 
 // PlaybookRequest Contains data needed to generate a certificate request

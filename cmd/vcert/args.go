@@ -17,7 +17,7 @@
 package main
 
 import (
-	"github.com/Venafi/vcert/v4/pkg/certificate"
+	"github.com/Venafi/vcert/v5/pkg/certificate"
 )
 
 const (

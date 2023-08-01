@@ -22,7 +22,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Venafi/vcert/v4/pkg/certificate"
+	"github.com/Venafi/vcert/v5/pkg/certificate"
 )
 
 func TestNewZoneConfiguration(t *testing.T) {

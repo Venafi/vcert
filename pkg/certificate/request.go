@@ -15,8 +15,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Venafi/vcert/v4/pkg/util"
-	"github.com/Venafi/vcert/v4/pkg/verror"
+	"github.com/Venafi/vcert/v5/pkg/util"
+	"github.com/Venafi/vcert/v5/pkg/verror"
 )
 
 // Request contains data needed to generate a certificate request

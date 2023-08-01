@@ -23,7 +23,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain"
+	"github.com/Venafi/vcert/v5/pkg/playbook/app/domain"
 )
 
 // GetInstaller returns a proper installer according to the type defined in inst

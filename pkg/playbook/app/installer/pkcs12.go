@@ -26,9 +26,9 @@ import (
 	"go.uber.org/zap"
 	"software.sslmate.com/src/go-pkcs12"
 
-	"github.com/Venafi/vcert/v4/pkg/certificate"
-	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain"
-	"github.com/Venafi/vcert/v4/pkg/playbook/util"
+	"github.com/Venafi/vcert/v5/pkg/certificate"
+	"github.com/Venafi/vcert/v5/pkg/playbook/app/domain"
+	"github.com/Venafi/vcert/v5/pkg/playbook/util"
 )
 
 // PKCS12Installer represents an installation that will use the PKCS12 format for the certificate bundle
