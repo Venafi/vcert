@@ -9,43 +9,58 @@ very easy for clients.
 
 1. Users don't have to pass long command line arguments. They can now call VCert with playbook yaml files. A huge help 
 in automation and maintenance. 
-2. Users can specify, where the certificate goes once received from Venafi. It supports folder locations as well as 
-CAPI store. 
-3. Users can specify, any after installation actions need to be taken. E.g. Restart my apache or restart nginx or any 
+2. Users can specify where the certificate goes and in which format once received from Venafi. It supports common keystore 
+formats (PEM, JKS, PKCS#12) in folder locations as well as Windows CAPI store. 
+3. Users can specify any after installation actions need to be taken. E.g. Restart services (apache, nginx) or any 
 other script one would like to run after the certificate is available in the right location. 
-4. User can mention renewing before, this helps to run the script on daily basis as part of cronjob or automation, the 
-tool will check if certificate exists or the certificate requires renewal before fetching a new certificate based on 
-the values configured. 
-5. Supports many formats of certificate to be stored, PKCS12, JKS, PEM, and CAPI store.
-
-## Some use cases:
-1. A client having 100s of Microsoft servers can have this script as part of the scheduled job.  The tool will run, 
-check if the certificate  present in the CAPI store needs renewal, if yes, it will fetch a new certificate, and install 
-in CAPI. Tool can run any after install script as well. 
-2. Remote machines like ATMs, can use this tool to pull provisioning certificates on startup or regular intervals. Once 
-the certificate is received, it can run any post-processing scripts configured in the tool.
+4. Renewal parameters can be setup to automatically renew the certificate before it expires. This model assumes that vcert 
+is added to a daily cronjob or is executed on a regular basis by some other automation. Default renewal is 10% of remaining 
+certificate lifetime.
+5. VCert will also automatically update API access tokens / refresh tokens within the playbook when using TLS Protect Datacenter 
+/ Trust Protection Platform. This functionality enables ongoing operation without intervention correctly utilizing a
+refresh token to get a new access token when necessary. This approach works well when the refresh/grant token lifetime is
+sufficiently long, in coordination with a short-lived access token. (i.e. 3 years/1 hour)
+6. VCert Playbook functionality works with both TLS Protect Cloud (VaaS) and TLS Protect Datacenter (TPP)
 
 ## Getting started
-VCert Playbook is a new cli command that helps you request and retrieve a certificate from a Venafi platform and 
+VCert Playbook functionality is invoked using the `vcert run` cli command. that helps you request and retrieve a certificate from a Venafi platform and 
 installs them on any number of locations.
-It also takes care of token refreshing when the platform is TPP.
+
+1. Create a YAML playbook file. 
+    - This readme contains all of the valid options and formatting for the YAML playbook. 
+    - Sample YAML playbook files are also available in the [examples folder](./examples/playbook)
+2. Execute the playbook using the `vcert run` command:
+    ```sh
+    vcert run -f path/to/my/playbook.yaml
+    ```
+3. Setup a cronjob (or Windows scheduled task) to execute the playbook on a regular basis (usually daily)
+    Sample cronjob entry:
+    ```
+    0 23 * * *     /usr/bin/sudo /usr/local/bin/vcert run -f ~/playbook.yaml >> /var/log/vcert-playbook.log 2>&1
+    ```
 
 ## Usage
-Run the following: 
+VCert run playbook functionality is invoked using the `run` command with optional additional arguments:
 ```sh
-vcert run -f path/to/my/playbook.yaml
+vcert run [OPTIONAL ARGUMENTS]
 ```
+
+For example, the following command will execute the playbook in ./path/to/my/playbook.yaml with debug output enabled:
+```sh
+vcert run --file path/to/my/playbook.yaml --debug
+```
+
 
 ### Arguments
 The following arguments are available to use:
 
 | Argument      | Short | Type    | Description                                                                                                                                                     |
 |---------------|-------|---------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `debug`       | `-d`  | boolean | Enables more detailed logging from the tool                                                                                                                     |
-| `file`        | `-f`  | string  | The playbook file to be run by the tool                                                                                                                         |
-| `force-renew` |       | boolean | Request a new certificate regardless of the expiration date on the current certificate                                                                          |
+| `--debug`       | `-d`  | boolean | Enables more detailed logging from the tool                                                                                                                     |
+| `--file`        | `-f`  | string  | The playbook file to be run by the tool (defaults to playbook.yaml in current directory)                                                                                                                         |
+| `--force-renew` |       | boolean | Request a new certificate regardless of the expiration date on the current certificate                                                                          |
 
-### Samples
+### Playbook Samples
 Handy samples have been provided in the [examples folder](./examples/playbook):
 * [Playbook for CAPI store](./examples/playbook/sample.capi.yaml)
 * [Playbook for JKS](./examples/playbook/sample.jks.yaml)
@@ -54,15 +69,16 @@ Handy samples have been provided in the [examples folder](./examples/playbook):
 * [Playbook for multiple installations](./examples/playbook/sample.multi.yaml)
 * [Playbook for TLSPC](./examples/playbook/sample.tlspc.yaml)
 
-## Playbook file
-The playbook file defines the details of the certificate to request as well as the locations where the certificate will 
-be installed. The structure of the file is described in the following table:
-### Playbook
+# Playbook file structure and options
+The playbook file is a YAML file that defines the following structure and types. Each playbook defines the details of one or more certificates to be requested as well as the locations where the certificate will be installed. 
+
+The top-level structure of the playbook file is described as:
+
 
 | Field        | Type                       | Description |
 |--------------|----------------------------|-------------|
-| certificates | array of `CertificateTask` |             |
-| config       | `Config`                   |             |
+| certificateTasks | array of [CertificateTask](#certificatetask) | One or more [CertificateTask](#certificatetask) objects. |
+| config       | [Config](#config) | A single [Config](#config) object that represents connectivity to either TLS Protect Cloud or TLS Protect Datacenter (TPP) |
 
 ### Config
 
