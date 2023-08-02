@@ -64,7 +64,7 @@ For code samples of programmatic use, please review the files in [/examples](/ex
 
 ### Enroll certificate
 1. Instantiate a client by calling the `NewClient` method of the vcert class with the configuration object.
-1. Compose a certiticate request object of type `&certificate.Request`.
+1. Compose a certificate request object of type `&certificate.Request`.
 1. Generate a key pair and CSR for the certificate request by calling the `GenerateRequest` method of the client.
 1. Submit the request by passing the certificate request object to the `RequestCertificate` method of the client.
 1. Use the request ID to pickup the certificate using the `RetrieveCertificate` method of the client.
