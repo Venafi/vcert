@@ -51,6 +51,15 @@ When(/^I revoke(?: the)? certificate (?:from|in|using) (\S+)(?: using)?( the sam
   steps %{Then I try to run `#{cmd}`}
 end
 
+# retire via PickupId
+When(/^I retire(?: the)? certificate (?:from|in|using) (\S+)(?: using)?( the same Pickup ID)?(?: with)?(.+)?$/) do |endpoint, same_pickup_id, flags|
+  if same_pickup_id
+    id_value = " -id '#{@pickup_id}'"
+  end
+  cmd = "vcert retire #{ENDPOINTS[endpoint]}#{id_value}#{flags}"
+  steps %{Then I try to run `#{cmd}`}
+end
+
 # renewal via flags, no magic
 When(/^I renew(?: the)? certificate (?:from|in|using) (\S+) with(?: flags)?(.+)$/) do |endpoint, flags|
   sleep 2

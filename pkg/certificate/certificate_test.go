@@ -30,7 +30,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Venafi/vcert/v4/pkg/util"
+	"github.com/Venafi/vcert/v5/pkg/util"
 )
 
 func getCertificateRequestForTest() *Request {

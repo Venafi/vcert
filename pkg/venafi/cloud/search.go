@@ -19,12 +19,13 @@ package cloud
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"log"
 	"math"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/Venafi/vcert/v5/pkg/certificate"
 )
 
 type SearchRequest struct {

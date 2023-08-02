@@ -1,0 +1,41 @@
+# This is an unlikely scenario. Mostly to showcase the tool capabilities.
+config:
+  connection:
+    type: tpp
+    url: https://my-tpp-instance.com
+    trustBundle: /path/to/my/trustbundle.pem
+    credentials:
+      accessToken: '{{ Env "TPP_ACCESS_TOKEN" }}'
+      refreshToken: '{{ Env "TPP_REFRESH_TOKEN" }}'
+      clientId: vcert-sdk
+certificateTasks:
+  - name: myCertificate # Task Identifier, no relevance in tool run
+    renewBefore: 31d
+    request:
+      csr: service
+      keyPassword: "newPassword!"
+      subject:
+        # Templating needs to go between single quotes to avoid issues when refreshing tokens and saving back
+        commonName: '{{ Hostname | ToLower -}}.{{- Env "USERDNSDOMAIN" | ToLower }}'
+        country: US
+        locality: Salt Lake City
+        province: Utah
+        organization: Venafi Inc
+        orgUnits:
+          - engineering
+          - marketing
+      zone: "Open Source\\vcert"
+    installations:
+      - format: PEM
+        file: "/path/to/my/certificate/cert.cer"
+        chainFile: "/path/to/my/certificate/chain.cer"
+        keyFile: "/path/to/my/certificate/key.pem"
+        afterInstallAction: "echo Success!!!"
+      - format: JKS
+        file: "/path/to/my/certificate/cert.jks"
+        jksAlias: venafi
+        jksPassword: foobar123 # Minimum six characters length
+        afterInstallAction: "echo Success!!!"
+      - format: PKCS12
+        file: "/path/to/my/certificate/cert.p12"
+        afterInstallAction: "echo Success!!!"

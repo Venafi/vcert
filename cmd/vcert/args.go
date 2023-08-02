@@ -17,8 +17,8 @@
 package main
 
 import (
-	"github.com/Venafi/vcert/v4/pkg/certificate"
-	"github.com/Venafi/vcert/v4/pkg/venafi"
+	"github.com/Venafi/vcert/v5/pkg/certificate"
+	"github.com/Venafi/vcert/v5/pkg/venafi"
 )
 
 const (
@@ -27,6 +27,7 @@ const (
 	commandPickupName       = "pickup"
 	commandRevokeName       = "revoke"
 	commandRenewName        = "renew"
+	commandRetireName       = "retire"
 	commandGetCredName      = "getcred"
 	commandCheckCredName    = "checkcred"
 	commandVoidCredName     = "voidcred"

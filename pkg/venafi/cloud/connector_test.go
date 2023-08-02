@@ -36,13 +36,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Venafi/vcert/v4/pkg/policy"
-
-	"github.com/Venafi/vcert/v4/pkg/certificate"
-	"github.com/Venafi/vcert/v4/pkg/endpoint"
-	"github.com/Venafi/vcert/v4/pkg/util"
-	"github.com/Venafi/vcert/v4/pkg/verror"
-	"github.com/Venafi/vcert/v4/test"
+	"github.com/Venafi/vcert/v5/pkg/certificate"
+	"github.com/Venafi/vcert/v5/pkg/endpoint"
+	"github.com/Venafi/vcert/v5/pkg/policy"
+	"github.com/Venafi/vcert/v5/pkg/util"
+	"github.com/Venafi/vcert/v5/pkg/verror"
+	"github.com/Venafi/vcert/v5/test"
 )
 
 var ctx *test.Context
@@ -769,6 +768,150 @@ func TestReadPolicyConfiguration(t *testing.T) {
 
 	if !reflect.DeepEqual(*policy, expectedPolice) {
 		t.Fatalf("policy for zone %s is not as expected \nget:    %+v \nexpect: %+v", ctx.CloudZone, *policy, expectedPolice)
+	}
+}
+
+func TestRetireCertificate(t *testing.T) {
+	conn := getTestConnector(ctx.CloudZone)
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	zoneConfig, err := conn.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	req := &certificate.Request{}
+	req.Subject.CommonName = test.RandCN()
+	req.Subject.Organization = []string{"Venafi, Inc."}
+	req.Subject.OrganizationalUnit = []string{"Automated Tests"}
+	err = conn.GenerateRequest(zoneConfig, req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	pickupID, err := conn.RequestCertificate(req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	req.PickupID = pickupID
+	req.ChainOption = certificate.ChainOptionRootLast
+
+	pcc, _ := certificate.NewPEMCollection(nil, nil, nil)
+	startTime := time.Now()
+	for {
+		pcc, err = conn.RetrieveCertificate(req)
+		if err != nil {
+			_, ok := err.(endpoint.ErrCertificatePending)
+			if ok {
+				if time.Now().After(startTime.Add(time.Duration(600) * time.Second)) {
+					err = endpoint.ErrRetrieveCertificateTimeout{CertificateID: pickupID}
+					break
+				}
+				time.Sleep(time.Duration(10) * time.Second)
+				continue
+			}
+			break
+		}
+		break
+	}
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	p, _ := pem.Decode([]byte(pcc.Certificate))
+	cert, err := x509.ParseCertificate(p.Bytes)
+	retireReq := &certificate.RetireRequest{}
+	thumbprint := sha1.Sum(cert.Raw)
+	hexThumbprint := hex.EncodeToString((thumbprint[:]))
+	retireReq.Thumbprint = hexThumbprint
+
+	// Letting VaaS some time to load certificate into inventory.
+	// VaaS may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
+	// or even stuck into it
+	time.Sleep(time.Duration(2) * time.Second)
+	err = conn.RetireCertificate(retireReq)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+}
+
+func TestRetireCertificateWithPickUpID(t *testing.T) {
+	conn := getTestConnector(ctx.CloudZone)
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	zoneConfig, err := conn.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	req := &certificate.Request{}
+	req.Subject.CommonName = test.RandCN()
+	req.Subject.Organization = []string{"Venafi, Inc."}
+	req.Subject.OrganizationalUnit = []string{"Automated Tests"}
+	err = conn.GenerateRequest(zoneConfig, req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	pickupID, err := conn.RequestCertificate(req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	retireReq := &certificate.RetireRequest{}
+	retireReq.CertificateDN = pickupID
+
+	// Letting VaaS some time to load certificate into inventory.
+	// VaaS may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
+	// or even stuck into it
+	time.Sleep(time.Duration(2) * time.Second)
+	err = conn.RetireCertificate(retireReq)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+}
+
+func TestRetireCertificateTwice(t *testing.T) {
+	conn := getTestConnector(ctx.CloudZone)
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	zoneConfig, err := conn.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	req := &certificate.Request{}
+	req.Subject.CommonName = test.RandCN()
+	req.Subject.Organization = []string{"Venafi, Inc."}
+	req.Subject.OrganizationalUnit = []string{"Automated Tests"}
+	err = conn.GenerateRequest(zoneConfig, req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	pickupID, err := conn.RequestCertificate(req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	retireReq := &certificate.RetireRequest{}
+	retireReq.CertificateDN = pickupID
+
+	// Letting VaaS some time to load certificate into inventory.
+	// VaaS may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
+	// or even stuck into it
+	time.Sleep(time.Duration(2) * time.Second)
+	err = conn.RetireCertificate(retireReq)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	t.Log("Trying to retire the certificate a second time")
+	retireReqSecond := &certificate.RetireRequest{}
+	retireReqSecond.CertificateDN = pickupID
+
+	err = conn.RetireCertificate(retireReqSecond)
+	if err != nil {
+		t.Fatalf("%s", err)
 	}
 }
 

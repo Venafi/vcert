@@ -1,6 +1,6 @@
 package policy
 
-import "github.com/Venafi/vcert/v4/pkg/util"
+import "github.com/Venafi/vcert/v5/pkg/util"
 
 const (
 	JsonExtension        = ".json"

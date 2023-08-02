@@ -23,15 +23,15 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/util"
-	"io/ioutil"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"github.com/pavel-v-chernykh/keystore-go/v4"
 	"software.sslmate.com/src/go-pkcs12"
+
+	"github.com/Venafi/vcert/v5/pkg/certificate"
+	"github.com/Venafi/vcert/v5/pkg/util"
 )
 
 type Config struct {
@@ -329,7 +329,7 @@ func (r *Result) Flush() error {
 				return err
 			}
 		}
-		err = ioutil.WriteFile(r.Config.AllFile, bytes, 0600)
+		err = os.WriteFile(r.Config.AllFile, bytes, 0600)
 		errors = append(errors, err)
 	} else {
 
@@ -410,11 +410,11 @@ func writeFile(output *Output, result *Result, filePath string) (err error) {
 		if err != nil {
 			return // something worse than file permission problem
 		}
-		err = ioutil.WriteFile(filePath, bytes, 0600)
+		err = os.WriteFile(filePath, bytes, 0600)
 
 	} else {
 		if output.PickupId != "" {
-			err = ioutil.WriteFile(result.Config.PickupIdFile, []byte(result.PickupId+"\n"), 0600)
+			err = os.WriteFile(result.Config.PickupIdFile, []byte(result.PickupId+"\n"), 0600)
 		}
 	}
 	return

@@ -17,16 +17,17 @@
 package main
 
 import (
+	"crypto/rand"
 	"fmt"
-	"io/ioutil"
-	"math/rand"
+	"math/big"
+	"os"
 	"time"
 
 	"github.com/Venafi/vcert/v4/pkg/venafi"
 	"github.com/urfave/cli/v2"
 
-	"github.com/Venafi/vcert/v4"
-	"github.com/Venafi/vcert/v4/pkg/endpoint"
+	"github.com/Venafi/vcert/v5"
+	"github.com/Venafi/vcert/v5/pkg/endpoint"
 )
 
 func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err error) {
@@ -56,9 +57,8 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 			connectorType = endpoint.ConnectorTypeFake
 			if flags.testModeDelay > 0 {
 				logf("Running in -test-mode with emulating endpoint delay.")
-				/* #nosec */
-				var delay = rand.Intn(flags.testModeDelay)
-				for i := 0; i < delay; i++ {
+				delay, _ := rand.Int(rand.Reader, big.NewInt(int64(flags.testModeDelay)))
+				for i := int64(0); i < delay.Int64(); i++ {
 					time.Sleep(1 * time.Second)
 				}
 			}
@@ -132,7 +132,7 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 		if cfg.ConnectionTrust != "" {
 			logf("Overriding trust bundle based on command line flag.")
 		}
-		data, err := ioutil.ReadFile(flags.trustBundle)
+		data, err := os.ReadFile(flags.trustBundle)
 		if err != nil {
 			return cfg, fmt.Errorf("Failed to read trust bundle: %s", err)
 		}
@@ -144,7 +144,7 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 			if cfg.ConnectionTrust != "" {
 				logf("Overriding trust bundle based on environment property")
 			}
-			data, err := ioutil.ReadFile(trustBundleSrc)
+			data, err := os.ReadFile(trustBundleSrc)
 			if err != nil {
 				return cfg, fmt.Errorf("Failed to read trust bundle: %s", err)
 			}

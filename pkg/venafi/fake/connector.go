@@ -29,10 +29,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Venafi/vcert/v4/pkg/policy"
-
-	"github.com/Venafi/vcert/v4/pkg/certificate"
-	"github.com/Venafi/vcert/v4/pkg/endpoint"
+	"github.com/Venafi/vcert/v5/pkg/certificate"
+	"github.com/Venafi/vcert/v5/pkg/endpoint"
+	"github.com/Venafi/vcert/v5/pkg/policy"
 )
 
 type Connector struct {
@@ -336,6 +335,11 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (pcc *certific
 // RevokeCertificate attempts to revoke the certificate
 func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (err error) {
 	return fmt.Errorf("revocation is not supported in -test-mode")
+}
+
+// RetireCertificate attempts to retire the certificate
+func (c *Connector) RetireCertificate(revReq *certificate.RetireRequest) (err error) {
+	return fmt.Errorf("retire is not supported in -test-mode")
 }
 
 func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration, err error) {

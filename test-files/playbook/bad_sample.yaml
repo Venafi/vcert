@@ -1,0 +1,26 @@
+config:
+  connection:
+    type: TPP
+    credentials:
+      apikey:
+      clientId: vcert-sdk
+certificateTasks:
+  - name: mtls
+    request:
+      zone: "Open Source\\vcert"
+      subject:
+        commonName: foo.bar.venafi.com
+        country: US
+        locality: Salt Lake City
+        province: Utah
+        organization: Venafi Inc
+        orgUnits:
+          - engineering
+          - marketing
+      csrOrigin: service
+      keyPassword: "newPassword!"
+    installations
+      - type: PEM
+        location: "/Users/rvela/venafi/supertreat/pem"
+        afterInstallAction: "echo Success!!!"
+    renewBefore: 31d

@@ -3,19 +3,25 @@ package policy
 import (
 	"encoding/json"
 	"fmt"
-	"gopkg.in/yaml.v2"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"gopkg.in/yaml.v2"
 )
 
-// there is no way for creating an array as constant, so creating a variable
-// this is the nearest to a constant on arrays.
+// TppKeyType represents the Private Key types supported by TPP
 var TppKeyType = []string{"RSA", "ECDSA"}
+
+// TppRsaKeySize represents the Key sizes supported by TPP for RSA Private Keys
 var TppRsaKeySize = []int{512, 1024, 2048, 3072, 4096}
+
+// CloudRsaKeySize represents the Key sizes supported by VaaS for RSA Private Keys
 var CloudRsaKeySize = []int{1024, 2048, 3072, 4096}
+
+// TppEllipticCurves represents the curves supported by TPP for ECDSA Private Keys
 var TppEllipticCurves = []string{"P256", "P384", "P521"}
 
 func GetFileType(f string) string {
@@ -628,7 +634,7 @@ func BuildPolicySpecificationForTPP(checkPolicyResp CheckPolicyResponse) (*Polic
 	if shouldCreateKeyPair {
 		p.KeyPair = &keyPair
 	}
-	subjectAltNames := resolveSubjectAltNames((*policy))
+	subjectAltNames := resolveSubjectAltNames(*policy)
 
 	if subjectAltNames != nil {
 		p.SubjectAltNames = subjectAltNames
@@ -1524,7 +1530,7 @@ func GetFileAndBytes(p string) (*os.File, []byte, error) {
 		return nil, nil, err
 	}
 
-	bytes, err := ioutil.ReadAll(file)
+	bytes, err := io.ReadAll(file)
 	if err != nil {
 		return nil, nil, err
 	}

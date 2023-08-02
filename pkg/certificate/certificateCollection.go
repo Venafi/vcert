@@ -22,33 +22,9 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/verror"
-	"strings"
+
+	"github.com/Venafi/vcert/v5/pkg/verror"
 )
-
-// ChainOption represents the options to be used with the certificate chain
-type ChainOption int
-
-const (
-	//ChainOptionRootLast specifies the root certificate should be in the last position of the chain
-	ChainOptionRootLast ChainOption = iota
-	//ChainOptionRootFirst specifies the root certificate should be in the first position of the chain
-	ChainOptionRootFirst
-	//ChainOptionIgnore specifies the chain should be ignored
-	ChainOptionIgnore
-)
-
-// ChainOptionFromString converts the string to the corresponding ChainOption
-func ChainOptionFromString(order string) ChainOption {
-	switch strings.ToLower(order) {
-	case "root-first":
-		return ChainOptionRootFirst
-	case "ignore":
-		return ChainOptionIgnore
-	default:
-		return ChainOptionRootLast
-	}
-}
 
 // PEMCollection represents a collection of PEM data
 type PEMCollection struct {

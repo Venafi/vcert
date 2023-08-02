@@ -19,11 +19,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Venafi/vcert/v4"
-	"github.com/Venafi/vcert/v4/pkg/endpoint"
 	"io/ioutil"
 	"log"
 	"os"
+
+	"github.com/Venafi/vcert/v5"
+	"github.com/Venafi/vcert/v5/pkg/endpoint"
 )
 
 var mockConfig, cloudConfig, tppConfig *vcert.Config

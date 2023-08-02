@@ -24,7 +24,6 @@ import (
 	"encoding/pem"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"math/rand"
 	"os"
@@ -33,13 +32,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Venafi/vcert/v4"
-	"github.com/Venafi/vcert/v4/pkg/certificate"
-	"github.com/Venafi/vcert/v4/pkg/endpoint"
-	"github.com/Venafi/vcert/v4/pkg/util"
-
+	"github.com/Venafi/vcert/v5"
 	"github.com/spf13/viper"
 	"github.com/urfave/cli/v2"
+
+	"github.com/Venafi/vcert/v5/pkg/certificate"
+	"github.com/Venafi/vcert/v5/pkg/endpoint"
+	"github.com/Venafi/vcert/v5/pkg/util"
 )
 
 const (
@@ -222,7 +221,7 @@ func generateRenewalRequest(cf *commandFlags, certReq *certificate.Request) *cer
 
 func readThumbprintFromFile(fname string) (string, error) {
 	var err error
-	bytes, err := ioutil.ReadFile(fname)
+	bytes, err := os.ReadFile(fname)
 	if err != nil {
 		return "", err
 	}
@@ -263,7 +262,7 @@ func readThumbprintFromFile(fname string) (string, error) {
 }
 
 func readCSRfromFile(fileName string) ([]byte, error) {
-	bytes, err := ioutil.ReadFile(fileName)
+	bytes, err := os.ReadFile(fileName)
 	if err != nil {
 		return nil, err
 	}
@@ -369,7 +368,7 @@ func getPropertyFromEnvironment(s string) string {
 
 func writeToFile(content []byte, fileName string, perm os.FileMode) error {
 
-	err := ioutil.WriteFile(fileName, content, perm)
+	err := os.WriteFile(fileName, content, perm)
 
 	if err != nil {
 		return err
@@ -513,7 +512,7 @@ func getSshPubKeyFromFile() (content string, err error) {
 
 			var fileContent []byte
 
-			fileContent, err = ioutil.ReadFile(fileName)
+			fileContent, err = os.ReadFile(fileName)
 			if err != nil {
 				return
 			}
@@ -535,16 +534,16 @@ func getExistingSshFiles(id string) ([]string, error) {
 	}
 	existingFiles := make([]string, 0)
 
-	certFile, err := ioutil.ReadFile(fileName + sshCertFileExt)
+	certFile, err := os.ReadFile(fileName + sshCertFileExt)
 	if err == nil && certFile != nil { //means file exists.
 		existingFiles = append(existingFiles, fileName+sshCertFileExt)
 	}
 
-	pubKeyFile, err := ioutil.ReadFile(fileName + sshPubKeyFileExt)
+	pubKeyFile, err := os.ReadFile(fileName + sshPubKeyFileExt)
 	if err == nil && pubKeyFile != nil { //means file exists.
 		existingFiles = append(existingFiles, fileName+sshPubKeyFileExt)
 	}
-	privKeyFile, err := ioutil.ReadFile(fileName)
+	privKeyFile, err := os.ReadFile(fileName)
 	if err == nil && privKeyFile != nil { //means file exists.
 		existingFiles = append(existingFiles, fileName)
 	}

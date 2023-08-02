@@ -26,9 +26,15 @@ Feature: renew by -id
     Then private key in "k1.pem" and certificate in "c1.pem" should have the same modulus
     And certificate in "c.pem" and certificate in "c1.pem" should not have the same modulus
     And certificate in "c.pem" and certificate in "c1.pem" should not have the same serial
+
+    @TPP
     Examples:
       | endpoint  |
       | TPP       |
+
+    @VAAS
+    Examples:
+      | endpoint  |
       | Cloud     |
 
 
@@ -45,9 +51,15 @@ Feature: renew by -id
     Then private key in "k1.pem" and certificate in "c1.pem" should have the same modulus
     And certificate in "c.pem" and certificate in "c1.pem" should not have the same modulus
     And certificate in "c.pem" and certificate in "c1.pem" should not have the same serial
+
+    @TPP
     Examples:
       | endpoint  |
       | TPP       |
+
+    @VAAS
+    Examples:
+      | endpoint  |
       | Cloud     |
 
   Scenario Outline: TPP renew by CertificateDN with -omit-sans
@@ -62,6 +74,8 @@ Feature: renew by -id
     And it should write certificate to the file "c1.pem"
     And certificate in "c.pem" and certificate in "c1.pem" should not have the same serial
     And certificate in "c1.pem" should have 1 DNS SANs
+
+    @TPP
     Examples:
     | endpoint          |
     | TPPdeprecated     |
