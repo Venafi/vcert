@@ -18,10 +18,11 @@ package cloud
 
 import (
 	"encoding/json"
-	"github.com/Venafi/vcert/v4/pkg/certificate"
-	"github.com/Venafi/vcert/v4/pkg/util"
 	"testing"
 	"time"
+
+	"github.com/Venafi/vcert/v5/pkg/certificate"
+	"github.com/Venafi/vcert/v5/pkg/util"
 )
 
 func TestSearchRequest(t *testing.T) {

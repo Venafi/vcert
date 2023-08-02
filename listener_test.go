@@ -4,12 +4,13 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/endpoint"
-	"github.com/Venafi/vcert/v4/pkg/venafi/fake"
 	"io/ioutil"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/Venafi/vcert/v5/pkg/endpoint"
+	"github.com/Venafi/vcert/v5/pkg/venafi/fake"
 )
 
 func TestConfig_NewListener(t *testing.T) {

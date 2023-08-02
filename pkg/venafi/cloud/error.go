@@ -19,7 +19,8 @@ package cloud
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/verror"
+
+	"github.com/Venafi/vcert/v5/pkg/verror"
 )
 
 type responseError struct {

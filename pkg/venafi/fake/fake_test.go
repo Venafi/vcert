@@ -17,8 +17,9 @@
 package fake
 
 import (
-	"github.com/Venafi/vcert/v4/pkg/certificate"
 	"testing"
+
+	"github.com/Venafi/vcert/v5/pkg/certificate"
 )
 
 func TestGenerateRequest(t *testing.T) {

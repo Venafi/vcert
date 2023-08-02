@@ -20,8 +20,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Venafi/vcert/v4/pkg/endpoint"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/Venafi/vcert/v5/pkg/endpoint"
 )
 
 type ConnectionSuite struct {

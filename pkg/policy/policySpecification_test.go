@@ -3,12 +3,13 @@ package policy
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/smartystreets/assertions"
-	"gopkg.in/yaml.v2"
 	t "log"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/smartystreets/assertions"
+	"gopkg.in/yaml.v2"
 )
 
 func getPolicySpecificationFromFile(f string) *PolicySpecification {

@@ -21,9 +21,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain"
-	"github.com/Venafi/vcert/v4/pkg/playbook/app/parser"
-	"github.com/Venafi/vcert/v4/pkg/playbook/app/vcertutil"
+	"github.com/Venafi/vcert/v5/pkg/playbook/app/domain"
+	"github.com/Venafi/vcert/v5/pkg/playbook/app/parser"
+	"github.com/Venafi/vcert/v5/pkg/playbook/app/vcertutil"
 )
 
 // ValidateTPPCredentials checks that the TPP credentials are not expired.

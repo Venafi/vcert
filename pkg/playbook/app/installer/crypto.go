@@ -29,9 +29,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/Venafi/vcert/v4/pkg/certificate"
-	"github.com/Venafi/vcert/v4/pkg/playbook/app/vcertutil"
-	"github.com/Venafi/vcert/v4/pkg/util"
+	"github.com/Venafi/vcert/v5/pkg/certificate"
+	"github.com/Venafi/vcert/v5/pkg/playbook/app/vcertutil"
+	"github.com/Venafi/vcert/v5/pkg/util"
 )
 
 // DayDuration represents a day (24 hours) in the Duration type

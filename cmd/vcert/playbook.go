@@ -27,10 +27,10 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/crypto/pkcs12"
 
-	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain"
-	"github.com/Venafi/vcert/v4/pkg/playbook/app/parser"
-	"github.com/Venafi/vcert/v4/pkg/playbook/app/service"
-	"github.com/Venafi/vcert/v4/pkg/playbook/util"
+	"github.com/Venafi/vcert/v5/pkg/playbook/app/domain"
+	"github.com/Venafi/vcert/v5/pkg/playbook/app/parser"
+	"github.com/Venafi/vcert/v5/pkg/playbook/app/service"
+	"github.com/Venafi/vcert/v5/pkg/playbook/util"
 )
 
 const (

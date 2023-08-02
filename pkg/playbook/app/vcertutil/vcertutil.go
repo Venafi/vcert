@@ -22,14 +22,14 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Venafi/vcert/v5"
 	"go.uber.org/zap"
 
-	"github.com/Venafi/vcert/v4"
-	"github.com/Venafi/vcert/v4/pkg/certificate"
-	"github.com/Venafi/vcert/v4/pkg/endpoint"
-	"github.com/Venafi/vcert/v4/pkg/playbook/app/domain"
-	"github.com/Venafi/vcert/v4/pkg/util"
-	"github.com/Venafi/vcert/v4/pkg/venafi/tpp"
+	"github.com/Venafi/vcert/v5/pkg/certificate"
+	"github.com/Venafi/vcert/v5/pkg/endpoint"
+	"github.com/Venafi/vcert/v5/pkg/playbook/app/domain"
+	"github.com/Venafi/vcert/v5/pkg/util"
+	"github.com/Venafi/vcert/v5/pkg/venafi/tpp"
 )
 
 // EnrollCertificate takes a Request object and requests a certificate to the Venafi platform defined by config.

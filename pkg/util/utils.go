@@ -8,8 +8,9 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/youmark/pkcs8"
 	"time"
+
+	"github.com/youmark/pkcs8"
 )
 
 const LegacyPem = "legacy-pem"

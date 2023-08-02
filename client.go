@@ -19,12 +19,13 @@ package vcert
 import (
 	"crypto/x509"
 	"fmt"
-	"github.com/Venafi/vcert/v4/pkg/endpoint"
-	"github.com/Venafi/vcert/v4/pkg/venafi/cloud"
-	"github.com/Venafi/vcert/v4/pkg/venafi/fake"
-	"github.com/Venafi/vcert/v4/pkg/venafi/tpp"
-	"github.com/Venafi/vcert/v4/pkg/verror"
 	"log"
+
+	"github.com/Venafi/vcert/v5/pkg/endpoint"
+	"github.com/Venafi/vcert/v5/pkg/venafi/cloud"
+	"github.com/Venafi/vcert/v5/pkg/venafi/fake"
+	"github.com/Venafi/vcert/v5/pkg/venafi/tpp"
+	"github.com/Venafi/vcert/v5/pkg/verror"
 )
 
 type newClientArgs struct {
