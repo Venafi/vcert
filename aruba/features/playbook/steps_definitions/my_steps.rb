@@ -63,6 +63,9 @@ And(/^task named "(.*)" has request with "(.*)" value "(.*)"$/) do |task_name, k
   if request_key_should_be_string(key)
     if value.is_a?(String)
       current_certificate_task.request.send "#{key}=", value
+      if key == "keyPassword"
+        @key_password = value
+      end
     else
       fail(ArgumentError.new("Wrong type of value provided for key: #{key}, expected a String but got: #{value.class}"))
     end
@@ -227,8 +230,25 @@ And(/^I uninstall file named "(.*)"$/) do |file_name|
   # Aruba will automatically take this as relative path from WORKDIR
   # WORKDIR as context for our Dockerfile
   # "tmp" directory is automatically generated for aruba during our file generation
-  file_path = + $temp_path + $path_separator + file_name
+  file_path = Dir.pwd + $path_separator + $temp_path + $path_separator + file_name
   steps %{
     Then a file named "#{file_path}" does not exist
+  }
+end
+
+When(/^playbook generated private key in "([^"]*)" and certificate in "([^"]*)" should have the same modulus$/) do |key_file, cert_file|
+  cert_path = Dir.pwd + $path_separator + $temp_path + $path_separator + cert_file
+  key_path = Dir.pwd + $path_separator + $temp_path + $path_separator + key_file
+  steps %{
+    Given private key in "#{cert_path}" and certificate in "#{key_path}" should have the same modulus
+  }
+end
+
+When(/^playbook generated "([^"]*)" should be PKCS#12 archive with password "([^"]*)"$/) do |filename, password|
+  cert_path = Dir.pwd + $path_separator + $temp_path + $path_separator + filename
+
+  steps %{
+    Then I try to run `openssl pkcs12 -in "#{cert_path}" -passin pass:#{password} -noout`
+    And the exit status should be 0
   }
 end

@@ -7,7 +7,7 @@ Feature: playbook
     And the default aruba exit timeout is 180 seconds
 
   @TPP
-  Scenario Outline: run playbook
+  Scenario Outline: Run playbook for TPP with extended configuration with PEM, PKCS12 and PEM installations
     Given I have playbook with TPP connection details
     And I have playbook with certificateTasks block
     And I have playbook with task named "myCertificateInstallation"
@@ -55,6 +55,11 @@ Feature: playbook
     And a file named "cert.jks" should exist
     And a file named "cert.jks" should exist
     And a file named "cert.p12" should exist
+    And playbook generated private key in "cert.cer" and certificate in "key.pem" should have the same modulus
+    And playbook generated "cert.p12" should be PKCS#12 archive with password "Passcode123!"
+#    And private key in "cert.cer" and certificate in "key.pem" should have the same modulus
+    And "cert.p12" should be PKCS#12 archive with password "Passcode123!"
+    # And "cert.jks" should be jks archive with password "foobar123" # TODO: solve this case
     And I uninstall file named "cert.cer"
     And I uninstall file named "chain.cer"
     And I uninstall file named "key.pem"
@@ -64,3 +69,4 @@ Feature: playbook
     Examples:
     | config-file      |
     | playbook-tpp.yml |
+
