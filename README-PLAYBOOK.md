@@ -12,7 +12,7 @@ VCert Playbook functionality solves the "last mile" problem. VCert has historica
 - For certificate renewals, it checks to see if the certificate already exists and if it is due for renewal before requesting a new certificate. This allows you to run a script regularly without renewing certificates that don't need to be.
 - VCert Playbook functionality works with both TLS Protect Cloud and TLS Protect Datacenter.
 
-## Example use cases:
+## Example use cases
 - Renewal parameters can be setup to automatically renew the certificate before it expires. This model assumes that VCert is added to a daily cronjob or is executed on a regular basis by some other automation. Default renewal is 10% of remaining certificate lifetime.
 - VCert will also automatically update API access and refresh tokens within the playbook when using TLS Protect Datacenter. This functionality enables ongoing operation without intervention, using a refresh token to get a new access token when necessary. This approach works well when the refresh/grant token lifetime is sufficiently long, in coordination with a short-lived access token (for example, 3 years/1 hour)
 
