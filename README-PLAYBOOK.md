@@ -77,96 +77,85 @@ The top-level structure of the playbook file is described as:
 
 | Field        | Type                       | Description |
 |--------------|----------------------------|-------------|
-| certificateTasks | array of [CertificateTask](#certificatetask) | One or more [CertificateTask](#certificatetask) objects. |
-| config       | [Config](#config) | A single [Config](#config) object that represents connectivity to either TLS Protect Cloud or TLS Protect Datacenter (TPP) |
+| certificateTasks | array of [CertificateTask](#certificatetask) | ***REQUIRED*** - One or more [CertificateTask](#certificatetask) objects. |
+| config       | ***REQUIRED*** - [Config](#config) | A single [Config](#config) object that represents connectivity to either TLS Protect Cloud or TLS Protect Datacenter (TPP) |
 
 ### Config
 
 | Field       | Type          | Description                                                                                       |
 |-------------|---------------|---------------------------------------------------------------------------------------------------|
-| credentials | `Credentials` ||
-| trustBundle | string        ||
-| type        | string        | Either "tpp" or "tlspdc" for TPP/Datacenter - OR - "vaas" or "tlspc" for TLS Protect Cloud / VaaS |
-| url         | string        ||
+| connection | [Connection](#connection) | ***REQUIRED*** - A [Connection](#connection) object that specifies the provider (TLPSC or TLSPDC) and associated configuration to fulfill certificate requests |
 
-### Credentials
+### Connection
+| Field        | Type                              | Description |
+|--------------|-----------------------------------|-------------|
+| credentials  | [Credential](#credentials)        | ***REQUIRED*** - An [Credential](#credential) object that defines the credentials used to connect to the selected provider platform |
+| insecure     | `bool`                            | *OPTIONAL* - Default `false`. When set to `true`, ignore certificate errors when connecting. |
+| platform     | `string`                          | ***REQUIRED*** - Either `tpp` or `vaas`. Designates which Venafi platform to connect to. `tlspc` is a valid alias for `tpp`. `tlspc` is a valid alias for `vaas`. |
+| trustBundle  | `string`                          | *OPTIONAL* - Defines path to PEM formated trust bundle that contains the root (and optionally intermediate certificates) to use to trust the TLS connection. If omitted, will attempt to use operating system trusted CAs. |
+| url          | `string`                          | ***REQUIRED*** when platform is `tpp`. *OPTIONAL* when platform is `vaas` (defaults to api.venafi.cloud). If url string does not include `https://` it will be added automatically. For connection to TPP, url must include the full API path (i.e. `https://tpp.company.com/vedsdk/`)
 
-| Field        | Type                   | Description                                                                                                                                                                                                             |
-|--------------|------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| accessToken  | `Credentials`          ||
-| apikey       | string                 ||
-| clientId     | string                 ||
-| pkcs12       | `CertificateTask.Name` | Use a configured certificateTask (by name) to reference a certificate to be used for certificate authentication. Only supported by TPP endpoints. Referenced certificateTask must have an installation of type `pkcs12` |
-| refreshToken | string                 ||
-| scope        | string                 ||
+### Credential
+
+| Field        | Type                              | Description |
+|--------------|-----------------------------------|-------------|
+| apikey       | string                            | ***REQUIRED*** - when [Connection.platform](#connection) is `vaas`. *IGNORED* otherwise. |
+| accessToken  | string                            | *OPTIONAL* - Used when [Connection.platform](#connection) is `tpp` for authenticating to the REST API. If omitted, or invalid, expired, vcert will attempt to use the [Credential.p12Task](#credential) or [Credential.refreshToken](#credential) to get a valid accessToken. Upon successful refresh, this value will be overwritten with the new valid accessToken. *IGNORED* when [Connection.platform](#connection) is `vaas` or `tlspc` |
+| clientId     | string                            | *OPTIONAL* - Used when [Connection.platform](#connection) is `tpp` to map to the API integration to be used. If omitted, uses `vcert-cli` as default. *IGNORED* when [Connection.platform](#connection) is `vaas` or `tlspc`|
+| p12Task       | string | *OPTIONAL* - Used when [Connection.platform](#connection) is `tpp` to reference a configured [CertificateTask.name](#certificatetask) to be used for certificate authentication. Will be used to get a new accessToken when `accessToken` is missing, invalid, or expired. Referenced certificateTask must have an installation of type `pkcs12`. |
+| refreshToken | string                            | *OPTIONAL* - Used when [Connection.platform](#connection) is `tpp` to refresh the `accessToken` if it is missing, invalid, or expired. If omitted, the `accessToken` will not be refreshed when it expires. When a refresh token is used, a new accessToken *and* refreshToken are issued. The previous refreshToken is then invalid (one-time use only). vCert will attempt to update the refreshToken and accessToken fields upon refresh. |
+| scope        | string                            | *OPTIONAL* - Used when [Connection.platform](#connection) is `tpp` to determine the scope of the access token when refreshing the access token, or when getting a new grant using a `pkcs12` certificate. Defaults to `certificate:manage` if omitted.|
 
 
 ### CertificateTask
 
-| Field         | Type                    | Description                                                                                                                                                                                                                                                                                                                              |
-|---------------|-------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| installations | array of `Installation` ||
-| name          | string                  ||
-| renewBefore   | string                  | Configure auto-renewal threshold for certificates. Either by days, hours, or % remaining of certificate lifetime. For example, 30d renews certificate 30 days before expiration, 10h - 10 hours before expiration, or 15% will renew when 15% of the lifetime is remaining. Use "0" or "disabled" to disable auto-renew. Default is 10%. |
-| request       | `Request`               ||
-| setenvvars    | array of strings        ||Set to "thumbprint" and/or "serial" to set environment variables. Environment variables will be named VCERT_TASKNAME_THUMBPRINT or VCERT_TASKNAME_SERIAL accordingly, where TASKNAME is the uppercased name provied on the certificate task.
+| Field         | Type                              | Description |
+|---------------|-----------------------------------|-------------|
+| name          | string                            | ***REQUIRED*** - The name of the certificate task within the playbook. Used in output messages to distinguish tasks when multiple certificate tasks are defined, also, referred to by [Credential.p12Task](#credential) when specifying a certificate to use to refresh [Credential.accessToken](#credential). If more than one [CertificateTask](#certificatetask) exists, each name must be unique. |
+| installations | array of [Installation](#installation) objects | ***REQUIRED*** - Specifies one or more locations in which format and where the certificate requested will be stored. |
+| renewBefore   | string                            | *OPTIONAL* - Configure auto-renewal threshold for certificates. Either by days, hours, or % remaining of certificate lifetime. For example, 30d renews certificate 30 days before expiration, 10h - 10 hours before expiration, or 15% will renew when 15% of the lifetime is remaining. Use "0" or "disabled" to disable auto-renew. Default is 10%. |
+| request       | [Request](#request)               | ***REQUIRED*** - The [Request](#request) object specifies the details about the certificate to be requested such as commonname, SANs, etc. |
+| setEnvVars    | array of strings                  | *OPTIONAL* - Specify details about the certificate to be set as environment variables before the [Installation.afterInstallAction](#installation) is executed. Supported options are `thumbprint`, `serial`, and `base64` (which sets the entire base64 of the certificate retrieved as an environment variable). Environment variables will be named VCERT_TASKNAME_THUMBPRINT, VCERT_TASKNAME_SERIAL, or VCERT_TASKNAME_BASE64 accordingly, where TASKNAME is the uppercased [CertificateTask.name](#certificatetask). |
 
 ### Installation
 
-| Field                | Type    | Description                                                                                                                                                                                                    |
-|----------------------|---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| afterInstallAction   | string  | Execute this command after this installation is performed (both enrollment and renewal). On *nix, this uses `/bin/sh -c '<afterInstallAction>'`. On Windows, this uses `powershell.exe '<afterInstallAction>'` |
-| capiIsNonExportable  | boolean | Ignored if type is NOT `CAPI`                                                                                                                                                                                  |
-| jksAlias             | string  | Required when type is `JKS`                                                                                                                                                                                    |
-| jksPassword          | string  | Required when type is `JKS`                                                                                                                                                                                    |
-| location             | string  | file location for certificate. (NOTE: When type is `PEM`, this must be a folder location!)                                                                                                                     |
-| pemCertFilename      | string  | Required when type is `PEM`                                                                                                                                                                                    |
-| pemChainFilename     | string  | Required when type is `PEM`                                                                                                                                                                                    |
-| pemKeyFilename       | string  | Required when type is `PEM`                                                                                                                                                                                    |
-| type                 | string  | Valid types are `PKCS12`, `PEM`, `JKS`, and `CAPI`                                                                                                                                                             |
+| Field                | Type    | Description |
+|----------------------|---------|-------------|
+| format               | string  |  ***REQUIRED*** - Specifies the format type for the installed certificate. Valid types are `PKCS12`, `PEM`, `JKS`, and `CAPI` |
+| afterInstallAction   | string  | *OPTIONAL* - Execute this command after this installation is performed (both enrollment and renewal). On *nix, this uses `/bin/sh -c '<afterInstallAction>'`. On Windows, this uses `powershell.exe '<afterInstallAction>'` |
+| backupFiles          | boolean | *OPTIONAL* - When `true`, backup existing certificate files before replacing during a renewal operation. Defaults to `false` |
+| file                 | string  | ***REQUIRED*** when [Installation.format](#installation) is `PKCS#12`, `PEM`, or `JKS`. Specifies the file path and name for the certificate file (PEM) or PKCS#12 / JKS bundle. Example `/etc/ssl/certs/myPEMfile.cer`, `/etc/ssl/certs/myPKCS12.p12`, or `/etc/ssl/certs/myJKS.jks`. *IGNORED* for other values of [Installation.format](#installation) |
+| jksAlias             | string  | ***REQUIRED*** when [Installation.format](#installation) is `JKS`. Specifies the certificate alias value within the Java Keystore. *IGNORED* when [Installation.format](#installation) is not `JKS` |
+| jksPassword          | string  | ***REQUIRED*** when [Installation.format](#installation) is `JKS`. Specifies the password for the JKS. *IGNORED* when [Installation.format](#installation) is not `JKS`. |
+| chainFile            | string  | ***REQUIRED*** when [Installation.format](#installation) is `PEM`. Specifies the file path and name for the chain PEM bundle (Example `/etc/ssl/certs/myChain.cer`). *IGNORED* for other values of [Installation.format](#installation) |
+| keyFile              | string  | ***REQUIRED*** when [Installation.format](#installation) is `PEM`. Specifies the file path and name for the private key PEM file (Example `/etc/ssl/certs/myKey.key`). *IGNORED* for other values of [Installation.format](#installation) |
+| location             | string |  ***REQUIRED*** when [Installation.format](#installation) is `CAPI`. Specifies the Windows CAPI store to place the installed certificate. Typically `"LocalMachine\My"` or `"CurrentUser\My"`. *IGNORED* if [Installation.format](#installation) is NOT `CAPI`. **NOTE:** if the location is not contained within `"`, the backslash `\` must be properly escaped (i.e. `LocalMachine\\My`) |
+| capiIsNonExportable  | boolean | *OPTIONAL* - When `true`, private key will be flagged as 'Non-Exportable' when stored in Windows CAPI store. *IGNORED* if [Installation.format](#installation) is NOT `CAPI`. Defaults to `false` |
 
 ### Request
 
 | Field           | Type                   | Description |
 |-----------------|------------------------|-------------|
-| cadn            | string                 ||
-| chainOption     | string                 ||
-| csrOrigin       | string                 ||
-| customFields    | array of `CustomField` ||
-| dnsNames        | array of string        ||
-| emails          | array of string        ||
-| fetchPrivateKey | boolean                ||
-| friendlyName    | string                 ||
-| ips             | array of string        ||
-| issuerHint      | string                 ||
-| keyCurve        | string                 ||
-| keyLength       | integer                ||
-| keyPassword     | string                 ||
-| keyType         | string                 ||
-| location        | `Location`             ||
-| omitSans        | boolean                ||
-| origin          | string                 ||
-| subject         | `Subject`              ||
-| upns            | array of string        ||
-| uris            | array of string        ||
-| validDays       | string                 ||
-| zone            | string                 ||
-
-### CustomField
-
-| Field   | Type      | Description |
-|---------|-----------|-------------|
-| type    | string    ||
-| name    | string    ||
-| value   | string    ||
-
-### Location
-
-| Field      | Type    | Description |
-|------------|---------|-------------|
-| instance   | string  ||
-| tlsAddress | string  ||
-| replace    | boolean ||
+| cadn            | string                 | *OPTIONAL* - Specify the DN location for a specific CA template to fulfil the request (i.e. "\VED\Policy\CA Templates\Internal CA"). Only valid when [Connection.platform](#connection) is `tpp` |
+| chain           | string                 | *OPTIONAL* - Determines the ordering of certificates within the returned chain. Valid options are `root-first`, `root-last`, or `ignore`. Defaults to `root-last`. |
+| csr             | string                 | *OPTIONAL* - Specifies where the CSR and PrivateKey are generated: use `local` to generate the CSR and PrivateKey locally, or `service` to have the PrivateKey and CSR generated by the specified [Connection.platform](#connection). Defaults to `local`. |
+| fields          | array of [CustomField] objects | *OPTIONAL* - Sets specified custom field on certificate object. Only valid when [Connection.platform](#connection) is `tpp`. |
+| sanDNS          | array of string        | *OPTIONAL* - Specify one or more DNS SAN entries for the requested certificate |
+| sanEmail        | array of string        | *OPTIONAL* - Specify one or more Email SAN entries for the requested certificate |
+| nickname        | string                 | *OPTIONAL* - Specify the certificate object name to be created in TPP for the requested certificate. If not specified, TPP will use the [Subject.commonName](#subject). Only valid when [Connection.platform](#connection) is `tpp`|
+| sanIP           | array of string        | *OPTIONAL* - Specify one or more IP SAN entries for the requested certificate |
+| issuerHint      | string                 | *OPTIONAL* - Used only when [Request.validDays](#request) is specified to determine the correct Specific End Date attribute to set on the TPP certificate object. Valid options are `DIGICERT`, `MICROSOFT`, `ENTRUST`, `ALL_ISSUERS`. If not defined, but validDays are set, the attribute 'Specific End Date' will be used. Only valid when [Connection.platform](#connection) is `tpp` |
+| keyCurve        | string                 | ***REQUIRED*** when [Request.keyType](#request) is `ECDSA`, `EC`, or `ECC`. Valid values are `P256`, `P384`, `P521`, `ED25519`. |
+| keySize         | integer                | *OPTIONAL* - Specifies the key size when specified [Request.keyType](#request) is `RSA`. Defaults to 2048. |
+| keyPassword     | string                 | ***REQURED*** when [Installation.format](#installation) is `JKS` or `PKCS#12`. Otherwise **OPTIONAL**. Specifies the password to encrypt the private key. If not specified for `PEM` [Installation.format](#installation), the private key will be stored in an unencrypted PEM format. |
+| keyType         | string                 | *OPTIONAL* - Specify the key type of the requested certificate. Valid options are `RSA`, `ECDSA`, `EC`, `ECC` and `ED25519`. Default is `RSA` |
+| location        | [Location](#location)  | *OPTIONAL* - If defined, creates an installation on VaaS, or an associated device and basic application on TPP that represents the location where the certificate is installed. |
+| appInfo         | string                 | *OPTIONAL* - Sets the origin attribute on the certificate object in TPP. Only valid when [Connection.platform](#connection) is `tpp`. |
+| subject         | [Subject](#subject)    | ***REQUIRED*** - defines the [Subject](#subject) information for the requested certificate |
+| sanUPN          | array of string        | *OPTIONAL* - Specify one or more UPN SAN entries for the requested certificate |
+| sanURI          | array of string        | *OPTIONAL* - Specify one or more URI SAN entries for the requested certificate |
+| validDays       | string                 | *OPTIONAL* - Specify the number of days the certificate should be valid for. Only supported by specific CAs, and only if [Connection.platform](#connection) is `tpp`. The number of days can be combined with an "issuer hint" to correctly set the right parameter for the desired CA. For example, `"30#m"` will specify a 30-day certificate from a Microsoft issuer. Valid hints are `m` for Microsoft, `d` for Digicert, `e` for Entrust. If an issuer hint is not specified, the generic attribute 'Specific End Date' will be used. |
+| zone            | string                 | ***REQUIRED*** - Specifies the Policy Folder (for TPP) or the Application and Issuing Template to use (for VaaS). For TPP, exclude the "\VED\Policy" portion of the folder path. **NOTE:** if the zone is not contained within `"`, the backslash `\` must be properly escaped (i.e. `Certificates\\vCert`) |
 
 ### Subject
 
@@ -178,3 +167,20 @@ The top-level structure of the playbook file is described as:
 | organization | string          ||
 | orgUnits     | array of string ||
 | province     | string          ||
+
+### CustomField
+
+| Field   | Type      | Description |
+|---------|-----------|-------------|
+| name    | string    ||
+| value   | string    ||
+
+### Location
+
+| Field      | Type    | Description |
+|------------|---------|-------------|
+| instance   | string  ||
+| tlsAddress | string  ||
+| replace    | boolean ||
+
+
