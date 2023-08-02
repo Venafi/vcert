@@ -9,14 +9,16 @@ end
 
 class Installation;
   attr_accessor :afterInstallAction
+  attr_accessor :installValidationAction
   attr_accessor :capiIsNonExportable
   attr_accessor :jksAlias
   attr_accessor :jksPassword
   attr_accessor :location
-  attr_accessor :pemCertFilename
-  attr_accessor :pemChainFilename
-  attr_accessor :pemKeyFilename
-  attr_accessor :type
+  attr_accessor :file
+  attr_accessor :chainFile
+  attr_accessor :keyFile
+  attr_accessor :format
+  attr_accessor :backupFiles # will add the .bak for creating a copy of the generated file
 
 end
 
@@ -40,23 +42,23 @@ end
 
 class Request
   attr_accessor :cadn
-  attr_accessor :chainOption
-  attr_accessor :csrOrigin
-  attr_accessor :customFields
-  attr_accessor :dnsNames
-  attr_accessor :emails
+  attr_accessor :chain
+  attr_accessor :csr
+  attr_accessor :fields
+  attr_accessor :sanDns
+  attr_accessor :sanEmail
   attr_accessor :fetchPrivateKey
-  attr_accessor :friendlyName
-  attr_accessor :ips
+  attr_accessor :nickname
+  attr_accessor :sanIP
   attr_accessor :issuerHint
   attr_accessor :keyCurve
-  attr_accessor :keyLength
+  attr_accessor :keySize
   attr_accessor :keyPassword
   attr_accessor :keyType
   attr_accessor :omitSans
-  attr_accessor :origin
-  attr_accessor :upns
-  attr_accessor :uris
+  attr_accessor :appInfo
+  attr_accessor :sanUpn
+  attr_accessor :sanUri
   attr_accessor :validDays
   attr_accessor :zone
   attr_accessor :location
@@ -98,12 +100,12 @@ def object_to_hash(obj)
 end
 
 def request_key_should_be_string(key)
-  request_string_keys = %w[cadn chainOption csrOrigin friendlyName issuerHint keyCurve keyPassword keyType origin validDays zone]
+  request_string_keys = %w[cadn chain csr nickname issuerHint keyCurve keyPassword keyType appInfo validDays zone]
   request_string_keys.include?(key)
 end
 
 def request_key_should_be_integer(key)
-  request_integer_keys = %w[keyLength]
+  request_integer_keys = %w[keySize]
   request_integer_keys.include?(key)
 end
 
@@ -113,7 +115,7 @@ def request_key_should_be_boolean(key)
 end
 
 def request_key_should_be_array_of_strings(key)
-  request_array_string_keys =  %w[customFields dnsNames emails ips upns uris]
+  request_array_string_keys =  %w[fields sanDns sanEmail sanIP sanUpn sanUri]
   request_array_string_keys.include?(key)
 end
 

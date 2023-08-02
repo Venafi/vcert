@@ -11,7 +11,7 @@ Given(/^I have playbook with (\S+) connection details$/) do |platform|
   if platform == "TPP"
     validate_tpp_envs
     connection_tpp = {
-      type: "tpp",
+      platform: "tpp",
       url: ENV['TPP_URL'],
       trustBundle: ENV['TPP_TRUST_BUNDLE']
     }
@@ -24,7 +24,7 @@ Given(/^I have playbook with (\S+) connection details$/) do |platform|
   elsif platform == "VaaS"
     validate_vaas_envs
     connection_vaas = {
-      type: "vaas"
+      platform: "vaas"
     }
     credentials = {
       clientId: "vcert-sdk",
@@ -42,23 +42,23 @@ Then(/^I created playbook named "(.*)" with previous content$/) do |fname|
   File.write(path_name, stringified_data.to_yaml)
 end
 
-And(/^I have playbook with certificates block$/) do
-  @playbook_data['certificates'] = Array.new
+And(/^I have playbook with certificateTasks block$/) do
+  @playbook_data['certificateTasks'] = Array.new
 end
 
 And(/^I have playbook with task named "(.*)"$/) do |task_name|
   aux_playbook_task = PlaybookTask.new()
   aux_playbook_task.name = task_name
-  @playbook_data['certificates'].push(aux_playbook_task)
+  @playbook_data['certificateTasks'].push(aux_playbook_task)
 end
 
 And(/^task named "(.*)" has request$/) do |task_name|
-  current_certificate_task = @playbook_data['certificates'].find { |certificate_task| certificate_task.name == task_name }
+  current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
   current_certificate_task.request = Request.new
 end
 
 And(/^task named "(.*)" has request with "(.*)" value "(.*)"$/) do |task_name, key, value|
-  current_certificate_task = @playbook_data['certificates'].find { |certificate_task| certificate_task.name == task_name }
+  current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
 
   if request_key_should_be_string(key)
     if value.is_a?(String)
@@ -91,7 +91,7 @@ And(/^task named "(.*)" has request with "(.*)" value "(.*)"$/) do |task_name, k
 end
 
 And(/^task named "(.*)" has request with default (.*) zone$/) do |task_name, platform|
-  current_certificate_task = @playbook_data['certificates'].find { |certificate_task| certificate_task.name == task_name }
+  current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
   if platform == "TPP"
     current_certificate_task.request.zone=ENV['TPP_ZONE']
   elsif platform == "VaaS"
@@ -102,23 +102,23 @@ And(/^task named "(.*)" has request with default (.*) zone$/) do |task_name, pla
 end
 
 And(/^task named "(.*)" has request with Location instance "(.*)", workload prefixed by "(.*)", tlsAddress "(.*)" and replace "(.*)"$/) do |task_name, instance, workload_prefix, tls_address, replace|
-  current_certificate_task = @playbook_data['certificates'].find { |certificate_task| certificate_task.name == task_name }
+  current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
   current_certificate_task.request.location = Location.new
   workload = "#{workload_prefix}-#{Time.now.to_i.to_s}"
 
-  instance_name = "#{instance}:#{workload}"
-  current_certificate_task.request.location.instance = instance_name
+  current_certificate_task.request.location.instance = instance
+  current_certificate_task.request.location.workload = workload
   current_certificate_task.request.location.tlsAddress = tls_address
   current_certificate_task.request.location.replace = to_boolean(replace)
 end
 
 And(/^task named "(.*)" request has subject$/) do |task_name|
-  current_certificate_task = @playbook_data['certificates'].find { |certificate_task| certificate_task.name == task_name }
+  current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
   current_certificate_task.request.subject = Subject.new
 end
 
 And(/^task named "(.*)" request has subject with "(.*)" value "(.*)"$/) do |task_name, key, value|
-  current_certificate_task = @playbook_data['certificates'].find { |certificate_task| certificate_task.name == task_name }
+  current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
   if request_subject_key_should_be_string(key)
     if value.is_a?(String)
       current_certificate_task.request.subject.send "#{key}=", value
@@ -140,66 +140,77 @@ And(/^task named "(.*)" request has subject with "(.*)" value "(.*)"$/) do |task
 end
 
 And(/^task named "(.*)" request has subject random CommonName$/) do |task_name|
-  current_certificate_task = @playbook_data['certificates'].find { |certificate_task| certificate_task.name == task_name }
+  current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
   cn = random_cn
   current_certificate_task.request.subject.commonName = cn
 end
 
 And(/^task named "(.*)" has installations$/) do |task_name|
-  current_certificate_task = @playbook_data['certificates'].find { |certificate_task| certificate_task.name == task_name }
+  current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
   current_certificate_task.installations = Array.new
 end
 
-And(/^task named "(.*)" has installation type PEM with cert name "(.*)", chain name "(.*)" and key name "(.*)"(?: that uses)( installation script)?$/) do |task_name, cert_name, chain_name, key_name, installation|
-  current_certificate_task = @playbook_data['certificates'].find { |certificate_task| certificate_task.name == task_name }
+And(/^task named "(.*)" has installation format PEM with file name "(.*)", chain name "(.*)" and key name "(.*)"(?: with)( installation)?(?: and|)( validation)?(?: and uses|)( backup)?$/) do |task_name, cert_name, chain_name, key_name, installation, validation, backup|
+  current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
   aux_installation = Installation.new
-  aux_installation.type = "PEM"
-  aux_installation.location = "{{- Env \"PWD\" }}" + "/tmp/"
-  aux_installation.pemCertFilename = cert_name
-  aux_installation.pemChainFilename = chain_name
-  aux_installation.pemKeyFilename = key_name
+  aux_installation.format = "PEM"
+  aux_installation.file = "{{- Env \"PWD\" }}" + $path_separator + $temp_path + $path_separator + cert_name
+  aux_installation.chainFile = "{{- Env \"PWD\" }}" + $path_separator + $temp_path + $path_separator + chain_name
+  aux_installation.keyFile = "{{- Env \"PWD\" }}" + $path_separator + $temp_path + $path_separator + + key_name
   if installation
-    aux_installation.afterInstallAction = "echo Success!!!"
+    aux_installation.afterInstallAction = "echo SuccessInstall"
+  end
+  if validation
+    aux_installation.installValidationAction = "echo SuccessValidation"
+  end
+  if backup
+    aux_installation.backupFiles = true
   end
   current_certificate_task.installations.push(aux_installation)
 end
 
-And(/^task named "(.*)" has installation type JKS with cert name "(.*)", jksAlias "(.*)" and jksPassword "(.*)"(?: that uses)( installation script)?$/) do |task_name, cert_name, jks_alias, jks_password, installation|
-  current_certificate_task = @playbook_data['certificates'].find { |certificate_task| certificate_task.name == task_name }
+And(/^task named "(.*)" has installation format JKS with cert name "(.*)", jksAlias "(.*)" and jksPassword "(.*)"(?: with)( installation)?(?: and|)( validation)?$/) do |task_name, cert_name, jks_alias, jks_password, installation, validation|
+  current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
   aux_installation = Installation.new
-  aux_installation.type = "JKS"
-  aux_installation.location = "{{- Env \"PWD\" }}" + "/tmp/#{cert_name}"
+  aux_installation.format = "JKS"
+  aux_installation.file = "{{- Env \"PWD\" }}" + $path_separator + $temp_path + $path_separator + cert_name
   aux_installation.jksAlias = jks_alias
   aux_installation.jksPassword = jks_password
   if installation
-    aux_installation.afterInstallAction = "echo Success!!!"
+    aux_installation.afterInstallAction = "echo SuccessInstall"
+  end
+  if validation
+    aux_installation.installValidationAction = "echo SuccessValidation"
   end
   current_certificate_task.installations.push(aux_installation)
 end
 
-And(/^task named "(.*)" has installation type PKCS12 with cert name "(.*)"(?: that uses)( installation script)?$/) do |task_name, cert_name, installation|
-  current_certificate_task = @playbook_data['certificates'].find { |certificate_task| certificate_task.name == task_name }
+And(/^task named "(.*)" has installation format PKCS12 with cert name "(.*)"(?: with)( installation)?(?: and|)( validation)?$/) do |task_name, cert_name, installation, validation|
+  current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
   aux_installation = Installation.new
-  aux_installation.type = "PKCS12"
-  aux_installation.location = "{{- Env \"PWD\" }}" + "/tmp/#{cert_name}"
+  aux_installation.format = "PKCS12"
+  aux_installation.file = "{{- Env \"PWD\" }}" + $path_separator + $temp_path + $path_separator + cert_name
   if installation
-    aux_installation.afterInstallAction = "echo Success!!!"
+    aux_installation.afterInstallAction = "echo SuccessInstall"
+  end
+  if validation
+    aux_installation.installValidationAction = "echo SuccessValidation"
   end
   current_certificate_task.installations.push(aux_installation)
 end
 
 And(/^task named "(.*)" has setenvvars "(.*)"$/) do |task_name, set_env_vars|
-  current_certificate_task = @playbook_data['certificates'].find { |certificate_task| certificate_task.name == task_name }
+  current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
   current_certificate_task.setenvvars = set_env_vars.split(',')
 end
 
 And(/^task named "(.*)" has renewBefore with value "(.*)"$/) do |task_name, renew_before|
-  current_certificate_task = @playbook_data['certificates'].find { |certificate_task| certificate_task.name == task_name }
+  current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
   current_certificate_task.renewBefore = renew_before
 end
 
-And(/^task named "(.*)" has request with friendlyName based on commonName$/) do |task_name|
-  current_certificate_task = @playbook_data['certificates'].find { |certificate_task| certificate_task.name == task_name }
+And(/^task named "(.*)" has request with nickname based on commonName$/) do |task_name|
+  current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
   if current_certificate_task.request == Request.new
     fail(ArgumentError.new("Error while trying to set friendlyName based on commonName: no request defined"))
   end
@@ -209,15 +220,14 @@ And(/^task named "(.*)" has request with friendlyName based on commonName$/) do 
   if current_certificate_task.request.subject.commonName.nil? or current_certificate_task.request.subject.commonName == ""
     fail(ArgumentError.new("Error while trying to set friendlyName based on commonName: no commonName defined"))
   end
-  current_certificate_task.request.friendlyName = "friendly.#{current_certificate_task.request.subject.commonName}"
+  current_certificate_task.request.nickname = "friendly.#{current_certificate_task.request.subject.commonName}"
 end
 
 And(/^I uninstall file named "(.*)"$/) do |file_name|
-  path_name = "tmp"
   # Aruba will automatically take this as relative path from WORKDIR
   # WORKDIR as context for our Dockerfile
   # "tmp" directory is automatically generated for aruba during our file generation
-  file_path = + path_name + $path_separator + file_name
+  file_path = + $temp_path + $path_separator + file_name
   steps %{
     Then a file named "#{file_path}" does not exist
   }
