@@ -28,10 +28,10 @@ Given(/^I have playbook with (\S+) connection details$/) do |platform|
     }
     credentials = {
       clientId: "vcert-sdk",
-      accessToken: ENV['CLOUD_APIKEY']
+      apiKey: ENV['CLOUD_APIKEY']
     }
     connection_vaas['credentials'] = credentials
-    @playbook_data['config']['connection'] = connection_vaas
+    @playbook_data[:config][:connection] = connection_vaas
   end
 end
 
@@ -63,9 +63,6 @@ And(/^task named "(.*)" has request with "(.*)" value "(.*)"$/) do |task_name, k
   if request_key_should_be_string(key)
     if value.is_a?(String)
       current_certificate_task.request.send "#{key}=", value
-      if key == "keyPassword"
-        @key_password = value
-      end
     else
       fail(ArgumentError.new("Wrong type of value provided for key: #{key}, expected a String but got: #{value.class}"))
     end
@@ -120,6 +117,17 @@ And(/^task named "(.*)" request has subject$/) do |task_name|
   current_certificate_task.request.subject = Subject.new
 end
 
+And(/^task named "(.*)" request has subject with default values$/) do |task_name|
+  current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
+  current_certificate_task.request.subject.country = "US"
+  current_certificate_task.request.subject.locality = "Salt Lake City"
+  current_certificate_task.request.subject.province = "Utah"
+  current_certificate_task.request.subject.organization = "Venafi Inc"
+  org_units = "engineering,marketing"
+  array_org_units = org_units.split(',')
+  current_certificate_task.request.subject.orgUnits = array_org_units
+end
+
 And(/^task named "(.*)" request has subject with "(.*)" value "(.*)"$/) do |task_name, key, value|
   current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
   if request_subject_key_should_be_string(key)
@@ -153,7 +161,7 @@ And(/^task named "(.*)" has installations$/) do |task_name|
   current_certificate_task.installations = Array.new
 end
 
-And(/^task named "(.*)" has installation format PEM with file name "(.*)", chain name "(.*)" and key name "(.*)"(?: with)( installation)?(?: and|)( validation)?(?: and uses|)( backup)?$/) do |task_name, cert_name, chain_name, key_name, installation, validation, backup|
+And(/^task named "(.*)" has installation format PEM with file name "(.*)", chain name "(.*)" and key name "(.*)"(?: with|)( installation)?(?: and|)( validation)?(?: and uses|)( backup)?$/) do |task_name, cert_name, chain_name, key_name, installation, validation, backup|
   current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
   aux_installation = Installation.new
   aux_installation.format = "PEM"
@@ -227,20 +235,28 @@ And(/^task named "(.*)" has request with nickname based on commonName$/) do |tas
 end
 
 And(/^I uninstall file named "(.*)"$/) do |file_name|
-  # Aruba will automatically take this as relative path from WORKDIR
-  # WORKDIR as context for our Dockerfile
-  # "tmp" directory is automatically generated for aruba during our file generation
   file_path = Dir.pwd + $path_separator + $temp_path + $path_separator + file_name
   steps %{
     Then a file named "#{file_path}" does not exist
   }
 end
 
-When(/^playbook generated private key in "([^"]*)" and certificate in "([^"]*)" should have the same modulus$/) do |key_file, cert_file|
+When(/^playbook generated private key in "([^"]*)" and certificate in "([^"]*)" should have the same modulus(?: with password |)(.*)?$/) do |key_file, cert_file, password|
   cert_path = Dir.pwd + $path_separator + $temp_path + $path_separator + cert_file
   key_path = Dir.pwd + $path_separator + $temp_path + $path_separator + key_file
+
+  if password != ""
+    steps %{
+      Then I run `openssl rsa -modulus -noout -passin pass:#{password} -in #{key_path}`
+      And the exit status should be 0
+    }
+  else
+    steps %{ Then I run `openssl rsa -modulus -noout -in #{key_path}` }
+  end
   steps %{
-    Given private key in "#{cert_path}" and certificate in "#{key_path}" should have the same modulus
+    And I remember the output
+    And I run `openssl x509 -modulus -noout -in #{cert_path}`
+    Then the outputs should be the same
   }
 end
 
@@ -251,4 +267,25 @@ When(/^playbook generated "([^"]*)" should be PKCS#12 archive with password "([^
     Then I try to run `openssl pkcs12 -in "#{cert_path}" -passin pass:#{password} -noout`
     And the exit status should be 0
   }
+end
+
+And(/^"(.*)" should( not)? be( encrypted)? RSA private key$/) do |filename, negated, encrypted|
+  header = "-----BEGIN RSA PRIVATE KEY-----"
+  file_path = Dir.pwd + $path_separator + $temp_path + $path_separator + filename
+
+  lines = File.open(file_path).first(2).map(&:strip)
+
+  if lines[0] == header then
+    if lines[1].include?("ENCRYPTED")
+      if negated
+        fail(ArgumentError.new("Expected RSA key to not be encrypted but fail to found on second line: #{lines[1]}"))
+      end
+    else
+      unless negated
+        fail(ArgumentError.new("Expected RSA key to be encrypted but fail to found on second line: #{lines[1]}"))
+      end
+    end
+  else
+    fail(ArgumentError.new("Expected RSA key headers: #{header} but got in first line: #{lines[0]}"))
+  end
 end
