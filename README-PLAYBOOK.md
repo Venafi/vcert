@@ -17,7 +17,7 @@ VCert Playbook functionality solves the "last mile" problem. VCert has historica
 - VCert will also automatically update API access and refresh tokens within the playbook when using TLS Protect Datacenter. This functionality enables ongoing operation without intervention, using a refresh token to get a new access token when necessary. This approach works well when the refresh/grant token lifetime is sufficiently long, in coordination with a short-lived access token (for example, 3 years/1 hour)
 
 ## Getting started
-VCert Playbook functionality is invoked using the `vcert run` cli command. 
+VCert Playbook functionality is invoked using the `vcert run` command. 
 
 1. Create a YAML playbook file. 
     - This readme contains all of the valid options and formatting for the YAML playbook. 
