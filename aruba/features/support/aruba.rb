@@ -1,6 +1,10 @@
 require 'aruba/cucumber'
 require "json_spec/cucumber"
 
+Aruba.configure do |config|
+  config.allow_absolute_paths = true
+end
+
 $path_separator = "/"
 
 $temp_path = "tmp/aruba"
