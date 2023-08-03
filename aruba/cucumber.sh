@@ -5,6 +5,7 @@ echo "Using token $TPP_ACCESS_TOKEN"
 RUN_COMMAND="docker run -t --rm \
           -e TPP_URL \
           -e TPP_USER \
+          -e TPP_TRUST_BUNDLE \
           -e TPP_PASSWORD \
           -e TPP_ACCESS_TOKEN \
           -e TPP_ZONE \
