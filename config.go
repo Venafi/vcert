@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Venafi, Inc.
+ * Copyright 2018-2023 Venafi, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ type Config struct {
 	Client *http.Client
 }
 
-// LoadConfigFromFile is deprecated. In the future will be rewrited.
+// LoadConfigFromFile is deprecated. In the future will be rewritten.
 func LoadConfigFromFile(path, section string) (cfg Config, err error) {
 
 	if section == "" {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2021 Venafi, Inc.
+ * Copyright 2018-2023 Venafi, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package main
 
 import (
 	"github.com/Venafi/vcert/v5/pkg/certificate"
+	"github.com/Venafi/vcert/v5/pkg/venafi"
 )
 
 const (
@@ -44,11 +45,13 @@ var (
 type commandFlags struct {
 	apiKey               string
 	appInfo              string
+	audience             string
 	caDN                 string
 	certFile             string
 	chainFile            string
 	chainOption          string
 	clientId             string
+	clientSecret         string
 	clientP12            string
 	clientP12PW          string
 	commonName           string
@@ -98,17 +101,20 @@ type commandFlags struct {
 	email                string
 	password             string
 	tppToken             string
-	tppUser              string
+	userName             string
 	trustBundle          string
 	upnSans              rfc822NameSlice
 	uriSans              uriSlice
 	url                  string
+	tokenURL             string
 	verbose              bool
 	zone                 string
 	omitSans             bool
 	csrFormat            string
 	credFormat           string
 	validDays            string
+	platformString       string
+	platform             venafi.PlatformType
 	policyName           string
 	policySpecLocation   string
 	policyConfigStarter  bool

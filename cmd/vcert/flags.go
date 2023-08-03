@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 Venafi, Inc.
+ * Copyright 2020-2023 Venafi, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,13 @@ import (
 )
 
 var (
+	flagPlatform = &cli.StringFlag{
+		Name: "platform",
+		Usage: "The platformString which VCert is going to authenticate. The accepted values are 'tlspdatacenter' for Trust Protection Platform, " +
+			" 'tlspcloud' for TLS Protect Cloud and 'firefly' for Firefly",
+		Destination: &flags.platformString,
+	}
+
 	flagUrl = &cli.StringFlag{
 		Name:        "url",
 		Usage:       "REQUIRED/TPP. The URL of the Trust Protection Platform WebSDK. Example: -u https://tpp.example.com",
@@ -46,17 +53,23 @@ var (
 		Aliases:     []string{"k"},
 	}
 
-	flagTPPUser = &cli.StringFlag{
+	flagTokenURL = &cli.StringFlag{
+		Name:        "token-url",
+		Usage:       "REQUIRED/Firefly. The url endpoint of the OAuth 2.0 identity provider to request an access token. Example for Okta: -token-url https://${yourOktaDomain}/oauth2/v1/token",
+		Destination: &flags.tokenURL,
+	}
+
+	flagUser = &cli.StringFlag{
 		Name: "username",
-		Usage: "Use to specify the username of a Trust Protection Platform user." +
+		Usage: "Use to specify the username of a Trust Protection Platform or Firefly user." +
 			"Required if -p12-file or -t is not present and may not be combined with either.",
-		Destination: &flags.tppUser,
+		Destination: &flags.userName,
 	}
 
 	flagTPPUserDeprecated = &cli.StringFlag{
 		Name:        "tpp-user",
 		Usage:       "",
-		Destination: &flags.tppUser,
+		Destination: &flags.userName,
 		Hidden:      true,
 	}
 
@@ -484,6 +497,19 @@ var (
 		Value:       "vcert-cli",
 	}
 
+	flagClientSecret = &cli.StringFlag{
+		Name:        "client-secret",
+		Usage:       "Use to specify the client secret to get authorization from an OAuth 2.0 identity provider.",
+		Destination: &flags.clientSecret,
+	}
+
+	flagAudience = &cli.StringFlag{
+		Name: "audience",
+		Usage: "Use to specify the audience param to get an access token for OAuth 2.0 identity providers\n" +
+			"\t supporting it like auth0. The audience values must be separated by blank spaces",
+		Destination: &flags.audience,
+	}
+
 	flagCustomField = &cli.StringSliceFlag{
 		Name:  "field",
 		Usage: "Use to specify custom fields in format 'key=value'. If many values for the same key are required, use syntax '--field key1=value1 --field key1=value2'",
@@ -794,17 +820,21 @@ var (
 	commonCredFlags = []cli.Flag{flagConfig, flagProfile, flagUrl, flagTPPToken, flagTrustBundle}
 
 	getCredFlags = sortedFlags(flagsApppend(
+		flagPlatform,
 		commonCredFlags,
 		flagClientP12,
 		flagClientP12PW,
 		flagCredFormat,
 		flagEmail,
 		flagPassword,
-		flagTPPUser,
+		flagUser,
 		flagScope,
 		flagCredSsh,
 		flagCredPm,
 		flagClientId,
+		flagClientSecret,
+		flagAudience,
+		flagTokenURL,
 		commonFlags,
 	))
 

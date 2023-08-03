@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Venafi, Inc.
+ * Copyright 2018-2023 Venafi, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import (
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
 	"github.com/Venafi/vcert/v5/pkg/venafi/cloud"
 	"github.com/Venafi/vcert/v5/pkg/venafi/fake"
+	"github.com/Venafi/vcert/v5/pkg/venafi/firefly"
 	"github.com/Venafi/vcert/v5/pkg/venafi/tpp"
 	"github.com/Venafi/vcert/v5/pkg/verror"
 )
@@ -66,6 +67,8 @@ func (cfg *Config) newClient(args []interface{}) (connector endpoint.Connector, 
 		connector, err = cloud.NewConnector(cfg.BaseUrl, cfg.Zone, cfg.LogVerbose, connectionTrustBundle)
 	case endpoint.ConnectorTypeTPP:
 		connector, err = tpp.NewConnector(cfg.BaseUrl, cfg.Zone, cfg.LogVerbose, connectionTrustBundle)
+	case endpoint.ConnectorTypeFirefly:
+		connector, err = firefly.NewConnector(cfg.LogVerbose, connectionTrustBundle)
 	case endpoint.ConnectorTypeFake:
 		connector = fake.NewConnector(cfg.LogVerbose, connectionTrustBundle)
 	default:
