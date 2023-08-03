@@ -107,6 +107,7 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 				identityProvider.TokenURL = flags.tokenURL
 				identityProvider.Audience = flags.audience
 				auth.IdentityProvider = identityProvider
+				auth.Scope = flags.scope
 			}
 		} else {
 			apiKey := flags.apiKey
