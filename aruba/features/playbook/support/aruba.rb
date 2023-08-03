@@ -183,7 +183,7 @@ def validate_tpp_envs
 end
 
 def validate_vaas_envs
-  vaas_envs = %w[CLOUD_URL CLOUD_APIKEY CLOUD_ZONE]
+  vaas_envs = %w[CLOUD_APIKEY CLOUD_ZONE]
 
   vaas_envs.each do |vaas_env|
     unless env_variable_exists_and_set(vaas_env)

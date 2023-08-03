@@ -27,7 +27,7 @@ Feature: playbook
     And task named "myCertificateInstallation" has request with "keyType" value "rsa"
     And task named "myCertificateInstallation" has request with "keySize" value "4096"
     # "origin" is the full name for adding to meta information to certificate request
-    And task named "myCertificateInstallation" has request with "appInfo" value "Venafi VCert CLI"
+    And task named "myCertificateInstallation" has request with "appInfo" value "Venafi VCert Playbook"
     And task named "myCertificateInstallation" has request with "sanUpn" value "test,test2"
     And task named "myCertificateInstallation" has request with "sanUri" value "uri.test.com,foo.venafi.com"
     And task named "myCertificateInstallation" has request with "keyPassword" value "Passcode123!"
