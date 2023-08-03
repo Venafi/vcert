@@ -41,7 +41,7 @@ const (
 	DefaultTimeout = 180
 
 	// OriginName represents the Origin of the Request set in a Custom Field
-	OriginName = "Venafi VCertplus"
+	OriginName = "Venafi VCert Playbook"
 
 	userProvidedCSRPrefix = "file:"
 )

@@ -38,8 +38,7 @@ type Connection struct {
 func (c Connection) GetConnectorType() endpoint.ConnectorType {
 	switch c.Platform {
 	case CTypeFirefly:
-		// This is not implemented in vCertSDK yet
-		return endpoint.ConnectorTypeFake
+		return endpoint.ConnectorTypeFirefly
 	case CTypeTPP:
 		return endpoint.ConnectorTypeTPP
 	case CTypeVaaS:
