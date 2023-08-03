@@ -19,7 +19,7 @@ package firefly
 import (
 	"net/http"
 
-	"github.com/Venafi/vcert/v4/test"
+	"github.com/Venafi/vcert/v5/test"
 )
 
 var ctx *test.Context

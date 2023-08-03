@@ -23,11 +23,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/Venafi/vcert/v4/pkg/venafi"
 	"github.com/urfave/cli/v2"
 
 	"github.com/Venafi/vcert/v5"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
+	"github.com/Venafi/vcert/v5/pkg/venafi"
 )
 
 func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err error) {

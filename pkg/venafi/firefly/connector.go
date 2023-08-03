@@ -25,10 +25,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Venafi/vcert/v4/pkg/certificate"
-	"github.com/Venafi/vcert/v4/pkg/endpoint"
-	"github.com/Venafi/vcert/v4/pkg/policy"
-	"github.com/Venafi/vcert/v4/pkg/verror"
+	"github.com/Venafi/vcert/v5/pkg/certificate"
+	"github.com/Venafi/vcert/v5/pkg/endpoint"
+	"github.com/Venafi/vcert/v5/pkg/policy"
+	"github.com/Venafi/vcert/v5/pkg/verror"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
 )
@@ -177,6 +177,10 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 }
 
 func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (err error) {
+	panic("operation is not supported yet")
+}
+
+func (c *Connector) RetireCertificate(req *certificate.RetireRequest) (err error) {
 	panic("operation is not supported yet")
 }
 
