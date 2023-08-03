@@ -76,18 +76,18 @@ The top-level structure of the file is described as follows:
 
 | Field         | Type          | Description |
 |---|---|---|
-| credentials | `Credentials` | A [Credential](#credential) object that defines the credentials used to connect to the selected provider `platform`. |
+| credentials | `Credentials` | A [Credential](#credentials) object that defines the credentials used to connect to the selected provider `platform`. |
 | trustBundle | string        | Defines path to PEM-formatted trust bundle that contains the root (and optionally intermediate certificates) to use to trust the TLS connection. If omitted, will attempt to use operating system trusted CAs. |
 | platform    | string        | For TLS Protect Datacenter, either `tpp` or `tlspdc`. For TLS Protect Cloud, either `vaas` or `tlspc`. |
 | url         | string        | ***REQUIRED*** when platform is `tpp` or `tlspdc`. *OPTIONAL* when platform is `vaas` or `tlspc` (defaults to api.venafi.cloud). If url string does not include `https://`, it will be added automatically. For connection to TLS Protect Datacenter, `url` must include the full API path (for example `https://tpp.company.com/vedsdk/`. |
 
-### Credential
+### Credentials
 
 | Field        | Type                              | Description |
 |---|---|---|
-| apikey       | string     | ***REQUIRED*** - when [Connection.platform](#connection) is `vaas`. *IGNORED* otherwise. |
-| accessToken  | string     | *OPTIONAL* - Used when [Connection.platform](#connection) is `tpp` for authenticating to the REST API. If omitted, invalid, or expired, vcert will attempt to use the [Credential.p12Task](#credential) or [Credential.refreshToken](#credential) to get a valid accessToken. Upon successful refresh, this value will be overwritten with the new valid accessToken. *IGNORED* when [Connection.platform](#connection) is `vaas` or `tlspc`. |
-| clientId     | string     | *OPTIONAL* - Used when [Connection.platform](#connection) is `tpp` to map to the API integration to be used. If omitted, uses `vcert-cli` as default. *IGNORED* when [Connection.platform](#connection) is `vaas` or `tlspc`. |
+| apiKey       | string     | ***REQUIRED*** - when [Connection.platform](#connection) is `vaas`. *IGNORED* otherwise. |
+| accessToken  | string     | *OPTIONAL* - Used when [Connection.platform](#connection) is `tpp` for authenticating to the REST API. If omitted, invalid, or expired, vcert will attempt to use the [Credential.p12Task](#credentials) or [Credential.refreshToken](#credentials) to get a valid accessToken. Upon successful refresh, this value will be overwritten with the new valid accessToken. *IGNORED* when [Connection.platform](#connection) is `vaas` or `tlspc`. |
+| clientId     | string     | *OPTIONAL* - Used when [Connection.platform](#connection) is `tpp` to map to the API integration to be used. If omitted, uses `vcert-sdk` as default. *IGNORED* when [Connection.platform](#connection) is `vaas` or `tlspc`. |
 | p12Task      | string | *OPTIONAL* - Used when [Connection.platform](#connection) is `tpp` to reference a configured [CertificateTask.name](#certificatetask) to be used for certificate authentication. Will be used to get a new accessToken when `accessToken` is missing, invalid, or expired. Referenced certificateTask must have an installation of type `pkcs12`. |
 | refreshToken | string     | *OPTIONAL* - Used when [Connection.platform](#connection) is `tpp` to refresh the `accessToken` if it is missing, invalid, or expired. If omitted, the `accessToken` will not be refreshed when it expires. When a refresh token is used, a new accessToken *and* refreshToken are issued. The previous refreshToken is then invalid (one-time use only). vCert will attempt to update the refreshToken and accessToken fields upon refresh. |
 | scope        | string     | *OPTIONAL* - Used when [Connection.platform](#connection) is `tpp` to determine the scope of the access token when refreshing the access token, or when getting a new grant using a `pkcs12` certificate. Defaults to `certificate:manage` if omitted.|
@@ -97,7 +97,7 @@ The top-level structure of the file is described as follows:
 
 | Field         | Type                                              | Description |
 |---|---|---|
-| name          | string                                            | ***REQUIRED*** - The name of the certificate task within the playbook. Used in output messages to distinguish tasks when multiple certificate tasks are defined. Also, referred to by [Credential.p12Task](#credential) when specifying a certificate to use to refresh [Credential.accessToken](#credential). If more than one [CertificateTask](#certificatetask) exists, each name must be unique. |
+| name          | string                                            | ***REQUIRED*** - The name of the certificate task within the playbook. Used in output messages to distinguish tasks when multiple certificate tasks are defined. Also, referred to by [Credential.p12Task](#credentials) when specifying a certificate to use to refresh [Credential.accessToken](#credentials). If more than one [CertificateTask](#certificatetask) exists, each name must be unique. |
 | installations | array of [Installation](#installation) objects    | ***REQUIRED*** - Specifies one or more locations in which format and where the certificate requested will be stored. |
 | renewBefore   | string                                            | *OPTIONAL* - Configure auto-renewal threshold for certificates. Either by days, hours, or percent remaining of certificate lifetime. For example, `30d` renews certificate 30 days before expiration, `10h` renews the certificate 10 hours before expiration, or `15%` renews when 15% of the lifetime is remaining. Use `0` or `disabled` to disable auto-renew. Default is 10%. |
 | request       | [Request](#request)                               | ***REQUIRED*** - The [Request](#request) object specifies the details about the certificate to be requested such as CommonName, SANs, etc. |
@@ -112,10 +112,10 @@ The top-level structure of the file is described as follows:
 | backupFiles          | boolean | *OPTIONAL* - When `true`, backup existing certificate files before replacing during a renewal operation. Defaults to `false`. |
 | file                 | string  | ***REQUIRED*** when [Installation.format](#installation) is `PKCS#12`, `PEM`, or `JKS`. Specifies the file path and name for the certificate file (PEM) or PKCS#12 / JKS bundle. Example `/etc/ssl/certs/myPEMfile.cer`, `/etc/ssl/certs/myPKCS12.p12`, or `/etc/ssl/certs/myJKS.jks`. *IGNORED* for other values of [Installation.format](#installation). |
 | jksAlias             | string  | ***REQUIRED*** when [Installation.format](#installation) is `JKS`. Specifies the certificate alias value within the Java Keystore. *IGNORED* when [Installation.format](#installation) is not `JKS`. |
-| jksPassword          | string  | ***REQUIRED*** when [Installation.format](#installation) is `JKS`. Specifies the password for the JKS. *IGNORED* when [Installation.format](#installation) is not `JKS`. |
+| jksPassword          | string  | ***REQUIRED*** when [Installation.format](#installation) is `JKS`. Specifies the password for the Java Keystore. *IGNORED* when [Installation.format](#installation) is not `JKS`. |
 | chainFile            | string  | ***REQUIRED*** when [Installation.format](#installation) is `PEM`. Specifies the file path and name for the chain PEM bundle (Example `/etc/ssl/certs/myChain.cer`). *IGNORED* for other values of [Installation.format](#installation) |
 | keyFile              | string  | ***REQUIRED*** when [Installation.format](#installation) is `PEM`. Specifies the file path and name for the private key PEM file (Example `/etc/ssl/certs/myKey.key`). *IGNORED* for other values of [Installation.format](#installation) |
-| location             | string |  ***REQUIRED*** when [Installation.format](#installation) is `CAPI`. Specifies the Windows CAPI store to place the installed certificate. Typically `"LocalMachine\My"` or `"CurrentUser\My"`. *IGNORED* if [Installation.format](#installation) is NOT `CAPI`. **NOTE:** if the location is not contained within `"`, the backslash `\` must be properly escaped (i.e. `LocalMachine\\My`). |
+| location             | string |  ***REQUIRED*** when [Installation.format](#installation) is `CAPI`. Specifies the Windows CAPI store to place the installed certificate. Typically `"LocalMachine\My"` or `"CurrentUser\My"`. *IGNORED* if [Installation.format](#installation) is NOT `CAPI`. **NOTE:** If the location is contained within `"`, the backslash `\` must be properly escaped (i.e. `"LocalMachine\\My"`). |
 | capiIsNonExportable  | boolean | *OPTIONAL* - When `true`, private key will be flagged as 'Non-Exportable' when stored in Windows CAPI store. *IGNORED* if [Installation.format](#installation) is NOT `CAPI`. Defaults to `false`. |
 
 
@@ -125,14 +125,14 @@ The top-level structure of the file is described as follows:
 |---|---|---|
 | chain           | string                 | *OPTIONAL* - Determines the ordering of certificates within the returned chain. Valid options are `root-first`, `root-last`, or `ignore`. Defaults to `root-last`. |
 | csr             | string                 | *OPTIONAL* - Specifies where the CSR and PrivateKey are generated: use `local` to generate the CSR and PrivateKey locally, or `service` to have the PrivateKey and CSR generated by the specified [Connection.platform](#connection). Defaults to `local`. |
-| fields          | array of strings)      | *OPTIONAL* - Sets the specified custom field on certificate object. Only valid when [Connection.platform](#connection) is `tpp`. |
+| fields          | array of `CustomField` | *OPTIONAL* - Sets the specified custom field on certificate object. Only valid when [Connection.platform](#connection) is `tpp`. |
 | sanDNS          | array of string        | *OPTIONAL* - Specify one or more DNS SAN entries for the requested certificate. |
 | sanEmail        | array of string        | *OPTIONAL* - Specify one or more Email SAN entries for the requested certificate. |
 | nickname        | string                 | *OPTIONAL* - Specify the certificate object name to be created in TPP for the requested certificate. If not specified, TPP will use the [Subject.commonName](#subject). Only valid when [Connection.platform](#connection) is `tpp`.|
 | sanIP           | array of string        | *OPTIONAL* - Specify one or more IP SAN entries for the requested certificate. |
 | issuerHint      | string                 | *OPTIONAL* - Used only when [Request.validDays](#request) is specified to determine the correct Specific End Date attribute to set on the TPP certificate object. Valid options are `DIGICERT`, `MICROSOFT`, `ENTRUST`, `ALL_ISSUERS`. If not defined, but `validDays` are set, the attribute 'Specific End Date' will be used. Only valid when [Connection.platform](#connection) is `tpp`. |
 | keyCurve        | string                 | ***REQUIRED*** when [Request.keyType](#request) is `ECDSA`, `EC`, or `ECC`. Valid values are `P256`, `P384`, `P521`, `ED25519`. |
-| keySize         | integer                | *OPTIONAL* - Specifies the key size when specified [Request.keyType](#request) is `RSA`. Defaults to 2048. |
+| keySize         | integer                | *OPTIONAL* - Specifies the key size when specified [Request.keyType](#request) is `RSA`. Supported values are `1024`, `2048`, `4096`, and `8192`. Defaults to 2048. |
 | keyPassword     | string                 | ***REQURED*** when [Installation.format](#installation) is `JKS` or `PKCS#12`. Otherwise **OPTIONAL**. Specifies the password to encrypt the private key. If not specified for `PEM` [Installation.format](#installation), the private key will be stored in an unencrypted PEM format. |
 | keyType         | string                 | *OPTIONAL* - Specify the key type of the requested certificate. Valid options are `RSA`, `ECDSA`, `EC`, `ECC` and `ED25519`. Default is `RSA`. |
 | location        | [Location](#location)  | *OPTIONAL* - Use to provide the name/address of the compute instance and an identifier for the workload using the certificate. This results in a device (node) and application (workload) being associated with the certificate in the Venafi Platform.<br/>Example: `node:workload`. |
@@ -143,6 +143,14 @@ The top-level structure of the file is described as follows:
 | validDays       | string                 | *OPTIONAL* - Specify the number of days the certificate should be valid for. Only supported by specific CAs, and only if [Connection.platform](#connection) is `tpp`. The number of days can be combined with an "issuer hint" to correctly set the right parameter for the desired CA. For example, `"30#m"` will specify a 30-day certificate from a Microsoft issuer. Valid hints are `m` for Microsoft, `d` for Digicert, `e` for Entrust. If an issuer hint is not specified, the generic attribute 'Specific End Date' will be used. |
 | zone            | string                 | ***REQUIRED*** - Specifies the Policy Folder (for TPP) or the Application and Issuing Template to use (for VaaS). For TPP, exclude the "\VED\Policy" portion of the folder path. **NOTE:** if the zone is not contained within `"`, the backslash `\` must be properly escaped (i.e. `Certificates\\vCert`). |
  
+### CustomField
+
+| Field   | Type      | Description |
+|---|---|---|
+| name    | string    | ***REQUIRED*** - Adds a custom-field entry with name to the certificate object. The custom field must already be defined in TPP. |
+| value   | string    | ***REQUIRED*** - Specifies the custom-field value to the certificate object. |
+
+
 ### Location
 
 | Field         | Type      | Description |
