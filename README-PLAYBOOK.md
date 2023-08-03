@@ -6,15 +6,21 @@ VCert Playbook functionality solves the "last mile" problem. VCert has historica
 
 ## Key features of VCert playbook
 
-- You don't have to pass long command line arguments. You can now call VCert with playbook YAML files, which helps with automation and maintenance. 
-- You can specify where the certificate goes, and in which format, once received from Venafi. It supports common keystore formats (PEM, JKS, PKCS#12) in folder locations as well as Windows CAPI store. 
-- You can specify any post-installation actions need to be taken, such as restarting services (apache, nginx) or any other script you would like to run after the certificate is available in the right location. 
-- For certificate renewals, it checks to see if the certificate already exists and if it is due for renewal before requesting a new certificate. This allows you to run a script regularly without renewing certificates that don't need to be.
-- VCert Playbook functionality works with both TLS Protect Cloud and TLS Protect Datacenter.
+- **Simplified commands**: With VCert Playbook, you can avoid long command-line arguments. Instead, use playbook YAML files with VCert to enhance automation and maintenance ease.
+
+- **Flexible certificate placement**: You can designate where to place the certificate and the format in which you want it once received from Venafi. VCert Playbook supports common keystore formats like PEM, JKS, PKCS#12, accommodating folder locations and the Windows CAPI store.
+
+- **Post-installation actions**: Specify any actions that must be carried out after the certificate is installed. This includes restarting services like Apache or Nginx, or running any other scripts needed once the certificate is in the right location.
+
+- **Smart certificate renewals**: VCert Playbook checks if a certificate already exists and whether it's due for renewal before requesting a new one. This functionality lets you run a script regularly without unnecessarily renewing certificates.
+
+- **Compatibility**: VCert Playbook works seamlessly with both TLS Protect Cloud and TLS Protect Datacenter, ensuring it fits your particular environment.
 
 ## Example use cases
-- Renewal parameters can be setup to automatically renew the certificate before it expires. This model assumes that VCert is added to a daily cronjob or is executed on a regular basis by some other automation. Default renewal is 10% of remaining certificate lifetime.
-- VCert will also automatically update API access and refresh tokens within the playbook when using TLS Protect Datacenter. This functionality enables ongoing operation without intervention, using a refresh token to get a new access token when necessary. This approach works well when the refresh/grant token lifetime is sufficiently long, in coordination with a short-lived access token (for example, 3 years/1 hour)
+
+- **Automated certificate renewal**: You can set renewal parameters to have VCert automatically renew certificates before expiration. This approach assumes that VCert is part of a daily cronjob or is executed routinely through other automation methods. By default, renewal occurs at 10% of the remaining certificate lifetime.
+
+- **Effortless API access updates**: When using TLS Protect Datacenter, VCert will automatically update API access and refresh tokens within the playbook. This feature ensures continuous operation without manual intervention. It leverages a refresh token to acquire a new access token when needed, an approach that's particularly effective when paired with a long-lasting refresh/grant token and a short-lived access token, such as a 3-year refresh token and a 1-hour access token.
 
 ## Getting started
 VCert Playbook functionality is invoked using the `vcert run` command. 
