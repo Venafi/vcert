@@ -206,6 +206,10 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 		}
 	}
 
+	if cf.validPeriod != "" {
+		req.ValidityPeriod = cf.validPeriod
+	}
+
 	return req
 }
 

@@ -96,6 +96,10 @@ type Connector interface {
 	ResetCertificate(req *certificate.Request, restart bool) (err error)
 	// RequestCertificate makes a request to the server with data for enrolling the certificate.
 	RequestCertificate(req *certificate.Request) (requestID string, err error)
+	// SynchronousRequestCertificate makes a request to the server with data for enrolling the certificate and returns the enrolled certificate.
+	SynchronousRequestCertificate(req *certificate.Request) (certificates *certificate.PEMCollection, err error)
+	// SupportSynchronousRequestCertificate returns if the connector support synchronous calls to request a certificate.
+	SupportSynchronousRequestCertificate() bool
 	// RetrieveCertificate immediately returns an enrolled certificate. Otherwise, RetrieveCertificate waits and retries during req.Timeout.
 	RetrieveCertificate(req *certificate.Request) (certificates *certificate.PEMCollection, err error)
 	IsCSRServiceGenerated(req *certificate.Request) (bool, error)

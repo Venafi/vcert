@@ -36,10 +36,12 @@ import (
 
 // Connector contains the base data needed to communicate with a Firefly Server
 type Connector struct {
+	baseURL     string
 	accessToken string
 	verbose     bool
 	trust       *x509.CertPool
 	client      *http.Client
+	zone        string // holds the policyName
 }
 
 func (c *Connector) IsCSRServiceGenerated(_ *certificate.Request) (bool, error) {
@@ -59,10 +61,9 @@ func NewConnector(verbose bool, trust *x509.CertPool) (*Connector, error) {
 	return &Connector{verbose: verbose, trust: trust}, nil
 }
 
-func (c *Connector) SetZone(_ string) {
-	//Given the method vcert.newClient() is generically calling the SetZone() method
-	//of the created Connector, then we need to leave this empty because for now the zone is not
-	//required
+func (c *Connector) SetZone(zone string) {
+	//for now the zone refers to the policyName
+	c.zone = zone
 }
 
 func (c *Connector) GetType() endpoint.ConnectorType {
@@ -137,8 +138,124 @@ func (c *Connector) RetrieveSystemVersion() (string, error) {
 	panic("operation is not supported yet")
 }
 
+// RequestCertificate submits the CSR to the Venafi Firefly API for processing
 func (c *Connector) RequestCertificate(_ *certificate.Request) (requestID string, err error) {
 	panic("operation is not supported yet")
+}
+
+// SynchronousRequestCertificate It's not supported yet in VaaS
+func (c *Connector) SynchronousRequestCertificate(req *certificate.Request) (certificates *certificate.PEMCollection, err error) {
+
+	//creating the request object
+	certReq := c.getCertificateRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	statusCode, status, body, err := c.request("POST", c.getCertificateRequestUrl(req), certReq)
+
+	if err != nil {
+		return nil, err
+	}
+	//parsing the result
+	cr, err := parseCertificateRequestResult(statusCode, status, body)
+	if err != nil {
+		return nil, err
+	}
+	//converting to PEMCollection
+	certificates, err = certificate.PEMCollectionFromBytes([]byte(cr.CertificateChain), req.ChainOption)
+	if err != nil {
+		return nil, err
+	}
+	certificates.PrivateKey = cr.PrivateKey
+	return certificates, nil
+}
+
+func (c *Connector) getCertificateRequest(req *certificate.Request) *certificateRequest {
+	fireflyCertRequest := &certificateRequest{}
+
+	if req.CsrOrigin == certificate.UserProvidedCSR {
+		fireflyCertRequest.CSR = string(req.GetCSR())
+	} else { // it's considered as a ServiceGeneratedCSR
+		//getting the subject
+		subject := Subject{
+			CommonName: req.Subject.CommonName,
+		}
+
+		if len(req.Subject.Organization) > 0 {
+			subject.Organization = req.Subject.Organization[0]
+		}
+
+		if len(req.Subject.OrganizationalUnit) > 0 {
+			subject.OrgUnits = req.Subject.OrganizationalUnit
+		}
+
+		if len(req.Subject.Locality) > 0 {
+			subject.Locality = req.Subject.Locality[0]
+		}
+
+		if len(req.Subject.Province) > 0 {
+			subject.State = req.Subject.Province[0]
+		}
+
+		if len(req.Subject.Country) > 0 {
+			subject.Country = req.Subject.Country[0]
+		}
+
+		fireflyCertRequest.Subject = subject
+
+		//getting the altnames
+		if len(req.DNSNames) > 0 || len(req.IPAddresses) > 0 || len(req.EmailAddresses) > 0 || len(req.URIs) > 0 {
+			altNames := &AlternativeNames{}
+			if len(req.DNSNames) > 0 {
+				altNames.DnsNames = req.DNSNames
+			}
+
+			if len(req.IPAddresses) > 0 {
+				sIPAddresses := make([]string, 0)
+				for _, address := range req.IPAddresses {
+					sIPAddresses = append(sIPAddresses, address.String())
+				}
+
+				altNames.IpAddresses = sIPAddresses
+			}
+
+			if len(req.EmailAddresses) > 0 {
+				altNames.EmailAddresses = req.EmailAddresses
+			}
+
+			if len(req.URIs) > 0 {
+				sUris := make([]string, 0)
+				for _, uri := range req.URIs {
+					sUris = append(sUris, uri.String())
+				}
+				altNames.Uris = sUris
+			}
+
+			fireflyCertRequest.AlternativeName = altNames
+		}
+	}
+
+	if req.ValidityPeriod != "" {
+		fireflyCertRequest.ValidityPeriod = &req.ValidityPeriod
+	}
+
+	fireflyCertRequest.PolicyName = c.zone
+
+	return fireflyCertRequest
+}
+
+func (c *Connector) getCertificateRequestUrl(req *certificate.Request) urlResource {
+	if req.CsrOrigin == certificate.UserProvidedCSR {
+		return urlResourceCertificateRequestCSR
+	}
+
+	return urlResourceCertificateRequest
+}
+
+// SupportSynchronousRequestCertificate returns if the connector support synchronous calls to request a certificate.
+func (c *Connector) SupportSynchronousRequestCertificate() bool {
+	return true
 }
 
 type ErrCertNotFound struct {
@@ -162,10 +279,6 @@ func (c *Connector) GetPolicy(_ string) (*policy.PolicySpecification, error) {
 }
 
 func (c *Connector) SetPolicy(_ string, _ *policy.PolicySpecification) (string, error) {
-	panic("operation is not supported yet")
-}
-
-func (c *Connector) GenerateRequest(_ *endpoint.ZoneConfiguration, _ *certificate.Request) (err error) {
 	panic("operation is not supported yet")
 }
 

@@ -210,6 +210,16 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 	return pickupID, nil
 }
 
+// SynchronousRequestCertificate It's not supported yet
+func (c *Connector) SynchronousRequestCertificate(_ *certificate.Request) (certificates *certificate.PEMCollection, err error) {
+	panic("operation is not supported yet")
+}
+
+// SupportSynchronousRequestCertificate returns if the connector support synchronous calls to request a certificate.
+func (c *Connector) SupportSynchronousRequestCertificate() bool {
+	return false
+}
+
 func issueCertificate(csr *x509.CertificateRequest) ([]byte, error) {
 	limit := new(big.Int).Lsh(big.NewInt(1), 128)
 	serial, _ := rand.Int(rand.Reader, limit)

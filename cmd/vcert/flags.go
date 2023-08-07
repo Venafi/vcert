@@ -26,7 +26,7 @@ import (
 var (
 	flagPlatform = &cli.StringFlag{
 		Name: "platform",
-		Usage: "The platformString which VCert is going to authenticate. The accepted values are 'tlspdatacenter' for Trust Protection Platform, " +
+		Usage: "The platform string which VCert is going to authenticate. The accepted values are 'tlspdatacenter' for Trust Protection Platform, " +
 			" 'tlspcloud' for TLS Protect Cloud and 'firefly' for Firefly",
 		Destination: &flags.platformString,
 	}
@@ -543,6 +543,13 @@ var (
 		Destination: &flags.validDays,
 	}
 
+	flagValidPeriod = &cli.StringFlag{
+		Name: "valid-period",
+		Usage: "Specify the validity period of a certificate needs to be valid expressed as an ISO 8601 duration in Firefly.\n" +
+			"\t For Example to set 90 days will be --valid-period P90D\n",
+		Destination: &flags.validPeriod,
+	}
+
 	flagPolicyName = &cli.StringFlag{
 		Name: "zone",
 		Usage: "REQUIRED. Use to specify target zone for applying or retrieving certificate policy. " +
@@ -718,6 +725,7 @@ var (
 	))
 
 	enrollFlags = flagsApppend(
+		flagPlatform,
 		flagCommonName,
 		flagZone,
 		credentialsFlags,
@@ -747,6 +755,7 @@ var (
 			flagReplace,
 			flagOmitSans,
 			flagValidDays,
+			flagValidPeriod,
 		)),
 	)
 

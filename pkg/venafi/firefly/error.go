@@ -22,21 +22,21 @@ import (
 )
 
 type responseError struct {
-	ErrorDetails string `json:"ErrorDetails,omitempty"`
+	error string `json:"error,omitempty"`
 }
 
-func NewResponseError(b []byte) error {
+func NewResponseError(b []byte) (*responseError, error) {
 	if len(b) == 0 {
-		return fmt.Errorf("failed to parser empty error message")
+		return nil, fmt.Errorf("failed to parser empty error message")
 	}
 	var data = &responseError{}
 	err := json.Unmarshal(b, data)
 	if err != nil {
-		return fmt.Errorf("failed to parser server error: %s", err)
+		return nil, fmt.Errorf("failed to parser server error: %s", err)
 	}
-	return data
+	return data, nil
 }
 
 func (e *responseError) Error() string {
-	return e.ErrorDetails
+	return e.error
 }

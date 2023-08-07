@@ -52,6 +52,7 @@ type Request struct {
 	CustomFields     []CustomField
 	Location         *Location
 	ValidityDuration *time.Duration
+	ValidityPeriod   string //represents the validity of the certificate expressed as an ISO 8601 duration
 	IssuerHint       util.IssuerHint
 
 	// Deprecated: use ValidityDuration instead, this field is ignored if ValidityDuration is set
