@@ -25,6 +25,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sosodev/duration"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
 
@@ -238,6 +239,11 @@ func (c *Connector) getCertificateRequest(req *certificate.Request) *certificate
 
 	if req.ValidityPeriod != "" {
 		fireflyCertRequest.ValidityPeriod = &req.ValidityPeriod
+	} else {
+		if req.ValidityDuration != nil { //if the validityDuration was set then it will convert to ISO 8601
+			validityPeriod := duration.Format(*req.ValidityDuration)
+			fireflyCertRequest.ValidityPeriod = &validityPeriod
+		}
 	}
 
 	fireflyCertRequest.PolicyName = c.zone

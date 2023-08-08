@@ -546,7 +546,8 @@ var (
 	flagValidPeriod = &cli.StringFlag{
 		Name: "valid-period",
 		Usage: "Specify the validity period of a certificate needs to be valid expressed as an ISO 8601 duration in Firefly.\n" +
-			"\t For Example to set 90 days will be --valid-period P90D\n",
+			"\t For Example to set 90 days will be --valid-period P90D.\n" +
+			"\t If this flag is not set then the valid-days flag value it will be converted to ISO 8601 format and used.\n",
 		Destination: &flags.validPeriod,
 	}
 
