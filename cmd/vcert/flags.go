@@ -539,7 +539,9 @@ var (
 	flagValidDays = &cli.StringFlag{
 		Name: "valid-days",
 		Usage: "Specify the number of days a certificate needs to be valid. For TPP, optionally indicate the target issuer by\n" +
-			"\tappending #D for DigiCert, #E for Entrust, or #M for Microsoft. Example: --valid-days 90#M\n",
+			"\tappending #D for DigiCert, #E for Entrust, or #M for Microsoft. Example: --valid-days 90#M.\n" +
+			"\tThis flag can be used also to provide the valid period for Firefly, but it's preferable to use valid-period flag.\n" +
+			"\tIf both flags are provided for Firefly then the valid-period flag will be taken into account.\n",
 		Destination: &flags.validDays,
 	}
 
