@@ -36,8 +36,8 @@ import (
 type urlResource string
 
 const (
-	urlResourceCertificateRequest    urlResource = "vedsdk/certificates/request"
-	urlResourceCertificateRequestCSR urlResource = "vedsdk/certificates/request"
+	urlResourceCertificateRequest    urlResource = "v1/certificaterequest"
+	urlResourceCertificateRequestCSR urlResource = "v1/certificatesigningrequest"
 )
 
 type certificateRequest struct {
