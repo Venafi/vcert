@@ -53,7 +53,7 @@ func (s *ConnectionSuite) SetupTest() {
 					Apikey: "asdasdadsd",
 				},
 			},
-			expectedCType: endpoint.ConnectorTypeFake,
+			expectedCType: endpoint.ConnectorTypeFirefly,
 			expectedValid: true,
 		},
 		{
@@ -62,7 +62,7 @@ func (s *ConnectionSuite) SetupTest() {
 				Platform:    CTypeFirefly,
 				Credentials: Authentication{},
 			},
-			expectedCType: endpoint.ConnectorTypeFake,
+			expectedCType: endpoint.ConnectorTypeFirefly,
 			expectedValid: false,
 			expectedErr:   ErrNoCredentials,
 		},

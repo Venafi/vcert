@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 Venafi, Inc.
+ * Copyright 2020-2023 Venafi, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,6 +42,7 @@ import (
 	"github.com/Venafi/vcert/v5/pkg/util"
 	"github.com/Venafi/vcert/v5/pkg/venafi/cloud"
 	"github.com/Venafi/vcert/v5/pkg/venafi/fake"
+	"github.com/Venafi/vcert/v5/pkg/venafi/firefly"
 	"github.com/Venafi/vcert/v5/pkg/venafi/tpp"
 )
 
@@ -69,10 +70,12 @@ var (
 		Action: doCommandCredMgmt1,
 		Usage:  "To obtain a new credential (token) for authentication",
 		UsageText: ` vcert getcred -u https://tpp.example.com --username <TPP user> --password <TPP user password>
-		 vcert getcred --email <email address for VaaS headless registration> [--password <password>] [--format (text|json)]
-		 vcert getcred -u https://tpp.example.com --p12-file <PKCS#12 client cert> --p12-password <PKCS#12 password> --trust-bundle /path-to/bundle.pem
-		 vcert getcred -u https://tpp.example.com -t <TPP refresh token>
-		 vcert getcred -u https://tpp.example.com -t <TPP refresh token> --scope <scopes and restrictions>`,
+		vcert getcred --email <email address for VaaS headless registration> [--password <password>] [--format (text|json)]
+		vcert getcred -u https://tpp.example.com --p12-file <PKCS#12 client cert> --p12-password <PKCS#12 password> --trust-bundle /path-to/bundle.pem
+		vcert getcred -u https://tpp.example.com -t <TPP refresh token>
+		vcert getcred -u https://tpp.example.com -t <TPP refresh token> --scope <scopes and restrictions>
+		vcert getcred --platform firefly --token-url https://authorization-server.com/oauth/token --username <okta user> --password <okta user password> -- scope okta.behaviors.manage
+		vcert getcred --platform firefly --token-url https://authorization-server.com/oauth/token --client-id <okta client id> --client-secret <okta client secret> -- scope okta.behaviors.manage`,
 	}
 	commandCheckCred = &cli.Command{
 		Before:    runBeforeCommand,
@@ -655,6 +658,7 @@ func doCommandCredMgmt1(c *cli.Context) error {
 	//getting the concrete connector
 	var vaasConnector *cloud.Connector
 	var tppConnector *tpp.Connector
+	var fireflyConnector *firefly.Connector
 	var okCasting bool
 
 	//trying to cast to cloud.Connector
@@ -664,13 +668,18 @@ func doCommandCredMgmt1(c *cli.Context) error {
 		//trying to cast to tpp.Connector
 		tppConnector, okCasting = connector.(*tpp.Connector)
 		if !okCasting { // if the connector is not a tpp.Connector
-			_, okCasting = connector.(*fake.Connector) //trying to cast to fake.Connector
 
-			// if the connector is a fake.Connector
-			if okCasting {
-				panic("operation is not supported yet")
-			} else { // if the connector is not a fake.Connector
-				panic("it was not possible to get a supported connector")
+			//trying to cast to firefly.Connector
+			fireflyConnector, okCasting = connector.(*firefly.Connector)
+			if !okCasting { // if the connector is not a firefly.Connector
+				_, okCasting = connector.(*fake.Connector) //trying to cast to fake.Connector
+
+				// if the connector is a fake.Connector
+				if okCasting {
+					panic("operation is not supported yet")
+				} else { // if the connector is not a fake.Connector
+					panic("it was not possible to get a supported connector")
+				}
 			}
 		}
 	}
@@ -679,8 +688,10 @@ func doCommandCredMgmt1(c *cli.Context) error {
 	case commandGetCredName:
 		if vaasConnector != nil {
 			return getVaaSCredentials(vaasConnector, &cfg)
-		} else {
+		} else if tppConnector != nil {
 			return getTppCredentials(tppConnector, &cfg, clientP12)
+		} else {
+			return getFireflyCredentials(fireflyConnector, &cfg)
 		}
 	case commandCheckCredName:
 		//TODO: quick workaround to supress logs when output is in JSON.
@@ -852,6 +863,31 @@ func getVaaSCredentials(vaasConnector *cloud.Connector, cfg *vcert.Config) error
 		}
 	} else {
 		return fmt.Errorf("failed to determine credentials set")
+	}
+
+	return nil
+}
+
+func getFireflyCredentials(fireflyConnector *firefly.Connector, cfg *vcert.Config) error {
+	//TODO: quick workaround to suppress logs when output is in JSON.
+	if flags.credFormat != "json" {
+		logf("Getting credentials...")
+	}
+
+	token, err := fireflyConnector.Authorize(cfg.Credentials)
+
+	if err != nil {
+		return err
+	}
+	if flags.credFormat == "json" {
+		if err := outputJSON(token); err != nil {
+			return err
+		}
+	} else {
+		fmt.Println("access_token: ", token.AccessToken)
+		fmt.Println("refresh_token: ", token.RefreshToken)
+		fmt.Println("token_type: ", token.TokenType)
+		fmt.Println("access_token_expires: ", token.Expiry)
 	}
 
 	return nil

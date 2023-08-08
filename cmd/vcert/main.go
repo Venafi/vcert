@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2021 Venafi, Inc.
+ * Copyright 2018-2023 Venafi, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -81,7 +81,7 @@ func main() {
 		},
 		EnableBashCompletion: true, //todo: write BashComplete function for options
 		Authors:              authors,
-		Copyright: `2018-2022 Venafi, Inc.
+		Copyright: `2018-2023 Venafi, Inc.
 	 Licensed under the Apache License, Version 2.0`,
 	}
 
@@ -109,7 +109,7 @@ ACTIONS:
    getpolicy    To retrieve the certificate policy of a zone
    setpolicy    To apply a certificate policy specification to a zone
 
-   getcred      To obtain a new TPP authentication token or register for a new VaaS user API key
+   getcred      To obtain a new TPP authentication token or Firefly access token or register for a new VaaS user API key
    checkcred    To check the validity of a token and grant
    voidcred     To invalidate an authentication grant
 

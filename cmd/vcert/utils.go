@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2021 Venafi, Inc.
+ * Copyright 2018-2023 Venafi, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
 
@@ -32,18 +32,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Venafi/vcert/v5"
 	"github.com/spf13/viper"
 	"github.com/urfave/cli/v2"
 
+	"github.com/Venafi/vcert/v5"
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
 	"github.com/Venafi/vcert/v5/pkg/util"
 )
 
 const (
-	vCertURL  = "VCERT_URL"
-	vCertZone = "VCERT_ZONE"
+	vCertPlatform = "VCERT_PLATFORM"
+	vCertURL      = "VCERT_URL"
+	vCertZone     = "VCERT_ZONE"
 	/* #nosec */
 	vCertToken = "VCERT_TOKEN"
 	/* #nosec */
@@ -627,7 +628,7 @@ func getUserParameterProvidedForGetCred() (string, error) {
 	}
 
 	identityParameters := map[string]bool{
-		flagTPPUser.Name:   flags.tppUser != "",
+		flagUser.Name:      flags.userName != "",
 		flagTPPToken.Name:  tppTokenS != "",
 		flagClientP12.Name: flags.clientP12 != "",
 		flagEmail.Name:     flags.email != "",
