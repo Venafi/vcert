@@ -626,14 +626,14 @@ func randRunes(n int) string {
 
 func getUserParameterProvidedForGetCred() (string, error) {
 
-	tppTokenS := flags.tppToken
-	if tppTokenS == "" {
-		tppTokenS = getPropertyFromEnvironment(vCertToken)
+	tokenS := flags.token
+	if tokenS == "" {
+		tokenS = getPropertyFromEnvironment(vCertToken)
 	}
 
 	identityParameters := map[string]bool{
 		flagUser.Name:      flags.userName != "",
-		flagTPPToken.Name:  tppTokenS != "",
+		flagToken.Name:     tokenS != "",
 		flagClientP12.Name: flags.clientP12 != "",
 		flagEmail.Name:     flags.email != "",
 	}

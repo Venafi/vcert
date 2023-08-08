@@ -100,7 +100,7 @@ type commandFlags struct {
 	tlsAddress           string
 	email                string
 	password             string
-	tppToken             string
+	token                string
 	userName             string
 	trustBundle          string
 	upnSans              rfc822NameSlice

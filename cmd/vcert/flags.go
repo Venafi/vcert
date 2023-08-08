@@ -92,11 +92,11 @@ var (
 		Hidden:      true,
 	}
 
-	flagTPPToken = &cli.StringFlag{
+	flagToken = &cli.StringFlag{
 		Name: "token",
-		Usage: "REQUIRED/TPP. Your access token (or refresh token for getcred) for Trust Protection Platform. " +
+		Usage: "REQUIRED/TPP/Firefly. Your access token (or refresh token for getcred) for Trust Protection Platform or Firefly. " +
 			"Example: -t Ab01Cd23Ef45Uv67Wx89Yz==",
-		Destination: &flags.tppToken,
+		Destination: &flags.token,
 		Aliases:     []string{"t"},
 	}
 
@@ -710,7 +710,7 @@ var (
 
 	credentialsFlags = []cli.Flag{
 		flagKey,
-		flagTPPToken,
+		flagToken,
 		flagUrl,
 		delimiter(" "),
 	}
@@ -827,7 +827,7 @@ var (
 		)),
 	)
 
-	commonCredFlags = []cli.Flag{flagConfig, flagProfile, flagUrl, flagTPPToken, flagTrustBundle}
+	commonCredFlags = []cli.Flag{flagConfig, flagProfile, flagUrl, flagToken, flagTrustBundle}
 
 	getCredFlags = sortedFlags(flagsApppend(
 		flagPlatform,
@@ -862,7 +862,7 @@ var (
 	createPolicyFlags = sortedFlags(flagsApppend(
 		flagKey,
 		flagUrl,
-		flagTPPToken,
+		flagToken,
 		flagVerbose,
 		flagPolicyName,
 		flagPolicyConfigFile,
@@ -874,7 +874,7 @@ var (
 	getPolicyFlags = sortedFlags(flagsApppend(
 		flagKey,
 		flagUrl,
-		flagTPPToken,
+		flagToken,
 		flagVerbose,
 		flagPolicyName,
 		flagPolicyConfigFile,
@@ -885,7 +885,7 @@ var (
 
 	sshPickupFlags = sortedFlags(flagsApppend(
 		flagUrl,
-		flagTPPToken,
+		flagToken,
 		flagTrustBundle,
 		flagSshCertPickupId,
 		flagSshCertGuid,
@@ -896,7 +896,7 @@ var (
 
 	sshEnrollFlags = sortedFlags(flagsApppend(
 		flagUrl,
-		flagTPPToken,
+		flagToken,
 		flagTrustBundle,
 		flagKeyId,
 		flagObjectName,
@@ -920,7 +920,7 @@ var (
 	sshGetConfigFlags = sortedFlags(flagsApppend(
 		flagUrl,
 		flagTrustBundle,
-		flagTPPToken,
+		flagToken,
 		flagSshCertCa,
 		flagSshCertGuid,
 		flagSshFileGetConfig,
