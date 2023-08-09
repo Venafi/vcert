@@ -120,12 +120,6 @@ func buildRequest(request domain.PlaybookRequest) certificate.Request {
 		CustomFields:   request.CustomFields,
 	}
 
-	// Only fetch private key if a key password is provided
-	// Check vcert/cmd/vcert/commands.go doCommandPickup1() for a similar behavior
-	if request.KeyPassword != "" {
-		vcertRequest.FetchPrivateKey = true
-	}
-
 	// Set timeout for cert retrieval
 	setTimeout(request, &vcertRequest)
 	//Set Location
