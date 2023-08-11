@@ -173,7 +173,7 @@ func (c *Connector) SynchronousRequestCertificate(req *certificate.Request) (cer
 }
 
 func (c *Connector) getCertificateRequest(req *certificate.Request) *certificateRequest {
-	fireflyCertRequest := &certificateRequest{KeyType: "EC_P256"}
+	fireflyCertRequest := &certificateRequest{}
 
 	if req.CsrOrigin == certificate.UserProvidedCSR {
 		fireflyCertRequest.CSR = string(req.GetCSR())
@@ -247,6 +247,17 @@ func (c *Connector) getCertificateRequest(req *certificate.Request) *certificate
 	}
 
 	fireflyCertRequest.PolicyName = c.zone
+
+	//getting the keyAlgorithm
+	keyAlgorithm := ""
+	switch req.KeyType {
+	case certificate.KeyTypeRSA:
+		keyAlgorithm = fmt.Sprintf("RSA_%d", req.KeyLength)
+
+	case certificate.KeyTypeECDSA, certificate.KeyTypeED25519:
+		keyAlgorithm = fmt.Sprintf("EC_%s", req.KeyCurve.String())
+	}
+	fireflyCertRequest.KeyAlgorithm = keyAlgorithm
 
 	return fireflyCertRequest
 }

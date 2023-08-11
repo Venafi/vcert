@@ -46,6 +46,7 @@ type certificateRequest struct {
 	AlternativeName *AlternativeNames `json:"altNames,omitempty"`
 	ValidityPeriod  *string           `json:"validityPeriod,omitempty"`
 	PolicyName      string            `json:"policyName,omitempty"`
+	KeyAlgorithm    string            `json:"keyType,omitempty"`
 }
 
 type Subject struct {
