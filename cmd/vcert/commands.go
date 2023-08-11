@@ -31,6 +31,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Venafi/vcert/v5/pkg/venafi"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/crypto/pkcs12"
 	"gopkg.in/yaml.v2"
@@ -230,6 +231,10 @@ func runBeforeCommand(c *cli.Context) error {
 	for _, stringURI := range c.StringSlice("san-uri") {
 		uri, _ := url.Parse(stringURI)
 		flags.uriSans = append(flags.uriSans, uri)
+	}
+
+	if flags.platformString != "" {
+		flags.platform = venafi.GetPlatformType(flags.platformString)
 	}
 
 	return nil

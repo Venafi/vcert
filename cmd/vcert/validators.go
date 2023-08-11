@@ -393,10 +393,6 @@ func validateCredMgmtFlags1(commandName string) error {
 		}
 		getCredForVaaS := false
 		if commandName == commandGetCredName {
-			//TODO the platform validation should moved into an upper level to use it in other commands
-			if flags.platformString != "" {
-				flags.platform = venafi.GetPlatformType(flags.platformString)
-			}
 			if flags.platform != venafi.Firefly {
 				userParameterProvided, err := getUserParameterProvidedForGetCred()
 
