@@ -100,7 +100,7 @@ type commandFlags struct {
 	tlsAddress           string
 	email                string
 	password             string
-	tppToken             string
+	token                string
 	userName             string
 	trustBundle          string
 	upnSans              rfc822NameSlice
@@ -113,6 +113,7 @@ type commandFlags struct {
 	csrFormat            string
 	credFormat           string
 	validDays            string
+	validPeriod          string
 	platformString       string
 	platform             venafi.PlatformType
 	policyName           string

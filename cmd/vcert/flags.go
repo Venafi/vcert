@@ -26,7 +26,7 @@ import (
 var (
 	flagPlatform = &cli.StringFlag{
 		Name: "platform",
-		Usage: "The platformString which VCert is going to authenticate. The accepted values are 'tlspdatacenter' for Trust Protection Platform, " +
+		Usage: "The platform string which VCert is going to authenticate. The accepted values are 'tlspdatacenter' for Trust Protection Platform, " +
 			" 'tlspcloud' for TLS Protect Cloud and 'firefly' for Firefly",
 		Destination: &flags.platformString,
 	}
@@ -92,11 +92,11 @@ var (
 		Hidden:      true,
 	}
 
-	flagTPPToken = &cli.StringFlag{
+	flagToken = &cli.StringFlag{
 		Name: "token",
-		Usage: "REQUIRED/TPP. Your access token (or refresh token for getcred) for Trust Protection Platform. " +
+		Usage: "REQUIRED/TPP/Firefly. Your access token (or refresh token for getcred) for Trust Protection Platform or Firefly. " +
 			"Example: -t Ab01Cd23Ef45Uv67Wx89Yz==",
-		Destination: &flags.tppToken,
+		Destination: &flags.token,
 		Aliases:     []string{"t"},
 	}
 
@@ -539,8 +539,18 @@ var (
 	flagValidDays = &cli.StringFlag{
 		Name: "valid-days",
 		Usage: "Specify the number of days a certificate needs to be valid. For TPP, optionally indicate the target issuer by\n" +
-			"\tappending #D for DigiCert, #E for Entrust, or #M for Microsoft. Example: --valid-days 90#M\n",
+			"\tappending #D for DigiCert, #E for Entrust, or #M for Microsoft. Example: --valid-days 90#M.\n" +
+			"\tThis flag can be used also to provide the valid period for Firefly, but it's preferable to use valid-period flag.\n" +
+			"\tIf both flags are provided for Firefly then the valid-period flag will be taken into account.\n",
 		Destination: &flags.validDays,
+	}
+
+	flagValidPeriod = &cli.StringFlag{
+		Name: "valid-period",
+		Usage: "Specify the validity period of a certificate needs to be valid expressed as an ISO 8601 duration in Firefly.\n" +
+			"\t For Example to set 90 days will be --valid-period P90D.\n" +
+			"\t If this flag is not set then the valid-days flag value it will be converted to ISO 8601 format and used.\n",
+		Destination: &flags.validPeriod,
 	}
 
 	flagPolicyName = &cli.StringFlag{
@@ -702,7 +712,7 @@ var (
 
 	credentialsFlags = []cli.Flag{
 		flagKey,
-		flagTPPToken,
+		flagToken,
 		flagUrl,
 		delimiter(" "),
 	}
@@ -718,6 +728,7 @@ var (
 	))
 
 	enrollFlags = flagsApppend(
+		flagPlatform,
 		flagCommonName,
 		flagZone,
 		credentialsFlags,
@@ -747,6 +758,7 @@ var (
 			flagReplace,
 			flagOmitSans,
 			flagValidDays,
+			flagValidPeriod,
 		)),
 	)
 
@@ -817,7 +829,7 @@ var (
 		)),
 	)
 
-	commonCredFlags = []cli.Flag{flagConfig, flagProfile, flagUrl, flagTPPToken, flagTrustBundle}
+	commonCredFlags = []cli.Flag{flagConfig, flagProfile, flagUrl, flagToken, flagTrustBundle}
 
 	getCredFlags = sortedFlags(flagsApppend(
 		flagPlatform,
@@ -852,7 +864,7 @@ var (
 	createPolicyFlags = sortedFlags(flagsApppend(
 		flagKey,
 		flagUrl,
-		flagTPPToken,
+		flagToken,
 		flagVerbose,
 		flagPolicyName,
 		flagPolicyConfigFile,
@@ -864,7 +876,7 @@ var (
 	getPolicyFlags = sortedFlags(flagsApppend(
 		flagKey,
 		flagUrl,
-		flagTPPToken,
+		flagToken,
 		flagVerbose,
 		flagPolicyName,
 		flagPolicyConfigFile,
@@ -875,7 +887,7 @@ var (
 
 	sshPickupFlags = sortedFlags(flagsApppend(
 		flagUrl,
-		flagTPPToken,
+		flagToken,
 		flagTrustBundle,
 		flagSshCertPickupId,
 		flagSshCertGuid,
@@ -886,7 +898,7 @@ var (
 
 	sshEnrollFlags = sortedFlags(flagsApppend(
 		flagUrl,
-		flagTPPToken,
+		flagToken,
 		flagTrustBundle,
 		flagKeyId,
 		flagObjectName,
@@ -910,7 +922,7 @@ var (
 	sshGetConfigFlags = sortedFlags(flagsApppend(
 		flagUrl,
 		flagTrustBundle,
-		flagTPPToken,
+		flagToken,
 		flagSshCertCa,
 		flagSshCertGuid,
 		flagSshFileGetConfig,

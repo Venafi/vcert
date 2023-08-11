@@ -895,6 +895,16 @@ func (c *Connector) getCertificateStatus(requestID string) (certStatus *certific
 
 }
 
+// SynchronousRequestCertificate It's not supported yet in VaaS
+func (c *Connector) SynchronousRequestCertificate(_ *certificate.Request) (certificates *certificate.PEMCollection, err error) {
+	panic("operation is not supported yet")
+}
+
+// SupportSynchronousRequestCertificate returns if the connector support synchronous calls to request a certificate.
+func (c *Connector) SupportSynchronousRequestCertificate() bool {
+	return false
+}
+
 // RetrieveCertificate retrieves the certificate for the specified ID
 func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates *certificate.PEMCollection, err error) {
 

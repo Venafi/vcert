@@ -47,7 +47,7 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 		var identityProvider = &endpoint.OAuthProvider{}
 
 		//case when access token can come from environment variable.
-		tppTokenS := flags.tppToken
+		tppTokenS := flags.token
 
 		if tppTokenS == "" {
 			tppTokenS = getPropertyFromEnvironment(vCertToken)
@@ -81,11 +81,11 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 				return cfg, fmt.Errorf("A password is required to communicate with TPP")
 			}
 
-			if flags.tppToken != "" {
+			if flags.token != "" {
 				if c.Command.Name == commandGetCredName {
-					auth.RefreshToken = flags.tppToken
+					auth.RefreshToken = flags.token
 				} else {
-					auth.AccessToken = flags.tppToken
+					auth.AccessToken = flags.token
 				}
 			} else if flags.userName != "" && flags.password != "" {
 				auth.User = flags.userName

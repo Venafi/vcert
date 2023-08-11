@@ -68,7 +68,7 @@ func (cfg *Config) newClient(args []interface{}) (connector endpoint.Connector, 
 	case endpoint.ConnectorTypeTPP:
 		connector, err = tpp.NewConnector(cfg.BaseUrl, cfg.Zone, cfg.LogVerbose, connectionTrustBundle)
 	case endpoint.ConnectorTypeFirefly:
-		connector, err = firefly.NewConnector(cfg.LogVerbose, connectionTrustBundle)
+		connector, err = firefly.NewConnector(cfg.BaseUrl, cfg.Zone, cfg.LogVerbose, connectionTrustBundle)
 	case endpoint.ConnectorTypeFake:
 		connector = fake.NewConnector(cfg.LogVerbose, connectionTrustBundle)
 	default:

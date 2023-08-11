@@ -49,7 +49,7 @@ func setEnvironmentVariableForTrustBundle() {
 }
 
 func unsetFlags() {
-	flags.tppToken = ""
+	flags.token = ""
 	flags.zone = ""
 	flags.url = ""
 	flags.validDays = ""
@@ -61,6 +61,6 @@ func setEmptyCredentials() {
 	flags.config = "fake config"
 	flags.apiKey = ""
 	flags.password = ""
-	flags.tppToken = ""
+	flags.token = ""
 	flags.testMode = true
 }

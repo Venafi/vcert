@@ -124,7 +124,7 @@ func validateConnectionFlags(commandName string) error {
 		if flags.apiKey != "" ||
 			flags.userName != "" ||
 			flags.password != "" ||
-			flags.tppToken != "" ||
+			flags.token != "" ||
 			flags.url != "" ||
 			flags.testMode {
 			return fmt.Errorf("connection details cannot be specified with flags when -config is used")
@@ -134,7 +134,7 @@ func validateConnectionFlags(commandName string) error {
 			return fmt.Errorf("-profile option cannot be used without -config option")
 		}
 
-		tppToken := flags.tppToken
+		tppToken := flags.token
 		if tppToken == "" {
 			tppToken = getPropertyFromEnvironment(vCertToken)
 		}
@@ -271,7 +271,7 @@ func validateEnrollFlags(commandName string) error {
 
 	if !flags.testMode && flags.config == "" {
 
-		tppToken := flags.tppToken
+		tppToken := flags.token
 		if tppToken == "" {
 			tppToken = getPropertyFromEnvironment(vCertToken)
 		}
@@ -370,7 +370,7 @@ func validateValidDaysFlag(cn string) bool {
 func validateCredMgmtFlags1(commandName string) error {
 	var err error
 
-	tppTokenS := flags.tppToken
+	tppTokenS := flags.token
 	if tppTokenS == "" {
 		tppTokenS = getPropertyFromEnvironment(vCertToken)
 	}
@@ -393,10 +393,6 @@ func validateCredMgmtFlags1(commandName string) error {
 		}
 		getCredForVaaS := false
 		if commandName == commandGetCredName {
-			//TODO the platform validation should moved into an upper level to use it in other commands
-			if flags.platformString != "" {
-				flags.platform = venafi.GetPlatformType(flags.platformString)
-			}
 			if flags.platform != venafi.Firefly {
 				userParameterProvided, err := getUserParameterProvidedForGetCred()
 
@@ -488,7 +484,7 @@ func validateRenewFlags1(commandName string) error {
 	}
 
 	if flags.csrOption == "service" {
-		if !(flags.noPickup) && flags.noPrompt && len(flags.keyPassword) == 0 && (flags.userName != "" || flags.tppToken != "") {
+		if !(flags.noPickup) && flags.noPrompt && len(flags.keyPassword) == 0 && (flags.userName != "" || flags.token != "") {
 			return fmt.Errorf("-key-password cannot be empty in -csr service mode for TPP unless -no-pickup specified")
 		}
 		if flags.commonName != "" ||
@@ -677,7 +673,7 @@ func validateOverWritingEnviromentVariables() {
 	}
 
 	if getPropertyFromEnvironment(vCertToken) != "" {
-		if flags.tppToken != "" {
+		if flags.token != "" {
 			logger.Println(colorYellow, "Warning: Command line parameter -t has overridden environment variable VCERT_TOKEN", colorReset)
 		}
 	}
@@ -701,12 +697,12 @@ func validateOverWritingEnviromentVariables() {
 func validateGetPolicyFlags(commandName string) error {
 	isPolicyConfigStarter := flags.policyConfigStarter
 	if isPolicyConfigStarter {
-		if flags.userName != "" || flags.password != "" || flags.tppToken != "" || flags.apiKey != "" {
+		if flags.userName != "" || flags.password != "" || flags.token != "" || flags.apiKey != "" {
 			return fmt.Errorf("starter flag and credentials are set, please remove credentials to be able to use starter flag")
 		}
 
 	} else {
-		if flags.userName != "" && flags.password != "" && flags.tppToken != "" && flags.apiKey != "" {
+		if flags.userName != "" && flags.password != "" && flags.token != "" && flags.apiKey != "" {
 			return fmt.Errorf("credentials are required")
 		}
 
@@ -723,13 +719,13 @@ func validateSetPolicyFlags(commandName string) error {
 
 	if isVerifyPolicy {
 
-		if flags.userName != "" || flags.password != "" || flags.tppToken != "" || flags.apiKey != "" {
+		if flags.userName != "" || flags.password != "" || flags.token != "" || flags.apiKey != "" {
 			return fmt.Errorf("starter flag and credentials are set, please remove credentials to be able to use starter flag")
 		}
 
 	} else {
 
-		if flags.userName != "" && flags.password != "" && flags.tppToken != "" && flags.apiKey != "" {
+		if flags.userName != "" && flags.password != "" && flags.token != "" && flags.apiKey != "" {
 			return fmt.Errorf("credentials are required")
 		}
 

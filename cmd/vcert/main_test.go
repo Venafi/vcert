@@ -254,7 +254,7 @@ func TestGetCredFlagsNoUrl(t *testing.T) {
 
 	flags = commandFlags{}
 
-	flags.tppToken = "3rlybZwAdV1qo/KpNJ5FWg=="
+	flags.token = "3rlybZwAdV1qo/KpNJ5FWg=="
 
 	err := validateCredMgmtFlags1(commandGetCredName)
 	if err == nil {
@@ -314,7 +314,7 @@ func TestValidateFlagsForTPPMissingData(t *testing.T) {
 	}
 
 	flags.url = "https://localhost/vedsdk"
-	flags.tppToken = "udd3OCDO/Vu3An01KSlLzQ=="
+	flags.token = "udd3OCDO/Vu3An01KSlLzQ=="
 	flags.commonName = "test"
 	flags.zone = "Test Policy"
 
@@ -456,7 +456,7 @@ func TestGetCredFlagsTrustBundle(t *testing.T) {
 
 	var err error
 
-	flags.tppToken = "3rlybZwAdV1qo/KpNJ5FWg=="
+	flags.token = "3rlybZwAdV1qo/KpNJ5FWg=="
 	flags.url = "https://tpp.example.com"
 	flags.trustBundle = "/opt/venafi/bundle.pem"
 
@@ -472,7 +472,7 @@ func TestGetCredFlagsNoTrust(t *testing.T) {
 
 	var err error
 
-	flags.tppToken = "3rlybZwAdV1qo/KpNJ5FWg=="
+	flags.token = "3rlybZwAdV1qo/KpNJ5FWg=="
 	flags.url = "https://tpp.example.com"
 
 	err = validateCredMgmtFlags1(commandGetCredName)
@@ -921,7 +921,7 @@ func TestEnvironmentVariableTrustBundleFileName(t *testing.T) {
 
 func TestValidatePrecedenceForFlagsTpp(t *testing.T) {
 
-	flags.tppToken = tppTokenTestFlagValue
+	flags.token = tppTokenTestFlagValue
 	flags.zone = tppZoneTestFlagValue
 	flags.url = tppURlTestFlagValue
 
