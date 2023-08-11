@@ -58,8 +58,8 @@ func (c *Connector) RetrieveAvailableSSHTemplates() (response []certificate.SshA
 }
 
 // NewConnector creates a new Firefly Connector object used to communicate with Firefly
-func NewConnector(verbose bool, trust *x509.CertPool) (*Connector, error) {
-	return &Connector{verbose: verbose, trust: trust}, nil
+func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (*Connector, error) {
+	return &Connector{baseURL: url, zone: zone, verbose: verbose, trust: trust}, nil
 }
 
 func (c *Connector) SetZone(zone string) {
@@ -173,7 +173,7 @@ func (c *Connector) SynchronousRequestCertificate(req *certificate.Request) (cer
 }
 
 func (c *Connector) getCertificateRequest(req *certificate.Request) *certificateRequest {
-	fireflyCertRequest := &certificateRequest{}
+	fireflyCertRequest := &certificateRequest{KeyType: "EC_P256"}
 
 	if req.CsrOrigin == certificate.UserProvidedCSR {
 		fireflyCertRequest.CSR = string(req.GetCSR())
@@ -305,7 +305,7 @@ func (c *Connector) ReadPolicyConfiguration() (policy *endpoint.Policy, err erro
 }
 
 func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration, err error) {
-	panic("operation is not supported yet")
+	return nil, nil
 }
 
 func (c *Connector) ImportCertificate(_ *certificate.ImportRequest) (*certificate.ImportResponse, error) {
