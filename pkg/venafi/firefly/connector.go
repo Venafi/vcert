@@ -75,8 +75,12 @@ func (c *Connector) Ping() (err error) {
 	panic("operation is not supported yet")
 }
 
-func (c *Connector) Authenticate(_ *endpoint.Authentication) (err error) {
-	panic("operation is not supported yet")
+func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
+	if auth.AccessToken != "" {
+		c.accessToken = auth.AccessToken
+	}
+
+	return err
 }
 
 // Authorize Get an OAuth access token
