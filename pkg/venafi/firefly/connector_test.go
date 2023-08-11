@@ -25,7 +25,7 @@ import (
 var ctx *test.Context
 
 func getTestConnector() (c *Connector, err error) {
-	c, err = NewConnector(false, nil)
+	c, err = NewConnector("", "", false, nil)
 	c.client = &http.Client{}
 	return c, err
 }
