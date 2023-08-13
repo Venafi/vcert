@@ -238,6 +238,27 @@ func (c *Connector) RefreshAccessToken(auth *endpoint.Authentication) (resp Oaut
 	}
 }
 
+// RefreshAccessTokenValidity is a wrapper over RefreshAccessToken which refreshes OAuth access token
+func (c *Connector) RefreshAccessTokenValidity(auth *endpoint.Authentication) (endpoint.RefreshTokenResponse, error) {
+	var resp endpoint.RefreshTokenResponse
+	var err error
+	resp, err = c.RefreshAccessToken(auth)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+// GetRefreshedAccessTokenInfo returns refreshed access token and its validity
+func (o OauthRefreshAccessTokenResponse) GetRefreshedAccessTokenInfo() (string, int) {
+	return o.Access_token, o.Expires
+}
+
+// GetRefreshTokenInfo returns refresh token and its validity
+func (o OauthRefreshAccessTokenResponse) GetRefreshTokenInfo() (string, int) {
+	return o.Refresh_token, o.Refresh_until
+}
+
 // VerifyAccessToken - call to check whether token is valid and, if so, return its properties
 func (c *Connector) VerifyAccessToken(auth *endpoint.Authentication) (resp OauthVerifyTokenResponse, err error) {
 

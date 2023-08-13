@@ -1889,3 +1889,8 @@ func getCertificateAuthorityInfoFromCloud(caName, caAccountId, caProductOptionId
 
 	return &info, nil
 }
+
+// RefreshAccessTokenValidity is a wrapper over RefreshAccessToken which refreshes OAuth access token
+func (c *Connector) RefreshAccessTokenValidity(auth *endpoint.Authentication) (endpoint.RefreshTokenResponse, error) {
+	return nil, fmt.Errorf("RefreshAccessTokenValidity is not implemented for venafi cloud")
+}
