@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -132,7 +131,7 @@ func (c *Connector) request(method string, resource urlResource, data interface{
 	}
 
 	defer res.Body.Close()
-	body, err = ioutil.ReadAll(res.Body)
+	body, err = io.ReadAll(res.Body)
 	// Do not enable trace in production
 	trace := false // IMPORTANT: sensitive information can be diclosured
 	// I hope you know what are you doing
