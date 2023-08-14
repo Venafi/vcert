@@ -18,6 +18,7 @@ RUN_COMMAND="docker run -t --rm \
           -e OKTA_CLIENT_ID \
           -e OKTA_CLIENT_ID_PASS \
           -e OKTA_AUTH_SERVER \
+          -e OKTA_CLIENT_SECRET \
           -e OKTA_ACCESS_TOKEN \
           -e OKTA_USER \
           -e OKTA_PASSWORD \
