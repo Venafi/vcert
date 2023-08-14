@@ -79,9 +79,9 @@ func buildClient(config domain.Config, zone string) (endpoint.Connector, error) 
 		BaseUrl:       config.Connection.URL,
 		Zone:          zone,
 		Credentials: &endpoint.Authentication{
-			APIKey:      config.Connection.Credentials.Apikey,
+			APIKey:      config.Connection.Credentials.APIKey,
 			Scope:       config.Connection.Credentials.Scope,
-			ClientId:    config.Connection.Credentials.ClientID,
+			ClientId:    config.Connection.Credentials.ClientId,
 			AccessToken: config.Connection.Credentials.AccessToken,
 		},
 		ConnectionTrust: loadTrustBundle(config.Connection.TrustBundlePath),
@@ -162,7 +162,7 @@ func IsValidAccessToken(config domain.Config) (bool, error) {
 		BaseUrl:       config.Connection.URL,
 		Credentials: &endpoint.Authentication{
 			Scope:       config.Connection.Credentials.Scope,
-			ClientId:    config.Connection.Credentials.ClientID,
+			ClientId:    config.Connection.Credentials.ClientId,
 			AccessToken: config.Connection.Credentials.AccessToken,
 		},
 		ConnectionTrust: loadTrustBundle(config.Connection.TrustBundlePath),
@@ -186,7 +186,7 @@ func RefreshTPPTokens(config domain.Config) (string, string, error) {
 		BaseUrl:       config.Connection.URL,
 		Credentials: &endpoint.Authentication{
 			Scope:    config.Connection.Credentials.Scope,
-			ClientId: config.Connection.Credentials.ClientID,
+			ClientId: config.Connection.Credentials.ClientId,
 		},
 		ConnectionTrust: loadTrustBundle(config.Connection.TrustBundlePath),
 		LogVerbose:      false,
@@ -202,7 +202,7 @@ func RefreshTPPTokens(config domain.Config) (string, string, error) {
 		RefreshToken: config.Connection.Credentials.RefreshToken,
 		ClientPKCS12: config.Connection.Credentials.P12Task != "",
 		Scope:        config.Connection.Credentials.Scope,
-		ClientId:     config.Connection.Credentials.ClientID,
+		ClientId:     config.Connection.Credentials.ClientId,
 	}
 
 	if auth.RefreshToken != "" {

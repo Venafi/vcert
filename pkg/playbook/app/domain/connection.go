@@ -22,26 +22,27 @@ import (
 	"os"
 
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
+	"github.com/Venafi/vcert/v5/pkg/venafi"
 )
 
 // Connection represents the issuer that vCert will connect to
 // in order to issue certificates
 type Connection struct {
-	Credentials     Authentication `yaml:"credentials,omitempty"`
-	Insecure        bool           `yaml:"insecure,omitempty"`
-	Platform        Platform       `yaml:"platform,omitempty"`
-	TrustBundlePath string         `yaml:"trustBundle,omitempty"`
-	URL             string         `yaml:"url,omitempty"`
+	Credentials     Authentication  `yaml:"credentials,omitempty"`
+	Insecure        bool            `yaml:"insecure,omitempty"`
+	Platform        venafi.Platform `yaml:"platform,omitempty"`
+	TrustBundlePath string          `yaml:"trustBundle,omitempty"`
+	URL             string          `yaml:"url,omitempty"`
 }
 
 // GetConnectorType returns the type of vcert Connector this config will create
 func (c Connection) GetConnectorType() endpoint.ConnectorType {
 	switch c.Platform {
-	case CTypeFirefly:
+	case venafi.Firefly:
 		return endpoint.ConnectorTypeFirefly
-	case CTypeTPP:
+	case venafi.TPP:
 		return endpoint.ConnectorTypeTPP
-	case CTypeVaaS:
+	case venafi.TLSPCloud:
 		return endpoint.ConnectorTypeCloud
 	default:
 		return endpoint.ConnectorTypeFake
@@ -63,11 +64,11 @@ func (c Connection) validateTrustBundle() error {
 // and has the necessary values to connect to the given platform
 func (c Connection) IsValid() (bool, error) {
 	switch c.Platform {
-	case CTypeTPP:
+	case venafi.TPP:
 		return isValidTpp(c)
-	case CTypeVaaS:
+	case venafi.TLSPCloud:
 		return isValidVaaS(c)
-	case CTypeFirefly:
+	case venafi.Firefly:
 		return isValidFirefly(c)
 	default:
 		return false, fmt.Errorf("invalid connection type %v", c.Platform)

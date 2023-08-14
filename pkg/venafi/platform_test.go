@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package domain
+package venafi
 
 import (
 	"fmt"
@@ -24,7 +24,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type ConnectionTypeSuite struct {
+type PlatformSuite struct {
 	suite.Suite
 	testYaml  string
 	testCases []struct {
@@ -33,15 +33,15 @@ type ConnectionTypeSuite struct {
 	}
 }
 
-func (s *ConnectionTypeSuite) SetupTest() {
+func (s *PlatformSuite) SetupTest() {
 	s.testCases = []struct {
 		ct       Platform
 		strValue string
 	}{
-		{ct: CTypeUnknown, strValue: stringCTypeUnknown},
-		{ct: CTypeTPP, strValue: stringCTypeTPP},
-		{ct: CTypeVaaS, strValue: stringCTypeVaaS},
-		{ct: CTypeFirefly, strValue: stringCTypeFirefly},
+		{ct: Undefined, strValue: strPlatformUnknown},
+		{ct: TPP, strValue: strPlatformTPP},
+		{ct: TLSPCloud, strValue: strPlatformVaaS},
+		{ct: Firefly, strValue: strPlatformFirefly},
 	}
 
 	s.testYaml = `---
@@ -51,10 +51,10 @@ url: https://something.com
 }
 
 func TestConnectionType(t *testing.T) {
-	suite.Run(t, new(ConnectionTypeSuite))
+	suite.Run(t, new(PlatformSuite))
 }
 
-func (s *ConnectionTypeSuite) TestConnectionType_MarshalYAML() {
+func (s *PlatformSuite) TestConnectionType_MarshalYAML() {
 	for _, tc := range s.testCases {
 		s.Run(tc.strValue, func() {
 			data, err := tc.ct.MarshalYAML()
@@ -64,7 +64,7 @@ func (s *ConnectionTypeSuite) TestConnectionType_MarshalYAML() {
 	}
 }
 
-func (s *ConnectionTypeSuite) TestConnectionType_String() {
+func (s *PlatformSuite) TestConnectionType_String() {
 	for _, tc := range s.testCases {
 		s.Run(tc.strValue, func() {
 			str := tc.ct.String()
@@ -73,10 +73,13 @@ func (s *ConnectionTypeSuite) TestConnectionType_String() {
 	}
 }
 
-func (s *ConnectionTypeSuite) TestConnectionType_UnmarshalYAML() {
+func (s *PlatformSuite) TestConnectionType_UnmarshalYAML() {
 	for _, tc := range s.testCases {
 		s.Run(tc.strValue, func() {
-			var c Connection
+			var c struct {
+				Platform Platform `yaml:"platform,omitempty"`
+				Url      string   `yaml:"url,omitempty"`
+			}
 			parsedYaml := fmt.Sprintf(s.testYaml, tc.strValue)
 			err := yaml.Unmarshal([]byte(parsedYaml), &c)
 
