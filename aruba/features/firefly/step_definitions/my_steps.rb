@@ -11,8 +11,8 @@ When(/^I( interactively)? get credentials from "(.*)"(?: with)?(.+)?$/) do |inte
   case identity_provider
   when "Okta"
     idp_token_url = "#{ENV['OKTA_AUTH_SERVER']}/v1/token"
-    idp_user = ENV['OKTA_USER']
-    idp_password = ENV['OKTA_PASSWORD']
+    idp_user = ENV['OKTA_CREDS_USR']
+    idp_password = ENV['OKTA_CREDS_PSW']
     if flags === " username and no password" || flags === " username and password"
       idp_client_id = ENV['OKTA_CLIENT_ID_PASS']
     else

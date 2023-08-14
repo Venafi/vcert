@@ -20,8 +20,8 @@ RUN_COMMAND="docker run -t --rm \
           -e OKTA_AUTH_SERVER \
           -e OKTA_CLIENT_SECRET \
           -e OKTA_ACCESS_TOKEN \
-          -e OKTA_USER \
-          -e OKTA_PASSWORD \
+          -e OKTA_CREDS_USR \
+          -e OKTA_CREDS_PSW \
           -e OKTA_SCOPE"
 
 # Use getopts to handle command-line options
