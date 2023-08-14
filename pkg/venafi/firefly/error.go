@@ -22,7 +22,8 @@ import (
 )
 
 type responseError struct {
-	error string `json:"error,omitempty"`
+	ErrorKey         string `json:"error,omitempty"`
+	ErrorDescription string `json:"error_description,omitempty"`
 }
 
 func NewResponseError(b []byte) (*responseError, error) {
@@ -38,5 +39,5 @@ func NewResponseError(b []byte) (*responseError, error) {
 }
 
 func (e *responseError) Error() string {
-	return e.error
+	return e.ErrorKey
 }
