@@ -17,14 +17,16 @@
 package venafi
 
 import (
-	"fmt"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 )
 
-type PlatformType int
+type Platform int
 
 const (
-	Undefined PlatformType = iota
+	// Undefined represents an invalid Platform
+	Undefined Platform = iota
 	// Fake is a fake platform for tests
 	Fake
 	// TLSPCloud represents the TLS Protect Cloud platform type
@@ -33,35 +35,63 @@ const (
 	TPP
 	// Firefly represents the Firefly platform type
 	Firefly
+
+	// String representations of the Platform types
+	strPlatformFake    = "FAKE"
+	strPlatformFirefly = "FIREFLY"
+	strPlatformTPP     = "TPP"
+	strPlatformVaaS    = "VAAS"
+	strPlatformUnknown = "Unknown"
+
+	// alias for TPP
+	strPlatformTLSPDC = "TLSPDC"
+	// alias for VaaS
+	strPlatformTLSPC = "TLSPC"
 )
 
-func (t PlatformType) String() string {
-	switch t {
-	case Undefined:
-		return "Undefined platform"
+// String returns a string representation of this object
+func (p Platform) String() string {
+	switch p {
 	case Fake:
-		return "Fake platform"
-	case TLSPCloud:
-		return "TLS Protect Cloud"
-	case TPP:
-		return "Trust Protection Platform"
+		return strPlatformFake
 	case Firefly:
-		return "Firefly"
+		return strPlatformFirefly
+	case TPP:
+		return strPlatformTPP
+	case TLSPCloud:
+		return strPlatformVaaS
 	default:
-		return fmt.Sprintf("unexpected platform type: %d", t)
+		return strPlatformUnknown
 	}
 }
 
-func GetPlatformType(platformString string) PlatformType {
-	switch strings.ToLower(platformString) {
-	case "fake":
+// MarshalYAML customizes the behavior of Platform when being marshaled into a YAML document.
+// The returned value is marshaled in place of the original value implementing Marshaller
+func (p Platform) MarshalYAML() (interface{}, error) {
+	return p.String(), nil
+}
+
+// UnmarshalYAML customizes the behavior when being unmarshalled from a YAML document
+func (p *Platform) UnmarshalYAML(value *yaml.Node) error {
+	var strValue string
+	err := value.Decode(&strValue)
+	if err != nil {
+		return err
+	}
+	*p = GetPlatformType(strValue)
+	return nil
+}
+
+func GetPlatformType(platformString string) Platform {
+	switch strings.ToUpper(platformString) {
+	case strPlatformFake:
 		return Fake
-	case "tlspdatacenter":
-		return TLSPCloud
-	case "tlspcloud":
-		return TPP
-	case "firefly":
+	case strPlatformFirefly:
 		return Firefly
+	case strPlatformTPP, strPlatformTLSPDC:
+		return TPP
+	case strPlatformVaaS, strPlatformTLSPC:
+		return TLSPCloud
 	default:
 		return Undefined
 	}

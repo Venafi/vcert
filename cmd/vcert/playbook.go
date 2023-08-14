@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/Venafi/vcert/v5/pkg/venafi"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/pkcs12"
@@ -129,7 +130,7 @@ func doRunPlaybook(_ *cli.Context) error {
 		os.Exit(1)
 	}
 
-	if playbook.Config.Connection.Platform == domain.CTypeTPP {
+	if playbook.Config.Connection.Platform == venafi.TPP {
 		err = service.ValidateTPPCredentials(&playbook)
 		if err != nil {
 			zap.L().Error("invalid tpp credentials", zap.Error(err))
@@ -158,7 +159,7 @@ func setPlaybookTLSConfig(playbook domain.Playbook) error {
 	//  and to enable certificate authentication
 
 	// Set RenegotiateFreelyAsClient in case of we're communicating with MTLS enabled TPP server
-	if playbook.Config.Connection.Platform == domain.CTypeTPP {
+	if playbook.Config.Connection.Platform == venafi.TPP {
 		tlsConfig.Renegotiation = tls.RenegotiateFreelyAsClient
 	}
 
@@ -167,7 +168,7 @@ func setPlaybookTLSConfig(playbook domain.Playbook) error {
 	}
 
 	// Try to set up certificate authentication if enabled
-	if playbook.Config.Connection.Platform == domain.CTypeTPP && playbook.Config.Connection.Credentials.P12Task != "" {
+	if playbook.Config.Connection.Platform == venafi.TPP && playbook.Config.Connection.Credentials.P12Task != "" {
 		zap.L().Info("attempting to enable certificate authentication to TPP")
 		var p12FileLocation string
 		var p12Password string
