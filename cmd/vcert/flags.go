@@ -61,7 +61,7 @@ var (
 
 	flagDeviceURL = &cli.StringFlag{
 		Name:        "device-url",
-		Usage:       "REQUIRED/Firefly working in device flow. The url endpoint of the OAuth 2.0 identity provider to request a device code. Example for Okta: --token-device https://${yourOktaDomain}/device",
+		Usage:       "REQUIRED/Firefly working in device flow. The url endpoint of the OAuth 2.0 identity provider to request a device code. Example for Okta: --device-url https://${yourOktaDomain}/device",
 		Destination: &flags.deviceURL,
 	}
 
