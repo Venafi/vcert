@@ -114,6 +114,11 @@ func (c *Connector) Authorize(auth *endpoint.Authentication) (token *oauth2.Toke
 		return config.PasswordCredentialsToken(context.Background(), auth.User, auth.Password)
 	}
 
+	// if it's a device flow grant
+	if auth.IdentityProvider.DeviceURL != "" {
+		return c.getDeviceAccessToken(auth)
+	}
+
 	// if it's a client credentials flow grant
 	if auth.ClientSecret != "" {
 
