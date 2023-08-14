@@ -15,6 +15,7 @@ import (
 	"golang.org/x/crypto/pkcs12"
 
 	"github.com/Venafi/vcert/v5/pkg/playbook/app/domain"
+	"github.com/Venafi/vcert/v5/pkg/venafi"
 )
 
 type logLine struct {
@@ -55,7 +56,7 @@ func (s *PlaybookSuite) TestPlaybook_SetTLSConfig() {
 		},
 		Config: domain.Config{
 			Connection: domain.Connection{
-				Platform:    domain.CTypeTPP,
+				Platform:    venafi.TPP,
 				Credentials: domain.Authentication{P12Task: "p12Auth"},
 			},
 		},
@@ -114,7 +115,7 @@ func (s *PlaybookSuite) TestPlaybook_SetTLSConfig_noP12Certificate() {
 		},
 		Config: domain.Config{
 			Connection: domain.Connection{
-				Platform:    domain.CTypeTPP,
+				Platform:    venafi.TPP,
 				Credentials: domain.Authentication{P12Task: "p12Auth"},
 				Insecure:    true,
 			},
@@ -165,7 +166,7 @@ func (s *PlaybookSuite) TestPlaybook_SetTLSConfig_noCertAuth() {
 		CertificateTasks: nil,
 		Config: domain.Config{
 			Connection: domain.Connection{
-				Platform:    domain.CTypeVaaS,
+				Platform:    venafi.TLSPCloud,
 				Credentials: domain.Authentication{},
 			},
 		},
