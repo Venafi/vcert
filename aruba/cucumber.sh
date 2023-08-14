@@ -14,7 +14,15 @@ RUN_COMMAND="docker run -t --rm \
           -e CLOUD_APIKEY \
           -e CLOUD_ZONE \
           -e TPP_IP \
-          -e TPP_CN"
+          -e TPP_CN \
+          -e OKTA_CLIENT_ID \
+          -e OKTA_CLIENT_ID_PASS \
+          -e OKTA_AUTH_SERVER \
+          -e OKTA_CLIENT_SECRET \
+          -e OKTA_ACCESS_TOKEN \
+          -e OKTA_CREDS_USR \
+          -e OKTA_CREDS_PSW \
+          -e OKTA_SCOPE"
 
 # Use getopts to handle command-line options
 while getopts "a:b:" opt; do
