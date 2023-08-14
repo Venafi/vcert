@@ -100,9 +100,9 @@ func (a *Authentication) UnmarshalYAML(value *yaml.Node) error {
 	if _, found := authMap[clientSecret]; found {
 		a.ClientSecret = authMap[clientSecret].(string)
 	}
-	if _, found := authMap[idP]; found {
-		//a.IdentityProvider = authMap[].(string)
-	}
+	//if _, found := authMap[idP]; found {
+	//	a.IdentityProvider = authMap[].(string)
+	//}
 	if _, found := authMap[refreshToken]; found {
 		a.RefreshToken = authMap[refreshToken].(string)
 	}
