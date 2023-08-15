@@ -21,10 +21,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Venafi/vcert/v5/pkg/endpoint"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/Venafi/vcert/v5/pkg/certificate"
+	"github.com/Venafi/vcert/v5/pkg/endpoint"
 	"github.com/Venafi/vcert/v5/pkg/playbook/app/domain"
 )
 
@@ -77,6 +77,10 @@ func (s *WriterSuite) SetupTest() {
 					Authentication: endpoint.Authentication{
 						AccessToken:  "123fooBar",
 						RefreshToken: "456XyzABc",
+						IdentityProvider: &endpoint.OAuthProvider{
+							TokenURL: "okta.com",
+							Audience: "myAudience",
+						},
 					},
 					P12Task: "",
 				},
