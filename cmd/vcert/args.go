@@ -116,7 +116,7 @@ type commandFlags struct {
 	validDays            string
 	validPeriod          string
 	platformString       string
-	platform             venafi.PlatformType
+	platform             venafi.Platform
 	policyName           string
 	policySpecLocation   string
 	policyConfigStarter  bool

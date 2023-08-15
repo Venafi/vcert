@@ -140,31 +140,6 @@ type Filter struct {
 	WithExpired bool
 }
 
-// Authentication provides a struct for authentication data. Either specify User and Password for Trust Protection Platform
-// or Firefly or ClientId and ClientSecret for Firefly or specify an APIKey for TLS Protect Cloud.
-type Authentication struct {
-	User         string
-	Password     string
-	APIKey       string
-	RefreshToken string
-	Scope        string
-	ClientId     string
-	ClientSecret string
-	AccessToken  string
-	ClientPKCS12 bool
-	// IdentityProvider specify the OAuth 2.0 which VCert will be working for authorization purposes
-	IdentityProvider *OAuthProvider
-}
-
-// OAuthProvider provides a struct for the OAuth 2.0 providers information
-type OAuthProvider struct {
-	//OAuthProviderType string
-	//AuthURL           string
-	TokenURL  string
-	DeviceURL string
-	Audience  string
-}
-
 // todo: replace with verror
 // ErrRetrieveCertificateTimeout provides a common error structure for a timeout while retrieving a certificate
 type ErrRetrieveCertificateTimeout struct {

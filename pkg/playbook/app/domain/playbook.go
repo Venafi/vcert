@@ -19,6 +19,8 @@ package domain
 import (
 	"errors"
 	"fmt"
+
+	"github.com/Venafi/vcert/v5/pkg/venafi"
 )
 
 const (
@@ -45,7 +47,7 @@ func NewPlaybook() Playbook {
 		CertificateTasks: make(CertificateTasks, 0),
 		Config: Config{
 			Connection: Connection{
-				Platform:        CTypeVaaS,
+				Platform:        venafi.TLSPCloud,
 				URL:             tlspcURL,
 				TrustBundlePath: "",
 			},

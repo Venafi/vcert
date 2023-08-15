@@ -21,6 +21,8 @@ import (
 	"runtime"
 	"testing"
 
+	"github.com/Venafi/vcert/v5/pkg/endpoint"
+	"github.com/Venafi/vcert/v5/pkg/venafi"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -48,9 +50,11 @@ func (s *PlaybookSuite) SetupTest() {
 
 	config := Config{
 		Connection: Connection{
-			Platform: CTypeVaaS,
+			Platform: venafi.TLSPCloud,
 			Credentials: Authentication{
-				Apikey: "foobarGibberish123",
+				Authentication: endpoint.Authentication{
+					APIKey: "foobarGibberish123",
+				},
 			},
 		},
 	}
@@ -82,8 +86,10 @@ func (s *PlaybookSuite) SetupTest() {
 				Config: Config{
 					Connection: Connection{
 						Credentials: Authentication{
-							AccessToken: "foobar123",
-							Apikey:      "xyz456abc",
+							Authentication: endpoint.Authentication{
+								AccessToken: "foobar123",
+								APIKey:      "xyz456abc",
+							},
 						},
 					},
 				},
@@ -96,7 +102,9 @@ func (s *PlaybookSuite) SetupTest() {
 				Config: Config{
 					Connection: Connection{
 						Credentials: Authentication{
-							AccessToken: "someToken",
+							Authentication: endpoint.Authentication{
+								AccessToken: "someToken",
+							},
 						},
 					},
 				},
@@ -109,7 +117,9 @@ func (s *PlaybookSuite) SetupTest() {
 				Config: Config{
 					Connection: Connection{
 						Credentials: Authentication{
-							AccessToken: "someToken",
+							Authentication: endpoint.Authentication{
+								AccessToken: "someToken",
+							},
 						},
 						URL:             "https://foo.bar.kwan",
 						TrustBundlePath: "/foo/bar/bundle.pem",

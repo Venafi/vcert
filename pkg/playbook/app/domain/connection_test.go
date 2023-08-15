@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Venafi/vcert/v5/pkg/venafi"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
@@ -48,9 +49,11 @@ func (s *ConnectionSuite) SetupTest() {
 		{
 			name: "Firefly_valid",
 			c: Connection{
-				Platform: CTypeFirefly,
+				Platform: venafi.Firefly,
 				Credentials: Authentication{
-					Apikey: "asdasdadsd",
+					Authentication: endpoint.Authentication{
+						APIKey: "asdasdadsd",
+					},
 				},
 			},
 			expectedCType: endpoint.ConnectorTypeFirefly,
@@ -59,7 +62,7 @@ func (s *ConnectionSuite) SetupTest() {
 		{
 			name: "Firefly_invalid_empty_credentials",
 			c: Connection{
-				Platform:    CTypeFirefly,
+				Platform:    venafi.Firefly,
 				Credentials: Authentication{},
 			},
 			expectedCType: endpoint.ConnectorTypeFirefly,
@@ -69,9 +72,11 @@ func (s *ConnectionSuite) SetupTest() {
 		{
 			name: "TPP_valid",
 			c: Connection{
-				Platform: CTypeTPP,
+				Platform: venafi.TPP,
 				Credentials: Authentication{
-					AccessToken: "123abc###",
+					Authentication: endpoint.Authentication{
+						AccessToken: "123abc###",
+					},
 				},
 				URL:             "https://my.tpp.instance.com",
 				TrustBundlePath: "",
@@ -83,7 +88,7 @@ func (s *ConnectionSuite) SetupTest() {
 		{
 			name: "TPP_invalid_empty_credentials",
 			c: Connection{
-				Platform:    CTypeTPP,
+				Platform:    venafi.TPP,
 				Credentials: Authentication{},
 				URL:         "https://my.tpp.instance.com",
 			},
@@ -94,9 +99,11 @@ func (s *ConnectionSuite) SetupTest() {
 		{
 			name: "TPP_invalid_no_url",
 			c: Connection{
-				Platform: CTypeTPP,
+				Platform: venafi.TPP,
 				Credentials: Authentication{
-					AccessToken: "123abc###",
+					Authentication: endpoint.Authentication{
+						AccessToken: "123abc###",
+					},
 				},
 			},
 			expectedCType: endpoint.ConnectorTypeTPP,
@@ -106,9 +113,11 @@ func (s *ConnectionSuite) SetupTest() {
 		{
 			name: "TPP_invalid_trustbundle_not_exist",
 			c: Connection{
-				Platform: CTypeTPP,
+				Platform: venafi.TPP,
 				Credentials: Authentication{
-					AccessToken: "123abc###",
+					Authentication: endpoint.Authentication{
+						AccessToken: "123abc###",
+					},
 				},
 				URL:             "https://my.tpp.instance.com",
 				TrustBundlePath: "/foo/bar/trustbundle.pem",
@@ -120,9 +129,11 @@ func (s *ConnectionSuite) SetupTest() {
 		{
 			name: "VaaS_valid",
 			c: Connection{
-				Platform: CTypeVaaS,
+				Platform: venafi.TLSPCloud,
 				Credentials: Authentication{
-					Apikey: "xxx-XXX-xxx",
+					Authentication: endpoint.Authentication{
+						APIKey: "xxx-XXX-xxx",
+					},
 				},
 			},
 			expectedCType: endpoint.ConnectorTypeCloud,
@@ -131,7 +142,7 @@ func (s *ConnectionSuite) SetupTest() {
 		{
 			name: "VaaS_invalid_empty_credentials",
 			c: Connection{
-				Platform:    CTypeVaaS,
+				Platform:    venafi.TLSPCloud,
 				Credentials: Authentication{},
 			},
 			expectedCType: endpoint.ConnectorTypeCloud,
@@ -141,11 +152,11 @@ func (s *ConnectionSuite) SetupTest() {
 		{
 			name: "Unknown_invalid",
 			c: Connection{
-				Platform: CTypeUnknown,
+				Platform: venafi.Undefined,
 			},
 			expectedCType: endpoint.ConnectorTypeFake,
 			expectedValid: false,
-			expectedErr:   fmt.Errorf("invalid connection type %v", CTypeUnknown),
+			expectedErr:   fmt.Errorf("invalid connection type %v", venafi.Undefined),
 		},
 	}
 }

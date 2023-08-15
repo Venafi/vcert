@@ -21,6 +21,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/Venafi/vcert/v5/pkg/endpoint"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/Venafi/vcert/v5/pkg/certificate"
@@ -73,8 +74,11 @@ func (s *WriterSuite) SetupTest() {
 				URL:             "https://foo.bar.venafi.com",
 				TrustBundlePath: "path/to/my/trustbundle.pem",
 				Credentials: domain.Authentication{
-					AccessToken:  "123fooBar",
-					RefreshToken: "456XyzABc",
+					Authentication: endpoint.Authentication{
+						AccessToken:  "123fooBar",
+						RefreshToken: "456XyzABc",
+					},
+					P12Task: "",
 				},
 			},
 		},

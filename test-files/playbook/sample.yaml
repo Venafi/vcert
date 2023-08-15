@@ -1,6 +1,8 @@
 config:
-  credentials:
-    apikey: fooo123bar!
+  connection:
+    type: TLSPC
+    credentials:
+      apiKey: fooo123bar!
 certificateTasks:
   - name: mtls
     request:
