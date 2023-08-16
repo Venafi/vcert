@@ -60,9 +60,9 @@ func EnrollCertificate(config domain.Config, request domain.PlaybookRequest) (*c
 	if client.SupportSynchronousRequestCertificate() {
 		pcc, err = client.SynchronousRequestCertificate(&vRequest)
 	} else {
-		reqID, err := client.RequestCertificate(&vRequest)
-		if err != nil {
-			return nil, nil, err
+		reqID, reqErr := client.RequestCertificate(&vRequest)
+		if reqErr != nil {
+			return nil, nil, reqErr
 		}
 		zap.L().Debug("successfully requested certificate", zap.String("requestID", reqID))
 
