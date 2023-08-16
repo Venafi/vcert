@@ -178,3 +178,16 @@ end
 Before('@TODO') do  # will only run if the test has @TODO annotation
   skip_this_scenario
 end
+
+When(/^I enroll(?: a)?( random)? certificate with defined platform (.*) with (.+)?$/) do |random, platform, flags|
+  if random
+    cn = " -cn " + random_cn
+  end
+
+  platform_flag = " -platform " + platform
+
+  trust_bundle_flag = " -trust-bundle '#{ENV["FIREFLY_CA_BUNDLE"]}' "
+
+  cmd = "vcert enroll #{platform_flag} #{ENDPOINTS[platform]} #{ZONE[platform]} #{cn} #{flags} #{trust_bundle_flag}"
+  steps %{Then I try to run `#{cmd}`}
+end
