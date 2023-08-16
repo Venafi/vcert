@@ -17,8 +17,11 @@
 package domain
 
 import (
-	"github.com/Venafi/vcert/v5/pkg/endpoint"
+	"fmt"
+
 	"gopkg.in/yaml.v3"
+
+	"github.com/Venafi/vcert/v5/pkg/endpoint"
 )
 
 const (
@@ -30,6 +33,8 @@ const (
 	refreshToken = "refreshToken"
 	p12Task      = "p12Task"
 	scope        = "scope"
+	idPTokenURL  = "tokenURL"
+	idPAudience  = "audience"
 )
 
 // Authentication holds the credentials to connect to Venafi platforms: TPP and TLSPC
@@ -88,30 +93,54 @@ func (a *Authentication) UnmarshalYAML(value *yaml.Node) error {
 		return err
 	}
 
-	if _, found := authMap[accessToken]; found {
-		a.AccessToken = authMap[accessToken].(string)
+	if val, found := authMap[accessToken]; found {
+		a.AccessToken = val.(string)
 	}
-	if _, found := authMap[apiKey]; found {
-		a.APIKey = authMap[apiKey].(string)
+	if val, found := authMap[apiKey]; found {
+		a.APIKey = val.(string)
 	}
-	if _, found := authMap[clientID]; found {
-		a.ClientId = authMap[clientID].(string)
+	if val, found := authMap[clientID]; found {
+		a.ClientId = val.(string)
 	}
-	if _, found := authMap[clientSecret]; found {
-		a.ClientSecret = authMap[clientSecret].(string)
+	if val, found := authMap[clientSecret]; found {
+		a.ClientSecret = val.(string)
 	}
-	//if _, found := authMap[idP]; found {
-	//	a.IdentityProvider = authMap[].(string)
-	//}
-	if _, found := authMap[refreshToken]; found {
-		a.RefreshToken = authMap[refreshToken].(string)
+	if val, found := authMap[idP]; found {
+		provider, err := unmarshallIdP(val)
+		if err != nil {
+			return err
+		}
+		a.IdentityProvider = provider
 	}
-	if _, found := authMap[p12Task]; found {
-		a.P12Task = authMap[p12Task].(string)
+	if val, found := authMap[refreshToken]; found {
+		a.RefreshToken = val.(string)
 	}
-	if _, found := authMap[scope]; found {
-		a.Scope = authMap[scope].(string)
+	if val, found := authMap[p12Task]; found {
+		a.P12Task = val.(string)
+	}
+	if val, found := authMap[scope]; found {
+		a.Scope = val.(string)
 	}
 
 	return nil
+}
+
+func unmarshallIdP(value interface{}) (*endpoint.OAuthProvider, error) {
+	if value == nil {
+		return nil, fmt.Errorf("idP value is nil")
+	}
+	idPMap, ok := value.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("expected idP map but got %v", value)
+	}
+	provider := endpoint.OAuthProvider{}
+
+	if val, found := idPMap[idPTokenURL]; found {
+		provider.TokenURL = val.(string)
+	}
+	if val, found := idPMap[idPAudience]; found {
+		provider.Audience = val.(string)
+	}
+
+	return &provider, nil
 }
