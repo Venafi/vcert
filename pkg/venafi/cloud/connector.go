@@ -29,7 +29,6 @@ import (
 	"log"
 	"net/http"
 	netUrl "net/url"
-	"regexp"
 	"strings"
 	"time"
 
@@ -673,16 +672,9 @@ func normalizeURL(url string) (normalizedURL string, err error) {
 		url = apiURL
 		//return "", fmt.Errorf("base URL cannot be empty")
 	}
-	modified := strings.ToLower(url)
-	reg := regexp.MustCompile("^http(|s)://")
-	if reg.FindStringIndex(modified) == nil {
-		modified = "https://" + modified
-	} else {
-		modified = reg.ReplaceAllString(modified, "https://")
-	}
-	if !strings.HasSuffix(modified, "/") {
-		modified = modified + "/"
-	}
+
+	modified := util.NormalizeUrl(url)
+
 	normalizedURL = modified
 	return normalizedURL, nil
 }

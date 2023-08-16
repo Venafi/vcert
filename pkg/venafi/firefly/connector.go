@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"regexp"
 	"strings"
 	"time"
 
@@ -70,13 +69,7 @@ func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (
 
 func normalizeURL(url string) (normalizedURL string, err error) {
 
-	var baseUrlRegex = regexp.MustCompile(`^https://[a-z\d]+[-a-z\d.]+[a-z\d][:\d]*/$`)
-
-	modified := util.NormalizeSlash(url)
-
-	if loc := baseUrlRegex.FindStringIndex(modified); loc == nil {
-		return "", fmt.Errorf("The specified URL is invalid. %s\nExpected URL format 'https://my.company.com'", url)
-	}
+	modified := util.NormalizeUrl(url)
 
 	return modified, nil
 }

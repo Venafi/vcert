@@ -77,7 +77,7 @@ func normalizeURL(url string) (normalizedURL string, err error) {
 
 	var baseUrlRegex = regexp.MustCompile(`^https://[a-z\d]+[-a-z\d.]+[a-z\d][:\d]*/$`)
 
-	modified := util.NormalizeSlash(url)
+	modified := util.NormalizeUrl(url)
 
 	modified = strings.TrimSuffix(modified, "vedsdk/")
 
