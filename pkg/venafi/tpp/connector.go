@@ -74,16 +74,10 @@ func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (
 
 // normalizeURL normalizes the base URL used to communicate with TPP
 func normalizeURL(url string) (normalizedURL string, err error) {
+
 	var baseUrlRegex = regexp.MustCompile(`^https://[a-z\d]+[-a-z\d.]+[a-z\d][:\d]*/$`)
-	modified := strings.ToLower(url)
-	if strings.HasPrefix(modified, "http://") {
-		modified = "https://" + modified[7:]
-	} else if !strings.HasPrefix(modified, "https://") {
-		modified = "https://" + modified
-	}
-	if !strings.HasSuffix(modified, "/") {
-		modified = modified + "/"
-	}
+
+	modified := util.NormalizeSlash(url)
 
 	modified = strings.TrimSuffix(modified, "vedsdk/")
 

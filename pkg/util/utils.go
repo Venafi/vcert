@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/youmark/pkcs8"
@@ -114,4 +115,18 @@ func ArrayContainsString(s []string, e string) bool {
 		}
 	}
 	return false
+}
+
+func NormalizeSlash(url string) string {
+
+	modified := strings.ToLower(url)
+	if strings.HasPrefix(modified, "http://") {
+		modified = "https://" + modified[7:]
+	} else if !strings.HasPrefix(modified, "https://") {
+		modified = "https://" + modified
+	}
+	if !strings.HasSuffix(modified, "/") {
+		modified = modified + "/"
+	}
+	return modified
 }

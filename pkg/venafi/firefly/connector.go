@@ -22,9 +22,11 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 
+	"github.com/Venafi/vcert/v5/pkg/util"
 	"github.com/sosodev/duration"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
@@ -59,7 +61,24 @@ func (c *Connector) RetrieveAvailableSSHTemplates() (response []certificate.SshA
 
 // NewConnector creates a new Firefly Connector object used to communicate with Firefly
 func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (*Connector, error) {
-	return &Connector{baseURL: url, zone: zone, verbose: verbose, trust: trust}, nil
+	normalizedUrl, err := normalizeURL(url)
+	if err != nil {
+		return nil, fmt.Errorf("%w: failed to normalize URL: %v", verror.UserDataError, err)
+	}
+	return &Connector{baseURL: normalizedUrl, zone: zone, verbose: verbose, trust: trust}, nil
+}
+
+func normalizeURL(url string) (normalizedURL string, err error) {
+
+	var baseUrlRegex = regexp.MustCompile(`^https://[a-z\d]+[-a-z\d.]+[a-z\d][:\d]*/$`)
+
+	modified := util.NormalizeSlash(url)
+
+	if loc := baseUrlRegex.FindStringIndex(modified); loc == nil {
+		return "", fmt.Errorf("The specified URL is invalid. %s\nExpected URL format 'https://my.company.com'", url)
+	}
+
+	return modified, nil
 }
 
 func (c *Connector) SetZone(zone string) {
