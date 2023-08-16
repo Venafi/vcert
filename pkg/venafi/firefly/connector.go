@@ -76,10 +76,17 @@ func (c *Connector) Ping() (err error) {
 }
 
 func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
-	if auth.AccessToken != "" {
-		c.accessToken = auth.AccessToken
+	if auth.AccessToken == "" {
+		var token *oauth2.Token
+		token, err = c.Authorize(auth)
+		if err != nil {
+			return err
+		}
+		auth.AccessToken = token.AccessToken
 	}
 
+	//setting the accessToken to the connector
+	c.accessToken = auth.AccessToken
 	return err
 }
 
@@ -136,7 +143,7 @@ func (c *Connector) Authorize(auth *endpoint.Authentication) (token *oauth2.Toke
 		return config.Token(context.Background())
 	}
 
-	return
+	return token, fmt.Errorf("failed to authenticate: can't determine valid credentials set")
 }
 
 func (c *Connector) RetrieveSystemVersion() (string, error) {
