@@ -75,10 +75,14 @@ func (c *Connector) Ping() (err error) {
 	panic("operation is not supported yet")
 }
 
-func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
+func (c *Connector) Authenticate(auth *endpoint.Authentication) error {
+	if auth == nil {
+		return fmt.Errorf("failed to authenticate: missing credentials")
+	}
+
 	if auth.AccessToken == "" {
 		var token *oauth2.Token
-		token, err = c.Authorize(auth)
+		token, err := c.Authorize(auth)
 		if err != nil {
 			return err
 		}
@@ -87,7 +91,7 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 
 	//setting the accessToken to the connector
 	c.accessToken = auth.AccessToken
-	return err
+	return nil
 }
 
 // Authorize Get an OAuth access token
@@ -298,7 +302,7 @@ func (e *ErrCertNotFound) Unwrap() error {
 	return e.error
 }
 
-func (c *Connector) ResetCertificate(_ *certificate.Request, restart bool) (err error) {
+func (c *Connector) ResetCertificate(_ *certificate.Request, _ bool) (err error) {
 	panic("operation is not supported yet")
 }
 
