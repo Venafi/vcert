@@ -6,6 +6,9 @@ COPY . /vcert/
 ENV BUNDLE_PATH="/vcert/tpp"
 RUN mkdir -p $BUNDLE_PATH
 COPY tpp-bundle.pem $BUNDLE_PATH
+ENV FIREFLY_BUNDLE_PATH="/vcert/firefly"
+RUN mkdir -p $FIREFLY_BUNDLE_PATH
+COPY firefly-bundle.pem $FIREFLY_BUNDLE_PATH
 ENV PATH="/vcert/bin:${PATH}"
 
 WORKDIR /vcert/
