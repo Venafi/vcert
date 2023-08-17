@@ -19,10 +19,11 @@ RUN_COMMAND="docker run -t --rm \
           -e OKTA_CLIENT_ID_PASS \
           -e OKTA_AUTH_SERVER \
           -e OKTA_CLIENT_SECRET \
-          -e OKTA_ACCESS_TOKEN \
+          -e IDP_ACCESS_TOKEN \
           -e OKTA_CREDS_USR \
           -e OKTA_CREDS_PSW \
-          -e OKTA_SCOPE"
+          -e OKTA_SCOPE \
+          -e FIREFLY_CA_BUNDLE"
 
 # Use getopts to handle command-line options
 while getopts "a:b:" opt; do
