@@ -60,8 +60,20 @@ func (c *Connector) RetrieveAvailableSSHTemplates() (response []certificate.SshA
 
 // NewConnector creates a new Firefly Connector object used to communicate with Firefly
 func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (*Connector, error) {
-	normalizedUrl := util.NormalizeUrl(url)
-	return &Connector{baseURL: normalizedUrl, zone: zone, verbose: verbose, trust: trust}, nil
+	if url != "" {
+		var err error
+		url, err = normalizeURL(url)
+		if err != nil {
+			return nil, fmt.Errorf("%w: failed to normalize URL: %v", verror.UserDataError, err)
+		}
+	}
+	return &Connector{baseURL: url, zone: zone, verbose: verbose, trust: trust}, nil
+}
+
+// normalizeURL normalizes the base URL used to communicate with Firefly
+func normalizeURL(url string) (normalizedURL string, err error) {
+	normalizedURL = util.NormalizeUrl(url)
+	return normalizedURL, err
 }
 
 func (c *Connector) SetZone(zone string) {

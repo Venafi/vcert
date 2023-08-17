@@ -670,12 +670,8 @@ func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (
 func normalizeURL(url string) (normalizedURL string, err error) {
 	if url == "" {
 		url = apiURL
-		//return "", fmt.Errorf("base URL cannot be empty")
 	}
-
-	modified := util.NormalizeUrl(url)
-
-	normalizedURL = modified
+	normalizedURL = util.NormalizeUrl(url)
 	return normalizedURL, nil
 }
 
