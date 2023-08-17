@@ -23,6 +23,8 @@ RUN_COMMAND="docker run -t --rm \
           -e OKTA_CREDS_USR \
           -e OKTA_CREDS_PSW \
           -e OKTA_SCOPE \
+          -e FIREFLY_ZONE \
+          -e FIREFLY_URL \
           -e FIREFLY_CA_BUNDLE"
 
 # Use getopts to handle command-line options
