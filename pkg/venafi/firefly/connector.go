@@ -25,7 +25,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Venafi/vcert/v5/pkg/util"
 	"github.com/sosodev/duration"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
@@ -33,6 +32,7 @@ import (
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
 	"github.com/Venafi/vcert/v5/pkg/policy"
+	"github.com/Venafi/vcert/v5/pkg/util"
 	"github.com/Venafi/vcert/v5/pkg/verror"
 )
 
