@@ -107,12 +107,12 @@ func (c *Connector) request(method string, resource urlResource, data interface{
 	r.Header.Add("cache-control", "no-cache")
 
 	res, err := c.getHTTPClient().Do(r)
+	if err != nil {
+		return
+	}
 	if res != nil {
 		statusCode = res.StatusCode
 		statusText = res.Status
-	}
-	if err != nil {
-		return
 	}
 
 	defer res.Body.Close()
@@ -161,6 +161,7 @@ func (c *Connector) getHTTPClient() *http.Client {
 		}
 		tlsConfig.RootCAs = c.trust
 	}
+
 	netTransport.TLSClientConfig = tlsConfig
 	c.client = &http.Client{
 		Timeout:   time.Second * 30,

@@ -105,7 +105,7 @@ func isValidTpp(c Connection) (bool, error) {
 
 func isValidVaaS(c Connection) (bool, error) {
 	// Credentials are not empty
-	if c.Credentials.IsEmpty() {
+	if c.Credentials.APIKey == "" {
 		return false, ErrNoCredentials
 	}
 
@@ -113,9 +113,46 @@ func isValidVaaS(c Connection) (bool, error) {
 }
 
 func isValidFirefly(c Connection) (bool, error) {
-	// Credentials are not empty
-	if c.Credentials.IsEmpty() {
+
+	if c.URL == "" {
+		return false, ErrNoFireflyURL
+	}
+
+	// Auth method: User-Password
+	userPassword := false
+	if c.Credentials.User != "" && c.Credentials.Password != "" {
+		userPassword = true
+	}
+
+	//Auth method: Client Secret
+	cSecret := false
+	if c.Credentials.ClientSecret != "" {
+		cSecret = true
+	}
+
+	//Auth method: Access Token
+	token := false
+	if c.Credentials.AccessToken != "" {
+		token = true
+	}
+
+	if !userPassword && !cSecret && !token {
 		return false, ErrNoCredentials
+	}
+
+	// Auth method is AccessToken, no further validations required
+	if token {
+		return true, nil
+	}
+
+	//Validate ClientId
+	if c.Credentials.ClientId == "" {
+		return false, ErrNoClientId
+	}
+
+	// Validate Identity Provider values
+	if c.Credentials.IdentityProvider == nil || c.Credentials.IdentityProvider.TokenURL == "" {
+		return false, ErrNoIdentityProviderURL
 	}
 
 	return true, nil

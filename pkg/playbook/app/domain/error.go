@@ -67,4 +67,11 @@ var (
 	ErrInvalidCAPILocation = fmt.Errorf("invalid CAPI location. Should be either 'LocalMachine' or 'CurrentUser' (i.e. 'LocalMachine\\My')")
 	// ErrInvalidCAPIStoreName is thrown when certificates.installations[].type is CAPI but the location is malformed
 	ErrInvalidCAPIStoreName = fmt.Errorf("invalid CAPI store name. Should contain a valid storeName after the '\\' (i.e. 'LocalMachine\\My')")
+
+	// ErrNoFireflyURL is thrown when platform is Firefly but no url is specified inf config.credentials
+	ErrNoFireflyURL = fmt.Errorf("no url defined. Firefly platform requires an url to the Firefly instance")
+	// ErrNoClientId is thrown when platform is Firefly and no config.credentials.clientId is defined
+	ErrNoClientId = fmt.Errorf("no cliendId defined. Firefly platform requires a clientId to request OAuth2 token")
+	// ErrNoIdentityProviderURL is thrown when platform is Firefly and no config.credentials.tokenURL is defined to request an OAuth2 Token
+	ErrNoIdentityProviderURL = fmt.Errorf("no tokenURL defined in credentials. tokenURL is required to request OAuth2 token")
 )

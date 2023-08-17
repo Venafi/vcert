@@ -83,7 +83,7 @@ func getPrivateKey(privateKeyStr string, keyPassword string) (interface{}, error
 	return privateKey, nil
 }
 
-func prepareCertificateForBundle(request certificate.Request, pcc certificate.PEMCollection) (*certificate.PEMCollection, error) {
+func prepareCertificateForBundle(request certificate.Request, pcc certificate.PEMCollection, decryptPK bool) (*certificate.PEMCollection, error) {
 	// Private key generated locally. Need to add it to the PEM Collection
 	if request.CsrOrigin == certificate.LocalGeneratedCSR {
 		err := pcc.AddPrivateKey(request.PrivateKey, []byte(request.KeyPassword), "")
@@ -94,7 +94,8 @@ func prepareCertificateForBundle(request certificate.Request, pcc certificate.PE
 	}
 
 	//Key needs to be decrypted in order to create the bundle (PKCS12, JKS)
-	if pcc.PrivateKey != "" {
+	// Firefly does not encrypt Private Keys. Thus, Private Key should not be decrypted in that scenario
+	if pcc.PrivateKey != "" && decryptPK {
 		privateKey, err := vcertutil.DecryptPrivateKey(pcc.PrivateKey, request.KeyPassword)
 		if err != nil {
 			return nil, err
@@ -213,8 +214,8 @@ func needRenewal(cert *x509.Certificate, renewBefore string) bool {
 
 // CreateX509Cert takes a PEMCollection and creates an x509.Certificate object from it
 // Could also add the x509.Certificate object directly to the PEM collection in the original constructor
-func CreateX509Cert(pcc *certificate.PEMCollection, certReq *certificate.Request) (*Certificate, *certificate.PEMCollection, error) {
-	preparedPcc, err := prepareCertificateForBundle(*certReq, *pcc)
+func CreateX509Cert(pcc *certificate.PEMCollection, certReq *certificate.Request, decryptPK bool) (*Certificate, *certificate.PEMCollection, error) {
+	preparedPcc, err := prepareCertificateForBundle(*certReq, *pcc, decryptPK)
 
 	if err != nil {
 		return nil, nil, fmt.Errorf("could not prepare certificate and key: %w", err)
