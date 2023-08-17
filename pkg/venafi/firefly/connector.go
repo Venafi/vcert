@@ -32,6 +32,7 @@ import (
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
 	"github.com/Venafi/vcert/v5/pkg/policy"
+	"github.com/Venafi/vcert/v5/pkg/util"
 	"github.com/Venafi/vcert/v5/pkg/verror"
 )
 
@@ -59,7 +60,20 @@ func (c *Connector) RetrieveAvailableSSHTemplates() (response []certificate.SshA
 
 // NewConnector creates a new Firefly Connector object used to communicate with Firefly
 func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (*Connector, error) {
+	if url != "" {
+		var err error
+		url, err = normalizeURL(url)
+		if err != nil {
+			return nil, fmt.Errorf("%w: failed to normalize URL: %v", verror.UserDataError, err)
+		}
+	}
 	return &Connector{baseURL: url, zone: zone, verbose: verbose, trust: trust}, nil
+}
+
+// normalizeURL normalizes the base URL used to communicate with Firefly
+func normalizeURL(url string) (normalizedURL string, err error) {
+	normalizedURL = util.NormalizeUrl(url)
+	return normalizedURL, err
 }
 
 func (c *Connector) SetZone(zone string) {
