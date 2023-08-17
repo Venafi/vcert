@@ -39,6 +39,8 @@ type urlResource string
 const (
 	urlResourceCertificateRequest    urlResource = "v1/certificaterequest"
 	urlResourceCertificateRequestCSR urlResource = "v1/certificatesigningrequest"
+
+	scopesSeparator = " "
 )
 
 type certificateRequest struct {

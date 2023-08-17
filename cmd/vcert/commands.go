@@ -237,6 +237,13 @@ func runBeforeCommand(c *cli.Context) error {
 		flags.platform = venafi.GetPlatformType(flags.platformString)
 	}
 
+	if flags.platform == venafi.Firefly {
+		if flags.scope != "" {
+			//The separator in scope flag is ";" but Firefly use " " as separator
+			flags.scope = strings.ReplaceAll(flags.scope, ";", " ")
+		}
+	}
+
 	return nil
 }
 

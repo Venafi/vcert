@@ -39,13 +39,13 @@ type DeviceCred struct {
 	ExpiresIn       int64  `json:"expires_in"`
 }
 
-func (c *Connector) getDeviceAccessToken(auth *endpoint.Authentication) (*oauth2.Token, error) {
+func (c *Connector) getDeviceAccessToken(auth *endpoint.Authentication) (token *oauth2.Token, err error) {
 
 	//requesting the device code
 	devCred, err := c.requestDeviceCode(auth)
 
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	//setting as default verificationURL the value returned in VerificationURI given that is the used for the most of the
@@ -57,10 +57,14 @@ func (c *Connector) getDeviceAccessToken(auth *endpoint.Authentication) (*oauth2
 		verificationURL = devCred.VerificationURL
 	}
 
-	fmt.Printf("please go to %v and enter the code %v . It will expire in %dm and %ds\n\n", verificationURL, devCred.UserCode, devCred.ExpiresIn/60, devCred.ExpiresIn%60)
+	fmt.Printf("Please open de following URL in your web browser:\n\n%v\n\n and then enter the code:\n\n%v\n\nIt will expire in %dm and %ds\n\n", verificationURL, devCred.UserCode, devCred.ExpiresIn/60, devCred.ExpiresIn%60)
 
 	//waiting for the user authorization
-	return c.waitForDeviceAuthorization(devCred, auth)
+	token, err = c.waitForDeviceAuthorization(devCred, auth)
+	if err == nil {
+		fmt.Println("Successfully authorized device.")
+	}
+	return
 }
 
 func (c *Connector) requestDeviceCode(auth *endpoint.Authentication) (*DeviceCred, error) {
@@ -135,22 +139,24 @@ func (c *Connector) waitForDeviceAuthorization(devCred *DeviceCred, auth *endpoi
 		//parsing the response
 		token, err := parseWaitingDeviceAuthorizationRequestResult(statusCode, body)
 
-		if err != nil {
-			switch err.Error() {
-			case "authorization_pending":
-				time.Sleep(time.Duration(devCred.Interval) * time.Second)
-			case "slow_down":
-				devCred.Interval += 5
-				time.Sleep(time.Duration(devCred.Interval) * time.Second)
-			case "access_denied":
-				return nil, fmt.Errorf("the access from device was denied by the user")
-			case "expired_token":
-				return nil, fmt.Errorf("the device code expired")
-			default:
-				return nil, fmt.Errorf("the authorization failed. %w", err)
-			}
-		} else {
+		//if there is not any error, then the token was gotten
+		if err == nil {
 			return token, err
+		}
+
+		//verifying the error gotten
+		switch GetDevAuthStatus(err.Error()) {
+		case AuthorizationPending:
+			time.Sleep(time.Duration(devCred.Interval) * time.Second)
+		case SlowDown:
+			devCred.Interval += 5
+			time.Sleep(time.Duration(devCred.Interval) * time.Second)
+		case AccessDenied:
+			return nil, fmt.Errorf("the access from device was denied by the user")
+		case ExpiredToken:
+			return nil, fmt.Errorf("the device code expired")
+		default:
+			return nil, fmt.Errorf("the authorization failed. %w", err)
 		}
 	}
 }
