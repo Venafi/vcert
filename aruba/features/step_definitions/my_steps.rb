@@ -21,6 +21,13 @@ Then(/^it should post certificate request$/) do
   }
 end
 
+Then(/^it should request certificate$/) do
+  steps %{
+    Then the exit status should be 0
+    And the output should contain "Successfully requested certificate for"
+  }
+end
+
 Then(/^it should( not)? output( encrypted)? private key$/) do |negated, encrypted|
   if encrypted
     steps %{Then the output should#{negated} contain "-----BEGIN ENCRYPTED PRIVATE KEY-----"}

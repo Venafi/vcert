@@ -8,6 +8,7 @@ aruba/tmp/
 aruba/bin/
 aruba/vcert
 aruba/tpp-bundle.pem
+aruba/firefly-bundle.pem
 vcert.exe
 Gemfile.lock
 aruba/features/step_definitions/0.endpoints.rb

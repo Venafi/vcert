@@ -25,15 +25,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sosodev/duration"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/clientcredentials"
-
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
 	"github.com/Venafi/vcert/v5/pkg/policy"
 	"github.com/Venafi/vcert/v5/pkg/util"
 	"github.com/Venafi/vcert/v5/pkg/verror"
+	"github.com/sosodev/duration"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/clientcredentials"
 )
 
 // Connector contains the base data needed to communicate with a Firefly Server
@@ -120,12 +119,31 @@ func (c *Connector) Authorize(auth *endpoint.Authentication) (token *oauth2.Toke
 		return nil, fmt.Errorf("failed to authenticate: missing credentials")
 	}
 
+	// if it's a client credentials flow grant
+	if auth.ClientSecret != "" {
+
+		config := clientcredentials.Config{
+			ClientID:     auth.ClientId,
+			ClientSecret: auth.ClientSecret,
+			TokenURL:     auth.IdentityProvider.TokenURL,
+			Scopes:       strings.Split(auth.Scope, scopesSeparator),
+		}
+		//if the audience was provided, then it's required to set it to the config.
+		if auth.IdentityProvider.Audience != "" {
+			config.EndpointParams = url.Values{
+				"audience": []string{auth.IdentityProvider.Audience},
+			}
+		}
+
+		return config.Token(context.Background())
+	}
+
 	// if it's a password flow grant
 	if auth.User != "" && auth.Password != "" {
 		config := oauth2.Config{
 			ClientID:     auth.ClientId,
 			ClientSecret: auth.ClientSecret,
-			Scopes:       strings.Split(auth.Scope, " "),
+			Scopes:       strings.Split(auth.Scope, scopesSeparator),
 			//RedirectURL:  "http://localhost:9094/oauth2",
 			// This points to our Authorization Server
 			// if our Client ID and Client Secret are valid
@@ -139,26 +157,9 @@ func (c *Connector) Authorize(auth *endpoint.Authentication) (token *oauth2.Toke
 		return config.PasswordCredentialsToken(context.Background(), auth.User, auth.Password)
 	}
 
-	// if it's a client credentials flow grant
-	if auth.ClientSecret != "" {
-
-		config := clientcredentials.Config{
-			ClientID:     auth.ClientId,
-			ClientSecret: auth.ClientSecret,
-			TokenURL:     auth.IdentityProvider.TokenURL,
-			Scopes:       strings.Split(auth.Scope, " "),
-		}
-		//if the audience was provided, then it's required to set it to the config.
-		if auth.IdentityProvider.Audience != "" {
-			audienceList := strings.Split(auth.IdentityProvider.Audience, " ")
-			if len(audienceList) > 0 {
-				config.EndpointParams = url.Values{
-					"audience": audienceList,
-				}
-			}
-		}
-
-		return config.Token(context.Background())
+	// if it's a device flow grant
+	if auth.IdentityProvider.DeviceURL != "" {
+		return c.getDeviceAccessToken(auth)
 	}
 
 	return token, fmt.Errorf("failed to authenticate: can't determine valid credentials set")

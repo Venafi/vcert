@@ -29,13 +29,13 @@ func TestNewResponseError(t *testing.T) {
 		}
 	`
 
-	err = NewResponseError(nil)
+	_, err = NewResponseError(nil)
 	if err == nil {
 		t.Fatal("error cannot be nil")
 	}
 
-	err = NewResponseError([]byte(s))
-	if !strings.Contains(err.Error(), "Failed to load certificate") {
+	respError, _ := NewResponseError([]byte(s))
+	if !strings.Contains(respError.Error(), "Failed to load certificate") {
 		t.Fatal("failed to parse error message")
 	}
 }

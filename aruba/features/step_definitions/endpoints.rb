@@ -15,7 +15,9 @@ ENDPOINTS = {
              " -t '#{ENV['TPP_ACCESS_TOKEN']}'" +
              " -insecure",
 
-    "Cloud" => "-u '#{ENV['CLOUD_URL']}' -k '#{ENV['CLOUD_APIKEY']}'"
+    "Cloud" => "-u '#{ENV['CLOUD_URL']}' -k '#{ENV['CLOUD_APIKEY']}'",
+
+    "Firefly" => "-u '#{ENV['FIREFLY_URL']}' -t '#{ENV['IDP_ACCESS_TOKEN']}'"
 }
 
 ENDPOINTS["VaaS"] = ENDPOINTS["Cloud"]
@@ -29,7 +31,9 @@ ZONE = {
 
     "TPPecdsa" => "-z '#{ENV['TPP_ZONE_ECDSA']}'", 
 
-    "Cloud" => "-z '#{ENV['CLOUD_ZONE']}'"
+    "Cloud" => "-z '#{ENV['CLOUD_ZONE']}'",
+
+    "Firefly" => "-z '#{ENV['FIREFLY_ZONE']}'"
 }
 ZONE["VaaS"] = ZONE["Cloud"]
 
