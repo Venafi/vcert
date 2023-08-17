@@ -3,6 +3,9 @@ config:
     type: TLSPC
     credentials:
       apiKey: fooo123bar!
+      idP:
+        tokenURL: okta.com
+        audience: someAudience
 certificateTasks:
   - name: mtls
     request:

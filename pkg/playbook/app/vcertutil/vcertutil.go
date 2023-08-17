@@ -55,16 +55,23 @@ func EnrollCertificate(config domain.Config, request domain.PlaybookRequest) (*c
 	}
 	zap.L().Debug("successfully updated Request with zone config values")
 
-	reqID, err := client.RequestCertificate(&vRequest)
-	if err != nil {
-		return nil, nil, err
+	var pcc *certificate.PEMCollection
+
+	if client.SupportSynchronousRequestCertificate() {
+		pcc, err = client.SynchronousRequestCertificate(&vRequest)
+	} else {
+		reqID, reqErr := client.RequestCertificate(&vRequest)
+		if reqErr != nil {
+			return nil, nil, reqErr
+		}
+		zap.L().Debug("successfully requested certificate", zap.String("requestID", reqID))
+
+		vRequest.PickupID = reqID
+		vRequest.Timeout = 180 * time.Second
+
+		pcc, err = client.RetrieveCertificate(&vRequest)
 	}
-	zap.L().Debug("successfully requested certificate", zap.String("requestID", reqID))
 
-	vRequest.PickupID = reqID
-	vRequest.Timeout = 180 * time.Second
-
-	pcc, err := client.RetrieveCertificate(&vRequest)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -79,13 +86,18 @@ func buildClient(config domain.Config, zone string) (endpoint.Connector, error) 
 		BaseUrl:       config.Connection.URL,
 		Zone:          zone,
 		Credentials: &endpoint.Authentication{
-			APIKey:      config.Connection.Credentials.APIKey,
-			Scope:       config.Connection.Credentials.Scope,
-			ClientId:    config.Connection.Credentials.ClientId,
-			AccessToken: config.Connection.Credentials.AccessToken,
+			APIKey:       config.Connection.Credentials.APIKey,
+			Scope:        config.Connection.Credentials.Scope,
+			ClientId:     config.Connection.Credentials.ClientId,
+			AccessToken:  config.Connection.Credentials.AccessToken,
+			ClientSecret: config.Connection.Credentials.ClientSecret,
 		},
 		ConnectionTrust: loadTrustBundle(config.Connection.TrustBundlePath),
 		LogVerbose:      false,
+	}
+
+	if config.Connection.Credentials.IdentityProvider != nil {
+		vConfig.Credentials.IdentityProvider = config.Connection.Credentials.IdentityProvider
 	}
 
 	client, err := vcert.NewClient(vConfig)

@@ -32,6 +32,7 @@ import (
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
 	"github.com/Venafi/vcert/v5/pkg/policy"
+	"github.com/Venafi/vcert/v5/pkg/util"
 	"github.com/Venafi/vcert/v5/pkg/verror"
 )
 
@@ -59,7 +60,20 @@ func (c *Connector) RetrieveAvailableSSHTemplates() (response []certificate.SshA
 
 // NewConnector creates a new Firefly Connector object used to communicate with Firefly
 func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (*Connector, error) {
+	if url != "" {
+		var err error
+		url, err = normalizeURL(url)
+		if err != nil {
+			return nil, fmt.Errorf("%w: failed to normalize URL: %v", verror.UserDataError, err)
+		}
+	}
 	return &Connector{baseURL: url, zone: zone, verbose: verbose, trust: trust}, nil
+}
+
+// normalizeURL normalizes the base URL used to communicate with Firefly
+func normalizeURL(url string) (normalizedURL string, err error) {
+	normalizedURL = util.NormalizeUrl(url)
+	return normalizedURL, err
 }
 
 func (c *Connector) SetZone(zone string) {
@@ -75,12 +89,23 @@ func (c *Connector) Ping() (err error) {
 	panic("operation is not supported yet")
 }
 
-func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
-	if auth.AccessToken != "" {
-		c.accessToken = auth.AccessToken
+func (c *Connector) Authenticate(auth *endpoint.Authentication) error {
+	if auth == nil {
+		return fmt.Errorf("failed to authenticate: missing credentials")
 	}
 
-	return err
+	if auth.AccessToken == "" {
+		var token *oauth2.Token
+		token, err := c.Authorize(auth)
+		if err != nil {
+			return err
+		}
+		auth.AccessToken = token.AccessToken
+	}
+
+	//setting the accessToken to the connector
+	c.accessToken = auth.AccessToken
+	return nil
 }
 
 // Authorize Get an OAuth access token
@@ -141,7 +166,7 @@ func (c *Connector) Authorize(auth *endpoint.Authentication) (token *oauth2.Toke
 		return config.Token(context.Background())
 	}
 
-	return
+	return token, fmt.Errorf("failed to authenticate: can't determine valid credentials set")
 }
 
 func (c *Connector) RetrieveSystemVersion() (string, error) {
@@ -296,7 +321,7 @@ func (e *ErrCertNotFound) Unwrap() error {
 	return e.error
 }
 
-func (c *Connector) ResetCertificate(_ *certificate.Request, restart bool) (err error) {
+func (c *Connector) ResetCertificate(_ *certificate.Request, _ bool) (err error) {
 	panic("operation is not supported yet")
 }
 
