@@ -370,16 +370,16 @@ func validateValidDaysFlag(cn string) bool {
 func validateCredMgmtFlags1(commandName string) error {
 	var err error
 
-	tppTokenS := flags.token
-	if tppTokenS == "" {
-		tppTokenS = getPropertyFromEnvironment(vCertToken)
+	tokenS := flags.token
+	if tokenS == "" {
+		tokenS = getPropertyFromEnvironment(vCertToken)
 	}
 
 	if flags.config != "" {
 		if flags.apiKey != "" ||
 			flags.userName != "" ||
 			flags.password != "" ||
-			tppTokenS != "" ||
+			tokenS != "" ||
 			flags.url != "" ||
 			flags.testMode {
 			return fmt.Errorf("connection details cannot be specified with flags or environment variables when --config is used")
@@ -405,22 +405,33 @@ func validateCredMgmtFlags1(commandName string) error {
 				}
 			}
 		} else {
-			if tppTokenS == "" {
+			if tokenS == "" {
 				return fmt.Errorf("missing -t (access token) parameter")
 			}
 		}
 
-		//doing this validation if the platform was not set to Firefly
-		if flags.platform != venafi.Firefly && flags.url == "" && getPropertyFromEnvironment(vCertURL) == "" && !getCredForVaaS {
-			return fmt.Errorf("missing -u (URL) parameter")
-		}
+		if flags.platform == venafi.Firefly {
 
-		if flags.platform == venafi.Firefly && flags.tokenURL == "" {
-			return fmt.Errorf("missing -token-url parameter")
-		}
+			if flags.clientId == "" {
+				return fmt.Errorf("missing --client-id parameter")
+			}
 
-		if flags.noPrompt && flags.password == "" && tppTokenS == "" && flags.clientSecret == "" {
-			return fmt.Errorf("An access token or password or client secret is required for communicating with Trust Protection Platform or Firefly")
+			if flags.tokenURL == "" {
+				return fmt.Errorf("missing --token-url parameter")
+			}
+
+			if flags.noPrompt && flags.password == "" && flags.clientSecret == "" && flags.deviceURL == "" {
+				return fmt.Errorf("a user/password or client secret or device-url are required for communicating with Firefly")
+			}
+		} else {
+			//doing this validation if the platform was not set to Firefly
+			if flags.url == "" && getPropertyFromEnvironment(vCertURL) == "" && !getCredForVaaS {
+				return fmt.Errorf("missing -u (URL) parameter")
+			}
+
+			if flags.noPrompt && flags.password == "" && tokenS == "" {
+				return fmt.Errorf("an access token or password is required for communicating with Trust Protection Platform")
+			}
 		}
 
 		// mutual TLS with TPP service

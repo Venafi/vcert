@@ -25,6 +25,8 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/Venafi/vcert/v5/pkg/certificate"
@@ -37,6 +39,8 @@ type urlResource string
 const (
 	urlResourceCertificateRequest    urlResource = "v1/certificaterequest"
 	urlResourceCertificateRequestCSR urlResource = "v1/certificatesigningrequest"
+
+	scopesSeparator = " "
 )
 
 type certificateRequest struct {
@@ -90,20 +94,33 @@ func (c *Connector) GenerateRequest(_ *endpoint.ZoneConfiguration, req *certific
 }
 
 func (c *Connector) request(method string, resource urlResource, data interface{}) (statusCode int, statusText string, body []byte, err error) {
-	url := c.baseURL + string(resource)
+	resourceUrl := c.baseURL + string(resource)
 	var payload io.Reader
 	var b []byte
+	var values url.Values
+
+	contentType := "application/json"
+
 	if method == "POST" || method == "PUT" {
-		b, _ = json.Marshal(data)
-		payload = bytes.NewReader(b)
+		//determining if the data is type of url.Values
+		v, ok := data.(url.Values)
+		//if the data is type of url.Values then commonly they are passed to the request as form
+		if ok {
+			payload = strings.NewReader(v.Encode())
+			values = v
+			contentType = "application/x-www-form-urlencoded"
+		} else {
+			b, _ = json.Marshal(data)
+			payload = bytes.NewReader(b)
+		}
 	}
 
-	r, _ := http.NewRequest(method, url, payload)
+	r, _ := http.NewRequest(method, resourceUrl, payload)
 	r.Close = true
 	if c.accessToken != "" {
 		r.Header.Add("Authorization", fmt.Sprintf("Bearer %s", c.accessToken))
 	}
-	r.Header.Add("content-type", "application/json")
+	r.Header.Add("content-type", contentType)
 	r.Header.Add("cache-control", "no-cache")
 
 	res, err := c.getHTTPClient().Do(r)
@@ -124,13 +141,17 @@ func (c *Connector) request(method string, resource urlResource, data interface{
 		log.Println("#################")
 		log.Printf("Headers are:\n%s", r.Header)
 		if method == "POST" || method == "PUT" {
-			log.Printf("JSON sent for %s\n%s\n", url, string(b))
+			if len(values) > 0 {
+				log.Printf("Values sent for %s\n%s\n", resourceUrl, values.Encode())
+			} else {
+				log.Printf("JSON sent for %s\n%s\n", resourceUrl, string(b))
+			}
 		} else {
-			log.Printf("%s request sent to %s\n", method, url)
+			log.Printf("%s request sent to %s\n", method, resourceUrl)
 		}
 		log.Printf("Response:\n%s\n", string(body))
 	} else if c.verbose {
-		log.Printf("Got %s status for %s %s\n", statusText, method, url)
+		log.Printf("Got %s status for %s %s\n", statusText, method, resourceUrl)
 	}
 	return
 }

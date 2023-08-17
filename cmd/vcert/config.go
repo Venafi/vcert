@@ -47,10 +47,10 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 		var identityProvider = &endpoint.OAuthProvider{}
 
 		//case when access token can come from environment variable.
-		tppTokenS := flags.token
+		tokenS := flags.token
 
-		if tppTokenS == "" {
-			tppTokenS = getPropertyFromEnvironment(vCertToken)
+		if tokenS == "" {
+			tokenS = getPropertyFromEnvironment(vCertToken)
 		}
 
 		if flags.testMode {
@@ -62,7 +62,7 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 					time.Sleep(1 * time.Second)
 				}
 			}
-		} else if flags.platform == venafi.Firefly || (flags.userName != "" || tppTokenS != "" || flags.clientP12 != "" || c.Command.Name == "sshgetconfig") {
+		} else if flags.platform == venafi.Firefly || (flags.userName != "" || tokenS != "" || flags.clientP12 != "" || c.Command.Name == "sshgetconfig") {
 
 			if flags.platform == venafi.Firefly {
 				connectorType = endpoint.ConnectorTypeFirefly
@@ -77,7 +77,7 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 			}
 			//add support for using environment variables ends
 
-			if tppTokenS == "" && flags.password == "" && flags.clientP12 == "" && flags.clientSecret == "" && c.Command.Name != "sshgetconfig" {
+			if connectorType != endpoint.ConnectorTypeFirefly && tokenS == "" && flags.password == "" && flags.clientP12 == "" && c.Command.Name != "sshgetconfig" {
 				return cfg, fmt.Errorf("A password is required to communicate with TPP")
 			}
 
@@ -105,6 +105,7 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 				auth.ClientId = flags.clientId
 				auth.ClientSecret = flags.clientSecret
 				identityProvider.TokenURL = flags.tokenURL
+				identityProvider.DeviceURL = flags.deviceURL
 				identityProvider.Audience = flags.audience
 				auth.IdentityProvider = identityProvider
 				auth.Scope = flags.scope

@@ -107,6 +107,7 @@ type commandFlags struct {
 	uriSans              uriSlice
 	url                  string
 	tokenURL             string
+	deviceURL            string
 	verbose              bool
 	zone                 string
 	omitSans             bool
