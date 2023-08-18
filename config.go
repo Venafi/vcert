@@ -301,10 +301,6 @@ func validateSection(s *ini.Section) error {
 			if m.has(fireflyUserKey) && m.has(fireflyDeviceUrlKey) {
 				return fmt.Errorf("configuration issue in section %s: The OAuth Resource Owner Password Flow and Device Flow grants are set but only one flow grant is accepted", s.Name())
 			}
-
-			if m.has(fireflyClientSecretKey) && m.has(fireflyDeviceUrlKey) {
-				return fmt.Errorf("configuration issue in section %s: The OAuth Credential Flow and Device Flow grants are set but only one flow grant is accepted", s.Name())
-			}
 		}
 	} else if m.has("test_mode") {
 		// it's ok
