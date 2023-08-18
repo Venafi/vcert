@@ -38,7 +38,7 @@ func GetInstaller(inst domain.Installation) Installer {
 	case domain.FormatPKCS12:
 		return NewPKCS12Installer(inst)
 	default:
-		zap.L().Fatal(fmt.Sprintf("Runner not found for installation type: %s", inst.Type.String()))
+		zap.L().Fatal(fmt.Sprintf("runner not found for installation type: %s", inst.Type.String()))
 		return nil
 	}
 }

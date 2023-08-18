@@ -7,7 +7,7 @@ Feature: playbook
     And the default aruba exit timeout is 180 seconds
 
   @TPP
-  Scenario Outline: Run playbook for TPP with extended configuration with PEM, PKCS12 and PEM installations
+  Scenario Outline: Run playbook for TPP with extended configuration with PEM, PKCS12 and JKS installations
     Given I have playbook with TPP connection details
     And I have playbook with certificateTasks block
     And I have playbook with task named "myCertificateInstallation"
@@ -44,11 +44,11 @@ Feature: playbook
     And task named "myCertificateInstallation" has installations
     And task named "myCertificateInstallation" has installation format PEM with file name "cert.cer", chain name "chain.cer" and key name "key.pem" with installation and validation and uses backup
     And task named "myCertificateInstallation" has installation format JKS with cert name "cert.jks", jksAlias "venafi" and jksPassword "foobar123" with installation
-    And task named "myCertificateInstallation" has installation format PKCS12 with cert name "cert.p12" with validation
+    And task named "myCertificateInstallation" has installation format PKCS12 with cert name "cert.p12" with installation
     And I created playbook named "<config-file>" with previous content
     And I run `vcert run -f <config-file>`
     Then the output should contain "successfully executed after-install actions"
-    And the output should contain "Successfully executed installation validation actions"
+    And the output should contain "successfully executed installation validation actions"
     And the output should contain "playbook run finished"
     And a file named "cert.cer" should exist
     And a file named "chain.cer" should exist
@@ -85,7 +85,7 @@ Feature: playbook
     And task named "myCertificateInstallation" has installation format PEM with file name "c1.cer", chain name "ch1.cer" and key name "k1.pem"
     And I created playbook named "<config-file>" with previous content
     And I run `vcert run -f <config-file>`
-    Then the output should contain "Successfully installed certificate"
+    Then the output should contain "successfully installed certificate"
     And the output should contain "playbook run finished"
     And a file named "c1.cer" should exist
     And a file named "ch1.cer" should exist
@@ -124,7 +124,7 @@ Feature: playbook
     And task named "myCertificateInstallation" has installation format PEM with file name "c1.cer", chain name "ch1.cer" and key name "k1.pem"
     And I created playbook named "<config-file>" with previous content
     And I run `vcert run -f <config-file>`
-    Then the output should contain "Successfully installed certificate"
+    Then the output should contain "successfully installed certificate"
     And the output should contain "playbook run finished"
     And a file named "c1.cer" should exist
     And a file named "ch1.cer" should exist
@@ -162,7 +162,7 @@ Feature: playbook
     And task named "myCertificateInstallation" has installation format PEM with file name "c1.cer", chain name "ch1.cer" and key name "k1.pem"
     And I created playbook named "<config-file>" with previous content
     And I run `vcert run -f <config-file>`
-    Then the output should contain "Successfully installed certificate"
+    Then the output should contain "successfully installed certificate"
     And the output should contain "playbook run finished"
     And a file named "c1.cer" should exist
     And a file named "ch1.cer" should exist
@@ -200,10 +200,10 @@ Feature: playbook
     And task named "myCertificateInstallation" has installation format PEM with file name "c1.cer", chain name "ch1.cer" and key name "k1.pem"
     And I created playbook named "<config-file>" with previous content
     And I run `vcert run -f <config-file>`
-    Then the output should contain "Successfully installed certificate"
+    Then the output should contain "successfully installed certificate"
     And the output should contain "playbook run finished"
     And I run `vcert run -f <config-file>`
-    Then the output should contain "Certificate in good health. No actions needed"
+    Then the output should contain "certificate in good health. No actions needed"
     And the output should contain "playbook run finished"
     And a file named "c1.cer" should exist
     And a file named "ch1.cer" should exist
@@ -242,10 +242,10 @@ Feature: playbook
     And task named "myCertificateInstallation" has installation format PEM with file name "c1.cer", chain name "ch1.cer" and key name "k1.pem"
     And I created playbook named "<config-file>" with previous content
     And I run `vcert run -f <config-file>`
-    Then the output should contain "Successfully installed certificate"
+    Then the output should contain "successfully installed certificate"
     And the output should contain "playbook run finished"
     And I run `vcert run -f <config-file>`
-    Then the output should contain "Successfully installed certificate"
+    Then the output should contain "successfully installed certificate"
     And the output should contain "playbook run finished"
     And a file named "c1.cer" should exist
     And a file named "ch1.cer" should exist
@@ -283,10 +283,10 @@ Feature: playbook
     And task named "myCertificateInstallation" has installation format PEM with file name "c1.cer", chain name "ch1.cer" and key name "k1.pem"
     And I created playbook named "<config-file>" with previous content
     And I run `vcert run -f <config-file>`
-    Then the output should contain "Successfully installed certificate"
+    Then the output should contain "successfully installed certificate"
     And the output should contain "playbook run finished"
     And I run `vcert run -f <config-file> --force-renew`
-    Then the output should contain "Successfully installed certificate"
+    Then the output should contain "successfully installed certificate"
     And the output should contain "playbook run finished"
     And a file named "c1.cer" should exist
     And a file named "ch1.cer" should exist
@@ -335,7 +335,7 @@ Feature: playbook
     And task named "myCertificateInstallationPKCS12" has installation format PKCS12 with cert name "cert.p12" with validation
     And I created playbook named "<config-file>" with previous content
     And I run `vcert run -f <config-file>`
-    Then the output should contain "Successfully installed certificate"
+    Then the output should contain "successfully installed certificate"
     And the output should contain "playbook run finished"
     And a file named "c1.cer" should exist
     And a file named "ch1.cer" should exist

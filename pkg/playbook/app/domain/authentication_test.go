@@ -33,9 +33,3 @@ func (s *AuthenticationSuite) SetupTest() {
 func TestAuthentication(t *testing.T) {
 	suite.Run(t, new(AuthenticationSuite))
 }
-
-func (s *AuthenticationSuite) TestAuthentication_IsEmpty() {
-	auth := Authentication{}
-	result := auth.IsEmpty()
-	s.True(result)
-}

@@ -34,7 +34,7 @@ type Authentication struct {
 
 // OAuthProvider provides a struct for the OAuth 2.0 providers information
 type OAuthProvider struct {
-	DeviceURL string `yaml:"deviceURL,omitempty"`
+	DeviceURL string `yaml:"-"`
 	TokenURL  string `yaml:"tokenURL,omitempty"`
 	Audience  string `yaml:"audience,omitempty"`
 }
