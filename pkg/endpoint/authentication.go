@@ -19,8 +19,8 @@ package endpoint
 // Authentication provides a struct for authentication data. Either specify User and Password for Trust Protection Platform
 // or Firefly or ClientId and ClientSecret for Firefly or specify an APIKey for TLS Protect Cloud.
 type Authentication struct {
-	User         string `yaml:"-"`
-	Password     string `yaml:"-"`
+	User         string `yaml:"user,omitempty"`
+	Password     string `yaml:"password,omitempty"`
 	APIKey       string `yaml:"apiKey,omitempty"`
 	RefreshToken string `yaml:"refreshToken,omitempty"`
 	Scope        string `yaml:"scope,omitempty"`

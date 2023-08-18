@@ -227,8 +227,17 @@ func setPlaybookTLSConfig(playbook domain.Playbook) error {
 
 	}
 
-	//Setting TLS configuration
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tlsConfig
+	// Create own Transport to allow HTTP1.1 connections
+	transport := &http.Transport{
+		// Only one request is made with a client
+		DisableKeepAlives: true,
+		// This is to allow for http1.1 connections
+		ForceAttemptHTTP2: false,
+		TLSClientConfig:   &tlsConfig,
+	}
+
+	//Setting Default HTTP Transport
+	http.DefaultTransport = transport
 
 	return nil
 }

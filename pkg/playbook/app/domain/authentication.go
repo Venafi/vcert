@@ -29,7 +29,6 @@ const (
 	apiKey       = "apiKey"
 	clientID     = "clientId"
 	clientSecret = "clientSecret"
-	idP          = "idP"
 	refreshToken = "refreshToken"
 	p12Task      = "p12Task"
 	scope        = "scope"
@@ -70,7 +69,13 @@ func (a Authentication) MarshalYAML() (interface{}, error) {
 		values[clientSecret] = a.ClientSecret
 	}
 	if a.IdentityProvider != nil {
-		values[idP] = a.IdentityProvider
+		if a.IdentityProvider.TokenURL != "" {
+			values[idPTokenURL] = a.IdentityProvider.TokenURL
+		}
+		if a.IdentityProvider.Audience != "" {
+			values[idPAudience] = a.IdentityProvider.Audience
+		}
+		//values[idP] = a.IdentityProvider
 	}
 	if a.RefreshToken != "" {
 		values[refreshToken] = a.RefreshToken
@@ -105,13 +110,6 @@ func (a *Authentication) UnmarshalYAML(value *yaml.Node) error {
 	if val, found := authMap[clientSecret]; found {
 		a.ClientSecret = val.(string)
 	}
-	if val, found := authMap[idP]; found {
-		provider, err := unmarshallIdP(val)
-		if err != nil {
-			return err
-		}
-		a.IdentityProvider = provider
-	}
 	if val, found := authMap[refreshToken]; found {
 		a.RefreshToken = val.(string)
 	}
@@ -122,25 +120,38 @@ func (a *Authentication) UnmarshalYAML(value *yaml.Node) error {
 		a.Scope = val.(string)
 	}
 
+	provider, err := unmarshallIdP(authMap)
+	if err != nil {
+		return err
+	}
+	a.IdentityProvider = provider
+
 	return nil
 }
 
 func unmarshallIdP(value interface{}) (*endpoint.OAuthProvider, error) {
 	if value == nil {
-		return nil, fmt.Errorf("idP value is nil")
+		return nil, fmt.Errorf("authentication map value is nil")
 	}
-	idPMap, ok := value.(map[string]interface{})
+	authMap, ok := value.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("expected idP map but got %v", value)
-	}
-	provider := endpoint.OAuthProvider{}
-
-	if val, found := idPMap[idPTokenURL]; found {
-		provider.TokenURL = val.(string)
-	}
-	if val, found := idPMap[idPAudience]; found {
-		provider.Audience = val.(string)
+		return nil, fmt.Errorf("expected map but got %v", value)
 	}
 
-	return &provider, nil
+	tokenURL, tokenURLFound := authMap[idPTokenURL]
+	audience, audienceFound := authMap[idPAudience]
+
+	if !tokenURLFound && !audienceFound {
+		return nil, nil
+	}
+
+	provider := &endpoint.OAuthProvider{}
+	if tokenURLFound {
+		provider.TokenURL = tokenURL.(string)
+	}
+	if audienceFound {
+		provider.Audience = audience.(string)
+	}
+
+	return provider, nil
 }

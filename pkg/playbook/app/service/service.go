@@ -29,6 +29,7 @@ import (
 	"github.com/Venafi/vcert/v5/pkg/playbook/app/domain"
 	"github.com/Venafi/vcert/v5/pkg/playbook/app/installer"
 	"github.com/Venafi/vcert/v5/pkg/playbook/app/vcertutil"
+	"github.com/Venafi/vcert/v5/pkg/venafi"
 )
 
 // DefaultRenew represents the duration before certificate expiration in which renewal should be attempted
@@ -75,8 +76,13 @@ func Execute(config domain.Config, task domain.CertificateTask) []error {
 	}
 	zap.L().Info("Successfully enrolled certificate", zap.String("certificate", task.Request.Subject.CommonName))
 
-	// Decrypt the private key for later use
-	x509Certificate, prepedPcc, err := installer.CreateX509Cert(pcc, certRequest)
+	// Private Key should not be decrypted when csrOrigin is service and Platform is Firefly.
+	// Firefly does not support encryption of private keys
+	decryptPK := config.Connection.Platform != venafi.Firefly && csrOrigin != certificate.ServiceGeneratedCSR
+
+	// This function will add the private key to the PCC when csrOrigin is local.
+	// It will also decrypt the Private Key if it is encrypted
+	x509Certificate, prepedPcc, err := installer.CreateX509Cert(pcc, certRequest, decryptPK)
 	if err != nil {
 		e := "error preparing certificate for installation"
 		zap.L().Error(e, zap.Error(err))
