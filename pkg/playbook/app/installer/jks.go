@@ -97,7 +97,7 @@ func (r JKSInstaller) Backup() error {
 		return err
 	}
 
-	zap.L().Info("Certificate backed up", zap.String("location", r.File), zap.String("backupLocation", newLocation))
+	zap.L().Info("certificate backed up", zap.String("location", r.File), zap.String("backupLocation", newLocation))
 	return nil
 }
 

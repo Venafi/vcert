@@ -42,15 +42,6 @@ type Authentication struct {
 	P12Task                 string `yaml:"p12Task,omitempty"`
 }
 
-// IsEmpty returns true if not credentials are set
-func (a Authentication) IsEmpty() bool {
-	// TODO: This is very hacky.. need specifics based on connection type
-	if a.APIKey == "" && a.AccessToken == "" && a.RefreshToken == "" && a.P12Task == "" {
-		return true
-	}
-	return false
-}
-
 // MarshalYAML customizes the behavior of Authentication when being marshaled into a YAML document.
 // The returned value is marshaled in place of the original value implementing Marshaller
 func (a Authentication) MarshalYAML() (interface{}, error) {

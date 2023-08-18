@@ -79,7 +79,7 @@ func (r PEMInstaller) Backup() error {
 
 	// No cert file
 	if !certExists {
-		zap.L().Info("New certificate location specified, no back up taken")
+		zap.L().Info("new certificate location specified, no back up taken")
 		return nil
 	}
 
@@ -104,7 +104,7 @@ func (r PEMInstaller) Backup() error {
 		if err != nil {
 			return err
 		}
-		zap.L().Info("Certificate resource backed up", zap.String("location", resource.oldLocation),
+		zap.L().Info("certificate resource backed up", zap.String("location", resource.oldLocation),
 			zap.String("backupLocation", resource.newLocation))
 	}
 

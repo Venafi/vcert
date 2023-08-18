@@ -44,12 +44,12 @@ func ValidateTPPCredentials(playbook *domain.Playbook) error {
 		}
 	}
 
-	zap.L().Info("Access token is invalid, missing, or expired")
+	zap.L().Info("access token is invalid, missing, or expired")
 	if playbook.Config.Connection.Credentials.RefreshToken == "" && playbook.Config.Connection.Credentials.P12Task == "" {
 		return fmt.Errorf("access token no longer valid and no authorization methods specified - cannot get a new access token")
 	}
 
-	zap.L().Info("Using refresh token")
+	zap.L().Info("using refresh token")
 
 	// Read the playbook first, to make sure we can, before refreshing the tokens
 	// and blowing things up!
@@ -63,7 +63,7 @@ func ValidateTPPCredentials(playbook *domain.Playbook) error {
 		zap.L().Error("failed to refresh TPP Tokens", zap.Error(err))
 		return err
 	}
-	zap.L().Info("Successfully retrieved new refresh token")
+	zap.L().Info("successfully retrieved new refresh token")
 
 	playbook.Config.Connection.Credentials.AccessToken = accessToken
 	playbook.Config.Connection.Credentials.RefreshToken = refreshToken

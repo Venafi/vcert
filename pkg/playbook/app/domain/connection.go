@@ -80,7 +80,7 @@ func isValidTpp(c Connection) (bool, error) {
 	rValid := true
 
 	// Credentials are not empty
-	if c.Credentials.IsEmpty() {
+	if c.Credentials.AccessToken == "" && c.Credentials.RefreshToken == "" && c.Credentials.P12Task == "" {
 		rValid = false
 		rErr = errors.Join(rErr, ErrNoCredentials)
 	}

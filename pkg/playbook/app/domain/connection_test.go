@@ -45,30 +45,111 @@ func (s *ConnectionSuite) SetupTest() {
 		expectedValid bool
 		expectedErr   error
 	}{
-		//TODO: Update this test once vcert supports Firefly
+		// FIREFLY USE CASES
 		{
-			name: "Firefly_valid",
+			name: "Firefly_valid_secret",
 			c: Connection{
 				Platform: venafi.Firefly,
 				Credentials: Authentication{
 					Authentication: endpoint.Authentication{
-						APIKey: "asdasdadsd",
+						ClientSecret: "mySecret",
+						ClientId:     "myClientID",
+						IdentityProvider: &endpoint.OAuthProvider{
+							TokenURL: "https://my.okta.instance.com/token",
+						},
 					},
 				},
+				URL: "https://my.firefly.instance.com",
 			},
 			expectedCType: endpoint.ConnectorTypeFirefly,
 			expectedValid: true,
 		},
 		{
-			name: "Firefly_invalid_empty_credentials",
+			name: "Firefly_valid_password",
+			c: Connection{
+				Platform: venafi.Firefly,
+				Credentials: Authentication{
+					Authentication: endpoint.Authentication{
+						User:     "myUser",
+						Password: "myPassword",
+						ClientId: "myClientID",
+						IdentityProvider: &endpoint.OAuthProvider{
+							TokenURL: "https://my.okta.instance.com/token",
+						},
+					},
+				},
+				URL: "https://my.firefly.instance.com",
+			},
+			expectedCType: endpoint.ConnectorTypeFirefly,
+			expectedValid: true,
+		},
+		{
+			name: "Firefly_valid_token",
+			c: Connection{
+				Platform: venafi.Firefly,
+				Credentials: Authentication{
+					Authentication: endpoint.Authentication{
+						AccessToken: "foo123Token",
+					},
+				},
+				URL: "https://my.firefly.instance.com",
+			},
+			expectedCType: endpoint.ConnectorTypeFirefly,
+			expectedValid: true,
+		},
+		{
+			name: "Firefly_invalid_no_url",
 			c: Connection{
 				Platform:    venafi.Firefly,
 				Credentials: Authentication{},
 			},
 			expectedCType: endpoint.ConnectorTypeFirefly,
 			expectedValid: false,
+			expectedErr:   ErrNoFireflyURL,
+		},
+		{
+			name: "Firefly_invalid_empty_credentials",
+			c: Connection{
+				Platform:    venafi.Firefly,
+				Credentials: Authentication{},
+				URL:         "https://my.firefly.instance.com",
+			},
+			expectedCType: endpoint.ConnectorTypeFirefly,
+			expectedValid: false,
 			expectedErr:   ErrNoCredentials,
 		},
+		{
+			name: "Firefly_invalid_no_clientID",
+			c: Connection{
+				Platform: venafi.Firefly,
+				Credentials: Authentication{
+					Authentication: endpoint.Authentication{
+						ClientSecret: "mySecret",
+					},
+				},
+				URL: "https://my.firefly.instance.com",
+			},
+			expectedCType: endpoint.ConnectorTypeFirefly,
+			expectedValid: false,
+			expectedErr:   ErrNoClientId,
+		},
+		{
+			name: "Firefly_invalid_no_IdP",
+			c: Connection{
+				Platform: venafi.Firefly,
+				Credentials: Authentication{
+					Authentication: endpoint.Authentication{
+						ClientSecret: "mySecret",
+						ClientId:     "myClientID",
+					},
+				},
+				URL: "https://my.firefly.instance.com",
+			},
+			expectedCType: endpoint.ConnectorTypeFirefly,
+			expectedValid: false,
+			expectedErr:   ErrNoIdentityProviderURL,
+		},
+		// TPP USE CASES
 		{
 			name: "TPP_valid",
 			c: Connection{
@@ -126,6 +207,7 @@ func (s *ConnectionSuite) SetupTest() {
 			expectedValid: false,
 			expectedErr:   ErrTrustBundleNotExist,
 		},
+		// VAAS USE CASES
 		{
 			name: "VaaS_valid",
 			c: Connection{
@@ -149,6 +231,7 @@ func (s *ConnectionSuite) SetupTest() {
 			expectedValid: false,
 			expectedErr:   ErrNoCredentials,
 		},
+		// UNKNOWN USE CASES
 		{
 			name: "Unknown_invalid",
 			c: Connection{
