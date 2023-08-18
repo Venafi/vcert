@@ -7,7 +7,7 @@ Feature: playbook
     And the default aruba exit timeout is 180 seconds
 
   @TPP
-  Scenario Outline: Run playbook for TPP with extended configuration with PEM, PKCS12 and PEM installations
+  Scenario Outline: Run playbook for TPP with extended configuration with PEM, PKCS12 and JKS installations
     Given I have playbook with TPP connection details
     And I have playbook with certificateTasks block
     And I have playbook with task named "myCertificateInstallation"
