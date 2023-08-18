@@ -130,6 +130,8 @@ func doRunPlaybook(_ *cli.Context) error {
 		os.Exit(1)
 	}
 
+	zap.L().Info("using Venafi Platform", zap.String("platform", playbook.Config.Connection.Platform.String()))
+
 	if playbook.Config.Connection.Platform == venafi.TPP {
 		err = service.ValidateTPPCredentials(&playbook)
 		if err != nil {

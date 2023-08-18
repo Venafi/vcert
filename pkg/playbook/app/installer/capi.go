@@ -92,7 +92,7 @@ func (r CAPIInstaller) Check(renewBefore string, request domain.PlaybookRequest)
 
 // Backup takes the certificate request and backs up the current version prior to overwriting
 func (r CAPIInstaller) Backup() error {
-	zap.L().Debug("Certificate is backed up by default for CAPI")
+	zap.L().Debug("certificate is backed up by default for CAPI")
 	return nil
 }
 
