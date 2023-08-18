@@ -191,13 +191,13 @@ func setCSR(playbookRequest domain.PlaybookRequest, vcertRequest *certificate.Re
 		file := playbookRequest.CsrOrigin[len(userProvidedCSRPrefix):]
 		csr, err := readCSRFromFile(file)
 		if err != nil {
-			zap.L().Warn("Failed to read CSR from file", zap.String("file", file), zap.Error(err))
+			zap.L().Warn("failed to read CSR from file", zap.String("file", file), zap.Error(err))
 			vcertRequest.CsrOrigin = certificate.LocalGeneratedCSR
 			return
 		}
 		err = vcertRequest.SetCSR(csr)
 		if err != nil {
-			zap.L().Warn("Failed to set CSR", zap.Error(err))
+			zap.L().Warn("failed to set CSR", zap.Error(err))
 			vcertRequest.CsrOrigin = certificate.LocalGeneratedCSR
 			return
 		}

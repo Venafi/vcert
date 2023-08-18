@@ -29,6 +29,25 @@ import (
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
 )
 
+const (
+	//common keys
+	platformUrlKey = "url"
+	trustBundleKey = "trust_bundle"
+
+	//Firefly keys
+	fireflyUrlKey          = "firefly_url"
+	fireflyTokenUrlKey     = "oauth_token_url"
+	fireflyAccessTokenKey  = "oauth_access_token"
+	fireflyClientIdKey     = "oauth_client_id"
+	fireflyClientSecretKey = "oauth_client_secret"
+	fireflyUserKey         = "oauth_user"
+	fireflyPasswordKey     = "oauth_password"
+	fireflyDeviceUrlKey    = "oauth_device_url"
+	fireflyAudienceKey     = "oauth_audience"
+	fireflyScopeKey        = "oauth_scope"
+	fireflyZoneKey         = "firefly_zone"
+)
+
 // Config is a basic structure for high level initiating connector to Trust Platform (TPP)/Venafi Cloud
 type Config struct {
 	// ConnectorType specify what do you want to use. May be "Cloud", "TPP" or "Fake" for development.
@@ -91,8 +110,8 @@ func LoadConfigFromFile(path, section string) (cfg Config, err error) {
 		connectorType = endpoint.ConnectorTypeTPP
 		if m["tpp_url"] != "" {
 			baseUrl = m["tpp_url"]
-		} else if m["url"] != "" {
-			baseUrl = m["url"]
+		} else if m[platformUrlKey] != "" {
+			baseUrl = m[platformUrlKey]
 		}
 		auth.AccessToken = m["access_token"]
 		auth.User = m["tpp_user"]
@@ -107,21 +126,44 @@ func LoadConfigFromFile(path, section string) (cfg Config, err error) {
 		connectorType = endpoint.ConnectorTypeCloud
 		if m["cloud_url"] != "" {
 			baseUrl = m["cloud_url"]
-		} else if m["url"] != "" {
-			baseUrl = m["url"]
+		} else if m[platformUrlKey] != "" {
+			baseUrl = m[platformUrlKey]
 		}
 		auth.APIKey = m["cloud_apikey"]
 		if m.has("cloud_zone") {
 			cfg.Zone = m["cloud_zone"]
 		}
+	} else if m.has(fireflyClientIdKey) || m.has(fireflyAccessTokenKey) {
+		connectorType = endpoint.ConnectorTypeFirefly
+
+		idp := &endpoint.OAuthProvider{}
+		auth.IdentityProvider = idp
+
+		if m[fireflyUrlKey] != "" {
+			baseUrl = m[fireflyUrlKey]
+		} else if m[platformUrlKey] != "" {
+			baseUrl = m[platformUrlKey]
+		}
+		auth.AccessToken = m[fireflyAccessTokenKey]
+		auth.User = m[fireflyUserKey]
+		auth.Password = m[fireflyPasswordKey]
+		auth.ClientId = m[fireflyClientIdKey]
+		auth.ClientSecret = m[fireflyClientSecretKey]
+		auth.Scope = m[fireflyScopeKey]
+
+		idp.TokenURL = m[fireflyTokenUrlKey]
+		idp.Audience = m[fireflyAudienceKey]
+		idp.DeviceURL = m[fireflyDeviceUrlKey]
+
+		cfg.Zone = m[fireflyZoneKey]
 	} else if m.has("test_mode") && m["test_mode"] == "true" {
 		connectorType = endpoint.ConnectorTypeFake
 	} else {
 		return cfg, fmt.Errorf("failed to load config: connector type cannot be defined")
 	}
 
-	if m.has("trust_bundle") {
-		fname, err := expand(m["trust_bundle"])
+	if m.has(trustBundleKey) {
+		fname, err := expand(m[trustBundleKey])
 		if err != nil {
 			return cfg, fmt.Errorf("failed to load trust-bundle: %s", err)
 		}
@@ -170,27 +212,42 @@ func (d set) has(key string) bool {
 
 func validateSection(s *ini.Section) error {
 	var TPPValidKeys set = map[string]bool{
-		"url":          true,
+		platformUrlKey: true,
 		"access_token": true,
 		"tpp_url":      true,
 		"tpp_user":     true,
 		"tpp_password": true,
 		"tpp_zone":     true,
-		"trust_bundle": true,
+		trustBundleKey: true,
 	}
 	var CloudValidKeys set = map[string]bool{
-		"url":          true,
-		"trust_bundle": true,
+		platformUrlKey: true,
+		trustBundleKey: true,
 		"cloud_url":    true,
 		"cloud_apikey": true,
 		"cloud_zone":   true,
+	}
+	var FireflyValidKeys set = map[string]bool{
+		platformUrlKey:         true,
+		fireflyUrlKey:          true,
+		fireflyTokenUrlKey:     true,
+		fireflyAccessTokenKey:  true,
+		fireflyClientIdKey:     true,
+		fireflyClientSecretKey: true,
+		fireflyUserKey:         true,
+		fireflyPasswordKey:     true,
+		fireflyDeviceUrlKey:    true,
+		fireflyAudienceKey:     true,
+		fireflyScopeKey:        true,
+		trustBundleKey:         true,
+		fireflyZoneKey:         true,
 	}
 
 	log.Printf("Validating configuration section %s", s.Name())
 	var m dict = s.KeysHash()
 
-	if m.has("access_token") && m.has("cloud_apikey") {
-		return fmt.Errorf("configuration issue in section %s: could not set both TPP token and cloud api key", s.Name())
+	if m.has("access_token") && m.has("cloud_apikey") && m.has(fireflyAccessTokenKey) {
+		return fmt.Errorf("configuration issue in section %s: only one between TPP token, cloud api key or OAuth token can be set", s.Name())
 	}
 	if m.has("tpp_user") || m.has("access_token") || m.has("tpp_password") {
 		// looks like TPP config section
@@ -215,10 +272,40 @@ func validateSection(s *ini.Section) error {
 				return fmt.Errorf("illegal key '%s' in Cloud section %s", k, s.Name())
 			}
 		}
+	} else if m.has(fireflyClientIdKey) || m.has(fireflyAccessTokenKey) {
+		// looks like TPP config section
+		for k := range m {
+			if !FireflyValidKeys.has(k) {
+				return fmt.Errorf("illegal key '%s' in Firefly section %s", k, s.Name())
+			}
+		}
+
+		if m.has(fireflyClientIdKey) {
+			//if it's not set any Flow Grant
+			if !((m.has(fireflyUserKey) && m.has(fireflyPasswordKey)) || m.has(fireflyClientSecretKey) || m.has(fireflyDeviceUrlKey)) {
+				return fmt.Errorf("configuration issue in section %s: The OAuth Client ID is set but is not set any OAuth Flow grant", s.Name())
+			}
+
+			if m.has(fireflyUserKey) && !m.has(fireflyPasswordKey) {
+				return fmt.Errorf("configuration issue in section %s: The OAuth password is required when the OAuth username is provided", s.Name())
+			}
+
+			if !m.has(fireflyUserKey) && m.has(fireflyPasswordKey) {
+				return fmt.Errorf("configuration issue in section %s: The OAuth username is required when the OAuth password is provided", s.Name())
+			}
+
+			if m.has(fireflyUserKey) && m.has(fireflyClientSecretKey) {
+				return fmt.Errorf("configuration issue in section %s: The OAuth Resource Owner Password Flow and Credential Flow grants are set but only one flow grant is accepted", s.Name())
+			}
+
+			if m.has(fireflyUserKey) && m.has(fireflyDeviceUrlKey) {
+				return fmt.Errorf("configuration issue in section %s: The OAuth Resource Owner Password Flow and Device Flow grants are set but only one flow grant is accepted", s.Name())
+			}
+		}
 	} else if m.has("test_mode") {
 		// it's ok
 
-	} else if m.has("url") {
+	} else if m.has(platformUrlKey) {
 		return fmt.Errorf("could not determine connection endpoint with only url information in section %s", s.Name())
 	} else {
 		return fmt.Errorf("section %s looks empty", s.Name())

@@ -79,7 +79,7 @@ func (r PKCS12Installer) Backup() error {
 		return err
 	}
 	if !certExists {
-		zap.L().Info("New certificate location specified, no back up taken")
+		zap.L().Info("new certificate location specified, no back up taken")
 		return nil
 	}
 
@@ -90,7 +90,7 @@ func (r PKCS12Installer) Backup() error {
 		return err
 	}
 
-	zap.L().Info("Certificate backed up", zap.String("location", r.File), zap.String("backupLocation", newLocation))
+	zap.L().Info("certificate backed up", zap.String("location", r.File), zap.String("backupLocation", newLocation))
 	return err
 }
 
@@ -188,7 +188,7 @@ func packageAsPKCS12(pcc certificate.PEMCollection, keyPassword string) ([]byte,
 
 	bytes, err := pkcs12.Encode(rand.Reader, privateKey, cert, chainList, keyPassword)
 	if err != nil {
-		return nil, fmt.Errorf("pkcs12 encode error: %w", err)
+		return nil, fmt.Errorf("PKCS12 encode error: %w", err)
 	}
 
 	return bytes, nil
