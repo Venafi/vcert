@@ -120,7 +120,7 @@ func (c *Connector) Authorize(auth *endpoint.Authentication) (token *oauth2.Toke
 	}
 
 	// if it's a client credentials flow grant
-	if auth.ClientSecret != "" {
+	if auth.ClientSecret != "" && auth.IdentityProvider.DeviceURL == "" {
 
 		config := clientcredentials.Config{
 			ClientID:     auth.ClientId,
