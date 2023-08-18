@@ -14,7 +14,7 @@ VCert Playbook functionality solves the "last mile" problem. VCert has historica
 
 - **Smart certificate renewals**: VCert Playbook checks if a certificate already exists and whether it's due for renewal before requesting a new one. This functionality lets you run a script regularly without unnecessarily renewing certificates.
 
-- **Compatibility**: VCert Playbook works seamlessly with the three Venafi platforms: TLS Protect Cloud, TLS Protect Datacenter and Firefly, ensuring it fits your particular environment.
+- **Compatibility**: VCert Playbook works seamlessly with the three Venafi platforms: TLS Protect Cloud, TLS Protect Datacenter, and Firefly, ensuring it fits your particular environment.
 
 ## Example use cases
 
