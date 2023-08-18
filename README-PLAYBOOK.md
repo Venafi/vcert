@@ -86,7 +86,7 @@ The top-level structure of the file is described as follows:
 
 | Field      | Type                             | Description                                                                                                                                                           |
 |------------|----------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| connection | [Connection](#connection) object | ***REQUIRED*** - Defines the parameters required to make a connection to one of the following Venafi platforms: TLS Protect Cloud, TLS Protect Datacenter or Firefly. |
+| connection | [Connection](#connection) object | ***REQUIRED*** - Defines the parameters required to make a connection to one of the following Venafi platforms: TLS Protect Cloud, TLS Protect Datacenter, or Firefly. |
 
 ### Connection
 
