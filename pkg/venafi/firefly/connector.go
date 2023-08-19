@@ -25,14 +25,21 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sosodev/duration"
+	"go.uber.org/zap"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/clientcredentials"
+
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
 	"github.com/Venafi/vcert/v5/pkg/policy"
 	"github.com/Venafi/vcert/v5/pkg/util"
+	"github.com/Venafi/vcert/v5/pkg/venafi"
 	"github.com/Venafi/vcert/v5/pkg/verror"
-	"github.com/sosodev/duration"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/clientcredentials"
+)
+
+var (
+	fieldPlatform = zap.String("platform", venafi.Firefly.String())
 )
 
 // Connector contains the base data needed to communicate with a Firefly Server
@@ -43,18 +50,6 @@ type Connector struct {
 	trust       *x509.CertPool
 	client      *http.Client
 	zone        string // holds the policyName
-}
-
-func (c *Connector) IsCSRServiceGenerated(_ *certificate.Request) (bool, error) {
-	panic("operation is not supported yet")
-}
-
-func (c *Connector) RetrieveSshConfig(_ *certificate.SshCaTemplateRequest) (*certificate.SshConfig, error) {
-	panic("operation is not supported yet")
-}
-
-func (c *Connector) RetrieveAvailableSSHTemplates() (response []certificate.SshAvaliableTemplate, err error) {
-	panic("operation is not supported yet")
 }
 
 // NewConnector creates a new Firefly Connector object used to communicate with Firefly
@@ -84,16 +79,15 @@ func (c *Connector) GetType() endpoint.ConnectorType {
 	return endpoint.ConnectorTypeFirefly
 }
 
-func (c *Connector) Ping() (err error) {
-	panic("operation is not supported yet")
-}
-
 func (c *Connector) Authenticate(auth *endpoint.Authentication) error {
 	if auth == nil {
-		return fmt.Errorf("failed to authenticate: missing credentials")
+		msg := "failed to authenticate: no credentials provided"
+		zap.L().Error(msg, fieldPlatform)
+		return fmt.Errorf(msg)
 	}
 
 	if auth.AccessToken == "" {
+		zap.L().Info("no access token provided. Authorization needed", fieldPlatform)
 		var token *oauth2.Token
 		token, err := c.Authorize(auth)
 		if err != nil {
@@ -102,6 +96,7 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) error {
 		auth.AccessToken = token.AccessToken
 	}
 
+	zap.L().Info("successfully authenticated", fieldPlatform)
 	//setting the accessToken to the connector
 	c.accessToken = auth.AccessToken
 	return nil
@@ -115,12 +110,20 @@ func (c *Connector) Authorize(auth *endpoint.Authentication) (token *oauth2.Toke
 		}
 	}()
 
+	zap.L().Info("authorizing to OAuth2 server", fieldPlatform)
+
 	if auth == nil {
-		return nil, fmt.Errorf("failed to authenticate: missing credentials")
+		msg := "failed to authenticate: missing credentials"
+		zap.L().Error(msg, fieldPlatform)
+		return nil, fmt.Errorf(msg)
 	}
+
+	successMsg := "successfully authorized to OAuth2 server"
+	failureMsg := "authorization flow failed"
 
 	// if it's a client credentials flow grant
 	if auth.ClientSecret != "" && auth.IdentityProvider.DeviceURL == "" {
+		zap.L().Info("authorizing using credentials flow", fieldPlatform)
 
 		config := clientcredentials.Config{
 			ClientID:     auth.ClientId,
@@ -135,11 +138,20 @@ func (c *Connector) Authorize(auth *endpoint.Authentication) (token *oauth2.Toke
 			}
 		}
 
-		return config.Token(context.Background())
+		token, err = config.Token(context.Background())
+		if err != nil {
+			zap.L().Error(failureMsg, fieldPlatform, zap.Error(err))
+			return token, err
+		}
+
+		zap.L().Info(successMsg, fieldPlatform)
+		return
 	}
 
 	// if it's a password flow grant
 	if auth.User != "" && auth.Password != "" {
+		zap.L().Info("authorizing using password flow", fieldPlatform)
+
 		config := oauth2.Config{
 			ClientID:     auth.ClientId,
 			ClientSecret: auth.ClientSecret,
@@ -154,55 +166,70 @@ func (c *Connector) Authorize(auth *endpoint.Authentication) (token *oauth2.Toke
 			},
 		}
 
-		return config.PasswordCredentialsToken(context.Background(), auth.User, auth.Password)
+		token, err = config.PasswordCredentialsToken(context.Background(), auth.User, auth.Password)
+		if err != nil {
+			zap.L().Error(failureMsg, fieldPlatform, zap.Error(err))
+			return token, err
+		}
+
+		zap.L().Info(successMsg, fieldPlatform)
+		return
 	}
 
 	// if it's a device flow grant
 	if auth.IdentityProvider.DeviceURL != "" {
-		return c.getDeviceAccessToken(auth)
+		zap.L().Info("authorizing using device flow", fieldPlatform)
+
+		token, err = c.getDeviceAccessToken(auth)
+		if err != nil {
+			zap.L().Error(failureMsg, fieldPlatform, zap.Error(err))
+			return token, err
+		}
+
+		zap.L().Info(successMsg, fieldPlatform)
+		return
 	}
 
-	return token, fmt.Errorf("failed to authenticate: can't determine valid credentials set")
-}
-
-func (c *Connector) RetrieveSystemVersion() (string, error) {
-	panic("operation is not supported yet")
-}
-
-// RequestCertificate submits the CSR to the Venafi Firefly API for processing
-func (c *Connector) RequestCertificate(_ *certificate.Request) (requestID string, err error) {
-	panic("operation is not supported yet")
+	errMsg := "authorization failed: cannot determine the authorization flow required for the credentials provided"
+	zap.L().Error(errMsg, fieldPlatform)
+	return token, fmt.Errorf(errMsg)
 }
 
 // SynchronousRequestCertificate It's not supported yet in VaaS
 func (c *Connector) SynchronousRequestCertificate(req *certificate.Request) (certificates *certificate.PEMCollection, err error) {
 
+	zap.L().Info("requesting certificate", zap.String("cn", req.Subject.CommonName), fieldPlatform)
 	//creating the request object
 	certReq := c.getCertificateRequest(req)
-	if err != nil {
-		return nil, err
-	}
 
+	zap.L().Info("sending HTTP request", fieldPlatform)
 	statusCode, status, body, err := c.request("POST", c.getCertificateRequestUrl(req), certReq)
-
 	if err != nil {
+		zap.L().Error("HTTP request failed", fieldPlatform, zap.Error(err))
 		return nil, err
 	}
+
 	//parsing the result
 	cr, err := parseCertificateRequestResult(statusCode, status, body)
 	if err != nil {
+		zap.L().Error("failed to parse HTTP response", fieldPlatform, zap.Error(err))
 		return nil, err
 	}
+
 	//converting to PEMCollection
 	certificates, err = certificate.PEMCollectionFromBytes([]byte(cr.CertificateChain), req.ChainOption)
 	if err != nil {
+		zap.L().Error("failed to create pem collection", fieldPlatform, zap.Error(err))
 		return nil, err
 	}
+
 	certificates.PrivateKey = cr.PrivateKey
+	zap.L().Info("successfully requested certificate", fieldPlatform)
 	return certificates, nil
 }
 
 func (c *Connector) getCertificateRequest(req *certificate.Request) *certificateRequest {
+	zap.L().Info("building certificate request", fieldPlatform)
 	fireflyCertRequest := &certificateRequest{}
 
 	if req.CsrOrigin == certificate.UserProvidedCSR {
@@ -289,6 +316,7 @@ func (c *Connector) getCertificateRequest(req *certificate.Request) *certificate
 	}
 	fireflyCertRequest.KeyAlgorithm = keyAlgorithm
 
+	zap.L().Info("successfully built certificate request", fieldPlatform)
 	return fireflyCertRequest
 }
 
@@ -315,6 +343,31 @@ func (e *ErrCertNotFound) Error() string {
 
 func (e *ErrCertNotFound) Unwrap() error {
 	return e.error
+}
+
+func (c *Connector) Ping() (err error) {
+	panic("operation is not supported yet")
+}
+
+func (c *Connector) RetrieveSystemVersion() (string, error) {
+	panic("operation is not supported yet")
+}
+
+// RequestCertificate submits the CSR to the Venafi Firefly API for processing
+func (c *Connector) RequestCertificate(_ *certificate.Request) (requestID string, err error) {
+	panic("operation is not supported yet")
+}
+
+func (c *Connector) IsCSRServiceGenerated(_ *certificate.Request) (bool, error) {
+	panic("operation is not supported yet")
+}
+
+func (c *Connector) RetrieveSshConfig(_ *certificate.SshCaTemplateRequest) (*certificate.SshConfig, error) {
+	panic("operation is not supported yet")
+}
+
+func (c *Connector) RetrieveAvailableSSHTemplates() (response []certificate.SshAvaliableTemplate, err error) {
+	panic("operation is not supported yet")
 }
 
 func (c *Connector) ResetCertificate(_ *certificate.Request, _ bool) (err error) {
