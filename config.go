@@ -36,10 +36,10 @@ const (
 
 	//Firefly keys
 	fireflyUrlKey          = "firefly_url"
-	fireflyTokenUrlKey     = "oauth_token_url"
-	fireflyAccessTokenKey  = "oauth_access_token"
+	fireflyTokenUrlKey     = "oauth_token_url"    // #nosec G101 // False positive
+	fireflyAccessTokenKey  = "oauth_access_token" // #nosec G101 // False positive
 	fireflyClientIdKey     = "oauth_client_id"
-	fireflyClientSecretKey = "oauth_client_secret"
+	fireflyClientSecretKey = "oauth_client_secret" // #nosec G101 // False positive
 	fireflyUserKey         = "oauth_user"
 	fireflyPasswordKey     = "oauth_password"
 	fireflyDeviceUrlKey    = "oauth_device_url"
