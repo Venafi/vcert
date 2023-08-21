@@ -113,10 +113,11 @@ Then(/^it should( not)? output (access|refresh) token( in JSON)?$/) do |negated,
 
   unless negated
     if json then
-      # Since Ruby is returning both STDOUT and STDERR joined in string, in that order, in oder to find the expected
-      # JSON value, we will look for it ignoring the rest. This started to happen here when we introduced Zap Logging.
-      # The odd behavior is that this didn't happen before with regular standard logging from Golang, as during code examining
-      # we found out that indeed, aruba is joining STDOUT and STDERR into one string.
+      # Since Ruby is returning both STDOUT and STDERR joined in string, in that order respectively. In order to find
+      # the expected JSON value, we will look for it, ignoring the rest of STDERR (if any). This started to happen when
+      # we introduced Zap Logging. The odd behavior is that this didn't happen before with regular standard logging
+      # from Golang, as during code examining we found out that, indeed, aruba is joining STDOUT and STDERR into one
+      # string, but we only need the STDOUT for parsing JSON.
 
       json_string = extract_json_from_output(@previous_command_output)
 
