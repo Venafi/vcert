@@ -1834,8 +1834,10 @@ func getCertificateAuthorityDetails(caName string, c *Connector) (*policy.CADeta
 		if account.Account.Key == info.CAAccountKey {
 			for _, productOption := range account.ProductOption {
 				if productOption.ProductName == info.VendorProductName {
-					details.CertificateAuthorityOrganizationId = &productOption.ProductDetails.ProductTemplate.OrganizationId
-					details.CertificateAuthorityProductOptionId = &productOption.Id
+					productOptionOrganizationId := productOption.ProductDetails.ProductTemplate.OrganizationId
+					details.CertificateAuthorityOrganizationId = &productOptionOrganizationId
+					productionOptionId := productOption.Id
+					details.CertificateAuthorityProductOptionId = &productionOptionId
 					return &details, nil
 				}
 			}
