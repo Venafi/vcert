@@ -6,8 +6,8 @@ const (
 	vCertPlatform     = "VCERT_PLATFORM"
 	vCertURL          = "VCERT_URL"
 	vCertZone         = "VCERT_ZONE"
-	vCertToken        = "VCERT_TOKEN" // #nosec G101
-	vCertApiKey       = "VCERT_APIKEY"
+	vCertToken        = "VCERT_TOKEN"  // #nosec G101
+	vCertApiKey       = "VCERT_APIKEY" // #nosec G101
 	vCertTrustBundle  = "VCERT_TRUST_BUNDLE"
 	vcertUser         = "VCERT_USER"
 	vcertPassword     = "VCERT_PASSWORD"
