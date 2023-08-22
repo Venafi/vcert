@@ -48,8 +48,14 @@ const (
 	/* #nosec */
 	vCertToken = "VCERT_TOKEN"
 	/* #nosec */
-	vCertApiKey      = "VCERT_APIKEY"
-	vCertTrustBundle = "VCERT_TRUST_BUNDLE"
+	vCertApiKey       = "VCERT_APIKEY"
+	vCertTrustBundle  = "VCERT_TRUST_BUNDLE"
+	vcertUser         = "VCERT_USER"
+	vcertPassword     = "VCERT_PASSWORD"
+	vcertClientID     = "VCERT_CLIENT_ID"
+	vcertClientSecret = "VCERT_CLIENT_SECRET"
+	vcertTokenURL     = "VCERT_TOKEN_URL"
+	vcertDeviceURL    = "VCERT_DEVICE_URL"
 
 	JKSFormat              = "jks"
 	Pkcs12                 = "pkcs12"
