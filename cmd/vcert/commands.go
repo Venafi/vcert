@@ -50,7 +50,8 @@ import (
 var (
 	tlsConfig      tls.Config
 	connectionType endpoint.ConnectorType
-	commandEnroll  = &cli.Command{
+
+	commandEnroll = &cli.Command{
 		Before: runBeforeCommand,
 		Flags:  enrollFlags,
 		Action: doCommandEnroll1,
@@ -133,7 +134,6 @@ var (
         vcert renew -u https://tpp.example.com -t <TPP access token> --id <ID value>
 		vcert renew -k <VaaS API key> --thumbprint <cert SHA1 fingerprint>`,
 	}
-
 	commandRetire = &cli.Command{
 		Before: runBeforeCommand,
 		Name:   commandRetireName,
@@ -155,7 +155,6 @@ var (
         vcert setpolicy -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --file /path-to/policy.spec
 		vcert setpolicy -k <VaaS API key> -z "<app name>\<CIT alias>" --file /path-to/policy.spec`,
 	}
-
 	commandGetPolicy = &cli.Command{
 		Before: runBeforeCommand,
 		Name:   commandGetePolicyName,
@@ -175,7 +174,6 @@ var (
 		Usage:     "To retrieve a SSH Certificate",
 		UsageText: `vcert sshpickup -u https://tpp.example.com -t <TPP access token> --pickup-id <ssh cert DN>`,
 	}
-
 	commandSshEnroll = &cli.Command{
 		Before:    runBeforeCommand,
 		Name:      commandSshEnrollName,
@@ -184,7 +182,6 @@ var (
 		Usage:     "To enroll a SSH Certificate",
 		UsageText: `vcert sshenroll -u https://tpp.example.com -t <TPP access token> --template <val> --id <val> --principal bob --principal alice --valid-hours 1`,
 	}
-
 	commandSshGetConfig = &cli.Command{
 		Before:    runBeforeCommand,
 		Name:      commandSshGetConfigName,
@@ -232,6 +229,9 @@ func runBeforeCommand(c *cli.Context) error {
 		uri, _ := url.Parse(stringURI)
 		flags.uriSans = append(flags.uriSans, uri)
 	}
+
+	//Assign environment variables values to flags
+	assignEnvVarsToFlags()
 
 	if flags.platformString != "" {
 		flags.platform = venafi.GetPlatformType(flags.platformString)
@@ -309,8 +309,6 @@ func doCommandEnroll1(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-
-	validateOverWritingEnviromentVariables()
 
 	cfg, err := buildConfig(c, &flags)
 	if err != nil {
@@ -655,7 +653,6 @@ func doCommandCredMgmt1(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	validateOverWritingEnviromentVariables()
 
 	err = setTLSConfig()
 	if err != nil {
@@ -950,8 +947,6 @@ func doCommandPickup1(c *cli.Context) error {
 		return err
 	}
 
-	validateOverWritingEnviromentVariables()
-
 	cfg, err := buildConfig(c, &flags)
 	if err != nil {
 		return fmt.Errorf("Failed to build vcert config: %s", err)
@@ -1059,8 +1054,6 @@ func doCommandRevoke1(c *cli.Context) error {
 		return err
 	}
 
-	validateOverWritingEnviromentVariables()
-
 	cfg, err := buildConfig(c, &flags)
 	if err != nil {
 		return fmt.Errorf("Failed to build vcert config: %s", err)
@@ -1116,8 +1109,6 @@ func doCommandRetire(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-
-	validateOverWritingEnviromentVariables()
 
 	cfg, err := buildConfig(c, &flags)
 	if err != nil {
@@ -1334,7 +1325,6 @@ func doCommandRenew1(c *cli.Context) error {
 		return err
 	}
 
-	validateOverWritingEnviromentVariables()
 	cfg, err := buildConfig(c, &flags)
 	if err != nil {
 		return fmt.Errorf("Failed to build vcert config: %s", err)
