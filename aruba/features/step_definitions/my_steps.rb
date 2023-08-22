@@ -113,11 +113,19 @@ Then(/^it should( not)? output (access|refresh) token( in JSON)?$/) do |negated,
 
   unless negated
     if json then
-      JSON.parse(@previous_command_output)
+      # Since Ruby is returning both STDOUT and STDERR joined in string, in that order respectively. In order to find
+      # the expected JSON value, we will look for it, ignoring the rest of STDERR (if any). This started to happen when
+      # we introduced Zap Logging. The odd behavior is that this didn't happen before with regular standard logging
+      # from Golang, as during code examining we found out that, indeed, aruba is joining STDOUT and STDERR into one
+      # string, but we only need the STDOUT for parsing JSON.
+
+      json_string = extract_json_from_output(@previous_command_output)
+
+      JSON.parse(json_string)
       if token === "access"
-        @access_token = unescape_text(normalize_json(@previous_command_output, "access_token")).tr('"', '')
+        @access_token = unescape_text(normalize_json(json_string, "access_token")).tr('"', '')
       elsif token === "refresh"
-        @refresh_token = unescape_text(normalize_json(@previous_command_output, "refresh_token")).tr('"', '')
+        @refresh_token = unescape_text(normalize_json(json_string, "refresh_token")).tr('"', '')
       else
         fail(ArgumentError.new("Cant determine token type for #{token}"))
       end

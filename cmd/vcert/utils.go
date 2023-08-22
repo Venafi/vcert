@@ -42,15 +42,6 @@ import (
 )
 
 const (
-	vCertPlatform = "VCERT_PLATFORM"
-	vCertURL      = "VCERT_URL"
-	vCertZone     = "VCERT_ZONE"
-	/* #nosec */
-	vCertToken = "VCERT_TOKEN"
-	/* #nosec */
-	vCertApiKey      = "VCERT_APIKEY"
-	vCertTrustBundle = "VCERT_TRUST_BUNDLE"
-
 	JKSFormat              = "jks"
 	Pkcs12                 = "pkcs12"
 	Sha256                 = "SHA256"

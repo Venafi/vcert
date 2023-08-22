@@ -26,6 +26,7 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/Venafi/vcert/v5"
+	"github.com/Venafi/vcert/v5/pkg/util"
 )
 
 var (
@@ -55,6 +56,13 @@ func main() {
 
 		}
 	}()
+
+	//Configure zap logger
+	err := util.ConfigureLogger(false)
+	if err != nil {
+		l := log.New(os.Stderr, UtilityShortName+": ", log.LstdFlags)
+		l.Panicf("%s", err)
+	}
 
 	app := &cli.App{
 		Usage: UtilityName,
@@ -144,11 +152,11 @@ OPTIONS:
    {{range .VisibleFlags}}{{.}}
    {{end}}{{end}}
 `
-	err := app.Run(os.Args)
+	err = app.Run(os.Args)
 	if err != nil {
 		//TODO: we need to make logger a global package
-		logger := log.New(os.Stderr, UtilityShortName+": ", log.LstdFlags)
-		logger.Panicf("%s", err)
+		l := log.New(os.Stderr, UtilityShortName+": ", log.LstdFlags)
+		l.Panicf("%s", err)
 	}
 }
 

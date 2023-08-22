@@ -23,7 +23,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/Venafi/vcert/v5/pkg/venafi"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/pkcs12"
@@ -31,7 +30,8 @@ import (
 	"github.com/Venafi/vcert/v5/pkg/playbook/app/domain"
 	"github.com/Venafi/vcert/v5/pkg/playbook/app/parser"
 	"github.com/Venafi/vcert/v5/pkg/playbook/app/service"
-	"github.com/Venafi/vcert/v5/pkg/playbook/util"
+	"github.com/Venafi/vcert/v5/pkg/util"
+	"github.com/Venafi/vcert/v5/pkg/venafi"
 )
 
 const (

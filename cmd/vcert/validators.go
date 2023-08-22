@@ -658,53 +658,6 @@ func validateRetireFlags(commandName string) error {
 	return nil
 }
 
-func validateOverWritingEnviromentVariables() {
-
-	colorYellow := "\033[33m"
-	colorReset := "\033[0m"
-
-	if getPropertyFromEnvironment(vCertPlatform) != "" {
-		if flags.platformString != "" {
-			logger.Println(colorYellow, "Warning Command line parameter -platformString has overridden environment variable VCERT_PLATFORM", colorReset)
-		}
-	}
-
-	if getPropertyFromEnvironment(vCertURL) != "" {
-		if flags.url != "" {
-			logger.Println(colorYellow, "Warning Command line parameter -u has overridden environment variable VCERT_URL", colorReset)
-		}
-
-	}
-
-	if getPropertyFromEnvironment(vCertZone) != "" {
-		if flags.zone != "" {
-			logger.Println(colorYellow, "Warning: Command line parameter -z has overridden environment variable VCERT_ZONE", colorReset)
-		}
-
-	}
-
-	if getPropertyFromEnvironment(vCertToken) != "" {
-		if flags.token != "" {
-			logger.Println(colorYellow, "Warning: Command line parameter -t has overridden environment variable VCERT_TOKEN", colorReset)
-		}
-	}
-
-	if getPropertyFromEnvironment(vCertApiKey) != "" {
-		if flags.apiKey != "" {
-			logger.Println(colorYellow, "Warning: Command line parameter -k has overridden environment variable VCERT_APIKEY", colorReset)
-		}
-
-	}
-
-	if getPropertyFromEnvironment(vCertTrustBundle) != "" {
-		if flags.trustBundle != "" {
-			logger.Println(colorYellow, "Warning: Command line parameter --trust-bundle has overridden environment variable VCERT_TRUST_BUNDLE", colorReset)
-		}
-
-	}
-
-}
-
 func validateGetPolicyFlags(commandName string) error {
 	isPolicyConfigStarter := flags.policyConfigStarter
 	if isPolicyConfigStarter {

@@ -26,8 +26,8 @@ import (
 var (
 	flagPlatform = &cli.StringFlag{
 		Name: "platform",
-		Usage: "The platform string which VCert is going to authenticate. The accepted values are 'tlspdatacenter' for Trust Protection Platform, " +
-			" 'tlspcloud' for TLS Protect Cloud and 'firefly' for Firefly",
+		Usage: "The platform string which VCert is going to authenticate. The accepted values are 'tpp' or 'tlspdc' for Trust Protection Platform, " +
+			" 'vaas' or 'tlspc' for TLS Protect Cloud and 'firefly' for Firefly",
 		Destination: &flags.platformString,
 	}
 
@@ -67,7 +67,7 @@ var (
 
 	flagUser = &cli.StringFlag{
 		Name: "username",
-		Usage: "Use to specify the username of a Trust Protection Platform or Firefly user." +
+		Usage: "Use to specify the username of a Trust Protection Platform or the username of OAuth 2.0 password flow grant." +
 			"Required if -p12-file or -t is not present and may not be combined with either.",
 		Destination: &flags.userName,
 	}
@@ -87,7 +87,7 @@ var (
 
 	flagPassword = &cli.StringFlag{
 		Name:        "password",
-		Usage:       "Use to specify the Trust Protection Platform user's password or the optional password for the headless registration in VaaS.",
+		Usage:       "Use to specify the Trust Protection Platform user's password or the optional password for the headless registration in VaaS or the password for OAuth 2.0 password flow grant.",
 		Destination: &flags.password,
 	}
 
