@@ -26,7 +26,7 @@ import (
 var (
 	flagPlatform = &cli.StringFlag{
 		Name: "platform",
-		Usage: "The platform string which VCert is going to authenticate. The accepted values are 'tpp' or 'tlspdc' for Trust Protection Platform, " +
+		Usage: "REQUIRED/Firefly. The platform string which VCert is going to authenticate. The accepted values are 'tpp' or 'tlspdc' for Trust Protection Platform, " +
 			" 'vaas' or 'tlspc' for TLS Protect Cloud and 'firefly' for Firefly",
 		Destination: &flags.platformString,
 	}
