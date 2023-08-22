@@ -2,6 +2,21 @@ package main
 
 import "fmt"
 
+const (
+	vCertPlatform     = "VCERT_PLATFORM"
+	vCertURL          = "VCERT_URL"
+	vCertZone         = "VCERT_ZONE"
+	vCertToken        = "VCERT_TOKEN" // #nosec G101
+	vCertApiKey       = "VCERT_APIKEY"
+	vCertTrustBundle  = "VCERT_TRUST_BUNDLE"
+	vcertUser         = "VCERT_USER"
+	vcertPassword     = "VCERT_PASSWORD"
+	vcertClientID     = "VCERT_CLIENT_ID"
+	vcertClientSecret = "VCERT_CLIENT_SECRET" // #nosec G101
+	vcertTokenURL     = "VCERT_TOKEN_URL"     // #nosec G101
+	vcertDeviceURL    = "VCERT_DEVICE_URL"
+)
+
 type envVar struct {
 	EnvVarName  string
 	Destination *string
