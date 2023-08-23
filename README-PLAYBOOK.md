@@ -190,4 +190,4 @@ The top-level structure of the file is described as follows:
 | locality     | string          | *OPTIONAL* - Specifies the L= (City) attribute of the requested certificate.                       |
 | organization | string          | *OPTIONAL* - Specifies the O= (Organization) attribute of the requested certificate.               |
 | orgUnits     | array of string | *OPTIONAL* - Specifies one or more OU= (Organization Unit) attribute of the requested certificate. |
-| province     | string          | *OPTIONAL* - Specifies the S= (State) attribute of the requested certificate.                      |
+| state        | string          | *OPTIONAL* - Specifies the S= (State) attribute of the requested certificate.                      |
