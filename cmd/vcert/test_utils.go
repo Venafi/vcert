@@ -33,7 +33,6 @@ func unsetEnvironmentVariables() {
 	os.Unsetenv(vCertPlatform)
 	os.Unsetenv(vcertClientID)
 	os.Unsetenv(vcertClientSecret)
-	os.Unsetenv(vcertTokenURL)
 	os.Unsetenv(vcertDeviceURL)
 }
 

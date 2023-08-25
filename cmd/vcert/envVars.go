@@ -13,7 +13,6 @@ const (
 	vcertPassword     = "VCERT_PASSWORD"
 	vcertClientID     = "VCERT_CLIENT_ID"
 	vcertClientSecret = "VCERT_CLIENT_SECRET" // #nosec G101
-	vcertTokenURL     = "VCERT_TOKEN_URL"     // #nosec G101
 	vcertDeviceURL    = "VCERT_DEVICE_URL"
 )
 
@@ -75,11 +74,6 @@ var (
 			EnvVarName:  vcertClientID,
 			Destination: &flags.clientId,
 			FlagName:    "--client-secret",
-		},
-		{
-			EnvVarName:  vcertTokenURL,
-			Destination: &flags.tokenURL,
-			FlagName:    "--token-url",
 		},
 		{
 			EnvVarName:  vcertDeviceURL,

@@ -25,14 +25,14 @@ When(/^I( interactively)? get credentials from "(.*)"(?: with)?(.+)?$/) do |inte
   end
 
   if flags === " username and no password"
-    cmd = "vcert getcred -platform firefly -token-url '#{idp_token_url}' -client-id '#{idp_client_id}'" +
+    cmd = "vcert getcred -platform oidc -u '#{idp_token_url}' -client-id '#{idp_client_id}'" +
       " -username '#{idp_user}' -scope '#{idp_scope}'"
   elsif flags === " username and password"
-    cmd = "vcert getcred -platform firefly -token-url '#{idp_token_url}' -client-id '#{idp_client_id}'" +
+    cmd = "vcert getcred -platform oidc -u '#{idp_token_url}' -client-id '#{idp_client_id}'" +
       " -username '#{idp_user}' -password '#{idp_password}' -scope '#{idp_scope}'"
   else
     # client id is our default
-    cmd = "vcert getcred -platform firefly -token-url '#{idp_token_url}'" +
+    cmd = "vcert getcred -platform oidc -u '#{idp_token_url}'" +
       " -client-id '#{idp_client_id}' -client-secret #{idp_client_secret} -scope '#{idp_scope}' #{flags}"
   end
 

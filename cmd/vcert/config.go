@@ -107,7 +107,7 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 			if flags.platform == venafi.Firefly && c.Command.Name == commandGetCredName {
 				auth.ClientId = flags.clientId
 				auth.ClientSecret = flags.clientSecret
-				identityProvider.TokenURL = flags.tokenURL
+				identityProvider.TokenURL = flags.url
 				identityProvider.DeviceURL = flags.deviceURL
 				identityProvider.Audience = flags.audience
 				auth.IdentityProvider = identityProvider
