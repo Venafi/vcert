@@ -47,6 +47,13 @@ const (
 	strPlatformTLSPDC = "TLSPDC"
 	// alias for VaaS
 	strPlatformTLSPC = "TLSPC"
+	//NOTE: For now OIDC will be taken as an alias for Firefly
+	//given Firefly implements the logic to get an OAuth 2.0
+	//Access token but OIDC will be available independently of Firefly
+	//so is pending to create an independent client to get an
+	//OAuth 2.0 access token
+	// alias for Firefly
+	strPlatformOIDC = "OIDC"
 )
 
 // String returns a string representation of this object
@@ -86,7 +93,7 @@ func GetPlatformType(platformString string) Platform {
 	switch strings.ToUpper(platformString) {
 	case strPlatformFake:
 		return Fake
-	case strPlatformFirefly:
+	case strPlatformFirefly, strPlatformOIDC:
 		return Firefly
 	case strPlatformTPP, strPlatformTLSPDC:
 		return TPP
