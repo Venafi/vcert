@@ -850,6 +850,7 @@ func TestWrapArgumentDescription(t *testing.T) {
 }
 
 func TestConfigEnvironmentVariablesForTpp(t *testing.T) {
+	flags = commandFlags{}
 
 	//create the environment variables.
 	setEnvironmentVariablesForTpp()
@@ -880,6 +881,7 @@ func TestConfigEnvironmentVariablesForTpp(t *testing.T) {
 }
 
 func TestConfigEnvironmentVariablesForCloud(t *testing.T) {
+	flags = commandFlags{}
 
 	//create the environment variables.
 	setEnvironmentVariablesForCloud()

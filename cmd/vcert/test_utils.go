@@ -28,6 +28,13 @@ func unsetEnvironmentVariables() {
 	os.Unsetenv(vCertToken)
 	os.Unsetenv(vCertApiKey)
 	os.Unsetenv(vCertTrustBundle)
+	os.Unsetenv(vCertPlatform)
+	os.Unsetenv(vcertUser)
+	os.Unsetenv(vCertPlatform)
+	os.Unsetenv(vcertClientID)
+	os.Unsetenv(vcertClientSecret)
+	os.Unsetenv(vcertTokenURL)
+	os.Unsetenv(vcertDeviceURL)
 }
 
 func getCliContext(command string) *cli.Context {
