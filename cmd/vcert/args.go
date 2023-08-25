@@ -106,7 +106,6 @@ type commandFlags struct {
 	upnSans              rfc822NameSlice
 	uriSans              uriSlice
 	url                  string
-	tokenURL             string
 	deviceURL            string
 	verbose              bool
 	zone                 string
