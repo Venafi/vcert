@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"runtime"
 	"strings"
+
+	"go.uber.org/zap"
 )
 
 const (
@@ -45,7 +47,9 @@ type Installation struct {
 	JKSAlias            string             `yaml:"jksAlias,omitempty"`
 	JKSPassword         string             `yaml:"jksPassword,omitempty"`
 	KeyFile             string             `yaml:"keyFile,omitempty"`
+	KeyPassword         string             `yaml:"keyPassword,omitempty"`
 	Location            string             `yaml:"location,omitempty"`
+	P12Password         string             `yaml:"p12Password,omitempty"`
 	Type                InstallationFormat `yaml:"format,omitempty"`
 }
 
@@ -133,6 +137,15 @@ func validateJKS(installation Installation) error {
 	if len(installation.JKSPassword) < JKSMinPasswordLength {
 		return ErrJKSPasswordLength
 	}
+
+	if installation.KeyPassword == "" {
+		zap.L().Warn("no keyPassword set. Using JKSPassword as password for the Private Key")
+	} else {
+		if len(installation.KeyPassword) < JKSMinPasswordLength {
+			return ErrKeyPasswordLength
+		}
+	}
+
 	return nil
 }
 
@@ -153,6 +166,9 @@ func validatePEM(installation Installation) error {
 func validateP12(installation Installation) error {
 	if installation.File == "" {
 		return ErrNoInstallationFile
+	}
+	if installation.P12Password == "" {
+		return ErrNoP12Password
 	}
 	return nil
 }

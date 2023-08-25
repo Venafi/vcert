@@ -45,7 +45,7 @@ func NewCAPIInstaller(inst domain.Installation) CAPIInstaller {
 // 2. Does the certificate is about to expire? Renew if about to expire.
 // Returns true if the certificate needs to be installed.
 func (r CAPIInstaller) Check(renewBefore string, request domain.PlaybookRequest) (bool, error) {
-	zap.L().Debug("checking certificate", zap.String("location", r.Location))
+	zap.L().Info("checking certificate health", zap.String("format", r.Type.String()), zap.String("location", r.Location))
 
 	friendlyName := request.Subject.CommonName
 	if request.FriendlyName != "" {
@@ -100,7 +100,7 @@ func (r CAPIInstaller) Backup() error {
 func (r CAPIInstaller) Install(request domain.PlaybookRequest, pcc certificate.PEMCollection) error {
 	zap.L().Debug("installing certificate", zap.String("location", r.Location))
 
-	content, err := packageAsPKCS12(pcc, request.KeyPassword)
+	content, err := packageAsPKCS12(pcc, r.P12Password)
 	if err != nil {
 		zap.L().Error("could not package certificate as PKCS12", zap.Error(err))
 		return err
@@ -121,7 +121,7 @@ func (r CAPIInstaller) Install(request domain.PlaybookRequest, pcc certificate.P
 		PFX:             content,
 		FriendlyName:    friendlyName,
 		IsNonExportable: r.CAPIIsNonExportable,
-		Password:        request.KeyPassword,
+		Password:        r.P12Password,
 		StoreLocation:   storeLocation,
 		StoreName:       storeName,
 	}
@@ -140,11 +140,11 @@ func (r CAPIInstaller) Install(request domain.PlaybookRequest, pcc certificate.P
 // AfterInstallActions runs any instructions declared in the Installer on a terminal.
 //
 // No validations happen over the content of the AfterAction string, so caution is advised
-func (r CAPIInstaller) AfterInstallActions() error {
+func (r CAPIInstaller) AfterInstallActions() (string, error) {
 	zap.L().Debug("running after-install actions", zap.String("location", r.Location))
 
-	_, err := util.ExecuteScript(r.AfterAction)
-	return err
+	result, err := util.ExecuteScript(r.AfterAction)
+	return result, err
 }
 
 // InstallValidationActions runs any instructions declared in the Installer on a terminal and expects

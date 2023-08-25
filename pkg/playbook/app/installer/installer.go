@@ -40,7 +40,7 @@ type Installer interface {
 	// AfterInstallActions runs any instructions declared in the Installer on a terminal.
 	//
 	// No validations happen over the content of the AfterAction string, so caution is advised
-	AfterInstallActions() error
+	AfterInstallActions() (string, error)
 
 	// InstallValidationActions runs any instructions declared in the Installer on a terminal and expects
 	// "0" for successful validation and "1" for a validation failure

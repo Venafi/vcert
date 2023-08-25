@@ -29,16 +29,16 @@ import (
 //
 // No validation is done over the afterAction string, so caution is advised.
 func ExecuteScript(afterAction string) (string, error) {
-	zap.L().Debug("running After-install actions", zap.String("action", afterAction))
+	zap.L().Debug("running script in powershell", zap.String("action", afterAction))
 
 	cmd := exec.Command("powershell.exe", afterAction)
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()
 	if err != nil {
-		zap.L().Error("could not run after-install action", zap.Error(err))
+		zap.L().Error("could not run script", zap.Error(err))
 		return "", err
 	}
-	zap.L().Debug("after-install output", zap.String("stdout", out.String()))
+	zap.L().Debug("script output", zap.String("stdout", out.String()))
 	return out.String(), nil
 }

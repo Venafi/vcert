@@ -46,8 +46,8 @@ func NewJKSInstaller(inst domain.Installation) JKSInstaller {
 // 1. Does the certificate exists? > Install if it doesn't.
 // 2. Does the certificate is about to expire? Renew if about to expire.
 // Returns true if the certificate needs to be installed.
-func (r JKSInstaller) Check(renewBefore string, request domain.PlaybookRequest) (bool, error) {
-	zap.L().Debug("checking certificate:", zap.String("location", r.File))
+func (r JKSInstaller) Check(renewBefore string, _ domain.PlaybookRequest) (bool, error) {
+	zap.L().Info("checking certificate health", zap.String("format", r.Type.String()), zap.String("location", r.File))
 
 	// Check certificate file exists
 	certExists, err := util.FileExists(r.File)
@@ -58,14 +58,13 @@ func (r JKSInstaller) Check(renewBefore string, request domain.PlaybookRequest) 
 		return true, nil
 	}
 
-	//If no jksPassword set, use keyPassword
-	jksPass := r.JKSPassword
-	if jksPass == "" {
-		jksPass = request.KeyPassword
+	keyPassword := r.KeyPassword
+	if keyPassword == "" {
+		keyPassword = r.JKSPassword
 	}
 
 	// Load Certificate
-	cert, err := loadJKS(r.File, r.JKSAlias, jksPass, request.KeyPassword)
+	cert, err := loadJKS(r.File, r.JKSAlias, r.JKSPassword, keyPassword)
 	if err != nil {
 		return false, err
 	}
@@ -102,10 +101,16 @@ func (r JKSInstaller) Backup() error {
 }
 
 // Install takes the certificate bundle and moves it to the location specified in the installer
-func (r JKSInstaller) Install(request domain.PlaybookRequest, pcc certificate.PEMCollection) error {
+func (r JKSInstaller) Install(_ domain.PlaybookRequest, pcc certificate.PEMCollection) error {
 	zap.L().Debug("installing certificate", zap.String("location", r.File))
 
-	content, err := packageAsJKS(pcc, request.KeyPassword, r.JKSAlias, r.JKSPassword)
+	// If no password is set for the Private Key, use the JKSPassword
+	keyPassword := r.KeyPassword
+	if keyPassword == "" {
+		keyPassword = r.JKSPassword
+	}
+
+	content, err := packageAsJKS(pcc, keyPassword, r.JKSAlias, r.JKSPassword)
 	if err != nil {
 		zap.L().Error("could not package certificate as JKS", zap.Error(err))
 		return err
@@ -122,11 +127,11 @@ func (r JKSInstaller) Install(request domain.PlaybookRequest, pcc certificate.PE
 // AfterInstallActions runs any instructions declared in the Installer on a terminal.
 //
 // No validations happen over the content of the AfterAction string, so caution is advised
-func (r JKSInstaller) AfterInstallActions() error {
+func (r JKSInstaller) AfterInstallActions() (string, error) {
 	zap.L().Debug("running after-install actions", zap.String("location", r.File))
 
-	_, err := util.ExecuteScript(r.AfterAction)
-	return err
+	result, err := util.ExecuteScript(r.AfterAction)
+	return result, err
 }
 
 // InstallValidationActions runs any instructions declared in the Installer on a terminal and expects
