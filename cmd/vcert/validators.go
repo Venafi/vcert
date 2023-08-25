@@ -271,9 +271,9 @@ func validateEnrollFlags(commandName string) error {
 
 	if !flags.testMode && flags.config == "" {
 
-		tppToken := flags.token
-		if tppToken == "" {
-			tppToken = getPropertyFromEnvironment(vCertToken)
+		token := flags.token
+		if token == "" {
+			token = getPropertyFromEnvironment(vCertToken)
 		}
 
 		zone := flags.zone
@@ -281,30 +281,40 @@ func validateEnrollFlags(commandName string) error {
 			zone = getPropertyFromEnvironment(vCertZone)
 		}
 
-		if flags.userName == "" && tppToken == "" {
-			// should be SaaS endpoint
-			if apiKey == "" {
-				return fmt.Errorf("An API key is required for enrollment with Venafi as a Service")
+		if flags.platform == venafi.Firefly {
+			if token == "" {
+				return fmt.Errorf("an access token is required for communicating with Firefly")
 			}
+
 			if zone == "" {
-				return fmt.Errorf("A zone is required for requesting a certificate from Venafi as a Service")
+				return fmt.Errorf("a zone is required for requesting a certificate from Firefly")
 			}
 		} else {
-			// should be TPP service
-			if flags.userName == "" && tppToken == "" {
-				return fmt.Errorf("An access token or username is required for communicating with Trust Protection Platform")
-			}
-			if flags.noPrompt && flags.password == "" && tppToken == "" {
-				return fmt.Errorf("An access token or password is required for communicating with Trust Protection Platform")
-			}
+			if flags.userName == "" && token == "" {
+				// should be SaaS endpoint
+				if apiKey == "" {
+					return fmt.Errorf("An API key is required for enrollment with Venafi as a Service")
+				}
+				if zone == "" {
+					return fmt.Errorf("A zone is required for requesting a certificate from Venafi as a Service")
+				}
+			} else {
+				// should be TPP service
+				if flags.userName == "" && token == "" {
+					return fmt.Errorf("An access token or username is required for communicating with Trust Protection Platform")
+				}
+				if flags.noPrompt && flags.password == "" && token == "" {
+					return fmt.Errorf("An access token or password is required for communicating with Trust Protection Platform")
+				}
 
-			if zone == "" {
-				return fmt.Errorf("A zone is required for requesting a certificate from Trust Protection Platform")
-			}
+				if zone == "" {
+					return fmt.Errorf("A zone is required for requesting a certificate from Trust Protection Platform")
+				}
 
-			// mutual TLS with TPP service
-			if flags.clientP12 == "" && flags.clientP12PW != "" {
-				return fmt.Errorf("-client-pkcs12-pw can only be specified in combination with -client-pkcs12")
+				// mutual TLS with TPP service
+				if flags.clientP12 == "" && flags.clientP12PW != "" {
+					return fmt.Errorf("-client-pkcs12-pw can only be specified in combination with -client-pkcs12")
+				}
 			}
 		}
 
