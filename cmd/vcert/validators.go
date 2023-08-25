@@ -74,6 +74,7 @@ func readData(commandName string) error {
 }
 
 func validateCommonFlags(commandName string) error {
+
 	if flags.format != "" && flags.format != "pem" && flags.format != "json" && flags.format != "pkcs12" && flags.format != JKSFormat && flags.format != util.LegacyPem {
 		return fmt.Errorf("Unexpected output format: %s", flags.format)
 	}
@@ -81,9 +82,17 @@ func validateCommonFlags(commandName string) error {
 		return fmt.Errorf("The '-file' option cannot be used used with any other -*-file flags. Either all data goes into one file or individual files must be specified using the appropriate flags")
 	}
 
-	csrOptionRegex := regexp.MustCompile(`(^file:).*$|^local$|^service$|^$`)
-	if !csrOptionRegex.MatchString(flags.csrOption) {
-		return fmt.Errorf("unexpected --csr option provided: %s; specify one of the following options: %s, %s, or %s", flags.csrOption, "'file:<filename>'", "'local'", "'service'")
+	var csrOptionRegex *regexp.Regexp
+	if flags.platform == venafi.Firefly {
+		csrOptionRegex = regexp.MustCompile(`(^file:).*$|^service$|^$`)
+		if !csrOptionRegex.MatchString(flags.csrOption) {
+			return fmt.Errorf("unexpected --csr option provided: %s; specify one of the following options: %s, or %s", flags.csrOption, "'file:<filename>'", "'service'")
+		}
+	} else {
+		csrOptionRegex = regexp.MustCompile(`(^file:).*$|^local$|^service$|^$`)
+		if !csrOptionRegex.MatchString(flags.csrOption) {
+			return fmt.Errorf("unexpected --csr option provided: %s; specify one of the following options: %s, %s, or %s", flags.csrOption, "'file:<filename>'", "'local'", "'service'")
+		}
 	}
 
 	csrOptFlagResults := csrOptionRegex.FindStringSubmatch(flags.csrOption)
