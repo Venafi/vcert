@@ -26,8 +26,8 @@ import (
 var (
 	flagPlatform = &cli.StringFlag{
 		Name: "platform",
-		Usage: "The platform string which VCert is going to authenticate. The accepted values are 'tpp' or 'tlspdc' for Trust Protection Platform, " +
-			" 'vaas' or 'tlspc' for TLS Protect Cloud and 'firefly' for Firefly",
+		Usage: "REQUIRED/OIDC. The platform string which VCert is going to authenticate. The accepted values are 'tpp' or 'tlspdc' for Trust Protection Platform, " +
+			" 'vaas' or 'tlspc' for TLS Protect Cloud and 'firefly' for Firefly. Also to get an Access Token from a given OIDC using the 'getcred' command, you must set the value to 'oidc'.",
 		Destination: &flags.platformString,
 	}
 
