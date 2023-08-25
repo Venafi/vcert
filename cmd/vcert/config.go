@@ -31,6 +31,8 @@ import (
 )
 
 func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err error) {
+	// Get values from Env Vars and set it to flags before building the config object
+	assignEnvVarsToFlags()
 	cfg.LogVerbose = flags.verbose
 
 	if flags.config != "" {

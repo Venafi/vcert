@@ -230,9 +230,6 @@ func runBeforeCommand(c *cli.Context) error {
 		flags.uriSans = append(flags.uriSans, uri)
 	}
 
-	//Assign environment variables values to flags
-	assignEnvVarsToFlags()
-
 	if flags.platformString != "" {
 		flags.platform = venafi.GetPlatformType(flags.platformString)
 	}
