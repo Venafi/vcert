@@ -217,7 +217,7 @@ func setEnvVars(task domain.CertificateTask, cert *installer.Certificate, preped
 			varValue = cert.Thumbprint
 		case envVarSerial:
 			varName = fmt.Sprintf("VCERT_%s_SERIAL", strings.ToUpper(task.Name))
-			varValue = cert.X509cert.Subject.SerialNumber
+			varValue = cert.X509cert.SerialNumber.String()
 		case envVarBase64:
 			varName = fmt.Sprintf("VCERT_%s_BASE64", strings.ToUpper(task.Name))
 			varValue = prepedPcc.Certificate
