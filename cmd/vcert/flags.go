@@ -512,7 +512,7 @@ var (
 	flagAudience = &cli.StringFlag{
 		Name: "audience",
 		Usage: "Use to specify the audience param to get an access token for OAuth 2.0 identity providers\n" +
-			"\t supporting it like auth0. The audience values must be separated by blank spaces",
+			"\t supporting it like Auth0.",
 		Destination: &flags.audience,
 	}
 
