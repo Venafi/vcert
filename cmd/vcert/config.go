@@ -31,8 +31,6 @@ import (
 )
 
 func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err error) {
-	// Get values from Env Vars and set it to flags before building the config object
-	assignEnvVarsToFlags()
 	cfg.LogVerbose = flags.verbose
 
 	if flags.config != "" {
@@ -42,6 +40,9 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 			return cfg, err
 		}
 	} else {
+		// Get values from Env Vars and set it to flags before building the config object
+		// Only do these when values are not loaded from config file
+		assignEnvVarsToFlags()
 		// Loading configuration from CLI flags
 		var connectorType endpoint.ConnectorType
 		var baseURL string
