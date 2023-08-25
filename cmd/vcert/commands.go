@@ -239,6 +239,10 @@ func runBeforeCommand(c *cli.Context) error {
 			//The separator in scope flag is ";" but Firefly use " " as separator
 			flags.scope = strings.ReplaceAll(flags.scope, ";", " ")
 		}
+
+		if flags.csrOption == "" {
+			flags.csrOption = "service"
+		}
 	}
 
 	return nil

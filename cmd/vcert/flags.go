@@ -327,8 +327,8 @@ var (
 	flagCSROption = &cli.StringFlag{
 		Name: "csr",
 		Usage: "Use to specify the CSR and private key location. Options include: local | service | file.\n" +
-			"\t\tlocal:   The private key and CSR will be generated locally (default)\n" +
-			"\t\tservice: The private key and CSR will be generated at service side\n" +
+			"\t\tlocal:   The private key and CSR will be generated locally (default for TPP and VaaS. For Firefly it doesn't apply)\n" +
+			"\t\tservice: The private key and CSR will be generated at service side(default for Firefly)\n" +
 			"\t\tfile:    The CSR will be read from a file by name. Example: --csr file:/path-to/csr.pem",
 		Destination: &flags.csrOption,
 	}
