@@ -436,8 +436,8 @@ func validateCredMgmtFlags1(commandName string) error {
 				return fmt.Errorf("missing --client-id parameter")
 			}
 
-			if flags.tokenURL == "" {
-				return fmt.Errorf("missing --token-url parameter")
+			if flags.url == "" {
+				return fmt.Errorf("missing -u (URL) parameter")
 			}
 
 			if flags.noPrompt && flags.password == "" && flags.clientSecret == "" && flags.deviceURL == "" {
