@@ -201,7 +201,7 @@ func parseCertificateRequestResult(httpStatusCode int, httpStatus string, body [
 			return nil, err
 		}
 
-		return nil, fmt.Errorf("unexpected status code on Venafi Firefly. Status: %s error: %w", httpStatus, respError)
+		return nil, fmt.Errorf("unexpected status code on Venafi Firefly. Status: %s. %w", httpStatus, respError)
 	}
 }
 

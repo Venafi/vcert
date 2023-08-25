@@ -39,5 +39,5 @@ func NewResponseError(b []byte) (*responseError, error) {
 }
 
 func (e *responseError) Error() string {
-	return e.ErrorKey
+	return "error: " + e.ErrorKey + " - error description: " + e.ErrorDescription
 }
