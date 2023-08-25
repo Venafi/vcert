@@ -129,37 +129,38 @@ func validateConnectionFlags(commandName string) error {
 			flags.testMode {
 			return fmt.Errorf("connection details cannot be specified with flags when -config is used")
 		}
+		return nil
+	}
+
+	if flags.profile != "" {
+		return fmt.Errorf("-profile option cannot be used without -config option")
+	}
+
+	tppToken := flags.token
+	if tppToken == "" {
+		tppToken = getPropertyFromEnvironment(vCertToken)
+	}
+
+	if flags.testMode {
+		return nil
+	}
+	if flags.userName == "" && tppToken == "" {
+		// should be SaaS endpoint
+		if commandName != "sshgetconfig" && flags.apiKey == "" && getPropertyFromEnvironment(vCertApiKey) == "" {
+			return fmt.Errorf("An API key is required for communicating with Venafi as a Service")
+		}
 	} else {
-		if flags.profile != "" {
-			return fmt.Errorf("-profile option cannot be used without -config option")
+		// should be TPP service
+		if flags.url == "" && getPropertyFromEnvironment(vCertURL) == "" {
+			return fmt.Errorf("missing -u (URL) parameter")
+		}
+		if flags.noPrompt && flags.password == "" && tppToken == "" {
+			return fmt.Errorf("An access token or password is required for communicating with Trust Protection Platform or Firefly")
 		}
 
-		tppToken := flags.token
-		if tppToken == "" {
-			tppToken = getPropertyFromEnvironment(vCertToken)
-		}
-
-		if flags.testMode {
-			return nil
-		}
-		if flags.userName == "" && tppToken == "" {
-			// should be SaaS endpoint
-			if commandName != "sshgetconfig" && flags.apiKey == "" && getPropertyFromEnvironment(vCertApiKey) == "" {
-				return fmt.Errorf("An API key is required for communicating with Venafi as a Service")
-			}
-		} else {
-			// should be TPP service
-			if flags.url == "" && getPropertyFromEnvironment(vCertURL) == "" {
-				return fmt.Errorf("missing -u (URL) parameter")
-			}
-			if flags.noPrompt && flags.password == "" && tppToken == "" {
-				return fmt.Errorf("An access token or password is required for communicating with Trust Protection Platform or Firefly")
-			}
-
-			// mutual TLS with TPP service
-			if flags.clientP12 == "" && flags.clientP12PW != "" {
-				return fmt.Errorf("-client-pkcs12-pw can only be specified in combination with -client-pkcs12")
-			}
+		// mutual TLS with TPP service
+		if flags.clientP12 == "" && flags.clientP12PW != "" {
+			return fmt.Errorf("-client-pkcs12-pw can only be specified in combination with -client-pkcs12")
 		}
 	}
 	return nil
