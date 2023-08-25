@@ -33,8 +33,10 @@ var (
 	}
 
 	flagUrl = &cli.StringFlag{
-		Name:        "url",
-		Usage:       "REQUIRED/TPP. The URL of the Trust Protection Platform WebSDK. Example: -u https://tpp.example.com",
+		Name: "url",
+		Usage: "REQUIRED/TPP/Firefly/OIDC. The URL of the service. \n\t\tTPP example: -u https://tpp.example.com" +
+			"\n\t\tFirefly example: -u https://firefly.example.com" +
+			"\n\t\tOIDC example: -u https://my.okta.domain//oauth2/v1/token",
 		Destination: &flags.url,
 		Aliases:     []string{"u"},
 	}
@@ -52,12 +54,6 @@ var (
 		Usage:       "REQUIRED/VAAS. Your API key for Venafi as a Service.  Example: -k aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
 		Destination: &flags.apiKey,
 		Aliases:     []string{"k"},
-	}
-
-	flagTokenURL = &cli.StringFlag{
-		Name:        "token-url",
-		Usage:       "REQUIRED/Firefly. The url endpoint of the OAuth 2.0 identity provider to request an access token. Example for Okta: --token-url https://${yourOktaDomain}/oauth2/v1/token",
-		Destination: &flags.tokenURL,
 	}
 
 	flagDeviceURL = &cli.StringFlag{
@@ -853,7 +849,6 @@ var (
 		flagClientId,
 		flagClientSecret,
 		flagAudience,
-		flagTokenURL,
 		flagDeviceURL,
 		commonFlags,
 	))
