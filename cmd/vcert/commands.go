@@ -76,8 +76,8 @@ var (
 		vcert getcred -u https://tpp.example.com --p12-file <PKCS#12 client cert> --p12-password <PKCS#12 password> --trust-bundle /path-to/bundle.pem
 		vcert getcred -u https://tpp.example.com -t <TPP refresh token>
 		vcert getcred -u https://tpp.example.com -t <TPP refresh token> --scope <scopes and restrictions>
-		vcert getcred --platform firefly --token-url https://authorization-server.com/oauth/token --username <okta user> --password <okta user password> -- scope okta.behaviors.manage
-		vcert getcred --platform firefly --token-url https://authorization-server.com/oauth/token --client-id <okta client id> --client-secret <okta client secret> -- scope okta.behaviors.manage`,
+		vcert getcred --platform oidc --token-url https://authorization-server.com/oauth/token --username <okta user> --password <okta user password> -- scope okta.behaviors.manage
+		vcert getcred --platform oidc --token-url https://authorization-server.com/oauth/token --client-id <okta client id> --client-secret <okta client secret> -- scope okta.behaviors.manage`,
 	}
 	commandCheckCred = &cli.Command{
 		Before:    runBeforeCommand,
