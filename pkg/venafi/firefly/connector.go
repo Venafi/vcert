@@ -212,7 +212,7 @@ func (c *Connector) SynchronousRequestCertificate(req *certificate.Request) (cer
 	//parsing the result
 	cr, err := parseCertificateRequestResult(statusCode, status, body)
 	if err != nil {
-		zap.L().Error("failed to parse HTTP response", fieldPlatform, zap.Error(err))
+		zap.L().Error("failed to request a certificate", fieldPlatform, zap.Error(err))
 		return nil, err
 	}
 
