@@ -168,7 +168,7 @@ And(/^task named "(.*)" has installation format PEM with file name "(.*)", chain
   aux_installation.file = "{{- Env \"PWD\" }}" + $path_separator + $temp_path + $path_separator + cert_name
   aux_installation.chainFile = "{{- Env \"PWD\" }}" + $path_separator + $temp_path + $path_separator + chain_name
   aux_installation.keyFile = "{{- Env \"PWD\" }}" + $path_separator + $temp_path + $path_separator + + key_name
-  aux_installation.key_password = key_password
+  aux_installation.keyPassword = key_password
   if installation
     aux_installation.afterInstallAction = "echo SuccessInstall"
   end
@@ -202,7 +202,7 @@ And(/^task named "(.*)" has installation format PKCS12 with cert name "(.*)"(?: 
   aux_installation = Installation.new
   aux_installation.format = "PKCS12"
   aux_installation.file = "{{- Env \"PWD\" }}" + $path_separator + $temp_path + $path_separator + cert_name
-  aux_installation.p12_password = p12_password
+  aux_installation.p12Password = p12_password
   if installation
     aux_installation.afterInstallAction = "echo SuccessInstall"
   end
