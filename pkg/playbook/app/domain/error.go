@@ -46,6 +46,11 @@ var (
 	ErrNoJKSPassword = fmt.Errorf("jksPassword should not be empty when installing a certificate in JKS format")
 	// ErrJKSPasswordLength is thrown when certificates.installations[].type is JKS but the jksPassword length is shorter than the minimum required
 	ErrJKSPasswordLength = fmt.Errorf("jksPassword must be at least 6 characters long")
+	// ErrKeyPasswordLength is thrown when certificates.installations[].type is JKS but the keyPassword length is shorter than the minimum required
+	ErrKeyPasswordLength = fmt.Errorf("keyPassword must be at least 6 characters long")
+
+	// ErrNoP12Password is thrown when certificates.installations[].type is JKS but no jksPassword is set
+	ErrNoP12Password = fmt.Errorf("p12Password should not be empty when installing a certificate in PKCS12 format")
 
 	// ErrNoChainFile is thrown when certificates.installations[].type is PEM but no pemChainFilename is set
 	ErrNoChainFile = fmt.Errorf("chainFile should not be empty when installing a certificate in PEM format")

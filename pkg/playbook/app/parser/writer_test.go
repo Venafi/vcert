@@ -47,9 +47,8 @@ func (s *WriterSuite) SetupTest() {
 							Value: RandomString(10),
 						},
 					},
-					KeyCurve:    certificate.EllipticCurveP521,
-					KeyPassword: "newPassword!",
-					KeyType:     certificate.KeyTypeRSA,
+					KeyCurve: certificate.EllipticCurveP521,
+					KeyType:  certificate.KeyTypeRSA,
 					Subject: domain.Subject{
 						CommonName:   "foo.bar.123.venafi.com",
 						Country:      "US",
@@ -64,6 +63,7 @@ func (s *WriterSuite) SetupTest() {
 						Type:        domain.FormatPEM,
 						File:        "path/to/my/pem/folder",
 						AfterAction: "echo Success!",
+						KeyPassword: "foo123",
 					},
 				},
 				RenewBefore: "30d",
@@ -134,7 +134,6 @@ func (s *WriterSuite) TestWriter_WritePlaybook() {
 	s.Equal(req.KeyCurve, targetReq.KeyCurve)
 	s.Equal(req.KeyType, targetReq.KeyType)
 
-	s.Equal(req.KeyPassword, targetReq.KeyPassword)
 	s.Equal(req.Zone, targetReq.Zone)
 	s.Equal(req.Subject.CommonName, targetReq.Subject.CommonName)
 	s.Equal(req.Subject.Country, targetReq.Subject.Country)
@@ -147,5 +146,6 @@ func (s *WriterSuite) TestWriter_WritePlaybook() {
 
 	s.Equal(inst.Type, targetInst.Type)
 	s.Equal(inst.File, targetInst.File)
+	s.Equal(inst.KeyPassword, targetInst.KeyPassword)
 	s.Equal(inst.AfterAction, targetInst.AfterAction)
 }

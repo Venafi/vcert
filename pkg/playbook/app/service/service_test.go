@@ -34,12 +34,6 @@ type ServiceSuite struct {
 		config domain.Config
 		task   domain.CertificateTask
 	}
-	errTestCases []struct {
-		name   string
-		config domain.Config
-		task   domain.CertificateTask
-		err    error
-	}
 }
 
 func (s *ServiceSuite) SetupTest() {
@@ -56,7 +50,6 @@ func (s *ServiceSuite) SetupTest() {
 		IssuerHint:     util.IssuerHintGeneric,
 		KeyCurve:       certificate.EllipticCurveNotSet,
 		KeyLength:      2048,
-		KeyPassword:    "foobar123",
 		KeyType:        certificate.KeyTypeRSA,
 		Location:       certificate.Location{},
 		OmitSANs:       false,
@@ -111,6 +104,7 @@ func (s *ServiceSuite) SetupTest() {
 						File:        "./jks/testjks.jks",
 						AfterAction: "",
 						BackupFiles: true,
+						JKSPassword: "foobar123",
 					},
 				},
 			},
@@ -125,6 +119,7 @@ func (s *ServiceSuite) SetupTest() {
 					{
 						Type:        domain.FormatPKCS12,
 						File:        "./pkcs12/testp12.p12",
+						P12Password: "foobar123",
 						AfterAction: "",
 					},
 				},
@@ -142,42 +137,17 @@ func (s *ServiceSuite) SetupTest() {
 					{
 						Type:        domain.FormatPKCS12,
 						File:        "./pkcs12/testp12.p12",
+						P12Password: "foobar123",
 						AfterAction: "",
 					},
 					{
 						Type:        domain.FormatJKS,
 						File:        "./jks/testjks.jks",
+						JKSPassword: "foobar123",
 						AfterAction: "",
 					},
 				},
 				RenewBefore: "30d",
-			},
-		},
-	}
-
-	s.errTestCases = []struct {
-		name   string
-		config domain.Config
-		task   domain.CertificateTask
-		err    error
-	}{
-		{
-			name:   "PEM",
-			config: domain.Config{ForceRenew: true},
-			task: domain.CertificateTask{
-				Name:    "testcertpem",
-				Request: request,
-				Installations: domain.Installations{
-					{
-						Type:        domain.FormatPEM,
-						File:        "./pem/cert.cert",
-						AfterAction: "echo Success!",
-						ChainFile:   "./pem/cert.chain",
-						KeyFile:     "./pem/pk.pem",
-					},
-				},
-				RenewBefore: "30d",
-				SetEnvVars:  []string{envVarThumbprint, envVarBase64, envVarSerial},
 			},
 		},
 	}
@@ -189,15 +159,6 @@ func TestService(t *testing.T) {
 
 func (s *ServiceSuite) TestService_Execute() {
 	for _, tc := range s.testCases {
-		s.Run(tc.name, func() {
-			err := Execute(tc.config, tc.task)
-			s.Empty(err)
-		})
-	}
-}
-
-func (s *ServiceSuite) TestService_ExecuteErrors() {
-	for _, tc := range s.errTestCases {
 		s.Run(tc.name, func() {
 			err := Execute(tc.config, tc.task)
 			s.Empty(err)

@@ -399,8 +399,9 @@ func (s *PlaybookSuite) SetupTest() {
 						Request: req,
 						Installations: Installations{
 							{
-								Type: FormatPKCS12,
-								File: "somewhere",
+								Type:        FormatPKCS12,
+								File:        "somewhere",
+								P12Password: "foo123",
 							},
 						},
 					},

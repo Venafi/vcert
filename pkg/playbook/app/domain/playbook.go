@@ -79,13 +79,13 @@ func (p Playbook) IsValid() (bool, error) {
 		if !taskNames[t.Name] {
 			taskNames[t.Name] = true
 		} else {
-			rErr = errors.Join(rErr, fmt.Errorf("\ttask '%s' is defined multiple times", t.Name))
+			rErr = errors.Join(rErr, fmt.Errorf("task '%s' is defined multiple times", t.Name))
 			rValid = false
 		}
 
 		_, err := t.IsValid()
 		if err != nil {
-			rErr = errors.Join(rErr, fmt.Errorf("\ttask '%s' is invalid: \n%w", t.Name, err))
+			rErr = errors.Join(rErr, fmt.Errorf("task '%s' is invalid: %w", t.Name, err))
 			rValid = false
 		}
 	}
