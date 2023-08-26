@@ -30,7 +30,6 @@ Feature: playbook
     And task named "myCertificateInstallation" has request with "appInfo" value "Venafi VCert Playbook"
     And task named "myCertificateInstallation" has request with "sanUpn" value "test,test2"
     And task named "myCertificateInstallation" has request with "sanUri" value "uri.test.com,foo.venafi.com"
-    And task named "myCertificateInstallation" has request with "keyPassword" value "Passcode123!"
     And task named "myCertificateInstallation" has request with default TPP zone
     And task named "myCertificateInstallation" has request with Location instance "devops-instance", workload prefixed by "workload", tlsAddress "wwww.example.com:443" and replace "false"
     And task named "myCertificateInstallation" request has subject
@@ -42,9 +41,9 @@ Feature: playbook
     And task named "myCertificateInstallation" request has subject random CommonName
     And task named "myCertificateInstallation" has request with nickname based on commonName
     And task named "myCertificateInstallation" has installations
-    And task named "myCertificateInstallation" has installation format PEM with file name "cert.cer", chain name "chain.cer" and key name "key.pem" with installation and validation and uses backup
+    And task named "myCertificateInstallation" has installation format PEM with file name "cert.cer", chain name "chain.cer", key name "key.pem" and password "Passcode123!" with installation and validation and uses backup
     And task named "myCertificateInstallation" has installation format JKS with cert name "cert.jks", jksAlias "venafi" and jksPassword "foobar123" with installation
-    And task named "myCertificateInstallation" has installation format PKCS12 with cert name "cert.p12" with installation
+    And task named "myCertificateInstallation" has installation format PKCS12 with cert name "cert.p12" and password "Passcode123!" with installation
     And I created playbook named "<config-file>" with previous content
     And I run `vcert run -f <config-file>`
     Then the output should contain "successfully executed after-install actions"
@@ -82,7 +81,7 @@ Feature: playbook
     And task named "myCertificateInstallation" request has subject with default values
     And task named "myCertificateInstallation" request has subject random CommonName
     And task named "myCertificateInstallation" has installations
-    And task named "myCertificateInstallation" has installation format PEM with file name "c1.cer", chain name "ch1.cer" and key name "k1.pem"
+    And task named "myCertificateInstallation" has installation format PEM with file name "c1.cer", chain name "ch1.cer", key name "k1.pem"
     And I created playbook named "<config-file>" with previous content
     And I run `vcert run -f <config-file>`
     Then the output should contain "successfully installed certificate"
@@ -115,13 +114,12 @@ Feature: playbook
     And task named "myCertificateInstallation" has renewBefore with value "31d"
     And task named "myCertificateInstallation" has request
     And task named "myCertificateInstallation" has request with "csr" value "service"
-    And task named "myCertificateInstallation" has request with "keyPassword" value "Passcode123!"
     And task named "myCertificateInstallation" has request with default <platform> zone
     And task named "myCertificateInstallation" request has subject
     And task named "myCertificateInstallation" request has subject with default values
     And task named "myCertificateInstallation" request has subject random CommonName
     And task named "myCertificateInstallation" has installations
-    And task named "myCertificateInstallation" has installation format PEM with file name "c1.cer", chain name "ch1.cer" and key name "k1.pem"
+    And task named "myCertificateInstallation" has installation format PEM with file name "c1.cer", chain name "ch1.cer", key name "k1.pem" and password "Passcode123!"
     And I created playbook named "<config-file>" with previous content
     And I run `vcert run -f <config-file>`
     Then the output should contain "successfully installed certificate"
@@ -153,13 +151,12 @@ Feature: playbook
     And task named "myCertificateInstallation" has renewBefore with value "31d"
     And task named "myCertificateInstallation" has request
     And task named "myCertificateInstallation" has request with "csr" value "local"
-    And task named "myCertificateInstallation" has request with "keyPassword" value "Passcode123!"
     And task named "myCertificateInstallation" has request with default <platform> zone
     And task named "myCertificateInstallation" request has subject
     And task named "myCertificateInstallation" request has subject with default values
     And task named "myCertificateInstallation" request has subject random CommonName
     And task named "myCertificateInstallation" has installations
-    And task named "myCertificateInstallation" has installation format PEM with file name "c1.cer", chain name "ch1.cer" and key name "k1.pem"
+    And task named "myCertificateInstallation" has installation format PEM with file name "c1.cer", chain name "ch1.cer", key name "k1.pem" and password "Passcode123!"
     And I created playbook named "<config-file>" with previous content
     And I run `vcert run -f <config-file>`
     Then the output should contain "successfully installed certificate"
@@ -197,7 +194,7 @@ Feature: playbook
     And task named "myCertificateInstallation" request has subject with default values
     And task named "myCertificateInstallation" request has subject random CommonName
     And task named "myCertificateInstallation" has installations
-    And task named "myCertificateInstallation" has installation format PEM with file name "c1.cer", chain name "ch1.cer" and key name "k1.pem"
+    And task named "myCertificateInstallation" has installation format PEM with file name "c1.cer", chain name "ch1.cer", key name "k1.pem"
     And I created playbook named "<config-file>" with previous content
     And I run `vcert run -f <config-file>`
     Then the output should contain "successfully installed certificate"
@@ -239,7 +236,7 @@ Feature: playbook
     And task named "myCertificateInstallation" request has subject with default values
     And task named "myCertificateInstallation" request has subject random CommonName
     And task named "myCertificateInstallation" has installations
-    And task named "myCertificateInstallation" has installation format PEM with file name "c1.cer", chain name "ch1.cer" and key name "k1.pem"
+    And task named "myCertificateInstallation" has installation format PEM with file name "c1.cer", chain name "ch1.cer", key name "k1.pem"
     And I created playbook named "<config-file>" with previous content
     And I run `vcert run -f <config-file>`
     Then the output should contain "successfully installed certificate"
@@ -280,7 +277,7 @@ Feature: playbook
     And task named "myCertificateInstallation" request has subject with default values
     And task named "myCertificateInstallation" request has subject random CommonName
     And task named "myCertificateInstallation" has installations
-    And task named "myCertificateInstallation" has installation format PEM with file name "c1.cer", chain name "ch1.cer" and key name "k1.pem"
+    And task named "myCertificateInstallation" has installation format PEM with file name "c1.cer", chain name "ch1.cer", key name "k1.pem"
     And I created playbook named "<config-file>" with previous content
     And I run `vcert run -f <config-file>`
     Then the output should contain "successfully installed certificate"
@@ -315,24 +312,22 @@ Feature: playbook
     And task named "myCertificateInstallation" has renewBefore with value "31d"
     And task named "myCertificateInstallation" has request
     And task named "myCertificateInstallation" has request with "csr" value "service"
-    And task named "myCertificateInstallation" has request with "keyPassword" value "Passcode123!"
     And task named "myCertificateInstallation" has request with default <platform> zone
     And task named "myCertificateInstallation" request has subject
     And task named "myCertificateInstallation" request has subject with default values
     And task named "myCertificateInstallation" request has subject random CommonName
     And task named "myCertificateInstallation" has installations
-    And task named "myCertificateInstallation" has installation format PEM with file name "c1.cer", chain name "ch1.cer" and key name "k1.pem"
+    And task named "myCertificateInstallation" has installation format PEM with file name "c1.cer", chain name "ch1.cer", key name "k1.pem" and password "Passcode123!"
     And I have playbook with task named "myCertificateInstallationPKCS12"
     And task named "myCertificateInstallationPKCS12" has renewBefore with value "31d"
     And task named "myCertificateInstallationPKCS12" has request
     And task named "myCertificateInstallationPKCS12" has request with "csr" value "service"
-    And task named "myCertificateInstallationPKCS12" has request with "keyPassword" value "Passcode124!"
     And task named "myCertificateInstallationPKCS12" has request with default <platform> zone
     And task named "myCertificateInstallationPKCS12" request has subject
     And task named "myCertificateInstallationPKCS12" request has subject with default values
     And task named "myCertificateInstallationPKCS12" request has subject random CommonName
     And task named "myCertificateInstallationPKCS12" has installations
-    And task named "myCertificateInstallationPKCS12" has installation format PKCS12 with cert name "cert.p12" with validation
+    And task named "myCertificateInstallationPKCS12" has installation format PKCS12 with cert name "cert.p12" and password "Passcode124!" with validation
     And I created playbook named "<config-file>" with previous content
     And I run `vcert run -f <config-file>`
     Then the output should contain "successfully installed certificate"

@@ -161,13 +161,14 @@ And(/^task named "(.*)" has installations$/) do |task_name|
   current_certificate_task.installations = Array.new
 end
 
-And(/^task named "(.*)" has installation format PEM with file name "(.*)", chain name "(.*)" and key name "(.*)"(?: with|)( installation)?(?: and|)( validation)?(?: and uses|)( backup)?$/) do |task_name, cert_name, chain_name, key_name, installation, validation, backup|
+And(/^task named "(.*)" has installation format PEM with file name "(.*)", chain name "(.*)", key name "(.*)"(?: and password "(.*)")?(?: with|)( installation)?(?: and|)( validation)?(?: and uses|)( backup)?$/) do |task_name, cert_name, chain_name, key_name, key_password, installation, validation, backup|
   current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
   aux_installation = Installation.new
   aux_installation.format = "PEM"
   aux_installation.file = "{{- Env \"PWD\" }}" + $path_separator + $temp_path + $path_separator + cert_name
   aux_installation.chainFile = "{{- Env \"PWD\" }}" + $path_separator + $temp_path + $path_separator + chain_name
   aux_installation.keyFile = "{{- Env \"PWD\" }}" + $path_separator + $temp_path + $path_separator + + key_name
+  aux_installation.key_password = key_password
   if installation
     aux_installation.afterInstallAction = "echo SuccessInstall"
   end
@@ -196,11 +197,12 @@ And(/^task named "(.*)" has installation format JKS with cert name "(.*)", jksAl
   current_certificate_task.installations.push(aux_installation)
 end
 
-And(/^task named "(.*)" has installation format PKCS12 with cert name "(.*)"(?: with)( installation)?(?: and|)( validation)?$/) do |task_name, cert_name, installation, validation|
+And(/^task named "(.*)" has installation format PKCS12 with cert name "(.*)"(?: and password "(.*)")?(?: with)( installation)?(?: and|)( validation)?$/) do |task_name, cert_name, p12_password, installation, validation|
   current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
   aux_installation = Installation.new
   aux_installation.format = "PKCS12"
   aux_installation.file = "{{- Env \"PWD\" }}" + $path_separator + $temp_path + $path_separator + cert_name
+  aux_installation.p12_password = p12_password
   if installation
     aux_installation.afterInstallAction = "echo SuccessInstall"
   end
