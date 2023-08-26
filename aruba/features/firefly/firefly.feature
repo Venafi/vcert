@@ -12,8 +12,8 @@ Feature: Enroll certificate using Firefly
     Then it should request certificate
 
   Scenario: Enroll Firefly using local
-    When I enroll a random certificate with defined platform Firefly with -key-type ecdsa -key-curve p256 -no-prompt
-    Then the output should contain "local generated CSR it's not supported by Firefly yet"
+    When I enroll a random certificate with defined platform Firefly with -key-type ecdsa -key-curve p256 -csr local -no-prompt
+    Then the output should contain "unexpected --csr option provided: local; specify one of the following options: 'file:<filename>', or 'service'"
 
   Scenario: Enroll using CSR with Firefly
     Given I generate random CSR with -no-prompt -csr-file csr.pem -key-file k.pem
