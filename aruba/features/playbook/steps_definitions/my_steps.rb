@@ -170,6 +170,7 @@ And(/^task named "(.*)" has installation format PEM with file name "(.*)", chain
   aux_installation.keyFile = "{{- Env \"PWD\" }}" + $path_separator + $temp_path + $path_separator + + key_name
   if password
     aux_installation.keyPassword = "Passcode123!"
+  end
   if installation
     aux_installation.afterInstallAction = "echo SuccessInstall"
   end
