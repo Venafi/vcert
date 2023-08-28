@@ -19,6 +19,8 @@ class Installation;
   attr_accessor :keyFile
   attr_accessor :format
   attr_accessor :backupFiles # will add the .bak for creating a copy of the generated file
+  attr_accessor :keyPassword
+  attr_accessor :p12Password
 
 end
 
@@ -53,7 +55,6 @@ class Request
   attr_accessor :issuerHint
   attr_accessor :keyCurve
   attr_accessor :keySize
-  attr_accessor :keyPassword
   attr_accessor :keyType
   attr_accessor :omitSans
   attr_accessor :appInfo
