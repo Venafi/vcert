@@ -161,14 +161,15 @@ And(/^task named "(.*)" has installations$/) do |task_name|
   current_certificate_task.installations = Array.new
 end
 
-And(/^task named "(.*)" has installation format PEM with file name "(.*)", chain name "(.*)", key name "(.*)"(?: and password "(.*)")?(?: with|)( installation)?(?: and|)( validation)?(?: and uses|)( backup)?$/) do |task_name, cert_name, chain_name, key_name, key_password, installation, validation, backup|
+And(/^task named "(.*)" has installation format PEM with file name "(.*)", chain name "(.*)", key name "(.*)"(?: with)?( password)?(?:,| and)?( installation)?(?:,| and)?( validation)?(?: and uses)?( backup)?$/) do |task_name, cert_name, chain_name, key_name, password, installation, validation, backup|
   current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
   aux_installation = Installation.new
   aux_installation.format = "PEM"
   aux_installation.file = "{{- Env \"PWD\" }}" + $path_separator + $temp_path + $path_separator + cert_name
   aux_installation.chainFile = "{{- Env \"PWD\" }}" + $path_separator + $temp_path + $path_separator + chain_name
   aux_installation.keyFile = "{{- Env \"PWD\" }}" + $path_separator + $temp_path + $path_separator + + key_name
-  aux_installation.keyPassword = key_password
+  if password
+    aux_installation.keyPassword = "Passcode123!"
   if installation
     aux_installation.afterInstallAction = "echo SuccessInstall"
   end
