@@ -12,7 +12,7 @@ func GetRSASize(rsaSize int) (int, error) {
 		rsaSizeResult = certificate.DefaultRSAlength
 	}
 
-	if !rsaSizes[rsaSize] {
+	if !rsaSizes[rsaSizeResult] {
 		var sizes []int
 		for size, _ := range rsaSizes {
 			sizes = append(sizes, size)
@@ -20,5 +20,5 @@ func GetRSASize(rsaSize int) (int, error) {
 		return 0, fmt.Errorf("key Size %d is not supported. The valid RSA sizes for Firefly are %v", rsaSize, sizes)
 	}
 
-	return rsaSize, nil
+	return rsaSizeResult, nil
 }
