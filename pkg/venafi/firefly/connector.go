@@ -313,11 +313,11 @@ func (c *Connector) getCertificateRequest(req *certificate.Request) (*certificat
 	keyAlgorithm := ""
 	switch req.KeyType {
 	case certificate.KeyTypeRSA:
-		keyLength, err := GetRSASize(req.KeyLength)
+		keySize, err := GetRSASize(req.KeyLength)
 		if err != nil {
 			return nil, err
 		}
-		keyAlgorithm = fmt.Sprintf("RSA_%d", keyLength)
+		keyAlgorithm = fmt.Sprintf("RSA_%d", keySize)
 	case certificate.KeyTypeECDSA, certificate.KeyTypeED25519:
 		keyCurve := req.KeyCurve
 		if keyCurve == certificate.EllipticCurveNotSet {
