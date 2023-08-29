@@ -43,6 +43,10 @@ const (
 	scopesSeparator = " "
 )
 
+var (
+	rsaSizes = map[int]bool{certificate.DefaultRSAlength: true, 3072: true, 4096: true}
+)
+
 type certificateRequest struct {
 	CSR             string            `json:"request,omitempty"`
 	Subject         Subject           `json:"subject,omitempty"`

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Venafi, Inc.
+ * Copyright 2018-2023 Venafi, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,11 +37,11 @@ import (
 )
 
 const (
-	defaultRSAlength int = 2048
+	DefaultRSAlength int = 2048
 )
 
 func AllSupportedKeySizes() []int {
-	return []int{1024, 2048, 4096, 8192}
+	return []int{1024, DefaultRSAlength, 4096, 8192}
 }
 
 //SSH Certificate structures

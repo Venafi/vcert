@@ -117,7 +117,7 @@ func (request *Request) GeneratePrivateKey() error {
 		request.PrivateKey, err = GenerateED25519PrivateKey()
 	case KeyTypeRSA:
 		if request.KeyLength == 0 {
-			request.KeyLength = defaultRSAlength
+			request.KeyLength = DefaultRSAlength
 		}
 		if request.KeyLength < AllSupportedKeySizes()[0] {
 			return fmt.Errorf("key Size must be %d or greater. But it is %d", AllSupportedKeySizes()[0], request.KeyLength)

@@ -200,7 +200,11 @@ func (c *Connector) SynchronousRequestCertificate(req *certificate.Request) (cer
 
 	zap.L().Info("requesting certificate", zap.String("cn", req.Subject.CommonName), fieldPlatform)
 	//creating the request object
-	certReq := c.getCertificateRequest(req)
+	certReq, err := c.getCertificateRequest(req)
+	if err != nil {
+		zap.L().Error("HTTP request failed", fieldPlatform, zap.Error(err))
+		return nil, err
+	}
 
 	zap.L().Info("sending HTTP request", fieldPlatform)
 	statusCode, status, body, err := c.request("POST", c.getCertificateRequestUrl(req), certReq)
@@ -228,7 +232,7 @@ func (c *Connector) SynchronousRequestCertificate(req *certificate.Request) (cer
 	return certificates, nil
 }
 
-func (c *Connector) getCertificateRequest(req *certificate.Request) *certificateRequest {
+func (c *Connector) getCertificateRequest(req *certificate.Request) (*certificateRequest, error) {
 	zap.L().Info("building certificate request", fieldPlatform)
 	fireflyCertRequest := &certificateRequest{}
 
@@ -309,15 +313,22 @@ func (c *Connector) getCertificateRequest(req *certificate.Request) *certificate
 	keyAlgorithm := ""
 	switch req.KeyType {
 	case certificate.KeyTypeRSA:
-		keyAlgorithm = fmt.Sprintf("RSA_%d", req.KeyLength)
-
+		keySize, err := GetRSASize(req.KeyLength)
+		if err != nil {
+			return nil, err
+		}
+		keyAlgorithm = fmt.Sprintf("RSA_%d", keySize)
 	case certificate.KeyTypeECDSA, certificate.KeyTypeED25519:
-		keyAlgorithm = fmt.Sprintf("EC_%s", req.KeyCurve.String())
+		keyCurve := req.KeyCurve
+		if keyCurve == certificate.EllipticCurveNotSet {
+			keyCurve = certificate.EllipticCurveDefault
+		}
+		keyAlgorithm = fmt.Sprintf("EC_%s", keyCurve.String())
 	}
 	fireflyCertRequest.KeyAlgorithm = keyAlgorithm
 
 	zap.L().Info("successfully built certificate request", fieldPlatform)
-	return fireflyCertRequest
+	return fireflyCertRequest, nil
 }
 
 func (c *Connector) getCertificateRequestUrl(req *certificate.Request) urlResource {
