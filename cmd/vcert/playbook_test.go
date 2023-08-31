@@ -44,12 +44,12 @@ func (s *PlaybookSuite) TestPlaybook_SetTLSConfig() {
 	playbook := domain.Playbook{
 		CertificateTasks: domain.CertificateTasks{
 			domain.CertificateTask{
-				Name:    "p12Auth",
-				Request: domain.PlaybookRequest{KeyPassword: p12Password},
+				Name: "p12Auth",
 				Installations: domain.Installations{
 					domain.Installation{
-						File: p12FileLocation,
-						Type: domain.FormatPKCS12,
+						File:        p12FileLocation,
+						Type:        domain.FormatPKCS12,
+						P12Password: p12Password,
 					},
 				},
 			},
@@ -103,12 +103,12 @@ func (s *PlaybookSuite) TestPlaybook_SetTLSConfig_noP12Certificate() {
 	playbook := domain.Playbook{
 		CertificateTasks: domain.CertificateTasks{
 			domain.CertificateTask{
-				Name:    "p12Auth",
-				Request: domain.PlaybookRequest{KeyPassword: "foo123"},
+				Name: "p12Auth",
 				Installations: domain.Installations{
 					domain.Installation{
-						File: "./bad/location.p12",
-						Type: domain.FormatPKCS12,
+						File:        "./bad/location.p12",
+						Type:        domain.FormatPKCS12,
+						P12Password: "foo123",
 					},
 				},
 			},

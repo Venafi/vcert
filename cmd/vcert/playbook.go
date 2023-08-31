@@ -182,7 +182,7 @@ func setPlaybookTLSConfig(playbook domain.Playbook) error {
 					// Find the first installation that is of type P12
 					if inst.Type == domain.FormatPKCS12 {
 						p12FileLocation = inst.File
-						p12Password = task.Request.KeyPassword
+						p12Password = inst.P12Password
 						break
 					}
 				}
