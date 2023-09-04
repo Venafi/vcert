@@ -48,9 +48,10 @@ func NewCAPIInstaller(inst domain.Installation) CAPIInstaller {
 func (r CAPIInstaller) Check(renewBefore string, request domain.PlaybookRequest) (bool, error) {
 	zap.L().Info("checking certificate health", zap.String("format", r.Type.String()), zap.String("location", r.Location))
 
-	// Get friendly name. If no friendly name is set, get CN from request as friendly name
+	// Get friendly name. If no friendly name is set, get CN from request as friendly name.
+	//  NOTE: This functionality is deprecated, and in a future version will be removed, and CAPIFriendlyName will be req'd
 	friendlyName := r.CAPIFriendlyName
-	if request.FriendlyName == "" {
+	if friendlyName == "" {
 		friendlyName = request.Subject.CommonName
 	}
 
