@@ -2,7 +2,7 @@ config:
   connection:
     platform: vaas
     credentials:
-      apiKey: "XxXXxXxx-Xxxx-XXxX-XxXx-xXxxXXxxXXxX"
+      apiKey: '{{ Env "TLSCP_APIKEY" }}'
 certificateTasks:
   - name: myCertificate # Task Identifier, no relevance in tool run
     renewBefore: 31d
@@ -14,7 +14,7 @@ certificateTasks:
         commonName: '{{ Hostname | ToLower -}}.{{- Env "USERDNSDOMAIN" | ToLower }}'
         country: US
         locality: Salt Lake City
-        province: Utah
+        state: Utah
         organization: Venafi Inc
         orgUnits:
           - engineering
