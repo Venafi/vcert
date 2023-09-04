@@ -95,7 +95,7 @@ func (r PKCS12Installer) Backup() error {
 }
 
 // Install takes the certificate bundle and moves it to the location specified in the installer
-func (r PKCS12Installer) Install(_ domain.PlaybookRequest, pcc certificate.PEMCollection) error {
+func (r PKCS12Installer) Install(pcc certificate.PEMCollection) error {
 	zap.L().Debug("installing certificate", zap.String("location", r.File))
 
 	if r.P12Password == "" {

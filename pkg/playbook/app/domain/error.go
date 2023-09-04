@@ -72,6 +72,11 @@ var (
 	ErrInvalidCAPILocation = fmt.Errorf("invalid CAPI location. Should be either 'LocalMachine' or 'CurrentUser' (i.e. 'LocalMachine\\My')")
 	// ErrInvalidCAPIStoreName is thrown when certificates.installations[].type is CAPI but the location is malformed
 	ErrInvalidCAPIStoreName = fmt.Errorf("invalid CAPI store name. Should contain a valid storeName after the '\\' (i.e. 'LocalMachine\\My')")
+	// WarningLocationFieldDeprecated is thrown when certificates.installations[].type is CAPI but the deprecated location field is set
+	WarningLocationFieldDeprecated = "location field is deprecated and will be removed in a future release. Use capiLocation instead"
+	// WarningNoCAPIFriendlyName is thrown when certificates.installations[].type is CAPI but no friendlyName is set
+	WarningNoCAPIFriendlyName = "no capiFriendlyName defined. It is strongly recommended to define a " +
+		"capiFriendlyName for CAPI installation type. This will become required in a future release"
 
 	// ErrNoFireflyURL is thrown when platform is Firefly but no url is specified inf config.credentials
 	ErrNoFireflyURL = fmt.Errorf("no url defined. Firefly platform requires an url to the Firefly instance")

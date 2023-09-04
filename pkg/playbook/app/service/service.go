@@ -17,11 +17,9 @@
 package service
 
 import (
-	"crypto/rand"
 	"fmt"
 	"os"
 	"strings"
-	"time"
 
 	"go.uber.org/zap"
 
@@ -65,7 +63,7 @@ func Execute(config domain.Config, task domain.CertificateTask) []error {
 	csrOrigin := certificate.ParseCSROrigin(task.Request.CsrOrigin)
 	if csrOrigin == certificate.ServiceGeneratedCSR {
 		zap.L().Info("csr option is 'service'. Generating random password for certificate request")
-		task.Request.KeyPassword = generateKeyPassword()
+		task.Request.KeyPassword = vcertutil.GeneratePassword()
 	}
 
 	// Config changed or certificate needs renewal. Do request
@@ -101,7 +99,7 @@ func Execute(config domain.Config, task domain.CertificateTask) []error {
 	// Install certificate on locations
 	errorList := make([]error, 0)
 	for _, installation := range task.Installations {
-		e := runInstaller(installation, task.Request, prepedPcc)
+		e := runInstaller(installation, prepedPcc)
 		if e != nil {
 			errorList = append(errorList, e)
 		}
@@ -136,22 +134,7 @@ func isCertificateChanged(config domain.Config, task domain.CertificateTask) (bo
 	return changed, nil
 }
 
-func generateKeyPassword() string {
-	letterRunes := "abcdefghijklmnopqrstuvwxyz"
-
-	b := make([]byte, 4)
-	_, _ = rand.Read(b)
-
-	for i, v := range b {
-		b[i] = letterRunes[v%byte(len(letterRunes))]
-	}
-
-	randString := string(b)
-
-	return fmt.Sprintf("t%d-%s.temp.pwd", time.Now().Unix(), randString)
-}
-
-func runInstaller(installation domain.Installation, request domain.PlaybookRequest, prepedPcc *certificate.PEMCollection) error {
+func runInstaller(installation domain.Installation, prepedPcc *certificate.PEMCollection) error {
 	instlr := installer.GetInstaller(installation)
 	zap.L().Info("running Installer", zap.String("installer", installation.Type.String()),
 		zap.String("location", installation.File))
@@ -169,7 +152,7 @@ func runInstaller(installation domain.Installation, request domain.PlaybookReque
 		}
 	}
 
-	err = instlr.Install(request, *prepedPcc)
+	err = instlr.Install(*prepedPcc)
 	if err != nil {
 		e := "error installing certificate"
 		zap.L().Error(e, zap.String("location", installation.File), zap.Error(err))
