@@ -38,19 +38,22 @@ var validStoreNames = []string{"addressbook", "authroot", "certificateauthority"
 // Installation represents a location in which a certificate will be installed,
 // along with the format in which it will be installed
 type Installation struct {
-	AfterAction         string             `yaml:"afterInstallAction,omitempty"`
-	BackupFiles         bool               `yaml:"backupFiles,omitempty"`
-	CAPIIsNonExportable bool               `yaml:"capiIsNonExportable,omitempty"`
-	ChainFile           string             `yaml:"chainFile,omitempty"`
-	File                string             `yaml:"file,omitempty"`
-	InstallValidation   string             `yaml:"installValidationAction,omitempty"`
-	JKSAlias            string             `yaml:"jksAlias,omitempty"`
-	JKSPassword         string             `yaml:"jksPassword,omitempty"`
-	KeyFile             string             `yaml:"keyFile,omitempty"`
-	KeyPassword         string             `yaml:"keyPassword,omitempty"`
-	Location            string             `yaml:"location,omitempty"`
-	P12Password         string             `yaml:"p12Password,omitempty"`
-	Type                InstallationFormat `yaml:"format,omitempty"`
+	AfterAction         string `yaml:"afterInstallAction,omitempty"`
+	BackupFiles         bool   `yaml:"backupFiles,omitempty"`
+	CAPIFriendlyName    string `yaml:"capiFriendlyName,omitempty"` // In a future version of vCert this will become REQUIRED!
+	CAPIIsNonExportable bool   `yaml:"capiIsNonExportable,omitempty"`
+	CAPILocation        string `yaml:"capiLocation,omitempty"` // This is an alias for Location
+	ChainFile           string `yaml:"chainFile,omitempty"`
+	File                string `yaml:"file,omitempty"`
+	InstallValidation   string `yaml:"installValidationAction,omitempty"`
+	JKSAlias            string `yaml:"jksAlias,omitempty"`
+	JKSPassword         string `yaml:"jksPassword,omitempty"`
+	KeyFile             string `yaml:"keyFile,omitempty"`
+	KeyPassword         string `yaml:"keyPassword,omitempty"`
+	// Deprecated: Location is deprecated in favor of CAPILocation. It will be removed on a future release
+	Location    string             `yaml:"location,omitempty"`
+	P12Password string             `yaml:"p12Password,omitempty"`
+	Type        InstallationFormat `yaml:"format,omitempty"`
 }
 
 // Installations is a slice of Installation
@@ -85,24 +88,40 @@ func (installation Installation) IsValid() (bool, error) {
 }
 
 func validateCAPI(installation Installation) error {
-	if installation.Location == "" {
-		return ErrNoCAPILocation
-	}
-
 	if runtime.GOOS != "windows" {
 		return ErrCAPIOnNonWindows
 	}
 
+	location := installation.CAPILocation
+	if location == "" {
+		location = installation.Location
+	}
+
+	// Ensure there is a location specified
+	if location == "" {
+		return ErrNoCAPILocation
+	}
+
+	// Throw warning if using deprecated field
+	if installation.Location != "" {
+		zap.L().Warn(WarningLocationFieldDeprecated)
+	}
+
+	// Throw warning if no friendly name set
+	if installation.CAPIFriendlyName == "" {
+		zap.L().Warn(WarningNoCAPIFriendlyName)
+	}
+
 	// Ensure proper location specified
-	segments := strings.Split(installation.Location, "\\")
+	segments := strings.Split(location, "\\")
 
 	// CAPI Location must be in form of <string>\<string>
 	if len(segments) != 2 {
 		return ErrMalformedCAPILocation
 	}
 
-	location := strings.ToLower(segments[0])
-	if location != capiLocationCurrentUser && location != capiLocationLocalMachine {
+	capiLocation := strings.ToLower(segments[0])
+	if capiLocation != capiLocationCurrentUser && capiLocation != capiLocationLocalMachine {
 		return ErrInvalidCAPILocation
 	}
 

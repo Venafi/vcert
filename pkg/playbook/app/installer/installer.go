@@ -35,7 +35,7 @@ type Installer interface {
 	Backup() error
 
 	// Install takes the certificate bundle and moves it to the location specified in the installer
-	Install(request domain.PlaybookRequest, pcc certificate.PEMCollection) error
+	Install(pcc certificate.PEMCollection) error
 
 	// AfterInstallActions runs any instructions declared in the Installer on a terminal.
 	//

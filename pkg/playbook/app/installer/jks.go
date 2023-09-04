@@ -101,7 +101,7 @@ func (r JKSInstaller) Backup() error {
 }
 
 // Install takes the certificate bundle and moves it to the location specified in the installer
-func (r JKSInstaller) Install(_ domain.PlaybookRequest, pcc certificate.PEMCollection) error {
+func (r JKSInstaller) Install(pcc certificate.PEMCollection) error {
 	zap.L().Debug("installing certificate", zap.String("location", r.File))
 
 	// If no password is set for the Private Key, use the JKSPassword

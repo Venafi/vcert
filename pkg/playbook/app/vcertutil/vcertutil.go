@@ -17,14 +17,15 @@
 package vcertutil
 
 import (
+	"crypto/rand"
 	"crypto/x509/pkix"
 	"errors"
 	"fmt"
 	"time"
 
-	"github.com/Venafi/vcert/v5"
 	"go.uber.org/zap"
 
+	"github.com/Venafi/vcert/v5"
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
 	"github.com/Venafi/vcert/v5/pkg/playbook/app/domain"
@@ -240,4 +241,19 @@ func RefreshTPPTokens(config domain.Config) (string, string, error) {
 	}
 
 	return "", "", fmt.Errorf("no refresh token or certificate available to refresh access token")
+}
+
+func GeneratePassword() string {
+	letterRunes := "abcdefghijklmnopqrstuvwxyz"
+
+	b := make([]byte, 4)
+	_, _ = rand.Read(b)
+
+	for i, v := range b {
+		b[i] = letterRunes[v%byte(len(letterRunes))]
+	}
+
+	randString := string(b)
+
+	return fmt.Sprintf("t%d-%s.temp.pwd", time.Now().Unix(), randString)
 }

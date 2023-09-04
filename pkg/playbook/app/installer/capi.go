@@ -26,6 +26,7 @@ import (
 
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/playbook/app/domain"
+	"github.com/Venafi/vcert/v5/pkg/playbook/app/vcertutil"
 	"github.com/Venafi/vcert/v5/pkg/playbook/util"
 	"github.com/Venafi/vcert/v5/pkg/playbook/util/capistore"
 )
@@ -47,12 +48,20 @@ func NewCAPIInstaller(inst domain.Installation) CAPIInstaller {
 func (r CAPIInstaller) Check(renewBefore string, request domain.PlaybookRequest) (bool, error) {
 	zap.L().Info("checking certificate health", zap.String("format", r.Type.String()), zap.String("location", r.Location))
 
-	friendlyName := request.Subject.CommonName
-	if request.FriendlyName != "" {
-		friendlyName = request.FriendlyName
+	// Get friendly name. If no friendly name is set, get CN from request as friendly name.
+	//  NOTE: This functionality is deprecated, and in a future version will be removed, and CAPIFriendlyName will be req'd
+	friendlyName := r.CAPIFriendlyName
+	if friendlyName == "" {
+		friendlyName = request.Subject.CommonName
 	}
 
-	storeLocation, storeName, err := getCertStore(r.Location)
+	// Get location from CAPILocation. If CAPILocation is not set, check deprecated Location field
+	location := r.CAPILocation
+	if location == "" {
+		location = r.Location
+	}
+
+	storeLocation, storeName, err := getCertStore(location)
 	if err != nil {
 		zap.L().Error("failed to get certificate store", zap.Error(err))
 		return true, err
@@ -97,21 +106,34 @@ func (r CAPIInstaller) Backup() error {
 }
 
 // Install takes the certificate bundle and moves it to the location specified in the installer
-func (r CAPIInstaller) Install(request domain.PlaybookRequest, pcc certificate.PEMCollection) error {
+func (r CAPIInstaller) Install(pcc certificate.PEMCollection) error {
 	zap.L().Debug("installing certificate", zap.String("location", r.Location))
 
-	content, err := packageAsPKCS12(pcc, r.P12Password)
+	// Generate random password for temporary P12 bundle
+	bundlePassword := vcertutil.GeneratePassword()
+
+	content, err := packageAsPKCS12(pcc, bundlePassword)
 	if err != nil {
 		zap.L().Error("could not package certificate as PKCS12", zap.Error(err))
 		return err
 	}
 
-	friendlyName := request.Subject.CommonName
-	if request.FriendlyName != "" {
-		friendlyName = request.FriendlyName
+	// Get friendly name. If no friendly name is set, get CN from certificate as friendly name
+	friendlyName := r.CAPIFriendlyName
+	if friendlyName == "" {
+		friendlyName, err = getCertFriendlyName([]byte(pcc.Certificate))
+		if err != nil {
+			return err
+		}
 	}
 
-	storeLocation, storeName, err := getCertStore(r.Location)
+	// Get location from CAPILocation. If CAPILocation is not set, check deprecated Location field
+	location := r.CAPILocation
+	if location == "" {
+		location = r.Location
+	}
+
+	storeLocation, storeName, err := getCertStore(location)
 	if err != nil {
 		zap.L().Error("failed to get certificate store", zap.Error(err))
 		return err
@@ -121,7 +143,7 @@ func (r CAPIInstaller) Install(request domain.PlaybookRequest, pcc certificate.P
 		PFX:             content,
 		FriendlyName:    friendlyName,
 		IsNonExportable: r.CAPIIsNonExportable,
-		Password:        r.P12Password,
+		Password:        bundlePassword,
 		StoreLocation:   storeLocation,
 		StoreName:       storeName,
 	}
@@ -168,4 +190,12 @@ func getCertStore(location string) (string, string, error) {
 	}
 
 	return segments[0], segments[1], nil
+}
+
+func getCertFriendlyName(cert []byte) (string, error) {
+	x509Cert, err := parsePEMCertificate(cert)
+	if err != nil {
+		return "", fmt.Errorf("failed to get friendly name from certificate: %w", err)
+	}
+	return x509Cert.Subject.CommonName, nil
 }

@@ -111,7 +111,7 @@ func (r PEMInstaller) Backup() error {
 }
 
 // Install takes the certificate bundle and moves it to the location specified in the installer
-func (r PEMInstaller) Install(_ domain.PlaybookRequest, pcc certificate.PEMCollection) error {
+func (r PEMInstaller) Install(pcc certificate.PEMCollection) error {
 	zap.L().Debug("installing certificate", zap.String("location", r.File))
 
 	//TODO: should we add support for PEM bundle?

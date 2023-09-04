@@ -19,7 +19,7 @@ function install-cert {
         [string] $friendlyName,
 
         [Parameter(Mandatory)]
-        [System.Security.Cryptography.X509Certificates.storeName] $storeName,
+        [string] $storeName,
 
         [Parameter(Mandatory)]
         [System.Security.Cryptography.X509Certificates.storeLocation] $storeLocation,
@@ -52,6 +52,10 @@ function install-cert {
 
     foreach ($cert in $collection.GetEnumerator())
     {
+        # The storeName changes based on certificate type. Defaults to the specified store where the end-entity cert will go.
+        #  use installToStore so not to reset the global $storeName variable
+        $installToStore = $storeName
+        
         $is_ca_cert = $false
         foreach ($ext in $cert.Extensions)
         {
@@ -67,16 +71,16 @@ function install-cert {
             # check to see if it is a root certificate
             if ($cert.Issuer -eq $cert.Subject)
             {
-                $store = "Root"
-                if (Test-Path "Cert:\$($storeLocation)\$($store)\$($cert.Thumbprint)")
+                $installToStore = "Root"
+                if (Test-Path "Cert:\$($storeLocation)\$($installToStore)\$($cert.Thumbprint)")
                 {
                     continue  # already in the CAPI store
                 }
             }
             else # it is an intermediate certificate
             {
-                $store = "CA"
-                if (Test-Path "Cert:\$($storeLocation)\$($store)\$($cert.Thumbprint)")
+                $installToStore = "CA"
+                if (Test-Path "Cert:\$($storeLocation)\$($installToStore)\$($cert.Thumbprint)")
                 {
                     continue  # already in the CAPI store
                 }
@@ -84,13 +88,13 @@ function install-cert {
         }
         else
         {
-            if (!(Test-Path "Cert:\$($storeLocation)\$($storeName)\$($cert.Thumbprint)"))
+            if (!(Test-Path "Cert:\$($storeLocation)\$($installToStore)\$($cert.Thumbprint)"))
             {
                 $cert.FriendlyName = $friendlyName
             }
             else
             {
-                $existing = Get-Item "Cert:\$($storeLocation)\$($storeName)\$($cert.Thumbprint)"
+                $existing = Get-Item "Cert:\$($storeLocation)\$($installToStore)\$($cert.Thumbprint)"
 
                 if ($existing.FriendlyName -ne $friendlyName)
                 {
@@ -101,7 +105,7 @@ function install-cert {
             }
         }
 
-        $capi = Get-Item "Cert:\$($storeLocation)\$($storeName)"
+        $capi = Get-Item "Cert:\$($storeLocation)\$($installToStore)"
         $capi.Open("ReadWrite")
         $capi.Add($cert)
         $capi.Close()
@@ -109,7 +113,7 @@ function install-cert {
         # wait two seconds before checking to see the installation was successful
         Start-Sleep -s 2
 
-        if (!(Test-Path "Cert:\$($storeLocation)\$($storeName)\$($cert.Thumbprint)"))
+        if (!(Test-Path "Cert:\$($storeLocation)\$($installToStore)\$($cert.Thumbprint)"))
         {
             if ($is_ca_cert) {
                 throw "Failed to install chain certificate on target system - $($cert.Subject)"
