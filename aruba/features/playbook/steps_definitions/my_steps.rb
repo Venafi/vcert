@@ -2,6 +2,17 @@ require 'yaml'
 
 Given(/^I have playbook with (\S+) connection details$/) do |platform|
 
+  set_playbook_connection(false, platform)
+
+end
+
+Given(/^I have playbook with (\S+) bad connection details$/) do |platform|
+
+  set_playbook_connection(true, platform)
+
+end
+
+def set_playbook_connection(bad_connection, platform)
   @playbook_data = {
     config: {
       connection: nil
@@ -19,6 +30,9 @@ Given(/^I have playbook with (\S+) connection details$/) do |platform|
       clientId: "vcert-sdk",
       accessToken: ENV['TPP_ACCESS_TOKEN']
     }
+    if bad_connection == true
+      credentials[:accessToken] = "INVALID"
+    end
     connection_tpp['credentials'] = credentials
     @playbook_data[:config][:connection] = connection_tpp
   elsif platform == "VaaS"
@@ -30,7 +44,10 @@ Given(/^I have playbook with (\S+) connection details$/) do |platform|
       clientId: "vcert-sdk",
       apiKey: ENV['CLOUD_APIKEY']
     }
-    connection_vaas['credentials'] = credentials
+    if bad_connection == true
+      credentials[:apiKey] = "INVALID"
+    end
+    connection_vaas[':credentials'] = credentials
     @playbook_data[:config][:connection] = connection_vaas
   end
 end
@@ -40,6 +57,13 @@ Then(/^I created playbook named "(.*)" with previous content$/) do |fname|
   stringified_data = stringify_keys(new_data)
   path_name="tmp/aruba/#{fname}"
   File.write(path_name, stringified_data.to_yaml)
+end
+
+When(/^I output playbook named "(.*)" content$/) do |fname|
+  file_path = Dir.pwd + $path_separator + $temp_path + $path_separator + fname
+  steps %{
+    When I run `cat #{file_path}`
+  }
 end
 
 And(/^I have playbook with certificateTasks block$/) do
@@ -97,7 +121,16 @@ And(/^task named "(.*)" has request with default (.*) zone$/) do |task_name, pla
   elsif platform == "VaaS"
     current_certificate_task.request.zone=ENV['CLOUD_ZONE']
   else
-      fail(ArgumentError.new("Unkonw plataform: #{platform}"))
+      fail(ArgumentError.new("Unknown platform: #{platform}"))
+  end
+end
+
+And(/^task named "(.*)" has request with p12 authentication for (.*) zone$/) do |task_name, platform|
+  current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
+  if platform == "TPP"
+    current_certificate_task.request.zone=ENV['TPP_P12_AUTH_ZONE']
+  else
+    fail(ArgumentError.new("Unknown platform for p12 authentication: #{platform}"))
   end
 end
 

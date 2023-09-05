@@ -116,7 +116,7 @@ def request_key_should_be_boolean(key)
 end
 
 def request_key_should_be_array_of_strings(key)
-  request_array_string_keys =  %w[fields sanDns sanEmail sanIP sanUpn sanUri]
+  request_array_string_keys =  %w[commonName fields sanDns sanEmail sanIP sanUpn sanUri]
   request_array_string_keys.include?(key)
 end
 

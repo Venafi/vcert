@@ -354,3 +354,26 @@ Feature: playbook
     Examples:
       | platform | config-file       |
       | VaaS     | playbook-vaas.yml |
+
+  Scenario Outline: Run playbook with Invalid credential and P12 authentication (TPP). It should update access token to a valid one
+    Given I have playbook with TPP bad connection details
+    And I have playbook with certificateTasks block
+    And I have playbook with task named "myP12authCertificate"
+    And task named "myP12authCertificate" has renewBefore with value "10%"
+    And task named "myP12authCertificate" has request
+    And task named "myP12authCertificate" has request with "csr" value "service"
+    And task named "myP12authCertificate" has request with p12 authentication for TPP zone
+    And task named "myP12authCertificate" request has subject
+    And task named "myP12authCertificate" request has subject with "commonName" value "{{- Env "P12_AUTH_CN" }}"
+    And task named "myP12authCertificate" has installations
+    And task named "myP12authCertificate" has installation format PKCS12 with cert name "p12-auth.pfx" and password "{{- Env "P12_AUTH_PASS" }}" with installation
+    And I created playbook named "<config-file>" with previous content
+    And I output playbook named "<config-file>" content
+    Then the output should contain "accessToken: INVALID"
+    And I run `vcert run -f <config-file>`
+    And I run `cat $PWD/<config-file>`
+    Then I output playbook named "<config-file>" content
+
+    Examples:
+      | config-file   |
+      | p12-auth.yml  |
