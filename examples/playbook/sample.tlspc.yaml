@@ -2,7 +2,7 @@ config:
   connection:
     platform: vaas
     credentials:
-      apiKey: '{{ Env "TLSCP_APIKEY" }}'
+      apiKey: '{{ Env "TLSCP_APIKEY" }}' # APIKEY as Environment variable
 certificateTasks:
   - name: myCertificate # Task Identifier, no relevance in tool run
     renewBefore: 31d
