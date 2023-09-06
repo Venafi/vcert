@@ -234,5 +234,5 @@ func getInstallationLocationString(installation domain.Installation) string {
 	if installation.CAPILocation != "" {
 		return installation.CAPILocation
 	}
-	return installation.Location
+	return installation.Location //nolint:staticcheck
 }
