@@ -135,30 +135,32 @@ func isCertificateChanged(config domain.Config, task domain.CertificateTask) (bo
 }
 
 func runInstaller(installation domain.Installation, prepedPcc *certificate.PEMCollection) error {
+	location := getInstallationLocationString(installation)
+
 	instlr := installer.GetInstaller(installation)
 	zap.L().Info("running Installer", zap.String("installer", installation.Type.String()),
-		zap.String("location", installation.File))
+		zap.String("location", location))
 
 	var err error
 
 	if installation.BackupFiles {
 		zap.L().Info("backing up certificate for Installer", zap.String("installer", installation.Type.String()),
-			zap.String("location", installation.File))
+			zap.String("location", location))
 		err = instlr.Backup()
 		if err != nil {
 			e := "error backing up certificate"
-			zap.L().Error(e, zap.String("location", installation.File), zap.Error(err))
-			return fmt.Errorf("%s at location %s: %w", e, installation.File, err)
+			zap.L().Error(e, zap.String("location", location), zap.Error(err))
+			return fmt.Errorf("%s at location %s: %w", e, location, err)
 		}
 	}
 
 	err = instlr.Install(*prepedPcc)
 	if err != nil {
 		e := "error installing certificate"
-		zap.L().Error(e, zap.String("location", installation.File), zap.Error(err))
-		return fmt.Errorf("%s at location %s: %w", e, installation.File, err)
+		zap.L().Error(e, zap.String("location", location), zap.Error(err))
+		return fmt.Errorf("%s at location %s: %w", e, location, err)
 	}
-	zap.L().Info("successfully installed certificate", zap.String("location", installation.File))
+	zap.L().Info("successfully installed certificate", zap.String("location", location))
 
 	if installation.AfterAction == "" {
 		return nil
@@ -167,8 +169,8 @@ func runInstaller(installation domain.Installation, prepedPcc *certificate.PEMCo
 	result, err := instlr.AfterInstallActions()
 	if err != nil {
 		e := "error running after-install actions"
-		zap.L().Error(e, zap.String("location", installation.File), zap.Error(err))
-		return fmt.Errorf("%s at location %s: %w", e, installation.File, err)
+		zap.L().Error(e, zap.String("location", location), zap.Error(err))
+		return fmt.Errorf("%s at location %s: %w", e, location, err)
 	} else if strings.TrimSpace(result) == "1" {
 		zap.L().Info("after-install actions failed")
 	}
@@ -182,8 +184,8 @@ func runInstaller(installation domain.Installation, prepedPcc *certificate.PEMCo
 
 	if err != nil {
 		e := "error running installation validation actions"
-		zap.L().Error(e, zap.String("location", installation.File), zap.Error(err))
-		return fmt.Errorf("%s at location %s: %w", e, installation.File, err)
+		zap.L().Error(e, zap.String("location", location), zap.Error(err))
+		return fmt.Errorf("%s at location %s: %w", e, location, err)
 	} else if strings.TrimSpace(validationResults) == "1" {
 		zap.L().Info("installation validation actions failed")
 	}
@@ -222,4 +224,15 @@ func setEnvVars(task domain.CertificateTask, cert *installer.Certificate, preped
 			zap.L().Error("failed to set environment variable", zap.String("envVar", varName), zap.Error(err))
 		}
 	}
+}
+
+func getInstallationLocationString(installation domain.Installation) string {
+	if installation.Type != domain.FormatCAPI {
+		return installation.File
+	}
+
+	if installation.CAPILocation != "" {
+		return installation.CAPILocation
+	}
+	return installation.Location
 }

@@ -46,7 +46,7 @@ func NewCAPIInstaller(inst domain.Installation) CAPIInstaller {
 // 2. Does the certificate is about to expire? Renew if about to expire.
 // Returns true if the certificate needs to be installed.
 func (r CAPIInstaller) Check(renewBefore string, request domain.PlaybookRequest) (bool, error) {
-	zap.L().Info("checking certificate health", zap.String("format", r.Type.String()), zap.String("location", r.Location))
+	zap.L().Info("checking certificate health", zap.String("format", r.Type.String()), zap.String("location", r.CAPILocation))
 
 	// Get friendly name. If no friendly name is set, get CN from request as friendly name.
 	//  NOTE: This functionality is deprecated, and in a future version will be removed, and CAPIFriendlyName will be req'd
@@ -107,7 +107,7 @@ func (r CAPIInstaller) Backup() error {
 
 // Install takes the certificate bundle and moves it to the location specified in the installer
 func (r CAPIInstaller) Install(pcc certificate.PEMCollection) error {
-	zap.L().Debug("installing certificate", zap.String("location", r.Location))
+	zap.L().Debug("installing certificate", zap.String("location", r.CAPILocation))
 
 	// Generate random password for temporary P12 bundle
 	bundlePassword := vcertutil.GeneratePassword()
@@ -163,7 +163,7 @@ func (r CAPIInstaller) Install(pcc certificate.PEMCollection) error {
 //
 // No validations happen over the content of the AfterAction string, so caution is advised
 func (r CAPIInstaller) AfterInstallActions() (string, error) {
-	zap.L().Debug("running after-install actions", zap.String("location", r.Location))
+	zap.L().Debug("running after-install actions", zap.String("location", r.CAPILocation))
 
 	result, err := util.ExecuteScript(r.AfterAction)
 	return result, err
@@ -173,7 +173,7 @@ func (r CAPIInstaller) AfterInstallActions() (string, error) {
 // "0" for successful validation and "1" for a validation failure
 // No validations happen over the content of the InstallValidation string, so caution is advised
 func (r CAPIInstaller) InstallValidationActions() (string, error) {
-	zap.L().Debug("running install validation actions", zap.String("location", r.Location))
+	zap.L().Debug("running install validation actions", zap.String("location", r.CAPILocation))
 	validationResult, err := util.ExecuteScript(r.InstallValidation)
 	if err != nil {
 		return "", err
