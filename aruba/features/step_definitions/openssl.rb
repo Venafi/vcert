@@ -123,7 +123,7 @@ end
 
 When(/^"([^"]*)" should be PKCS#12 archive with password "([^"]*)"$/) do |filename, password|
   steps %{
-    Then I try to run `openssl pkcs12 -in "#{filename}" -passin pass:#{password} -noout`
+    Then I try to run `openssl pkcs12 -in "#{filename}" -legacy -passin pass:#{password} -noout`
     And the exit status should be 0
   }
   # -nokeys           Don't output private keys
