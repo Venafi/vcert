@@ -45,7 +45,7 @@ Use these links to quickly jump to a relevant section lower on this page:
 Review these prerequistes to get started. You'll need the following:
 
 1. Verify that the Venafi as a Service REST API at [https://api.venafi.cloud](https://api.venafi.cloud/vaas) or 
-[https://api.eu.venafi.cloud](https://api.eu.venafi.cloud/vaas)(if you have an EU account) is accessible from the system where VCert will be run.
+[https://api.venafi.ue](https://api.venafi.eu/vaas)(if you have an EU account) is accessible from the system where VCert will be run.
 2. You have successfully registered for a Venafi as a Service account, have been granted at least the
 "Resource Owner" role, and know your API key. You can use the `getcred` action to
 [register and obtain an API key](#registering-and-obtaining-an-api-key) but you will need an administrator
