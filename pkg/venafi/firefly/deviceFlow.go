@@ -145,7 +145,7 @@ func (c *Connector) waitForDeviceAuthorization(devCred *DeviceCred, auth *endpoi
 		}
 
 		//verifying the error gotten
-		switch GetDevAuthStatus(err.Error()) {
+		switch GetDevAuthStatusFromError(err) {
 		case AuthorizationPending:
 			time.Sleep(time.Duration(devCred.Interval) * time.Second)
 		case SlowDown:

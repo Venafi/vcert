@@ -1,6 +1,9 @@
 package firefly
 
-import "strings"
+import (
+	"errors"
+	"strings"
+)
 
 type DevAuthStatus int
 
@@ -31,6 +34,14 @@ func (das DevAuthStatus) String() string {
 	default:
 		return strUnknown
 	}
+}
+
+func GetDevAuthStatusFromError(err error) DevAuthStatus {
+	var respError *responseError
+	if errors.As(err, &respError) {
+		return GetDevAuthStatus(respError.ErrorKey)
+	}
+	return Unknown
 }
 
 func GetDevAuthStatus(devAuthStatus string) DevAuthStatus {

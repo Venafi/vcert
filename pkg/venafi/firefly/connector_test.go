@@ -17,15 +17,176 @@
 package firefly
 
 import (
-	"net/http"
+	"fmt"
+	"testing"
 
-	"github.com/Venafi/vcert/v5/test"
+	"github.com/Venafi/vcert/v5/pkg/endpoint"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 )
 
-var ctx *test.Context
+type ConnectorSuite struct {
+	suite.Suite
+	idpServer *IdentityProviderServer
+}
 
-func getTestConnector() (c *Connector, err error) {
-	c, err = NewConnector("", "", false, nil)
-	c.client = &http.Client{}
-	return c, err
+func (s *ConnectorSuite) SetupSuite() {
+	fmt.Println("mocking server")
+	s.idpServer = newIdentityProviderServer()
+}
+
+func (s *ConnectorSuite) createCredFlowAuth() *endpoint.Authentication {
+	return &endpoint.Authentication{
+		Scope:        TestingScope,
+		ClientId:     TestingClientID,
+		ClientSecret: TestingClientSecret,
+		IdentityProvider: &endpoint.OAuthProvider{
+			TokenURL: s.idpServer.idpURL + s.idpServer.tokenPath,
+			Audience: TestingAudience,
+		},
+	}
+}
+
+func (s *ConnectorSuite) createPasswordFlowAuth() *endpoint.Authentication {
+	return &endpoint.Authentication{
+		User:     TestingUserName,
+		Password: TestingUserPassword,
+		Scope:    TestingScope,
+		ClientId: TestingClientID,
+		IdentityProvider: &endpoint.OAuthProvider{
+			TokenURL: s.idpServer.idpURL + s.idpServer.tokenPath,
+			Audience: TestingAudience,
+		},
+	}
+}
+
+func (s *ConnectorSuite) createDevFlowAuth() *endpoint.Authentication {
+	return &endpoint.Authentication{
+		Scope:    TestingScope,
+		ClientId: TestingClientID,
+		IdentityProvider: &endpoint.OAuthProvider{
+			DeviceURL: s.idpServer.idpURL + s.idpServer.devicePath,
+			TokenURL:  s.idpServer.idpURL + s.idpServer.tokenPath,
+			Audience:  TestingAudience,
+		},
+	}
+}
+
+// In order for 'go test' to run this suite, we need to create
+// a normal test function and pass our suite to suite.Run
+func TestConnectorSuite(t *testing.T) {
+	suite.Run(t, new(ConnectorSuite))
+}
+
+func (s *ConnectorSuite) TestClientCredentialFlow() {
+	fireflyConnector, err := NewConnector("", "", false, nil)
+	assert.Nil(s.T(), err, fmt.Errorf("error creating firefly connector: %w", err).Error())
+
+	oauthToken, err := fireflyConnector.Authorize(s.createCredFlowAuth())
+
+	assert.Nil(s.T(), err, fmt.Errorf("error getting acccess token: %w", err).Error())
+	assert.NotNil(s.T(), oauthToken)
+}
+
+func (s *ConnectorSuite) TestClientCredentialFlow_Unauthorized() {
+	fireflyConnector, err := NewConnector("", "", false, nil)
+	assert.Nil(s.T(), err, fmt.Errorf("error creating firefly connector: %w", err).Error())
+
+	auth := s.createCredFlowAuth()
+	//changing the clientId
+	auth.ClientId = "unauthorized"
+
+	oauthToken, err := fireflyConnector.Authorize(auth)
+
+	assert.NotNil(s.T(), err, fmt.Errorf("error getting acccess token: %w", err).Error())
+	assert.Nil(s.T(), oauthToken)
+}
+
+func (s *ConnectorSuite) TestClientPasswordFlow() {
+	fireflyConnector, err := NewConnector("", "", false, nil)
+	assert.Nil(s.T(), err, fmt.Errorf("error creating firefly connector: %w", err).Error())
+
+	oauthToken, err := fireflyConnector.Authorize(s.createPasswordFlowAuth())
+
+	assert.Nil(s.T(), err, fmt.Errorf("error getting acccess token: %w", err).Error())
+	assert.NotNil(s.T(), oauthToken)
+}
+
+func (s *ConnectorSuite) TestClientPasswordFlow_Unauthorized() {
+	fireflyConnector, err := NewConnector("", "", false, nil)
+	assert.Nil(s.T(), err, fmt.Errorf("error creating firefly connector: %w", err).Error())
+
+	auth := s.createPasswordFlowAuth()
+	auth.ClientId = "unauthorized"
+
+	oauthToken, err := fireflyConnector.Authorize(auth)
+
+	assert.NotNil(s.T(), err, fmt.Errorf("error getting acccess token: %w", err).Error())
+	assert.Nil(s.T(), oauthToken)
+}
+
+func (s *ConnectorSuite) TestDeviceFlow() {
+	fireflyConnector, err := NewConnector("", "", false, nil)
+	assert.Nil(s.T(), err, fmt.Errorf("error creating firefly connector: %w", err).Error())
+
+	oauthToken, err := fireflyConnector.Authorize(s.createDevFlowAuth())
+
+	assert.Nil(s.T(), err, fmt.Errorf("error getting acccess token: %w", err).Error())
+	assert.NotNil(s.T(), oauthToken)
+}
+
+func (s *ConnectorSuite) TestDeviceFlow_AuthPending() {
+	fireflyConnector, err := NewConnector("", "", false, nil)
+	assert.Nil(s.T(), err, fmt.Errorf("error creating firefly connector: %w", err).Error())
+
+	auth := s.createDevFlowAuth()
+	auth.ClientId = TestingClientIDAuthPending
+
+	oauthToken, err := fireflyConnector.Authorize(auth)
+
+	assert.Nil(s.T(), err, fmt.Errorf("error getting acccess token: %w", err).Error())
+	assert.NotNil(s.T(), oauthToken)
+}
+
+func (s *ConnectorSuite) TestDeviceFlow_SlowDown() {
+	fireflyConnector, err := NewConnector("", "", false, nil)
+	assert.Nil(s.T(), err, fmt.Errorf("error creating firefly connector: %w", err).Error())
+
+	auth := s.createDevFlowAuth()
+	auth.ClientId = TestingClientIDSlowDown
+
+	oauthToken, err := fireflyConnector.Authorize(auth)
+
+	assert.Nil(s.T(), err, fmt.Errorf("error getting acccess token: %w", err).Error())
+	assert.NotNil(s.T(), oauthToken)
+}
+
+func (s *ConnectorSuite) TestDeviceFlow_AccessDenied() {
+	fireflyConnector, err := NewConnector("", "", false, nil)
+	assert.Nil(s.T(), err, fmt.Errorf("error creating firefly connector: %w", err).Error())
+
+	auth := s.createDevFlowAuth()
+	auth.ClientId = TestingClientIDAccessDenied
+
+	oauthToken, err := fireflyConnector.Authorize(auth)
+
+	if assert.Errorf(s.T(), err, "expected to get an error but was gotten the access_token") {
+		assert.Equal(s.T(), "vcert error: your data contains problems: auth error: the access from device was denied by the user", err.Error())
+	}
+	assert.Nil(s.T(), oauthToken)
+}
+
+func (s *ConnectorSuite) TestDeviceFlow_ExpiredToken() {
+	fireflyConnector, err := NewConnector("", "", false, nil)
+	assert.Nil(s.T(), err, fmt.Errorf("error creating firefly connector: %w", err).Error())
+
+	auth := s.createDevFlowAuth()
+	auth.ClientId = TestingClientIDExpiredToken
+
+	oauthToken, err := fireflyConnector.Authorize(auth)
+
+	if assert.Errorf(s.T(), err, "expected to get an error but was gotten the access_token") {
+		assert.Equal(s.T(), "vcert error: your data contains problems: auth error: the device code expired", err.Error())
+	}
+	assert.Nil(s.T(), oauthToken)
 }
