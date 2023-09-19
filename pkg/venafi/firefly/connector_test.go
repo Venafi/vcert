@@ -78,6 +78,47 @@ func TestConnectorSuite(t *testing.T) {
 	suite.Run(t, new(ConnectorSuite))
 }
 
+func (s *ConnectorSuite) TestNewConnector() {
+
+	s.Run("Success", func() {
+		fireflyConnector, err := NewConnector("my.firefly:8080", "", false, nil)
+
+		assert.Nil(s.T(), err)
+		assert.NotNil(s.T(), fireflyConnector)
+		assert.Equal(s.T(), "https://my.firefly:8080/", fireflyConnector.baseURL)
+	})
+}
+
+func (s *ConnectorSuite) TestGetType() {
+	fireflyConnector, err := NewConnector("", "", false, nil)
+	assert.Nil(s.T(), err, fmt.Errorf("error creating firefly connector: %w", err).Error())
+	assert.Equal(s.T(), endpoint.ConnectorTypeFirefly, fireflyConnector.GetType())
+}
+
+func (s *ConnectorSuite) TestAuthenticate() {
+	s.Run("AuthenticationConfNotProvided", func() {
+		fireflyConnector, err := NewConnector("", "", false, nil)
+		assert.Nil(s.T(), err, fmt.Errorf("error creating firefly connector: %w", err).Error())
+
+		err = fireflyConnector.Authenticate(nil)
+
+		if assert.Errorf(s.T(), err, "expected to get an error but was gotten the access_token") {
+			assert.Equal(s.T(), "failed to authenticate: no credentials provided", err.Error())
+		}
+		assert.Equal(s.T(), "", fireflyConnector.accessToken)
+	})
+
+	s.Run("Success", func() {
+		fireflyConnector, err := NewConnector("", "", false, nil)
+		assert.Nil(s.T(), err, fmt.Errorf("error creating firefly connector: %w", err).Error())
+
+		err = fireflyConnector.Authenticate(s.createCredFlowAuth())
+
+		assert.Nil(s.T(), err, fmt.Errorf("error getting acccess token: %w", err).Error())
+		assert.NotNil(s.T(), fireflyConnector.accessToken)
+	})
+}
+
 func (s *ConnectorSuite) TestClientCredentialFlow() {
 	fireflyConnector, err := NewConnector("", "", false, nil)
 	assert.Nil(s.T(), err, fmt.Errorf("error creating firefly connector: %w", err).Error())
