@@ -91,6 +91,10 @@ cloud_test: get
 	go test -v $(GOFLAGS) -coverprofile=cov_vaas.out ./pkg/venafi/cloud
 	go tool cover -func=cov_vaas.out
 
+firefly_test: get
+	go test -v $(GOFLAGS) -coverprofile=cov_firefly.out ./pkg/venafi/firefly
+	go tool cover -func=cov_firefly.out
+
 cmd_test: get
 	go test -v $(GOFLAGS) -coverprofile=cov_cmd.out ./cmd/vcert
 	go tool cover -func=cov_cmd.out
