@@ -39,5 +39,8 @@ func NewResponseError(b []byte) (*responseError, error) {
 }
 
 func (e *responseError) Error() string {
+	if e.ErrorDescription == "" {
+		return e.ErrorKey
+	}
 	return fmt.Sprintf("%s: %s", e.ErrorKey, e.ErrorDescription)
 }

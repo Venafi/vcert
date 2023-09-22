@@ -17,25 +17,49 @@
 package firefly
 
 import (
-	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-func TestNewResponseError(t *testing.T) {
-	var err error
-	s := `
-		{
-			"ErrorDetails": "Failed to load certificate list due to a query error, please check the query parameters and try again. Error details: The query parameter Thumbprint did not match any known query possibilities, please check your parameters and try again.\r\n"
-		}
-	`
+func TestNewResponseErrorWithDescription(t *testing.T) {
+	var jsonError = []byte(`{"error": "error_short", "error_description": "error description"}`)
 
-	_, err = NewResponseError(nil)
-	if err == nil {
-		t.Fatal("error cannot be nil")
-	}
+	respError, err := NewResponseError(jsonError)
+	assert.Nil(t, err)
+	assert.NotNil(t, respError)
+	assert.Equal(t, "error_short", respError.ErrorKey)
+	assert.Equal(t, "error description", respError.ErrorDescription)
+	assert.Equal(t, "error_short: error description", respError.Error())
+}
 
-	respError, _ := NewResponseError([]byte(s))
-	if !strings.Contains(respError.Error(), "Failed to load certificate") {
-		t.Fatal("failed to parse error message")
+func TestNewResponseErrorWithoutDescription(t *testing.T) {
+	var jsonError = []byte(`{"error": "error_short"}`)
+
+	respError, err := NewResponseError(jsonError)
+	assert.Nil(t, err)
+	assert.NotNil(t, respError)
+	assert.Equal(t, "error_short", respError.ErrorKey)
+	assert.Equal(t, "", respError.ErrorDescription)
+	assert.Equal(t, "error_short", respError.Error())
+}
+
+func TestNewResponseErrorNilData(t *testing.T) {
+
+	respError, err := NewResponseError(nil)
+	if assert.Errorf(t, err, "I was expected an error but is nil") {
+		assert.Error(t, err, "failed to parser empty error message")
 	}
+	assert.Nil(t, respError)
+}
+
+func TestNewResponseErrorWrongData(t *testing.T) {
+
+	var jsonError = []byte(`"error": "error_short"`) //omitted the curly brackets to test the unmarshal error
+
+	respError, err := NewResponseError(jsonError)
+	if assert.Errorf(t, err, "I was expected an error but is nil") {
+		assert.Error(t, err, "failed to parser empty error message")
+	}
+	assert.Nil(t, respError)
 }
