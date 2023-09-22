@@ -33,14 +33,14 @@ Custom Fields and Instance Tracking require TPP 18.2 or higher, and Token Authen
 3. Download the source code:
 
 ```sh
-go get github.com/Venafi/vcert/v4
+go get github.com/Venafi/vcert/v5
 ```
 
 or
 
 Pre Go 1.13
 ```sh
-git clone https://github.com/Venafi/vcert.git $GOPATH/src/github.com/Venafi/vcert/v4
+git clone https://github.com/Venafi/vcert.git $GOPATH/src/github.com/Venafi/vcert/v5
 ```
 
 Go 1.11 with go modules enabled or go 1.13 and up make sure to clone outside of `$GOPATH/src`
@@ -59,7 +59,7 @@ make build
 For code samples of programmatic use, please review the files in [/examples](/examples/).
 
 ### Common part
-1. In your main.go file, make the following import declarations:  `github.com/Venafi/vcert/v4`, `github.com/Venafi/vcert/v4/pkg/certificate`, and `github.com/Venafi/vcert/v4/pkg/endpoint`.
+1. In your main.go file, make the following import declarations:  `github.com/Venafi/vcert/v5`, `github.com/Venafi/vcert/v5/pkg/certificate`, and `github.com/Venafi/vcert/v5/pkg/endpoint`.
 1. Create a configuration object of type `&vcert.Config` that specifies the Venafi connection details.  Solutions are typically designed to get those details from a secrets vault, .ini file, environment variables, or command line parameters.
 
 ### Enroll certificate
@@ -96,41 +96,240 @@ go test -v ./example -run TestRequestCertificate
 
 The requirement for the CA Template to be assigned by policy follows a long standing Venafi best practice which also met our design objective to keep the certificate request process simple for VCert users. If you require the ability to specify the CA Template with the request you can use the TPP REST APIs but please be advised this goes against Venafi recommendations.
 
-## Testing with Trust Protection Platform and Venafi as a Service
+## Playbook functionality
 
-Unit tests:
+For detailed explanations about the playbook and how it is build please check here: [Readme Playbook](./README-PLAYBOOK.md)
 
-```sh
+Information about how to e2e cucumber tests can be found here: [Playbook e2e testing with Aruba](./aruba/README.md)
+
+## Contributing to VCert
+
+Venafi welcomes contributions from the developer community.
+
+### Preparing your own for to add changes
+
+1. Fork it to your account (https://github.com/Venafi/vcert/fork)
+2. Clone your fork (`git clone git@github.com:youracct/vcert.git`)
+3. Create a feature branch (`git checkout -b your-branch-name`)
+4. Implement and test your changes
+5. Commit your changes (`git commit -am 'Added some cool functionality'`)
+6. Push to the branch (`git push origin your-branch-name`)
+7. Create a new Pull Request (https://github.com/youracct/vcert/pull/new/your-branch-name)
+
+### Preparing tests environment
+
+In order for us to accept incoming changes, they must pass our internal pipeline which triggers this project's tests.
+There are two types SDK tests (some of them are e2e) and Cucumber tests (all of them are e2e).
+Even if contributing only SDK, you need to make sure SDK tests pass.
+
+For our integration tests side to work, Trust Protection Platform and Venafi as a Service require access to those products.
+
+#### SDK tests
+
+Every file that ends with `_test.go` should be run, generally
+you will need to make to run the following ones that triggers
+our SDK e2e tests.
+
+- `/pkg/venafi/cloud/connector_test.go`
+- `/pkg/venafi/tpp/connector_test.go`
+
+>Note 1:
+> - cloud -> TLSPC (previously know as VaaS)
+> - tpp -> TLSPDC
+
+>Note 2:
+> This may vary on the feature you are trying to update.
+
+For the e2e of our SDK tests to work you need to configure
+environment variables in `/test/context.go`.
+
+In order to trigger all off SDK tests:
+
+```
 make test
 ```
 
-Integration tests for Trust Protection Platform and Venafi as a Service require access to those products. Environment 
-variables are used to specify required settings including credentials.  The VaaS API key and zone value
-fragments (i.e. `Application Name`\\`Issuing Template API Alias`) are readily available in the web interface.
+In order to run TLSPC tests, in the root of project run:
 
-```sh
-export TPP_URL=https://tpp.venafi.example/vedsdk
-export TPP_USER=tpp-user
-export TPP_PASSWORD=tpp-password
-export TPP_ZONE='some\suggested_policy'
-export TPP_ZONE_RESTRICTED='some\locked_policy'
-export TPP_ZONE_ECDSA='some\ecdsa_policy'
-
-make tpp_test
 ```
-
-```sh
-export CLOUD_URL=https://api.venafi.cloud/v1
-export CLOUD_APIKEY=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-export CLOUD_ZONE='My Application\Permissive CIT'
-export CLOUD_ZONE_RESTRICTED='Your Application\Restrictive CIT'
-
 make cloud_test
 ```
 
+In order to run TLSPDC tests, in the root of project run:
+
+```
+make tpp_test
+```
+
+In order to run Playbook tests, in the root of project run:
+
+```
+make playbook_test
+```
+
+##### SDK Environment variables
+
+###### TLSPDC related ENVs
+
+**TPP_USER and TPP_PASSWORD**
+
+We will use them to generate an access token on the go. That user
+must have configured an API integration that is named `vcert-sdk`
+which is the default one we use for testing and it needs to be
+able to create an access token that has all the following scopes:
+`certificate:discover,manage,revoke;configuration:manage;ssh:manage`
+
+**TPP_ZONE**
+
+- No domain restriction
+
+- CSR Generation: Accepts both user provided and service generated CSR's
+
+- Key algorithm `RSA` and key size defaults to `2048`
+
+- Private Key algorithm set to "High security but low system compatibility (SHA256 AES256)" or "Insecure but better system compatibility (SHA1 3DES)".
+
+- Configured Microsoft CA with default certificate validity for 8 years
+
+
+**TPP_ZONE_RESTRICTED**
+
+Same as **TPP_ZONE** but only difference would be restricting the domain as follows:
+
+  - vfidev.com
+  - vfidev.net
+  - vfide.org
+
+
+**TPP_ZONE_ECDSA**
+
+Same as **TPP_ZONE** but only difference would be the private key type:
+
+Key Algorithm `ECC` and Elliptic Curve `P521`
+
+**TPP_CA_NAME**
+
+The CA template that need to use for Policy management related tests.
+
+**TPP_PM_ROOT**
+
+The Policy that need to use for Policy management related tests.
+
+>Note: we have disabled **TestGetPolicy** test that uses **TPP_POLICY_MANAGEMENT_SAMPLE**.
+This is just for dev purposes, you can enable the test for testing and then let it back to be skipped.
+
+**TPP_SSH_CA**
+
+The SSH CA template that we use for requesting SSH certificates. 
+It should be able to accept requests for "test.com"
+
+**TPP_ZONE_SEARCH_CERT**
+
+The Policy we use for Search Certificate feature that allows to Query valid certificates.
+It should just be a different policy to regular ones so it doesn't query a certificate that's not
+expected for the test.
+
+###### TLSPC related ENVs
+
+**CLOUD_APIKEY**
+
+It only needs API KEY bound to a user that is able to create
+service generated CSR.
+
+**CLOUD_ZONE**
+
+Needs the following configuration:
+
+- Encryption and Validity: `VaaS or user generated`
+
+- Validity: `90 days`
+
+- Key Algorithm: `RSA 2048`, `RSA 4096`
+
+- Common Name and Subject Alternative Names: No restriction applied.
+
+**CLOUD_ZONE_RESTRICTED**
+
+Needs the following configuration:
+
+- Encryption and Validity: `VaaS or user generated`
+
+- Validity: `1 weeks`
+
+- Key Algorithm: `RSA 2048`, `RSA 4096`
+
+- Common Name and Subject Alternative Names
+
+  - Common Name: `.*\.vfidev\.com`
+
+  - DNS (SAN): `.*\.vfidev\.com`
+  
+- CSR Parameters
+
+  - Organization (O): `Venafi Inc.\`
+
+  - Organizational Unit (OU): `Integrations`, `Integration`
+
+  - City (L): `Salt Lake`
+
+  - State (ST): `utah`
+
+  - Country (C): `US`
+
+
+**VAAS_ZONE_EC**
+
+- Encryption and Validity: `VaaS generated`
+
+- Validity: `90 days`
+
+- Key Algorithm: `EC P256`, `EC P384`, `EC P521`, `EC ED25519`
+
+> Note: This order of the key algorithm is important as we expect it
+> to be in this in order in test:  **TestReadPolicyConfigurationOnlyEC**
+
+- Common Name and Subject Alternative Names
+
+   - Common Name: `[a-z]{1}[a-z0-9.-]*\.vfidev\.com`
+
+   - DNS (SAN): `[a-z]{1}[a-z0-9.-]*\.vfidev\.com`
+
+- CSR Parameters
+
+   - Organization (O): `Venafi Inc.\`
+
+   - Organizational Unit (OU): `Integrations`, `Integration`
+
+   - City (L): `Salt Lake`
+
+   - State (ST): `utah`
+
+   - Country (C): `US`
+
+**CLOUD_ENTRUST_CA_NAME**
+
+An Entrust CA enabled, that we will just need to verify we can create
+a policy for it in our "Policy Management" feature
+
+**CLOUD_DIGICERT_CA_NAME**
+
+A Digicert CA enabled, that we will just need to verify we can create
+a policy for it in our "Policy Management" feature
+
+**CLOUD_CA_NAME**
+
+A Venafi Built-in CA enabled, that we will just need to verify we can create
+a policy for it in our "Policy Management" feature
+
+
+>Note: we have disabled **TestGetPolicy** test that uses **CLOUD_POLICY_MANAGEMENT_SAMPLE**.
+This is just for dev purposes, you can enable the test for testing and then let it back to be skipped.
+
+### Cucumber Tests
+
 Command line utility tests make use of [Cucumber & Aruba](https://github.com/cucumber/aruba) feature files.
 
-- To run tests for all features in parallel:
+- To run tests for all features:
 
 ```sh
 make cucumber
@@ -143,23 +342,9 @@ make cucumber FEATURE=./features/basic/version.feature
 ```
 
 When run, these tests will be executed in their own Docker container using the Ruby version of Cucumber.  
-The completed test run will report on the number of test "scenarios" and "steps" that passed, failed, or were skipped. 
+The completed test run will report on the number of test "scenarios" and "steps" that passed, failed, or were skipped.
 
-## Playbook functionality
-
-For detailed explanations about the playbook and how it is build please check here: [Readme Playbook](./README-PLAYBOOK.md)
-
-## Contributing to VCert
-
-Venafi welcomes contributions from the developer community.
-
-1. Fork it to your account (https://github.com/Venafi/vcert/fork)
-2. Clone your fork (`git clone git@github.com:youracct/vcert.git`)
-3. Create a feature branch (`git checkout -b your-branch-name`)
-4. Implement and test your changes
-5. Commit your changes (`git commit -am 'Added some cool functionality'`)
-6. Push to the branch (`git push origin your-branch-name`)
-7. Create a new Pull Request (https://github.com/youracct/vcert/pull/new/your-branch-name)
+For detailed explanations about how set up the cucumber tests please check here: [Readme Aruba + Cucumber](./aruba/README.md)
 
 ## License
 
