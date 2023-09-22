@@ -33,7 +33,7 @@ var (
 	slowDownCount    = 0
 )
 
-func newIdentityProviderServer() *IdentityProviderServer {
+func newIdentityProviderMockServer() *IdentityProviderMockServer {
 	tokenPath := "/token"
 	devicePath := "/device"
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -47,7 +47,7 @@ func newIdentityProviderServer() *IdentityProviderServer {
 		}
 	}))
 	//creating and returning the idp server
-	return &IdentityProviderServer{
+	return &IdentityProviderMockServer{
 		server:     server,
 		idpURL:     server.URL,
 		tokenPath:  tokenPath,
@@ -55,7 +55,7 @@ func newIdentityProviderServer() *IdentityProviderServer {
 	}
 }
 
-type IdentityProviderServer struct {
+type IdentityProviderMockServer struct {
 	server     *httptest.Server
 	idpURL     string
 	tokenPath  string
@@ -250,21 +250,6 @@ func validateAccessTokenRequest(w http.ResponseWriter, accessTokenRequest Access
 	}
 
 	return true
-}
-
-func writeError(w http.ResponseWriter, statusCode int, error string, errorDescription string) {
-	w.WriteHeader(statusCode)
-	w.Header().Set("Content-Type", "application/json")
-	resp := make(map[string]string)
-	resp["error"] = error
-	if errorDescription != "" {
-		resp["error_description"] = errorDescription
-	}
-	jsonResp, err := json.Marshal(resp)
-	if err != nil {
-		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
-	}
-	w.Write(jsonResp)
 }
 
 func parseAccessTokenRequest(r *http.Request) (accessTokenRequest AccessTokenRequest, err error) {

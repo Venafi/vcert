@@ -26,6 +26,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 
@@ -98,7 +99,16 @@ func (c *Connector) GenerateRequest(_ *endpoint.ZoneConfiguration, req *certific
 }
 
 func (c *Connector) request(method string, resource urlResource, data interface{}) (statusCode int, statusText string, body []byte, err error) {
-	resourceUrl := c.baseURL + string(resource)
+
+	resourceUrl := string(resource)
+
+	//validating if the resource is already a full url
+	reg := regexp.MustCompile("^http(|s)://")
+	//if the resourceUrl is not a full Url then prefixing it with the baseUrl
+	if reg.FindStringIndex(strings.ToLower(string(resource))) == nil {
+		resourceUrl = c.baseURL + resourceUrl
+	}
+
 	var payload io.Reader
 	var b []byte
 	var values url.Values
