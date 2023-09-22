@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func writeError2(w http.ResponseWriter, statusCode int, error string, errorDescription string) {
+func writeError(w http.ResponseWriter, statusCode int, error string, errorDescription string) {
 	w.WriteHeader(statusCode)
 	w.Header().Set("Content-Type", "application/json")
 	resp := make(map[string]string)

@@ -34,7 +34,7 @@ import (
 
 type ConnectorSuite struct {
 	suite.Suite
-	idpServer     *IdentityProviderServer
+	idpServer     *IdentityProviderMockServer
 	fireflyServer *FireflyMockServer
 }
 
@@ -44,8 +44,8 @@ func (s *ConnectorSuite) SetupSuite() {
 		InsecureSkipVerify: true,
 	}
 	fmt.Println("mocking servers")
-	s.idpServer = newIdentityProviderServer()
-	s.fireflyServer = newFireflyServer()
+	s.idpServer = newIdentityProviderMockServer()
+	s.fireflyServer = newFireflyMockServer()
 }
 
 func (s *ConnectorSuite) TearDownSuite() {

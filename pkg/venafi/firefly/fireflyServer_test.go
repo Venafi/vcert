@@ -14,7 +14,7 @@ const (
 	TestingFailingPolicyName = "failingPolicy" // used to return a corrupted certificate
 )
 
-func newFireflyServer() *FireflyMockServer {
+func newFireflyMockServer() *FireflyMockServer {
 	certReqPath := "/v1/certificaterequest"
 	certSignReqPath := "/v1/certificatesigningrequest"
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -82,24 +82,24 @@ func processCertificateRequest(w http.ResponseWriter, r *http.Request) {
 	// respond to the client with the error message and a 400 status code.
 	err := json.NewDecoder(r.Body).Decode(&certReq)
 	if err != nil {
-		writeError2(w, http.StatusBadRequest, err.Error(), "")
+		writeError(w, http.StatusBadRequest, err.Error(), "")
 		return
 	}
 
 	//validating that the subject was provided given is required
 	if reflect.DeepEqual(certReq.Subject, Subject{}) {
-		writeError2(w, http.StatusBadRequest, "no-subject", "the subject was not provided")
+		writeError(w, http.StatusBadRequest, "no-subject", "the subject was not provided")
 		return
 	}
 
 	//validating that the policy name was provided given is required
 	if certReq.PolicyName == "" {
-		writeError2(w, http.StatusBadRequest, "no-policyName", "the policy name was not provided")
+		writeError(w, http.StatusBadRequest, "no-policyName", "the policy name was not provided")
 		return
 	}
 
 	if certReq.PolicyName != TestingPolicyName && certReq.PolicyName != TestingFailingPolicyName {
-		writeError2(w, http.StatusBadRequest, "invalid-policyName", "the policy name is not valid")
+		writeError(w, http.StatusBadRequest, "invalid-policyName", "the policy name is not valid")
 		return
 	}
 
@@ -136,24 +136,24 @@ func processCertificateSigningRequest(w http.ResponseWriter, r *http.Request) {
 	// respond to the client with the error message and a 400 status code.
 	err := json.NewDecoder(r.Body).Decode(&certReq)
 	if err != nil {
-		writeError2(w, http.StatusBadRequest, err.Error(), "")
+		writeError(w, http.StatusBadRequest, err.Error(), "")
 		return
 	}
 
 	//validating that the CSR was provided given is required
 	if certReq.CSR == "" {
-		writeError2(w, http.StatusBadRequest, "no-csr", "the CSR was not provided")
+		writeError(w, http.StatusBadRequest, "no-csr", "the CSR was not provided")
 		return
 	}
 
 	//validating that the policy name was provided given is required
 	if certReq.PolicyName == "" {
-		writeError2(w, http.StatusBadRequest, "no-policyName", "the policy name was not provided")
+		writeError(w, http.StatusBadRequest, "no-policyName", "the policy name was not provided")
 		return
 	}
 
 	if certReq.PolicyName != TestingPolicyName && certReq.PolicyName != TestingFailingPolicyName {
-		writeError2(w, http.StatusBadRequest, "invalid-policyName", "the policy name is not valid")
+		writeError(w, http.StatusBadRequest, "invalid-policyName", "the policy name is not valid")
 		return
 	}
 
