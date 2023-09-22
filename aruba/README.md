@@ -79,9 +79,9 @@ For "Password Auth" flow you need to defined following variables:
 
 In order to write e2e testing with aruba for playbook, there are 3 steps:
 
-- Writing the Playbook YAML
-- Executing and validating the output
-- Removing generated files
+- [Writing the Playbook YAML](./README#writing-the-playbook-yaml)
+- [Executing and validating the output](./README#executing-and-validating-the-output)
+- [Removing generated files](./README#removing-generated-files)
 
 ### Writing the Playbook YAML
 
@@ -145,12 +145,12 @@ From 2 to 6 we have produced the following block:
 
 ```YAML
 certificateTasks:
-      name: myCertificateInstallation
-	  request:
-	    csr: service
-	    keyType: rsa
-	    keySize: 4096
-	    zone: Devops\vcert
+    name: myCertificateInstallation
+    request:
+        csr: service
+        keyType: rsa
+        keySize: 4096
+        zone: Devops\vcert
 ```
 7. `And task named "myCertificateInstallation" request has subject`
 
@@ -184,20 +184,20 @@ From step 7 to 11, we have generated this block:
 
 ```YAML
     subject:
-      country: US
-      locality: Salt Lake City
-      province: Utah
-      organization: Venafi Inc
-	  orgUnits:
-	    - engineering
-	    - marketing
-      commonName: 1692387475-0dgrf.venafi.example.com
-  installations:
-  - format: PEM
-    file: '{{- Env "PWD" }}/tmp/aruba/cert.cer'
-    chainFile: '{{- Env "PWD" }}/tmp/aruba/chain.cer'
-    keyFile: '{{- Env "PWD" }}/tmp/aruba/key.pem'
-    afterInstallAction: echo SuccessInstall
+        country: US
+        locality: Salt Lake City
+        province: Utah
+        organization: Venafi Inc
+        orgUnits:
+            - engineering
+            - marketing
+        commonName: 1692387475-0dgrf.venafi.example.com
+installations:
+    - format: PEM
+      file: '{{- Env "PWD" }}/tmp/aruba/cert.cer'
+      chainFile: '{{- Env "PWD" }}/tmp/aruba/chain.cer'
+      keyFile: '{{- Env "PWD" }}/tmp/aruba/key.pem'
+      afterInstallAction: echo SuccessInstall
 ```
 
 12. `And I created playbook named "<config-file>" with previous content`
@@ -210,35 +210,35 @@ Then putting all together, we have the resulting YAML:
 ```YAML
 ---
 config:
-	connection:
-		type: tpp
-		credentials:
-			clientId: vcert-sdk
-			accessToken: '{{ Env "TPP_ACCESS_TOKEN" }}'
-		trustBundle: /path/to/my/trustbundle.pem # TrustBundle for TPP connection
-		url: https://tpp.venafi.example # URL to TPP instance
+    connection:
+        type: tpp
+        credentials:
+            clientId: vcert-sdk
+            accessToken: '{{ Env "TPP_ACCESS_TOKEN" }}'
+        trustBundle: /path/to/my/trustbundle.pem # TrustBundle for TPP connection
+        url: https://tpp.venafi.example # URL to TPP instance
 certificateTasks:
-	name: myCertificateInstallation
-	request:
-		csr: service
-		keyType: rsa
-		keySize: 4096
-		zone: Devops\vcert
-    	subject:
-			country: US
-			locality: Salt Lake City
-			province: Utah
-			organization: Venafi Inc
-			orgUnits:
-			- engineering
-			- marketing
-			commonName: 1692387475-0dgrf.venafi.example.com
-	installations:
-		- format: PEM
-		  file: '{{- Env "PWD" }}/tmp/aruba/c1.cer'
-		  chainFile: '{{- Env "PWD" }}/tmp/aruba/ch1.cer'
-		  keyFile: '{{- Env "PWD" }}/tmp/aruba/k1.pem'
-		  afterInstallAction: echo SuccessInstall
+    name: myCertificateInstallation
+    request:
+        csr: service
+        keyType: rsa
+        keySize: 4096
+        zone: Devops\vcert
+        subject:
+            country: US
+            locality: Salt Lake City
+            province: Utah
+            organization: Venafi Inc
+            orgUnits:
+            - engineering
+            - marketing
+            commonName: 1692387475-0dgrf.venafi.example.com
+    installations:
+        - format: PEM
+          file: '{{- Env "PWD" }}/tmp/aruba/c1.cer'
+          chainFile: '{{- Env "PWD" }}/tmp/aruba/ch1.cer'
+          keyFile: '{{- Env "PWD" }}/tmp/aruba/k1.pem'
+          afterInstallAction: echo SuccessInstall
 ```
 
 If you want to find this generated file during debugging, aruba automatically
