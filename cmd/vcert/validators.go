@@ -482,11 +482,18 @@ func validateGenerateFlags1(commandName string) error {
 		return err
 	}
 
-	if flags.commonName == "" && len(flags.dnsSans) == 0 {
-		return fmt.Errorf("A Common Name (cn) or Subject Alternative Name: DNS (san-dns) value is required")
+	// X.509 certificates must have either a Subject DN...
+	if flags.commonName != "" || len(flags.orgUnits) > 0 || flags.org != "" ||
+		flags.locality != "" || flags.state != "" || flags.country != "" {
+		return nil
 	}
-
-	return nil
+	// ...or at least one Subject Alternative Name
+	if len(flags.dnsSans) > 0 || len(flags.ipSans) > 0 || len(flags.emailSans) > 0 ||
+		len(flags.uriSans) > 0 || len(flags.upnSans) > 0 {
+		return nil
+	}
+	// the enrolling CA may have more strict requirements when the CSR is submitted
+	return fmt.Errorf("At least one Subject DN component or Subject Alternative Name value is required")
 }
 
 func validateRenewFlags1(commandName string) error {
