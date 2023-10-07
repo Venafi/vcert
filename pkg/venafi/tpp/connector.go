@@ -522,7 +522,7 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 		return tppReq, fmt.Errorf("Unexpected option in PrivateKeyOrigin")
 	}
 
-	tppReq.CertificateType = "AUTO"
+	tppReq.CertificateType = "auto"
 	tppReq.PolicyDN = getPolicyDN(zone)
 	tppReq.CADN = req.CADN
 	tppReq.ObjectName = req.FriendlyName
