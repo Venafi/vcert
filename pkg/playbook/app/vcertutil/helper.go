@@ -171,6 +171,7 @@ func setLocationWorkload(playbookRequest domain.PlaybookRequest, vcertRequest *c
 		Workload:   workload,
 		TLSAddress: playbookRequest.Location.TLSAddress,
 		Replace:    playbookRequest.Location.Replace,
+		Zone:       playbookRequest.Location.Zone,
 	}
 	vcertRequest.Location = &newLocation
 }

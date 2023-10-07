@@ -185,6 +185,7 @@ The top-level structure of the file is described as follows:
 | replace    | boolean | *Optional*     | Replace the current object with new information. Defaults to `false`.                                                                            |
 | tlsAddress | string  | ***Required*** | Specifies the IP address or hostname and port where the certificate can be validated by the Venafi Platform. <br/>Example: `192.168.100.23:443`. |
 | workload   | string  | *Optional*     | Use to provide an identifier for the workload using the certificate. Example: `workload`.                                                        |
+| zone       | string  | *Optional*     | Use to provide a different policy folder for the device object to be created in, when platform is TPP. If excluded, the device object is created in the same policy folder as the certificate. Example: `Installations\Agentless\Datacenters\PHX`|
 
 ### Subject
 
