@@ -593,8 +593,14 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 		if workload == "" {
 			workload = defaultWorkloadName
 		}
+
+		deviceDN := getPolicyDN(zone)
+		if req.Location.Zone != "" {
+			deviceDN = getPolicyDN(req.Location.Zone)
+		}
+
 		dev := device{
-			PolicyDN:   getPolicyDN(zone),
+			PolicyDN:   deviceDN,
 			ObjectName: req.Location.Instance,
 			Host:       req.Location.Instance,
 			Applications: []application{

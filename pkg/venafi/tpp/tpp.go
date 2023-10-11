@@ -584,6 +584,11 @@ func getPolicyDN(zone string) string {
 }
 
 func getDeviceDN(zone string, location certificate.Location) string {
+	if location.Zone != "" {
+		// A specific device location was specified
+		zone = location.Zone
+	}
+
 	workload := location.Workload
 	if workload == "" {
 		workload = "Default"

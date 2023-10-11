@@ -6,4 +6,5 @@ type Location struct {
 	Workload   string `yaml:"workload,omitempty"`
 	TLSAddress string `yaml:"tlsAddress,omitempty"`
 	Replace    bool   `yaml:"replace,omitempty"`
+	Zone       string `yaml:"zone,omitempty"`
 }
