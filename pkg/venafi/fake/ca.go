@@ -45,6 +45,8 @@ f6ZUnA9hhqxO4CHqQWmKPHftbGscwx5yg/J6J7TfG+rYd5ZVVhrr2un2xpOTctjO
 lriDCQa4FOwP9/x1OJRXEsSl5YFqBppX5A==
 -----END CERTIFICATE-----`
 
+// This credential is just meant for testing, no valid use for auth or any risk is present here
+// #nosec G101:Potential hardcoded credentials: RSA private key
 const caKeyPEM = `-----BEGIN RSA PRIVATE KEY-----
 MIIEpAIBAAKCAQEA0BobDKthxG5SuMfAp2heyDQN/IL9NTEnFJUUl/CkLEQTSQT6
 8M9US7TCxi+FOizIoev2k4Nkovgk7uM0q94aygbhcHyTTL64uphHwcClu99ZQ6DI
