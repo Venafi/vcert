@@ -939,7 +939,7 @@ func TestReadPolicyConfigurationOnlyEC(t *testing.T) {
 		SubjectCRegexes:          []string{"^US$"},
 		AllowedKeyConfigurations: []endpoint.AllowedKeyConfiguration{{certificate.KeyTypeECDSA, nil, []certificate.EllipticCurve{certificate.EllipticCurveP256, certificate.EllipticCurveP384, certificate.EllipticCurveP521, certificate.EllipticCurveED25519}}},
 		DnsSanRegExs:             []string{"^.*\\.vfidev\\.com$"},
-		AllowWildcards:           false,
+		AllowWildcards:           true,
 		AllowKeyReuse:            false,
 	}
 
