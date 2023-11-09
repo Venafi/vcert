@@ -110,6 +110,9 @@ func prepareCertificateForBundle(request certificate.Request, pcc certificate.PE
 
 			privKeyD := privKey.(crypto.Signer)
 			privKeyBlock, err = certificate.GetPrivateKeyPEMBock(privKeyD, util.LegacyPem)
+			if err != nil {
+				return nil, err
+			}
 			privEncodedPEM := pem.EncodeToMemory(privKeyBlock)
 			privKeyPEMString := string(privEncodedPEM)
 			pcc.PrivateKey = privKeyPEMString
