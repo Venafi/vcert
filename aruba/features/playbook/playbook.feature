@@ -35,7 +35,7 @@ Feature: playbook
     And task named "myCertificateInstallation" request has subject
     And task named "myCertificateInstallation" request has subject with "country" value "US"
     And task named "myCertificateInstallation" request has subject with "locality" value "Salt Lake City"
-    And task named "myCertificateInstallation" request has subject with "province" value "Utah"
+    And task named "myCertificateInstallation" request has subject with "state" value "Utah"
     And task named "myCertificateInstallation" request has subject with "organization" value "Venafi Inc"
     And task named "myCertificateInstallation" request has subject with "orgUnits" value "engineering,marketing"
     And task named "myCertificateInstallation" request has subject random CommonName
