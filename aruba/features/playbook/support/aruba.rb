@@ -38,7 +38,7 @@ class Subject
   attr_accessor :locality
   attr_accessor :organization
   attr_accessor :orgUnits
-  attr_accessor :province
+  attr_accessor :state
 
 end
 

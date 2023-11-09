@@ -17,6 +17,7 @@
 package installer
 
 import (
+	"crypto"
 	"crypto/sha1"
 	"crypto/x509"
 	"encoding/hex"
@@ -27,11 +28,10 @@ import (
 	"strings"
 	"time"
 
-	"go.uber.org/zap"
-
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/playbook/app/vcertutil"
 	"github.com/Venafi/vcert/v5/pkg/util"
+	"go.uber.org/zap"
 )
 
 // DayDuration represents a day (24 hours) in the Duration type
@@ -93,16 +93,30 @@ func prepareCertificateForBundle(request certificate.Request, pcc certificate.PE
 		zap.L().Debug("CSR Origin is [local]. Private Key added to PEM Collection")
 	}
 
-	//Key needs to be decrypted in order to create the bundle (PKCS12, JKS)
+	// Key needs to be decrypted in order to create the bundle (PKCS12, JKS)
 	// Firefly does not encrypt Private Keys. Thus, Private Key should not be decrypted in that scenario
 	if pcc.PrivateKey != "" && decryptPK {
+
 		privateKey, err := vcertutil.DecryptPrivateKey(pcc.PrivateKey, request.KeyPassword)
 		if err != nil {
-			return nil, err
+			// there's chance we've got a private key that is not PKCS8
+			zap.L().Debug("PKCS8 decrypt failed for opening Private Key. Trying legacy decrypt")
+			privKey, err := getPrivateKey(pcc.PrivateKey, request.KeyPassword)
+			if err != nil {
+				return nil, err
+			}
+
+			var privKeyBlock *pem.Block
+
+			privKeyD := privKey.(crypto.Signer)
+			privKeyBlock, err = certificate.GetPrivateKeyPEMBock(privKeyD, util.LegacyPem)
+			privEncodedPEM := pem.EncodeToMemory(privKeyBlock)
+			privKeyPEMString := string(privEncodedPEM)
+			pcc.PrivateKey = privKeyPEMString
+		} else {
+			pcc.PrivateKey = privateKey
 		}
 		zap.L().Debug("successfully decrypted Private Key")
-
-		pcc.PrivateKey = privateKey
 	}
 
 	return &pcc, nil
