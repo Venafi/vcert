@@ -1291,6 +1291,7 @@ func RemoveRegex(values []string) []string {
 
 		current = strings.TrimPrefix(current, "[*a-z]{1}[a-z0-9.-]*\\.")
 		current = strings.TrimPrefix(current, "[a-z]{1}[a-z0-9.-]*\\.")
+		current = strings.TrimPrefix(current, ".*\\.")
 
 		current = strings.ReplaceAll(current, "\\.", ".")
 

@@ -17,6 +17,7 @@
 package installer
 
 import (
+	"crypto"
 	"crypto/sha1"
 	"crypto/x509"
 	"encoding/hex"
@@ -93,16 +94,33 @@ func prepareCertificateForBundle(request certificate.Request, pcc certificate.PE
 		zap.L().Debug("CSR Origin is [local]. Private Key added to PEM Collection")
 	}
 
-	//Key needs to be decrypted in order to create the bundle (PKCS12, JKS)
+	// Key needs to be decrypted in order to create the bundle (PKCS12, JKS)
 	// Firefly does not encrypt Private Keys. Thus, Private Key should not be decrypted in that scenario
 	if pcc.PrivateKey != "" && decryptPK {
+
 		privateKey, err := vcertutil.DecryptPrivateKey(pcc.PrivateKey, request.KeyPassword)
 		if err != nil {
-			return nil, err
-		}
-		zap.L().Debug("successfully decrypted Private Key")
+			// there's chance we've got a private key that is not PKCS8
+			zap.L().Debug("PKCS8 decrypt failed for opening Private Key. Trying legacy decrypt")
+			privKey, err := getPrivateKey(pcc.PrivateKey, request.KeyPassword)
+			if err != nil {
+				return nil, err
+			}
 
+			var privKeyBlock *pem.Block
+
+			privKeyD := privKey.(crypto.Signer)
+			privKeyBlock, err = certificate.GetPrivateKeyPEMBock(privKeyD, util.LegacyPem)
+			if err != nil {
+				return nil, err
+			}
+			privEncodedPEM := pem.EncodeToMemory(privKeyBlock)
+			privKeyPEMString := string(privEncodedPEM)
+			pcc.PrivateKey = privKeyPEMString
+			privateKey = privKeyPEMString
+		}
 		pcc.PrivateKey = privateKey
+		zap.L().Debug("successfully decrypted Private Key")
 	}
 
 	return &pcc, nil

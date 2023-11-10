@@ -38,7 +38,7 @@ class Subject
   attr_accessor :locality
   attr_accessor :organization
   attr_accessor :orgUnits
-  attr_accessor :province
+  attr_accessor :state
 
 end
 
@@ -121,7 +121,7 @@ def request_key_should_be_array_of_strings(key)
 end
 
 def request_subject_key_should_be_string(key)
-  request_subject_string_keys = %w[commonName country locality organization province]
+  request_subject_string_keys = %w[commonName country locality organization state]
   request_subject_string_keys.include?(key)
 end
 
