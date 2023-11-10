@@ -28,10 +28,11 @@ import (
 	"strings"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/playbook/app/vcertutil"
 	"github.com/Venafi/vcert/v5/pkg/util"
-	"go.uber.org/zap"
 )
 
 // DayDuration represents a day (24 hours) in the Duration type
@@ -116,9 +117,9 @@ func prepareCertificateForBundle(request certificate.Request, pcc certificate.PE
 			privEncodedPEM := pem.EncodeToMemory(privKeyBlock)
 			privKeyPEMString := string(privEncodedPEM)
 			pcc.PrivateKey = privKeyPEMString
-		} else {
-			pcc.PrivateKey = privateKey
+			privateKey = privKeyPEMString
 		}
+		pcc.PrivateKey = privateKey
 		zap.L().Debug("successfully decrypted Private Key")
 	}
 
