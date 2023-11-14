@@ -13,6 +13,7 @@ RUN_COMMAND="docker run -t --rm \
           -e CLOUD_URL \
           -e CLOUD_APIKEY \
           -e CLOUD_ZONE \
+          -e VAAS_ZONE_EC \
           -e TPP_IP \
           -e TPP_CN \
           -e OKTA_CLIENT_ID \

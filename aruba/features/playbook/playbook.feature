@@ -30,12 +30,12 @@ Feature: playbook
     And task named "myCertificateInstallation" has request with "appInfo" value "Venafi VCert Playbook"
     And task named "myCertificateInstallation" has request with "sanUpn" value "test,test2"
     And task named "myCertificateInstallation" has request with "sanUri" value "uri.test.com,foo.venafi.com"
-    And task named "myCertificateInstallation" has request with default TPP zone
+    And task named "myCertificateInstallation" has request with default "TPP" zone
     And task named "myCertificateInstallation" has request with Location instance "devops-instance", workload prefixed by "workload", tlsAddress "wwww.example.com:443" and replace "false"
     And task named "myCertificateInstallation" request has subject
     And task named "myCertificateInstallation" request has subject with "country" value "US"
     And task named "myCertificateInstallation" request has subject with "locality" value "Salt Lake City"
-    And task named "myCertificateInstallation" request has subject with "province" value "Utah"
+    And task named "myCertificateInstallation" request has subject with "state" value "Utah"
     And task named "myCertificateInstallation" request has subject with "organization" value "Venafi Inc"
     And task named "myCertificateInstallation" request has subject with "orgUnits" value "engineering,marketing"
     And task named "myCertificateInstallation" request has subject random CommonName
@@ -76,7 +76,7 @@ Feature: playbook
     And task named "myCertificateInstallation" has renewBefore with value "31d"
     And task named "myCertificateInstallation" has request
     And task named "myCertificateInstallation" has request with "csr" value "local"
-    And task named "myCertificateInstallation" has request with default <platform> zone
+    And task named "myCertificateInstallation" has request with default "<platform>" zone
     And task named "myCertificateInstallation" request has subject
     And task named "myCertificateInstallation" request has subject with default values
     And task named "myCertificateInstallation" request has subject random CommonName
@@ -90,7 +90,7 @@ Feature: playbook
     And a file named "ch1.cer" should exist
     And a file named "k1.pem" should exist
     And playbook generated private key in "k1.pem" and certificate in "c1.cer" should have the same modulus
-    And "k1.pem" should not be encrypted RSA private key
+    And "k1.pem" should not be encrypted "RSA" private key
     And "k1.pem" should be RSA private key with password ""
     And I uninstall file named "c1.cer"
     And I uninstall file named "ch1.cer"
@@ -114,7 +114,7 @@ Feature: playbook
     And task named "myCertificateInstallation" has renewBefore with value "31d"
     And task named "myCertificateInstallation" has request
     And task named "myCertificateInstallation" has request with "csr" value "service"
-    And task named "myCertificateInstallation" has request with default <platform> zone
+    And task named "myCertificateInstallation" has request with default "<platform>" zone
     And task named "myCertificateInstallation" request has subject
     And task named "myCertificateInstallation" request has subject with default values
     And task named "myCertificateInstallation" request has subject random CommonName
@@ -128,7 +128,7 @@ Feature: playbook
     And a file named "ch1.cer" should exist
     And a file named "k1.pem" should exist
     And playbook generated private key in "k1.pem" and certificate in "c1.cer" should have the same modulus with password Passcode123!
-    And "k1.pem" should be encrypted RSA private key
+    And "k1.pem" should be encrypted "RSA" private key
     And "k1.pem" should be RSA private key with password "Passcode123!"
     And I uninstall file named "c1.cer"
     And I uninstall file named "ch1.cer"
@@ -151,7 +151,7 @@ Feature: playbook
     And task named "myCertificateInstallation" has renewBefore with value "31d"
     And task named "myCertificateInstallation" has request
     And task named "myCertificateInstallation" has request with "csr" value "local"
-    And task named "myCertificateInstallation" has request with default <platform> zone
+    And task named "myCertificateInstallation" has request with default "<platform>" zone
     And task named "myCertificateInstallation" request has subject
     And task named "myCertificateInstallation" request has subject with default values
     And task named "myCertificateInstallation" request has subject random CommonName
@@ -165,7 +165,7 @@ Feature: playbook
     And a file named "ch1.cer" should exist
     And a file named "k1.pem" should exist
     And playbook generated private key in "k1.pem" and certificate in "c1.cer" should have the same modulus with password Passcode123!
-    And "k1.pem" should be encrypted RSA private key
+    And "k1.pem" should be encrypted "RSA" private key
     And "k1.pem" should be RSA private key with password "Passcode123!"
     And I uninstall file named "c1.cer"
     And I uninstall file named "ch1.cer"
@@ -189,7 +189,7 @@ Feature: playbook
     And task named "myCertificateInstallation" has renewBefore with value "31d"
     And task named "myCertificateInstallation" has request
     And task named "myCertificateInstallation" has request with "csr" value "local"
-    And task named "myCertificateInstallation" has request with default <platform> zone
+    And task named "myCertificateInstallation" has request with default "<platform>" zone
     And task named "myCertificateInstallation" request has subject
     And task named "myCertificateInstallation" request has subject with default values
     And task named "myCertificateInstallation" request has subject random CommonName
@@ -206,7 +206,7 @@ Feature: playbook
     And a file named "ch1.cer" should exist
     And a file named "k1.pem" should exist
     And playbook generated private key in "k1.pem" and certificate in "c1.cer" should have the same modulus
-    And "k1.pem" should not be encrypted RSA private key
+    And "k1.pem" should not be encrypted "RSA" private key
     And "k1.pem" should be RSA private key with password ""
     And I uninstall file named "c1.cer"
     And I uninstall file named "ch1.cer"
@@ -231,7 +231,7 @@ Feature: playbook
     And task named "myCertificateInstallation" has request with "csr" value "local"
     And task named "myCertificateInstallation" has request with "validDays" value "30"
     And task named "myCertificateInstallation" has request with "issuerHint" value "MICROSOFT"
-    And task named "myCertificateInstallation" has request with default <platform> zone
+    And task named "myCertificateInstallation" has request with default "<platform>" zone
     And task named "myCertificateInstallation" request has subject
     And task named "myCertificateInstallation" request has subject with default values
     And task named "myCertificateInstallation" request has subject random CommonName
@@ -248,7 +248,7 @@ Feature: playbook
     And a file named "ch1.cer" should exist
     And a file named "k1.pem" should exist
     And playbook generated private key in "k1.pem" and certificate in "c1.cer" should have the same modulus
-    And "k1.pem" should not be encrypted RSA private key
+    And "k1.pem" should not be encrypted "RSA" private key
     And "k1.pem" should be RSA private key with password ""
     And I uninstall file named "c1.cer"
     And I uninstall file named "ch1.cer"
@@ -272,7 +272,7 @@ Feature: playbook
     And task named "myCertificateInstallation" has renewBefore with value "31d"
     And task named "myCertificateInstallation" has request
     And task named "myCertificateInstallation" has request with "csr" value "local"
-    And task named "myCertificateInstallation" has request with default <platform> zone
+    And task named "myCertificateInstallation" has request with default "<platform>" zone
     And task named "myCertificateInstallation" request has subject
     And task named "myCertificateInstallation" request has subject with default values
     And task named "myCertificateInstallation" request has subject random CommonName
@@ -289,7 +289,7 @@ Feature: playbook
     And a file named "ch1.cer" should exist
     And a file named "k1.pem" should exist
     And playbook generated private key in "k1.pem" and certificate in "c1.cer" should have the same modulus
-    And "k1.pem" should not be encrypted RSA private key
+    And "k1.pem" should not be encrypted "RSA" private key
     And "k1.pem" should be RSA private key with password ""
     And I uninstall file named "c1.cer"
     And I uninstall file named "ch1.cer"
@@ -312,7 +312,7 @@ Feature: playbook
     And task named "myCertificateInstallation" has renewBefore with value "31d"
     And task named "myCertificateInstallation" has request
     And task named "myCertificateInstallation" has request with "csr" value "service"
-    And task named "myCertificateInstallation" has request with default <platform> zone
+    And task named "myCertificateInstallation" has request with default "<platform>" zone
     And task named "myCertificateInstallation" request has subject
     And task named "myCertificateInstallation" request has subject with default values
     And task named "myCertificateInstallation" request has subject random CommonName
@@ -322,7 +322,7 @@ Feature: playbook
     And task named "myCertificateInstallationPKCS12" has renewBefore with value "31d"
     And task named "myCertificateInstallationPKCS12" has request
     And task named "myCertificateInstallationPKCS12" has request with "csr" value "service"
-    And task named "myCertificateInstallationPKCS12" has request with default <platform> zone
+    And task named "myCertificateInstallationPKCS12" has request with default "<platform>" zone
     And task named "myCertificateInstallationPKCS12" request has subject
     And task named "myCertificateInstallationPKCS12" request has subject with default values
     And task named "myCertificateInstallationPKCS12" request has subject random CommonName
@@ -337,13 +337,87 @@ Feature: playbook
     And a file named "k1.pem" should exist
     And a file named "cert.p12" should exist
     And playbook generated private key in "k1.pem" and certificate in "c1.cer" should have the same modulus with password Passcode123!
-    And "k1.pem" should be encrypted RSA private key
+    And "k1.pem" should be encrypted "RSA" private key
     And "k1.pem" should be RSA private key with password "Passcode123!"
     And playbook generated "cert.p12" should be PKCS#12 archive with password "Passcode124!"
     And I uninstall file named "c1.cer"
     And I uninstall file named "ch1.cer"
     And I uninstall file named "k1.pem"
     And I uninstall file named "cert.p12"
+
+    @TPP
+    Examples:
+      | platform | config-file       |
+      | TPP      | playbook-tpp.yml  |
+
+    @VAAS
+    Examples:
+      | platform | config-file       |
+      | VaaS     | playbook-vaas.yml |
+
+  Scenario Outline: Run playbook with default configuration and performs PEM installation using service generated ECDSA private keys
+    Given I have playbook with <platform> connection details
+    And I have playbook with certificateTasks block
+    And I have playbook with task named "myCertificateInstallation"
+    And task named "myCertificateInstallation" has renewBefore with value "31d"
+    And task named "myCertificateInstallation" has request
+    And task named "myCertificateInstallation" has request with "csr" value "service"
+    And task named "myCertificateInstallation" has request with "keyType" value "ECDSA"
+    And task named "myCertificateInstallation" has request with "keyCurve" value "P521"
+    And task named "myCertificateInstallation" has request with default Elliptic Curve "<platform>" zone
+    And task named "myCertificateInstallation" request has subject
+    And task named "myCertificateInstallation" request has subject with default values
+    And task named "myCertificateInstallation" request has subject random CommonName with random site name and fixed Domain Name "vfidev.com"
+    And task named "myCertificateInstallation" has installations
+    And task named "myCertificateInstallation" has installation format PEM with file name "c1.cer", chain name "ch1.cer", key name "k1.pem"
+    And I created playbook named "<config-file>" with previous content
+    And I run `vcert run -f <config-file>`
+    Then the output should contain "successfully installed certificate"
+    And the output should contain "playbook run finished"
+    And a file named "c1.cer" should exist
+    And a file named "ch1.cer" should exist
+    And a file named "k1.pem" should exist
+    And "k1.pem" should not be encrypted "ECDSA" private key
+    And I uninstall file named "c1.cer"
+    And I uninstall file named "ch1.cer"
+    And I uninstall file named "k1.pem"
+
+    @TPP
+    Examples:
+      | platform | config-file       |
+      | TPP      | playbook-tpp.yml  |
+
+    @VAAS
+    Examples:
+      | platform | config-file       |
+      | VaaS     | playbook-vaas.yml |
+
+  Scenario Outline: Run playbook with default configuration and performs PEM installation using service generated encrypted ECDSA private keys
+    Given I have playbook with <platform> connection details
+    And I have playbook with certificateTasks block
+    And I have playbook with task named "myCertificateInstallation"
+    And task named "myCertificateInstallation" has renewBefore with value "31d"
+    And task named "myCertificateInstallation" has request
+    And task named "myCertificateInstallation" has request with "csr" value "service"
+    And task named "myCertificateInstallation" has request with "keyType" value "ECDSA"
+    And task named "myCertificateInstallation" has request with "keyCurve" value "P521"
+    And task named "myCertificateInstallation" has request with default Elliptic Curve "<platform>" zone
+    And task named "myCertificateInstallation" request has subject
+    And task named "myCertificateInstallation" request has subject with default values
+    And task named "myCertificateInstallation" request has subject random CommonName with random site name and fixed Domain Name "vfidev.com"
+    And task named "myCertificateInstallation" has installations
+    And task named "myCertificateInstallation" has installation format PEM with file name "c1.cer", chain name "ch1.cer", key name "k1.pem" with password
+    And I created playbook named "<config-file>" with previous content
+    And I run `vcert run -f <config-file>`
+    Then the output should contain "successfully installed certificate"
+    And the output should contain "playbook run finished"
+    And a file named "c1.cer" should exist
+    And a file named "ch1.cer" should exist
+    And a file named "k1.pem" should exist
+    And "k1.pem" should be encrypted "ECDSA" private key
+    And I uninstall file named "c1.cer"
+    And I uninstall file named "ch1.cer"
+    And I uninstall file named "k1.pem"
 
     @TPP
     Examples:

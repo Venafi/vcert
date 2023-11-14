@@ -931,15 +931,15 @@ func TestReadPolicyConfigurationOnlyEC(t *testing.T) {
 		t.Fatalf("%s", err)
 	}
 	expectedPolice := endpoint.Policy{
-		SubjectCNRegexes:         []string{"^[a-z]{1}[a-z0-9.-]*\\.vfidev\\.com$"},
+		SubjectCNRegexes:         []string{"^.*\\.vfidev\\.com$"},
 		SubjectORegexes:          []string{"^Venafi Inc.$"},
 		SubjectOURegexes:         []string{"^Integrations$", "^Integration$"},
 		SubjectSTRegexes:         []string{"^Utah$"},
 		SubjectLRegexes:          []string{"^Salt Lake$"},
 		SubjectCRegexes:          []string{"^US$"},
 		AllowedKeyConfigurations: []endpoint.AllowedKeyConfiguration{{certificate.KeyTypeECDSA, nil, []certificate.EllipticCurve{certificate.EllipticCurveP256, certificate.EllipticCurveP384, certificate.EllipticCurveP521, certificate.EllipticCurveED25519}}},
-		DnsSanRegExs:             []string{"^[a-z]{1}[a-z0-9.-]*\\.vfidev\\.com$"},
-		AllowWildcards:           false,
+		DnsSanRegExs:             []string{"^.*\\.vfidev\\.com$"},
+		AllowWildcards:           true,
 		AllowKeyReuse:            false,
 	}
 

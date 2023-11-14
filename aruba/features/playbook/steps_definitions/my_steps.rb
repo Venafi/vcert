@@ -90,14 +90,25 @@ And(/^task named "(.*)" has request with "(.*)" value "(.*)"$/) do |task_name, k
   end
 end
 
-And(/^task named "(.*)" has request with default (.*) zone$/) do |task_name, platform|
+And(/^task named "(.*)" has request with default "(.*)" zone$/) do |task_name, platform|
   current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
   if platform == "TPP"
     current_certificate_task.request.zone=ENV['TPP_ZONE']
   elsif platform == "VaaS"
     current_certificate_task.request.zone=ENV['CLOUD_ZONE']
   else
-      fail(ArgumentError.new("Unkonw plataform: #{platform}"))
+      fail(ArgumentError.new("Unknown platform: #{platform}"))
+  end
+end
+
+And(/^task named "(.*)" has request with default Elliptic Curve "(.*)" zone$/) do |task_name, platform|
+  current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
+  if platform == "TPP"
+    current_certificate_task.request.zone=ENV['TPP_ZONE_ECDSA']
+  elsif platform == "VaaS"
+    current_certificate_task.request.zone=ENV['VAAS_ZONE_EC']
+  else
+    fail(ArgumentError.new("Unknown platform: #{platform}"))
   end
 end
 
@@ -119,12 +130,18 @@ end
 
 And(/^task named "(.*)" request has subject with default values$/) do |task_name|
   current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
-  current_certificate_task.request.subject.country = "US"
-  current_certificate_task.request.subject.locality = "Salt Lake City"
-  current_certificate_task.request.subject.province = "Utah"
-  current_certificate_task.request.subject.organization = "Venafi Inc"
+
   org_units = "engineering,marketing"
+  current_certificate_task.request.subject.locality = "Salt Lake City"
+  current_certificate_task.request.subject.organization = "Venafi Inc"
+  if current_certificate_task.request.zone == ENV['VAAS_ZONE_EC']
+    current_certificate_task.request.subject.locality = "Salt Lake"
+    current_certificate_task.request.subject.organization = "Venafi Inc."
+    org_units = "Integrations,Integration"
+  end
   array_org_units = org_units.split(',')
+  current_certificate_task.request.subject.country = "US"
+  current_certificate_task.request.subject.state = "Utah"
   current_certificate_task.request.subject.orgUnits = array_org_units
 end
 
@@ -153,6 +170,12 @@ end
 And(/^task named "(.*)" request has subject random CommonName$/) do |task_name|
   current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
   cn = random_cn
+  current_certificate_task.request.subject.commonName = cn
+end
+
+And(/^task named "(.*)" request has subject random CommonName with random site name and fixed Domain Name "(.*)"$/) do |task_name, domain_name|
+  current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
+  cn = random_string + "." + domain_name
   current_certificate_task.request.subject.commonName = cn
 end
 
@@ -273,23 +296,30 @@ When(/^playbook generated "([^"]*)" should be PKCS#12 archive with password "([^
   }
 end
 
-And(/^"(.*)" should( not)? be( encrypted)? RSA private key$/) do |filename, negated, encrypted|
-  header = "-----BEGIN RSA PRIVATE KEY-----"
-  file_path = Dir.pwd + $path_separator + $temp_path + $path_separator + filename
+And(/^"(.*)" should( not)? be encrypted "(.*)" private key$/) do |filename, negated, key_type|
 
+  if key_type == "RSA"
+    header = "-----BEGIN RSA PRIVATE KEY-----"
+  elsif key_type == "ECDSA"
+    header = "-----BEGIN EC PRIVATE KEY-----"
+  else
+    fail(ArgumentError.new("Unexpected Key Type. Unknown Key Type: #{key_type}"))
+  end
+
+  file_path = Dir.pwd + $path_separator + $temp_path + $path_separator + filename
   lines = File.open(file_path).first(2).map(&:strip)
 
   if lines[0] == header then
     if lines[1].include?("ENCRYPTED")
       if negated
-        fail(ArgumentError.new("Expected RSA key to not be encrypted but fail to found on second line: #{lines[1]}"))
+        fail(ArgumentError.new("Expected #{key_type} key to not be encrypted but fail to found on first line: #{lines[1]}"))
       end
     else
       unless negated
-        fail(ArgumentError.new("Expected RSA key to be encrypted but fail to found on second line: #{lines[1]}"))
+        fail(ArgumentError.new("Expected #{key_type} key to be encrypted but fail to found on first line: #{lines[1]}"))
       end
     end
   else
-    fail(ArgumentError.new("Expected RSA key headers: #{header} but got in first line: #{lines[0]}"))
+    fail(ArgumentError.new("Expected #{key_type} key headers: #{header} but got in first line: #{lines[0]}"))
   end
 end
