@@ -43,7 +43,8 @@ import (
 
 const (
 	JKSFormat              = "jks"
-	Pkcs12                 = "pkcs12"
+	P12Format              = "pkcs12"
+	LegacyP12Format        = "legacy-pkcs12"
 	Sha256                 = "SHA256"
 	SshCertPubKeyServ      = "service"
 	SshCertPubKeyFilePreff = "file:"
