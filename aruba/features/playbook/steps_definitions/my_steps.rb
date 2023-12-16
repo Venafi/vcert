@@ -291,7 +291,7 @@ When(/^playbook generated "([^"]*)" should be PKCS#12 archive with password "([^
   cert_path = Dir.pwd + $path_separator + $temp_path + $path_separator + filename
 
   steps %{
-    Then I try to run `openssl pkcs12 -in "#{cert_path}" -legacy -passin pass:#{password} -noout`
+    Then I try to run `openssl pkcs12 -in "#{cert_path}" -passin pass:#{password} -noout`
     And the exit status should be 0
   }
 end
