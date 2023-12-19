@@ -47,7 +47,7 @@ class Request
   attr_accessor :chain
   attr_accessor :csr
   attr_accessor :fields
-  attr_accessor :sanDns
+  attr_accessor :sanDNS
   attr_accessor :sanEmail
   attr_accessor :fetchPrivateKey
   attr_accessor :nickname
@@ -58,8 +58,8 @@ class Request
   attr_accessor :keyType
   attr_accessor :omitSans
   attr_accessor :appInfo
-  attr_accessor :sanUpn
-  attr_accessor :sanUri
+  attr_accessor :sanUPN
+  attr_accessor :sanURI
   attr_accessor :validDays
   attr_accessor :zone
   attr_accessor :location
