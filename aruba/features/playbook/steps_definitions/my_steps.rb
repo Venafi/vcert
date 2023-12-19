@@ -177,6 +177,7 @@ And(/^task named "(.*)" request has subject random CommonName with random site n
   current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
   cn = random_string + "." + domain_name
   current_certificate_task.request.subject.commonName = cn
+  current_certificate_task.request.sanDns = %w[ cn ]
 end
 
 And(/^task named "(.*)" has installations$/) do |task_name|
