@@ -156,6 +156,7 @@ func TestRequestCertificateED25519WithValidation(t *testing.T) {
 
 	req := certificate.Request{}
 	req.Subject.CommonName = test.RandSpecificCN("vfidev.com")
+	req.DNSNames = []string{req.Subject.CommonName}
 	req.Subject.Organization = []string{"Venafi Inc."}
 	req.Subject.OrganizationalUnit = []string{"Integrations"}
 	req.Subject.Locality = []string{"Salt Lake"}
@@ -195,6 +196,7 @@ func TestRequestCertificateED25519WithPolicyValidation(t *testing.T) {
 
 	req := certificate.Request{}
 	req.Subject.CommonName = test.RandSpecificCN("vfidev.com")
+	req.DNSNames = []string{req.Subject.CommonName}
 	req.Subject.Organization = []string{"Venafi Inc."}
 	req.Subject.OrganizationalUnit = []string{"Integrations"}
 	req.Subject.Locality = []string{"Salt Lake"}
