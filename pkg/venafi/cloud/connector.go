@@ -697,6 +697,11 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 		return fmt.Errorf("failed to authenticate: missing credentials")
 	}
 	c.apiKey = auth.APIKey
+
+	if auth.AccessToken != "" {
+		c.accessToken = auth.AccessToken
+	}
+
 	url := c.getURL(urlResourceUserAccounts)
 	statusCode, status, body, err := c.request("GET", url, nil, true)
 	if err != nil {
