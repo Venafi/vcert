@@ -330,9 +330,15 @@ func (c *Connector) request(method string, url string, data interface{}, authNot
 		err = fmt.Errorf("%w: %v", verror.VcertError, err)
 		return
 	}
+
+	if c.accessToken != "" {
+		r.Header.Add("Authorization", fmt.Sprintf("Bearer %s", c.accessToken))
+	}
+
 	if c.apiKey != "" {
 		r.Header.Add("tppl-api-key", c.apiKey)
 	}
+
 	if method == "POST" {
 		r.Header.Add("Accept", "application/json")
 		r.Header.Add("content-type", "application/json")

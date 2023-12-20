@@ -80,13 +80,14 @@ const (
 
 // Connector contains the base data needed to communicate with the Venafi Cloud servers
 type Connector struct {
-	baseURL string
-	apiKey  string
-	verbose bool
-	user    *userDetails
-	trust   *x509.CertPool
-	zone    cloudZone
-	client  *http.Client
+	baseURL     string
+	accessToken string
+	apiKey      string
+	verbose     bool
+	user        *userDetails
+	trust       *x509.CertPool
+	zone        cloudZone
+	client      *http.Client
 }
 
 func (c *Connector) RetrieveCertificateMetaData(dn string) (*certificate.CertificateMetaData, error) {
