@@ -227,7 +227,7 @@ var (
 
 	flagFormat = &cli.StringFlag{
 		Name: "format",
-		Usage: "Use to specify the output format. Options include: pem | json | pkcs12 | jks." +
+		Usage: "Use to specify the output format. Options include: pem | json | pkcs12 | jks | legacy-pem | legacy-pkcs12." +
 			" If PKCS#12 or JKS formats are specified, the --file parameter is required." +
 			" For JKS format, the --jks-alias parameter is required and a password must be provided (see --key-password and --jks-password).",
 		Destination: &flags.format,

@@ -75,7 +75,7 @@ func readData(commandName string) error {
 
 func validateCommonFlags(commandName string) error {
 
-	if flags.format != "" && flags.format != "pem" && flags.format != "json" && flags.format != "pkcs12" && flags.format != JKSFormat && flags.format != util.LegacyPem {
+	if flags.format != "" && flags.format != "pem" && flags.format != "json" && flags.format != P12Format && flags.format != LegacyP12Format && flags.format != JKSFormat && flags.format != util.LegacyPem {
 		return fmt.Errorf("Unexpected output format: %s", flags.format)
 	}
 	if flags.file != "" && (flags.certFile != "" || flags.chainFile != "" || flags.keyFile != "") {
@@ -176,7 +176,7 @@ func validateConnectionFlags(commandName string) error {
 }
 
 func validatePKCS12Flags(commandName string) error {
-	if flags.format == "pkcs12" {
+	if flags.format == P12Format || flags.format == LegacyP12Format {
 		if commandName == commandEnrollName {
 			if flags.file == "" && flags.csrOption != "service" {
 				return fmt.Errorf("PKCS#12 format requires certificate, private key, and chain to be written to a single file; specify using --file")
@@ -187,13 +187,13 @@ func validatePKCS12Flags(commandName string) error {
 			}
 		}
 		if flags.certFile != "" || flags.chainFile != "" || flags.keyFile != "" {
-			return fmt.Errorf(`The --file parameter may not be combined with the --cert-file, --key-file, or --chain-file parameters when --format is "pkcs12"`)
+			return fmt.Errorf(`The --file parameter may not be combined with the --cert-file, --key-file, or --chain-file parameters when --format is %q`, flags.format)
 		}
 		if strings.HasPrefix(flags.csrOption, "file:") {
-			return fmt.Errorf(`The --csr "file" option may not be used with the enroll or renew actions when --format is "pkcs12"`)
+			return fmt.Errorf(`The --csr "file" option may not be used with the enroll or renew actions when --format is %q`, flags.format)
 		}
 		if (flags.csrOption == "" || flags.csrOption == "local") && flags.noPickup {
-			return fmt.Errorf(`The --csr "local" option may not be used with the enroll or renew actions when --format is "pkcs12" and --no-pickup is specified`)
+			return fmt.Errorf(`The --csr "local" option may not be used with the enroll or renew actions when --format is %q and --no-pickup is specified`, flags.format)
 		}
 	}
 	return nil

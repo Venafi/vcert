@@ -60,7 +60,9 @@ func readPasswordsFromInputFlags(commandName string, cf *commandFlags) error {
 
 	cloudSerViceGenerated := IsCSRServiceVaaSGenerated(commandName)
 
-	if commandName == commandSshPickupName || commandName == commandSshEnrollName || commandName == commandEnrollName || commandName == commandGenCSRName || commandName == commandRenewName || commandName == commandPickupName && (cf.format == "pkcs12" || cf.format == JKSFormat || cloudSerViceGenerated) {
+	if commandName == commandSshPickupName || commandName == commandSshEnrollName || commandName == commandEnrollName ||
+		commandName == commandGenCSRName || commandName == commandRenewName || commandName == commandPickupName &&
+		(cf.format == P12Format || cf.format == LegacyP12Format || cf.format == JKSFormat || cloudSerViceGenerated) {
 		var keyPasswordNotNeeded = false
 
 		keyPasswordNotNeeded = keyPasswordNotNeeded || (cf.csrOption == "service" && cf.noPickup)

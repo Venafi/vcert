@@ -17,7 +17,6 @@
 package installer
 
 import (
-	"crypto/rand"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
@@ -186,7 +185,7 @@ func packageAsPKCS12(pcc certificate.PEMCollection, keyPassword string) ([]byte,
 		return nil, err
 	}
 
-	bytes, err := pkcs12.Encode(rand.Reader, privateKey, cert, chainList, keyPassword)
+	bytes, err := pkcs12.Modern2023.Encode(privateKey, cert, chainList, keyPassword)
 	if err != nil {
 		return nil, fmt.Errorf("PKCS12 encode error: %w", err)
 	}

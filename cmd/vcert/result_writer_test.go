@@ -17,9 +17,17 @@
 package main
 
 import (
+	"crypto/x509"
+	"encoding/pem"
+	"errors"
+	"os"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"software.sslmate.com/src/go-pkcs12"
+
 	"github.com/Venafi/vcert/v5/pkg/certificate"
+	"github.com/Venafi/vcert/v5/pkg/util"
 )
 
 var (
@@ -141,6 +149,9 @@ func TestPKCS12withEncPK(t *testing.T) {
 	if err != nil {
 		t.Fatal("Failed to output the results: ", err)
 	}
+
+	//confirming that the PKCS12 file contains the same PK, Cert and Chain as the original data
+	validateGeneratedPKCS12IsCorrect(t, result)
 }
 
 func TestPKCS12withPlainPK(t *testing.T) {
@@ -171,6 +182,9 @@ func TestPKCS12withPlainPK(t *testing.T) {
 	if err != nil {
 		t.Fatal("Failed to output the results: ", err)
 	}
+
+	//confirming that the PKCS12 file contains the same PK, Cert and Chain as the original data
+	validateGeneratedPKCS12IsCorrect(t, result)
 }
 
 func TestPKCS12withPlainEcPK(t *testing.T) {
@@ -201,6 +215,108 @@ func TestPKCS12withPlainEcPK(t *testing.T) {
 	if err != nil {
 		t.Fatal("Failed to output the results: ", err)
 	}
+
+	//confirming that the PKCS12 file contains the same PK, Cert and Chain as the original data
+	validateGeneratedPKCS12IsCorrect(t, result)
+}
+
+func TestLegacyPKCS12withEncPK(t *testing.T) {
+	result := &Result{
+		&certificate.PEMCollection{
+			Certificate: cert,
+			PrivateKey:  encPK,
+			Chain:       chain,
+		},
+		"==pickup-id==",
+		&Config{
+			"enroll",
+			"legacy-pkcs12",
+			"",
+			"",
+			certificate.ChainOptionFromString(""),
+			"/tmp/TestLegacyPKCS12withEncPK",
+			"",
+			"",
+			"",
+			"",
+			"",
+			"asdf",
+		},
+	}
+	err := result.Flush()
+
+	if err != nil {
+		t.Fatal("Failed to output the results: ", err)
+	}
+
+	//confirming that the PKCS12 file contains the same PK, Cert and Chain as the original data
+	validateGeneratedPKCS12IsCorrect(t, result)
+}
+
+func TestLegacyPKCS12withPlainPK(t *testing.T) {
+	result := &Result{
+		&certificate.PEMCollection{
+			Certificate: cert,
+			PrivateKey:  PK,
+			Chain:       chain,
+		},
+		"==pickup-id==",
+		&Config{
+			"enroll",
+			"legacy-pkcs12",
+			"",
+			"",
+			certificate.ChainOptionFromString(""),
+			"/tmp/TestLegacyPKCS12withPlainPK",
+			"",
+			"",
+			"",
+			"",
+			"",
+			"",
+		},
+	}
+	err := result.Flush()
+
+	if err != nil {
+		t.Fatal("Failed to output the results: ", err)
+	}
+
+	//confirming that the PKCS12 file contains the same PK, Cert and Chain as the original data
+	validateGeneratedPKCS12IsCorrect(t, result)
+}
+
+func TestLegacyPKCS12withPlainEcPK(t *testing.T) {
+	result := &Result{
+		&certificate.PEMCollection{
+			Certificate: cert,
+			PrivateKey:  ec,
+			Chain:       chain,
+		},
+		"==pickup-id==",
+		&Config{
+			"enroll",
+			"legacy-pkcs12",
+			"",
+			"",
+			certificate.ChainOptionFromString(""),
+			"/tmp/TestLegacyPKCS12withPlainEcPK",
+			"",
+			"",
+			"",
+			"",
+			"",
+			"",
+		},
+	}
+	err := result.Flush()
+
+	if err != nil {
+		t.Fatal("Failed to output the results: ", err)
+	}
+
+	//confirming that the PKCS12 file contains the same PK, Cert and Chain as the original data
+	validateGeneratedPKCS12IsCorrect(t, result)
 }
 
 func TestJKSWithEncPKWithoutJKSPass(t *testing.T) {
@@ -261,4 +377,101 @@ func TestJKSWithEncPKAndJKSPass(t *testing.T) {
 	if err != nil {
 		t.Fatal("Failed to output the results: ", err)
 	}
+}
+
+func validateGeneratedPKCS12IsCorrect(t *testing.T, result *Result) {
+	//reading the generated PCKS12 file in order to get the PrivateKey, Cert and ChainCert to validate they are equals
+	// to the original
+	bytes, err := os.ReadFile(result.Config.AllFile)
+	if err != nil {
+		t.Fatal("Failed to read the output results: ", err)
+	}
+
+	//decoding the PKCS12 data
+	privateKeyDecoded, certDecoded, caCertsDecoded, err := pkcs12.DecodeChain(bytes, result.Config.KeyPassword)
+
+	if assert.NoError(t, err) {
+		assert.NotNil(t, privateKeyDecoded)
+		assert.NotNil(t, certDecoded)
+		assert.NotNil(t, caCertsDecoded)
+
+		//getting the original PK
+		var privKeyOriginal interface{}
+		privKeyOriginal, err = parsePKInPKCS1ToPrivateKey(result.Pcc.PrivateKey, result.Config.KeyPassword)
+		if err != nil {
+			t.Fatal("Failed to parse the original private key: ", err)
+		}
+
+		//asserting the original PK and the decoded PK from the generated PKCS12 are the same
+		assert.Equal(t, privKeyOriginal, privateKeyDecoded)
+
+		//getting the original Cert
+		var certOriginal *x509.Certificate
+		certOriginal, err = parseCertificate(result.Pcc.Certificate)
+		if err != nil {
+			t.Fatal("Failed to parse the original certificate: ", err)
+		}
+
+		//asserting the original Cert and the decoded Cert from the generated PKCS12 are the same
+		assert.Equal(t, certOriginal, certDecoded)
+
+		//getting the original CAChain
+		var chainList []*x509.Certificate
+		chainList, err = parseChain(result.Pcc.Chain)
+		if err != nil {
+			t.Fatal("Failed to parse the original chain of certificates: ", err)
+		}
+
+		//asserting the original CAChain and the decoded CAChain from the generated PKCS12 are the same
+		assert.Equal(t, chainList, caCertsDecoded)
+	}
+}
+
+func parsePKInPKCS1ToPrivateKey(encPK string, keyPassword string) (interface{}, error) {
+	privateKeyPEM, _ := pem.Decode([]byte(encPK))
+	if privateKeyPEM == nil {
+		return nil, errors.New("it was not possible to decode the private key")
+	}
+	var privateBytes []byte
+	if keyPassword != "" {
+		var err error
+		privateBytes, err = util.X509DecryptPEMBlock(privateKeyPEM, []byte(keyPassword))
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		privateBytes = privateKeyPEM.Bytes
+	}
+
+	if privateKeyPEM.Type == "EC PRIVATE KEY" {
+		return x509.ParseECPrivateKey(privateBytes)
+	} else {
+		// then it's considered as RSA Private Key
+		return x509.ParsePKCS1PrivateKey(privateBytes)
+	}
+}
+
+func parseCertificate(certString string) (*x509.Certificate, error) {
+	certPEMBlock, _ := pem.Decode([]byte(certString))
+	if certPEMBlock == nil || certPEMBlock.Type != "CERTIFICATE" {
+		return nil, errors.New("it was not possible to decode the certificate")
+	}
+	return x509.ParseCertificate(certPEMBlock.Bytes)
+}
+
+func parseChain(chain []string) ([]*x509.Certificate, error) {
+	var chainList []*x509.Certificate
+	for _, chainCert := range chain {
+		certPEMBlock, _ := pem.Decode([]byte(chainCert))
+		if certPEMBlock == nil {
+			return nil, errors.New("it was not possible to decode the CA certificate")
+		}
+		parsedCert, err := x509.ParseCertificate(certPEMBlock.Bytes)
+		if err != nil {
+			return nil, err
+		}
+		chainList = append(chainList, parsedCert)
+	}
+
+	return chainList, nil
 }

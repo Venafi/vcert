@@ -66,6 +66,26 @@ Feature: PKCS#12 format output
       | endpoint  |
       | Cloud     |
 
+  Scenario Outline: where all objects are written to one PKCS#12 legacy archive with key password
+    When I enroll random certificate in <endpoint> with -format legacy-pkcs12 -file all.p12 -key-password newPassw0rd!
+    Then the exit status should be 0
+    And "all.p12" should be PKCS#12 archive in legacy mode with password "newPassw0rd!"
+
+    @FAKE
+    Examples:
+      | endpoint  |
+      | test-mode |
+
+    @TPP
+    Examples:
+      | endpoint  |
+      | TPP       |
+
+    @VAAS
+    Examples:
+      | endpoint  |
+      | Cloud     |
+
   Scenario Outline: where it outputs error when trying to pickup local-generated certificate and output it in PKCS#12 format
     When I enroll random certificate using <endpoint> with -no-prompt -no-pickup
     And I retrieve the certificate using <endpoint> using the same Pickup ID with -timeout 180 -no-prompt -file all.p12 -format pkcs12
@@ -148,6 +168,21 @@ Feature: PKCS#12 format output
     When I enroll random certificate using <endpoint> with -no-prompt -no-pickup -csr service
     And I retrieve the certificate using <endpoint> using the same Pickup ID with -timeout 180 -key-password newPassw0rd! -file all.p12 -format pkcs12
     And "all.p12" should be PKCS#12 archive with password "newPassw0rd!"
+
+    @FAKE
+    Examples:
+      | endpoint  |
+      | test-mode |
+
+    @TPP
+    Examples:
+      | endpoint  |
+      | TPP       |
+
+  Scenario Outline: where it pickups up service-generated certificate and outputs it in PKCS#12 legacy format
+    When I enroll random certificate using <endpoint> with -no-prompt -no-pickup -csr service
+    And I retrieve the certificate using <endpoint> using the same Pickup ID with -timeout 180 -key-password newPassw0rd! -file all.p12 -format legacy-pkcs12
+    And "all.p12" should be PKCS#12 archive in legacy mode with password "newPassw0rd!"
 
     @FAKE
     Examples:
