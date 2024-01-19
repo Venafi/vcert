@@ -693,10 +693,21 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 			return
 		}
 	}
+
+	var contactIdentities []contactIdentity
+	if req.ContactEmails != nil {
+		var err error
+		contactIdentities, err = c.findContactIdentities(req.ContactEmails)
+		if err != nil {
+			return "", fmt.Errorf("failed to find contact identities: %w", err)
+		}
+	}
 	tppCertificateRequest, err := prepareRequest(req, c.zone)
 	if err != nil {
 		return "", err
 	}
+	tppCertificateRequest.Contacts = contactIdentities
+
 	statusCode, status, body, err := c.request("POST", urlResourceCertificateRequest, tppCertificateRequest)
 	if err != nil {
 		return "", err
@@ -763,6 +774,28 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 		log.Println(err)
 	}
 	return
+}
+
+func (c *Connector) findContactIdentities(contactEmails []string) ([]contactIdentity, error) {
+	var contactIdentities []contactIdentity
+	for _, email := range contactEmails {
+		identity, err := c.browseIdentities(
+			policy.BrowseIdentitiesRequest{
+				Filter:       email,
+				Limit:        2,
+				IdentityType: policy.AllIdentities,
+			})
+		if err != nil {
+			return nil, fmt.Errorf("failed to find email %s: %w", email, err)
+		}
+		if len(identity.Identities) == 0 {
+			return nil, fmt.Errorf("email %s not found", email)
+		}
+		contactIdentities = append(contactIdentities, contactIdentity{
+			PrefixedUniversal: identity.Identities[0].PrefixedUniversal,
+		})
+	}
+	return contactIdentities, nil
 }
 
 // SynchronousRequestCertificate It's not supported yet in TPP

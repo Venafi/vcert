@@ -55,6 +55,11 @@ type Request struct {
 	ValidityPeriod   string //represents the validity of the certificate expressed as an ISO 8601 duration
 	IssuerHint       util.IssuerHint
 
+	// ContactEmails is TPP-specific. It allows you to configure an email
+	// address to send notifications about the certificate to. Requires the
+	// scope `configuration`.
+	ContactEmails []string
+
 	// Deprecated: use ValidityDuration instead, this field is ignored if ValidityDuration is set
 	ValidityHours int
 }

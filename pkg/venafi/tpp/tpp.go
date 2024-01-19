@@ -63,28 +63,28 @@ type device struct {
 }
 
 type certificateRequest struct {
-	PolicyDN                string          `json:",omitempty"`
-	CADN                    string          `json:",omitempty"`
-	ObjectName              string          `json:",omitempty"`
-	Subject                 string          `json:",omitempty"`
-	OrganizationalUnit      string          `json:",omitempty"`
-	Organization            string          `json:",omitempty"`
-	City                    string          `json:",omitempty"`
-	State                   string          `json:",omitempty"`
-	Country                 string          `json:",omitempty"`
-	SubjectAltNames         []sanItem       `json:",omitempty"`
-	Contact                 string          `json:",omitempty"`
-	CASpecificAttributes    []nameValuePair `json:",omitempty"`
-	Origin                  string          `json:",omitempty"`
-	PKCS10                  string          `json:",omitempty"`
-	KeyAlgorithm            string          `json:",omitempty"`
-	KeyBitSize              int             `json:",omitempty"`
-	EllipticCurve           string          `json:",omitempty"`
-	DisableAutomaticRenewal bool            `json:",omitempty"`
-	CustomFields            []customField   `json:",omitempty"`
-	Devices                 []device        `json:",omitempty"`
-	CertificateType         string          `json:",omitempty"`
-	Reenable                bool            `json:",omitempty"`
+	PolicyDN                string            `json:",omitempty"`
+	CADN                    string            `json:",omitempty"`
+	ObjectName              string            `json:",omitempty"`
+	Subject                 string            `json:",omitempty"`
+	OrganizationalUnit      string            `json:",omitempty"`
+	Organization            string            `json:",omitempty"`
+	City                    string            `json:",omitempty"`
+	State                   string            `json:",omitempty"`
+	Country                 string            `json:",omitempty"`
+	SubjectAltNames         []sanItem         `json:",omitempty"`
+	Contacts                []contactIdentity `json:",omitempty"`
+	CASpecificAttributes    []nameValuePair   `json:",omitempty"`
+	Origin                  string            `json:",omitempty"`
+	PKCS10                  string            `json:",omitempty"`
+	KeyAlgorithm            string            `json:",omitempty"`
+	KeyBitSize              int               `json:",omitempty"`
+	EllipticCurve           string            `json:",omitempty"`
+	DisableAutomaticRenewal bool              `json:",omitempty"`
+	CustomFields            []customField     `json:",omitempty"`
+	Devices                 []device          `json:",omitempty"`
+	CertificateType         string            `json:",omitempty"`
+	Reenable                bool              `json:",omitempty"`
 }
 
 type certificateRetrieveRequest struct {
@@ -151,6 +151,11 @@ type certificateResetRequest struct {
 
 type certificateResetResponse struct {
 	Error string `json:"Error"`
+}
+
+// https://docs.venafi.com/Docs/currentSDK/TopNav/Content/SDK/WebSDK/r-SDK-POST-Certificates-request-IdentityHow.php
+type contactIdentity struct {
+	PrefixedUniversal string `json:",omitempty"`
 }
 
 type sanItem struct {
