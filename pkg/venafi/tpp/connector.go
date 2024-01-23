@@ -697,11 +697,12 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 	var contactIdentities []contactIdentity
 	if req.ContactEmails != nil {
 		var err error
-		contactIdentities, err = c.findContactIdentities(req.ContactEmails)
+		contactIdentities, err = c.resolveContactEmails(req.ContactEmails)
 		if err != nil {
 			return "", fmt.Errorf("failed to find contact identities: %w", err)
 		}
 	}
+
 	tppCertificateRequest, err := prepareRequest(req, c.zone)
 	if err != nil {
 		return "", err
@@ -776,7 +777,9 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 	return
 }
 
-func (c *Connector) findContactIdentities(contactEmails []string) ([]contactIdentity, error) {
+// Unlike the resolveContacts func above that only works for usernames, this
+// func works with emails.
+func (c *Connector) resolveContactEmails(contactEmails []string) ([]contactIdentity, error) {
 	var contactIdentities []contactIdentity
 	for _, email := range contactEmails {
 		identity, err := c.browseIdentities(
