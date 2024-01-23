@@ -779,7 +779,7 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 }
 
 // Unlike the resolveContacts func above that only works for usernames, this
-// func works with emails. Returns an error when no match is found.
+// func works with emails. No error is returned when no identity is found.
 //
 // It is possible that the same email is used by multiple TPP identities, that's
 // why multiple identities may be returned.
@@ -797,9 +797,6 @@ func (c *Connector) resolveEmail(email string) ([]identity, error) {
 		})
 	if err != nil {
 		return nil, fmt.Errorf("failed to find email %s: %w", email, err)
-	}
-	if len(resp.Identities) == 0 {
-		return nil, fmt.Errorf("email %s not found", email)
 	}
 
 	var identities []identity
@@ -829,6 +826,10 @@ func (c *Connector) resolveCertificateRequestContacts(emails []string) ([]contac
 		if err != nil {
 			return nil, err
 		}
+		if len(ids) == 0 {
+			return nil, fmt.Errorf("email %s was not found", email)
+		}
+
 		// Arbitrarily choose the first identity when multiple are found.
 		contacts = append(contacts, contactReq{
 			PrefixedUniversal: ids[0].PrefixedUniversal,
