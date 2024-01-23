@@ -837,16 +837,6 @@ func (c *Connector) resolveCertificateRequestContacts(emails []string) ([]contac
 	return contacts, nil
 }
 
-func identitiesToContactReqs(ids []identity) []contactReq {
-	var reqs []contactReq
-	for _, id := range ids {
-		reqs = append(reqs, contactReq{
-			PrefixedUniversal: id.PrefixedUniversal,
-		})
-	}
-	return reqs
-}
-
 // SynchronousRequestCertificate It's not supported yet in TPP
 func (c *Connector) SynchronousRequestCertificate(_ *certificate.Request) (certificates *certificate.PEMCollection, err error) {
 	panic("operation is not supported yet")
