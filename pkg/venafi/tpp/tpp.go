@@ -73,7 +73,7 @@ type certificateRequest struct {
 	State                   string          `json:",omitempty"`
 	Country                 string          `json:",omitempty"`
 	SubjectAltNames         []sanItem       `json:",omitempty"`
-	Contacts                []identityReq   `json:",omitempty"`
+	Contacts                []contactReq    `json:",omitempty"`
 	CASpecificAttributes    []nameValuePair `json:",omitempty"`
 	Origin                  string          `json:",omitempty"`
 	PKCS10                  string          `json:",omitempty"`
@@ -346,7 +346,7 @@ type identity struct {
 	Universal         string `json:"Universal"`
 }
 
-type identityReq struct {
+type contactReq struct {
 	PrefixedUniversal string `json:"PrefixedUniversal"`
 }
 

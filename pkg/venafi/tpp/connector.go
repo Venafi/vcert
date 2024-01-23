@@ -685,7 +685,8 @@ func (c *Connector) proccessLocation(req *certificate.Request) error {
 	return nil
 }
 
-// RequestCertificate submits the CSR to TPP returning the DN of the requested Certificate
+// RequestCertificate submits the CSR to TPP returning the DN of the requested
+// Certificate.
 func (c *Connector) RequestCertificate(req *certificate.Request) (requestID string, err error) {
 	if req.Location != nil {
 		err = c.proccessLocation(req)
@@ -694,10 +695,10 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 		}
 	}
 
-	var contactIdentities []contactIdentity
+	var contacts []contactReq
 	if req.ContactEmails != nil {
 		var err error
-		contactIdentities, err = c.resolveContactEmails(req.ContactEmails)
+		contacts, err = c.resolveCertificateRequestContacts(req.ContactEmails)
 		if err != nil {
 			return "", fmt.Errorf("failed to find contact identities: %w", err)
 		}
@@ -707,7 +708,7 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 	if err != nil {
 		return "", err
 	}
-	tppCertificateRequest.Contacts = contactIdentities
+	tppCertificateRequest.Contacts = contacts
 
 	statusCode, status, body, err := c.request("POST", urlResourceCertificateRequest, tppCertificateRequest)
 	if err != nil {
@@ -778,27 +779,72 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 }
 
 // Unlike the resolveContacts func above that only works for usernames, this
-// func works with emails.
-func (c *Connector) resolveContactEmails(contactEmails []string) ([]contactIdentity, error) {
-	var contactIdentities []contactIdentity
-	for _, email := range contactEmails {
-		identity, err := c.browseIdentities(
-			policy.BrowseIdentitiesRequest{
-				Filter:       email,
-				Limit:        2,
-				IdentityType: policy.AllIdentities,
-			})
-		if err != nil {
-			return nil, fmt.Errorf("failed to find email %s: %w", email, err)
-		}
-		if len(identity.Identities) == 0 {
-			return nil, fmt.Errorf("email %s not found", email)
-		}
-		contactIdentities = append(contactIdentities, contactIdentity{
-			PrefixedUniversal: identity.Identities[0].PrefixedUniversal,
+// func works with emails. Returns an error when no match is found.
+//
+// It is possible that the same email is used by multiple TPP identities, that's
+// why multiple identities may be returned.
+//
+// The scope `configuration` is required. This function doesn't work with the
+// local TPP identities. It also requires adding `mail` to the list of fields
+// searched when performing a user search, which can be configured in the Venafi
+// Configuration Console by RDP'ing into the TPP VM. This configuration cannot
+// be performed directly in the TPP UI.
+func (c *Connector) resolveEmail(email string) ([]identity, error) {
+	resp, err := c.browseIdentities(
+		policy.BrowseIdentitiesRequest{
+			Filter:       email,
+			IdentityType: policy.AllIdentities,
+		})
+	if err != nil {
+		return nil, fmt.Errorf("failed to find email %s: %w", email, err)
+	}
+	if len(resp.Identities) == 0 {
+		return nil, fmt.Errorf("email %s not found", email)
+	}
+
+	var identities []identity
+	for _, id := range resp.Identities {
+		identities = append(identities, identity{
+			Name:              id.Name,
+			FullName:          id.FullName,
+			PrefixedUniversal: id.PrefixedUniversal,
+			Prefix:            id.Prefix,
+			Universal:         id.Universal,
+			PrefixedName:      id.PrefixedName,
+			Type:              id.Type,
 		})
 	}
-	return contactIdentities, nil
+
+	return identities, nil
+}
+
+// Meant to be used to fill in the `Contacts` field.
+//
+// When an email resolves to two identities, the first identity is chosen
+// arbitrarily.
+func (c *Connector) resolveCertificateRequestContacts(emails []string) ([]contactReq, error) {
+	var contacts []contactReq
+	for _, email := range emails {
+		ids, err := c.resolveEmail(email)
+		if err != nil {
+			return nil, err
+		}
+		// Arbitrarily choose the first identity when multiple are found.
+		contacts = append(contacts, contactReq{
+			PrefixedUniversal: ids[0].PrefixedUniversal,
+		})
+	}
+	return contacts, nil
+}
+
+func identitiesToContactReqs(ids []identity) []contactReq {
+	var reqs []contactReq
+	for _, id := range ids {
+		reqs = append(reqs, contactReq{
+			PrefixedUniversal: id.PrefixedUniversal,
+		})
+	}
+	return reqs
 }
 
 // SynchronousRequestCertificate It's not supported yet in TPP
