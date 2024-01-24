@@ -2330,7 +2330,7 @@ func TestOmitSans(t *testing.T) {
 		Timeout:   30 * time.Second,
 	}
 
-	tppReq, err := prepareRequest(&req, tpp.zone)
+	tppReq, err := tpp.prepareRequest(&req, tpp.zone)
 	if err != nil {
 		t.Fatal(err)
 	}
