@@ -1245,6 +1245,9 @@ func getUniqueStringSlice(stringSlice []string) []string {
 	return list
 }
 
+// Searches for an identity using the username. The user name must exactly match
+// a username that exists in TPP. When two identities are found for the same
+// username, the first identity found is returned.
 func (c *Connector) getIdentity(userName string) (*IdentityEntry, error) {
 	if userName == "" {
 		return nil, fmt.Errorf("identity string cannot be null")
@@ -1264,6 +1267,8 @@ func (c *Connector) getIdentity(userName string) (*IdentityEntry, error) {
 	return c.getIdentityMatching(resp.Identities, userName)
 }
 
+// Returns the first identity in the given identities that matches the given
+// username. An error is returned when no identity matches the given username.
 func (c *Connector) getIdentityMatching(identities []IdentityEntry, identityName string) (*IdentityEntry, error) {
 	var identityEntryMatching *IdentityEntry
 
