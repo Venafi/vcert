@@ -62,16 +62,19 @@ type device struct {
 }
 
 type certificateRequest struct {
-	PolicyDN                string          `json:",omitempty"`
-	CADN                    string          `json:",omitempty"`
-	ObjectName              string          `json:",omitempty"`
-	Subject                 string          `json:",omitempty"`
-	OrganizationalUnit      string          `json:",omitempty"`
-	Organization            string          `json:",omitempty"`
-	City                    string          `json:",omitempty"`
-	State                   string          `json:",omitempty"`
-	Country                 string          `json:",omitempty"`
-	SubjectAltNames         []sanItem       `json:",omitempty"`
+	PolicyDN           string    `json:",omitempty"`
+	CADN               string    `json:",omitempty"`
+	ObjectName         string    `json:",omitempty"`
+	Subject            string    `json:",omitempty"`
+	OrganizationalUnit string    `json:",omitempty"`
+	Organization       string    `json:",omitempty"`
+	City               string    `json:",omitempty"`
+	State              string    `json:",omitempty"`
+	Country            string    `json:",omitempty"`
+	SubjectAltNames    []sanItem `json:",omitempty"`
+
+	// TPP only considers the fields `PrefixedUniversal`, `Prefix`, and
+	// `Universal` from the IdentityEntry struct.
 	Contacts                []IdentityEntry `json:",omitempty"`
 	CASpecificAttributes    []nameValuePair `json:",omitempty"`
 	Origin                  string          `json:",omitempty"`
