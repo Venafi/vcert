@@ -1305,7 +1305,10 @@ func (c *Connector) getIdentityMatching(identities []IdentityEntry, identityName
 // the TPP UI.
 func (c *Connector) getIdentities(filter string) ([]IdentityEntry, error) {
 	resp, err := c.browseIdentities(BrowseIdentitiesRequest{
-		Filter:       filter,
+		Filter: filter,
+		// The limit can't be set to 0 when the identity provider is LDAP. So we
+		// use an arbitrarily large number.
+		Limit:        100,
 		IdentityType: policy.AllIdentities,
 	})
 	if err != nil {
