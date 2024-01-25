@@ -1192,7 +1192,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 func (c *Connector) setContact(tppPolicy *policy.TppPolicy) (status string, err error) {
 
 	if tppPolicy.Contact != nil {
-		contacts, err := c.resolvePrefixedUniversals(tppPolicy.Contact)
+		contacts, err := c.resolveContacts(tppPolicy.Contact)
 		if err != nil {
 			return "", fmt.Errorf("an error happened trying to resolve the contacts: %w", err)
 		}
@@ -1209,28 +1209,15 @@ func (c *Connector) setContact(tppPolicy *policy.TppPolicy) (status string, err 
 	return status, nil
 }
 
-func (c *Connector) resolvePrefixedUniversals(filters []string) ([]string, error) {
-	var prefixedUniversals []string
-	identities, err := c.resolveIdentities(filters)
-	if err != nil {
-		return nil, err
-	}
-	for _, identityEntry := range identities {
-		prefixedUniversals = append(prefixedUniversals, identityEntry.PrefixedUniversal)
-	}
-
-	return prefixedUniversals, nil
-}
-
-func (c *Connector) resolveIdentities(filters []string) ([]*IdentityEntry, error) {
-	var identities []*IdentityEntry
-	uniqueContacts := getUniqueStringSlice(filters)
+func (c *Connector) resolveContacts(contacts []string) ([]string, error) {
+	var identities []string
+	uniqueContacts := getUniqueStringSlice(contacts)
 	for _, contact := range uniqueContacts {
-		identityEntry, err := c.getIdentity(contact)
+		identity, err := c.getIdentity(contact)
 		if err != nil {
 			return nil, err
 		}
-		identities = append(identities, identityEntry)
+		identities = append(identities, identity.PrefixedUniversal)
 	}
 
 	return identities, nil
