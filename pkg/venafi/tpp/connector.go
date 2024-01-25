@@ -509,7 +509,7 @@ func (c *Connector) setCertificateMetadata(metadataRequest metadataSetRequest) (
 	return result.Locked, nil
 }
 
-func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRequest, err error) {
+func (c *Connector) prepareRequest(req *certificate.Request, zone string) (tppReq certificateRequest, err error) {
 	switch req.CsrOrigin {
 	case certificate.LocalGeneratedCSR, certificate.UserProvidedCSR:
 		tppReq.PKCS10 = string(req.GetCSR())
@@ -581,6 +581,20 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 			})
 		}
 	}
+
+	//resolving Contacts if them were provide
+	var contacts []IdentityEntry
+	if req.Contacts != nil {
+		var err error
+		prefixedUniversals, err := c.resolvePrefixedUniversals(req.Contacts)
+		if err != nil {
+			return tppReq, fmt.Errorf("failed to find contact identities: %w", err)
+		}
+		for _, prefixedUniversal := range prefixedUniversals {
+			contacts = append(contacts, IdentityEntry{PrefixedUniversal: prefixedUniversal})
+		}
+	}
+	tppReq.Contacts = contacts
 
 	for name, value := range customFieldsMap {
 		tppReq.CustomFields = append(tppReq.CustomFields, customField{name, value})
@@ -695,20 +709,10 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 		}
 	}
 
-	var contacts []contactReq
-	if req.ContactEmails != nil {
-		var err error
-		contacts, err = c.resolveCertificateRequestContacts(req.ContactEmails)
-		if err != nil {
-			return "", fmt.Errorf("failed to find contact identities: %w", err)
-		}
-	}
-
-	tppCertificateRequest, err := prepareRequest(req, c.zone)
+	tppCertificateRequest, err := c.prepareRequest(req, c.zone)
 	if err != nil {
 		return "", err
 	}
-	tppCertificateRequest.Contacts = contacts
 
 	statusCode, status, body, err := c.request("POST", urlResourceCertificateRequest, tppCertificateRequest)
 	if err != nil {
@@ -776,66 +780,6 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 		log.Println(err)
 	}
 	return
-}
-
-// Unlike the resolveContacts func above that only works for usernames, this
-// func works with emails. No error is returned when no identity is found.
-//
-// It is possible that the same email is used by multiple TPP identities, that's
-// why multiple identities may be returned.
-//
-// The scope `configuration` is required. This function doesn't work with the
-// local TPP identities. It also requires adding `mail` to the list of fields
-// searched when performing a user search, which can be configured in the Venafi
-// Configuration Console by RDP'ing into the TPP VM. This configuration cannot
-// be performed directly in the TPP UI.
-func (c *Connector) resolveEmail(email string) ([]identity, error) {
-	resp, err := c.browseIdentities(
-		policy.BrowseIdentitiesRequest{
-			Filter:       email,
-			IdentityType: policy.AllIdentities,
-		})
-	if err != nil {
-		return nil, fmt.Errorf("failed to find email %s: %w", email, err)
-	}
-
-	var identities []identity
-	for _, id := range resp.Identities {
-		identities = append(identities, identity{
-			Name:              id.Name,
-			FullName:          id.FullName,
-			PrefixedUniversal: id.PrefixedUniversal,
-			Prefix:            id.Prefix,
-			Universal:         id.Universal,
-			PrefixedName:      id.PrefixedName,
-			Type:              id.Type,
-		})
-	}
-
-	return identities, nil
-}
-
-// Meant to be used to fill in the `Contacts` field.
-//
-// When an email resolves to two identities, the first identity is chosen
-// arbitrarily.
-func (c *Connector) resolveCertificateRequestContacts(emails []string) ([]contactReq, error) {
-	var contacts []contactReq
-	for _, email := range emails {
-		ids, err := c.resolveEmail(email)
-		if err != nil {
-			return nil, err
-		}
-		if len(ids) == 0 {
-			return nil, fmt.Errorf("email %s was not found", email)
-		}
-
-		// Arbitrarily choose the first identity when multiple are found.
-		contacts = append(contacts, contactReq{
-			PrefixedUniversal: ids[0].PrefixedUniversal,
-		})
-	}
-	return contacts, nil
 }
 
 // SynchronousRequestCertificate It's not supported yet in TPP
@@ -963,8 +907,8 @@ func (c *Connector) retrieveUserNamesForPolicySpecification(policyName string) (
 	if values != nil {
 		var users []string
 		for _, prefixedUniversal := range values {
-			validateIdentityRequest := policy.ValidateIdentityRequest{
-				ID: policy.IdentityInformation{
+			validateIdentityRequest := ValidateIdentityRequest{
+				ID: IdentityInformation{
 					PrefixedUniversal: prefixedUniversal,
 				},
 			}
@@ -983,7 +927,7 @@ func (c *Connector) retrieveUserNamesForPolicySpecification(policyName string) (
 	return nil, nil
 }
 
-func (c *Connector) validateIdentity(validateIdentityRequest policy.ValidateIdentityRequest) (*policy.ValidateIdentityResponse, error) {
+func (c *Connector) validateIdentity(validateIdentityRequest ValidateIdentityRequest) (*ValidateIdentityResponse, error) {
 
 	statusCode, status, body, err := c.request("POST", urlResourceValidateIdentity, validateIdentityRequest)
 	if err != nil {
@@ -1245,7 +1189,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 func (c *Connector) setContact(tppPolicy *policy.TppPolicy) (status string, err error) {
 
 	if tppPolicy.Contact != nil {
-		contacts, err := c.resolveContacts(tppPolicy.Contact)
+		contacts, err := c.resolvePrefixedUniversals(tppPolicy.Contact)
 		if err != nil {
 			return "", fmt.Errorf("an error happened trying to resolve the contacts: %w", err)
 		}
@@ -1262,15 +1206,28 @@ func (c *Connector) setContact(tppPolicy *policy.TppPolicy) (status string, err 
 	return status, nil
 }
 
-func (c *Connector) resolveContacts(contacts []string) ([]string, error) {
-	var identities []string
-	uniqueContacts := getUniqueStringSlice(contacts)
+func (c *Connector) resolvePrefixedUniversals(filters []string) ([]string, error) {
+	var prefixedUniversals []string
+	identities, err := c.resolveIdentities(filters)
+	if err != nil {
+		return nil, err
+	}
+	for _, identityEntry := range identities {
+		prefixedUniversals = append(prefixedUniversals, identityEntry.PrefixedUniversal)
+	}
+
+	return prefixedUniversals, nil
+}
+
+func (c *Connector) resolveIdentities(filters []string) ([]*IdentityEntry, error) {
+	var identities []*IdentityEntry
+	uniqueContacts := getUniqueStringSlice(filters)
 	for _, contact := range uniqueContacts {
-		identity, err := c.getIdentity(contact)
+		identityEntry, err := c.getIdentity(contact)
 		if err != nil {
 			return nil, err
 		}
-		identities = append(identities, identity.PrefixedUniversal)
+		identities = append(identities, identityEntry)
 	}
 
 	return identities, nil
@@ -1288,12 +1245,12 @@ func getUniqueStringSlice(stringSlice []string) []string {
 	return list
 }
 
-func (c *Connector) getIdentity(userName string) (*policy.IdentityEntry, error) {
+func (c *Connector) getIdentity(userName string) (*IdentityEntry, error) {
 	if userName == "" {
 		return nil, fmt.Errorf("identity string cannot be null")
 	}
 
-	req := policy.BrowseIdentitiesRequest{
+	req := BrowseIdentitiesRequest{
 		Filter:       userName,
 		Limit:        2,
 		IdentityType: policy.AllIdentities,
@@ -1307,8 +1264,8 @@ func (c *Connector) getIdentity(userName string) (*policy.IdentityEntry, error) 
 	return c.getIdentityMatching(resp.Identities, userName)
 }
 
-func (c *Connector) getIdentityMatching(identities []policy.IdentityEntry, identityName string) (*policy.IdentityEntry, error) {
-	var identityEntryMatching *policy.IdentityEntry
+func (c *Connector) getIdentityMatching(identities []IdentityEntry, identityName string) (*IdentityEntry, error) {
+	var identityEntryMatching *IdentityEntry
 
 	if len(identities) > 0 {
 		for i := range identities {
@@ -1328,7 +1285,7 @@ func (c *Connector) getIdentityMatching(identities []policy.IdentityEntry, ident
 	}
 }
 
-func (c *Connector) browseIdentities(browseReq policy.BrowseIdentitiesRequest) (*policy.BrowseIdentitiesResponse, error) {
+func (c *Connector) browseIdentities(browseReq BrowseIdentitiesRequest) (*BrowseIdentitiesResponse, error) {
 
 	statusCode, status, body, err := c.request("POST", urlResourceBrowseIdentities, browseReq)
 	if err != nil {

@@ -55,20 +55,20 @@ type Request struct {
 	ValidityPeriod   string //represents the validity of the certificate expressed as an ISO 8601 duration
 	IssuerHint       util.IssuerHint
 
-	// ContactEmails is TPP-specific. It allows you to configure an email
+	// Contact is TPP-specific. It allows you to configure an email
 	// address to send notifications about the certificate to. When an email is
 	// used by multiple TPP identities, the first identity found is picked
 	// arbitrarily.
 	//
-	// The scope `configuration` is required. Since ContactEmails works by
+	// The scope `configuration` is required. Since Contact works by
 	// searching the emails in the same LDAP or AD as the user attached to the
 	// token, you must check that you are using a user in that same identity
-	// provider. ContactEmails doesn't work with the local TPP identities. Using
-	// ContactEmails requires adding `mail` to the list of fields searched when
+	// provider. Contact doesn't work with the local TPP identities. Using
+	// Contact requires adding `mail` to the list of fields searched when
 	// performing a user search, which can be configured in the Venafi
 	// Configuration Console by RDP'ing into the TPP VM. This configuration
 	// cannot be performed directly in the TPP UI.
-	ContactEmails []string
+	Contacts []string
 
 	// Deprecated: use ValidityDuration instead, this field is ignored if ValidityDuration is set
 	ValidityHours int
