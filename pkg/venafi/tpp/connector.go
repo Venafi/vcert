@@ -586,12 +586,15 @@ func (c *Connector) prepareRequest(req *certificate.Request, zone string) (tppRe
 	var contacts []IdentityEntry
 	if req.Contacts != nil {
 		var err error
-		prefixedUniversals, err := c.resolvePrefixedUniversals(req.Contacts)
+		identitiesFound, err := c.resolveCertificateRequestContacts(req.Contacts)
 		if err != nil {
 			return tppReq, fmt.Errorf("failed to find contact identities: %w", err)
 		}
-		for _, prefixedUniversal := range prefixedUniversals {
-			contacts = append(contacts, IdentityEntry{PrefixedUniversal: prefixedUniversal})
+		// We need to drop all the fields except `PrefixedUniversal` because the
+		// Contacts field in `POST /certificates/request` doesn't expect that
+		// many fields.
+		for _, found := range identitiesFound {
+			contacts = append(contacts, IdentityEntry{PrefixedUniversal: found.PrefixedUniversal})
 		}
 	}
 	tppReq.Contacts = contacts
@@ -1245,8 +1248,8 @@ func getUniqueStringSlice(stringSlice []string) []string {
 	return list
 }
 
-// Searches for an identity using the username. The user name must exactly match
-// a username that exists in TPP. When two identities are found for the same
+// Searches for an identity using a username. The user name must exactly match a
+// username that exists in TPP. When two identities are found for the same
 // username, the first identity found is returned.
 func (c *Connector) getIdentity(userName string) (*IdentityEntry, error) {
 	if userName == "" {
@@ -1254,7 +1257,8 @@ func (c *Connector) getIdentity(userName string) (*IdentityEntry, error) {
 	}
 
 	req := BrowseIdentitiesRequest{
-		Filter:       userName,
+		Filter: userName,
+		// A limit of 2 allows us to detect duplicates.
 		Limit:        2,
 		IdentityType: policy.AllIdentities,
 	}
@@ -1267,8 +1271,6 @@ func (c *Connector) getIdentity(userName string) (*IdentityEntry, error) {
 	return c.getIdentityMatching(resp.Identities, userName)
 }
 
-// Returns the first identity in the given identities that matches the given
-// username. An error is returned when no identity matches the given username.
 func (c *Connector) getIdentityMatching(identities []IdentityEntry, identityName string) (*IdentityEntry, error) {
 	var identityEntryMatching *IdentityEntry
 
@@ -1288,6 +1290,50 @@ func (c *Connector) getIdentityMatching(identities []IdentityEntry, identityName
 	} else {
 		return nil, fmt.Errorf("it was not possible to find the user %s", identityName)
 	}
+}
+
+// Unlike getIdentity that only works for usernames, this func can work with any
+// filter, like the partial match of a username or an email (see below note). No
+// error is returned when the query returns no results. The scope
+// `configuration` is required.
+//
+// Note: It is only possible to query usernames when using a local TPP user.
+// Querying emails isn't possible for local TPP identities. For querying an
+// email, you need to add `mail` to the list of fields searched when performing
+// a user search, which can be configured in the Venafi Configuration Console by
+// RDP'ing into the TPP VM. This configuration cannot be performed directly in
+// the TPP UI.
+func (c *Connector) getIdentities(filter string) ([]IdentityEntry, error) {
+	resp, err := c.browseIdentities(BrowseIdentitiesRequest{
+		Filter:       filter,
+		IdentityType: policy.AllIdentities,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to find identity using the filter '%s': %w", filter, err)
+	}
+
+	return resp.Identities, nil
+}
+
+// Meant to be used to fill in the `Contacts` field. When an email resolves to
+// two identities, the first identity is chosen arbitrarily. We could have
+// chosen to use both itentities but that would mean that the person witht that
+// email would get two notification emails.
+func (c *Connector) resolveCertificateRequestContacts(contactEmails []string) ([]IdentityEntry, error) {
+	var contacts []IdentityEntry
+	for _, email := range contactEmails {
+		identities, err := c.getIdentities(email)
+		if err != nil {
+			return nil, err
+		}
+		if len(identities) == 0 {
+			return nil, fmt.Errorf("email %s was not found", email)
+		}
+
+		// Arbitrarily choose the first identity when multiple are found.
+		contacts = append(contacts, identities[0])
+	}
+	return contacts, nil
 }
 
 func (c *Connector) browseIdentities(browseReq BrowseIdentitiesRequest) (*BrowseIdentitiesResponse, error) {
