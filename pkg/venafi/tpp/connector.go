@@ -1286,15 +1286,15 @@ func (c *Connector) getIdentityMatching(identities []IdentityEntry, identityName
 //
 // Note: It is only possible to query usernames when using a local TPP user.
 // Querying emails isn't possible for local TPP identities. For querying an
-// email, you need to add `mail` to the list of fields searched when performing
-// a user search, which can be configured in the Venafi Configuration Console by
-// RDP'ing into the TPP VM. This configuration cannot be performed directly in
-// the TPP UI.
+// email when using LDAP or AD, you need to add `mail` to the list of fields
+// searched when performing a user search, which can be configured in the Venafi
+// Configuration Console by RDP'ing into the TPP VM. This configuration cannot
+// be performed directly in the TPP UI.
 func (c *Connector) getIdentities(filter string) ([]IdentityEntry, error) {
 	resp, err := c.browseIdentities(BrowseIdentitiesRequest{
 		Filter: filter,
-		// The limit can't be set to 0 when the identity provider is LDAP. So we
-		// use an arbitrarily large number.
+		// The limit can't be set to 0 when the identity provider is LDAP or AD.
+		// So we use an arbitrarily large number.
 		Limit:        100,
 		IdentityType: policy.AllIdentities,
 	})

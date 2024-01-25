@@ -67,10 +67,10 @@ type Request struct {
 	// When an email is used by multiple TPP identities, the first identity
 	// found is picked arbitrarily.
 	//
-	// The scope `configuration` is required. Since Contact works by searching
+	// The scope `configuration` is required. Since Contacts works by searching
 	// the emails in the same LDAP or AD as the user attached to the token, you
 	// must check that you are using a user in that same identity provider.
-	// Contact doesn't work with the local TPP identities. Using Contact
+	// Contacts doesn't work with the local TPP identities. Using Contacts
 	// requires adding `mail` to the list of fields searched when performing a
 	// user search, which can be configured in the Venafi Configuration Console
 	// by RDP'ing into the TPP VM. This configuration cannot be performed
