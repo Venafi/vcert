@@ -582,7 +582,7 @@ func (c *Connector) prepareRequest(req *certificate.Request, zone string) (tppRe
 		}
 	}
 
-	//resolving Contacts if them were provide
+	// Resolve emails to TPP identities if needed.
 	var contacts []IdentityEntry
 	if req.Contacts != nil {
 		var err error
