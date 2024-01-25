@@ -548,6 +548,71 @@ func TestRequestCertificateWithValidityDuration(t *testing.T) {
 	DoRequestCertificateWithValidityDuration(t, tpp)
 }
 
+func TestRequestCertificateWithContactEmails(t *testing.T) {
+	t.Skipf("Skipping test because the TPP instance doesn't have LDAP configured")
+
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("getTestConnector: %s, url: %s", err, expectedURL)
+	}
+
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("tpp.Authenticate: %s", err)
+		}
+	}
+
+	req := &certificate.Request{
+		Timeout:  time.Second * 30,
+		Subject:  pkix.Name{CommonName: test.RandCN()},
+		DNSNames: []string{"example.com"},
+		Contacts: []string{"mael.valais@venafi.com"},
+	}
+
+	config, err := tpp.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatalf("tpp.ReadZoneConfiguration: %s", err)
+	}
+
+	err = tpp.GenerateRequest(config, req)
+	if err != nil {
+		t.Fatalf("tpp.GenerateRequest: %s", err)
+	}
+
+	t.Logf("zone: %s", getPolicyDN(ctx.TPPZone))
+	req.PickupID, err = tpp.RequestCertificate(req)
+	if err != nil {
+		t.Fatalf("tpp.RequestCertificate: %s", err)
+	}
+	_, err = tpp.RetrieveCertificate(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Now, let's check that the contact email was set as we expected. We can't
+	// use SearchCertificates because its struct doesn't have the Contacts field
+	// due to being common to TPP and Cloud.
+	metadata, err := tpp.RetrieveCertificateMetaData(getPolicyDN(ctx.TPPZone) + "\\" + req.Subject.CommonName)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(metadata.Contact) != 1 {
+		t.Fatalf("expected exactly one contact but got %d", len(metadata.Contact))
+	}
+	resp, err := tpp.browseIdentities(BrowseIdentitiesRequest{Filter: "mael.valais@venafi.com", Limit: 2, IdentityType: 1})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(resp.Identities) != 1 {
+		t.Fatalf("expected exactly one identity but got %d: %+v", len(resp.Identities), resp.Identities)
+	}
+	if metadata.Contact[0] != resp.Identities[0].PrefixedUniversal {
+		t.Fatalf("expected contact to be %s but got %s", resp.Identities[0].PrefixedUniversal, metadata.Contact[0])
+	}
+}
+
 // The mocked HTTP interactions have been recorded using TPP 22.4.
 func TestResetCertificate(t *testing.T) {
 	type mockCall struct {
@@ -2332,7 +2397,7 @@ func TestOmitSans(t *testing.T) {
 		Timeout:   30 * time.Second,
 	}
 
-	tppReq, err := prepareRequest(&req, tpp.zone)
+	tppReq, err := tpp.prepareRequest(&req, tpp.zone)
 	if err != nil {
 		t.Fatal(err)
 	}
