@@ -3224,15 +3224,15 @@ func Test_getIdentity(t *testing.T) {
 		name string
 
 		givenFilter  string
-		mockReturns  []policy.IdentityEntry
+		mockReturns  []IdentityEntry
 		wantFullName string
 		wantErr      string
 	}{
 		{
 			name:        "no identities",
 			givenFilter: "jsmith",
-			mockReturns: []policy.IdentityEntry{},
-			wantErr:     "it was not possible to find the user jsmith",
+			mockReturns: []IdentityEntry{},
+			wantErr:     "no identity found for 'jsmith'",
 		}, {
 			name:        "exact username found",
 			givenFilter: "foo",
@@ -3266,7 +3266,7 @@ func Test_getIdentity(t *testing.T) {
 			// provider was given permission to access the local identities).
 			// The response comes from a real-world TPP instance.
 			givenFilter: "jsmith",
-			mockReturns: []policy.IdentityEntry{{
+			mockReturns: []IdentityEntry{{
 				FullName:          "CN=jsmithson,CN=Users,DC=domain,DC=local",
 				Name:              "jsmithson",
 				Prefix:            "LDAP+AD",
@@ -3315,7 +3315,7 @@ func Test_getIdentity(t *testing.T) {
 			// applies to each identity provider separately. This response comes
 			// from a real-world TPP instance.
 			givenFilter: "jsmith",
-			mockReturns: []policy.IdentityEntry{{
+			mockReturns: []IdentityEntry{{
 				FullName:          "CN=jsmithers,CN=Users,DC=domain,DC=local",
 				Name:              "jsmithson",
 				Prefix:            "LDAP+AD",
@@ -3349,19 +3349,65 @@ func Test_getIdentity(t *testing.T) {
 				Type:              1,
 				Universal:         "{a89b8519-6fd7-4f88-9de8-3013f87c4fd7}",
 			}},
-			wantFullName: "\\VED\\Identity\\jsmith",
+			wantErr: "unexpected: browseIdentities(jsmith) returned two identities but none of them match the username exactly",
+		}, {
+			name:        "email not found",
+			givenFilter: "jsmithson@venafi.com",
+			mockReturns: []IdentityEntry{},
+			wantErr:     "no identity found for 'jsmithson@venafi.com'",
+		}, {
+			name:        "email exists once",
+			givenFilter: "jsmithson@venafi.com",
+			mockReturns: []IdentityEntry{{
+				FullName:          "CN=jsmithson,CN=Users,DC=domain,DC=local",
+				Name:              "jsmithson",
+				Prefix:            "LDAP+AD",
+				PrefixedName:      "LDAP+AD:jsmithson",
+				PrefixedUniversal: "LDAP+AD:6ef23fe2-0728-4930-87a8-e1513d7087e4",
+				Type:              1,
+				Universal:         "6ef23fe2-0728-4930-87a8-e1513d7087e4",
+			}},
+			wantFullName: "CN=jsmithson,CN=Users,DC=domain,DC=local",
+		}, {
+			name:        "email exists in multiple identities, returns first found",
+			givenFilter: "jsmithson@venafi.com",
+			mockReturns: []IdentityEntry{{
+				FullName:          "CN=jsmithson,CN=Users,DC=domain,DC=local",
+				Name:              "jsmithson",
+				Prefix:            "LDAP+AD",
+				PrefixedName:      "LDAP+AD:jsmithson",
+				PrefixedUniversal: "LDAP+AD:6ef23fe2-0728-4930-87a8-e1513d7087e4",
+				Type:              1,
+				Universal:         "6ef23fe2-0728-4930-87a8-e1513d7087e4",
+			}, {
+				FullName:          "CN=jsmithson-admin,CN=Users,DC=domain,DC=local",
+				Name:              "jsmithson-admin",
+				Prefix:            "LDAP+AD",
+				PrefixedName:      "LDAP+AD:jsmithson-admin",
+				PrefixedUniversal: "LDAP+AD:73696245-c1f6-5ef7-bf13-90144c2bc06c",
+				Type:              1,
+				Universal:         "73696245-c1f6-5ef7-bf13-90144c2bc06c",
+			}},
+			wantFullName: "CN=jsmithson,CN=Users,DC=domain,DC=local",
 		},
 	}
 
-	serverWith := func(t *testing.T, mockReturns []policy.IdentityEntry) (_ *httptest.Server, ca *x509.CertPool) {
+	serverWith := func(t *testing.T, mockReturns []IdentityEntry) (_ *httptest.Server, ca *x509.CertPool) {
 		server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			require.Equal(t, "/vedsdk/Identity/Browse", r.URL.Path)
 			bytes, err := io.ReadAll(r.Body)
 			require.NoError(t, err)
-			req := policy.BrowseIdentitiesRequest{}
+			req := BrowseIdentitiesRequest{}
 			err = json.Unmarshal(bytes, &req)
 			require.NoError(t, err)
-			bytes, err = json.Marshal(policy.BrowseIdentitiesResponse{Identities: mockReturns})
+
+			// Only return the number of identities set in the Limit field.
+			if req.Limit <= len(mockReturns) {
+				mockReturns = mockReturns[:req.Limit]
+			}
+			require.GreaterOrEqual(t, req.Limit, len(mockReturns))
+
+			bytes, err = json.Marshal(BrowseIdentitiesResponse{Identities: mockReturns})
 			require.NoError(t, err)
 			w.Write(bytes)
 		}))
