@@ -1282,27 +1282,28 @@ func (c *Connector) getIdentity(filter string) (*IdentityEntry, error) {
 	// for searching usernames. Thus, we do not need to check for an exact match
 	// when an email is provided.
 
+	// When the filter isn't an email, we consider that it is a username.
 	_, err = mail.ParseAddress(filter)
-	isAnEmail := err == nil
+	isEmail := err == nil
+	isUsername := !isEmail
 
 	switch {
 	case len(resp.Identities) == 0:
 		return nil, fmt.Errorf("no identity found for '%s'", filter)
 	case len(resp.Identities) == 1:
 		return &resp.Identities[0], nil
-	case len(resp.Identities) > 1 && !isAnEmail:
-		// Since the query isn't an email, it must be a username. Thus, we need
-		// to filter out possible usernames that are a prefix of the queried
-		// username.
+	case len(resp.Identities) > 1 && isUsername:
+		// The username case: we need to ignore the results that are prefixes of
+		// the queried username. For example, if the filter is `jsmith`, we
+		// ignore `jsmithson` and `jsmithers`.
 		for _, identity := range resp.Identities {
 			if identity.Name == filter {
 				return &identity, nil
 			}
 		}
-
 		return nil, fmt.Errorf("unexpected: browseIdentities(%s) returned two identities but none of them match the username exactly", filter)
-	case len(resp.Identities) > 1 && isAnEmail:
-		// Since it is an email, we do not need to filter out anything. So let's
+	case len(resp.Identities) > 1 && isEmail:
+		// The email case: we do not need to filter out anything. So let's
 		// arbitrarily return the first identity.
 		return &resp.Identities[0], nil
 	default:
