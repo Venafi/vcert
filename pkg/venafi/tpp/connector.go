@@ -1246,8 +1246,9 @@ func getUniqueStringSlice(stringSlice []string) []string {
 	return list
 }
 
-// Searches for an identity using the given filter. When two identities are
-// found for the same filter, the first identity found is returned.
+// Searches for identities that are an exact match of the filter. When two
+// identities are found for the same filter, the first identity found is
+// returned.
 func (c *Connector) getIdentity(filter string) (*IdentityEntry, error) {
 	if filter == "" {
 		return nil, fmt.Errorf("identity string cannot be null")
@@ -1255,16 +1256,8 @@ func (c *Connector) getIdentity(filter string) (*IdentityEntry, error) {
 
 	req := BrowseIdentitiesRequest{
 		Filter:       filter,
+		Limit:        2,
 		IdentityType: policy.AllIdentities,
-	}
-
-	// If the filter is not an email address, it means that an exact matching
-	// will be required to confirm between the filter string and the
-	// Identity.Name returned by browseIdentities.
-	exactMatching := false
-	if _, err := mail.ParseAddress(filter); err != nil {
-		exactMatching = true
-		req.Limit = 2
 	}
 
 	resp, err := c.browseIdentities(req)
@@ -1272,31 +1265,48 @@ func (c *Connector) getIdentity(filter string) (*IdentityEntry, error) {
 		return nil, err
 	}
 
-	return c.getIdentityMatching(resp.Identities, filter, exactMatching)
-}
+	// When TPP looks for a username that matches the filter, an implicit
+	// wildcard is added to the end of the filter string. For example, imagining
+	// that `jsmith` and `jsmithson` are existing identities, searching for
+	// `jsmith` will return both `jsmith` and `jsmithson`. In the case of local
+	// identities, `jsmith` will always be returned first. But in the case of AD
+	// and LDAP, the order of these results may be different, and `jsmithson`
+	// may be unexpectedly returned first. This same problem may appear when an
+	// AD or LDAP provider has been configured to access the local identities:
+	// `jsmithson` may get returned first if `jsmithson` only exists in AD
+	// (because the AD results are returned before the local identities).
+	//
+	// The wildcard problem only affects usernames, not emails. That's because
+	// the LDAP query recommended for enabling user search by email in the
+	// Venafi Configuration Console is based on exact match, unlike `anr` used
+	// for searching usernames. Thus, we do not need to check for an exact match
+	// when an email is provided.
 
-func (c *Connector) getIdentityMatching(identities []IdentityEntry, identityName string, exactMatching bool) (*IdentityEntry, error) {
-	var identityEntryMatching *IdentityEntry
+	_, err = mail.ParseAddress(filter)
+	isAnEmail := err == nil
 
-	if len(identities) > 0 {
-		if exactMatching {
-			for i := range identities {
-				identityEntry := identities[i]
-				if identityEntry.Name == identityName {
-					identityEntryMatching = &identityEntry
-					break
-				}
+	switch {
+	case len(resp.Identities) == 0:
+		return nil, fmt.Errorf("no identity found for '%s'", filter)
+	case len(resp.Identities) == 1:
+		return &resp.Identities[0], nil
+	case len(resp.Identities) > 1 && !isAnEmail:
+		// Since the query isn't an email, it must be a username. Thus, we need
+		// to filter out possible usernames that are a prefix of the queried
+		// username.
+		for _, identity := range resp.Identities {
+			if identity.Name == filter {
+				return &identity, nil
 			}
-		} else {
-			identityEntryMatching = &identities[0]
 		}
-	}
 
-	//if the identity is not null
-	if identityEntryMatching != nil {
-		return identityEntryMatching, nil
-	} else {
-		return nil, fmt.Errorf("it was not possible to find the user %s", identityName)
+		return nil, fmt.Errorf("unexpected: browseIdentities(%s) returned two identities but none of them match the username exactly", filter)
+	case len(resp.Identities) > 1 && isAnEmail:
+		// Since it is an email, we do not need to filter out anything. So let's
+		// arbitrarily return the first identity.
+		return &resp.Identities[0], nil
+	default:
+		return nil, fmt.Errorf("programmer mistake: impossible case in getIdentity")
 	}
 }
 
