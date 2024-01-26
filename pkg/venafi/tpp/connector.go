@@ -1282,17 +1282,15 @@ func (c *Connector) getIdentity(filter string) (*IdentityEntry, error) {
 	// for searching usernames. Thus, we do not need to check for an exact match
 	// when an email is provided.
 
-	// When the filter isn't an email, we consider that it is a username.
 	_, err = mail.ParseAddress(filter)
 	isEmail := err == nil
-	isUsername := !isEmail
 
 	switch {
 	case len(resp.Identities) == 0:
 		return nil, fmt.Errorf("no identity found for '%s'", filter)
 	case len(resp.Identities) == 1:
 		return &resp.Identities[0], nil
-	case len(resp.Identities) > 1 && isUsername:
+	case len(resp.Identities) > 1 && !isEmail:
 		// The username case: we need to ignore the results that are prefixes of
 		// the queried username. For example, if the filter is `jsmith`, we
 		// ignore `jsmithson` and `jsmithers`.
@@ -1301,14 +1299,14 @@ func (c *Connector) getIdentity(filter string) (*IdentityEntry, error) {
 				return &identity, nil
 			}
 		}
-		return nil, fmt.Errorf("unexpected: browseIdentities(%q) returned %d identities but none of them match the username exactly", filter, len(resp.Identities))
+		return nil, fmt.Errorf("%d identities were found but none of these identities has a username equal to '%s'", len(resp.Identities), filter)
 	case len(resp.Identities) > 1 && isEmail:
 		// The email case: we do not need to filter out anything. So let's
 		// arbitrarily return the first identity.
 		return &resp.Identities[0], nil
-	default:
-		return nil, fmt.Errorf("programmer mistake: impossible case in getIdentity")
 	}
+
+	return nil, fmt.Errorf("programmer mistake: impossible case in getIdentity")
 }
 
 func (c *Connector) browseIdentities(browseReq BrowseIdentitiesRequest) (*BrowseIdentitiesResponse, error) {
