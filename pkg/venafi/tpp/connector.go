@@ -1301,7 +1301,7 @@ func (c *Connector) getIdentity(filter string) (*IdentityEntry, error) {
 				return &identity, nil
 			}
 		}
-		return nil, fmt.Errorf("unexpected: browseIdentities(%s) returned two identities but none of them match the username exactly", filter)
+		return nil, fmt.Errorf("unexpected: browseIdentities(%q) returned %d identities but none of them match the username exactly", filter, len(resp.Identities))
 	case len(resp.Identities) > 1 && isEmail:
 		// The email case: we do not need to filter out anything. So let's
 		// arbitrarily return the first identity.
