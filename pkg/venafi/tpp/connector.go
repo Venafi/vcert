@@ -1306,7 +1306,9 @@ func (c *Connector) getIdentity(filter string) (*IdentityEntry, error) {
 		return &resp.Identities[0], nil
 	}
 
-	return nil, fmt.Errorf("programmer mistake: impossible case in getIdentity")
+	// The above switch cases must catch 100% of the cases. If we arrive here,
+	// it means that we have made a programming mistake.
+	return nil, fmt.Errorf("programmer mistake: browseIdentities returned %d identities for the filter '%s' and none of the switch cases matched, but the switch cases are expected to catch 100%% of the cases", len(resp.Identities), filter)
 }
 
 func (c *Connector) browseIdentities(browseReq BrowseIdentitiesRequest) (*BrowseIdentitiesResponse, error) {
