@@ -3169,11 +3169,37 @@ func Test_getIdentity(t *testing.T) {
 			mockReturns: []policy.IdentityEntry{},
 			wantErr:     "it was not possible to find the user jsmith",
 		}, {
+			name:        "exact username found",
+			givenFilter: "foo",
+			mockReturns: []policy.IdentityEntry{{
+				FullName:          "\\VED\\Identity\\foo",
+				Name:              "foo",
+				Prefix:            "local",
+				PrefixedName:      "local:foo",
+				PrefixedUniversal: "local:{e1c6ceb2-b494-59e4-a31b-1c387488365d}",
+				Type:              1,
+				Universal:         "{e1c6ceb2-b494-59e4-a31b-1c387488365d}",
+			}},
+			wantFullName: "\\VED\\Identity\\foo",
+		}, {
+			name:        "mismatch with a longer username",
+			givenFilter: "foo",
+			mockReturns: []policy.IdentityEntry{{
+				FullName:          "\\VED\\Identity\\foobar",
+				Name:              "foobar", // "longer" username.
+				Prefix:            "local",
+				PrefixedName:      "local:foobar",
+				PrefixedUniversal: "local:{c1f0ac9a-c9da-55a7-963a-fd6445af8307}",
+				Type:              1,
+				Universal:         "{c1f0ac9a-c9da-55a7-963a-fd6445af8307}",
+			}},
+			wantErr: "it was not possible to find the user foo",
+		}, {
+			name: "finds the first exact username match: exact match in 2nd position",
 			// In this example, we reproduce the case where the AD has
 			// `jsmithson`, and there is a local `jsmith` (the AD identity
 			// provider was given permission to access the local identities).
 			// The response comes from a real-world TPP instance.
-			name:        "wrong username picked due to 1 other username with same prefix",
 			givenFilter: "jsmith",
 			mockReturns: []policy.IdentityEntry{{
 				FullName:          "CN=jsmithson,CN=Users,DC=domain,DC=local",
@@ -3195,11 +3221,34 @@ func Test_getIdentity(t *testing.T) {
 			}},
 			wantFullName: "\\VED\\Identity\\jsmith",
 		}, {
+			name: "finds the first exact username match: exact match in 1st position",
+			// Same, except that the correct match is first.
+			givenFilter: "jsmith",
+			mockReturns: []policy.IdentityEntry{{
+				// This is the identity that is expected to be returned.
+				FullName:          "CN=jsmith,CN=Users,DC=domain,DC=local",
+				Name:              "jsmith",
+				Prefix:            "LDAP+AD",
+				PrefixedName:      "LDAP+AD:jsmith",
+				PrefixedUniversal: "LDAP+AD:7ce696fa-593f-5b1f-af55-cdeb6a4fec04",
+				Type:              1,
+				Universal:         "7ce696fa-593f-5b1f-af55-cdeb6a4fec04",
+			}, {
+				FullName:          "\\VED\\Identity\\jsmithson",
+				Name:              "jsmithson",
+				Prefix:            "local",
+				PrefixedName:      "local:jsmithson",
+				PrefixedUniversal: "local:{a787a2fe-91f7-5715-80ff-cb3922fdb188}",
+				Type:              1,
+				Universal:         "{a787a2fe-91f7-5715-80ff-cb3922fdb188}",
+			}},
+			wantFullName: "CN=jsmith,CN=Users,DC=domain,DC=local",
+		}, {
+			name: "finds the first exact username match: exact match in 3rd position",
 			// Same, but with the maximum number of identities that can be
-			// returned with Limit=2. The response comes from a real-world TPP
-			// instance. There are 4 items are returned the limit applies to
-			// each identity provider separately.
-			name:        "wrong username picked due to 2 other usernames with same prefix",
+			// returned with Limit=2. There are 4 items are returned the limit
+			// applies to each identity provider separately. This response comes
+			// from a real-world TPP instance.
 			givenFilter: "jsmith",
 			mockReturns: []policy.IdentityEntry{{
 				FullName:          "CN=jsmithers,CN=Users,DC=domain,DC=local",
