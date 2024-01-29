@@ -3349,7 +3349,7 @@ func Test_getIdentity(t *testing.T) {
 				Type:              1,
 				Universal:         "{a89b8519-6fd7-4f88-9de8-3013f87c4fd7}",
 			}},
-			wantErr: "unexpected: browseIdentities(jsmith) returned two identities but none of them match the username exactly",
+			wantErr: "2 identities were found but none of these identities has a username equal to 'jsmith'",
 		}, {
 			name:        "email not found",
 			givenFilter: "jsmithson@venafi.com",
