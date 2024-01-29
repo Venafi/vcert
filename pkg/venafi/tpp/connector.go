@@ -1288,9 +1288,7 @@ func (c *Connector) getIdentity(filter string) (*IdentityEntry, error) {
 	switch {
 	case len(resp.Identities) == 0:
 		return nil, fmt.Errorf("no identity found for '%s'", filter)
-	case len(resp.Identities) == 1:
-		return &resp.Identities[0], nil
-	case len(resp.Identities) > 1 && !isEmail:
+	case len(resp.Identities) >= 1 && !isEmail:
 		// The username case: we need to ignore the results that are prefixes of
 		// the queried username. For example, if the filter is `jsmith`, we
 		// ignore `jsmithson` and `jsmithers`.
@@ -1300,7 +1298,7 @@ func (c *Connector) getIdentity(filter string) (*IdentityEntry, error) {
 			}
 		}
 		return nil, fmt.Errorf("%d identities were found but none of these identities has a username equal to '%s'", len(resp.Identities), filter)
-	case len(resp.Identities) > 1 && isEmail:
+	case len(resp.Identities) >= 1 && isEmail:
 		// The email case: we do not need to filter out anything. So let's
 		// arbitrarily return the first identity.
 		return &resp.Identities[0], nil

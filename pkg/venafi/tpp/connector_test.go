@@ -3236,7 +3236,7 @@ func Test_getIdentity(t *testing.T) {
 		}, {
 			name:        "exact username found",
 			givenFilter: "foo",
-			mockReturns: []policy.IdentityEntry{{
+			mockReturns: []IdentityEntry{{
 				FullName:          "\\VED\\Identity\\foo",
 				Name:              "foo",
 				Prefix:            "local",
@@ -3249,7 +3249,7 @@ func Test_getIdentity(t *testing.T) {
 		}, {
 			name:        "mismatch with a longer username",
 			givenFilter: "foo",
-			mockReturns: []policy.IdentityEntry{{
+			mockReturns: []IdentityEntry{{
 				FullName:          "\\VED\\Identity\\foobar",
 				Name:              "foobar", // "longer" username.
 				Prefix:            "local",
@@ -3258,7 +3258,7 @@ func Test_getIdentity(t *testing.T) {
 				Type:              1,
 				Universal:         "{c1f0ac9a-c9da-55a7-963a-fd6445af8307}",
 			}},
-			wantErr: "it was not possible to find the user foo",
+			wantErr: "1 identities were found but none of these identities has a username equal to 'foo'",
 		}, {
 			name: "finds the first exact username match: exact match in 2nd position",
 			// In this example, we reproduce the case where the AD has
@@ -3289,7 +3289,7 @@ func Test_getIdentity(t *testing.T) {
 			name: "finds the first exact username match: exact match in 1st position",
 			// Same, except that the correct match is first.
 			givenFilter: "jsmith",
-			mockReturns: []policy.IdentityEntry{{
+			mockReturns: []IdentityEntry{{
 				// This is the identity that is expected to be returned.
 				FullName:          "CN=jsmith,CN=Users,DC=domain,DC=local",
 				Name:              "jsmith",
