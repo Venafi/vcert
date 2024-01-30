@@ -549,7 +549,7 @@ func TestRequestCertificateWithValidityDuration(t *testing.T) {
 }
 
 func TestRequestCertificateWithContactEmails(t *testing.T) {
-	t.Skipf("Skipping test because the TPP instance doesn't have LDAP configured")
+	t.Skipf("Skipping by default because this test only works over TPP instances which have LDAP users configured")
 
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
