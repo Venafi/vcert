@@ -548,6 +548,71 @@ func TestRequestCertificateWithValidityDuration(t *testing.T) {
 	DoRequestCertificateWithValidityDuration(t, tpp)
 }
 
+func TestRequestCertificateWithContactEmails(t *testing.T) {
+	t.Skipf("Skipping by default because this test only works over TPP instances which have LDAP users configured")
+
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("getTestConnector: %s, url: %s", err, expectedURL)
+	}
+
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("tpp.Authenticate: %s", err)
+		}
+	}
+
+	req := &certificate.Request{
+		Timeout:  time.Second * 30,
+		Subject:  pkix.Name{CommonName: test.RandCN()},
+		DNSNames: []string{"example.com"},
+		Contacts: []string{"mael.valais@venafi.com", "richard.wall@venafi.com"},
+	}
+
+	config, err := tpp.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatalf("tpp.ReadZoneConfiguration: %s", err)
+	}
+
+	err = tpp.GenerateRequest(config, req)
+	if err != nil {
+		t.Fatalf("tpp.GenerateRequest: %s", err)
+	}
+
+	t.Logf("zone: %s", getPolicyDN(ctx.TPPZone))
+	req.PickupID, err = tpp.RequestCertificate(req)
+	if err != nil {
+		t.Fatalf("tpp.RequestCertificate: %s", err)
+	}
+	_, err = tpp.RetrieveCertificate(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Now, let's check that the contact email was set as we expected. We can't
+	// use SearchCertificates because its struct doesn't have the Contacts field
+	// due to being common to TPP and Cloud.
+	metadata, err := tpp.RetrieveCertificateMetaData(getPolicyDN(ctx.TPPZone) + "\\" + req.Subject.CommonName)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(metadata.Contact) != 1 {
+		t.Fatalf("expected exactly one contact but got %d", len(metadata.Contact))
+	}
+	resp, err := tpp.browseIdentities(BrowseIdentitiesRequest{Filter: "mael.valais@venafi.com", Limit: 2, IdentityType: 1})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(resp.Identities) != 1 {
+		t.Fatalf("expected exactly one identity but got %d: %+v", len(resp.Identities), resp.Identities)
+	}
+	if metadata.Contact[0] != resp.Identities[0].PrefixedUniversal {
+		t.Fatalf("expected contact to be %s but got %s", resp.Identities[0].PrefixedUniversal, metadata.Contact[0])
+	}
+}
+
 // The mocked HTTP interactions have been recorded using TPP 22.4.
 func TestResetCertificate(t *testing.T) {
 	type mockCall struct {
@@ -2332,7 +2397,7 @@ func TestOmitSans(t *testing.T) {
 		Timeout:   30 * time.Second,
 	}
 
-	tppReq, err := prepareRequest(&req, tpp.zone)
+	tppReq, err := tpp.prepareRequest(&req, tpp.zone)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -3159,19 +3224,19 @@ func Test_getIdentity(t *testing.T) {
 		name string
 
 		givenFilter  string
-		mockReturns  []policy.IdentityEntry
+		mockReturns  []IdentityEntry
 		wantFullName string
 		wantErr      string
 	}{
 		{
 			name:        "no identities",
 			givenFilter: "jsmith",
-			mockReturns: []policy.IdentityEntry{},
-			wantErr:     "it was not possible to find the user jsmith",
+			mockReturns: []IdentityEntry{},
+			wantErr:     "no identity found for 'jsmith'",
 		}, {
 			name:        "exact username found",
 			givenFilter: "foo",
-			mockReturns: []policy.IdentityEntry{{
+			mockReturns: []IdentityEntry{{
 				FullName:          "\\VED\\Identity\\foo",
 				Name:              "foo",
 				Prefix:            "local",
@@ -3184,7 +3249,7 @@ func Test_getIdentity(t *testing.T) {
 		}, {
 			name:        "mismatch with a longer username",
 			givenFilter: "foo",
-			mockReturns: []policy.IdentityEntry{{
+			mockReturns: []IdentityEntry{{
 				FullName:          "\\VED\\Identity\\foobar",
 				Name:              "foobar", // "longer" username.
 				Prefix:            "local",
@@ -3201,7 +3266,7 @@ func Test_getIdentity(t *testing.T) {
 			// provider was given permission to access the local identities).
 			// The response comes from a real-world TPP instance.
 			givenFilter: "jsmith",
-			mockReturns: []policy.IdentityEntry{{
+			mockReturns: []IdentityEntry{{
 				FullName:          "CN=jsmithson,CN=Users,DC=domain,DC=local",
 				Name:              "jsmithson",
 				Prefix:            "LDAP+AD",
@@ -3224,7 +3289,7 @@ func Test_getIdentity(t *testing.T) {
 			name: "finds the first exact username match: exact match in 1st position",
 			// Same, except that the correct match is first.
 			givenFilter: "jsmith",
-			mockReturns: []policy.IdentityEntry{{
+			mockReturns: []IdentityEntry{{
 				// This is the identity that is expected to be returned.
 				FullName:          "CN=jsmith,CN=Users,DC=domain,DC=local",
 				Name:              "jsmith",
@@ -3250,11 +3315,11 @@ func Test_getIdentity(t *testing.T) {
 			// applies to each identity provider separately. This response comes
 			// from a real-world TPP instance.
 			givenFilter: "jsmith",
-			mockReturns: []policy.IdentityEntry{{
+			mockReturns: []IdentityEntry{{
 				FullName:          "CN=jsmithers,CN=Users,DC=domain,DC=local",
-				Name:              "jsmithson",
+				Name:              "jsmithers",
 				Prefix:            "LDAP+AD",
-				PrefixedName:      "LDAP+AD:jsmithson",
+				PrefixedName:      "LDAP+AD:jsmithers",
 				PrefixedUniversal: "LDAP+AD:6ef23fe2-0728-4930-87a8-e1513d7087e4",
 				Type:              1,
 				Universal:         "6ef23fe2-0728-4930-87a8-e1513d7087e4",
@@ -3285,18 +3350,57 @@ func Test_getIdentity(t *testing.T) {
 				Universal:         "{a89b8519-6fd7-4f88-9de8-3013f87c4fd7}",
 			}},
 			wantFullName: "\\VED\\Identity\\jsmith",
+		}, {
+			name:        "email not found",
+			givenFilter: "jsmithson@venafi.com",
+			mockReturns: []IdentityEntry{},
+			wantErr:     "no identity found for 'jsmithson@venafi.com'",
+		}, {
+			name:        "email exists once",
+			givenFilter: "jsmithson@venafi.com",
+			mockReturns: []IdentityEntry{{
+				FullName:          "CN=jsmithson,CN=Users,DC=domain,DC=local",
+				Name:              "jsmithson",
+				Prefix:            "LDAP+AD",
+				PrefixedName:      "LDAP+AD:jsmithson",
+				PrefixedUniversal: "LDAP+AD:6ef23fe2-0728-4930-87a8-e1513d7087e4",
+				Type:              1,
+				Universal:         "6ef23fe2-0728-4930-87a8-e1513d7087e4",
+			}},
+			wantFullName: "CN=jsmithson,CN=Users,DC=domain,DC=local",
+		}, {
+			name:        "email exists in multiple identities, returns first found",
+			givenFilter: "jsmithson@venafi.com",
+			mockReturns: []IdentityEntry{{
+				FullName:          "CN=jsmithson,CN=Users,DC=domain,DC=local",
+				Name:              "jsmithson",
+				Prefix:            "LDAP+AD",
+				PrefixedName:      "LDAP+AD:jsmithson",
+				PrefixedUniversal: "LDAP+AD:6ef23fe2-0728-4930-87a8-e1513d7087e4",
+				Type:              1,
+				Universal:         "6ef23fe2-0728-4930-87a8-e1513d7087e4",
+			}, {
+				FullName:          "CN=jsmithson-admin,CN=Users,DC=domain,DC=local",
+				Name:              "jsmithson-admin",
+				Prefix:            "LDAP+AD",
+				PrefixedName:      "LDAP+AD:jsmithson-admin",
+				PrefixedUniversal: "LDAP+AD:73696245-c1f6-5ef7-bf13-90144c2bc06c",
+				Type:              1,
+				Universal:         "73696245-c1f6-5ef7-bf13-90144c2bc06c",
+			}},
+			wantFullName: "CN=jsmithson,CN=Users,DC=domain,DC=local",
 		},
 	}
 
-	serverWith := func(t *testing.T, mockReturns []policy.IdentityEntry) (_ *httptest.Server, ca *x509.CertPool) {
+	serverWith := func(t *testing.T, mockReturns []IdentityEntry) (_ *httptest.Server, ca *x509.CertPool) {
 		server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			require.Equal(t, "/vedsdk/Identity/Browse", r.URL.Path)
 			bytes, err := io.ReadAll(r.Body)
 			require.NoError(t, err)
-			req := policy.BrowseIdentitiesRequest{}
+			req := BrowseIdentitiesRequest{}
 			err = json.Unmarshal(bytes, &req)
 			require.NoError(t, err)
-			bytes, err = json.Marshal(policy.BrowseIdentitiesResponse{Identities: mockReturns})
+			bytes, err = json.Marshal(BrowseIdentitiesResponse{Identities: mockReturns})
 			require.NoError(t, err)
 			w.Write(bytes)
 		}))
