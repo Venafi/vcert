@@ -1297,7 +1297,7 @@ func (c *Connector) getIdentity(filter string) (*IdentityEntry, error) {
 				return &identity, nil
 			}
 		}
-		return nil, fmt.Errorf("%d identities were found but none of these identities has a username equal to '%s'", len(resp.Identities), filter)
+		return nil, fmt.Errorf("it was not possible to find the user %s", filter)
 	case len(resp.Identities) >= 1 && isEmail:
 		// The email case: we do not need to filter out anything. So let's
 		// arbitrarily return the first identity.
@@ -1306,7 +1306,7 @@ func (c *Connector) getIdentity(filter string) (*IdentityEntry, error) {
 
 	// The above switch cases must catch 100% of the cases. If we arrive here,
 	// it means that we have made a programming mistake.
-	return nil, fmt.Errorf("programmer mistake: browseIdentities returned %d identities for the filter '%s' and none of the switch cases matched, but the switch cases are expected to catch 100%% of the cases", len(resp.Identities), filter)
+	return nil, fmt.Errorf("this was not supposed to happen, please report to the developer team: browseIdentities returned %d identities for the filter '%s' and none of the switch cases matched, but the switch cases are expected to catch 100%% of the cases", len(resp.Identities), filter)
 }
 
 func (c *Connector) browseIdentities(browseReq BrowseIdentitiesRequest) (*BrowseIdentitiesResponse, error) {

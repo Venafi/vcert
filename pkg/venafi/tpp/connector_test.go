@@ -567,7 +567,7 @@ func TestRequestCertificateWithContactEmails(t *testing.T) {
 		Timeout:  time.Second * 30,
 		Subject:  pkix.Name{CommonName: test.RandCN()},
 		DNSNames: []string{"example.com"},
-		Contacts: []string{"mael.valais@venafi.com"},
+		Contacts: []string{"mael.valais@venafi.com", "richard.wall@venafi.com"},
 	}
 
 	config, err := tpp.ReadZoneConfiguration()
@@ -3258,7 +3258,7 @@ func Test_getIdentity(t *testing.T) {
 				Type:              1,
 				Universal:         "{c1f0ac9a-c9da-55a7-963a-fd6445af8307}",
 			}},
-			wantErr: "1 identities were found but none of these identities has a username equal to 'foo'",
+			wantErr: "it was not possible to find the user foo",
 		}, {
 			name: "finds the first exact username match: exact match in 2nd position",
 			// In this example, we reproduce the case where the AD has
@@ -3349,7 +3349,7 @@ func Test_getIdentity(t *testing.T) {
 				Type:              1,
 				Universal:         "{a89b8519-6fd7-4f88-9de8-3013f87c4fd7}",
 			}},
-			wantErr: "2 identities were found but none of these identities has a username equal to 'jsmith'",
+			wantErr: "it was not possible to find the user jsmith",
 		}, {
 			name:        "email not found",
 			givenFilter: "jsmithson@venafi.com",
