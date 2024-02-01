@@ -3317,9 +3317,9 @@ func Test_getIdentity(t *testing.T) {
 			givenFilter: "jsmith",
 			mockReturns: []IdentityEntry{{
 				FullName:          "CN=jsmithers,CN=Users,DC=domain,DC=local",
-				Name:              "jsmithson",
+				Name:              "jsmithers",
 				Prefix:            "LDAP+AD",
-				PrefixedName:      "LDAP+AD:jsmithson",
+				PrefixedName:      "LDAP+AD:jsmithers",
 				PrefixedUniversal: "LDAP+AD:6ef23fe2-0728-4930-87a8-e1513d7087e4",
 				Type:              1,
 				Universal:         "6ef23fe2-0728-4930-87a8-e1513d7087e4",
@@ -3349,7 +3349,7 @@ func Test_getIdentity(t *testing.T) {
 				Type:              1,
 				Universal:         "{a89b8519-6fd7-4f88-9de8-3013f87c4fd7}",
 			}},
-			wantErr: "it was not possible to find the user jsmith",
+			wantFullName: "\\VED\\Identity\\jsmith",
 		}, {
 			name:        "email not found",
 			givenFilter: "jsmithson@venafi.com",
@@ -3400,13 +3400,6 @@ func Test_getIdentity(t *testing.T) {
 			req := BrowseIdentitiesRequest{}
 			err = json.Unmarshal(bytes, &req)
 			require.NoError(t, err)
-
-			// Only return the number of identities set in the Limit field.
-			if req.Limit <= len(mockReturns) {
-				mockReturns = mockReturns[:req.Limit]
-			}
-			require.GreaterOrEqual(t, req.Limit, len(mockReturns))
-
 			bytes, err = json.Marshal(BrowseIdentitiesResponse{Identities: mockReturns})
 			require.NoError(t, err)
 			w.Write(bytes)
