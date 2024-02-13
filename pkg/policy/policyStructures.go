@@ -155,42 +155,6 @@ type TppPolicy struct {
 	WantRenewal          *int
 }
 
-type BrowseIdentitiesRequest struct {
-	Filter       string
-	Limit        int
-	IdentityType int
-}
-
-type BrowseIdentitiesResponse struct {
-	Identities []IdentityEntry
-}
-
-type IdentitySelfResponse struct {
-	Identities []IdentityEntry
-}
-
-type ValidateIdentityRequest struct {
-	ID IdentityInformation
-}
-
-type ValidateIdentityResponse struct {
-	ID IdentityEntry
-}
-
-type IdentityInformation struct {
-	PrefixedUniversal string
-}
-
-type IdentityEntry struct {
-	FullName          string
-	Name              string
-	Prefix            string
-	PrefixedName      string
-	PrefixedUniversal string
-	Type              int
-	Universal         string
-}
-
 type LockedAttribute struct {
 	Value  string
 	Locked bool

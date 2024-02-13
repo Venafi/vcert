@@ -55,6 +55,28 @@ type Request struct {
 	ValidityPeriod   string //represents the validity of the certificate expressed as an ISO 8601 duration
 	IssuerHint       util.IssuerHint
 
+	// Contacts allows you to configure email addresses to send notifications
+	// about the certificate. This field is TPP-specific.
+	//
+	// Note: the user who receives the notification isn't automatically given
+	// access to that certificate. Access is configured at the policy folder
+	// level; if the user doesn't permissions on that folder, they will not be
+	// able to see the certificate's status in TPP or remediate the problem
+	// through the TPP UI.
+	//
+	// When an email is used by multiple TPP identities, the first identity
+	// found is picked arbitrarily.
+	//
+	// The scope `configuration` is required. Since Contacts works by searching
+	// the emails in the same LDAP or AD as the user attached to the token, you
+	// must check that you are using a user in that same identity provider.
+	// Contacts doesn't work with the local TPP identities. Using Contacts
+	// requires adding `mail` to the list of fields searched when performing a
+	// user search, which can be configured in the Venafi Configuration Console
+	// by RDP'ing into the TPP VM. This configuration cannot be performed
+	// directly in the TPP UI.
+	Contacts []string
+
 	// Deprecated: use ValidityDuration instead, this field is ignored if ValidityDuration is set
 	ValidityHours int
 }

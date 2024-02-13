@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/mail"
 	neturl "net/url"
 	"regexp"
 	"strconv"
@@ -509,7 +510,7 @@ func (c *Connector) setCertificateMetadata(metadataRequest metadataSetRequest) (
 	return result.Locked, nil
 }
 
-func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRequest, err error) {
+func (c *Connector) prepareRequest(req *certificate.Request, zone string) (tppReq certificateRequest, err error) {
 	switch req.CsrOrigin {
 	case certificate.LocalGeneratedCSR, certificate.UserProvidedCSR:
 		tppReq.PKCS10 = string(req.GetCSR())
@@ -581,6 +582,20 @@ func prepareRequest(req *certificate.Request, zone string) (tppReq certificateRe
 			})
 		}
 	}
+
+	// Resolve emails to TPP identities if needed.
+	var contacts []IdentityEntry
+	if req.Contacts != nil {
+		var err error
+		prefixedUniversals, err := c.resolvePrefixedUniversals(req.Contacts)
+		if err != nil {
+			return tppReq, fmt.Errorf("failed to find contact identities: %w", err)
+		}
+		for _, prefixedUniversal := range prefixedUniversals {
+			contacts = append(contacts, IdentityEntry{PrefixedUniversal: prefixedUniversal})
+		}
+	}
+	tppReq.Contacts = contacts
 
 	for name, value := range customFieldsMap {
 		tppReq.CustomFields = append(tppReq.CustomFields, customField{name, value})
@@ -685,7 +700,8 @@ func (c *Connector) proccessLocation(req *certificate.Request) error {
 	return nil
 }
 
-// RequestCertificate submits the CSR to TPP returning the DN of the requested Certificate
+// RequestCertificate submits the CSR to TPP returning the DN of the requested
+// Certificate.
 func (c *Connector) RequestCertificate(req *certificate.Request) (requestID string, err error) {
 	if req.Location != nil {
 		err = c.proccessLocation(req)
@@ -693,10 +709,12 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 			return
 		}
 	}
-	tppCertificateRequest, err := prepareRequest(req, c.zone)
+
+	tppCertificateRequest, err := c.prepareRequest(req, c.zone)
 	if err != nil {
 		return "", err
 	}
+
 	statusCode, status, body, err := c.request("POST", urlResourceCertificateRequest, tppCertificateRequest)
 	if err != nil {
 		return "", err
@@ -890,8 +908,8 @@ func (c *Connector) retrieveUserNamesForPolicySpecification(policyName string) (
 	if values != nil {
 		var users []string
 		for _, prefixedUniversal := range values {
-			validateIdentityRequest := policy.ValidateIdentityRequest{
-				ID: policy.IdentityInformation{
+			validateIdentityRequest := ValidateIdentityRequest{
+				ID: IdentityInformation{
 					PrefixedUniversal: prefixedUniversal,
 				},
 			}
@@ -910,7 +928,7 @@ func (c *Connector) retrieveUserNamesForPolicySpecification(policyName string) (
 	return nil, nil
 }
 
-func (c *Connector) validateIdentity(validateIdentityRequest policy.ValidateIdentityRequest) (*policy.ValidateIdentityResponse, error) {
+func (c *Connector) validateIdentity(validateIdentityRequest ValidateIdentityRequest) (*ValidateIdentityResponse, error) {
 
 	statusCode, status, body, err := c.request("POST", urlResourceValidateIdentity, validateIdentityRequest)
 	if err != nil {
@@ -1172,7 +1190,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 func (c *Connector) setContact(tppPolicy *policy.TppPolicy) (status string, err error) {
 
 	if tppPolicy.Contact != nil {
-		contacts, err := c.resolveContacts(tppPolicy.Contact)
+		contacts, err := c.resolvePrefixedUniversals(tppPolicy.Contact)
 		if err != nil {
 			return "", fmt.Errorf("an error happened trying to resolve the contacts: %w", err)
 		}
@@ -1189,15 +1207,28 @@ func (c *Connector) setContact(tppPolicy *policy.TppPolicy) (status string, err 
 	return status, nil
 }
 
-func (c *Connector) resolveContacts(contacts []string) ([]string, error) {
-	var identities []string
-	uniqueContacts := getUniqueStringSlice(contacts)
+func (c *Connector) resolvePrefixedUniversals(filters []string) ([]string, error) {
+	var prefixedUniversals []string
+	identities, err := c.resolveIdentities(filters)
+	if err != nil {
+		return nil, err
+	}
+	for _, identityEntry := range identities {
+		prefixedUniversals = append(prefixedUniversals, identityEntry.PrefixedUniversal)
+	}
+
+	return prefixedUniversals, nil
+}
+
+func (c *Connector) resolveIdentities(filters []string) ([]*IdentityEntry, error) {
+	var identities []*IdentityEntry
+	uniqueContacts := getUniqueStringSlice(filters)
 	for _, contact := range uniqueContacts {
-		identity, err := c.getIdentity(contact)
+		identityEntry, err := c.getIdentity(contact)
 		if err != nil {
 			return nil, err
 		}
-		identities = append(identities, identity.PrefixedUniversal)
+		identities = append(identities, identityEntry)
 	}
 
 	return identities, nil
@@ -1215,13 +1246,16 @@ func getUniqueStringSlice(stringSlice []string) []string {
 	return list
 }
 
-func (c *Connector) getIdentity(userName string) (*policy.IdentityEntry, error) {
-	if userName == "" {
+// Searches for identities that are an exact match of the filter. When two
+// identities are found for the same filter, the first identity found is
+// returned.
+func (c *Connector) getIdentity(filter string) (*IdentityEntry, error) {
+	if filter == "" {
 		return nil, fmt.Errorf("identity string cannot be null")
 	}
 
-	req := policy.BrowseIdentitiesRequest{
-		Filter:       userName,
+	req := BrowseIdentitiesRequest{
+		Filter:       filter,
 		Limit:        2,
 		IdentityType: policy.AllIdentities,
 	}
@@ -1231,31 +1265,51 @@ func (c *Connector) getIdentity(userName string) (*policy.IdentityEntry, error) 
 		return nil, err
 	}
 
-	return c.getIdentityMatching(resp.Identities, userName)
-}
+	// When TPP looks for a username that matches the filter, an implicit
+	// wildcard is added to the end of the filter string. For example, imagining
+	// that `jsmith` and `jsmithson` are existing identities, searching for
+	// `jsmith` will return both `jsmith` and `jsmithson`. In the case of local
+	// identities, `jsmith` will always be returned first. But in the case of AD
+	// and LDAP, the order of these results may be different, and `jsmithson`
+	// may be unexpectedly returned first. This same problem may appear when an
+	// AD or LDAP provider has been configured to access the local identities:
+	// `jsmithson` may get returned first if `jsmithson` only exists in AD
+	// (because the AD results are returned before the local identities).
+	//
+	// The wildcard problem only affects usernames, not emails. That's because
+	// the LDAP query recommended for enabling user search by email in the
+	// Venafi Configuration Console is based on exact match, unlike `anr` used
+	// for searching usernames. Thus, we do not need to check for an exact match
+	// when an email is provided.
 
-func (c *Connector) getIdentityMatching(identities []policy.IdentityEntry, identityName string) (*policy.IdentityEntry, error) {
-	var identityEntryMatching *policy.IdentityEntry
+	_, err = mail.ParseAddress(filter)
+	isEmail := err == nil
 
-	if len(identities) > 0 {
-		for i := range identities {
-			identityEntry := identities[i]
-			if identityEntry.Name == identityName {
-				identityEntryMatching = &identityEntry
-				break
+	switch {
+	case len(resp.Identities) == 0:
+		return nil, fmt.Errorf("no identity found for '%s'", filter)
+	case len(resp.Identities) >= 1 && !isEmail:
+		// The username case: we need to ignore the results that are prefixes of
+		// the queried username. For example, if the filter is `jsmith`, we
+		// ignore `jsmithson` and `jsmithers`.
+		for _, identity := range resp.Identities {
+			if identity.Name == filter {
+				return &identity, nil
 			}
 		}
+		return nil, fmt.Errorf("it was not possible to find the user %s", filter)
+	case len(resp.Identities) >= 1 && isEmail:
+		// The email case: we do not need to filter out anything. So let's
+		// arbitrarily return the first identity.
+		return &resp.Identities[0], nil
 	}
 
-	//if the identity is not null
-	if identityEntryMatching != nil {
-		return identityEntryMatching, nil
-	} else {
-		return nil, fmt.Errorf("it was not possible to find the user %s", identityName)
-	}
+	// The above switch cases must catch 100% of the cases. If we arrive here,
+	// it means that we have made a programming mistake.
+	return nil, fmt.Errorf("this was not supposed to happen, please report to the developer team: browseIdentities returned %d identities for the filter '%s' and none of the switch cases matched, but the switch cases are expected to catch 100%% of the cases", len(resp.Identities), filter)
 }
 
-func (c *Connector) browseIdentities(browseReq policy.BrowseIdentitiesRequest) (*policy.BrowseIdentitiesResponse, error) {
+func (c *Connector) browseIdentities(browseReq BrowseIdentitiesRequest) (*BrowseIdentitiesResponse, error) {
 
 	statusCode, status, body, err := c.request("POST", urlResourceBrowseIdentities, browseReq)
 	if err != nil {
