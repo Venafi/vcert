@@ -177,6 +177,7 @@ And(/^task named "(.*)" request has subject random CommonName with random site n
   current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
   cn = random_string + "." + domain_name
   current_certificate_task.request.subject.commonName = cn
+  current_certificate_task.request.sanDNS = [ cn ]
 end
 
 And(/^task named "(.*)" has installations$/) do |task_name|
@@ -291,7 +292,7 @@ When(/^playbook generated "([^"]*)" should be PKCS#12 archive with password "([^
   cert_path = Dir.pwd + $path_separator + $temp_path + $path_separator + filename
 
   steps %{
-    Then I try to run `openssl pkcs12 -in "#{cert_path}" -legacy -passin pass:#{password} -noout`
+    Then I try to run `openssl pkcs12 -in "#{cert_path}" -passin pass:#{password} -noout`
     And the exit status should be 0
   }
 end

@@ -18,7 +18,6 @@ package main
 
 import (
 	"bytes"
-	"crypto/rand"
 	"crypto/x509"
 	"encoding/json"
 	"encoding/pem"
@@ -122,7 +121,11 @@ func (o *Output) AsPKCS12(c *Config) ([]byte, error) {
 		return nil, fmt.Errorf("private key error(3): %s", err)
 	}
 
-	bytes, err := pkcs12.Encode(rand.Reader, privKey, cert, chain_list, c.KeyPassword)
+	encoder := pkcs12.Modern2023
+	if c.Format == LegacyP12Format {
+		encoder = pkcs12.LegacyRC2
+	}
+	bytes, err := encoder.Encode(privKey, cert, chain_list, c.KeyPassword)
 	if err != nil {
 		return nil, fmt.Errorf("encode error: %s", err)
 	}
@@ -313,7 +316,7 @@ func (r *Result) Flush() error {
 		allFileOutput.CSR = r.Pcc.CSR
 
 		var bytes []byte
-		if r.Config.Format == "pkcs12" {
+		if r.Config.Format == P12Format || r.Config.Format == LegacyP12Format {
 			bytes, err = allFileOutput.AsPKCS12(r.Config)
 			if err != nil {
 				return fmt.Errorf("failed to encode pkcs12: %s", err)

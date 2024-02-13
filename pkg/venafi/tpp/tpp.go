@@ -33,7 +33,6 @@ import (
 
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
-	"github.com/Venafi/vcert/v5/pkg/policy"
 )
 
 const defaultKeySize = 2048
@@ -73,7 +72,7 @@ type certificateRequest struct {
 	State                   string          `json:",omitempty"`
 	Country                 string          `json:",omitempty"`
 	SubjectAltNames         []sanItem       `json:",omitempty"`
-	Contact                 string          `json:",omitempty"`
+	Contacts                []IdentityEntry `json:",omitempty"`
 	CASpecificAttributes    []nameValuePair `json:",omitempty"`
 	Origin                  string          `json:",omitempty"`
 	PKCS10                  string          `json:",omitempty"`
@@ -151,6 +150,42 @@ type certificateResetRequest struct {
 
 type certificateResetResponse struct {
 	Error string `json:"Error"`
+}
+
+type BrowseIdentitiesRequest struct {
+	Filter       string
+	Limit        int
+	IdentityType int
+}
+
+type BrowseIdentitiesResponse struct {
+	Identities []IdentityEntry
+}
+
+type IdentitySelfResponse struct {
+	Identities []IdentityEntry
+}
+
+type ValidateIdentityRequest struct {
+	ID IdentityInformation
+}
+
+type ValidateIdentityResponse struct {
+	ID IdentityEntry
+}
+
+type IdentityInformation struct {
+	PrefixedUniversal string
+}
+
+type IdentityEntry struct {
+	FullName          string `json:",omitempty"`
+	Name              string `json:",omitempty"`
+	Prefix            string `json:",omitempty"`
+	PrefixedName      string `json:",omitempty"`
+	PrefixedUniversal string `json:",omitempty"`
+	Type              int    `json:",omitempty"`
+	Universal         string `json:",omitempty"`
 }
 
 type sanItem struct {
@@ -717,8 +752,8 @@ func newPEMCollectionFromResponse(base64Response string, chainOrder certificate.
 	return nil, nil
 }
 
-func parseBrowseIdentitiesResult(httpStatusCode int, httpStatus string, body []byte) (policy.BrowseIdentitiesResponse, error) {
-	var browseIdentitiesResponse policy.BrowseIdentitiesResponse
+func parseBrowseIdentitiesResult(httpStatusCode int, httpStatus string, body []byte) (BrowseIdentitiesResponse, error) {
+	var browseIdentitiesResponse BrowseIdentitiesResponse
 	switch httpStatusCode {
 	case http.StatusOK, http.StatusAccepted:
 		browseIdentitiesResponse, err := parseBrowseIdentitiesData(body)
@@ -731,13 +766,13 @@ func parseBrowseIdentitiesResult(httpStatusCode int, httpStatus string, body []b
 	}
 }
 
-func parseBrowseIdentitiesData(b []byte) (data policy.BrowseIdentitiesResponse, err error) {
+func parseBrowseIdentitiesData(b []byte) (data BrowseIdentitiesResponse, err error) {
 	err = json.Unmarshal(b, &data)
 	return
 }
 
-func parseValidateIdentityResponse(httpStatusCode int, httpStatus string, body []byte) (policy.ValidateIdentityResponse, error) {
-	var validateIdentityResponse policy.ValidateIdentityResponse
+func parseValidateIdentityResponse(httpStatusCode int, httpStatus string, body []byte) (ValidateIdentityResponse, error) {
+	var validateIdentityResponse ValidateIdentityResponse
 	switch httpStatusCode {
 	case http.StatusOK, http.StatusAccepted:
 		validateIdentityResponse, err := parseValidateIdentityData(body)
@@ -750,7 +785,7 @@ func parseValidateIdentityResponse(httpStatusCode int, httpStatus string, body [
 	}
 }
 
-func parseValidateIdentityData(b []byte) (data policy.ValidateIdentityResponse, err error) {
+func parseValidateIdentityData(b []byte) (data ValidateIdentityResponse, err error) {
 	err = json.Unmarshal(b, &data)
 	return
 }

@@ -83,3 +83,12 @@ Feature: renew action with `-csr service` option
     When I renew the certificate in TPP using the same Pickup ID with flags -csr service -key-password Passcode123! -file all.p12 -format pkcs12
       Then it should retrieve certificate
       And "all.p12" should be PKCS#12 archive with password "Passcode123!"
+
+  Scenario: renew service-generated-CSR certificate in TPP with `-csr service` option with PKCS12 legacy flag
+      Given I enroll random certificate using TPP with -csr service -key-password Passcode123! -key-file k.pem -cert-file c.pem
+        And it should write private key to the file "k.pem"
+        And it should write certificate to the file "c.pem"
+        And it should output Pickup ID
+      When I renew the certificate in TPP using the same Pickup ID with flags -csr service -key-password Passcode123! -file all.p12 -format legacy-pkcs12
+        Then it should retrieve certificate
+        And "all.p12" should be PKCS#12 archive in legacy mode with password "Passcode123!"
