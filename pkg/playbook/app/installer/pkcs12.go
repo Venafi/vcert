@@ -101,7 +101,7 @@ func (r PKCS12Installer) Install(pcc certificate.PEMCollection) error {
 		return domain.ErrNoP12Password
 	}
 
-	content, err := packageAsPKCS12(pcc, r.P12Password)
+	content, err := packageAsPKCS12(pcc, r.P12Password, r.UseLegacyP12)
 	if err != nil {
 		zap.L().Error("could not package certificate as PKCS12")
 		return err
@@ -156,7 +156,7 @@ func loadPKCS12(pkcs12File string, keyPassword string) (*x509.Certificate, error
 	return cert, nil
 }
 
-func packageAsPKCS12(pcc certificate.PEMCollection, keyPassword string) ([]byte, error) {
+func packageAsPKCS12(pcc certificate.PEMCollection, keyPassword string, legacyPkcs12 bool) ([]byte, error) {
 	if len(pcc.Certificate) == 0 || len(pcc.PrivateKey) == 0 {
 		return nil, fmt.Errorf("certificate and Private Key are required for PKCS12")
 	}
@@ -184,8 +184,14 @@ func packageAsPKCS12(pcc certificate.PEMCollection, keyPassword string) ([]byte,
 	if err != nil {
 		return nil, err
 	}
+	var bytes []byte
 
-	bytes, err := pkcs12.Modern2023.Encode(privateKey, cert, chainList, keyPassword)
+	if legacyPkcs12 {
+		bytes, err = pkcs12.Legacy.Encode(privateKey, cert, chainList, keyPassword)
+	} else {
+		bytes, err = pkcs12.Modern2023.Encode(privateKey, cert, chainList, keyPassword)
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("PKCS12 encode error: %w", err)
 	}

@@ -51,9 +51,10 @@ type Installation struct {
 	KeyFile             string `yaml:"keyFile,omitempty"`
 	KeyPassword         string `yaml:"keyPassword,omitempty"`
 	// Deprecated: Location is deprecated in favor of CAPILocation. It will be removed on a future release
-	Location    string             `yaml:"location,omitempty"`
-	P12Password string             `yaml:"p12Password,omitempty"`
-	Type        InstallationFormat `yaml:"format,omitempty"`
+	Location     string             `yaml:"location,omitempty"`
+	P12Password  string             `yaml:"p12Password,omitempty"`
+	UseLegacyP12 bool               `yaml:"useLegacyPkcs12,omitempty"`
+	Type         InstallationFormat `yaml:"format,omitempty"`
 }
 
 // Installations is a slice of Installation
