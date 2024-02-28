@@ -84,6 +84,7 @@ type certificateRequest struct {
 	Devices                 []device        `json:",omitempty"`
 	CertificateType         string          `json:",omitempty"`
 	Reenable                bool            `json:",omitempty"`
+	WorkToDoTimeout         string          `json:",omitempty"`
 }
 
 type certificateRetrieveRequest struct {
