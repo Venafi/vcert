@@ -653,9 +653,12 @@ func (c *Connector) prepareRequest(req *certificate.Request, zone string) (tppRe
 	//    - true: Clear the Disabled attribute, reenable, and then renew the certificate (in this request). Reuse the same CertificateDN, that is also known as a Certificate object.
 	tppReq.Reenable = true
 
-	// If enable timeout is defined by the user in the request, we use it in order
-	// override API's timeout for the CA to finish issuance
-	if req.Timeout != 0 {
+	// If "Timeout" is defined by the user in the request, we use it in order to
+	// override API's timeout for the CA to finish issuance. In TLSPDC this means
+	// using WorkToDoTimeout attribute.
+	// We make sure to get the seconds from
+	// "Timeout" as it is a "TimeDuration" and remote (TLPSDC) only expects value in seconds.
+	if req.Timeout > 0 {
 		seconds := int64(req.Timeout.Seconds())
 		secondsString := strconv.FormatInt(seconds, 10)
 		tppReq.WorkToDoTimeout = secondsString
