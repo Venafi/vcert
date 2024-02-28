@@ -653,6 +653,12 @@ func (c *Connector) prepareRequest(req *certificate.Request, zone string) (tppRe
 	//    - true: Clear the Disabled attribute, reenable, and then renew the certificate (in this request). Reuse the same CertificateDN, that is also known as a Certificate object.
 	tppReq.Reenable = true
 
+	// If enable timeout is defined by the user in the request, we use it in order
+	// override API's timeout for the CA to finish issuance
+	if req.Timeout != 0 {
+		tppReq.WorkToDoTimeout = strconv.FormatFloat(req.Timeout.Seconds(), 'f', 0, 64)
+	}
+
 	return tppReq, err
 }
 

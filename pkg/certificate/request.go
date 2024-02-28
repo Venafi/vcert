@@ -47,7 +47,16 @@ type Request struct {
 	FetchPrivateKey bool
 	/*	Thumbprint is here because *Request is used in RetrieveCertificate().
 		Code should be refactored so that RetrieveCertificate() uses some abstract search object, instead of *Request{PickupID} */
-	Thumbprint       string
+	Thumbprint string
+	// Timeout we have multiple purposes for timeout (bad practice, we need to correct this in the future)
+	// TPP (a.k.a TLPSDC): we use it in order to set WorkToDoTimeout, that overrides TPP default timeout waiting time for the CA to finish
+	// if the value is more than the maximum value, TPP will automatically set the maximum value supported (as of the moment of this
+	// commit, 120 seconds).
+	// Cloud (a.k.a VaaS a.k.a TLPSC) : We use this timeout in our RetrieveCertificate function which handles a retry logic
+	// TPP SSH feature: We override the http client default timeout to perform http requests.
+	// Firefly: not usage at all
+	// VCert CLI: We have hardcoded 180 seconds for retrieve certificate operation. For VaaS it will set retry logic for
+	// 180 seconds and TPP will override CA timeout as the hardcoded value
 	Timeout          time.Duration
 	CustomFields     []CustomField
 	Location         *Location
