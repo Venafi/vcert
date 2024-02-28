@@ -657,7 +657,7 @@ func (c *Connector) prepareRequest(req *certificate.Request, zone string) (tppRe
 	// override API's timeout for the CA to finish issuance. In TLSPDC this means
 	// using WorkToDoTimeout attribute.
 	// We make sure to get the seconds from
-	// "Timeout" as it is a "TimeDuration" and remote (TLPSDC) only expects value in seconds.
+	// "Timeout" as it is a "TimeDuration" and remote (TLSPDC) only expects value in seconds.
 	if req.Timeout > 0 {
 		seconds := int64(req.Timeout.Seconds())
 		secondsString := strconv.FormatInt(seconds, 10)
