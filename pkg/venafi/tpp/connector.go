@@ -653,6 +653,14 @@ func (c *Connector) prepareRequest(req *certificate.Request, zone string) (tppRe
 	//    - true: Clear the Disabled attribute, reenable, and then renew the certificate (in this request). Reuse the same CertificateDN, that is also known as a Certificate object.
 	tppReq.Reenable = true
 
+	// We set timeout at 2 levels:
+	// - for the platform request, in this case TPP
+	// - for the Go HTTP client
+	// In the following we set the timeout for TPP
+	if req.Timeout != 0 {
+		tppReq.WorkToDoTimeout = strconv.FormatFloat(req.Timeout.Seconds(), 'f', 0, 64)
+	}
+
 	return tppReq, err
 }
 
@@ -713,6 +721,17 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 	tppCertificateRequest, err := c.prepareRequest(req, c.zone)
 	if err != nil {
 		return "", err
+	}
+
+	// We set timeout at 2 levels:
+	// - for the platform request, in this case TPP
+	// - for the Go HTTP client
+	// In the following we will add for the http client
+	if req.Timeout != 0 {
+		if c.client == nil {
+			c.client = &http.Client{}
+		}
+		c.client.Timeout = req.Timeout
 	}
 
 	statusCode, status, body, err := c.request("POST", urlResourceCertificateRequest, tppCertificateRequest)
@@ -1328,6 +1347,18 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 	includeChain := req.ChainOption != certificate.ChainOptionIgnore
 	rootFirstOrder := includeChain && req.ChainOption == certificate.ChainOptionRootFirst
 
+	// We set timeout at 2 levels:
+	// - for the platform request, in this case TPP
+	// - for the Go HTTP client
+	// In the following we will add for the http client
+
+	if req.Timeout != 0 {
+		if c.client == nil {
+			c.client = &http.Client{}
+		}
+		c.client.Timeout = req.Timeout
+	}
+
 	if req.PickupID == "" && req.Thumbprint != "" {
 		// search cert by Thumbprint and fill pickupID
 		searchResult, err := c.searchCertificatesByFingerprint(req.Thumbprint)
@@ -1360,6 +1391,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 	startTime := time.Now()
 	for {
 		var retrieveResponse *certificateRetrieveResponse
+
 		retrieveResponse, err = c.retrieveCertificateOnce(certReq)
 		if err != nil {
 			return nil, fmt.Errorf("unable to retrieve: %s", err)

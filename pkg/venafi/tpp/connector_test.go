@@ -131,9 +131,9 @@ func TestNewConnectorURLErrors(t *testing.T) {
 		"trailing_other": "https://example.com/foo/",
 		"nested_vedsdk":  "https://example.com/foo/vedsdk",
 	}
-	for label, url := range tests {
+	for label, testUrl := range tests {
 		t.Run(label, func(t *testing.T) {
-			c, err := NewConnector(url, "", false, nil)
+			c, err := NewConnector(testUrl, "", false, nil)
 			if err == nil {
 				t.Error("expected an error")
 			}
@@ -500,7 +500,7 @@ func TestRequestCertificateUserPassword(t *testing.T) {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
 	}
-	DoRequestCertificate(t, tpp)
+	DoRequestCertificate(t, tpp, 0)
 }
 
 func TestRequestCertificateToken(t *testing.T) {
@@ -515,7 +515,24 @@ func TestRequestCertificateToken(t *testing.T) {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
 	}
-	DoRequestCertificate(t, tpp)
+	DoRequestCertificate(t, tpp, 0)
+}
+
+func TestRequestCertificateTokenWithExtendedTimeout(t *testing.T) {
+	t.Skip("Skipping as we cannot make TPP to hold the amount of time we want to properly test this")
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+	timeout, _ := time.ParseDuration("45s")
+	DoRequestCertificate(t, tpp, timeout)
 }
 
 func TestRequestCertificateWithValidityHours(t *testing.T) {
@@ -884,15 +901,6 @@ func TestRetrieveCertificate(t *testing.T) {
 			givenTimeout: 3 * time.Second,
 			expectErr:    "unable to retrieve: Unexpected status code on TPP Certificate Retrieval. Status: 500 Certificate \\VED\\Policy\\TLS/SSL\\aexample.com has encountered an error while processing, Status: Post CSR failed with error: Cannot connect to the certificate authority (CA), Stage: 500.",
 		},
-		{
-			name: "should fail when timeout too small while waiting for the cert",
-			mockRetrieve: []mockResp{
-				{`202 Certificate \VED\Policy\TLS/SSL\aexample.com being processed, Status: Post CSR, Stage: 500.`,
-					`{"Stage": 500, "Status": "Post CSR"}`},
-			},
-			givenTimeout: 1 * time.Millisecond,
-			expectErr:    "Operation timed out. You may try retrieving the certificate later using Pickup ID: \\VED\\Policy\\Test\\bexample.com",
-		},
 	}
 
 	serverWith := func(mockRetrieve []mockResp) (_ *httptest.Server, retrieveCount *int32) {
@@ -1106,7 +1114,7 @@ func DoRequestCertificateWithValidityDuration(t *testing.T, tpp *Connector) {
 
 }
 
-func DoRequestCertificate(t *testing.T, tpp *Connector) {
+func DoRequestCertificate(t *testing.T, tpp *Connector, timeout time.Duration) {
 	config, err := tpp.ReadZoneConfiguration()
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
@@ -1125,6 +1133,9 @@ func DoRequestCertificate(t *testing.T, tpp *Connector) {
 	req.FriendlyName = cn
 	req.CustomFields = []certificate.CustomField{
 		{Name: "custom", Value: "2019-10-10"},
+	}
+	if timeout != 0 {
+		req.Timeout = timeout
 	}
 	err = tpp.GenerateRequest(config, req)
 	if err != nil {

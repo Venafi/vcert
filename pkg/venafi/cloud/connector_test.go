@@ -146,6 +146,33 @@ func TestRequestCertificate(t *testing.T) {
 	}
 }
 
+func TestRequestCertificateWithExtendTime(t *testing.T) {
+	t.Skip("Skipping as we cannot make VaaS to hold the amount of time we want to properly test this")
+	conn := getTestConnector(ctx.CloudZone)
+	conn.verbose = true
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	zoneConfig, err := conn.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	req := certificate.Request{}
+	req.Subject.CommonName = test.RandCN()
+	req.Subject.Organization = []string{"Venafi, Inc."}
+	req.Subject.OrganizationalUnit = []string{"Automated Tests"}
+	req.Timeout, _ = time.ParseDuration("45s")
+	err = conn.GenerateRequest(zoneConfig, &req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	_, err = conn.RequestCertificate(&req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+}
+
 func TestRequestCertificateED25519WithValidation(t *testing.T) {
 	conn := getTestConnector(ctx.VAASzoneEC)
 	conn.verbose = true
@@ -417,6 +444,74 @@ func TestRetrieveCertificate(t *testing.T) {
 	req.Subject.CommonName = test.RandCN()
 	req.Subject.Organization = []string{"Venafi, Inc."}
 	req.Subject.OrganizationalUnit = []string{"Automated Tests"}
+	err = conn.GenerateRequest(zoneConfig, req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	pickupID, err := conn.RequestCertificate(req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	req.PickupID = pickupID
+	req.ChainOption = certificate.ChainOptionRootLast
+
+	pcc, _ := certificate.NewPEMCollection(nil, nil, nil)
+	startTime := time.Now()
+	for {
+
+		pcc, err = conn.RetrieveCertificate(req)
+		if err != nil {
+			_, ok := err.(endpoint.ErrCertificatePending)
+			if ok {
+				if time.Now().After(startTime.Add(time.Duration(600) * time.Second)) {
+					err = endpoint.ErrRetrieveCertificateTimeout{CertificateID: pickupID}
+					break
+				}
+				time.Sleep(time.Duration(10) * time.Second)
+				continue
+			}
+			break
+		}
+		break
+	}
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	p, _ := pem.Decode([]byte(pcc.Certificate))
+	cert, err := x509.ParseCertificate(p.Bytes)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	if req.Subject.CommonName != cert.Subject.CommonName {
+		t.Fatalf("Retrieved certificate did not contain expected CN.  Expected: %s -- Actual: %s", req.Subject.CommonName, cert.Subject.CommonName)
+	}
+
+	p, _ = pem.Decode([]byte(pcc.Chain[0]))
+	cert, err = x509.ParseCertificate(p.Bytes)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	if !cert.IsCA || fmt.Sprintf("%v", cert.Subject) == fmt.Sprintf("%v", cert.Issuer) {
+		t.Fatalf("Expected Intermediate Root Certificate first, instead got Subject: %v -- Issuer %v", cert.Subject, cert.Issuer)
+	}
+}
+
+func TestRetrieveCertificateWithExtendedTime(t *testing.T) {
+	t.Skip("Skipping as we cannot make VaaS to hold the amount of time we want to properly test this")
+	conn := getTestConnector(ctx.CloudZone)
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	zoneConfig, err := conn.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	req := &certificate.Request{}
+	req.Subject.CommonName = test.RandCN()
+	req.Subject.Organization = []string{"Venafi, Inc."}
+	req.Subject.OrganizationalUnit = []string{"Automated Tests"}
+	req.Timeout, _ = time.ParseDuration("45s")
 	err = conn.GenerateRequest(zoneConfig, req)
 	if err != nil {
 		t.Fatalf("%s", err)
