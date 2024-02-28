@@ -656,7 +656,9 @@ func (c *Connector) prepareRequest(req *certificate.Request, zone string) (tppRe
 	// If enable timeout is defined by the user in the request, we use it in order
 	// override API's timeout for the CA to finish issuance
 	if req.Timeout != 0 {
-		tppReq.WorkToDoTimeout = strconv.FormatFloat(req.Timeout.Seconds(), 'f', 0, 64)
+		seconds := int64(req.Timeout.Seconds())
+		secondsString := strconv.FormatInt(seconds, 10)
+		tppReq.WorkToDoTimeout = secondsString
 	}
 
 	return tppReq, err
