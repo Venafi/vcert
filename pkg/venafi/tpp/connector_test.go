@@ -500,7 +500,7 @@ func TestRequestCertificateUserPassword(t *testing.T) {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
 	}
-	DoRequestCertificate(t, tpp)
+	DoRequestCertificate(t, tpp, 0)
 }
 
 func TestRequestCertificateToken(t *testing.T) {
@@ -515,7 +515,24 @@ func TestRequestCertificateToken(t *testing.T) {
 			t.Fatalf("err is not nil, err: %s", err)
 		}
 	}
-	DoRequestCertificate(t, tpp)
+	DoRequestCertificate(t, tpp, 0)
+}
+
+func TestRequestCertificateTokenWithExtendedTimeout(t *testing.T) {
+	t.Skip("Skipping as we cannot make TPP to hold the amount of time we want to properly test this")
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+	timeout, _ := time.ParseDuration("45s")
+	DoRequestCertificate(t, tpp, timeout)
 }
 
 func TestRequestCertificateWithValidityHours(t *testing.T) {
@@ -1106,7 +1123,7 @@ func DoRequestCertificateWithValidityDuration(t *testing.T, tpp *Connector) {
 
 }
 
-func DoRequestCertificate(t *testing.T, tpp *Connector) {
+func DoRequestCertificate(t *testing.T, tpp *Connector, timeout time.Duration) {
 	config, err := tpp.ReadZoneConfiguration()
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
@@ -1125,6 +1142,9 @@ func DoRequestCertificate(t *testing.T, tpp *Connector) {
 	req.FriendlyName = cn
 	req.CustomFields = []certificate.CustomField{
 		{Name: "custom", Value: "2019-10-10"},
+	}
+	if timeout != 0 {
+		req.Timeout = timeout
 	}
 	err = tpp.GenerateRequest(config, req)
 	if err != nil {
