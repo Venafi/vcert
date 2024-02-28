@@ -728,6 +728,9 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 	// - for the Go HTTP client
 	// In the following we will add for the http client
 	if req.Timeout != 0 {
+		if c.client == nil {
+			c.client = &http.Client{}
+		}
 		c.client.Timeout = req.Timeout
 	}
 
@@ -1350,6 +1353,9 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 	// In the following we will add for the http client
 
 	if req.Timeout != 0 {
+		if c.client == nil {
+			c.client = &http.Client{}
+		}
 		c.client.Timeout = req.Timeout
 	}
 

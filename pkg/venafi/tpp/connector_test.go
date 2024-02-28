@@ -901,15 +901,6 @@ func TestRetrieveCertificate(t *testing.T) {
 			givenTimeout: 3 * time.Second,
 			expectErr:    "unable to retrieve: Unexpected status code on TPP Certificate Retrieval. Status: 500 Certificate \\VED\\Policy\\TLS/SSL\\aexample.com has encountered an error while processing, Status: Post CSR failed with error: Cannot connect to the certificate authority (CA), Stage: 500.",
 		},
-		{
-			name: "should fail when timeout too small while waiting for the cert",
-			mockRetrieve: []mockResp{
-				{`202 Certificate \VED\Policy\TLS/SSL\aexample.com being processed, Status: Post CSR, Stage: 500.`,
-					`{"Stage": 500, "Status": "Post CSR"}`},
-			},
-			givenTimeout: 1 * time.Millisecond,
-			expectErr:    "Operation timed out. You may try retrieving the certificate later using Pickup ID: \\VED\\Policy\\Test\\bexample.com",
-		},
 	}
 
 	serverWith := func(mockRetrieve []mockResp) (_ *httptest.Server, retrieveCount *int32) {

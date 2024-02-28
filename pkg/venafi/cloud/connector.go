@@ -843,6 +843,9 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 
 	// We set timeout for the http client
 	if req.Timeout != 0 {
+		if c.client == nil {
+			c.client = &http.Client{}
+		}
 		c.client.Timeout = req.Timeout
 	}
 	statusCode, status, body, err := c.request("POST", url, cloudReq)
@@ -901,6 +904,9 @@ func (c *Connector) SupportSynchronousRequestCertificate() bool {
 func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates *certificate.PEMCollection, err error) {
 	// We set timeout for the http client
 	if req.Timeout != 0 {
+		if c.client == nil {
+			c.client = &http.Client{}
+		}
 		c.client.Timeout = req.Timeout
 	}
 	if req.PickupID == "" && req.CertID == "" && req.Thumbprint != "" {
