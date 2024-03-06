@@ -84,6 +84,7 @@ type certificateRequest struct {
 	Devices                 []device        `json:",omitempty"`
 	CertificateType         string          `json:",omitempty"`
 	Reenable                bool            `json:",omitempty"`
+	WorkToDoTimeout         string          `json:",omitempty"`
 }
 
 type certificateRetrieveRequest struct {
@@ -546,7 +547,9 @@ func (c *Connector) getHTTPClient() *http.Client {
 	/* #nosec */
 	if c.trust != nil {
 		if tlsConfig == nil {
-			tlsConfig = &tls.Config{}
+			tlsConfig = &tls.Config{
+				MinVersion: tls.VersionTLS12,
+			}
 		} else {
 			tlsConfig = tlsConfig.Clone()
 		}
