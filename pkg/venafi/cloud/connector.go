@@ -80,13 +80,14 @@ const (
 
 // Connector contains the base data needed to communicate with the Venafi Cloud servers
 type Connector struct {
-	baseURL string
-	apiKey  string
-	verbose bool
-	user    *userDetails
-	trust   *x509.CertPool
-	zone    cloudZone
-	client  *http.Client
+	baseURL     string
+	accessToken string
+	apiKey      string
+	verbose     bool
+	user        *userDetails
+	trust       *x509.CertPool
+	zone        cloudZone
+	client      *http.Client
 }
 
 func (c *Connector) RetrieveCertificateMetaData(dn string) (*certificate.CertificateMetaData, error) {
@@ -696,6 +697,11 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 		return fmt.Errorf("failed to authenticate: missing credentials")
 	}
 	c.apiKey = auth.APIKey
+
+	if auth.AccessToken != "" {
+		c.accessToken = auth.AccessToken
+	}
+
 	url := c.getURL(urlResourceUserAccounts)
 	statusCode, status, body, err := c.request("GET", url, nil, true)
 	if err != nil {
