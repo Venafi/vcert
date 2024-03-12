@@ -31,6 +31,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-http-utils/headers"
+
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
 	"github.com/Venafi/vcert/v5/pkg/policy"
@@ -319,10 +321,7 @@ func (c *Connector) request(method string, url string, data interface{}, authNot
 
 	var payload io.Reader
 	var b []byte
-	if method == "POST" {
-		b, _ = json.Marshal(data)
-		payload = bytes.NewReader(b)
-	} else if method == "PUT" {
+	if method == http.MethodPost || method == http.MethodPut {
 		b, _ = json.Marshal(data)
 		payload = bytes.NewReader(b)
 	}
@@ -332,19 +331,20 @@ func (c *Connector) request(method string, url string, data interface{}, authNot
 		err = fmt.Errorf("%w: %v", verror.VcertError, err)
 		return
 	}
-	if c.apiKey != "" {
+
+	if c.accessToken != "" {
+		r.Header.Add(headers.Authorization, fmt.Sprintf("%s %s", oauthTokenType, c.accessToken))
+	} else if c.apiKey != "" {
 		r.Header.Add("tppl-api-key", c.apiKey)
 	}
-	if method == "POST" {
-		r.Header.Add("Accept", "application/json")
-		r.Header.Add("content-type", "application/json")
-	} else if method == "PUT" {
-		r.Header.Add("Accept", "application/json")
-		r.Header.Add("content-type", "application/json")
+
+	if method == http.MethodPost || method == http.MethodPut {
+		r.Header.Add(headers.Accept, "application/json")
+		r.Header.Add(headers.ContentType, "application/json")
 	} else {
-		r.Header.Add("Accept", "*/*")
+		r.Header.Add(headers.Accept, "*/*")
 	}
-	r.Header.Add("cache-control", "no-cache")
+	r.Header.Add(headers.CacheControl, "no-cache")
 
 	var httpClient = c.getHTTPClient()
 
@@ -362,7 +362,7 @@ func (c *Connector) request(method string, url string, data interface{}, authNot
 		err = fmt.Errorf("%w: %v", verror.ServerError, err)
 	}
 	// Do not enable trace in production
-	trace := false // IMPORTANT: sensitive information can be diclosured
+	trace := false // IMPORTANT: sensitive information can be disclosed
 	// I hope you know what are you doing
 	if trace {
 		log.Println("#################")

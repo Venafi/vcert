@@ -67,8 +67,10 @@ const (
 	urlUserById                                   = urlUsers + "/%s"
 	urlUsersByName                                = urlUsers + "/username/%s"
 	urlTeams                          urlResource = apiVersion + "teams"
+	urlServiceAccountToken            urlResource = apiVersion + "oauth2/v2.0/%s/token"
 
 	defaultAppName = "Default"
+	oauthTokenType = "Bearer"
 )
 
 type condorChainOption string
@@ -80,20 +82,23 @@ const (
 
 // Connector contains the base data needed to communicate with the Venafi Cloud servers
 type Connector struct {
-	baseURL string
-	apiKey  string
-	verbose bool
-	user    *userDetails
-	trust   *x509.CertPool
-	zone    cloudZone
-	client  *http.Client
+	baseURL     string
+	apiKey      string
+	tenantID    string
+	jwt         string
+	accessToken string
+	verbose     bool
+	user        *userDetails
+	trust       *x509.CertPool
+	zone        cloudZone
+	client      *http.Client
 }
 
-func (c *Connector) RetrieveCertificateMetaData(dn string) (*certificate.CertificateMetaData, error) {
+func (c *Connector) RetrieveCertificateMetaData(_ string) (*certificate.CertificateMetaData, error) {
 	panic("operation is not supported yet")
 }
 
-func (c *Connector) SearchCertificates(req *certificate.SearchRequest) (*certificate.CertSearchResponse, error) {
+func (c *Connector) SearchCertificates(_ *certificate.SearchRequest) (*certificate.CertSearchResponse, error) {
 	panic("operation is not supported yet")
 }
 
@@ -195,7 +200,7 @@ func (c *Connector) IsCSRServiceGenerated(req *certificate.Request) (bool, error
 
 func getCertificateId(c *Connector, req *certificate.Request) (string, error) {
 	startTime := time.Now()
-	//Wait for certificate to be issued by checking it's PickupID
+	//Wait for certificate to be issued by checking its PickupID
 	//If certID is filled then certificate should be already issued.
 	for {
 		if req.PickupID == "" {
@@ -224,15 +229,15 @@ func getCertificateId(c *Connector, req *certificate.Request) (string, error) {
 	return "", endpoint.ErrRetrieveCertificateTimeout{CertificateID: req.PickupID}
 }
 
-func (c *Connector) RetrieveSshConfig(ca *certificate.SshCaTemplateRequest) (*certificate.SshConfig, error) {
+func (c *Connector) RetrieveSshConfig(_ *certificate.SshCaTemplateRequest) (*certificate.SshConfig, error) {
 	panic("operation is not supported yet")
 }
 
-func (c *Connector) RetrieveSSHCertificate(req *certificate.SshCertRequest) (response *certificate.SshCertificateObject, err error) {
+func (c *Connector) RetrieveSSHCertificate(_ *certificate.SshCertRequest) (response *certificate.SshCertificateObject, err error) {
 	panic("operation is not supported yet")
 }
 
-func (c *Connector) RequestSSHCertificate(req *certificate.SshCertRequest) (response *certificate.SshCertificateObject, err error) {
+func (c *Connector) RequestSSHCertificate(_ *certificate.SshCertRequest) (response *certificate.SshCertificateObject, err error) {
 	panic("operation is not supported yet")
 }
 
@@ -306,47 +311,46 @@ func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) 
 	ps := buildPolicySpecification(cit, info, true)
 
 	// getting the users to set to the PolicySpecification
-	users, error := c.getUsers()
-	if error != nil {
-		return nil, error
+	policyUsers, err := c.getUsers()
+	if err != nil {
+		return nil, err
 	}
-	ps.Users = users
+	ps.Users = policyUsers
 
 	return ps, nil
 }
 
 func (c *Connector) getUsers() ([]string, error) {
 	var usersList []string
-	appDetails, _, error := c.getAppDetailsByName(c.zone.getApplicationName())
-	if error != nil {
-		return nil, error
+	appDetails, _, err := c.getAppDetailsByName(c.zone.getApplicationName())
+	if err != nil {
+		return nil, err
 	}
-	var teams *teams
+	var teamsList *teams
 	for _, owner := range appDetails.OwnerIdType {
 		if owner.OwnerType == UserType.String() {
-			user, error := c.retrieveUser(owner.OwnerId)
-			if error != nil {
-				return nil, error
+			retrievedUser, userErr := c.retrieveUser(owner.OwnerId)
+			if userErr != nil {
+				return nil, userErr
 			}
-			usersList = append(usersList, user.Username)
-		} else {
-			if owner.OwnerType == TeamType.String() {
-				if teams == nil {
-					teams, error = c.retrieveTeams()
-					if error != nil {
-						return nil, error
-					}
+			usersList = append(usersList, retrievedUser.Username)
+		} else if owner.OwnerType == TeamType.String() {
+			if teamsList == nil {
+				teamsList, err = c.retrieveTeams()
+				if err != nil {
+					return nil, err
 				}
-				if teams != nil {
-					for _, team := range teams.Teams {
-						if team.ID == owner.OwnerId {
-							usersList = append(usersList, team.Name)
-							break
-						}
+			}
+			if teamsList != nil {
+				for _, t := range teamsList.Teams {
+					if t.ID == owner.OwnerId {
+						usersList = append(usersList, t.Name)
+						break
 					}
 				}
 			}
 		}
+
 	}
 	return usersList, nil
 }
@@ -400,7 +404,6 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 			ps.Policy.CertificateAuthority = &defaultCA
 
 			caDetails, err = getCertificateAuthorityDetails(*(ps.Policy.CertificateAuthority), c)
-
 			if err != nil {
 				return "", err
 			}
@@ -408,11 +411,9 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 		} else {
 			//policy is not specified so we get the default CA
 			caDetails, err = getCertificateAuthorityDetails(policy.DefaultCA, c)
-
 			if err != nil {
 				return "", err
 			}
-
 		}
 	}
 
@@ -478,16 +479,16 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 	if err != nil && statusCode == 404 { //means application was not found.
 		log.Printf("creating application: %s", appName)
 
-		_, error := c.createApplication(appName, ps, cit)
-		if error != nil {
-			return "", error
+		_, err = c.createApplication(appName, ps, cit)
+		if err != nil {
+			return "", err
 		}
 
 	} else { //determine if the application needs to be updated
 		log.Printf("updating application: %s", appName)
-		error := c.updateApplication(name, ps, cit, appDetails)
-		if error != nil {
-			return "", error
+		err = c.updateApplication(name, ps, cit, appDetails)
+		if err != nil {
+			return "", err
 		}
 	}
 
@@ -501,23 +502,23 @@ func (c *Connector) createApplication(appName string, ps *policy.PolicySpecifica
 	appIssuingTemplate[cit.Name] = cit.ID
 
 	var owners []policy.OwnerIdType
-	var error error
+	var err error
 	var statusCode int
 	var status string
 
-	//if users were passed to the PS, then it will needed to resolve the related Owners to set them
+	//if users are passed to the PS, resolve the related Owners to set them
 	if len(ps.Users) > 0 {
-		owners, error = c.resolveOwners(ps.Users)
-	} else { //if the users were not specified in PS, then the current User should be used as owner
+		owners, err = c.resolveOwners(ps.Users)
+	} else { //if users are not specified in PS, then the current User should be used as owner
 		var owner *policy.OwnerIdType
-		owner, error = c.getOwnerFromUserDetails()
+		owner, err = c.getOwnerFromUserDetails()
 		if owner != nil {
 			owners = []policy.OwnerIdType{*owner}
 		}
 	}
 
-	if error != nil {
-		return nil, fmt.Errorf("an error happened trying to resolve the owners: %w", error)
+	if err != nil {
+		return nil, fmt.Errorf("an error happened trying to resolve the owners: %w", err)
 	}
 
 	//create application
@@ -529,9 +530,9 @@ func (c *Connector) createApplication(appName string, ps *policy.PolicySpecifica
 
 	url := c.getURL(urlAppRoot)
 
-	statusCode, status, _, error = c.request("POST", url, appReq)
-	if error != nil {
-		return nil, error
+	statusCode, status, _, err = c.request("POST", url, appReq)
+	if err != nil {
+		return nil, err
 	}
 	if statusCode != 201 {
 		return nil, fmt.Errorf("unexpected result %s attempting to create application %s", status, appName)
@@ -562,9 +563,9 @@ func (c *Connector) updateApplication(name string, ps *policy.PolicySpecificatio
 	//is that users in the policy specification were provided
 	if len(ps.Users) > 0 {
 		//resolving and setting owners
-		owners, error := c.resolveOwners(ps.Users)
-		if error != nil {
-			return fmt.Errorf("an error happened trying to resolve the owners: %w", error)
+		owners, err := c.resolveOwners(ps.Users)
+		if err != nil {
+			return fmt.Errorf("an error happened trying to resolve the owners: %w", err)
 		}
 		appReq.OwnerIdsAndTypes = owners
 		ownersUpdated = true
@@ -684,7 +685,7 @@ func (c *Connector) GetType() endpoint.ConnectorType {
 	return endpoint.ConnectorTypeCloud
 }
 
-// Ping attempts to connect to the Venafi Cloud API and returns an errror if it cannot
+// Ping attempts to connect to the Venafi Cloud API and returns an error if it cannot
 func (c *Connector) Ping() (err error) {
 
 	return nil
@@ -695,11 +696,24 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 	if auth == nil {
 		return fmt.Errorf("failed to authenticate: missing credentials")
 	}
+
+	c.accessToken = auth.AccessToken
+	c.tenantID = auth.TLSPCTenantID
+	c.jwt = auth.TLSPCJWT
 	c.apiKey = auth.APIKey
+	// If no access token, request one
+	if c.accessToken == "" && c.tenantID != "" && c.jwt != "" {
+		err = c.getServiceAccountToken()
+		if err != nil {
+			return
+		}
+		auth.AccessToken = c.accessToken
+	}
+
 	url := c.getURL(urlResourceUserAccounts)
 	statusCode, status, body, err := c.request("GET", url, nil, true)
 	if err != nil {
-		return err
+		return
 	}
 	ud, err := parseUserDetailsResult(http.StatusOK, statusCode, status, body)
 	if err != nil {
@@ -707,6 +721,53 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 	}
 	c.user = ud
 	return
+}
+
+func (c *Connector) getServiceAccountToken() error {
+	url := c.getURL(urlServiceAccountToken)
+	url = fmt.Sprintf(url, c.tenantID)
+
+	body := netUrl.Values{}
+	body.Set("grant_type", "client_credentials")
+	body.Set("client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer")
+	body.Set("client_assertion", c.jwt)
+
+	r, err := http.NewRequest(http.MethodPost, url, strings.NewReader(body.Encode()))
+	if err != nil {
+		err = fmt.Errorf("%w: %v", verror.VcertError, err)
+		return err
+	}
+	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	httpClient := c.getHTTPClient()
+	resp, err := httpClient.Do(r)
+	if err != nil {
+		err = fmt.Errorf("%w: %v", verror.ServerUnavailableError, err)
+		return err
+	}
+
+	statusCode := resp.StatusCode
+	status := resp.Status
+
+	defer resp.Body.Close()
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		err = fmt.Errorf("%w: %v", verror.ServerError, err)
+		return err
+	}
+
+	accessTokenResponse, err := parseAccessTokenResponse(http.StatusOK, statusCode, status, respBody)
+	if err != nil {
+		return err
+	}
+	if accessTokenResponse.TokenType != oauthTokenType {
+		return fmt.Errorf(
+			"%w: got an access token but token type is not %s. Expected: %s. Got: %s", verror.ServerError,
+			oauthTokenType, oauthTokenType, accessTokenResponse.TokenType)
+	}
+	c.accessToken = accessTokenResponse.AccessToken
+
+	return nil
 }
 
 func (c *Connector) ReadPolicyConfiguration() (policy *endpoint.Policy, err error) {
@@ -828,7 +889,7 @@ func getCloudRequest(c *Connector, req *certificate.Request) (*certificateReques
 }
 
 // ResetCertificate resets the state of a certificate.
-func (c *Connector) ResetCertificate(req *certificate.Request, restart bool) (err error) {
+func (c *Connector) ResetCertificate(_ *certificate.Request, _ bool) (err error) {
 	return fmt.Errorf("not supported by endpoint")
 }
 
@@ -929,7 +990,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 	}
 
 	startTime := time.Now()
-	//Wait for certificate to be issued by checking it's PickupID
+	//Wait for certificate to be issued by checking its PickupID
 	//If certID is filled then certificate should be already issued.
 	var certificateId string
 	if req.CertID == "" {
@@ -1107,7 +1168,7 @@ func getDekInfo(c *Connector, cerId string) (*EdgeEncryptionKey, error) {
 
 func ConvertZipBytesToPem(dataByte []byte, rootFirst bool) (*certificate.PEMCollection, error) {
 	collection := certificate.PEMCollection{}
-	var certificate string
+	var cert string
 	var privateKey string
 	var chainArr []string
 
@@ -1160,13 +1221,13 @@ func ConvertZipBytesToPem(dataByte []byte, rootFirst bool) (*certificate.PEMColl
 						}
 					}
 				} else {
-					certificate = certs[i] + "\n"
+					cert = certs[i] + "\n"
 				}
 			}
 		}
 	}
 
-	collection.Certificate = certificate
+	collection.Certificate = cert
 	collection.PrivateKey = privateKey
 	collection.Chain = chainArr
 
@@ -1197,13 +1258,13 @@ func (c *Connector) waitForCertificate(url string, request *certificate.Request)
 }
 
 // RevokeCertificate attempts to revoke the certificate
-func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (err error) {
+func (c *Connector) RevokeCertificate(_ *certificate.RevocationRequest) (err error) {
 	return fmt.Errorf("not supported by endpoint")
 }
 
-// Custom Logging not currently supported by VaaS
-func (c *Connector) WriteLog(logReq *endpoint.LogRequest) (err error) {
-	return fmt.Errorf("Outbound logging not supported by endpoint")
+// WriteLog Custom Logging not currently supported by VaaS
+func (c *Connector) WriteLog(_ *endpoint.LogRequest) (err error) {
+	return fmt.Errorf("outbound logging not supported by endpoint")
 }
 
 // RenewCertificate attempts to renew the certificate
@@ -1364,7 +1425,7 @@ func (c *Connector) RetireCertificate(retireReq *certificate.RetireRequest) erro
 	previousRequest, err := c.getCertificateStatus(certificateRequestId)
 	if err != nil {
 		if strings.Contains(err.Error(), "Unable to find certificateRequest") {
-			return fmt.Errorf("Invalid thumbprint or certificate ID. No certificates were retired")
+			return fmt.Errorf("invalid thumbprint or certificate ID. No certificates were retired")
 		}
 		return fmt.Errorf("certificate retirement failed: error on getting Certificate ID: %s", err)
 	}
@@ -1422,18 +1483,6 @@ func (c *Connector) searchCertificatesByFingerprint(fp string) (*CertificateSear
 	return c.searchCertificates(req)
 }
 
-/*
-	 "id": "32a656d1-69b1-11e8-93d8-71014a32ec53",
-	 "companyId": "b5ed6d60-22c4-11e7-ac27-035f0608fd2c",
-	 "latestCertificateRequestId": "0e546560-69b1-11e8-9102-a1f1c55d36fb",
-	 "ownerUserId": "593cdba0-2124-11e8-8219-0932652c1da0",
-	 "certificateIds": [
-
-		 "32a656d0-69b1-11e8-93d8-71014a32ec53"
-
-	 ],
-	 "certificateName": "cn=svc6.venafi.example.com",
-*/
 type managedCertificate struct {
 	Id                   string `json:"id"`
 	CompanyId            string `json:"companyId"`
@@ -1711,8 +1760,8 @@ func (c *Connector) CreateAPIUserAccount(userName string, password string) (int,
 		UserAccountType: "API",
 		Username:        userName,
 		Password:        password,
-		Firstname:       userName[0:indexOfAt], //Given the issue reported in https://jira.eng.venafi.com/browse/VC-16461 it's
-		// required the workaround to set something on firstName or lastName field. For now we are setting the email's prefix
+		Firstname:       userName[0:indexOfAt], //Given the issue reported in https://jira.eng.venafi.com/browse/VC-16461 its
+		// required the workaround to set something on firstName or lastName field. For now, we are setting the email's prefix
 	}
 
 	return c.CreateUserAccount(&userAccountReq)
@@ -1874,7 +1923,7 @@ func getCertificateAuthorityInfoFromCloud(caName, caAccountId, caProductOptionId
 	info.CAType = accountDetails.Account.CertificateAuthority
 
 	if accountDetails.Account.Key == "" {
-		return nil, fmt.Errorf("Key is empty")
+		return nil, fmt.Errorf("key is empty")
 	}
 
 	info.CAAccountKey = accountDetails.Account.Key

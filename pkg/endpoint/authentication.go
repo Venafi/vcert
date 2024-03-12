@@ -30,6 +30,9 @@ type Authentication struct {
 	ClientPKCS12 bool   `yaml:"-"`
 	// IdentityProvider specify the OAuth 2.0 which VCert will be working for authorization purposes
 	IdentityProvider *OAuthProvider `yaml:"idP,omitempty"`
+	// Attributes to authenticate TLSPC by service account
+	TLSPCTenantID string `yaml:"tlspcTenantId,omitempty"`
+	TLSPCJWT      string `yaml:"tlspcJWT,omitempty"`
 }
 
 // OAuthProvider provides a struct for the OAuth 2.0 providers information
