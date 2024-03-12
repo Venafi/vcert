@@ -11,7 +11,7 @@ import (
 type AccessTokenResponse struct {
 	AccessToken string `json:"access_token"`
 	TokenType   string `json:"token_type"`
-	ExpiresIn   int    `json:"expires_in"`
+	ExpiresIn   int64  `json:"expires_in"`
 	Scope       string `json:"scope,omitempty"`
 }
 
@@ -37,11 +37,11 @@ func parseAccessTokenResponse(expectedStatusCode int, statusCode int, httpStatus
 }
 
 func parseAccessTokenData(data []byte) (*AccessTokenResponse, error) {
-	var response *AccessTokenResponse
-	err := json.Unmarshal(data, response)
+	var response AccessTokenResponse
+	err := json.Unmarshal(data, &response)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", verror.ServerError, err)
 	}
 
-	return response, nil
+	return &response, nil
 }
