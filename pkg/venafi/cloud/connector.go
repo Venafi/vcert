@@ -698,8 +698,8 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 	}
 
 	c.accessToken = auth.AccessToken
-	c.tenantID = auth.TLSPCTenantID
-	c.jwt = auth.TLSPCJWT
+	c.tenantID = auth.TenantID
+	c.jwt = auth.ExternalIdPJWT
 	c.apiKey = auth.APIKey
 	// If no access token, request one
 	if c.accessToken == "" && c.tenantID != "" && c.jwt != "" {

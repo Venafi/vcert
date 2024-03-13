@@ -19,20 +19,29 @@ package endpoint
 // Authentication provides a struct for authentication data. Either specify User and Password for Trust Protection Platform
 // or Firefly or ClientId and ClientSecret for Firefly or specify an APIKey for TLS Protect Cloud.
 type Authentication struct {
-	User         string `yaml:"user,omitempty"`
-	Password     string `yaml:"password,omitempty"`
-	APIKey       string `yaml:"apiKey,omitempty"`
+	//TPP Auth methods
+	// User and password
+	User     string `yaml:"user,omitempty"`     //**DEPRECATED** Use access/refresh token or client certificate instead
+	Password string `yaml:"password,omitempty"` //**DEPRECATED** Use access/refresh token or client certificate instead
+	// Tokens
+	AccessToken  string `yaml:"accessToken,omitempty"`
 	RefreshToken string `yaml:"refreshToken,omitempty"`
-	Scope        string `yaml:"scope,omitempty"`
+	// Client certificate
+	ClientPKCS12 bool `yaml:"-"`
+
+	//TLSPC Auth methods
+	// API key
+	APIKey string `yaml:"apiKey,omitempty"`
+	// Service account
+	TenantID       string `yaml:"tlspcTenantId,omitempty"`
+	ExternalIdPJWT string `yaml:"tlspcJWT,omitempty"`
+
+	// IDP Auth method
 	ClientId     string `yaml:"clientId,omitempty"`
 	ClientSecret string `yaml:"clientSecret,omitempty"`
-	AccessToken  string `yaml:"accessToken,omitempty"`
-	ClientPKCS12 bool   `yaml:"-"`
+	Scope        string `yaml:"scope,omitempty"`
 	// IdentityProvider specify the OAuth 2.0 which VCert will be working for authorization purposes
 	IdentityProvider *OAuthProvider `yaml:"idP,omitempty"`
-	// Attributes to authenticate TLSPC by service account
-	TLSPCTenantID string `yaml:"tlspcTenantId,omitempty"`
-	TLSPCJWT      string `yaml:"tlspcJWT,omitempty"`
 }
 
 // OAuthProvider provides a struct for the OAuth 2.0 providers information

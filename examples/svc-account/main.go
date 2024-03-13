@@ -24,26 +24,26 @@ func main() {
 	// URL can be nil if using production TLSPC
 	url := os.Getenv(TlspcUrl)
 
-	zone, _ := os.LookupEnv(TlspcZone)
-	//if !found {
-	//	log.Fatalf(envVarNotSet, TlspcZone)
-	//}
-	tenantID, _ := os.LookupEnv(TlspcTenantId)
-	//if !found {
-	//	log.Fatalf(envVarNotSet, TlspcTenantId)
-	//}
-	jwt, _ := os.LookupEnv(TlspcJwt)
-	//if !found {
-	//	log.Fatalf(envVarNotSet, TlspcJwt)
-	//}
+	zone, found := os.LookupEnv(TlspcZone)
+	if !found {
+		log.Fatalf(envVarNotSet, TlspcZone)
+	}
+	tenantID, found := os.LookupEnv(TlspcTenantId)
+	if !found {
+		log.Fatalf(envVarNotSet, TlspcTenantId)
+	}
+	jwt, found := os.LookupEnv(TlspcJwt)
+	if !found {
+		log.Fatalf(envVarNotSet, TlspcJwt)
+	}
 
 	config := &vcert.Config{
 		ConnectorType: endpoint.ConnectorTypeCloud,
 		BaseUrl:       url,
 		Zone:          zone,
 		Credentials: &endpoint.Authentication{
-			TLSPCTenantID: tenantID,
-			TLSPCJWT:      jwt,
+			TenantID:       tenantID,
+			ExternalIdPJWT: jwt,
 		},
 	}
 	connector, err := vcert.NewClient(config)
