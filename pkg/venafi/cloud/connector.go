@@ -697,19 +697,26 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 		return fmt.Errorf("failed to authenticate: missing credentials")
 	}
 
-	c.accessToken = auth.AccessToken
-	c.tenantID = auth.TenantID
-	c.jwt = auth.ExternalIdPJWT
-	c.apiKey = auth.APIKey
-	// If no access token, request one
-	if c.accessToken == "" && c.tenantID != "" && c.jwt != "" {
+	//1. Access token. Assign it to connector and return
+	if auth.AccessToken != "" {
+		c.accessToken = auth.AccessToken
+		return
+	}
+
+	//2. JWT and tenantID. use it to request new access token
+	if auth.TenantID != "" && auth.ExternalIdPJWT != "" {
+		c.tenantID = auth.TenantID
+		c.jwt = auth.ExternalIdPJWT
 		err = c.getServiceAccountToken()
 		if err != nil {
 			return
 		}
 		auth.AccessToken = c.accessToken
+		return
 	}
 
+	// 3. API key. Get user to test authentication
+	c.apiKey = auth.APIKey
 	url := c.getURL(urlResourceUserAccounts)
 	statusCode, status, body, err := c.request("GET", url, nil, true)
 	if err != nil {
@@ -815,7 +822,7 @@ func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration,
 }
 
 func getCloudRequest(c *Connector, req *certificate.Request) (*certificateRequest, error) {
-	if c.user == nil || c.user.Company == nil {
+	if (c.accessToken == "" && c.user == nil) || (c.user != nil && c.user.Company == nil) {
 		return nil, fmt.Errorf("must be autheticated to request a certificate")
 	}
 
@@ -1673,7 +1680,7 @@ func (c *Connector) getCertsBatch(page, pageSize int, withExpired bool) ([]certi
 
 func (c *Connector) getAppDetailsByName(appName string) (*ApplicationDetails, int, error) {
 	url := c.getURL(urlAppDetailsByName)
-	if c.user == nil {
+	if c.accessToken == "" && c.user == nil {
 		return nil, -1, fmt.Errorf("must be autheticated to read the zone configuration")
 	}
 	encodedAppName := netUrl.PathEscape(appName)

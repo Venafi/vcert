@@ -51,6 +51,12 @@ func main() {
 		log.Fatalf("error creating client: %s", err.Error())
 	}
 
+	_, err = connector.ReadZoneConfiguration()
+	if err != nil {
+		log.Fatalf("error reading zone: %s", err.Error())
+
+	}
+
 	request := &certificate.Request{
 		Subject: pkix.Name{
 			CommonName: "svc-account.venafi.example.com",
