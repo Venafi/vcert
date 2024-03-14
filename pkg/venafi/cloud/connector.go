@@ -767,7 +767,7 @@ func (c *Connector) getServiceAccountToken() error {
 	if err != nil {
 		return err
 	}
-	if strings.ToLower(accessTokenResponse.TokenType) != strings.ToLower(oauthTokenType) {
+	if !strings.EqualFold(accessTokenResponse.TokenType, oauthTokenType) {
 		return fmt.Errorf(
 			"%w: got an access token but token type is not %s. Expected: %s. Got: %s", verror.ServerError,
 			oauthTokenType, oauthTokenType, accessTokenResponse.TokenType)
