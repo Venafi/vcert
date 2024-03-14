@@ -31,6 +31,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-http-utils/headers"
+
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
 	"github.com/Venafi/vcert/v5/pkg/policy"
@@ -282,7 +284,6 @@ func (c *Connector) getHTTPClient() *http.Client {
 		DialContext: (&net.Dialer{
 			Timeout:   30 * time.Second,
 			KeepAlive: 30 * time.Second,
-			DualStack: true,
 		}).DialContext,
 		MaxIdleConns:          100,
 		IdleConnTimeout:       90 * time.Second,
@@ -310,19 +311,16 @@ func (c *Connector) getHTTPClient() *http.Client {
 }
 
 func (c *Connector) request(method string, url string, data interface{}, authNotRequired ...bool) (statusCode int, statusText string, body []byte, err error) {
-	if c.user == nil || c.user.Company == nil {
+	if (c.accessToken == "" && c.user == nil) || (c.user != nil && c.user.Company == nil) {
 		if !(len(authNotRequired) == 1 && authNotRequired[0]) {
-			err = fmt.Errorf("%w: must be autheticated to retrieve certificate", verror.VcertError)
+			err = fmt.Errorf("%w: must be autheticated to make requests to TLSPC API", verror.VcertError)
 			return
 		}
 	}
 
 	var payload io.Reader
 	var b []byte
-	if method == "POST" {
-		b, _ = json.Marshal(data)
-		payload = bytes.NewReader(b)
-	} else if method == "PUT" {
+	if method == http.MethodPost || method == http.MethodPut {
 		b, _ = json.Marshal(data)
 		payload = bytes.NewReader(b)
 	}
@@ -332,19 +330,20 @@ func (c *Connector) request(method string, url string, data interface{}, authNot
 		err = fmt.Errorf("%w: %v", verror.VcertError, err)
 		return
 	}
-	if c.apiKey != "" {
+
+	if c.accessToken != "" {
+		r.Header.Add(headers.Authorization, fmt.Sprintf("%s %s", oauthTokenType, c.accessToken))
+	} else if c.apiKey != "" {
 		r.Header.Add("tppl-api-key", c.apiKey)
 	}
-	if method == "POST" {
-		r.Header.Add("Accept", "application/json")
-		r.Header.Add("content-type", "application/json")
-	} else if method == "PUT" {
-		r.Header.Add("Accept", "application/json")
-		r.Header.Add("content-type", "application/json")
+
+	if method == http.MethodPost || method == http.MethodPut {
+		r.Header.Add(headers.Accept, "application/json")
+		r.Header.Add(headers.ContentType, "application/json")
 	} else {
-		r.Header.Add("Accept", "*/*")
+		r.Header.Add(headers.Accept, "*/*")
 	}
-	r.Header.Add("cache-control", "no-cache")
+	r.Header.Add(headers.CacheControl, "no-cache")
 
 	var httpClient = c.getHTTPClient()
 
@@ -361,18 +360,8 @@ func (c *Connector) request(method string, url string, data interface{}, authNot
 	if err != nil {
 		err = fmt.Errorf("%w: %v", verror.ServerError, err)
 	}
-	// Do not enable trace in production
-	trace := false // IMPORTANT: sensitive information can be diclosured
-	// I hope you know what are you doing
-	if trace {
-		log.Println("#################")
-		if method == "POST" {
-			log.Printf("JSON sent for %s\n%s\n", url, string(b))
-		} else {
-			log.Printf("%s request sent to %s\n", method, url)
-		}
-		log.Printf("Response:\n%s\n", string(body))
-	} else if c.verbose {
+
+	if c.verbose {
 		log.Printf("Got %s status for %s %s\n", statusText, method, url)
 	}
 	return
@@ -703,7 +692,7 @@ func (z *cloudZone) parseZone() error {
 	}
 
 	segments := strings.Split(z.zone, "\\")
-	if len(segments) > 2 || len(segments) < 2 {
+	if len(segments) != 2 {
 		return fmt.Errorf("invalid zone format")
 	}
 
@@ -972,14 +961,14 @@ func contains(values []string, toSearch string) bool {
 }
 
 func binarySearch(values []string, toSearch string) int {
-	len := len(values) - 1
-	min := 0
-	for min <= len {
-		mid := len - (len-min)/2
+	length := len(values) - 1
+	minimum := 0
+	for minimum <= length {
+		mid := length - (length-minimum)/2
 		if strings.Compare(toSearch, values[mid]) > 0 {
-			min = mid + 1
+			minimum = mid + 1
 		} else if strings.Compare(toSearch, values[mid]) < 0 {
-			len = mid - 1
+			length = mid - 1
 		} else {
 			return mid
 		}

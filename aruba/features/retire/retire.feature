@@ -29,7 +29,7 @@ Feature: certificate retirement
   @VAAS
   Scenario: retire certificate that does not exist in VaaS
     When I retire the certificate from Cloud with -id 'e9a98610-22aa-11ee-81be-3d121e6033c4'
-    Then it should fail with "Invalid thumbprint or certificate ID. No certificates were retired"
+    Then it should fail with "invalid thumbprint or certificate ID. No certificates were retired"
 
   Scenario Outline: retire certificate using -id flag
     Given I enroll random certificate from <endpoint> with -no-prompt
