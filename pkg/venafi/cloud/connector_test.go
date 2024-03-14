@@ -2288,9 +2288,7 @@ func TestVerifyCSRServiceGenerated(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-	if err != nil {
-		t.Fatalf("%s", err)
-	}
+
 	req := getBasicRequest()
 
 	req.CsrOrigin = certificate.ServiceGeneratedCSR
