@@ -140,15 +140,20 @@ func doRunPlaybook(_ *cli.Context) error {
 		}
 	}
 
+	var taskErrors []string
+
 	for _, certTask := range playbook.CertificateTasks {
 		zap.L().Info("running playbook task", zap.String("task", certTask.Name))
 		errors := service.Execute(playbook.Config, certTask)
 		if len(errors) > 0 {
+			taskErrors = append(taskErrors, certTask.Name)
 			for _, err2 := range errors {
 				zap.L().Error("error running task", zap.String("task", certTask.Name), zap.Error(err2))
 			}
-			os.Exit(1)
 		}
+	}
+	if len(taskErrors) > 0 {
+		os.Exit(1)
 	}
 
 	zap.L().Info("playbook run finished")
