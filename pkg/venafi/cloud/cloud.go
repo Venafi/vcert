@@ -331,6 +331,7 @@ func (c *Connector) request(method string, url string, data interface{}, authNot
 		return
 	}
 
+	r.Header.Set(headers.UserAgent, c.userAgent)
 	if c.accessToken != "" {
 		r.Header.Add(headers.Authorization, fmt.Sprintf("%s %s", oauthTokenType, c.accessToken))
 	} else if c.apiKey != "" {
