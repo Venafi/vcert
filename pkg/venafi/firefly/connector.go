@@ -50,6 +50,7 @@ type Connector struct {
 	trust       *x509.CertPool
 	client      *http.Client
 	zone        string // holds the policyName
+	userAgent   string
 }
 
 // NewConnector creates a new Firefly Connector object used to communicate with Firefly
@@ -61,7 +62,7 @@ func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (
 			return nil, fmt.Errorf("%w: failed to normalize URL: %v", verror.UserDataError, err)
 		}
 	}
-	return &Connector{baseURL: url, zone: zone, verbose: verbose, trust: trust}, nil
+	return &Connector{baseURL: url, zone: zone, verbose: verbose, trust: trust, userAgent: util.DefaultUserAgent}, nil
 }
 
 // normalizeURL normalizes the base URL used to communicate with Firefly
@@ -73,6 +74,10 @@ func normalizeURL(url string) (normalizedURL string, err error) {
 func (c *Connector) SetZone(zone string) {
 	//for now the zone refers to the policyName
 	c.zone = zone
+}
+
+func (c *Connector) SetUserAgent(userAgent string) {
+	c.userAgent = userAgent
 }
 
 func (c *Connector) GetType() endpoint.ConnectorType {
