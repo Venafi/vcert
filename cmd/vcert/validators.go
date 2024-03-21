@@ -42,7 +42,7 @@ var RevocationReasonOptions = []string{
 const JKSMinPasswordLen = 6
 
 func validateCommonFlags(commandName string) error {
-
+	// TODO validate --user-agent
 	if flags.format != "" && flags.format != "pem" && flags.format != "json" && flags.format != P12Format && flags.format != LegacyP12Format && flags.format != JKSFormat && flags.format != util.LegacyPem {
 		return fmt.Errorf("Unexpected output format: %s", flags.format)
 	}

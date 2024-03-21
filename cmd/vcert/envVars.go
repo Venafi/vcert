@@ -16,6 +16,7 @@ const (
 	vcertClientID     = "VCERT_CLIENT_ID"
 	vcertClientSecret = "VCERT_CLIENT_SECRET" // #nosec G101
 	vcertDeviceURL    = "VCERT_DEVICE_URL"
+	vcertUserAgent    = "VCERT_USER_AGENT"
 )
 
 type envVar struct {
@@ -91,6 +92,11 @@ var (
 			EnvVarName:  vcertDeviceURL,
 			Destination: &flags.deviceURL,
 			FlagName:    "--device-url",
+		},
+		{
+			EnvVarName:  vcertUserAgent,
+			Destination: &flags.userAgent,
+			FlagName:    "--user-agent",
 		},
 	}
 )

@@ -141,4 +141,5 @@ type commandFlags struct {
 	sshCertWindows       bool
 	sshFileCertEnroll    string
 	sshFileGetConfig     string
+	userAgent            string
 }

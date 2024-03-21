@@ -49,6 +49,7 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 			return cfg, err
 		}
 		cfg = *flagsCfg
+		cfg.UserAgent = &flags.userAgent
 	}
 
 	//verbosity

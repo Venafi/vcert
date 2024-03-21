@@ -108,6 +108,11 @@ func LoadConfigFromFile(path, section string) (cfg Config, err error) {
 
 	var m dict = iniFile.Section(section).KeysHash()
 
+	if m.has("user-agent") {
+		userAgent := m["user-agent"]
+		cfg.UserAgent = &userAgent
+	}
+
 	var connectorType endpoint.ConnectorType
 	var baseUrl string
 	var auth = &endpoint.Authentication{}

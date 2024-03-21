@@ -476,7 +476,7 @@ var (
 	//todo: make check agains RevocationReasonOptions[]string variable
 	flagRevocationReason = &cli.StringFlag{
 		Name: "reason",
-		Usage: `The revocation reason. Options include: 
+		Usage: `The revocation reason. Options include:
         "none", "key-compromise", "ca-compromise", "affiliation-changed", "superseded", "cessation-of-operation"`,
 		Destination: &flags.revocationReason,
 	}
@@ -707,7 +707,16 @@ var (
 		TakesFile:   true,
 	}
 
-	commonFlags              = []cli.Flag{flagInsecure, flagVerbose, flagNoPrompt}
+	flagUserAgent = &cli.StringFlag{
+		Name: "user-agent",
+		Usage: "Use to set the User-Agent header in HTTP requests to the Venafi REST API. " +
+			"Example: --user-agent example-vcert-script/v0.0.0",
+		Destination: &flags.userAgent,
+		Value:       "vcert/v5.5.0",
+		EnvVars:     []string{vcertUserAgent},
+	}
+
+	commonFlags              = []cli.Flag{flagInsecure, flagVerbose, flagNoPrompt, flagUserAgent}
 	keyFlags                 = []cli.Flag{flagKeyType, flagKeySize, flagKeyCurve, flagKeyFile, flagKeyPassword}
 	sansFlags                = []cli.Flag{flagDNSSans, flagEmailSans, flagIPSans, flagURISans, flagUPNSans}
 	subjectFlags             = flagsApppend(flagCommonName, flagCountry, flagState, flagLocality, flagOrg, flagOrgUnits)
