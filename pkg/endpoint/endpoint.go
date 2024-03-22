@@ -80,26 +80,26 @@ type Connector interface {
 	GetType() ConnectorType
 	// SetZone sets a zone (by name) for requests with this connector.
 	SetZone(z string)
-	// GetZonesByParent returns a list of valid zones specified by parent
-	GetZonesByParent(parent string) ([]string, error)
+	// SetHTTPClient allows to set custom http.Client to this Connector.
+	SetHTTPClient(client *http.Client)
 	Ping() (err error)
 	// Authenticate is usually called by NewClient and it is not required that you manually call it.
 	Authenticate(auth *Authentication) (err error)
+
 	// ReadPolicyConfiguration returns information about zone policies. It can be used for checking request compatibility with policies.
 	ReadPolicyConfiguration() (policy *Policy, err error)
 	// ReadZoneConfiguration returns the zone configuration. A zone configuration includes zone policy and additional zone information.
 	ReadZoneConfiguration() (config *ZoneConfiguration, err error)
+	// GetZonesByParent returns a list of valid zones specified by parent
+	GetZonesByParent(parent string) ([]string, error)
 	// GenerateRequest update certificate.Request with data from zone configuration.
 	GenerateRequest(config *ZoneConfiguration, req *certificate.Request) (err error)
+
 	// ResetCertificate resets the state of a certificate.
 	// This function is idempotent, i.e., it won't fail if there is nothing to be reset.
 	ResetCertificate(req *certificate.Request, restart bool) (err error)
 	// RequestCertificate makes a request to the server with data for enrolling the certificate.
 	RequestCertificate(req *certificate.Request) (requestID string, err error)
-	// SynchronousRequestCertificate makes a request to the server with data for enrolling the certificate and returns the enrolled certificate.
-	SynchronousRequestCertificate(req *certificate.Request) (certificates *certificate.PEMCollection, err error)
-	// SupportSynchronousRequestCertificate returns if the connector support synchronous calls to request a certificate.
-	SupportSynchronousRequestCertificate() bool
 	// RetrieveCertificate immediately returns an enrolled certificate. Otherwise, RetrieveCertificate waits and retries during req.Timeout.
 	RetrieveCertificate(req *certificate.Request) (certificates *certificate.PEMCollection, err error)
 	IsCSRServiceGenerated(req *certificate.Request) (bool, error)
@@ -108,29 +108,35 @@ type Connector interface {
 	RetireCertificate(req *certificate.RetireRequest) error
 	// ImportCertificate adds an existing certificate to Venafi Platform even if the certificate was not issued by Venafi Cloud or Venafi Platform. For information purposes.
 	ImportCertificate(req *certificate.ImportRequest) (*certificate.ImportResponse, error)
-	// SetHTTPClient allows to set custom http.Client to this Connector.
-	SetHTTPClient(client *http.Client)
-	// ListCertificates
+	// ListCertificates returns a list of certificates from inventory that matches the filter
 	ListCertificates(filter Filter) ([]certificate.CertificateInfo, error)
-	SetPolicy(name string, ps *policy.PolicySpecification) (string, error)
-	GetPolicy(name string) (*policy.PolicySpecification, error)
-	RequestSSHCertificate(req *certificate.SshCertRequest) (response *certificate.SshCertificateObject, err error)
-	RetrieveSSHCertificate(req *certificate.SshCertRequest) (response *certificate.SshCertificateObject, err error)
-	RetrieveSshConfig(ca *certificate.SshCaTemplateRequest) (*certificate.SshConfig, error)
 	SearchCertificates(req *certificate.SearchRequest) (*certificate.CertSearchResponse, error)
-	// Returns a valid certificate
+	// SearchCertificate returns a valid certificate
 	//
 	// If it returns no error, the certificate returned should be the latest [1]
 	// exact matching zone [2], CN and sans.DNS [3] provided, with a minimum
 	// validity of `certMinTimeLeft`
 	//
-	// [1] the one with longest validity; field named ValidTo for TPP and
+	// [1] the one with the longest validity; field named ValidTo for TPP and
 	// validityEnd for VaaS
 	// [2] application name for VaaS
 	// [3] an array of strings representing the DNS names
 	SearchCertificate(zone string, cn string, sans *certificate.Sans, certMinTimeLeft time.Duration) (*certificate.CertificateInfo, error)
-	RetrieveAvailableSSHTemplates() ([]certificate.SshAvaliableTemplate, error)
 	RetrieveCertificateMetaData(dn string) (*certificate.CertificateMetaData, error)
+
+	SetPolicy(name string, ps *policy.PolicySpecification) (string, error)
+	GetPolicy(name string) (*policy.PolicySpecification, error)
+
+	RequestSSHCertificate(req *certificate.SshCertRequest) (response *certificate.SshCertificateObject, err error)
+	RetrieveSSHCertificate(req *certificate.SshCertRequest) (response *certificate.SshCertificateObject, err error)
+	RetrieveSshConfig(ca *certificate.SshCaTemplateRequest) (*certificate.SshConfig, error)
+	RetrieveAvailableSSHTemplates() ([]certificate.SshAvaliableTemplate, error)
+
+	// SynchronousRequestCertificate makes a request to the server with data for enrolling the certificate and returns the enrolled certificate.
+	SynchronousRequestCertificate(req *certificate.Request) (certificates *certificate.PEMCollection, err error)
+	// SupportSynchronousRequestCertificate returns if the connector support synchronous calls to request a certificate.
+	SupportSynchronousRequestCertificate() bool
+
 	RetrieveSystemVersion() (string, error)
 	WriteLog(req *LogRequest) error
 }
