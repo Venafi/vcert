@@ -48,8 +48,7 @@ import (
 )
 
 var (
-	tlsConfig      tls.Config
-	connectionType endpoint.ConnectorType
+	tlsConfig tls.Config
 
 	commandEnroll = &cli.Command{
 		Before: runBeforeCommand,
@@ -58,12 +57,16 @@ var (
 		Name:   commandEnrollName,
 		Usage:  "To enroll a certificate",
 		UsageText: ` vcert enroll <Required Venafi as a Service -OR- Trust Protection Platform Config> <Options>
-		 vcert enroll -k <VaaS API key> -z "<app name>\<CIT alias>" --cn <common name>
-		 vcert enroll -k <VaaS API key> -z "<app name>\<CIT alias>" --cn <common name> --key-type rsa --key-size 4096 --san-dns <alt name> --san-dns <alt name2>
-		 vcert enroll -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --cn <common name>
-		 vcert enroll -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --cn <common name> --key-size 4096 --san-dns <alt name> --san-dns <alt name2>
-		 vcert enroll -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --cn <common name> --key-type ecdsa --key-curve p384 --san-dns <alt name> -san-dns <alt name2>
-		 vcert enroll -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --p12-file <PKCS#12 client cert> --p12-password <PKCS#12 password> --cn <common name>`,
+		vcert enroll -k <VaaS API key> -z "<app name>\<CIT alias>" --cn <common name>
+		vcert enroll -k <VaaS API key> -z "<app name>\<CIT alias>" --cn <common name> --key-type rsa --key-size 4096 --san-dns <alt name> --san-dns <alt name2>
+		vcert enroll --platform vaas -t <VaaS access token> -z "<app name>\<CIT alias>" --cn <common name>
+
+		vcert enroll -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --cn <common name>
+		vcert enroll -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --cn <common name> --key-size 4096 --san-dns <alt name> --san-dns <alt name2>
+		vcert enroll -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --cn <common name> --key-type ecdsa --key-curve p384 --san-dns <alt name> -san-dns <alt name2>
+		vcert enroll -u https://tpp.example.com -z "<policy folder DN>" --p12-file <PKCS#12 client cert> --p12-password <PKCS#12 password> --cn <common name>
+
+		vcert enroll --platform firefly -u <Firefly instance url> -t <OIDC access token> -z "<policy folder DN>" --cn <common name>`,
 	}
 	commandGetCred = &cli.Command{
 		Before: runBeforeCommand,
@@ -71,13 +74,16 @@ var (
 		Flags:  getCredFlags,
 		Action: doCommandCredMgmt1,
 		Usage:  "To obtain a new credential (token) for authentication",
-		UsageText: ` vcert getcred -u https://tpp.example.com --username <TPP user> --password <TPP user password>
-		vcert getcred --email <email address for VaaS headless registration> [--password <password>] [--format (text|json)]
+		UsageText: ` vcert getcred --email <email address for VaaS headless registration> [--password <password>] [--format (text|json)]
+		vcert getcred --platform vaas --tenant-id <VaaS tenant id> --external-jwt <JWT from identity provider>
+		
+		vcert getcred -u https://tpp.example.com --username <TPP user> --password <TPP user password>
 		vcert getcred -u https://tpp.example.com --p12-file <PKCS#12 client cert> --p12-password <PKCS#12 password> --trust-bundle /path-to/bundle.pem
 		vcert getcred -u https://tpp.example.com -t <TPP refresh token>
 		vcert getcred -u https://tpp.example.com -t <TPP refresh token> --scope <scopes and restrictions>
-		vcert getcred --platform oidc -u https://authorization-server.com/oauth/token --username <okta user> --password <okta user password> -- scope okta.behaviors.manage
-		vcert getcred --platform oidc -u https://authorization-server.com/oauth/token --client-id <okta client id> --client-secret <okta client secret> -- scope okta.behaviors.manage`,
+
+		vcert getcred --platform oidc -u https://authorization-server.com/oauth/token --username <okta user> --password <okta user password> --scope okta.behaviors.manage
+		vcert getcred --platform oidc -u https://authorization-server.com/oauth/token --client-id <okta client id> --client-secret <okta client secret> --scope okta.behaviors.manage`,
 	}
 	commandCheckCred = &cli.Command{
 		Before:    runBeforeCommand,
@@ -676,45 +682,33 @@ func doCommandCredMgmt1(c *cli.Context) error {
 	}
 
 	//getting the concrete connector
-	var vaasConnector *cloud.Connector
-	var tppConnector *tpp.Connector
-	var fireflyConnector *firefly.Connector
-	var okCasting bool
+	vaasConnector, okCloud := connector.(*cloud.Connector)
+	tppConnector, okTPP := connector.(*tpp.Connector)
+	fireflyConnector, okFirefly := connector.(*firefly.Connector)
+	_, okFake := connector.(*fake.Connector) //trying to cast to fake.Connector
 
-	//trying to cast to cloud.Connector
-	vaasConnector, okCasting = connector.(*cloud.Connector)
-	if !okCasting { // if the connector is not a cloud.Connector
+	if !okCloud && !okTPP && !okFirefly && !okFake {
+		panic("it was not possible to get a supported connector")
+	}
 
-		//trying to cast to tpp.Connector
-		tppConnector, okCasting = connector.(*tpp.Connector)
-		if !okCasting { // if the connector is not a tpp.Connector
+	if okFake {
+		panic("operation is not supported yet")
 
-			//trying to cast to firefly.Connector
-			fireflyConnector, okCasting = connector.(*firefly.Connector)
-			if !okCasting { // if the connector is not a firefly.Connector
-				_, okCasting = connector.(*fake.Connector) //trying to cast to fake.Connector
-
-				// if the connector is a fake.Connector
-				if okCasting {
-					panic("operation is not supported yet")
-				} else { // if the connector is not a fake.Connector
-					panic("it was not possible to get a supported connector")
-				}
-			}
-		}
 	}
 
 	switch c.Command.Name {
 	case commandGetCredName:
 		if vaasConnector != nil {
 			return getVaaSCredentials(vaasConnector, &cfg)
-		} else if tppConnector != nil {
+		}
+		if tppConnector != nil {
 			return getTppCredentials(tppConnector, &cfg, clientP12)
-		} else {
+		}
+		if fireflyConnector != nil {
 			return getFireflyCredentials(fireflyConnector, &cfg)
 		}
 	case commandCheckCredName:
-		//TODO: quick workaround to supress logs when output is in JSON.
+		//TODO: quick workaround to suppress logs when output is in JSON.
 		if flags.credFormat != "json" {
 			logf("Checking credentials...")
 		}
@@ -852,10 +846,10 @@ func getVaaSCredentials(vaasConnector *cloud.Connector, cfg *vcert.Config) error
 		logf("Getting credentials...")
 	}
 
+	// Register new account to VaaS
 	if cfg.Credentials.User != "" {
 
 		statusCode, userDetails, err := vaasConnector.CreateAPIUserAccount(cfg.Credentials.User, cfg.Credentials.Password)
-
 		if err != nil {
 			return fmt.Errorf("failed to create a User Account/rotate API Key in VaaS: %s", err)
 		}
@@ -863,9 +857,7 @@ func getVaaSCredentials(vaasConnector *cloud.Connector, cfg *vcert.Config) error
 		apiKey := userDetails.APIKey
 
 		if flags.credFormat == "json" {
-			if err := outputJSON(apiKey); err != nil {
-				return err
-			}
+			return outputJSON(apiKey)
 		} else {
 			var headerMessage string
 			if statusCode == http.StatusCreated {
@@ -880,6 +872,21 @@ func getVaaSCredentials(vaasConnector *cloud.Connector, cfg *vcert.Config) error
 			fmt.Println(headerMessage)
 			fmt.Println("api_key: ", apiKey.Key)
 			fmt.Println("api_key_expires: ", apiKey.ValidityEndDateString)
+		}
+		// Request access token
+	} else if cfg.Credentials.ExternalIdPJWT != "" && cfg.Credentials.TenantID != "" {
+		// Request access token from VaaS service account
+		tokenResponse, err := vaasConnector.GetAccessToken(cfg.Credentials)
+		if err != nil {
+			return fmt.Errorf("failed to request access token from VaaS: %w", err)
+		}
+
+		if flags.credFormat == "json" {
+			return outputJSON(tokenResponse)
+		} else {
+			t := time.Unix(tokenResponse.ExpiresIn, 0).UTC().Format(time.RFC3339)
+			fmt.Println("access_token: ", tokenResponse.AccessToken)
+			fmt.Println("expires_in: ", t)
 		}
 	} else {
 		return fmt.Errorf("failed to determine credentials set")

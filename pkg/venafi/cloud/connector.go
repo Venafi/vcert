@@ -84,8 +84,6 @@ const (
 type Connector struct {
 	baseURL     string
 	apiKey      string
-	tenantID    string
-	jwt         string
 	accessToken string
 	verbose     bool
 	user        *userDetails
@@ -126,7 +124,7 @@ func (c *Connector) Ping() (err error) {
 }
 
 // Authenticate authenticates the user with Venafi Cloud using the provided API Key
-func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
+func (c *Connector) Authenticate(auth *endpoint.Authentication) error {
 	if auth == nil {
 		return fmt.Errorf("failed to authenticate: missing credentials")
 	}
@@ -134,19 +132,17 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 	//1. Access token. Assign it to connector and return
 	if auth.AccessToken != "" {
 		c.accessToken = auth.AccessToken
-		return
+		return nil
 	}
 
 	//2. JWT and tenantID. use it to request new access token
 	if auth.TenantID != "" && auth.ExternalIdPJWT != "" {
-		c.tenantID = auth.TenantID
-		c.jwt = auth.ExternalIdPJWT
-		err = c.getServiceAccountToken()
+		tokenResponse, err := c.GetAccessToken(auth)
 		if err != nil {
-			return
+			return err
 		}
-		auth.AccessToken = c.accessToken
-		return
+		c.accessToken = tokenResponse.AccessToken
+		return nil
 	}
 
 	// 3. API key. Get user to test authentication
@@ -154,14 +150,14 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 	url := c.getURL(urlResourceUserAccounts)
 	statusCode, status, body, err := c.request("GET", url, nil, true)
 	if err != nil {
-		return
+		return err
 	}
 	ud, err := parseUserDetailsResult(http.StatusOK, statusCode, status, body)
 	if err != nil {
-		return
+		return err
 	}
 	c.user = ud
-	return
+	return nil
 }
 
 func (c *Connector) ReadPolicyConfiguration() (policy *endpoint.Policy, err error) {
@@ -862,19 +858,23 @@ func normalizeURL(url string) (normalizedURL string, err error) {
 	return normalizedURL, nil
 }
 
-func (c *Connector) getServiceAccountToken() error {
+func (c *Connector) GetAccessToken(auth *endpoint.Authentication) (*TLSPCAccessTokenResponse, error) {
+	if auth == nil {
+		return nil, fmt.Errorf("failed to authenticate: missing credentials")
+	}
+
 	url := c.getURL(urlServiceAccountToken)
-	url = fmt.Sprintf(url, c.tenantID)
+	url = fmt.Sprintf(url, auth.TenantID)
 
 	body := netUrl.Values{}
 	body.Set("grant_type", "client_credentials")
 	body.Set("client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer")
-	body.Set("client_assertion", c.jwt)
+	body.Set("client_assertion", auth.ExternalIdPJWT)
 
 	r, err := http.NewRequest(http.MethodPost, url, strings.NewReader(body.Encode()))
 	if err != nil {
 		err = fmt.Errorf("%w: %v", verror.VcertError, err)
-		return err
+		return nil, err
 	}
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
@@ -882,7 +882,7 @@ func (c *Connector) getServiceAccountToken() error {
 	resp, err := httpClient.Do(r)
 	if err != nil {
 		err = fmt.Errorf("%w: %v", verror.ServerUnavailableError, err)
-		return err
+		return nil, err
 	}
 
 	statusCode := resp.StatusCode
@@ -892,21 +892,20 @@ func (c *Connector) getServiceAccountToken() error {
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		err = fmt.Errorf("%w: %v", verror.ServerError, err)
-		return err
+		return nil, err
 	}
 
 	accessTokenResponse, err := parseAccessTokenResponse(http.StatusOK, statusCode, status, respBody)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if !strings.EqualFold(accessTokenResponse.TokenType, oauthTokenType) {
-		return fmt.Errorf(
+		return nil, fmt.Errorf(
 			"%w: got an access token but token type is not %s. Expected: %s. Got: %s", verror.ServerError,
 			oauthTokenType, oauthTokenType, accessTokenResponse.TokenType)
 	}
-	c.accessToken = accessTokenResponse.AccessToken
 
-	return nil
+	return accessTokenResponse, nil
 }
 
 func (c *Connector) isAuthenticated() bool {
