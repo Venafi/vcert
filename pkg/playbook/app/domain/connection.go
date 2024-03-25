@@ -105,8 +105,26 @@ func isValidTpp(c Connection) (bool, error) {
 
 func isValidVaaS(c Connection) (bool, error) {
 	// Credentials are not empty
-	if c.Credentials.APIKey == "" {
+	apikey := false
+	if c.Credentials.APIKey != "" {
+		apikey = true
+	}
+
+	svcaccount := false
+	if c.Credentials.TenantID != "" {
+		svcaccount = true
+	}
+
+	if !apikey && !svcaccount {
 		return false, ErrNoCredentials
+	}
+
+	if apikey {
+		return true, nil
+	}
+
+	if c.Credentials.ExternalIdPJWT == "" {
+		return false, ErrNoExternalJWT
 	}
 
 	return true, nil

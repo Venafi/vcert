@@ -27,6 +27,8 @@ import (
 const (
 	accessToken  = "accessToken"
 	apiKey       = "apiKey"
+	tenantID     = "tenantId"
+	externalJWT  = "externalJWT"
 	clientID     = "clientId"
 	clientSecret = "clientSecret"
 	refreshToken = "refreshToken"
@@ -53,6 +55,12 @@ func (a Authentication) MarshalYAML() (interface{}, error) {
 	if a.APIKey != "" {
 		values[apiKey] = a.APIKey
 	}
+	if a.TenantID != "" {
+		values[tenantID] = a.TenantID
+	}
+	if a.ExternalIdPJWT != "" {
+		values[externalJWT] = a.ExternalIdPJWT
+	}
 	if a.ClientId != "" {
 		values[clientID] = a.ClientId
 	}
@@ -66,7 +74,6 @@ func (a Authentication) MarshalYAML() (interface{}, error) {
 		if a.IdentityProvider.Audience != "" {
 			values[idPAudience] = a.IdentityProvider.Audience
 		}
-		//values[idP] = a.IdentityProvider
 	}
 	if a.RefreshToken != "" {
 		values[refreshToken] = a.RefreshToken
@@ -94,6 +101,12 @@ func (a *Authentication) UnmarshalYAML(value *yaml.Node) error {
 	}
 	if val, found := authMap[apiKey]; found {
 		a.APIKey = val.(string)
+	}
+	if val, found := authMap[tenantID]; found {
+		a.TenantID = val.(string)
+	}
+	if val, found := authMap[externalJWT]; found {
+		a.ExternalIdPJWT = val.(string)
 	}
 	if val, found := authMap[clientID]; found {
 		a.ClientId = val.(string)

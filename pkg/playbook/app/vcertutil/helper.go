@@ -43,7 +43,7 @@ const (
 	// OriginName represents the Origin of the Request set in a Custom Field
 	OriginName = "Venafi VCert Playbook"
 
-	userProvidedCSRPrefix = "file:"
+	filePrefix = "file:"
 )
 
 func loadTrustBundle(path string) string {
@@ -188,8 +188,8 @@ func setCSR(playbookRequest domain.PlaybookRequest, vcertRequest *certificate.Re
 	vcertRequest.CsrOrigin = certificate.LocalGeneratedCSR
 
 	//CSR is user provided. Load CSR from file
-	if strings.HasPrefix(playbookRequest.CsrOrigin, userProvidedCSRPrefix) {
-		file := playbookRequest.CsrOrigin[len(userProvidedCSRPrefix):]
+	if strings.HasPrefix(playbookRequest.CsrOrigin, filePrefix) {
+		file := playbookRequest.CsrOrigin[len(filePrefix):]
 		csr, err := readCSRFromFile(file)
 		if err != nil {
 			zap.L().Warn("failed to read CSR from file", zap.String("file", file), zap.Error(err))
@@ -216,7 +216,7 @@ func setCSR(playbookRequest domain.PlaybookRequest, vcertRequest *certificate.Re
 }
 
 func readCSRFromFile(fileName string) ([]byte, error) {
-	bytes, err := os.ReadFile(fileName)
+	bytes, err := readFile(fileName)
 	if err != nil {
 		return nil, err
 	}
@@ -230,4 +230,12 @@ func readCSRFromFile(fileName string) ([]byte, error) {
 		}
 		bytes = rest
 	}
+}
+
+func readFile(fileName string) ([]byte, error) {
+	bytes, err := os.ReadFile(fileName)
+	if err != nil {
+		return bytes, err
+	}
+	return bytes, nil
 }
