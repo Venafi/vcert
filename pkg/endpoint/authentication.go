@@ -33,8 +33,8 @@ type Authentication struct {
 	// API key
 	APIKey string `yaml:"apiKey,omitempty"`
 	// Service account
-	TenantID       string `yaml:"tlspcTenantId,omitempty"`
-	ExternalIdPJWT string `yaml:"tlspcJWT,omitempty"`
+	TenantID       string `yaml:"tenantId,omitempty"`
+	ExternalIdPJWT string `yaml:"externalJWT,omitempty"`
 
 	// IDP Auth method
 	ClientId     string `yaml:"clientId,omitempty"`
