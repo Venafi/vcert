@@ -27,9 +27,10 @@ var (
 	flagPlatform = &cli.StringFlag{
 		Name: "platform",
 		Usage: "Use to specify the platform VCert will use to execute the given command. Only accepted values are:\n" +
-			"\t\tFor getcred command: --platform oidc\n" +
-			"\t\tFor enroll command: --platform firefly",
+			"\t\tFor getcred command: --platform [TPP | VAAS | OIDC]\n" +
+			"\t\tFor enroll command: --platform [TPP | VAAS | FIREFLY]",
 		Destination: &flags.platformString,
+		Aliases:     []string{"p"},
 	}
 
 	flagUrl = &cli.StringFlag{
@@ -51,9 +52,21 @@ var (
 
 	flagKey = &cli.StringFlag{
 		Name:        "apiKey",
-		Usage:       "REQUIRED/VAAS. Your API key for Venafi as a Service.  Example: -k aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+		Usage:       "REQUIRED/VaaS. Your API key for Venafi as a Service.  Example: -k aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
 		Destination: &flags.apiKey,
 		Aliases:     []string{"k"},
+	}
+
+	flagTenantID = &cli.StringFlag{
+		Name:        "tenant-id",
+		Usage:       "REQUIRED/VaaS. The ID of your tenant/company in VaaS. Use it along --external-jwt to retrieve an access token for VaaS",
+		Destination: &flags.vaasTenantID,
+	}
+
+	flagExternalJWT = &cli.StringFlag{
+		Name:        "external-jwt",
+		Usage:       "REQUIRED/VaaS. The JWT of the Identity Provider associated to the service account to be used. Use it along --tenant-id flag to retrieve an access token for VaaS",
+		Destination: &flags.externalJWT,
 	}
 
 	flagDeviceURL = &cli.StringFlag{
@@ -97,7 +110,7 @@ var (
 
 	flagToken = &cli.StringFlag{
 		Name: "token",
-		Usage: "REQUIRED/TPP/Firefly. Your access token (or refresh token for getcred) for Trust Protection Platform or Firefly. " +
+		Usage: "REQUIRED/TPP/VaaS/Firefly. Your access token (or refresh token for getcred) for Trust Protection Platform, Venafi as a Service or Firefly. " +
 			"Example: -t Ab01Cd23Ef45Uv67Wx89Yz==",
 		Destination: &flags.token,
 		Aliases:     []string{"t"},
@@ -851,6 +864,8 @@ var (
 		flagAudience,
 		flagDeviceURL,
 		commonFlags,
+		flagTenantID,
+		flagExternalJWT,
 	))
 
 	checkCredFlags = sortedFlags(flagsApppend(

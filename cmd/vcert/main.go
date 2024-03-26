@@ -106,24 +106,26 @@ AUTHOR:
    {{range .Authors}}{{ . }}
    {{end}}{{end}}{{if .Commands}}
 ACTIONS:
-   gencsr       To generate a certificate signing request (CSR)
-   enroll       To enroll a certificate
-   pickup       To retrieve a certificate
-   renew        To renew a certificate
-   retire       To retire a certificate
-   revoke       To revoke a certificate
-   run          To retrieve and install certificates using a vcert playbook file
+   Command       Platform         Description
 
-   getpolicy    To retrieve the certificate policy of a zone
-   setpolicy    To apply a certificate policy specification to a zone
+   gencsr                         To generate a certificate signing request (CSR)
+   enroll        TPP | VaaS | FF  To enroll a certificate
+   pickup        TPP | VaaS       To retrieve a certificate
+   renew         TPP | VaaS       To renew a certificate
+   retire        TPP | VaaS       To retire a certificate
+   revoke        TPP              To revoke a certificate
+   run           TPP | VaaS | FF  To retrieve and install certificates using a vcert playbook file
 
-   getcred      To obtain a new TPP authentication token or Firefly access token or register for a new VaaS user API key
-   checkcred    To check the validity of a token and grant
-   voidcred     To invalidate an authentication grant
+   getpolicy     TPP | VaaS       To retrieve the certificate policy of a zone
+   setpolicy     TPP | VaaS       To apply a certificate policy specification to a zone
 
-   sshenroll    To enroll a SSH certificate
-   sshpickup    To retrieve a SSH certificate
-   sshgetconfig To get the SSH CA public key and default principals
+   getcred       TPP | VaaS | FF  To obtain a new authentication token from any Venafi platform or to register for a new VaaS user API key
+   checkcred     TPP              To check the validity of a token and grant. Only works for TPP platform
+   voidcred      TPP              To invalidate an authentication grant. Only works for TPP platform
+
+   sshenroll     TPP              To enroll a SSH certificate
+   sshpickup     TPP              To retrieve a SSH certificate
+   sshgetconfig  TPP              To get the SSH CA public key and default principals
 
 OPTIONS:
    {{range .VisibleFlags}}{{.}}
