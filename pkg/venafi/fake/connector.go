@@ -412,3 +412,8 @@ func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.Cert
 func (c *Connector) WriteLog(logReq *endpoint.LogRequest) (err error) {
 	return fmt.Errorf("Logging is not supported in -test-mode")
 }
+
+// RefreshAccessTokenValidity is a wrapper over RefreshAccessToken which refreshes OAuth access token
+func (c *Connector) RefreshAccessTokenValidity(auth *endpoint.Authentication) (endpoint.RefreshTokenResponse, error) {
+	return nil, fmt.Errorf("RefreshAccessTokenValidity is not implemented for fake")
+}

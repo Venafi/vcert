@@ -456,3 +456,8 @@ func (c *Connector) RetrieveCertificateMetaData(_ string) (*certificate.Certific
 func (c *Connector) RetireCertificate(_ *certificate.RetireRequest) error {
 	panic("operation is not supported yet")
 }
+
+// RefreshAccessTokenValidity is a wrapper over RefreshAccessToken which refreshes OAuth access token
+func (c *Connector) RefreshAccessTokenValidity(auth *endpoint.Authentication) (endpoint.RefreshTokenResponse, error) {
+	return nil, fmt.Errorf("RefreshAccessTokenValidity is not implemented for fake")
+}

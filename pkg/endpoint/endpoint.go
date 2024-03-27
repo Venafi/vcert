@@ -139,6 +139,13 @@ type Connector interface {
 
 	RetrieveSystemVersion() (string, error)
 	WriteLog(req *LogRequest) error
+	RefreshAccessTokenValidity(auth *Authentication) (RefreshTokenResponse, error)
+}
+
+// RefreshTokenResponse provides the information of refreshed token
+type RefreshTokenResponse interface {
+	GetRefreshedAccessTokenInfo() (string, int)
+	GetRefreshTokenInfo() (string, int)
 }
 
 type Filter struct {
