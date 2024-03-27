@@ -78,6 +78,9 @@ func (cfg *Config) newClient(args []interface{}) (connector endpoint.Connector, 
 		return
 	}
 
+	if cfg.UserAgent != nil {
+		connector.SetUserAgent(*cfg.UserAgent)
+	}
 	connector.SetZone(cfg.Zone)
 	connector.SetHTTPClient(cfg.Client)
 

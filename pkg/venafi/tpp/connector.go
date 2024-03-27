@@ -48,6 +48,7 @@ type Connector struct {
 	trust       *x509.CertPool
 	zone        string
 	client      *http.Client
+	userAgent   string
 }
 
 func (c *Connector) IsCSRServiceGenerated(req *certificate.Request) (bool, error) {
@@ -64,7 +65,7 @@ func (c *Connector) RetrieveAvailableSSHTemplates() (response []certificate.SshA
 
 // NewConnector creates a new TPP Connector object used to communicate with TPP
 func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (*Connector, error) {
-	c := Connector{verbose: verbose, trust: trust, zone: zone}
+	c := Connector{verbose: verbose, trust: trust, zone: zone, userAgent: util.DefaultUserAgent}
 	var err error
 	c.baseURL, err = normalizeURL(url)
 	if err != nil {
@@ -91,6 +92,10 @@ func normalizeURL(url string) (normalizedURL string, err error) {
 
 func (c *Connector) SetZone(z string) {
 	c.zone = z
+}
+
+func (c *Connector) SetUserAgent(userAgent string) {
+	c.userAgent = userAgent
 }
 
 func (c *Connector) GetType() endpoint.ConnectorType {

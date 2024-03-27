@@ -10,9 +10,16 @@ import (
 	"github.com/Venafi/vcert/v5"
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
+	"github.com/Venafi/vcert/v5/pkg/util"
+)
+
+const (
+	name    = "example-firefly-certificate-client"
+	version = "v0.0.1"
 )
 
 func main() {
+	userAgent := fmt.Sprintf("%s/%s %s", name, version, util.DefaultUserAgent)
 	fireflyConfig := vcert.Config{
 		ConnectorType: endpoint.ConnectorTypeFirefly,
 		BaseUrl:       os.Getenv("FIREFLY_URL"),
@@ -23,7 +30,8 @@ func main() {
 				TokenURL: os.Getenv("FIREFLY_TOKEN_URL"),
 			},
 		},
-		Zone: os.Getenv("FIREFLY_ZONE"),
+		Zone:      os.Getenv("FIREFLY_ZONE"),
+		UserAgent: &userAgent,
 	}
 
 	trustBundleFilePath := os.Getenv("FIREFLY_TRUST_BUNDLE_PATH")
@@ -39,7 +47,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("error creating client: %s", err.Error())
 	}
-
 	request := &certificate.Request{
 		Subject: pkix.Name{
 			CommonName:         "common.name.venafi.example.com",

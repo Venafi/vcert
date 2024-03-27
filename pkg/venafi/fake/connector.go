@@ -160,6 +160,9 @@ func (c *Connector) GetType() endpoint.ConnectorType {
 func (c *Connector) SetZone(z string) {
 }
 
+func (c *Connector) SetUserAgent(_ string) {
+}
+
 func (c *Connector) Ping() (err error) {
 	return
 }
