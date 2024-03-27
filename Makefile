@@ -53,6 +53,7 @@ build: get
 	env GOOS=windows GOARCH=amd64 go build $(GO_LDFLAGS) -o bin/windows/vcert.exe     ./cmd/vcert
 	env GOOS=windows GOARCH=386   go build $(GO_LDFLAGS) -o bin/windows/vcert86.exe   ./cmd/vcert
 	env GOOS=windows GOARCH=arm64 go build $(GO_LDFLAGS) -o bin/windows/vcert_arm.exe ./cmd/vcert
+	env GOOS=aix     GOARCH=ppc64 go build $(GO_LDFLAGS) -o bin/aix/vcert             ./cmd/vcert
 
 cucumber_build:
 	$(call cucumber_image_build)
