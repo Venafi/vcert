@@ -2,12 +2,14 @@ package main
 
 import (
 	"crypto/x509/pkix"
+	"fmt"
 	"log"
 	"os"
 
 	"github.com/Venafi/vcert/v5"
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
+	"github.com/Venafi/vcert/v5/pkg/util"
 )
 
 const (
@@ -17,6 +19,9 @@ const (
 	TlspcJwt      = "TLSPC_JWT"
 
 	envVarNotSet = "environment variable not set: %s"
+
+	name    = "example-tlspc-service-account-client"
+	version = "v0.0.1"
 )
 
 func main() {
@@ -36,7 +41,7 @@ func main() {
 	if !found {
 		log.Fatalf(envVarNotSet, TlspcJwt)
 	}
-
+	userAgent := fmt.Sprintf("%s/%s %s", name, version, util.DefaultUserAgent)
 	config := &vcert.Config{
 		ConnectorType: endpoint.ConnectorTypeCloud,
 		BaseUrl:       url,
@@ -45,6 +50,7 @@ func main() {
 			TenantID:       tenantID,
 			ExternalIdPJWT: jwt,
 		},
+		UserAgent: &userAgent,
 	}
 	connector, err := vcert.NewClient(config)
 	if err != nil {

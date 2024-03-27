@@ -33,7 +33,13 @@ import (
 	"github.com/Venafi/vcert/v5"
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
+	"github.com/Venafi/vcert/v5/pkg/util"
 	"github.com/Venafi/vcert/v5/pkg/venafi/tpp"
+)
+
+const (
+	name    = "example-certificate-client"
+	version = "v0.0.1"
 )
 
 func main() {
@@ -49,11 +55,12 @@ func main() {
 	config := tppConfig
 	//config := cloudConfig
 	//config := mockConfig
+	userAgent := fmt.Sprintf("%s/%s %s", name, version, util.DefaultUserAgent)
+	config.UserAgent = &userAgent
 	c, err := vcert.NewClient(config)
 	if err != nil {
 		t.Fatalf("could not connect to endpoint: %s", err)
 	}
-
 	//
 	// 1.1. Compose request object
 	//

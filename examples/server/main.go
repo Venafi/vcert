@@ -9,6 +9,12 @@ import (
 
 	"github.com/Venafi/vcert/v5"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
+	"github.com/Venafi/vcert/v5/pkg/util"
+)
+
+const (
+	name    = "example-auto-certificate-server"
+	version = "v0.0.1"
 )
 
 func main() {
@@ -22,13 +28,15 @@ func main() {
 }
 
 func initConfig() *vcert.Config {
+	userAgent := fmt.Sprintf("%s/%s %s", name, version, util.DefaultUserAgent)
 	conf := &vcert.Config{
 		ConnectorType: endpoint.ConnectorTypeTPP,
 		BaseUrl:       os.Getenv("TPP_URL"),
 		Credentials: &endpoint.Authentication{
 			User:     os.Getenv("TPP_USER"),
 			Password: os.Getenv("TPP_PASSWORD")},
-		Zone: os.Getenv("TPP_ZONE"),
+		Zone:      os.Getenv("TPP_ZONE"),
+		UserAgent: &userAgent,
 	}
 	trustBundleFilePath := os.Getenv("TRUST_BUNDLE_PATH")
 	if trustBundleFilePath != "" {
