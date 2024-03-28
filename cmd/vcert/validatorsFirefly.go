@@ -16,7 +16,8 @@ func validateConnectionFlagsFirefly(commandName string) error {
 		clientSecretPresent := flags.clientSecret != "" || getPropertyFromEnvironment(vcertClientSecret) != ""
 		clientIDPresent := flags.clientId != "" || getPropertyFromEnvironment(vcertClientID) != ""
 		userPresent := flags.userName != "" || getPropertyFromEnvironment(vcertUser) != ""
-		passwordPresent := flags.password != "" || getPropertyFromEnvironment(vcertPassword) != ""
+		// Check if noPrompt is false. If False, it means VCert will request the password from user on CLI
+		passwordPresent := flags.password != "" || getPropertyFromEnvironment(vcertPassword) != "" || !flags.noPrompt
 		deviceURLPresent := flags.deviceURL != "" || getPropertyFromEnvironment(vcertDeviceURL) != ""
 
 		credentialsFlowPresent := clientSecretPresent && clientIDPresent
@@ -31,8 +32,8 @@ func validateConnectionFlagsFirefly(commandName string) error {
 			return fmt.Errorf("missing client id for authentication. Set the client-id using --client-id flag")
 		}
 
-		if userPresent && flags.noPrompt && !passwordPresent {
-			return fmt.Errorf("missing password for password flow grant. Set the password using the --password flag")
+		if userPresent && !passwordPresent {
+			return fmt.Errorf("missing password for password flow grant. Set the password using the --password flag or remove --no-prompt flag")
 		}
 
 		advice := "Use only one of --client-id/--client-secret/--client-id, --username/--password/--client-id or --device-url/--client-id"

@@ -143,7 +143,7 @@ func validateConnectionFlags(commandName string) error {
 	//	- Token empty is considered to mean Cloud connector to keep previous behavior where token was exclusive to TPP
 	//	- To use token with VaaS, the platform flag is required.
 	//	- If the platform flag is set we would not be guessing here
-	if flags.userName == "" && tppToken == "" {
+	if flags.userName == "" && tppToken == "" && flags.clientP12 == "" {
 		// should be SaaS endpoint
 		return validateConnectionFlagsCloud(commandName)
 	} else {
