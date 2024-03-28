@@ -21,10 +21,6 @@ func validateConnectionFlagsCloud(commandName string) error {
 		}
 
 		advice := "Use --tenant-id/--external-jwt for authentication or --email for registration"
-		if svcAccountPresent && emailPresent {
-			return fmt.Errorf("multiple methods set for Venafi as a Service authentication. %s", advice)
-		}
-
 		if !svcAccountPresent && !emailPresent {
 			return fmt.Errorf("missing flags for Venafi as a Service authentication. %s", advice)
 		}

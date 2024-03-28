@@ -156,7 +156,8 @@ Then(/^it should( not)? output (application|expires|scope|refresh_until)( in JSO
 
   unless negated
     if json then
-      JSON.parse(@previous_command_output)
+      json_string = extract_json_from_output(@previous_command_output)
+      JSON.parse(json_string)
       if property === "application"
         @application = unescape_text(normalize_json(@previous_command_output, "application")).tr('"', '')
       elsif property === "expires"
