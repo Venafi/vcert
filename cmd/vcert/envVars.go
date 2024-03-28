@@ -80,12 +80,12 @@ var (
 		{
 			EnvVarName:  vcertClientSecret,
 			Destination: &flags.clientSecret,
-			FlagName:    "--client-id",
+			FlagName:    "--client-secret",
 		},
 		{
 			EnvVarName:  vcertClientID,
 			Destination: &flags.clientId,
-			FlagName:    "--client-secret",
+			FlagName:    "--client-id",
 		},
 		{
 			EnvVarName:  vcertDeviceURL,
