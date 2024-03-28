@@ -176,6 +176,8 @@ func buildConfigFirefly(flags *commandFlags) (*vcert.Config, error) {
 		ConnectorType: endpoint.ConnectorTypeFirefly,
 		BaseUrl:       flags.url,
 		Credentials: &endpoint.Authentication{
+			User:         flags.userName,
+			Password:     flags.password,
 			AccessToken:  flags.token,
 			ClientId:     flags.clientId,
 			ClientSecret: flags.clientSecret,

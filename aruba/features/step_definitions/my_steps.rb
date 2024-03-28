@@ -159,13 +159,13 @@ Then(/^it should( not)? output (application|expires|scope|refresh_until)( in JSO
       json_string = extract_json_from_output(@previous_command_output)
       JSON.parse(json_string)
       if property === "application"
-        @application = unescape_text(normalize_json(@previous_command_output, "application")).tr('"', '')
+        @application = unescape_text(normalize_json(json_string, "application")).tr('"', '')
       elsif property === "expires"
-        @expires = unescape_text(normalize_json(@previous_command_output, "expires_ISO8601")).tr('"', '')
+        @expires = unescape_text(normalize_json(json_string, "expires_ISO8601")).tr('"', '')
       elsif property === "scope"
-        @scope = unescape_text(normalize_json(@previous_command_output, "scope")).tr('"', '')
+        @scope = unescape_text(normalize_json(json_string, "scope")).tr('"', '')
       elsif property === "refresh_until"
-        @refresh_until = unescape_text(normalize_json(@previous_command_output, "refresh_until")).tr('"', '')
+        @refresh_until = unescape_text(normalize_json(json_string, "refresh_until")).tr('"', '')
         Integer(@refresh_until)
       else
         fail(ArgumentError.new("Cant determine property type for #{property}"))
