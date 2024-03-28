@@ -16,29 +16,29 @@ func validateConnectionFlagsFirefly(commandName string) error {
 		clientSecretPresent := flags.clientSecret != "" || getPropertyFromEnvironment(vcertClientSecret) != ""
 		clientIDPresent := flags.clientId != "" || getPropertyFromEnvironment(vcertClientID) != ""
 		userPresent := flags.userName != "" || getPropertyFromEnvironment(vcertUser) != ""
-		passwordPresent := flags.password != "" || getPropertyFromEnvironment(vcertPassword) != ""
-		deviceFlowPresent := flags.deviceURL != "" || getPropertyFromEnvironment(vcertDeviceURL) != ""
+		// Check if noPrompt is false. If False, it means VCert will request the password from user on CLI
+		passwordPresent := flags.password != "" || getPropertyFromEnvironment(vcertPassword) != "" || !flags.noPrompt
+		deviceURLPresent := flags.deviceURL != "" || getPropertyFromEnvironment(vcertDeviceURL) != ""
+
 		credentialsFlowPresent := clientSecretPresent && clientIDPresent
-		passwordFlowPresent := userPresent && passwordPresent
+		passwordFlowPresent := userPresent && passwordPresent && clientIDPresent
+		deviceFlowPresent := deviceURLPresent && clientIDPresent
 
 		if !urlPresent {
 			return fmt.Errorf("missing URL for authentication. Set the URL using --url (-u) flag")
 		}
 
-		advice := "Use only one of --client-id/--client-secret, --username/--password or --device-url"
-		if deviceFlowPresent && credentialsFlowPresent ||
-			deviceFlowPresent && passwordFlowPresent ||
-			credentialsFlowPresent && passwordFlowPresent {
-			return fmt.Errorf("multiple methods set for Firefly authentication. %s", advice)
-
+		if !clientIDPresent {
+			return fmt.Errorf("missing client id for authentication. Set the client-id using --client-id flag")
 		}
 
-		if clientIDPresent && !clientSecretPresent {
-			return fmt.Errorf("missing client-secret for client credentials flow grant. Set the secret using --client-secret flag")
+		if userPresent && !passwordPresent {
+			return fmt.Errorf("missing password for password flow grant. Set the password using the --password flag or remove --no-prompt flag")
 		}
 
-		if userPresent && flags.noPrompt && !passwordPresent {
-			return fmt.Errorf("missing password for password flow grant. Set the password using the --password flag")
+		advice := "Use only one of --client-id/--client-secret/--client-id, --username/--password/--client-id or --device-url/--client-id"
+		if !credentialsFlowPresent && !passwordFlowPresent && !deviceFlowPresent {
+			return fmt.Errorf("missing flags for Venafi Firefly authentication. %s", advice)
 		}
 
 		return nil
