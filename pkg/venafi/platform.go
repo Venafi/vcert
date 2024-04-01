@@ -19,8 +19,9 @@ package venafi
 import (
 	"strings"
 
-	"github.com/Venafi/vcert/v5/pkg/endpoint"
 	"gopkg.in/yaml.v3"
+
+	"github.com/Venafi/vcert/v5/pkg/endpoint"
 )
 
 type Platform int
