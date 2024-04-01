@@ -200,6 +200,9 @@ func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration,
 			if err != nil {
 				return
 			}
+		} else {
+			// an error happened, return now
+			return
 		}
 	}
 	if template == nil {
