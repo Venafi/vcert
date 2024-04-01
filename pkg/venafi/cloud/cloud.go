@@ -630,6 +630,8 @@ func parseApplicationDetailsResult(httpStatusCode int, httpStatus string, body [
 		return parseApplicationDetailsData(body)
 	case http.StatusBadRequest:
 		return nil, verror.ApplicationNotFoundError
+	case http.StatusUnauthorized:
+		return nil, fmt.Errorf("%w: %s", verror.ServerError, httpStatus)
 	default:
 		respErrors, err := parseResponseErrors(body)
 		if err != nil {
