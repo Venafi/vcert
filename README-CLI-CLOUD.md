@@ -48,8 +48,10 @@ Review these prerequistes to get started. You'll need the following:
 [https://api.venafi.eu](https://api.venafi.eu/vaas) (if you have an EU account) is accessible from the system where VCert will be run.
 2. You have successfully registered for a Venafi as a Service account, have been granted at least the
 "Resource Owner" role, and know your API key. You can use the `getcred` action to
-[register and obtain an API key](#registering-and-obtaining-an-api-key) but you will need an administrator
-to update your role if there are already 3 or more users registered for your company in Venafi as a Service.
+[register and obtain an API key](#registering-and-obtaining-an-api-key), but you will need an administrator
+to update your role if there are already 3 or more users registered for your company in Venafi as a Service. 
+Alternatively, you have configured a service account, the service account has been granted the "Resource Owner" role, 
+you know the `tenant ID` and have obtained a `JWT` from the Identity Provider associated to the service-account.
 3. A CA Account and Issuing Template exist and have been configured with:
     1. Recommended Settings values for:
         1. Organizational Unit (OU)
@@ -71,25 +73,42 @@ and you know the Application Name.
 
 The following options apply to the `enroll`, `pickup`, and `renew` actions:
 
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Command&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Description                                                                                                                                                                                                                                                                                                                                                                                                                   |
-|---------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `--config`                                                                                              | Use to specify INI configuration file containing connection details.  Available parameters: `cloud_apikey`, `cloud_zone`, `trust_bundle`, `test_mode`                                                                                                                                                                                                                                                                         |
-| `--k`                                                                                                   | Use to specify your API key for Venafi as a Service.<br/>Example: -k aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee                                                                                                                                                                                                                                                                                                                     |
-| `--no-prompt`                                                                                           | Use to exclude password prompts.  If you enable the prompt and you enter incorrect information, an error is displayed.  This option is useful with scripting.                                                                                                                                                                                                                                                                 |
-| `--test-mode`                                                                                           | Use to test operations without connecting to Venafi as a Service.  This option is useful for integration tests where the test environment does not have access to Venafi as a Service.  Default is false.                                                                                                                                                                                                                     |
-| `--test-mode-delay`                                                                                     | Use to specify the maximum number of seconds for the random test-mode connection delay.  Default is 15 (seconds).                                                                                                                                                                                                                                                                                                             |
-| `--timeout`                                                                                             | Use to specify the maximum amount of time to wait in seconds for a certificate to be processed by VaaS. Default is 120 (seconds).                                                                                                                                                                                                                                                                                             |
-| `--trust-bundle`                                                                                        | Use to specify a file with PEM formatted certificates to be used as trust anchors when communicating with VaaS.  Generally not needed because VaaS is secured by a publicly trusted certificate but it may be needed if your organization requires VCert to traverse a proxy server. VCert uses the trust store of your operating system for this purpose if not specified.<br/>Example: `--trust-bundle /path-to/bundle.pem` |
-| `-u`                                                                                                    | Use to specify the URL of the Venafi as a Service API server. If it's omitted, then VCert will use [https://api.venafi.cloud](https://api.venafi.cloud/vaas) as API server. <br/>Example: `-u https://api.venafi.eu`                                                                                                                                                                                                          |
-| `--verbose`                                                                                             | Use to increase the level of logging detail, which is helpful when troubleshooting issues.                                                                                                                                                                                                                                                                                                                                    |
+| Flag                 | Description                                                                                                                                                                                                                                                                                                                                                                                                                   |
+|----------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `--config`           | Use to specify INI configuration file containing connection details.  Available parameters: `cloud_apikey`, `cloud_zone`, `trust_bundle`, `test_mode`.                                                                                                                                                                                                                                                                        |
+| `-k` or `--apiKey`   | Use to specify your API key for Venafi as a Service.<br/>Example: -k aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee                                                                                                                                                                                                                                                                                                                     |
+| `--no-prompt`        | Use to exclude password prompts.  If you enable the prompt and you enter incorrect information, an error is displayed.  This option is useful with scripting.                                                                                                                                                                                                                                                                 |
+| `-p` or `--platform` | Use to specify Venafi as a Service as the platform of choice to connect. Accepted values are: `TLSPC` and `VAAS`.                                                                                                                                                                                                                                                                                                             |
+| `-t` or `--token`    | Use to specify an access token for Venafi as a Service. You need to set `--platform TLSPC` in order to use access tokens for Venafi as a Service.                                                                                                                                                                                                                                                                             |
+| `--test-mode`        | Use to test operations without connecting to Venafi as a Service.  This option is useful for integration tests where the test environment does not have access to Venafi as a Service.  Default is false.                                                                                                                                                                                                                     |
+| `--test-mode-delay`  | Use to specify the maximum number of seconds for the random test-mode connection delay.  Default is 15 (seconds).                                                                                                                                                                                                                                                                                                             |
+| `--timeout`          | Use to specify the maximum amount of time to wait in seconds for a certificate to be processed by VaaS. Default is 120 (seconds).                                                                                                                                                                                                                                                                                             |
+| `--trust-bundle`     | Use to specify a file with PEM formatted certificates to be used as trust anchors when communicating with VaaS.  Generally not needed because VaaS is secured by a publicly trusted certificate but it may be needed if your organization requires VCert to traverse a proxy server. VCert uses the trust store of your operating system for this purpose if not specified.<br/>Example: `--trust-bundle /path-to/bundle.pem` |
+| `-u` or `--url`      | Use to specify the URL of the Venafi as a Service API server. If it's omitted, then VCert will use [https://api.venafi.cloud](https://api.venafi.cloud/vaas) as API server. <br/>Example: `-u https://api.venafi.eu`                                                                                                                                                                                                          |
+| `--verbose`          | Use to increase the level of logging detail, which is helpful when troubleshooting issues.                                                                                                                                                                                                                                                                                                                                    |
 
 ### Environment Variables
 
-As an alternative to specifying API key, trust bundle, and/or zone via the command line or in a config file, VCert supports supplying those values using environment variables `VCERT_APIKEY`, `VCERT_TRUST_BUNDLE`, `VCERT_URL` and `VCERT_ZONE` respectively.
+VCert supports supplying flag values using environment variables:
+
+| Attribute                  | Flag               | Environment Variable |
+|----------------------------|--------------------|----------------------|
+| API key                    | `-k` or `--apiKey` | `VCERT_APIKEY`       |
+| JWT from Identity Provider | `external-jwt`     | `VCERT_EXTERNAL_JWT` |
+| Venafi platform            | `--platform`       | `VCERT_PLATFORM`     |
+| Tenant ID                  | `--tenant-id`      | `VCERT_TENANT_ID`    |
+| Venafi as a Service token  | `-t` or `--token`  | `VCERT_TOKEN`        |
+| Venafi as a Service URL    | `-u` or `--url`    | `VCERT_URL`          |
+| Zone                       | `-z` or `--zone`   | `VCERT_ZONE`         |
 
 ## Certificate Request Parameters
+API key:
 ```
 vcert enroll -k <api key> --cn <common name> -z <application name\issuing template alias>
+```
+Access token:
+```
+vcert enroll -p TLSPC -t <access token> --cn <common name> -z <application name\issuing template alias>
 ```
 Options:
 
@@ -120,8 +139,13 @@ Options:
 | `-z`                                                                                                    | Use to specify the name of the Application to which the certificate will be assigned and the API Alias of the Issuing Template that will handle the certificate request.<br/>Example: `-z "Business App\\Enterprise CIT"`                                                                                                                                                     |
 
 ## Certificate Retrieval Parameters
+API key:
 ```
 vcert pickup -k <api key> [--pickup-id <request id> | --pickup-id-file <file name>]
+```
+Access token:
+```
+vcert pickup -p TLSPC -t <access token> [--pickup-id <request id> | --pickup-id-file <file name>]
 ```
 Options:
 
@@ -135,10 +159,14 @@ Options:
 | `--pickup-id`                                                                                           | Use to specify the unique identifier of the certificate returned by the enroll or renew actions if `--no-pickup` was used or a timeout occurred. Required when `--pickup-id-file` is not specified.                    |
 | `--pickup-id-file`                                                                                      | Use to specify a file name that contains the unique identifier of the certificate returned by the enroll or renew actions if --no-pickup was used or a timeout occurred. Required when `--pickup-id` is not specified. |
 
-
 ## Certificate Renewal Parameters
+API key:
 ```
 vcert renew -k <api key> [--id <request id> | --thumbprint <sha1 thumb>]
+```
+Access token:
+```
+vcert renew -p TLSPC -t <access token> [--id <request id> | --thumbprint <sha1 thumb>]
 ```
 Options:
 
@@ -168,11 +196,14 @@ Options:
 | `--san-uri`                                                                                             | Use to specify a Uniform Resource Indicator Subject Alternative Name.  To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-uri spiffe://workload1.example.com` `--san-uri spiffe://workload2.example.com`                                                                                                                              |
 | `--thumbprint`                                                                                          | Use to specify the SHA1 thumbprint of the certificate to renew. Value may be specified as a string or read from the certificate file using the `file:` prefix.                                                                                                                                                                                                                |
 
-
-
 ## Certificate Retire Parameters
+API key:
 ```
 vcert retire -k <api key> [--id <request id> | --thumbprint <sha1 thumb>]
+```
+Access Token:
+```
+vcert retire -p TLSPC -t <access token> [--id <request id> | --thumbprint <sha1 thumb>]
 ```
 Options:
 
@@ -182,8 +213,13 @@ Options:
 | `--thumbprint`                                                                                          | Use to specify the SHA1 thumbprint of the certificate to retire. Value may be specified as a string or read from the certificate file using the `file:` prefix. |
 
 ## Parameters for Applying Certificate Policy
+API key:
 ```
 vcert setpolicy -k <api key> -z <application name\issuing template alias> --file <policy specification file>
+```
+Access token:
+```
+vcert setpolicy -p TLSPC -t <access token> -z <application name\issuing template alias> --file <policy specification file>
 ```
 Options:
 
@@ -206,10 +242,14 @@ When not present in the policy specification, `certificateAuthority` defaults to
 - The `ipAllowed`, `emailAllowed`, `uriAllowed`, and `upnAllowed` policy (`subjectAltNames`) do not apply as those SAN types are not yet supported by VaaS.
 - If undefined key/value pairs are included in the policy specification, they will be silently ignored by this action.  This would include keys that are misspelled.
 
-
 ## Parameters for Viewing Certificate Policy
+API key:
 ```
 vcert getpolicy -k <api key> -z <application name\issuing template alias> [--file <policy specification file>]
+```
+Access token:
+```
+vcert getpolicy -p TLSPC -t <access token> -z <application name\issuing template alias> [--file <policy specification file>]
 ```
 Options:
 
@@ -217,7 +257,6 @@ Options:
 |---------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------|
 | `--file`                                                                                                | Use to write the retrieved certificate policy to a file in JSON format. If not specified, policy is written to STDOUT.     |
 | `--starter`                                                                                             | Use to generate a template policy specification to help with  getting started. `-k` and `-z` are ignored with this option. |
-
 
 ## Examples
 
@@ -295,6 +334,17 @@ Options:
 | `--format`                                                                                              | Specify "json" to get more verbose JSON formatted output instead of the plain text default.                                                                                                                              |
 | `--password`                                                                                            | Use to specify the user's password if it is expected the user will need to login to the [Venafi as a Service web UI](https://ui.venafi.cloud/).                                                                          |
 
+### Obtaining an access token from service account
+```
+vcert getcred --platform TLSPC --tenant-id 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 --external-jwt "file:jwt.txt"
+```
+Options:
+
+| Flag                 | Description                                                                                                       |
+|----------------------|-------------------------------------------------------------------------------------------------------------------|
+| `-p` or `--platform` | Use to specify Venafi as a Service as the platform of choice to connect. Accepted values are: `TLSPC` and `VAAS`. |
+| `--tenant-id`        | The ID of the tenant (company) that VCert is connecting to                                                        |
+| `--external-jwt`     | The JWT of the Identity Provider associated to the service account that is going to grant the access token        |
 
 ### Generating a new key pair and CSR
 ```

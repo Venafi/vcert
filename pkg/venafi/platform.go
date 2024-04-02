@@ -20,6 +20,8 @@ import (
 	"strings"
 
 	"gopkg.in/yaml.v3"
+
+	"github.com/Venafi/vcert/v5/pkg/endpoint"
 )
 
 type Platform int
@@ -87,6 +89,11 @@ func (p *Platform) UnmarshalYAML(value *yaml.Node) error {
 	}
 	*p = GetPlatformType(strValue)
 	return nil
+}
+
+// GetConnectorType converts the Platform value to an endpoint.ConnectorType value. With aims to make easier to use one or another
+func (p Platform) GetConnectorType() endpoint.ConnectorType {
+	return endpoint.ConnectorType(p)
 }
 
 func GetPlatformType(platformString string) Platform {
