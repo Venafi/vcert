@@ -33,14 +33,14 @@ Custom Fields and Instance Tracking require TPP 18.2 or higher, and Token Authen
 3. Download the source code:
 
 ```sh
-go get github.com/Venafi/vcert/v4
+go get github.com/Venafi/vcert/v5
 ```
 
 or
 
 Pre Go 1.13
 ```sh
-git clone https://github.com/Venafi/vcert.git $GOPATH/src/github.com/Venafi/vcert/v4
+git clone https://github.com/Venafi/vcert.git $GOPATH/src/github.com/Venafi/vcert/v5
 ```
 
 Go 1.11 with go modules enabled or go 1.13 and up make sure to clone outside of `$GOPATH/src`
@@ -56,11 +56,11 @@ make build
 
 ## Using VCert to integrate Venafi with your application
 
-For code samples of programmatic use, please review the files in [/examples](/examples/).
+For code samples of programmatic use, please review the files in [examples folder](./examples).
 
 ### Common part
-1. In your main.go file, make the following import declarations:  `github.com/Venafi/vcert/v4`, `github.com/Venafi/vcert/v4/pkg/certificate`, and `github.com/Venafi/vcert/v4/pkg/endpoint`.
-1. Create a configuration object of type `&vcert.Config` that specifies the Venafi connection details.  Solutions are typically designed to get those details from a secrets vault, .ini file, environment variables, or command line parameters.
+1. In your main.go file, make the following import declarations:  `github.com/Venafi/vcert/v5`, `github.com/Venafi/vcert/v5/pkg/certificate`, and `github.com/Venafi/vcert/v5/pkg/endpoint`.
+2. Create a configuration object of type `&vcert.Config` that specifies the Venafi connection details. Solutions are typically designed to get those details from a secrets vault, .ini file, environment variables, or command line parameters.
 
 ### Enroll certificate
 1. Instantiate a client by calling the `NewClient` method of the vcert class with the configuration object.
