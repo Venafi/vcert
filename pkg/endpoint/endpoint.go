@@ -139,6 +139,11 @@ type Connector interface {
 
 	RetrieveSystemVersion() (string, error)
 	WriteLog(req *LogRequest) error
+	// SetUserAgent sets the value of the UserAgent header in HTTP requests to
+	// Venafi API endpoints by this connector.
+	// The default is `vcert/v5`.
+	// Further reading: https://www.rfc-editor.org/rfc/rfc9110#field.user-agent
+	SetUserAgent(userAgent string)
 }
 
 type Filter struct {

@@ -63,6 +63,11 @@ type Config struct {
 	LogVerbose      bool
 	// http.Client to use durring construction
 	Client *http.Client
+	// UserAgent is the value of the UserAgent header in HTTP requests to Venafi
+	// API endpoints.
+	// If nil, the default is `vcert/v5`.
+	// Further reading: https://www.rfc-editor.org/rfc/rfc9110#field.user-agent
+	UserAgent *string
 }
 
 // LoadConfigFromFile is deprecated. In the future will be rewritten.
