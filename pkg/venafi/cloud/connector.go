@@ -32,6 +32,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-http-utils/headers"
 	"golang.org/x/crypto/nacl/box"
 
 	"github.com/Venafi/vcert/v5/pkg/certificate"
@@ -90,12 +91,13 @@ type Connector struct {
 	trust       *x509.CertPool
 	zone        cloudZone
 	client      *http.Client
+	userAgent   string
 }
 
 // NewConnector creates a new Venafi Cloud Connector object used to communicate with Venafi Cloud
 func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (*Connector, error) {
 	cZone := cloudZone{zone: zone}
-	c := Connector{verbose: verbose, trust: trust, zone: cZone}
+	c := Connector{verbose: verbose, trust: trust, zone: cZone, userAgent: util.DefaultUserAgent}
 
 	var err error
 	c.baseURL, err = normalizeURL(url)
@@ -112,6 +114,10 @@ func (c *Connector) GetType() endpoint.ConnectorType {
 func (c *Connector) SetZone(z string) {
 	cZone := cloudZone{zone: z}
 	c.zone = cZone
+}
+
+func (c *Connector) SetUserAgent(userAgent string) {
+	c.userAgent = userAgent
 }
 
 func (c *Connector) SetHTTPClient(client *http.Client) {
@@ -879,6 +885,7 @@ func (c *Connector) GetAccessToken(auth *endpoint.Authentication) (*TLSPCAccessT
 		err = fmt.Errorf("%w: %v", verror.VcertError, err)
 		return nil, err
 	}
+	r.Header.Set(headers.UserAgent, c.userAgent)
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	httpClient := c.getHTTPClient()
