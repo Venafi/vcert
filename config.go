@@ -182,6 +182,7 @@ func LoadConfigFromFile(path, section string) (cfg Config, err error) {
 	cfg.ConnectorType = connectorType
 	cfg.Credentials = auth
 	cfg.BaseUrl = baseUrl
+	cfg.UserAgent = GetUserAgentCLI()
 
 	return
 }

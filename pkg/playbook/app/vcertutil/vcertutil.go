@@ -89,6 +89,7 @@ func buildClient(config domain.Config, zone string) (endpoint.Connector, error) 
 		Zone:            zone,
 		ConnectionTrust: loadTrustBundle(config.Connection.TrustBundlePath),
 		LogVerbose:      false,
+		UserAgent:       getUserAgent(),
 	}
 
 	// build Authentication object

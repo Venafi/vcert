@@ -130,6 +130,7 @@ func buildConfigFake(_ *commandFlags) (*vcert.Config, error) {
 	return &vcert.Config{
 		ConnectorType: endpoint.ConnectorTypeFake,
 		Credentials:   &endpoint.Authentication{},
+		UserAgent:     vcert.GetUserAgentCLI(),
 	}, nil
 }
 
@@ -145,6 +146,7 @@ func buildConfigTPP(commandName string, flags *commandFlags) (*vcert.Config, err
 		ConnectionTrust: "",
 		LogVerbose:      false,
 		Client:          nil,
+		UserAgent:       vcert.GetUserAgentCLI(),
 	}
 
 	if commandName == commandGetCredName {
@@ -168,6 +170,7 @@ func buildConfigVaaS(flags *commandFlags) (*vcert.Config, error) {
 			TenantID:       flags.vaasTenantID,
 			ExternalIdPJWT: flags.externalJWT,
 		},
+		UserAgent: vcert.GetUserAgentCLI(),
 	}, nil
 }
 
@@ -188,5 +191,6 @@ func buildConfigFirefly(flags *commandFlags) (*vcert.Config, error) {
 				Audience:  flags.audience,
 			},
 		},
+		UserAgent: vcert.GetUserAgentCLI(),
 	}, nil
 }

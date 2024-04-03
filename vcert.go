@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 /*
-VCert is a Go library, SDK, and command line utility designed to simplify key generation and enrollment of machine identities (also known as SSL/TLS certificates and keys) that comply with enterprise security policy by using the Venafi Platform or Venafi Cloud.
+Package vcert is a Go library, SDK, and command line utility designed to simplify key generation and enrollment of machine identities (also known as SSL/TLS certificates and keys) that comply with enterprise security policy by using the Venafi Platform or Venafi Cloud.
 */
 package vcert
+
+import "fmt"
 
 var (
 	versionBuildTimeStamp string
@@ -31,9 +33,14 @@ func GetFormattedVersionString() string {
 	return versionString
 }
 
-func GetFormatedBuildTimeStamp() string {
+func GetFormattedBuildTimeStamp() string {
 	if versionBuildTimeStamp == "" {
 		versionBuildTimeStamp = "Unknown"
 	}
 	return versionBuildTimeStamp
+}
+
+func GetUserAgentCLI() *string {
+	userAgent := fmt.Sprintf("vcert-cli/%s", GetFormattedVersionString()[1:])
+	return &userAgent
 }
