@@ -26,9 +26,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Venafi/vcert/v5"
 	"go.uber.org/zap"
 
+	"github.com/Venafi/vcert/v5"
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/playbook/app/domain"
 	"github.com/Venafi/vcert/v5/pkg/util"
