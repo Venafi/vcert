@@ -1033,13 +1033,11 @@ func isWildCard(cnRegex []string) bool {
 }
 
 func getServiceAccountTokenURL(rawURL string) (string, error) {
-	normalizedURL := util.NormalizeUrl(rawURL)
 	// removing trailing slash from util.NormalizeURL function
-	normalizedURL, _ = strings.CutSuffix(normalizedURL, "/")
-	_, err := url.ParseRequestURI(normalizedURL)
+	_, err := url.ParseRequestURI(rawURL)
 	if err != nil {
 		return "", fmt.Errorf("token url error: %w", err)
 	}
 
-	return normalizedURL, nil
+	return rawURL, nil
 }

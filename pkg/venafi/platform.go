@@ -42,13 +42,15 @@ const (
 	strPlatformFake    = "FAKE"
 	strPlatformFirefly = "FIREFLY"
 	strPlatformTPP     = "TPP"
-	strPlatformVaaS    = "VAAS"
+	strPlatformVCP     = "VCP"
 	strPlatformUnknown = "Unknown"
 
 	// alias for TPP
 	strPlatformTLSPDC = "TLSPDC"
-	// alias for VaaS
+	// alias for VCP
 	strPlatformTLSPC = "TLSPC"
+	// alias for VCP
+	strPlatformVaaS = "VAAS"
 	//NOTE: For now OIDC will be taken as an alias for Firefly
 	//given Firefly implements the logic to get an OAuth 2.0
 	//Access token but OIDC will be available independently of Firefly
@@ -104,7 +106,7 @@ func GetPlatformType(platformString string) Platform {
 		return Firefly
 	case strPlatformTPP, strPlatformTLSPDC:
 		return TPP
-	case strPlatformVaaS, strPlatformTLSPC:
+	case strPlatformVCP, strPlatformVaaS, strPlatformTLSPC:
 		return TLSPCloud
 	default:
 		return Undefined
