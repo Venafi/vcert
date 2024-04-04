@@ -59,7 +59,7 @@ var (
 		{
 			EnvVarName:  vCertIdPJWT,
 			Destination: &flags.idPJWT,
-			FlagName:    "--external-jwt",
+			FlagName:    "--idp-jwt",
 		},
 		{
 			EnvVarName:  vCertTrustBundle,
