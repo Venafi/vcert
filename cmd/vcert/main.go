@@ -106,26 +106,26 @@ AUTHOR:
    {{range .Authors}}{{ . }}
    {{end}}{{end}}{{if .Commands}}
 ACTIONS:
-   Command       Platform         Description
+   Command       Platform             Description
 
-   gencsr                         To generate a certificate signing request (CSR)
-   enroll        TPP | VaaS | FF  To enroll a certificate
-   pickup        TPP | VaaS       To retrieve a certificate
-   renew         TPP | VaaS       To renew a certificate
-   retire        TPP | VaaS       To retire a certificate
-   revoke        TPP              To revoke a certificate
-   run           TPP | VaaS | FF  To retrieve and install certificates using a vcert playbook file
+   gencsr                             To generate a certificate signing request (CSR)
+   enroll        tpp | vcp | firefly  To enroll a certificate
+   pickup        tpp | vcp            To retrieve a certificate
+   renew         tpp | vcp            To renew a certificate
+   retire        tpp | vcp            To retire a certificate
+   revoke        tpp                  To revoke a certificate
+   run           tpp | vcp | firefly  To retrieve and install certificates using a vcert playbook file
 
-   getpolicy     TPP | VaaS       To retrieve the certificate policy of a zone
-   setpolicy     TPP | VaaS       To apply a certificate policy specification to a zone
+   getpolicy     tpp | vcp            To retrieve the certificate policy of a zone
+   setpolicy     tpp | vcp            To apply a certificate policy specification to a zone
 
-   getcred       TPP | VaaS | FF  To obtain a new authentication token from any Venafi platform or to register for a new VaaS user API key
-   checkcred     TPP              To check the validity of a token and grant. Only works for TPP platform
-   voidcred      TPP              To invalidate an authentication grant. Only works for TPP platform
+   getcred       tpp | vcp | oidc     To obtain a new authentication token from any Venafi platform or to register for a new Venafi Control Plane user API key
+   checkcred     tpp                  To check the validity of a Trust Protection Platform token and grant
+   voidcred      tpp                  To invalidate a Trust Protection Platform authentication token
 
-   sshenroll     TPP              To enroll a SSH certificate
-   sshpickup     TPP              To retrieve a SSH certificate
-   sshgetconfig  TPP              To get the SSH CA public key and default principals
+   sshenroll     tpp                  To enroll an SSH certificate
+   sshpickup     tpp                  To retrieve an SSH certificate
+   sshgetconfig  tpp                  To get the SSH CA public key and default principals
 
 OPTIONS:
    {{range .VisibleFlags}}{{.}}

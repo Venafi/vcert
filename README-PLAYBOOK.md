@@ -1,26 +1,43 @@
 # VCert Playbook
 
-VCert Playbook functionality solves the "last mile" problem. VCert has historically done a great job fetching certificates, but getting those certificates installed in the right location usually required custom scripting. The Playbook functionality addresses this use case natively.
+VCert Playbook functionality solves the "last mile" problem. VCert has historically done a great job fetching 
+certificates, but getting those certificates installed in the right location usually required custom scripting. The 
+Playbook functionality addresses this use case natively.
 
-> Throughout this article, we use _TLS Protect Datacenter (TLSPDC)_ to refer to Trust Protection Platform and _TLS Protect Cloud (TLSPC)_ to refer to Venafi as a Service.
+> Throughout this article, we use _TLS Protect Datacenter (TLSPDC)_ to refer to Trust Protection Platform and 
+> _TLS Protect Cloud (TLSPC)_ to refer to Venafi Control Plane.
 
 ## Key features of VCert playbook
 
-- **Simplified commands**: With VCert Playbook, you can avoid long command-line arguments. Instead, use playbook YAML files with VCert to enhance automation and maintenance ease.
+- **Simplified commands**: With VCert Playbook, you can avoid long command-line arguments. Instead, use playbook YAML 
+files with VCert to enhance automation and maintenance ease.
 
-- **Flexible certificate placement**: You can designate where to place the certificate and the format in which you want it once received from Venafi. VCert Playbook supports common keystore formats like PEM, JKS, PKCS#12, accommodating folder locations and the Windows CAPI store.
+- **Flexible certificate placement**: You can designate where to place the certificate and the format in which you 
+want it once received from Venafi. VCert Playbook supports common keystore formats like PEM, JKS, PKCS#12, accommodating 
+folder locations and the Windows CAPI store.
 
-- **Post-installation actions**: Specify any actions that must be carried out after the certificate is installed. This includes restarting services like Apache or Nginx, or running any other scripts needed once the certificate is in the right location.
+- **Post-installation actions**: Specify any actions that must be carried out after the certificate is installed. This 
+includes restarting services like Apache or Nginx, or running any other scripts needed once the certificate is in the 
+right location.
 
-- **Smart certificate renewals**: VCert Playbook checks if a certificate already exists and whether it's due for renewal before requesting a new one. This functionality lets you run a script regularly without unnecessarily renewing certificates.
+- **Smart certificate renewals**: VCert Playbook checks if a certificate already exists and whether it's due for 
+renewal before requesting a new one. This functionality lets you run a script regularly without unnecessarily renewing 
+certificates.
 
-- **Compatibility**: VCert Playbook works seamlessly with the three Venafi platforms: TLS Protect Cloud, TLS Protect Datacenter, and Firefly, ensuring it fits your particular environment.
+- **Compatibility**: VCert Playbook works seamlessly with the three Venafi platforms: TLS Protect Cloud, TLS Protect 
+Datacenter, and Firefly, ensuring it fits your particular environment.
 
 ## Example use cases
 
-- **Automated certificate renewal**: You can set renewal parameters to have VCert automatically renew certificates before expiration. This approach assumes that VCert is part of a daily cronjob or is executed routinely through other automation methods. By default, renewal occurs at 10% of the remaining certificate lifetime.
+- **Automated certificate renewal**: You can set renewal parameters to have VCert automatically renew certificates 
+before expiration. This approach assumes that VCert is part of a daily cronjob or is executed routinely through other 
+automation methods. By default, renewal occurs at 10% of the remaining certificate lifetime.
 
-- **Effortless API access updates**: When using TLS Protect Datacenter, VCert will automatically update API access and refresh tokens within the playbook. This feature ensures continuous operation without manual intervention. It leverages a refresh token to acquire a new access token when needed, an approach that's particularly effective when paired with a long-lasting refresh/grant token and a short-lived access token, such as a 3-year refresh token and a 1-hour access token.
+- **Effortless API access updates**: When using TLS Protect Datacenter, VCert will automatically update API access and 
+refresh tokens within the playbook. This feature ensures continuous operation without manual intervention. It leverages 
+a refresh token to acquire a new access token when needed, an approach that's particularly effective when paired with a 
+long-lasting refresh/grant token and a short-lived access token, such as a 3-year refresh token and a 1-hour access 
+token.
 
 ## Getting started
 VCert Playbook functionality is invoked using the `vcert run` command.
@@ -32,23 +49,25 @@ VCert Playbook functionality is invoked using the `vcert run` command.
     ```sh
     vcert run -f path/to/my/playbook.yaml
     ```
-3. Setup a cronjob (or Windows scheduled task) to execute the playbook on a regular basis (usually daily)
-   Sample cronjob entry:
+3. Set up a cronjob (or Windows scheduled task) to execute the playbook on a regular basis (usually daily). Sample 
+cronjob entry:
     ```
     0 23 * * *     /usr/bin/sudo /usr/local/bin/vcert run -f ~/playbook.yaml >> /var/log/vcert-playbook.log 2>&1
     ```
-> **Recommended**: For a detailed walkthrough for automating certificate lifecycle management using a VCert Playbook for NGINX, check out the guide on [Dev Central](https://developer.venafi.com/tlsprotectcloud/docs/vcert-auto-cert-mgt-using-tlspc)!
+> **Recommended**: For a detailed walkthrough for automating certificate lifecycle management using a VCert Playbook 
+for NGINX, check out the guide on [Dev Central](https://developer.venafi.com/tlsprotectcloud/docs/vcert-auto-cert-mgt-using-tlspc)!
 
 ## Usage
+
 VCert run playbook functionality is invoked using the `vcert run` command with additional arguments:
 ```sh
 vcert run [OPTIONAL ARGUMENTS]
 ```
 For example, the following command will execute the playbook in ./path/to/my/playbook.yaml with debug output enabled:
-
 ```sh
 vcert run --file path/to/my/playbook.yaml --debug
 ```
+
 ### VCert playbook arguments
 The following arguments are available with the `vcert run` command:
 
@@ -71,7 +90,8 @@ Several playbook samples are provided in the [examples folder](./examples/playbo
 * [Playbook for Firefly using user/password authorization](./examples/playbook/sample.firefly.user-password.yaml)
 
 ## Playbook file structure and options
-The playbook file is a YAML file that provides access information to either TLS Protect Cloud or TLS Protect Datacenter, defines the details of the certificate to request, and specifies the locations where the certificate should be installed.
+The playbook file is a YAML file that provides access information to either TLS Protect Cloud or TLS Protect Datacenter, 
+defines the details of the certificate to request, and specifies the locations where the certificate should be installed.
 
 The top-level structure of the file is described as follows:
 
@@ -181,13 +201,13 @@ The top-level structure of the file is described as follows:
 
 ### Location
 
-| Field      | Type    | Required       | Description                                                                                                                                      |
-|------------|---------|----------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
-| instance   | string  | ***Required*** | Specifies the name of the installed node (typically the hostname).                                                                               |
-| replace    | boolean | *Optional*     | Replace the current object with new information. Defaults to `false`.                                                                            |
-| tlsAddress | string  | ***Required*** | Specifies the IP address or hostname and port where the certificate can be validated by the Venafi Platform. <br/>Example: `192.168.100.23:443`. |
-| workload   | string  | *Optional*     | Use to provide an identifier for the workload using the certificate. Example: `workload`.                                                        |
-| zone       | string  | *Optional*     | Use to provide a different policy folder for the device object to be created in, when platform is TPP. If excluded, the device object is created in the same policy folder as the certificate. Example: `Installations\Agentless\Datacenters\PHX`|
+| Field      | Type    | Required       | Description                                                                                                                                                                                                                                       |
+|------------|---------|----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| instance   | string  | ***Required*** | Specifies the name of the installed node (typically the hostname).                                                                                                                                                                                |
+| replace    | boolean | *Optional*     | Replace the current object with new information. Defaults to `false`.                                                                                                                                                                             |
+| tlsAddress | string  | ***Required*** | Specifies the IP address or hostname and port where the certificate can be validated by the Venafi Platform. <br/>Example: `192.168.100.23:443`.                                                                                                  |
+| workload   | string  | *Optional*     | Use to provide an identifier for the workload using the certificate. Example: `workload`.                                                                                                                                                         |
+| zone       | string  | *Optional*     | Use to provide a different policy folder for the device object to be created in, when platform is TPP. If excluded, the device object is created in the same policy folder as the certificate. Example: `Installations\Agentless\Datacenters\PHX` |
 
 ### Subject
 

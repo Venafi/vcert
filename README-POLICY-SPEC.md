@@ -1,22 +1,18 @@
 # Venafi Certificate and Key Policy Specification
 
-The _Venafi Certificate and Key Policy Specification_ is a standard for defining 
-constraints and recommendations that govern key generation and certificate issuance. 
-The specification is consumable by the VCert CLI and VCert-based integrations like 
-the [Venafi Collection for Ansible](https://github.com/Venafi/ansible-collection-venafi) 
-and the [Venafi Provider for HashiCorp Terraform](https://github.com/Venafi/terraform-provider-venafi) 
-that support _Certificate Policy Management_ for Trust Protection Platform (TPP) and Venafi
-as a Service (VaaS).
+The _Venafi Certificate and Key Policy Specification_ is a standard for defining constraints and recommendations that 
+govern key generation and certificate issuance. The specification is consumable by the VCert CLI and VCert-based 
+integrations like the [Venafi Collection for Ansible](https://github.com/Venafi/ansible-collection-venafi) and the 
+[Venafi Provider for HashiCorp Terraform](https://github.com/Venafi/terraform-provider-venafi) that support _Certificate 
+Policy Management_ for Trust Protection Platform (TPP) and Venafi Control Plane (VCP).
 
 ## Policy-as-Code Structure (JSON)
 
-The structure of the _Venafi Certificate and Key Policy Specification_ is shown 
-below and is the same starter policy that can be output by executing the `vcert 
-getpolicy --starter` command. The specification has two sections, "policy" and 
-"defaults". The "policy" section specifies values with which new certificate requests 
-must comply and the "defaults" section specifies values that are recommended for use 
-in certificate requests when those values are not specified or overridden. 
-VCert also supports YAML formatted input specifications.
+The structure of the _Venafi Certificate and Key Policy Specification_ is shown below and is the same starter policy 
+that can be output by executing the `vcert getpolicy --starter` command. The specification has two sections, `policy` 
+and `defaults`. The `policy` section specifies values with which new certificate requests must comply and the `defaults` 
+section specifies values that are recommended for use in certificate requests when those values are not specified or 
+overridden. VCert also supports YAML formatted input specifications.
 
 ```json
 {
@@ -67,47 +63,86 @@ VCert also supports YAML formatted input specifications.
 }
 ```
 
-## Policy-as-Code Parameters
+## Policy-as-Code structure
 
-All parameters in a specification are optional thus `{}` is the most simple valid 
-specification and results in a policy that uses TPP or VaaS defaults.
+All parameters in a specification are optional thus `{}` is the simplest valid specification and results in a policy 
+that uses TPP or VCP defaults.
 
-| Parameter | Data Type | Description |
-| ---- | ---- | ---- |
-| `policy`&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |||
-| &emsp;`domains` |string&nbsp;array| Specifies domain suffixes that are permitted in Common Name (CN) and DNS Subject Alternative Name (SAN) values |
-| &emsp;`wildcardAllowed` |boolean| Indicates whether CN and DNS SAN values may specify wildcards like "*.example.com" |
-| &emsp;`autoInstalled` |boolean| ![TPP Only](https://img.shields.io/badge/TPP%20Only-orange.svg) Indicates whether the requested certificate will be automatically installed (i.e. provisioned) |
-| &emsp;`maxValidDays` |integer| Number of days for which the requested certificate will be valid.  May be ignored if the integration with the issuing CA does not support specific end dates. |
-| &emsp;`certificateAuthority` |string| **TPP**: the distinguished name of a CA Template object.<br />For example, "\VED\Policy\Certificate Authorites\Entrust Advantage"<br /><br />**VaaS**: CA Account Type ("DIGICERT", "ENTRUST", "GLOBALSIGN", or "BUILTIN"), CA Account Name (as it appears in the web console), and CA Product Type delimited by backslash characters.<br />For example, "DIGICERT\My DigiCert Account\ssl_plus" |
-| &emsp;`subject` |||
-| &emsp;&emsp;`orgs` | string&nbsp;array | Organization (O) values that are permitted |
-| &emsp;&emsp;`orgUnits` | string&nbsp;array | Organizational Unit (OU) values that are permitted |
-| &emsp;&emsp;`localities` | string&nbsp;array | City/Locality (L) values that are permitted |
-| &emsp;&emsp;`states` | string&nbsp;array | State/Province (ST) values that are permitted |
-| &emsp;&emsp;`countries` | string&nbsp;array | [ISO 3166 2-Alpha](https://www.iso.org/obp/ui/#search/code/) Country (C) code values that are permitted |
-| &emsp; `keyPair` |||
-| &emsp;&emsp;`keyTypes` | string&nbsp;array | Key algorithm: "RSA" and/or "ECDSA" |
-| &emsp;&emsp;`rsaKeySizes` | integer&nbsp;array | Permitted number of bits for RSA keys: 512, 1024, 2048, 3072, and/or 4096 |
-| &emsp;&emsp;`ellipticCurves` | string&nbsp;array | Permitted elliptic curves: "P256", "P384", and/or "P521" |
-| &emsp;&emsp;`serviceGenerated` | boolean | Indicates whether key pair and CSR must be generated by the Venafi machine identity service |
-| &emsp;&emsp;`reuseAllowed` | boolean | Indicates whether new certificate requests are permitted to reuse a key pair of a known certificate |
-| &emsp;`subjectAltNames` |||
-| &emsp;&emsp;`dnsAllowed` | boolean | Indicates whether DNS Subject Alternative Names are permitted|
-| &emsp;&emsp;`ipAllowed` | boolean | Indicates whether IP Address Subject Alternative Names are permitted |
-| &emsp;&emsp;`emailAllowed` | boolean | Indicates whether Email Address (RFC822) Subject Alternative Names are permitted |
-| &emsp;&emsp;`uriAllowed` | boolean | Indicates whether Uniform Resource Indicator (URI) Subject Alternative Names are permitted |
-| &emsp;&emsp;`upnAllowed` | boolean | ![TPP Only](https://img.shields.io/badge/TPP%20Only-orange.svg) Indicates whether User Principal Name (UPN) Subject Alternative Names are permitted |
-| `defaults` |||
-| &emsp;`domain` |string| Domain suffix that should be used by default (e.g. "example.com")|
-| &emsp;`subject` |||
-| &emsp;&emsp;`org` | string | Organization (O) value that should be used by default (e.g. "Example, Inc.")|
-| &emsp;&emsp;`orgUnits` | string&nbsp;array | Organizational Unit (OU) values that should be used by default (e.g. "Quality Assurance")|
-| &emsp;&emsp;`locality` | string | City/Locality (L) value that should be used by default (e.g. "Salt Lake City")|
-| &emsp;&emsp;`state` | string | State/Province (ST) value that should be used by default (e.g. "Utah")|
-| &emsp;&emsp;`country` | string |[ISO 3166 2-Alpha](https://www.iso.org/obp/ui/#search/code/) Country (C) code value that should be used by default (e.g. "US")|
-| &emsp;`keyPair` |||
-| &emsp;&emsp;`keyType` | string | Key algorithm that should be used by default, "RSA" or "ECDSA"|
-| &emsp;&emsp;`rsaKeySize` | integer | Number of bits that should be used by default for RSA keys: 512, 1024, 2048, 3072, or 4096|
-| &emsp;&emsp;`ellipticCurve` | string | The elliptic curve that should be used by default: "P256", "P384", "P521"<br/>or _"ED25519"_ ![VaaS Only](https://img.shields.io/badge/VaaS%20Only-orange.svg)|
-| &emsp;&emsp;`serviceGenerated` | boolean | Indicates whether keys should be generated by the Venafi machine identity service by default|
+### Policy Specification
+
+| Parameter  | Description                  | Data Type                                                                                                                          |
+|------------|------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
+| `defaults` | [Defaults](#defaults) object | Default values used when Certificate Signing Request does not specify one. Must be a subset of values defined in [Policy](#policy) |
+| `policy`   | [Policy](#policy) object     | Values allowed for certificates requested using this policy                                                                        |
+
+### Defaults
+
+| Parameter | Description                              | Data Type                                                                            |
+|-----------|------------------------------------------|--------------------------------------------------------------------------------------|
+| `domain`  | string                                   | Domain suffix that should be used by default (e.g. "example.com")                    |
+| `keyPair` | [DefaultKeyPair](#defaultkeypair) object | The private key type, size and length that should be used by default (e.g. RSA 2048) |
+| `subject` | [DefaultSubject](#defaultsubject) object | The `subject` values that should be used by default                                  |
+
+
+### DefaultKeyPair
+
+| Parameter          | Description | Data Type                                                                                                                                             |
+|--------------------|-------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `ellipticCurve`    | string      | The elliptic curve that should be used by default: "P256", "P384", "P521"<br/>or _"ED25519"_ ![VCP Only](https://img.shields.io/badge/VCP-3d3dcc.svg) |
+| `keyType`          | string      | Key algorithm that should be used by default, "RSA" or "ECDSA"                                                                                        |
+| `rsaKeySize`       | integer     | Number of bits that should be used by default for RSA keys: 512, 1024, 2048, 3072, or 4096                                                            |
+| `serviceGenerated` | boolean     | Indicates whether keys should be generated by the Venafi machine identity service by default                                                          |
+
+### DefaultSubject
+
+| Parameter  | Description     | Data Type                                                                                                                      |
+|------------|-----------------|--------------------------------------------------------------------------------------------------------------------------------|
+| `country`  | string          | [ISO 3166 2-Alpha](https://www.iso.org/obp/ui/#search/code/) Country (C) code value that should be used by default (e.g. "US") |
+| `locality` | string          | City/Locality (L) value that should be used by default (e.g. "Salt Lake City")                                                 |
+| `org`      | string          | Organization (O) value that should be used by default (e.g. "Example, Inc.")                                                   |
+| `orgUnits` | array of string | Organizational Unit (OU) values that should be used by default (e.g. "Quality Assurance")                                      |
+| `state`    | string          | State/Province (ST) value that should be used by default (e.g. "Utah")                                                         |
+
+### Policy
+
+| Parameter              | Data Type                                  | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+|------------------------|--------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `autoInstalled`        | boolean                                    | ![TPP Only](https://img.shields.io/badge/TPP%20Only-orange.svg) Indicates whether the requested certificate will be automatically installed (i.e. provisioned)                                                                                                                                                                                                                                                                                                                        |
+| `certificateAuthority` | string                                     | ![TPP](https://img.shields.io/badge/TPP-orange.svg) The distinguished name of a CA Template object.<br />For example, "\VED\Policy\Certificate Authorites\Entrust Advantage"<br /><br />![VCP](https://img.shields.io/badge/VCP-3d3dcc.svg) CA Account Type ("DIGICERT", "ENTRUST", "GLOBALSIGN", or "BUILTIN"), CA Account Name (as it appears in the web console), and CA Product Type delimited by backslash characters.<br />For example, "DIGICERT\My DigiCert Account\ssl_plus" |
+| `domains`              | array of string                            | Specifies domain suffixes that are permitted in Common Name (CN) and DNS Subject Alternative Name (SAN) values                                                                                                                                                                                                                                                                                                                                                                        |
+| `keyPair`              | [KeyPair](#keypair) object                 | The private key settings allowed for certificates requested using this policy                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `maxValidDays`         | integer                                    | Number of days for which the requested certificate will be valid.  May be ignored if the integration with the issuing CA does not support specific end dates.                                                                                                                                                                                                                                                                                                                         |
+| `subject`              | [Subject](#subject) object                 | The `subject` values allowed for certificates requested using this policy                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `subjectAltNames`      | [SubjectAltNames](#subjectaltnames) object | The SANs values allowed for certificates requested using this policy                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `wildcardAllowed`      | boolean                                    | Indicates whether CN and DNS SAN values may specify wildcards like "*.example.com"                                                                                                                                                                                                                                                                                                                                                                                                    |
+
+### KeyPair
+
+| Parameter          | Data Type        | Description                                                                                         |
+|--------------------|------------------|-----------------------------------------------------------------------------------------------------|
+| `ellipticCurves`   | array of string  | Permitted elliptic curves: `P256`, `P384`, and/or `P521`                                            |
+| `keyTypes`         | array of string  | Key algorithm: `RSA` and/or `ECDSA`                                                                 |
+| `reuseAllowed`     | boolean          | Indicates whether new certificate requests are permitted to reuse a key pair of a known certificate |
+| `rsaKeySizes`      | array of integer | Permitted number of bits for RSA keys: `512`, `1024`, `2048`, `3072`, and/or `4096`                 |
+| `serviceGenerated` | boolean          | Indicates whether key pair and CSR must be generated by the Venafi machine identity service         |
+
+
+### Subject
+
+| Parameter    | Data Type       | Description                                                                                             |
+|--------------|-----------------|---------------------------------------------------------------------------------------------------------|
+| `countries`  | array of string | [ISO 3166 2-Alpha](https://www.iso.org/obp/ui/#search/code/) Country (C) code values that are permitted |
+| `localities` | array of string | City/Locality (L) values that are permitted                                                             |
+| `orgs`       | array of string | Organization (O) values that are permitted                                                              |
+| `orgUnits`   | array of string | Organizational Unit (OU) values that are permitted                                                      |
+| `states`     | array of string | State/Province (ST) values that are permitted                                                           |
+
+### SubjectAltNames
+
+| Parameter      | Data Type | Description                                                                                                                                         |
+|----------------|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| `dnsAllowed`   | boolean   | Indicates whether DNS Subject Alternative Names are permitted                                                                                       |
+| `ipAllowed`    | boolean   | Indicates whether IP Address Subject Alternative Names are permitted                                                                                |
+| `emailAllowed` | boolean   | Indicates whether Email Address (RFC822) Subject Alternative Names are permitted                                                                    |
+| `uriAllowed`   | boolean   | Indicates whether Uniform Resource Indicator (URI) Subject Alternative Names are permitted                                                          |
+| `upnAllowed`   | boolean   | ![TPP Only](https://img.shields.io/badge/TPP%20Only-orange.svg) Indicates whether User Principal Name (UPN) Subject Alternative Names are permitted |
