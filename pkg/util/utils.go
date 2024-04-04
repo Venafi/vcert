@@ -119,7 +119,6 @@ func ArrayContainsString(s []string, e string) bool {
 }
 
 func NormalizeUrl(url string) string {
-
 	modified := strings.ToLower(url)
 	reg := regexp.MustCompile("^http(|s)://")
 	if reg.FindStringIndex(modified) == nil {

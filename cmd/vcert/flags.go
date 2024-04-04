@@ -42,6 +42,13 @@ var (
 		Aliases:     []string{"u"},
 	}
 
+	flagTokenUrl = &cli.StringFlag{
+		Name: "token-url",
+		Usage: "REQUIRED/VCP. The URL of the token service." +
+			"\n\t\tExample: --token-url https://api.venafi.cloud/v1/oauth2/v2.0/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee/token",
+		Destination: &flags.tokenURL,
+	}
+
 	flagUrlDeprecated = &cli.StringFlag{
 		Name:        "venafi-saas-url",
 		Usage:       "",
@@ -57,16 +64,10 @@ var (
 		Aliases:     []string{"k"},
 	}
 
-	flagTenantID = &cli.StringFlag{
-		Name:        "tenant-id",
-		Usage:       "REQUIRED/VaaS. The ID of your tenant/company in VaaS. Use it along --external-jwt to retrieve an access token for VaaS",
-		Destination: &flags.vaasTenantID,
-	}
-
-	flagExternalJWT = &cli.StringFlag{
-		Name:        "external-jwt",
-		Usage:       "REQUIRED/VaaS. The JWT of the Identity Provider associated to the service account to be used. Use it along --tenant-id flag to retrieve an access token for VaaS",
-		Destination: &flags.externalJWT,
+	flagIdPJWT = &cli.StringFlag{
+		Name:        "idp-jwt",
+		Usage:       "REQUIRED/VCP. The JWT of the Identity Provider associated to the service account to be used. Use it along --token-url flag to retrieve an access token for VCP",
+		Destination: &flags.idPJWT,
 	}
 
 	flagDeviceURL = &cli.StringFlag{
@@ -864,8 +865,8 @@ var (
 		flagAudience,
 		flagDeviceURL,
 		commonFlags,
-		flagTenantID,
-		flagExternalJWT,
+		flagTokenUrl,
+		flagIdPJWT,
 	))
 
 	checkCredFlags = sortedFlags(flagsApppend(

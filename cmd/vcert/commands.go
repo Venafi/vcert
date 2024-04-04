@@ -874,11 +874,11 @@ func getVaaSCredentials(vaasConnector *cloud.Connector, cfg *vcert.Config) error
 			fmt.Println("api_key_expires: ", apiKey.ValidityEndDateString)
 		}
 		// Request access token
-	} else if cfg.Credentials.ExternalIdPJWT != "" && cfg.Credentials.TenantID != "" {
+	} else if cfg.Credentials.IdPJWT != "" && cfg.Credentials.IdentityProvider != nil && cfg.Credentials.IdentityProvider.TokenURL != "" {
 		// Request access token from VaaS service account
 		tokenResponse, err := vaasConnector.GetAccessToken(cfg.Credentials)
 		if err != nil {
-			return fmt.Errorf("failed to request access token from VaaS: %w", err)
+			return fmt.Errorf("failed to request access token from VCP: %w", err)
 		}
 
 		if flags.credFormat == "json" {

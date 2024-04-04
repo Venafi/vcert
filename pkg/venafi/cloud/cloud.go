@@ -26,6 +26,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"sort"
 	"strconv"
 	"strings"
@@ -1029,4 +1030,16 @@ func isWildCard(cnRegex []string) bool {
 		return true
 	}
 	return false
+}
+
+func getServiceAccountTokenURL(rawURL string) (string, error) {
+	normalizedURL := util.NormalizeUrl(rawURL)
+	// removing trailing slash from util.NormalizeURL function
+	normalizedURL, _ = strings.CutSuffix(normalizedURL, "/")
+	_, err := url.ParseRequestURI(normalizedURL)
+	if err != nil {
+		return "", fmt.Errorf("token url error: %w", err)
+	}
+
+	return normalizedURL, nil
 }

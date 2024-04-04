@@ -13,10 +13,10 @@ import (
 )
 
 const (
-	TlspcUrl      = "TLSPC_URL"
-	TlspcZone     = "TLSPC_ZONE"
-	TlspcTenantId = "TLSPC_TENANT_ID"
-	TlspcJwt      = "TLSPC_JWT"
+	vcpURL      = "VCP_URL"
+	vcpZone     = "VCP_ZONE"
+	vcpTokenURL = "VCP_TOKEN_URL"
+	vcpJWT      = "VCP_JWT"
 
 	envVarNotSet = "environment variable not set: %s"
 
@@ -27,19 +27,19 @@ const (
 func main() {
 
 	// URL can be nil if using production TLSPC
-	url := os.Getenv(TlspcUrl)
+	url := os.Getenv(vcpURL)
 
-	zone, found := os.LookupEnv(TlspcZone)
+	zone, found := os.LookupEnv(vcpZone)
 	if !found {
-		log.Fatalf(envVarNotSet, TlspcZone)
+		log.Fatalf(envVarNotSet, vcpZone)
 	}
-	tenantID, found := os.LookupEnv(TlspcTenantId)
+	tokenURL, found := os.LookupEnv(vcpTokenURL)
 	if !found {
-		log.Fatalf(envVarNotSet, TlspcTenantId)
+		log.Fatalf(envVarNotSet, vcpTokenURL)
 	}
-	jwt, found := os.LookupEnv(TlspcJwt)
+	jwt, found := os.LookupEnv(vcpJWT)
 	if !found {
-		log.Fatalf(envVarNotSet, TlspcJwt)
+		log.Fatalf(envVarNotSet, vcpJWT)
 	}
 
 	userAgent := fmt.Sprintf("%s/%s %s", name, version, util.DefaultUserAgent)
@@ -48,8 +48,10 @@ func main() {
 		BaseUrl:       url,
 		Zone:          zone,
 		Credentials: &endpoint.Authentication{
-			TenantID:       tenantID,
-			ExternalIdPJWT: jwt,
+			IdPJWT: jwt,
+			IdentityProvider: &endpoint.OAuthProvider{
+				TokenURL: tokenURL,
+			},
 		},
 		UserAgent: &userAgent,
 	}

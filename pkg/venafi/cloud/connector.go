@@ -141,8 +141,8 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) error {
 		return nil
 	}
 
-	//2. JWT and tenantID. use it to request new access token
-	if auth.TenantID != "" && auth.ExternalIdPJWT != "" {
+	//2. JWT and token URL. use it to request new access token
+	if auth.IdPJWT != "" && auth.IdentityProvider != nil && auth.IdentityProvider.TokenURL != "" {
 		tokenResponse, err := c.GetAccessToken(auth)
 		if err != nil {
 			return err
@@ -868,17 +868,19 @@ func normalizeURL(url string) (normalizedURL string, err error) {
 }
 
 func (c *Connector) GetAccessToken(auth *endpoint.Authentication) (*TLSPCAccessTokenResponse, error) {
-	if auth == nil {
+	if auth == nil || auth.IdentityProvider == nil || auth.IdentityProvider.TokenURL == "" {
 		return nil, fmt.Errorf("failed to authenticate: missing credentials")
 	}
 
-	url := c.getURL(urlServiceAccountToken)
-	url = fmt.Sprintf(url, auth.TenantID)
+	url, err := getServiceAccountTokenURL(auth.IdentityProvider.TokenURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	body := netUrl.Values{}
 	body.Set("grant_type", "client_credentials")
 	body.Set("client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer")
-	body.Set("client_assertion", auth.ExternalIdPJWT)
+	body.Set("client_assertion", auth.IdPJWT)
 
 	r, err := http.NewRequest(http.MethodPost, url, strings.NewReader(body.Encode()))
 	if err != nil {

@@ -124,29 +124,17 @@ func buildVCertAuthentication(playbookAuth domain.Authentication) (*endpoint.Aut
 	}
 	vcertAuth.APIKey = apiKey
 
-	// Cloud tenant ID
-	tenantID := playbookAuth.TenantID
-	if strings.HasPrefix(tenantID, filePrefix) {
-		data, err := readFile(tenantID[offset:])
-		if err != nil {
-			attribute := fmt.Sprintf("%s.tenantId", attrPrefix)
-			return nil, fmt.Errorf("failed to read value [%s] from authentication attribute: %w", attribute, err)
-		}
-		tenantID = strings.TrimSpace(string(data))
-	}
-	vcertAuth.TenantID = tenantID
-
 	// Cloud JWT
-	jwt := playbookAuth.ExternalIdPJWT
+	jwt := playbookAuth.IdPJWT
 	if strings.HasPrefix(jwt, filePrefix) {
 		data, err := readFile(jwt[offset:])
 		if err != nil {
-			attribute := fmt.Sprintf("%s.externalJWT", attrPrefix)
+			attribute := fmt.Sprintf("%s.idPJWT", attrPrefix)
 			return nil, fmt.Errorf("failed to read value [%s] from authentication attribute: %w", attribute, err)
 		}
 		jwt = strings.TrimSpace(string(data))
 	}
-	vcertAuth.ExternalIdPJWT = jwt
+	vcertAuth.IdPJWT = jwt
 
 	// Access token
 	accessToken := playbookAuth.AccessToken
