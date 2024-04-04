@@ -126,6 +126,11 @@ func (ct certificateTemplate) toPolicy() (p endpoint.Policy) {
 			allowWildCards = true
 		}
 	}
+	for _, s := range p.DnsSanRegExs {
+		if strings.HasPrefix(s, `^.*`) {
+			allowWildCards = true
+		}
+	}
 	p.AllowWildcards = allowWildCards
 
 	for _, kt := range ct.KeyTypes {
