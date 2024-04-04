@@ -94,22 +94,31 @@ func (ct certificateTemplate) toPolicy() (p endpoint.Policy) {
 		return s
 	}
 	addStartEndToArray := func(ss []string) []string {
+		// if the array is nil, return nil
+		if ss == nil {
+			return nil
+		}
+
 		a := make([]string, len(ss))
 		for i, s := range ss {
 			a[i] = addStartEnd(s)
 		}
 		return a
 	}
-	if len(ct.SubjectCValues) == 0 {
-		ct.SubjectCValues = []string{".*"}
-	}
+
 	p.SubjectCNRegexes = addStartEndToArray(ct.SubjectCNRegexes)
 	p.SubjectOURegexes = addStartEndToArray(ct.SubjectOURegexes)
-	p.SubjectCRegexes = addStartEndToArray(ct.SubjectCValues)
+	p.SubjectCRegexes = addStartEndToArray(ct.SubjectCValues) // For some reason, the API field is named subjectCValues instead of subjectCRegexes
 	p.SubjectSTRegexes = addStartEndToArray(ct.SubjectSTRegexes)
 	p.SubjectLRegexes = addStartEndToArray(ct.SubjectLRegexes)
 	p.SubjectORegexes = addStartEndToArray(ct.SubjectORegexes)
+
 	p.DnsSanRegExs = addStartEndToArray(ct.SANRegexes)
+	p.IpSanRegExs = addStartEndToArray(ct.SanIpAddressRegexes)
+	p.EmailSanRegExs = addStartEndToArray(ct.SanRfc822NameRegexes)
+	p.UriSanRegExs = addStartEndToArray(ct.SanUniformResourceIdentifierRegexes)
+	p.UpnSanRegExs = nil // UPN regexes are not provided by the API
+
 	p.AllowKeyReuse = ct.KeyReuse
 	allowWildCards := false
 	for _, s := range p.SubjectCNRegexes {
