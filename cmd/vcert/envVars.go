@@ -9,7 +9,7 @@ const (
 	vCertToken        = "VCERT_TOKEN"  // #nosec G101
 	vCertApiKey       = "VCERT_APIKEY" // #nosec G101
 	vCertIdPJWT       = "VCERT_IDP_JWT"
-	vCertTokenURL     = "VCERT_TOKEN_URL"
+	vCertTokenURL     = "VCERT_TOKEN_URL" // #nosec G101
 	vCertTrustBundle  = "VCERT_TRUST_BUNDLE"
 	vcertUser         = "VCERT_USER"
 	vcertPassword     = "VCERT_PASSWORD"
