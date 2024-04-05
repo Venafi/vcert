@@ -19,22 +19,21 @@ package endpoint
 // Authentication provides a struct for authentication data. Either specify User and Password for Trust Protection Platform
 // or Firefly or ClientId and ClientSecret for Firefly or specify an APIKey for TLS Protect Cloud.
 type Authentication struct {
-	//TPP Auth methods
-	// User and password
+	// TPP Auth methods
+	// user and password
 	User     string `yaml:"user,omitempty"`     //**DEPRECATED** Use access/refresh token or client certificate instead
 	Password string `yaml:"password,omitempty"` //**DEPRECATED** Use access/refresh token or client certificate instead
-	// Tokens
+	// tokens
 	AccessToken  string `yaml:"accessToken,omitempty"`
 	RefreshToken string `yaml:"refreshToken,omitempty"`
-	// Client certificate
+	// client certificate
 	ClientPKCS12 bool `yaml:"-"`
 
-	//TLSPC Auth methods
+	// VCP Auth methods
 	// API key
 	APIKey string `yaml:"apiKey,omitempty"`
 	// Service account
-	TenantID       string `yaml:"tenantId,omitempty"`
-	ExternalIdPJWT string `yaml:"externalJWT,omitempty"`
+	IdPJWT string `yaml:"idPJWT,omitempty"`
 
 	// IDP Auth method
 	ClientId     string `yaml:"clientId,omitempty"`
@@ -46,7 +45,8 @@ type Authentication struct {
 
 // OAuthProvider provides a struct for the OAuth 2.0 providers information
 type OAuthProvider struct {
+	// OIDC Auth methods
 	DeviceURL string `yaml:"-"`
-	TokenURL  string `yaml:"tokenURL,omitempty"`
+	TokenURL  string `yaml:"tokenURL,omitempty"` // This attribute is also used by VCP service account
 	Audience  string `yaml:"audience,omitempty"`
 }

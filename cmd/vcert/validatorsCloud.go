@@ -11,18 +11,18 @@ func validateConnectionFlagsCloud(commandName string) error {
 
 	//getcred command
 	if commandName == commandGetCredName {
-		tenantIDPresent := flags.vaasTenantID != "" || getPropertyFromEnvironment(vCertTenantID) != ""
-		externalJWTPresent := flags.externalJWT != "" || getPropertyFromEnvironment(vCertExternalJWT) != ""
-		svcAccountPresent := tenantIDPresent && externalJWTPresent
+		tokenURLPresent := flags.tokenURL != "" || getPropertyFromEnvironment(vCertTokenURL) != ""
+		jwtPresent := flags.idPJWT != "" || getPropertyFromEnvironment(vCertIdPJWT) != ""
+		svcAccountPresent := tokenURLPresent && jwtPresent
 		emailPresent := flags.email != ""
 
-		if tenantIDPresent && !externalJWTPresent {
-			return fmt.Errorf("missing jwt for service account authentication. Set the jwt using --external-jwt flag")
+		if tokenURLPresent && !jwtPresent {
+			return fmt.Errorf("missing jwt for service account authentication. Set the jwt using --idp-jwt flag")
 		}
 
-		advice := "Use --tenant-id/--external-jwt for authentication or --email for registration"
+		advice := "Use --token-url/--idp-jwt for authentication or --email for registration"
 		if !svcAccountPresent && !emailPresent {
-			return fmt.Errorf("missing flags for Venafi as a Service authentication. %s", advice)
+			return fmt.Errorf("missing flags for Venafi Cloud Platform authentication. %s", advice)
 		}
 
 		return nil
@@ -36,10 +36,6 @@ func validateConnectionFlagsCloud(commandName string) error {
 
 	if !apiKeyPresent && !tokenPresent {
 		return fmt.Errorf("missing flags for Venafi as a Service authentication. %s", advice)
-	}
-
-	if apiKeyPresent && tokenPresent {
-		return fmt.Errorf("multiple methods set for Venafi as a Service authentication. %s", advice)
 	}
 
 	return nil

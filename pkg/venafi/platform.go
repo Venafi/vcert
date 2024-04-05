@@ -31,7 +31,7 @@ const (
 	Undefined Platform = iota
 	// Fake is a fake platform for tests
 	Fake
-	// TLSPCloud represents the TLS Protect Cloud platform type
+	// TLSPCloud represents the VCP platform type
 	TLSPCloud
 	// TPP represents the TPP platform type
 	TPP
@@ -42,19 +42,20 @@ const (
 	strPlatformFake    = "FAKE"
 	strPlatformFirefly = "FIREFLY"
 	strPlatformTPP     = "TPP"
-	strPlatformVaaS    = "VAAS"
+	strPlatformVCP     = "VCP"
 	strPlatformUnknown = "Unknown"
 
 	// alias for TPP
 	strPlatformTLSPDC = "TLSPDC"
-	// alias for VaaS
+	// alias for VCP
 	strPlatformTLSPC = "TLSPC"
-	//NOTE: For now OIDC will be taken as an alias for Firefly
-	//given Firefly implements the logic to get an OAuth 2.0
-	//Access token but OIDC will be available independently of Firefly
-	//so is pending to create an independent client to get an
-	//OAuth 2.0 access token
-	// alias for Firefly
+	// alias for VCP
+	strPlatformVaaS = "VAAS"
+	// NOTE: For now OIDC will be taken as an alias for Firefly
+	// given Firefly implements the logic to get an OAuth 2.0
+	// access token but OIDC will be available independently of Firefly.
+	// So is pending to create an independent client to get an
+	// OAuth 2.0 access token
 	strPlatformOIDC = "OIDC"
 )
 
@@ -104,7 +105,7 @@ func GetPlatformType(platformString string) Platform {
 		return Firefly
 	case strPlatformTPP, strPlatformTLSPDC:
 		return TPP
-	case strPlatformVaaS, strPlatformTLSPC:
+	case strPlatformVCP, strPlatformVaaS, strPlatformTLSPC:
 		return TLSPCloud
 	default:
 		return Undefined

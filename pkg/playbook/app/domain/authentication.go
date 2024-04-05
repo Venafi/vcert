@@ -27,13 +27,13 @@ import (
 const (
 	accessToken  = "accessToken"
 	apiKey       = "apiKey"
-	tenantID     = "tenantId"
-	externalJWT  = "externalJWT"
+	idPJWT       = "idPJWT"
 	clientID     = "clientId"
 	clientSecret = "clientSecret"
 	refreshToken = "refreshToken"
 	p12Task      = "p12Task"
 	scope        = "scope"
+	idP          = "idP"
 	idPTokenURL  = "tokenURL"
 	idPAudience  = "audience"
 )
@@ -55,12 +55,6 @@ func (a Authentication) MarshalYAML() (interface{}, error) {
 	if a.APIKey != "" {
 		values[apiKey] = a.APIKey
 	}
-	if a.TenantID != "" {
-		values[tenantID] = a.TenantID
-	}
-	if a.ExternalIdPJWT != "" {
-		values[externalJWT] = a.ExternalIdPJWT
-	}
 	if a.ClientId != "" {
 		values[clientID] = a.ClientId
 	}
@@ -68,12 +62,17 @@ func (a Authentication) MarshalYAML() (interface{}, error) {
 		values[clientSecret] = a.ClientSecret
 	}
 	if a.IdentityProvider != nil {
-		if a.IdentityProvider.TokenURL != "" {
-			values[idPTokenURL] = a.IdentityProvider.TokenURL
-		}
+		idpMap := make(map[string]interface{})
 		if a.IdentityProvider.Audience != "" {
-			values[idPAudience] = a.IdentityProvider.Audience
+			idpMap[idPAudience] = a.IdentityProvider.Audience
 		}
+		if a.IdentityProvider.TokenURL != "" {
+			idpMap[idPTokenURL] = a.IdentityProvider.TokenURL
+		}
+		values[idP] = idpMap
+	}
+	if a.IdPJWT != "" {
+		values[idPJWT] = a.IdPJWT
 	}
 	if a.RefreshToken != "" {
 		values[refreshToken] = a.RefreshToken
@@ -102,17 +101,14 @@ func (a *Authentication) UnmarshalYAML(value *yaml.Node) error {
 	if val, found := authMap[apiKey]; found {
 		a.APIKey = val.(string)
 	}
-	if val, found := authMap[tenantID]; found {
-		a.TenantID = val.(string)
-	}
-	if val, found := authMap[externalJWT]; found {
-		a.ExternalIdPJWT = val.(string)
-	}
 	if val, found := authMap[clientID]; found {
 		a.ClientId = val.(string)
 	}
 	if val, found := authMap[clientSecret]; found {
 		a.ClientSecret = val.(string)
+	}
+	if val, found := authMap[idPJWT]; found {
+		a.IdPJWT = val.(string)
 	}
 	if val, found := authMap[refreshToken]; found {
 		a.RefreshToken = val.(string)
@@ -124,11 +120,13 @@ func (a *Authentication) UnmarshalYAML(value *yaml.Node) error {
 		a.Scope = val.(string)
 	}
 
-	provider, err := unmarshallIdP(authMap)
-	if err != nil {
-		return err
+	if val, found := authMap[idP]; found {
+		provider, err := unmarshallIdP(val)
+		if err != nil {
+			return err
+		}
+		a.IdentityProvider = provider
 	}
-	a.IdentityProvider = provider
 
 	return nil
 }
