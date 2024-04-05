@@ -280,7 +280,9 @@ func getVaaSCredentials(vaasConnector *cloud.Connector, cfg *vcert.Config) error
 		if flags.credFormat == "json" {
 			return outputJSON(tokenResponse)
 		} else {
-			t := time.Unix(tokenResponse.ExpiresIn, 0).UTC().Format(time.RFC3339)
+			validityPeriod := time.Duration(tokenResponse.ExpiresIn) * time.Second
+			expirationDate := time.Now().Add(validityPeriod)
+			t := expirationDate.UTC().Format(time.RFC3339)
 			fmt.Println("access_token: ", tokenResponse.AccessToken)
 			fmt.Println("expires_in: ", t)
 		}
