@@ -34,13 +34,14 @@ config:
             apiKey: xyz789
             clientId: clientID
             clientSecret: clientSecret
+            externalJWT: tokenJWT
             idP:
                 audience: some audience
                 tokenURL: some.token.url
-            idPJWT: tokenJWT
             p12Task: foo
             refreshToken: abcdef
             scope: noScope
+            tokenURL: venafi.com/tokenurl
         insecure: true
         platform: VAAS
         trustBundle: some/path.txt
@@ -75,6 +76,7 @@ func (s *AuthenticationSuite) TestAuthentication_MarshalIdentityProvider() {
 						ClientId:     "clientID",
 						ClientSecret: "clientSecret",
 						Scope:        "noScope",
+						TokenURL:     "venafi.com/tokenurl",
 						IdentityProvider: &endpoint.OAuthProvider{
 							TokenURL: "some.token.url",
 							Audience: "some audience",
@@ -94,9 +96,6 @@ func (s *AuthenticationSuite) TestAuthentication_MarshalIdentityProvider() {
 	s.NoError(err)
 	s.NotNil(data)
 	s.Equal([]byte(examplePlaybook), data)
-	//err = os.WriteFile("test", data, 0644)
-	//s.NoError(err)
-
 }
 
 func (s *AuthenticationSuite) TestAuthentication_UnmarshalIdentityProvider() {
@@ -118,6 +117,7 @@ func (s *AuthenticationSuite) TestAuthentication_UnmarshalIdentityProvider() {
 	s.Equal("abcdef", playbook.Config.Connection.Credentials.RefreshToken)
 	s.Equal("xyz789", playbook.Config.Connection.Credentials.APIKey)
 	s.Equal("tokenJWT", playbook.Config.Connection.Credentials.ExternalJWT)
+	s.Equal("venafi.com/tokenurl", playbook.Config.Connection.Credentials.TokenURL)
 	s.Equal("clientID", playbook.Config.Connection.Credentials.ClientId)
 	s.Equal("clientSecret", playbook.Config.Connection.Credentials.ClientSecret)
 	s.Equal("noScope", playbook.Config.Connection.Credentials.Scope)

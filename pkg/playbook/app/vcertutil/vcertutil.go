@@ -107,80 +107,55 @@ func buildClient(config domain.Config, zone string) (endpoint.Connector, error) 
 }
 
 func buildVCertAuthentication(playbookAuth domain.Authentication) (*endpoint.Authentication, error) {
-	offset := len(filePrefix)
-	attrPrefix := "config.connection.credentials"
+	attrPrefix := "config.connection.credentials.%s"
 
 	vcertAuth := &endpoint.Authentication{}
 
-	// Cloud API key
-	apiKey := playbookAuth.APIKey
-	if strings.HasPrefix(apiKey, filePrefix) {
-		data, err := readFile(apiKey[offset:])
-		if err != nil {
-			attribute := fmt.Sprintf("%s.apiKey", attrPrefix)
-			return nil, fmt.Errorf("failed to read value [%s] from authentication attribute: %w", attribute, err)
-		}
-		apiKey = strings.TrimSpace(string(data))
+	// VCP API key
+	apiKey, err := getAttributeValue(fmt.Sprintf(attrPrefix, "apiKey"), playbookAuth.APIKey)
+	if err != nil {
+		return nil, err
 	}
 	vcertAuth.APIKey = apiKey
 
-	// Cloud JWT
-	jwt := playbookAuth.ExternalJWT
-	if strings.HasPrefix(jwt, filePrefix) {
-		data, err := readFile(jwt[offset:])
-		if err != nil {
-			attribute := fmt.Sprintf("%s.idPJWT", attrPrefix)
-			return nil, fmt.Errorf("failed to read value [%s] from authentication attribute: %w", attribute, err)
-		}
-		jwt = strings.TrimSpace(string(data))
+	// VCP service account
+	jwt, err := getAttributeValue(fmt.Sprintf(attrPrefix, "externalJWT"), playbookAuth.ExternalJWT)
+	if err != nil {
+		return nil, err
 	}
 	vcertAuth.ExternalJWT = jwt
 
-	// Access token
-	accessToken := playbookAuth.AccessToken
-	if strings.HasPrefix(accessToken, filePrefix) {
-		data, err := readFile(accessToken[offset:])
-		if err != nil {
-			attribute := fmt.Sprintf("%s.accessToken", attrPrefix)
-			return nil, fmt.Errorf("failed to read value [%s] from authentication attribute: %w", attribute, err)
-		}
-		accessToken = strings.TrimSpace(string(data))
+	tokenURL, err := getAttributeValue(fmt.Sprintf(attrPrefix, "tokenURL"), playbookAuth.TokenURL)
+	if err != nil {
+		return nil, err
+	}
+	vcertAuth.TokenURL = tokenURL
+
+	// TPP/VCP/Firefly Access token
+	accessToken, err := getAttributeValue(fmt.Sprintf(attrPrefix, "accessToken"), playbookAuth.AccessToken)
+	if err != nil {
+		return nil, err
 	}
 	vcertAuth.AccessToken = accessToken
 
 	// Scope
-	scope := playbookAuth.Scope
-	if strings.HasPrefix(scope, filePrefix) {
-		data, err := readFile(scope[offset:])
-		if err != nil {
-			attribute := fmt.Sprintf("%s.scope", attrPrefix)
-			return nil, fmt.Errorf("failed to read value [%s] from authentication attribute: %w", attribute, err)
-		}
-		scope = strings.TrimSpace(string(data))
+	scope, err := getAttributeValue(fmt.Sprintf(attrPrefix, "scope"), playbookAuth.Scope)
+	if err != nil {
+		return nil, err
 	}
 	vcertAuth.Scope = scope
 
 	// Client ID
-	clientID := playbookAuth.ClientId
-	if strings.HasPrefix(clientID, filePrefix) {
-		data, err := readFile(clientID[offset:])
-		if err != nil {
-			attribute := fmt.Sprintf("%s.clientId", attrPrefix)
-			return nil, fmt.Errorf("failed to read value [%s] from authentication attribute: %w", attribute, err)
-		}
-		clientID = strings.TrimSpace(string(data))
+	clientID, err := getAttributeValue(fmt.Sprintf(attrPrefix, "clientId"), playbookAuth.ClientId)
+	if err != nil {
+		return nil, err
 	}
 	vcertAuth.ClientId = clientID
 
 	// Client secret
-	clientSecret := playbookAuth.ClientSecret
-	if strings.HasPrefix(clientSecret, filePrefix) {
-		data, err := readFile(clientSecret[offset:])
-		if err != nil {
-			attribute := fmt.Sprintf("%s.clientSecret", attrPrefix)
-			return nil, fmt.Errorf("failed to read value [%s] from authentication attribute: %w", attribute, err)
-		}
-		clientSecret = strings.TrimSpace(string(data))
+	clientSecret, err := getAttributeValue(fmt.Sprintf(attrPrefix, "clientSecret"), playbookAuth.ClientSecret)
+	if err != nil {
+		return nil, err
 	}
 	vcertAuth.ClientSecret = clientSecret
 
@@ -192,32 +167,40 @@ func buildVCertAuthentication(playbookAuth domain.Authentication) (*endpoint.Aut
 	idp := &endpoint.OAuthProvider{}
 
 	// OAuth provider token url
-	tokenURL := playbookAuth.IdentityProvider.TokenURL
-	if strings.HasPrefix(tokenURL, filePrefix) {
-		data, err := readFile(tokenURL[offset:])
-		if err != nil {
-			attribute := fmt.Sprintf("%s.idP.tokenURL", attrPrefix)
-			return nil, fmt.Errorf("failed to read value from attribute: %s:%w", attribute, err)
-		}
-		tokenURL = strings.TrimSpace(string(data))
+	idpTokenURL, err := getAttributeValue(fmt.Sprintf(attrPrefix, "idP.tokenURL"), playbookAuth.IdentityProvider.TokenURL)
+	if err != nil {
+		return nil, err
 	}
-	idp.TokenURL = tokenURL
+	idp.TokenURL = idpTokenURL
 
 	// OAuth provider audience
-	audience := playbookAuth.IdentityProvider.Audience
-	if strings.HasPrefix(audience, filePrefix) {
-		data, err := readFile(audience[len(filePrefix):])
-		if err != nil {
-			attribute := fmt.Sprintf("%s.idP.audience", attrPrefix)
-			return nil, fmt.Errorf("failed to read value [%s] from authentication attribute: %w", attribute, err)
-		}
-		audience = strings.TrimSpace(string(data))
+	audience, err := getAttributeValue(fmt.Sprintf(attrPrefix, "idP.audience"), playbookAuth.IdentityProvider.Audience)
+	if err != nil {
+		return nil, err
 	}
 	idp.Audience = audience
 
 	vcertAuth.IdentityProvider = idp
 
 	return vcertAuth, nil
+}
+
+func getAttributeValue(attrName string, attrValue string) (string, error) {
+	offset := len(filePrefix)
+	attrValue = strings.TrimSpace(attrValue)
+
+	// No file prefix, return value as is
+	if !strings.HasPrefix(attrValue, filePrefix) {
+		return attrValue, nil
+	}
+
+	data, err := readFile(attrValue[offset:])
+	if err != nil {
+		return "", fmt.Errorf("failed to read value [%s] from authentication object: %w", attrName, err)
+	}
+	fileValue := strings.TrimSpace(string(data))
+
+	return fileValue, nil
 }
 
 func buildRequest(request domain.PlaybookRequest) certificate.Request {
