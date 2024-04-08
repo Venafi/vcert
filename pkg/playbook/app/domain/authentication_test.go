@@ -71,7 +71,7 @@ func (s *AuthenticationSuite) TestAuthentication_MarshalIdentityProvider() {
 						AccessToken:  "123456",
 						RefreshToken: "abcdef",
 						APIKey:       "xyz789",
-						IdPJWT:       "tokenJWT",
+						ExternalJWT:  "tokenJWT",
 						ClientId:     "clientID",
 						ClientSecret: "clientSecret",
 						Scope:        "noScope",
@@ -117,7 +117,7 @@ func (s *AuthenticationSuite) TestAuthentication_UnmarshalIdentityProvider() {
 	s.Equal("123456", playbook.Config.Connection.Credentials.AccessToken)
 	s.Equal("abcdef", playbook.Config.Connection.Credentials.RefreshToken)
 	s.Equal("xyz789", playbook.Config.Connection.Credentials.APIKey)
-	s.Equal("tokenJWT", playbook.Config.Connection.Credentials.IdPJWT)
+	s.Equal("tokenJWT", playbook.Config.Connection.Credentials.ExternalJWT)
 	s.Equal("clientID", playbook.Config.Connection.Credentials.ClientId)
 	s.Equal("clientSecret", playbook.Config.Connection.Credentials.ClientSecret)
 	s.Equal("noScope", playbook.Config.Connection.Credentials.Scope)

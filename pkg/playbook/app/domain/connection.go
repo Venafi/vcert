@@ -123,7 +123,7 @@ func isValidVaaS(c Connection) (bool, error) {
 		return true, nil
 	}
 
-	if c.Credentials.IdPJWT == "" {
+	if c.Credentials.ExternalJWT == "" {
 		return false, ErrNoIdPJWT
 	}
 

@@ -71,8 +71,8 @@ func (a Authentication) MarshalYAML() (interface{}, error) {
 		}
 		values[idP] = idpMap
 	}
-	if a.IdPJWT != "" {
-		values[idPJWT] = a.IdPJWT
+	if a.ExternalJWT != "" {
+		values[idPJWT] = a.ExternalJWT
 	}
 	if a.RefreshToken != "" {
 		values[refreshToken] = a.RefreshToken
@@ -108,7 +108,7 @@ func (a *Authentication) UnmarshalYAML(value *yaml.Node) error {
 		a.ClientSecret = val.(string)
 	}
 	if val, found := authMap[idPJWT]; found {
-		a.IdPJWT = val.(string)
+		a.ExternalJWT = val.(string)
 	}
 	if val, found := authMap[refreshToken]; found {
 		a.RefreshToken = val.(string)

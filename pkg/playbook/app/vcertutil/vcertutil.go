@@ -125,7 +125,7 @@ func buildVCertAuthentication(playbookAuth domain.Authentication) (*endpoint.Aut
 	vcertAuth.APIKey = apiKey
 
 	// Cloud JWT
-	jwt := playbookAuth.IdPJWT
+	jwt := playbookAuth.ExternalJWT
 	if strings.HasPrefix(jwt, filePrefix) {
 		data, err := readFile(jwt[offset:])
 		if err != nil {
@@ -134,7 +134,7 @@ func buildVCertAuthentication(playbookAuth domain.Authentication) (*endpoint.Aut
 		}
 		jwt = strings.TrimSpace(string(data))
 	}
-	vcertAuth.IdPJWT = jwt
+	vcertAuth.ExternalJWT = jwt
 
 	// Access token
 	accessToken := playbookAuth.AccessToken

@@ -68,7 +68,6 @@ const (
 	urlUserById                                   = urlUsers + "/%s"
 	urlUsersByName                                = urlUsers + "/username/%s"
 	urlTeams                          urlResource = apiVersion + "teams"
-	urlServiceAccountToken            urlResource = apiVersion + "oauth2/v2.0/%s/token"
 
 	defaultAppName = "Default"
 	oauthTokenType = "Bearer"
@@ -142,7 +141,7 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) error {
 	}
 
 	//2. JWT and token URL. use it to request new access token
-	if auth.IdPJWT != "" && auth.IdentityProvider != nil && auth.IdentityProvider.TokenURL != "" {
+	if auth.TokenURL != "" && auth.ExternalJWT != "" {
 		tokenResponse, err := c.GetAccessToken(auth)
 		if err != nil {
 			return err
@@ -868,11 +867,11 @@ func normalizeURL(url string) (normalizedURL string, err error) {
 }
 
 func (c *Connector) GetAccessToken(auth *endpoint.Authentication) (*TLSPCAccessTokenResponse, error) {
-	if auth == nil || auth.IdentityProvider == nil || auth.IdentityProvider.TokenURL == "" {
+	if auth == nil || auth.TokenURL == "" || auth.ExternalJWT == "" {
 		return nil, fmt.Errorf("failed to authenticate: missing credentials")
 	}
 
-	url, err := getServiceAccountTokenURL(auth.IdentityProvider.TokenURL)
+	url, err := getServiceAccountTokenURL(auth.TokenURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to authenticate: %w", err)
 	}
@@ -880,7 +879,7 @@ func (c *Connector) GetAccessToken(auth *endpoint.Authentication) (*TLSPCAccessT
 	body := netUrl.Values{}
 	body.Set("grant_type", "client_credentials")
 	body.Set("client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer")
-	body.Set("client_assertion", auth.IdPJWT)
+	body.Set("client_assertion", auth.ExternalJWT)
 
 	r, err := http.NewRequest(http.MethodPost, url, strings.NewReader(body.Encode()))
 	if err != nil {
