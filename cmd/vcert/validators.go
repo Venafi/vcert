@@ -41,38 +41,6 @@ var RevocationReasonOptions = []string{
 // JKSMinPasswordLen taken from keystore.minPasswordLen constant
 const JKSMinPasswordLen = 6
 
-func readData(commandName string) error {
-	if strings.HasPrefix(flags.distinguishedName, "file:") {
-		fileName := flags.distinguishedName[5:]
-		bytes, err := os.ReadFile(fileName)
-		if err != nil {
-			return fmt.Errorf("Failed to read Certificate DN: %s", err)
-		}
-		flags.distinguishedName = strings.TrimSpace(string(bytes))
-	}
-	if strings.HasPrefix(flags.keyPassword, "file:") {
-		fileName := flags.keyPassword[5:]
-		bytes, err := os.ReadFile(fileName)
-		if err != nil {
-			return fmt.Errorf("Failed to read password from file: %s", err)
-		}
-		flags.keyPassword = strings.TrimSpace(string(bytes))
-	}
-	var err error
-	if strings.HasPrefix(flags.thumbprint, "file:") {
-		certFileName := flags.thumbprint[5:]
-		flags.thumbprint, err = readThumbprintFromFile(certFileName)
-		if err != nil {
-			return fmt.Errorf("Failed to read certificate fingerprint: %s", err)
-		}
-	}
-
-	if err = readPasswordsFromInputFlags(commandName, &flags); err != nil {
-		return fmt.Errorf("Failed to read password from input: %s", err)
-	}
-	return nil
-}
-
 func validateCommonFlags(commandName string) error {
 
 	if flags.format != "" && flags.format != "pem" && flags.format != "json" && flags.format != P12Format && flags.format != LegacyP12Format && flags.format != JKSFormat && flags.format != util.LegacyPem {
@@ -135,14 +103,34 @@ func validateConnectionFlags(commandName string) error {
 			flags.password != "" ||
 			flags.token != "" ||
 			flags.url != "" ||
+			flags.tokenURL != "" ||
+			flags.idPJWT != "" ||
 			flags.testMode {
-			return fmt.Errorf("connection details cannot be specified with flags when -config is used")
+			return fmt.Errorf("connection details cannot be specified with flags when --config is used")
 		}
 		return nil
 	}
 
 	if flags.profile != "" {
-		return fmt.Errorf("-profile option cannot be used without -config option")
+		return fmt.Errorf("--profile option cannot be used without --config option")
+	}
+
+	// Nothing to do in test mode
+	if flags.testMode {
+		if commandName == commandGetCredName {
+			// unless it is get credentials which cannot be emulated
+			return fmt.Errorf("there is no test mode for %s command", commandName)
+		}
+		return nil
+	}
+
+	switch flags.platform {
+	case venafi.TPP:
+		return validateConnectionFlagsTPP(commandName)
+	case venafi.TLSPCloud:
+		return validateConnectionFlagsCloud(commandName)
+	case venafi.Firefly:
+		return validateConnectionFlagsFirefly(commandName)
 	}
 
 	tppToken := flags.token
@@ -150,29 +138,18 @@ func validateConnectionFlags(commandName string) error {
 		tppToken = getPropertyFromEnvironment(vCertToken)
 	}
 
-	if flags.testMode {
-		return nil
-	}
-	if flags.userName == "" && tppToken == "" {
+	//Guessing the platform by checking flags
+	//	- Firefly not present here as it is required to pass the platform flag
+	//	- Token empty is considered to mean Cloud connector to keep previous behavior where token was exclusive to TPP
+	//	- To use token with VaaS, the platform flag is required.
+	//	- If the platform flag is set we would not be guessing here
+	if flags.userName == "" && tppToken == "" && flags.clientP12 == "" {
 		// should be SaaS endpoint
-		if commandName != "sshgetconfig" && flags.apiKey == "" && getPropertyFromEnvironment(vCertApiKey) == "" {
-			return fmt.Errorf("An API key is required for communicating with Venafi as a Service")
-		}
+		return validateConnectionFlagsCloud(commandName)
 	} else {
 		// should be TPP service
-		if flags.url == "" && getPropertyFromEnvironment(vCertURL) == "" {
-			return fmt.Errorf("missing -u (URL) parameter")
-		}
-		if flags.noPrompt && flags.password == "" && tppToken == "" {
-			return fmt.Errorf("An access token or password is required for communicating with Trust Protection Platform or Firefly")
-		}
-
-		// mutual TLS with TPP service
-		if flags.clientP12 == "" && flags.clientP12PW != "" {
-			return fmt.Errorf("-client-pkcs12-pw can only be specified in combination with -client-pkcs12")
-		}
+		return validateConnectionFlagsTPP(commandName)
 	}
-	return nil
 }
 
 func validatePKCS12Flags(commandName string) error {
@@ -262,86 +239,37 @@ func validateEnrollFlags(commandName string) error {
 	}
 	if strings.Index(flags.csrOption, "file:") == 0 {
 		if flags.commonName != "" {
-			return fmt.Errorf("The '-cn' option cannot be used in -csr file: provided mode")
+			return fmt.Errorf("the '--cn' option cannot be used in --csr file: provided mode")
 		}
 	} else {
 		if flags.commonName == "" {
-			return fmt.Errorf("A Common Name is required for enrollment")
+			return fmt.Errorf("a Common Name is required for enrollment")
 		}
 	}
 
 	if flags.chainOption == "ignore" && flags.chainFile != "" {
-		return fmt.Errorf("The `-chain ignore` option cannot be used with -chain-file option")
-	}
-
-	apiKey := flags.apiKey
-	if apiKey == "" {
-		apiKey = getPropertyFromEnvironment(vCertApiKey)
+		return fmt.Errorf("the `--chain ignore` option cannot be used with --chain-file option")
 	}
 
 	if !flags.testMode && flags.config == "" {
-
-		token := flags.token
-		if token == "" {
-			token = getPropertyFromEnvironment(vCertToken)
-		}
-
 		zone := flags.zone
 		if zone == "" {
 			zone = getPropertyFromEnvironment(vCertZone)
 		}
-
-		if flags.platform == venafi.Firefly {
-			if token == "" {
-				return fmt.Errorf("an access token is required for communicating with Firefly")
-			}
-
-			if zone == "" {
-				return fmt.Errorf("a zone is required for requesting a certificate from Firefly")
-			}
-		} else {
-			if flags.userName == "" && token == "" {
-				// should be SaaS endpoint
-				if apiKey == "" {
-					return fmt.Errorf("An API key is required for enrollment with Venafi as a Service")
-				}
-				if zone == "" {
-					return fmt.Errorf("A zone is required for requesting a certificate from Venafi as a Service")
-				}
-			} else {
-				// should be TPP service
-				if flags.userName == "" && token == "" {
-					return fmt.Errorf("An access token or username is required for communicating with Trust Protection Platform")
-				}
-				if flags.noPrompt && flags.password == "" && token == "" {
-					return fmt.Errorf("An access token or password is required for communicating with Trust Protection Platform")
-				}
-
-				if zone == "" {
-					return fmt.Errorf("A zone is required for requesting a certificate from Trust Protection Platform")
-				}
-
-				// mutual TLS with TPP service
-				if flags.clientP12 == "" && flags.clientP12PW != "" {
-					return fmt.Errorf("-client-pkcs12-pw can only be specified in combination with -client-pkcs12")
-				}
-			}
+		if zone == "" {
+			return fmt.Errorf("a zone is required for requesting a certificate. You can set the zone using the -z flag")
 		}
 
 		if flags.validDays != "" {
-
 			valid := validateValidDaysFlag(commandName)
-
 			if !valid {
 				return fmt.Errorf("--valid-days is set but, it have an invalid format/data")
 			}
-
 		}
-
 	}
 
 	if flags.csrOption == "file" && flags.keyFile != "" { // Do not specify -key-file with -csr file as VCert cannot access the private key
-		return fmt.Errorf("-key-file cannot be used with -csr file as VCert cannot access the private key")
+		return fmt.Errorf("--key-file cannot be used with -csr file as VCert cannot access the private key")
 	}
 
 	err = validatePKCS12Flags(commandName)
@@ -354,16 +282,19 @@ func validateEnrollFlags(commandName string) error {
 		return err
 	}
 
-	if flags.userName != "" || flags.password != "" {
-		logf("Warning: User\\Password authentication is deprecated, please use access token instead.")
-	}
-
 	if flags.tlsAddress != "" && flags.instance == "" {
 		return fmt.Errorf("--tls-address cannot be used without --instance")
 	}
 
-	if (flags.tlsAddress != "" || flags.instance != "") && apiKey != "" {
-		return fmt.Errorf("--instance and --tls-address are not applicable to Venafi as a Service")
+	apiKey := flags.apiKey
+	if apiKey == "" {
+		apiKey = getPropertyFromEnvironment(vCertApiKey)
+	}
+
+	addrInstPresent := flags.tlsAddress != "" || flags.instance != ""
+	isCloud := apiKey != "" || flags.platform == venafi.TLSPCloud
+	if addrInstPresent && isCloud {
+		return fmt.Errorf("--instance and --tls-address are not applicable to Venafi as a Service platform")
 	}
 
 	return nil
@@ -388,76 +319,9 @@ func validateValidDaysFlag(cn string) bool {
 }
 
 func validateCredMgmtFlags1(commandName string) error {
-	var err error
-
-	tokenS := flags.token
-	if tokenS == "" {
-		tokenS = getPropertyFromEnvironment(vCertToken)
-	}
-
-	if flags.config != "" {
-		if flags.apiKey != "" ||
-			flags.userName != "" ||
-			flags.password != "" ||
-			tokenS != "" ||
-			flags.url != "" ||
-			flags.testMode {
-			return fmt.Errorf("connection details cannot be specified with flags or environment variables when --config is used")
-		}
-	} else {
-		if flags.profile != "" {
-			return fmt.Errorf("--profile option cannot be used without --config option")
-		}
-		if flags.testMode {
-			return fmt.Errorf("There is no test mode for %s command", commandName)
-		}
-		getCredForVaaS := false
-		if commandName == commandGetCredName {
-			if flags.platform != venafi.Firefly {
-				userParameterProvided, err := getUserParameterProvidedForGetCred()
-
-				if err != nil {
-					return err
-				}
-
-				if userParameterProvided == flagEmail.Name {
-					getCredForVaaS = true
-				}
-			}
-		} else {
-			if tokenS == "" {
-				return fmt.Errorf("missing -t (access token) parameter")
-			}
-		}
-
-		if flags.platform == venafi.Firefly {
-
-			if flags.clientId == "" {
-				return fmt.Errorf("missing --client-id parameter")
-			}
-
-			if flags.url == "" {
-				return fmt.Errorf("missing -u (URL) parameter")
-			}
-
-			if flags.noPrompt && flags.password == "" && flags.clientSecret == "" && flags.deviceURL == "" {
-				return fmt.Errorf("a user/password or client secret or device-url are required for communicating with Firefly")
-			}
-		} else {
-			//doing this validation if the platform was not set to Firefly
-			if flags.url == "" && getPropertyFromEnvironment(vCertURL) == "" && !getCredForVaaS {
-				return fmt.Errorf("missing -u (URL) parameter")
-			}
-
-			if flags.noPrompt && flags.password == "" && tokenS == "" {
-				return fmt.Errorf("an access token or password is required for communicating with Trust Protection Platform")
-			}
-		}
-
-		// mutual TLS with TPP service
-		if flags.clientP12 == "" && flags.clientP12PW != "" {
-			return fmt.Errorf("--client-pkcs12-pw can only be specified in combination with --client-pkcs12")
-		}
+	err := validateConnectionFlags(commandName)
+	if err != nil {
+		return err
 	}
 
 	err = validateCommonFlags(commandName)

@@ -1176,7 +1176,7 @@ func TestSetPolicy(t *testing.T) {
 	}
 
 	//validate each attribute
-	userDetails, err := getUserDetails(conn)
+	userDetails, err := conn.getUserDetails()
 	//validating the default users attribute was created
 	users := []string{
 		//"jenkins@opensource.qa.venafi.io",
@@ -2288,9 +2288,7 @@ func TestVerifyCSRServiceGenerated(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-	if err != nil {
-		t.Fatalf("%s", err)
-	}
+
 	req := getBasicRequest()
 
 	req.CsrOrigin = certificate.ServiceGeneratedCSR

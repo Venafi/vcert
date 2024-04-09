@@ -105,8 +105,26 @@ func isValidTpp(c Connection) (bool, error) {
 
 func isValidVaaS(c Connection) (bool, error) {
 	// Credentials are not empty
-	if c.Credentials.APIKey == "" {
+	apikey := false
+	if c.Credentials.APIKey != "" {
+		apikey = true
+	}
+
+	svcaccount := false
+	if c.Credentials.IdentityProvider != nil && c.Credentials.IdentityProvider.TokenURL != "" {
+		svcaccount = true
+	}
+
+	if !apikey && !svcaccount {
 		return false, ErrNoCredentials
+	}
+
+	if apikey {
+		return true, nil
+	}
+
+	if c.Credentials.IdPJWT == "" {
+		return false, ErrNoIdPJWT
 	}
 
 	return true, nil

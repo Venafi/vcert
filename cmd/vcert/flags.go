@@ -27,9 +27,10 @@ var (
 	flagPlatform = &cli.StringFlag{
 		Name: "platform",
 		Usage: "Use to specify the platform VCert will use to execute the given command. Only accepted values are:\n" +
-			"\t\tFor getcred command: --platform oidc\n" +
-			"\t\tFor enroll command: --platform firefly",
+			"\t\tFor getcred command: --platform [TPP | VAAS | OIDC]\n" +
+			"\t\tFor enroll command: --platform [TPP | VAAS | FIREFLY]",
 		Destination: &flags.platformString,
+		Aliases:     []string{"p"},
 	}
 
 	flagUrl = &cli.StringFlag{
@@ -39,6 +40,13 @@ var (
 			"\n\t\tOIDC example: -u https://my.okta.domain//oauth2/v1/token",
 		Destination: &flags.url,
 		Aliases:     []string{"u"},
+	}
+
+	flagTokenUrl = &cli.StringFlag{
+		Name: "token-url",
+		Usage: "REQUIRED/VCP. The URL of the token service." +
+			"\n\t\tExample: --token-url https://api.venafi.cloud/v1/oauth2/v2.0/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee/token",
+		Destination: &flags.tokenURL,
 	}
 
 	flagUrlDeprecated = &cli.StringFlag{
@@ -51,9 +59,15 @@ var (
 
 	flagKey = &cli.StringFlag{
 		Name:        "apiKey",
-		Usage:       "REQUIRED/VAAS. Your API key for Venafi as a Service.  Example: -k aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+		Usage:       "REQUIRED/VaaS. Your API key for Venafi as a Service.  Example: -k aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
 		Destination: &flags.apiKey,
 		Aliases:     []string{"k"},
+	}
+
+	flagIdPJWT = &cli.StringFlag{
+		Name:        "idp-jwt",
+		Usage:       "REQUIRED/VCP. The JWT of the Identity Provider associated to the service account to be used. Use it along --token-url flag to retrieve an access token for VCP",
+		Destination: &flags.idPJWT,
 	}
 
 	flagDeviceURL = &cli.StringFlag{
@@ -97,7 +111,7 @@ var (
 
 	flagToken = &cli.StringFlag{
 		Name: "token",
-		Usage: "REQUIRED/TPP/Firefly. Your access token (or refresh token for getcred) for Trust Protection Platform or Firefly. " +
+		Usage: "REQUIRED/TPP/VaaS/Firefly. Your access token (or refresh token for getcred) for Trust Protection Platform, Venafi as a Service or Firefly. " +
 			"Example: -t Ab01Cd23Ef45Uv67Wx89Yz==",
 		Destination: &flags.token,
 		Aliases:     []string{"t"},
@@ -851,6 +865,8 @@ var (
 		flagAudience,
 		flagDeviceURL,
 		commonFlags,
+		flagTokenUrl,
+		flagIdPJWT,
 	))
 
 	checkCredFlags = sortedFlags(flagsApppend(

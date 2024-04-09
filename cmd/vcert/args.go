@@ -44,6 +44,8 @@ var (
 
 type commandFlags struct {
 	apiKey               string
+	idPJWT               string
+	tokenURL             string
 	appInfo              string
 	audience             string
 	caDN                 string

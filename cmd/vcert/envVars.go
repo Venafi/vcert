@@ -8,6 +8,8 @@ const (
 	vCertZone         = "VCERT_ZONE"
 	vCertToken        = "VCERT_TOKEN"  // #nosec G101
 	vCertApiKey       = "VCERT_APIKEY" // #nosec G101
+	vCertIdPJWT       = "VCERT_IDP_JWT"
+	vCertTokenURL     = "VCERT_TOKEN_URL" // #nosec G101
 	vCertTrustBundle  = "VCERT_TRUST_BUNDLE"
 	vcertUser         = "VCERT_USER"
 	vcertPassword     = "VCERT_PASSWORD"
@@ -50,6 +52,16 @@ var (
 			FlagName:    "-k",
 		},
 		{
+			EnvVarName:  vCertTokenURL,
+			Destination: &flags.tokenURL,
+			FlagName:    "--token-url",
+		},
+		{
+			EnvVarName:  vCertIdPJWT,
+			Destination: &flags.idPJWT,
+			FlagName:    "--idp-jwt",
+		},
+		{
 			EnvVarName:  vCertTrustBundle,
 			Destination: &flags.trustBundle,
 			FlagName:    "--trust-bundle",
@@ -68,12 +80,12 @@ var (
 		{
 			EnvVarName:  vcertClientSecret,
 			Destination: &flags.clientSecret,
-			FlagName:    "--client-id",
+			FlagName:    "--client-secret",
 		},
 		{
 			EnvVarName:  vcertClientID,
 			Destination: &flags.clientId,
-			FlagName:    "--client-secret",
+			FlagName:    "--client-id",
 		},
 		{
 			EnvVarName:  vcertDeviceURL,
@@ -87,7 +99,7 @@ func assignEnvVarsToFlags() {
 	colorYellow := "\033[33m"
 	colorReset := "\033[0m"
 
-	warnMsg := "Warning Command line parameter %s has overridden environment variable %s"
+	warnMsg := "Warning: command line parameter %s has overridden environment variable %s"
 
 	for _, item := range envVarList {
 		value := getPropertyFromEnvironment(item.EnvVarName)

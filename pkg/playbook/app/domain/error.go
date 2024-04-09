@@ -84,4 +84,6 @@ var (
 	ErrNoClientId = fmt.Errorf("no cliendId defined. Firefly platform requires a clientId to request OAuth2 token")
 	// ErrNoIdentityProviderURL is thrown when platform is Firefly and no config.credentials.tokenURL is defined to request an OAuth2 Token
 	ErrNoIdentityProviderURL = fmt.Errorf("no tokenURL defined in credentials. tokenURL is required to request OAuth2 token")
+	// ErrNoIdPJWT is thrown when platform is TLSPC/VAAS, a tenantId has been passed but no config.credentials.externalJWT is set
+	ErrNoIdPJWT = fmt.Errorf("no idPJWT defined in credentials. idPJWT is required to request an access token from VCP")
 )

@@ -265,7 +265,6 @@ func TestGetCredFlagsNoUrl(t *testing.T) {
 func TestValidateFlagsForTPPMissingData(t *testing.T) {
 
 	flags = commandFlags{}
-
 	flags.url = "https://localhost/vedsdk"
 	flags.userName = ""
 
@@ -274,19 +273,19 @@ func TestValidateFlagsForTPPMissingData(t *testing.T) {
 		t.Fatalf("Error was not expected to be nil.  Username and password are required for enrollment")
 	}
 
+	flags = commandFlags{}
 	flags.url = "https://localhost/vedsdk"
 	flags.userName = "admin"
 	flags.password = "xxxx"
 	flags.noPrompt = true
 	flags.zone = "Test Policy"
 
-	flags = commandFlags{}
-
 	err = validateEnrollFlags(commandEnrollName)
 	if err == nil {
 		t.Fatalf("Error was not expected to be nil.  CN is required for enrollment")
 	}
 
+	flags = commandFlags{}
 	flags.url = "https://localhost/vedsdk"
 	flags.userName = "admin"
 	flags.noPrompt = true
@@ -299,7 +298,6 @@ func TestValidateFlagsForTPPMissingData(t *testing.T) {
 	}
 
 	flags = commandFlags{}
-
 	flags.url = "https://localhost/vedsdk"
 	flags.userName = "admin"
 	flags.password = "secret"
@@ -313,10 +311,12 @@ func TestValidateFlagsForTPPMissingData(t *testing.T) {
 		t.Fatalf("Error was not expected to be nil.  Zone is required for enrollment")
 	}
 
+	flags = commandFlags{}
 	flags.url = "https://localhost/vedsdk"
 	flags.token = "udd3OCDO/Vu3An01KSlLzQ=="
 	flags.commonName = "test"
 	flags.zone = "Test Policy"
+	flags.noPrompt = true
 
 	err = validateEnrollFlags(commandEnrollName)
 	if err != nil {

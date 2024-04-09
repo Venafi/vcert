@@ -30,6 +30,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-http-utils/headers"
+
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
 	"github.com/Venafi/vcert/v5/pkg/verror"
@@ -131,6 +133,7 @@ func (c *Connector) request(method string, resource urlResource, data interface{
 
 	r, _ := http.NewRequest(method, resourceUrl, payload)
 	r.Close = true
+	r.Header.Set(headers.UserAgent, c.userAgent)
 	if c.accessToken != "" {
 		r.Header.Add("Authorization", fmt.Sprintf("Bearer %s", c.accessToken))
 	}
@@ -190,7 +193,9 @@ func (c *Connector) getHTTPClient() *http.Client {
 	/* #nosec */
 	if c.trust != nil {
 		if tlsConfig == nil {
-			tlsConfig = &tls.Config{}
+			tlsConfig = &tls.Config{
+				MinVersion: tls.VersionTLS12,
+			}
 		} else {
 			tlsConfig = tlsConfig.Clone()
 		}
