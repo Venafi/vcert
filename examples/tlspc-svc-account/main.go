@@ -58,19 +58,23 @@ func main() {
 		log.Fatalf("error creating client: %s", err.Error())
 	}
 
-	_, err = connector.ReadZoneConfiguration()
+	zoneConfig, err := connector.ReadZoneConfiguration()
 	if err != nil {
 		log.Fatalf("error reading zone: %s", err.Error())
-
 	}
 
 	request := &certificate.Request{
 		Subject: pkix.Name{
 			CommonName: "svc-account.venafi.example.com",
 		},
-		CsrOrigin: certificate.ServiceGeneratedCSR,
+		CsrOrigin: certificate.LocalGeneratedCSR,
 		KeyType:   certificate.KeyTypeRSA,
 		KeyLength: 2048,
+	}
+
+	err = connector.GenerateRequest(zoneConfig, request)
+	if err != nil {
+		log.Fatalf("error generating request: %s", err.Error())
 	}
 
 	certID, err := connector.RequestCertificate(request)
