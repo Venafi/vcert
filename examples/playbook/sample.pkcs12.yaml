@@ -2,7 +2,6 @@ config:
   connection:
     platform: tpp
     url: https://my.tpp.instance.company.com # URL to TPP instance
-    trustBundle: /path/to/my/trustbundle.pem # TrustBundle for TPP connection
     credentials:
       accessToken: '{{ Env "TPP_ACCESS_TOKEN" }}'
       refreshToken: '{{ Env "TPP_REFRESH_TOKEN" }}'
@@ -11,20 +10,16 @@ certificateTasks:
   - name: myCertificate # Task Identifier, no relevance in tool run
     renewBefore: 31d
     request:
-      csr: service
-      keyPassword: "newPassword!"
+      csr: local
       subject:
         # Templating needs to go between single quotes to avoid issues when refreshing tokens and saving back
-        commonName: '{{ Hostname | ToLower -}}.{{- Env "USERDNSDOMAIN" | ToLower }}'
+        commonName: '{{ Hostname | ToLower -}}'
         country: US
         locality: Salt Lake City
         state: Utah
         organization: Venafi Inc
-        orgUnits:
-          - engineering
-          - marketing
       zone: "Open Source\\vcert"
     installations:
       - format: PKCS12
         file: "/path/to/my/certificate/cert.p12"
-        afterInstallAction: "echo Success!!!"
+        p12Password: "5uperSecr3t5!"
