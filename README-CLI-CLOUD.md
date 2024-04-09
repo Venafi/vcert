@@ -98,7 +98,7 @@ VCert supports supplying flag values using environment variables:
 | Attribute                      | Flag               | Environment Variable |
 |--------------------------------|--------------------|----------------------|
 | API key                        | `-k` or `--apiKey` | `VCERT_APIKEY`       |
-| JWT from Identity Provider     | `--idp-jwt`        | `VCERT_IDP_JWT`      |
+| JWT from Identity Provider     | `--external-jwt`   | `VCERT_EXTERNAL_JWT` |
 | Venafi Control Plane token     | `-t` or `--token`  | `VCERT_TOKEN`        |
 | Venafi Control Plane token URL | `--token-url`      | `VCERT_TOKEN_URL`    |
 | Venafi Control Plane URL       | `-u` or `--url`    | `VCERT_URL`          |
@@ -372,7 +372,7 @@ Options:
 
 ### Obtaining an access token from service account
 ```
-vcert getcred -p vcp --token-url https://api.venafi.cloud/v1/oauth2/v2.0/xxx-XXxX/token  --idp-jwt "file:jwt.txt"
+vcert getcred -p vcp --token-url https://api.venafi.cloud/v1/oauth2/v2.0/aaa-bbb-ccc/token --external-jwt "file:jwt.txt"
 ```
 Options:
 
@@ -380,7 +380,7 @@ Options:
 |----------------------|-----------------------------------------------------------------------------------------------------------------------|
 | `-p` or `--platform` | Use to specify Venafi Control Plane as the platform of choice to connect. Accepted value is `vcp`, no case-sensitive. |
 | `--token-url`        | The URL used to obtain the access token, provided by Venafi Control Plane's service account page                      |
-| `--idp-jwt`          | The JWT of the Identity Provider associated to the service account that is going to grant the access token            |
+| `--external-jwt`     | The JWT of the Identity Provider associated to the service account that is going to grant the access token            |
 
 ### Generating a new key pair and CSR
 ```

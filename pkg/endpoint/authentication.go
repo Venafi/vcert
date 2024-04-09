@@ -36,7 +36,7 @@ type Authentication struct {
 	TokenURL    string `yaml:"tokenURL,omitempty"`
 	ExternalJWT string `yaml:"externalJWT,omitempty"`
 
-	// IDP Auth method
+	// OIDC Auth methods
 	ClientId     string `yaml:"clientId,omitempty"`
 	ClientSecret string `yaml:"clientSecret,omitempty"`
 	Scope        string `yaml:"scope,omitempty"`
