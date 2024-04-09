@@ -48,10 +48,8 @@ func main() {
 		BaseUrl:       url,
 		Zone:          zone,
 		Credentials: &endpoint.Authentication{
-			IdPJWT: jwt,
-			IdentityProvider: &endpoint.OAuthProvider{
-				TokenURL: tokenURL,
-			},
+			ExternalJWT: jwt,
+			TokenURL:    tokenURL,
 		},
 		UserAgent: &userAgent,
 	}

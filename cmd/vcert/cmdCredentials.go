@@ -38,7 +38,7 @@ var (
 		Action: doCommandCredMgmt1,
 		Usage:  "To obtain a new access token for authentication",
 		UsageText: ` vcert getcred --email <email address for Venafi Control Plane headless registration> [--password <password>] [--format (text|json)]
-		vcert getcred -p vcp --token-url <VCP token url> --idp-jwt <JWT from Identity Provider>
+		vcert getcred -p vcp --token-url <VCP token url> --external-jwt <JWT from Identity Provider>
 		
 		vcert getcred -u https://tpp.example.com --username <TPP user> --password <TPP user password>
 		vcert getcred -u https://tpp.example.com --p12-file <PKCS#12 client cert> --p12-password <PKCS#12 password> --trust-bundle /path-to/bundle.pem

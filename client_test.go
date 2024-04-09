@@ -316,10 +316,8 @@ func TestNewClient_UserAgent(t *testing.T) {
 			name: "with-service-account",
 			args: []any{
 				&endpoint.Authentication{
-					IdPJWT: "fake-external-idp-jwt",
-					IdentityProvider: &endpoint.OAuthProvider{
-						TokenURL: "https://fake.token.url.com/token",
-					},
+					ExternalJWT: "fake-external-idp-jwt",
+					TokenURL:    "https://fake.token.url.com/token",
 				},
 			},
 		},

@@ -111,7 +111,7 @@ func isValidVaaS(c Connection) (bool, error) {
 	}
 
 	svcaccount := false
-	if c.Credentials.IdentityProvider != nil && c.Credentials.IdentityProvider.TokenURL != "" {
+	if c.Credentials.TokenURL != "" {
 		svcaccount = true
 	}
 
@@ -123,8 +123,8 @@ func isValidVaaS(c Connection) (bool, error) {
 		return true, nil
 	}
 
-	if c.Credentials.IdPJWT == "" {
-		return false, ErrNoIdPJWT
+	if c.Credentials.ExternalJWT == "" {
+		return false, ErrNoExternalJWT
 	}
 
 	return true, nil

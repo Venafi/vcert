@@ -33,9 +33,10 @@ type Authentication struct {
 	// API key
 	APIKey string `yaml:"apiKey,omitempty"`
 	// Service account
-	IdPJWT string `yaml:"idPJWT,omitempty"`
+	TokenURL    string `yaml:"tokenURL,omitempty"`
+	ExternalJWT string `yaml:"externalJWT,omitempty"`
 
-	// IDP Auth method
+	// OIDC Auth methods
 	ClientId     string `yaml:"clientId,omitempty"`
 	ClientSecret string `yaml:"clientSecret,omitempty"`
 	Scope        string `yaml:"scope,omitempty"`
@@ -47,6 +48,6 @@ type Authentication struct {
 type OAuthProvider struct {
 	// OIDC Auth methods
 	DeviceURL string `yaml:"-"`
-	TokenURL  string `yaml:"tokenURL,omitempty"` // This attribute is also used by VCP service account
+	TokenURL  string `yaml:"tokenURL,omitempty"`
 	Audience  string `yaml:"audience,omitempty"`
 }

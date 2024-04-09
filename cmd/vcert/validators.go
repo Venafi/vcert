@@ -104,7 +104,7 @@ func validateConnectionFlags(commandName string) error {
 			flags.token != "" ||
 			flags.url != "" ||
 			flags.tokenURL != "" ||
-			flags.idPJWT != "" ||
+			flags.externalJWT != "" ||
 			flags.testMode {
 			return fmt.Errorf("connection details cannot be specified with flags when --config is used")
 		}
