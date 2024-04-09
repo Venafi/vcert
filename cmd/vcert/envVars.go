@@ -8,7 +8,7 @@ const (
 	vCertZone         = "VCERT_ZONE"
 	vCertToken        = "VCERT_TOKEN"  // #nosec G101
 	vCertApiKey       = "VCERT_APIKEY" // #nosec G101
-	vCertIdPJWT       = "VCERT_IDP_JWT"
+	vCertExternalJWT  = "VCERT_EXTERNAL_JWT"
 	vCertTokenURL     = "VCERT_TOKEN_URL" // #nosec G101
 	vCertTrustBundle  = "VCERT_TRUST_BUNDLE"
 	vcertUser         = "VCERT_USER"
@@ -57,9 +57,9 @@ var (
 			FlagName:    "--token-url",
 		},
 		{
-			EnvVarName:  vCertIdPJWT,
-			Destination: &flags.idPJWT,
-			FlagName:    "--idp-jwt",
+			EnvVarName:  vCertExternalJWT,
+			Destination: &flags.externalJWT,
+			FlagName:    "--external-jwt",
 		},
 		{
 			EnvVarName:  vCertTrustBundle,

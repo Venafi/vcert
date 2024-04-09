@@ -270,7 +270,7 @@ func getVaaSCredentials(vaasConnector *cloud.Connector, cfg *vcert.Config) error
 			fmt.Println("api_key_expires: ", apiKey.ValidityEndDateString)
 		}
 		// Request access token
-	} else if cfg.Credentials.ExternalJWT != "" && cfg.Credentials.IdentityProvider != nil && cfg.Credentials.IdentityProvider.TokenURL != "" {
+	} else if cfg.Credentials.ExternalJWT != "" && cfg.Credentials.TokenURL != "" {
 		// Request access token from VaaS service account
 		tokenResponse, err := vaasConnector.GetAccessToken(cfg.Credentials)
 		if err != nil {

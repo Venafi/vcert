@@ -44,7 +44,7 @@ var (
 
 type commandFlags struct {
 	apiKey               string
-	idPJWT               string
+	externalJWT          string
 	tokenURL             string
 	appInfo              string
 	audience             string

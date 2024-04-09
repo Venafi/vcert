@@ -12,7 +12,7 @@ func validateConnectionFlagsCloud(commandName string) error {
 	//getcred command
 	if commandName == commandGetCredName {
 		tokenURLPresent := flags.tokenURL != "" || getPropertyFromEnvironment(vCertTokenURL) != ""
-		jwtPresent := flags.idPJWT != "" || getPropertyFromEnvironment(vCertIdPJWT) != ""
+		jwtPresent := flags.externalJWT != "" || getPropertyFromEnvironment(vCertExternalJWT) != ""
 		svcAccountPresent := tokenURLPresent && jwtPresent
 		emailPresent := flags.email != ""
 

@@ -165,10 +165,8 @@ func buildConfigVaaS(flags *commandFlags) (*vcert.Config, error) {
 			Password:    flags.password,
 			AccessToken: flags.token,
 			APIKey:      flags.apiKey,
-			ExternalJWT: flags.idPJWT,
-			IdentityProvider: &endpoint.OAuthProvider{
-				TokenURL: flags.tokenURL,
-			},
+			ExternalJWT: flags.externalJWT,
+			TokenURL:    flags.tokenURL,
 		},
 	}, nil
 }

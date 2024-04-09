@@ -44,8 +44,8 @@ var (
 
 	flagTokenUrl = &cli.StringFlag{
 		Name: "token-url",
-		Usage: "REQUIRED/VCP. The URL of the token service." +
-			"\n\t\tExample: --token-url https://api.venafi.cloud/v1/oauth2/v2.0/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee/token",
+		Usage: "REQUIRED/VCP. Use to specify the URL to retrieve an access token for Venafi Control Plane. Use in combination with --external-jwt flag." +
+			"\n\t\tExample: --token-url https://api.venafi.cloud/v1/oauth2/v2.0/aaaaaaaa-bbbb-cccc/token",
 		Destination: &flags.tokenURL,
 	}
 
@@ -64,10 +64,10 @@ var (
 		Aliases:     []string{"k"},
 	}
 
-	flagIdPJWT = &cli.StringFlag{
-		Name:        "idp-jwt",
-		Usage:       "REQUIRED/VCP. The JWT of the Identity Provider associated to the service account to be used. Use it along --token-url flag to retrieve an access token for VCP",
-		Destination: &flags.idPJWT,
+	flagExternalJWT = &cli.StringFlag{
+		Name:        "external-jwt",
+		Usage:       "REQUIRED/VCP. Use to specify the JWT of the Identity Provider associated with the service account that is requesting a new access token for Venafi Control Plane. Use in combination with --token-url option.",
+		Destination: &flags.externalJWT,
 	}
 
 	flagDeviceURL = &cli.StringFlag{
@@ -866,7 +866,7 @@ var (
 		flagDeviceURL,
 		commonFlags,
 		flagTokenUrl,
-		flagIdPJWT,
+		flagExternalJWT,
 	))
 
 	checkCredFlags = sortedFlags(flagsApppend(

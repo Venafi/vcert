@@ -50,13 +50,13 @@ func readData(commandName string) error {
 		}
 	}
 
-	if strings.HasPrefix(flags.idPJWT, filePrefix) {
-		fileName := flags.idPJWT[5:]
+	if strings.HasPrefix(flags.externalJWT, filePrefix) {
+		fileName := flags.externalJWT[5:]
 		bytes, err := os.ReadFile(fileName)
 		if err != nil {
 			return fmt.Errorf("failed to read IdP JWT from file: %w", err)
 		}
-		flags.idPJWT = strings.TrimSpace(string(bytes))
+		flags.externalJWT = strings.TrimSpace(string(bytes))
 	}
 
 	if strings.HasPrefix(flags.tokenURL, filePrefix) {
