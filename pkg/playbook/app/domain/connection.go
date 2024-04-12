@@ -104,30 +104,63 @@ func isValidTpp(c Connection) (bool, error) {
 }
 
 func isValidVaaS(c Connection) (bool, error) {
-	// Credentials are not empty
+	// Check if an API key has been provided
 	apikey := false
 	if c.Credentials.APIKey != "" {
 		apikey = true
 	}
 
-	svcaccount := false
+	accesstoken := false
+	if c.Credentials.AccessToken != "" {
+		accesstoken = true
+	}
+
+	// Check if an TokenURL has been provided
+	tokenurl := false
 	if c.Credentials.TokenURL != "" {
+		tokenurl = true
+	}
+
+	// Check if externalJWT has been provided
+	externalJWT := false
+	if c.Credentials.ExternalJWT != "" {
+		externalJWT = true
+	}
+
+	// There's a valid service account IF both externalJWT and tokenURL provided
+	svcaccount := false
+	if externalJWT && tokenurl {
 		svcaccount = true
-	}
-
-	if !apikey && !svcaccount {
-		return false, ErrNoCredentials
-	}
-
-	if apikey {
-		return true, nil
-	}
-
-	if c.Credentials.ExternalJWT == "" {
+	} else if externalJWT && !tokenurl {
+		// JWT Provided without token url
+		return false, ErrNoVCPTokenURL
+	} else if tokenurl && !externalJWT {
+		// Tokenurl without an external JWT
 		return false, ErrNoExternalJWT
 	}
 
-	return true, nil
+	// If there's just an API key provided, that's good
+	if apikey && !accesstoken && !svcaccount {
+		return true, nil
+	}
+
+	// If there's just an accessToken provided, that's good
+	if !apikey && accesstoken && !svcaccount {
+		return true, nil
+	}
+
+	// If there's just a svcaccount defined, that's fine too
+	if !apikey && !accesstoken && svcaccount {
+		return true, nil
+	}
+
+	// At this point, there are no valid credentials. Figure out why.
+	if !apikey && !svcaccount && !accesstoken {
+		return false, ErrNoCredentials
+	}
+
+	// If we get here, it's because too many credentials were provided
+	return false, ErrAmbiguousVCPCreds
 }
 
 func isValidFirefly(c Connection) (bool, error) {
