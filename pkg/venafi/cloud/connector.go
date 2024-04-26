@@ -346,20 +346,20 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (*certificate.
 
 	// Download the private key and certificate in case the certificate is service generated
 	if req.CsrOrigin == certificate.ServiceGeneratedCSR || req.FetchPrivateKey {
-		var dekInfo *EdgeEncryptionKey
 		var currentId string
-		var err error
 		if req.CertID != "" {
-			dekInfo, err = getDekInfo(c, req.CertID)
 			currentId = req.CertID
 		} else if certificateId != "" {
-			dekInfo, err = getDekInfo(c, certificateId)
 			currentId = certificateId
 		}
-		if err == nil && dekInfo.Key != "" {
-			req.CertID = currentId
-			return retrieveServiceGeneratedCertData(c, req, dekInfo)
+
+		dekInfo, err := getDekInfo(c, currentId)
+		if err != nil {
+			return nil, err
 		}
+
+		req.CertID = currentId
+		return retrieveServiceGeneratedCertData(c, req, dekInfo)
 	}
 
 	url := c.getURL(urlResourceCertificateRetrievePem)
