@@ -268,7 +268,7 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 }
 
 // RetrieveCertificate retrieves the certificate for the specified ID
-func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates *certificate.PEMCollection, err error) {
+func (c *Connector) RetrieveCertificate(req *certificate.Request) (*certificate.PEMCollection, error) {
 	if !c.isAuthenticated() {
 		return nil, fmt.Errorf("must be autheticated to request a certificate")
 	}
@@ -340,22 +340,26 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 		certificateId = req.CertID
 	}
 
-	url := c.getURL(urlResourceCertificateRetrievePem)
-	url = fmt.Sprintf(url, certificateId)
+	// Download the private key and certificate in case the certificate is service generated
+	if req.CsrOrigin == certificate.ServiceGeneratedCSR || req.FetchPrivateKey {
+		var currentId string
+		if req.CertID != "" {
+			currentId = req.CertID
+		} else if certificateId != "" {
+			currentId = certificateId
+		}
 
-	var dekInfo *EdgeEncryptionKey
-	var currentId string
-	if req.CertID != "" {
-		dekInfo, err = getDekInfo(c, req.CertID)
-		currentId = req.CertID
-	} else if certificateId != "" {
-		dekInfo, err = getDekInfo(c, certificateId)
-		currentId = certificateId
-	}
-	if err == nil && dekInfo.Key != "" {
+		dekInfo, err := getDekInfo(c, currentId)
+		if err != nil {
+			return nil, err
+		}
+
 		req.CertID = currentId
 		return retrieveServiceGeneratedCertData(c, req, dekInfo)
 	}
+
+	url := c.getURL(urlResourceCertificateRetrievePem)
+	url = fmt.Sprintf(url, certificateId)
 
 	switch {
 	case req.CertID != "":
@@ -380,7 +384,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 			return nil, err
 		}
 		if statusCode == http.StatusOK {
-			certificates, err = newPEMCollectionFromResponse(body, req.ChainOption)
+			certificates, err := newPEMCollectionFromResponse(body, req.ChainOption)
 			if err != nil {
 				return nil, err
 			}
