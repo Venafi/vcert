@@ -371,7 +371,7 @@ func (c *Connector) request(method string, url string, data interface{}, authNot
 
 func parseUserDetailsResult(expectedStatusCode int, httpStatusCode int, httpStatus string, body []byte) (*userDetails, error) {
 	if httpStatusCode == expectedStatusCode {
-		return parseUserDetailsData(body)
+		return parseData[userDetails](body, verror.ServerError)
 	}
 	respErrors, err := parseResponseErrors(body)
 	if err != nil {
@@ -392,7 +392,7 @@ func parseUserDetailsResult(expectedStatusCode int, httpStatusCode int, httpStat
 
 func parseUserDetailsResultFromPOST(httpStatusCode int, httpStatus string, body []byte) (*userDetails, error) {
 	if httpStatusCode == http.StatusCreated || httpStatusCode == http.StatusAccepted {
-		return parseUserDetailsData(body)
+		return parseData[userDetails](body, verror.ServerError)
 	}
 	respErrors, err := parseResponseErrors(body)
 	if err != nil {
@@ -405,19 +405,18 @@ func parseUserDetailsResultFromPOST(httpStatusCode int, httpStatus string, body 
 	return nil, fmt.Errorf("%w: %v", verror.ServerError, respError)
 }
 
-func parseUserDetailsData(b []byte) (*userDetails, error) {
-	var data userDetails
+func parseData[T any](b []byte, errorMessage error) (*T, error) {
+	var data T
 	err := json.Unmarshal(b, &data)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", verror.ServerError, err)
+		return nil, fmt.Errorf("%w: %v", errorMessage, err)
 	}
-
 	return &data, nil
 }
 
 func parseUserByIdResult(expectedStatusCode int, httpStatusCode int, httpStatus string, body []byte) (*user, error) {
 	if httpStatusCode == expectedStatusCode {
-		return parseUserByIdData(body)
+		return parseData[user](body, verror.ServerError)
 	}
 	respErrors, err := parseResponseErrors(body)
 	if err != nil {
@@ -430,19 +429,9 @@ func parseUserByIdResult(expectedStatusCode int, httpStatusCode int, httpStatus 
 	return nil, fmt.Errorf("%w: %v", verror.ServerError, respError)
 }
 
-func parseUserByIdData(b []byte) (*user, error) {
-	var data user
-	err := json.Unmarshal(b, &data)
-	if err != nil {
-		return nil, fmt.Errorf("%w: %v", verror.ServerError, err)
-	}
-
-	return &data, nil
-}
-
 func parseUsersByNameResult(expectedStatusCode int, httpStatusCode int, httpStatus string, body []byte) (*users, error) {
 	if httpStatusCode == expectedStatusCode {
-		return parseUsersByNameData(body)
+		return parseData[users](body, verror.ServerError)
 	}
 	respErrors, err := parseResponseErrors(body)
 	if err != nil {
@@ -455,19 +444,24 @@ func parseUsersByNameResult(expectedStatusCode int, httpStatusCode int, httpStat
 	return nil, fmt.Errorf("%w: %v", verror.ServerError, respError)
 }
 
-func parseUsersByNameData(b []byte) (*users, error) {
-	var data users
-	err := json.Unmarshal(b, &data)
-	if err != nil {
-		return nil, fmt.Errorf("%w: %v", verror.ServerError, err)
+func parseCertByIdResult(expectedStatusCode int, httpStatusCode int, httpStatus string, body []byte) (*VenafiCertificate, error) {
+	if httpStatusCode == expectedStatusCode {
+		return parseData[VenafiCertificate](body, verror.ServerError)
 	}
-
-	return &data, nil
+	respErrors, err := parseResponseErrors(body)
+	if err != nil {
+		return nil, err // parseResponseErrors always return verror.ServerError
+	}
+	respError := fmt.Sprintf("unexpected status code on retrieval of users by name. Status: %s\n", httpStatus)
+	for _, e := range respErrors {
+		respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
+	}
+	return nil, fmt.Errorf("%w: %v", verror.ServerError, respError)
 }
 
 func parseTeamsResult(expectedStatusCode int, httpStatusCode int, httpStatus string, body []byte) (*teams, error) {
 	if httpStatusCode == expectedStatusCode {
-		return parseTeamsData(body)
+		return parseData[teams](body, verror.ServerError)
 	}
 	respErrors, err := parseResponseErrors(body)
 	if err != nil {
@@ -480,20 +474,10 @@ func parseTeamsResult(expectedStatusCode int, httpStatusCode int, httpStatus str
 	return nil, fmt.Errorf("%w: %v", verror.ServerError, respError)
 }
 
-func parseTeamsData(b []byte) (*teams, error) {
-	var data teams
-	err := json.Unmarshal(b, &data)
-	if err != nil {
-		return nil, fmt.Errorf("%w: %v", verror.ServerError, err)
-	}
-
-	return &data, nil
-}
-
 func parseZoneConfigurationResult(httpStatusCode int, httpStatus string, body []byte) (*zone, error) {
 	switch httpStatusCode {
 	case http.StatusOK:
-		return parseZoneConfigurationData(body)
+		return parseData[zone](body, verror.ServerError)
 	case http.StatusBadRequest, http.StatusNotFound:
 		return nil, verror.ZoneNotFoundError
 	default:
@@ -513,19 +497,10 @@ func parseZoneConfigurationResult(httpStatusCode int, httpStatus string, body []
 	}
 }
 
-func parseZoneConfigurationData(b []byte) (*zone, error) {
-	var data zone
-	err := json.Unmarshal(b, &data)
-	if err != nil {
-		return nil, fmt.Errorf("%w: %v", verror.ServerError, err)
-	}
-	return &data, nil
-}
-
 func parseCertificateTemplateResult(httpStatusCode int, httpStatus string, body []byte) (*certificateTemplate, error) {
 	switch httpStatusCode {
 	case http.StatusOK:
-		return parseCertificateTemplateData(body)
+		return parseData[certificateTemplate](body, verror.ServerError)
 	case http.StatusBadRequest:
 		return nil, verror.ZoneNotFoundError
 	case http.StatusUnauthorized:
@@ -547,19 +522,10 @@ func parseCertificateTemplateResult(httpStatusCode int, httpStatus string, body 
 	}
 }
 
-func parseCertificateTemplateData(body []byte) (*certificateTemplate, error) {
-	var ct certificateTemplate
-	err := json.Unmarshal(body, &ct)
-	if err != nil {
-		return nil, fmt.Errorf("%w: %v", verror.ServerError, err)
-	}
-	return &ct, nil
-}
-
 func parseCertificateRequestResult(httpStatusCode int, httpStatus string, body []byte) (*certificateRequestResponse, error) {
 	switch httpStatusCode {
 	case http.StatusCreated:
-		return parseCertificateRequestData(body)
+		return parseData[certificateRequestResponse](body, verror.ServerError)
 	default:
 		respErrors, err := parseResponseErrors(body)
 		if err != nil {
@@ -574,20 +540,10 @@ func parseCertificateRequestResult(httpStatusCode int, httpStatus string, body [
 	}
 }
 
-func parseCertificateRequestData(b []byte) (*certificateRequestResponse, error) {
-	var data certificateRequestResponse
-	err := json.Unmarshal(b, &data)
-	if err != nil {
-		return nil, fmt.Errorf("%w: %v", verror.ServerError, err)
-	}
-
-	return &data, nil
-}
-
 func checkCertificateRetireResults(httpStatusCode int, httpStatus string, body []byte) error {
 	switch httpStatusCode {
 	case 200:
-		resp, err := parseCertificateRetireData(body)
+		resp, err := parseData[certificateRetireResponse](body, verror.ServerError)
 		if err != nil {
 			return err
 		} else if resp.Count == 0 {
@@ -609,16 +565,6 @@ func checkCertificateRetireResults(httpStatusCode int, httpStatus string, body [
 	}
 }
 
-func parseCertificateRetireData(b []byte) (*certificateRetireResponse, error) {
-	var data certificateRetireResponse
-	err := json.Unmarshal(b, &data)
-	if err != nil {
-		return nil, fmt.Errorf("%w: %v", verror.ServerError, err)
-	}
-
-	return &data, nil
-}
-
 func newPEMCollectionFromResponse(data []byte, chainOrder certificate.ChainOption) (*certificate.PEMCollection, error) {
 	return certificate.PEMCollectionFromBytes(data, chainOrder)
 }
@@ -631,7 +577,7 @@ func certThumbprint(asn1 []byte) string {
 func parseApplicationDetailsResult(httpStatusCode int, httpStatus string, body []byte) (*ApplicationDetails, error) {
 	switch httpStatusCode {
 	case http.StatusOK:
-		return parseApplicationDetailsData(body)
+		return parseData[ApplicationDetails](body, verror.ServerError)
 	case http.StatusBadRequest:
 		return nil, verror.ApplicationNotFoundError
 	case http.StatusUnauthorized:
@@ -651,15 +597,6 @@ func parseApplicationDetailsResult(httpStatusCode int, httpStatus string, body [
 		}
 		return nil, fmt.Errorf("%w: %v", verror.ServerError, respError)
 	}
-}
-
-func parseApplicationDetailsData(b []byte) (*ApplicationDetails, error) {
-	var data ApplicationDetails
-	err := json.Unmarshal(b, &data)
-	if err != nil {
-		return nil, fmt.Errorf("%w: %v", verror.ServerError, err)
-	}
-	return &data, nil
 }
 
 type cloudZone struct {

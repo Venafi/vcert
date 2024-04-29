@@ -1,0 +1,21 @@
+mutation ProvisionCertificate(
+    $certificateId: UUID!
+    $cloudKeystoreId: UUID!
+    $wsClientId: UUID!
+    $options: CertificateProvisioningOptionsInput
+) {
+    provisionToCloudKeystore(certificateId: $certificateId, cloudKeystoreId: $cloudKeystoreId, wsClientId: $wsClientId, options: $options) {
+        workflowId
+        workflowName
+    }
+}
+
+query GetCloudKeystoresByKeystoreId($cloudKeystoreId: UUID) {
+    cloudKeystores(filter: {cloudKeystoreId: $cloudKeystoreId}) {
+        nodes {
+            id
+            name
+            type
+        }
+    }
+}

@@ -38,6 +38,10 @@ type Connector struct {
 	verbose bool
 }
 
+func (c *Connector) ProvisionCertificate(certificateId string, providerName *string, keystoreName *string, keystoreId *string, options *endpoint.ProvisioningOptions) (provisioningMetadata endpoint.ProvisioningMetadata, err error) {
+	panic("operation is not supported yet")
+}
+
 func (c *Connector) RetrieveCertificateMetaData(dn string) (*certificate.CertificateMetaData, error) {
 	panic("operation is not supported yet")
 }
