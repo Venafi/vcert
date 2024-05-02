@@ -112,7 +112,7 @@ func (r CAPIInstaller) Install(pcc certificate.PEMCollection) error {
 	// Generate random password for temporary P12 bundle
 	bundlePassword := vcertutil.GeneratePassword()
 
-	content, err := packageAsPKCS12(pcc, bundlePassword, false)
+	content, err := packageAsPKCS12(pcc, bundlePassword, r.UseLegacyP12)
 	if err != nil {
 		zap.L().Error("could not package certificate as PKCS12", zap.Error(err))
 		return err
