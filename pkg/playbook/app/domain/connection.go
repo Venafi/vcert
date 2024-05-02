@@ -104,29 +104,53 @@ func isValidTpp(c Connection) (bool, error) {
 }
 
 func isValidVaaS(c Connection) (bool, error) {
-	// Credentials are not empty
+	// Check if an API key has been provided
 	apikey := false
 	if c.Credentials.APIKey != "" {
 		apikey = true
 	}
 
+	accesstoken := false
+	if c.Credentials.AccessToken != "" {
+		accesstoken = true
+	}
+
+	// Check if an TokenURL has been provided
+	tokenurl := false
+	if c.Credentials.TokenURL != "" {
+		tokenurl = true
+	}
+
+	// Check if externalJWT has been provided
+	externaljwt := false
+	if c.Credentials.ExternalJWT != "" {
+		externaljwt = true
+	}
+
+	// There's a valid service account IF both externalJWT and tokenURL provided
 	svcaccount := false
-	if c.Credentials.TenantID != "" {
+	if externaljwt && tokenurl {
 		svcaccount = true
-	}
-
-	if !apikey && !svcaccount {
-		return false, ErrNoCredentials
-	}
-
-	if apikey {
-		return true, nil
-	}
-
-	if c.Credentials.ExternalIdPJWT == "" {
+	} else if externaljwt && !tokenurl {
+		// JWT Provided without token URL
+		return false, ErrNoVCPTokenURL
+	} else if tokenurl && !externaljwt {
+		// Token URL without an external JWT
 		return false, ErrNoExternalJWT
 	}
 
+	// At this point, there are no valid credentials. Figure out why.
+	if !apikey && !svcaccount && !accesstoken {
+		return false, ErrNoCredentials
+	}
+
+	// if we got here then at least one of the credential options was provided
+	if (svcaccount && apikey) || (svcaccount && accesstoken) || (apikey && accesstoken) {
+		// more than one credential option is not acceptable
+		return false, ErrAmbiguousVCPCreds
+	}
+
+	// if we got here then only one credential option was provided (which is what we want)
 	return true, nil
 }
 

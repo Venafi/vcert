@@ -12,6 +12,7 @@ var (
 	PolicyValidationError           = fmt.Errorf("%w: policy doesn't match request", VcertError)
 	CertificateCheckError           = fmt.Errorf("%w: request doesn't match certificate", UserDataError)
 	AuthError                       = fmt.Errorf("%w: auth error", UserDataError)
+	UnauthorizedError               = fmt.Errorf("%w: unauthorized or expired access credentials", ServerError)
 	ZoneNotFoundError               = fmt.Errorf("%w: zone not found", UserDataError)
 	ApplicationNotFoundError        = fmt.Errorf("%w: application not found", UserDataError)
 	// certificate search errors

@@ -26,6 +26,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"sort"
 	"strconv"
 	"strings"
@@ -527,6 +528,8 @@ func parseCertificateTemplateResult(httpStatusCode int, httpStatus string, body 
 		return parseCertificateTemplateData(body)
 	case http.StatusBadRequest:
 		return nil, verror.ZoneNotFoundError
+	case http.StatusUnauthorized:
+		return nil, verror.UnauthorizedError
 	default:
 		respErrors, err := parseResponseErrors(body)
 		if err != nil {
@@ -1029,4 +1032,14 @@ func isWildCard(cnRegex []string) bool {
 		return true
 	}
 	return false
+}
+
+func getServiceAccountTokenURL(rawURL string) (string, error) {
+	// removing trailing slash from util.NormalizeURL function
+	_, err := url.ParseRequestURI(rawURL)
+	if err != nil {
+		return "", fmt.Errorf("token url error: %w", err)
+	}
+
+	return rawURL, nil
 }

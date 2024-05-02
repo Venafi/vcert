@@ -33,7 +33,8 @@ func validateConnectionFlagsTPP(commandName string) error {
 		return fmt.Errorf("missing flags for Trust Protection Platform authentication. %s", advice)
 	}
 
-	if userPasswordPresent {
+	// Warning not valid when using user/password to obtain a token
+	if userPasswordPresent && commandName != commandGetCredName {
 		logf("Warning: username/password authentication is DEPRECATED, please use access token or client certificate instead")
 	}
 

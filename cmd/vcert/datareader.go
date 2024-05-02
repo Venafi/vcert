@@ -29,7 +29,7 @@ func readData(commandName string) error {
 		fileName := flags.distinguishedName[5:]
 		bytes, err := os.ReadFile(fileName)
 		if err != nil {
-			return fmt.Errorf("Failed to read Certificate DN: %s", err)
+			return fmt.Errorf("failed to read Certificate DN: %s", err)
 		}
 		flags.distinguishedName = strings.TrimSpace(string(bytes))
 	}
@@ -37,7 +37,7 @@ func readData(commandName string) error {
 		fileName := flags.keyPassword[5:]
 		bytes, err := os.ReadFile(fileName)
 		if err != nil {
-			return fmt.Errorf("Failed to read password from file: %s", err)
+			return fmt.Errorf("failed to read password from file: %s", err)
 		}
 		flags.keyPassword = strings.TrimSpace(string(bytes))
 	}
@@ -46,7 +46,7 @@ func readData(commandName string) error {
 		certFileName := flags.thumbprint[5:]
 		flags.thumbprint, err = readThumbprintFromFile(certFileName)
 		if err != nil {
-			return fmt.Errorf("Failed to read certificate fingerprint: %s", err)
+			return fmt.Errorf("failed to read certificate fingerprint: %s", err)
 		}
 	}
 
@@ -54,13 +54,22 @@ func readData(commandName string) error {
 		fileName := flags.externalJWT[5:]
 		bytes, err := os.ReadFile(fileName)
 		if err != nil {
-			return fmt.Errorf("failed to read external JWT from file: %w", err)
+			return fmt.Errorf("failed to read IdP JWT from file: %w", err)
 		}
 		flags.externalJWT = strings.TrimSpace(string(bytes))
 	}
 
+	if strings.HasPrefix(flags.tokenURL, filePrefix) {
+		fileName := flags.tokenURL[5:]
+		bytes, err := os.ReadFile(fileName)
+		if err != nil {
+			return fmt.Errorf("failed to read token URL from file: %w", err)
+		}
+		flags.tokenURL = strings.TrimSpace(string(bytes))
+	}
+
 	if err = readPasswordsFromInputFlags(commandName, &flags); err != nil {
-		return fmt.Errorf("Failed to read password from input: %s", err)
+		return fmt.Errorf("failed to read password from input: %s", err)
 	}
 	return nil
 }

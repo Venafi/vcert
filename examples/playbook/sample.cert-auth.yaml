@@ -17,7 +17,6 @@ certificateTasks:
     renewBefore: 5%
     request:
       csr: local
-      keyPassword: '{{ Env "APIP12PASS" }}'
       subject: 
         # An AD computer account can use a certificate to get Access/Refresh tokens from TPP
         # - Use either HOSTNAME$ (the sAMAccountName) or HOSTNAME@example.com in either the 

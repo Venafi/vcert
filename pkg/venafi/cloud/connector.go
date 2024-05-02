@@ -68,7 +68,6 @@ const (
 	urlUserById                                   = urlUsers + "/%s"
 	urlUsersByName                                = urlUsers + "/username/%s"
 	urlTeams                          urlResource = apiVersion + "teams"
-	urlServiceAccountToken            urlResource = apiVersion + "oauth2/v2.0/%s/token"
 
 	defaultAppName = "Default"
 	oauthTokenType = "Bearer"
@@ -141,8 +140,8 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) error {
 		return nil
 	}
 
-	//2. JWT and tenantID. use it to request new access token
-	if auth.TenantID != "" && auth.ExternalIdPJWT != "" {
+	//2. JWT and token URL. use it to request new access token
+	if auth.TokenURL != "" && auth.ExternalJWT != "" {
 		tokenResponse, err := c.GetAccessToken(auth)
 		if err != nil {
 			return err
@@ -206,9 +205,6 @@ func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration,
 			if err != nil {
 				return
 			}
-		} else {
-			// an error happened, return now
-			return
 		}
 	}
 	if template == nil {
@@ -272,7 +268,7 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 }
 
 // RetrieveCertificate retrieves the certificate for the specified ID
-func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates *certificate.PEMCollection, err error) {
+func (c *Connector) RetrieveCertificate(req *certificate.Request) (*certificate.PEMCollection, error) {
 	if !c.isAuthenticated() {
 		return nil, fmt.Errorf("must be autheticated to request a certificate")
 	}
@@ -344,22 +340,26 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 		certificateId = req.CertID
 	}
 
-	url := c.getURL(urlResourceCertificateRetrievePem)
-	url = fmt.Sprintf(url, certificateId)
+	// Download the private key and certificate in case the certificate is service generated
+	if req.CsrOrigin == certificate.ServiceGeneratedCSR || req.FetchPrivateKey {
+		var currentId string
+		if req.CertID != "" {
+			currentId = req.CertID
+		} else if certificateId != "" {
+			currentId = certificateId
+		}
 
-	var dekInfo *EdgeEncryptionKey
-	var currentId string
-	if req.CertID != "" {
-		dekInfo, err = getDekInfo(c, req.CertID)
-		currentId = req.CertID
-	} else if certificateId != "" {
-		dekInfo, err = getDekInfo(c, certificateId)
-		currentId = certificateId
-	}
-	if err == nil && dekInfo.Key != "" {
+		dekInfo, err := getDekInfo(c, currentId)
+		if err != nil {
+			return nil, err
+		}
+
 		req.CertID = currentId
 		return retrieveServiceGeneratedCertData(c, req, dekInfo)
 	}
+
+	url := c.getURL(urlResourceCertificateRetrievePem)
+	url = fmt.Sprintf(url, certificateId)
 
 	switch {
 	case req.CertID != "":
@@ -384,7 +384,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (certificates 
 			return nil, err
 		}
 		if statusCode == http.StatusOK {
-			certificates, err = newPEMCollectionFromResponse(body, req.ChainOption)
+			certificates, err := newPEMCollectionFromResponse(body, req.ChainOption)
 			if err != nil {
 				return nil, err
 			}
@@ -868,17 +868,19 @@ func normalizeURL(url string) (normalizedURL string, err error) {
 }
 
 func (c *Connector) GetAccessToken(auth *endpoint.Authentication) (*TLSPCAccessTokenResponse, error) {
-	if auth == nil {
+	if auth == nil || auth.TokenURL == "" || auth.ExternalJWT == "" {
 		return nil, fmt.Errorf("failed to authenticate: missing credentials")
 	}
 
-	url := c.getURL(urlServiceAccountToken)
-	url = fmt.Sprintf(url, auth.TenantID)
+	url, err := getServiceAccountTokenURL(auth.TokenURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	body := netUrl.Values{}
 	body.Set("grant_type", "client_credentials")
 	body.Set("client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer")
-	body.Set("client_assertion", auth.ExternalIdPJWT)
+	body.Set("client_assertion", auth.ExternalJWT)
 
 	r, err := http.NewRequest(http.MethodPost, url, strings.NewReader(body.Encode()))
 	if err != nil {

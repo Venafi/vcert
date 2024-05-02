@@ -163,12 +163,12 @@ func buildConfigVaaS(flags *commandFlags) (*vcert.Config, error) {
 		ConnectorType: endpoint.ConnectorTypeCloud,
 		BaseUrl:       flags.url,
 		Credentials: &endpoint.Authentication{
-			User:           flags.email,
-			Password:       flags.password,
-			AccessToken:    flags.token,
-			APIKey:         flags.apiKey,
-			TenantID:       flags.vaasTenantID,
-			ExternalIdPJWT: flags.externalJWT,
+			User:        flags.email,
+			Password:    flags.password,
+			AccessToken: flags.token,
+			APIKey:      flags.apiKey,
+			ExternalJWT: flags.externalJWT,
+			TokenURL:    flags.tokenURL,
 		},
 		UserAgent: vcert.GetUserAgentCLI(),
 	}, nil

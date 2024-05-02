@@ -84,6 +84,10 @@ var (
 	ErrNoClientId = fmt.Errorf("no cliendId defined. Firefly platform requires a clientId to request OAuth2 token")
 	// ErrNoIdentityProviderURL is thrown when platform is Firefly and no config.credentials.tokenURL is defined to request an OAuth2 Token
 	ErrNoIdentityProviderURL = fmt.Errorf("no tokenURL defined in credentials. tokenURL is required to request OAuth2 token")
-	// ErrNoExternalJWT is thrown when platform is TLSPC/VAAS, a tenantId has been passed but no config.credentials.externalJWT is set
-	ErrNoExternalJWT = fmt.Errorf("no externalJWT defined in credentials. externalJWT is required to request an access token from TLSPC")
+	// ErrNoExternalJWT is thrown when platform is TLSPC/VAAS/VCP, a tokenURL has been passed but no config.credentials.ExternalJWT is set
+	ErrNoExternalJWT = fmt.Errorf("no externalJWT defined in credentials. externalJWT and tokenURL are both required to request an access token from VCP")
+	// ErrNoVaaSTokenURL is thrown when platform is TLSPC/VAAS/VCP, an externaJWT has been provided, but no config.credentials.TokenURL has been passed
+	ErrNoVCPTokenURL = fmt.Errorf("no tokenURL defined in credentials. tokenURL and externalJWT are both required to request an access token from VCP when using an externalJWT")
+	// ErrAmbiguousVCPCreds is thrown when platform is TLSPC/VAAS/VCP, and more than one type (apiKey, accessToken, or externalJWT) was provided
+	ErrAmbiguousVCPCreds = fmt.Errorf("unable to disambiguate multiple VCP credentials. Only ONE of apiKey, accessToken, or tokenURL WITH externalJWT should be defined")
 )

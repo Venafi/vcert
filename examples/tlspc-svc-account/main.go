@@ -13,10 +13,10 @@ import (
 )
 
 const (
-	TlspcUrl      = "TLSPC_URL"
-	TlspcZone     = "TLSPC_ZONE"
-	TlspcTenantId = "TLSPC_TENANT_ID"
-	TlspcJwt      = "TLSPC_JWT"
+	vcpURL      = "VCP_URL"
+	vcpZone     = "VCP_ZONE"
+	vcpTokenURL = "VCP_TOKEN_URL"
+	vcpJWT      = "VCP_JWT"
 
 	envVarNotSet = "environment variable not set: %s"
 
@@ -27,19 +27,19 @@ const (
 func main() {
 
 	// URL can be nil if using production TLSPC
-	url := os.Getenv(TlspcUrl)
+	url := os.Getenv(vcpURL)
 
-	zone, found := os.LookupEnv(TlspcZone)
+	zone, found := os.LookupEnv(vcpZone)
 	if !found {
-		log.Fatalf(envVarNotSet, TlspcZone)
+		log.Fatalf(envVarNotSet, vcpZone)
 	}
-	tenantID, found := os.LookupEnv(TlspcTenantId)
+	tokenURL, found := os.LookupEnv(vcpTokenURL)
 	if !found {
-		log.Fatalf(envVarNotSet, TlspcTenantId)
+		log.Fatalf(envVarNotSet, vcpTokenURL)
 	}
-	jwt, found := os.LookupEnv(TlspcJwt)
+	jwt, found := os.LookupEnv(vcpJWT)
 	if !found {
-		log.Fatalf(envVarNotSet, TlspcJwt)
+		log.Fatalf(envVarNotSet, vcpJWT)
 	}
 
 	userAgent := fmt.Sprintf("%s/%s %s", name, version, util.DefaultUserAgent)
@@ -48,8 +48,8 @@ func main() {
 		BaseUrl:       url,
 		Zone:          zone,
 		Credentials: &endpoint.Authentication{
-			TenantID:       tenantID,
-			ExternalIdPJWT: jwt,
+			ExternalJWT: jwt,
+			TokenURL:    tokenURL,
 		},
 		UserAgent: &userAgent,
 	}
@@ -58,19 +58,23 @@ func main() {
 		log.Fatalf("error creating client: %s", err.Error())
 	}
 
-	_, err = connector.ReadZoneConfiguration()
+	zoneConfig, err := connector.ReadZoneConfiguration()
 	if err != nil {
 		log.Fatalf("error reading zone: %s", err.Error())
-
 	}
 
 	request := &certificate.Request{
 		Subject: pkix.Name{
 			CommonName: "svc-account.venafi.example.com",
 		},
-		CsrOrigin: certificate.ServiceGeneratedCSR,
+		CsrOrigin: certificate.LocalGeneratedCSR,
 		KeyType:   certificate.KeyTypeRSA,
 		KeyLength: 2048,
+	}
+
+	err = connector.GenerateRequest(zoneConfig, request)
+	if err != nil {
+		log.Fatalf("error generating request: %s", err.Error())
 	}
 
 	certID, err := connector.RequestCertificate(request)

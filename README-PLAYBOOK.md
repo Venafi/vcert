@@ -1,26 +1,43 @@
 # VCert Playbook
 
-VCert Playbook functionality solves the "last mile" problem. VCert has historically done a great job fetching certificates, but getting those certificates installed in the right location usually required custom scripting. The Playbook functionality addresses this use case natively.
+VCert Playbook functionality solves the "last mile" problem. VCert has historically done a great job fetching 
+certificates, but getting those certificates installed in the right location usually required custom scripting. The 
+Playbook functionality addresses this use case natively.
 
-> Throughout this article, we use _TLS Protect Datacenter (TLSPDC)_ to refer to Trust Protection Platform and _TLS Protect Cloud (TLSPC)_ to refer to Venafi as a Service.
+> Throughout this article, we use _TLS Protect Datacenter (TLSPDC)_ to refer to Trust Protection Platform and 
+> _TLS Protect Cloud (TLSPC)_ to refer to Venafi Control Plane.
 
 ## Key features of VCert playbook
 
-- **Simplified commands**: With VCert Playbook, you can avoid long command-line arguments. Instead, use playbook YAML files with VCert to enhance automation and maintenance ease.
+- **Simplified commands**: With VCert Playbook, you can avoid long command-line arguments. Instead, use playbook YAML 
+files with VCert to enhance automation and maintenance ease.
 
-- **Flexible certificate placement**: You can designate where to place the certificate and the format in which you want it once received from Venafi. VCert Playbook supports common keystore formats like PEM, JKS, PKCS#12, accommodating folder locations and the Windows CAPI store.
+- **Flexible certificate placement**: You can designate where to place the certificate and the format in which you 
+want it once received from Venafi. VCert Playbook supports common keystore formats like PEM, JKS, PKCS#12, accommodating 
+folder locations and the Windows CAPI store.
 
-- **Post-installation actions**: Specify any actions that must be carried out after the certificate is installed. This includes restarting services like Apache or Nginx, or running any other scripts needed once the certificate is in the right location.
+- **Post-installation actions**: Specify any actions that must be carried out after the certificate is installed. This 
+includes restarting services like Apache or Nginx, or running any other scripts needed once the certificate is in the 
+right location.
 
-- **Smart certificate renewals**: VCert Playbook checks if a certificate already exists and whether it's due for renewal before requesting a new one. This functionality lets you run a script regularly without unnecessarily renewing certificates.
+- **Smart certificate renewals**: VCert Playbook checks if a certificate already exists and whether it's due for 
+renewal before requesting a new one. This functionality lets you run a script regularly without unnecessarily renewing 
+certificates.
 
-- **Compatibility**: VCert Playbook works seamlessly with the three Venafi platforms: TLS Protect Cloud, TLS Protect Datacenter, and Firefly, ensuring it fits your particular environment.
+- **Compatibility**: VCert Playbook works seamlessly with the three Venafi platforms: TLS Protect Cloud, TLS Protect 
+Datacenter, and Firefly, ensuring it fits your particular environment.
 
 ## Example use cases
 
-- **Automated certificate renewal**: You can set renewal parameters to have VCert automatically renew certificates before expiration. This approach assumes that VCert is part of a daily cronjob or is executed routinely through other automation methods. By default, renewal occurs at 10% of the remaining certificate lifetime.
+- **Automated certificate renewal**: You can set renewal parameters to have VCert automatically renew certificates 
+before expiration. This approach assumes that VCert is part of a daily cronjob or is executed routinely through other 
+automation methods. By default, renewal occurs at 10% of the remaining certificate lifetime.
 
-- **Effortless API access updates**: When using TLS Protect Datacenter, VCert will automatically update API access and refresh tokens within the playbook. This feature ensures continuous operation without manual intervention. It leverages a refresh token to acquire a new access token when needed, an approach that's particularly effective when paired with a long-lasting refresh/grant token and a short-lived access token, such as a 3-year refresh token and a 1-hour access token.
+- **Effortless API access updates**: When using TLS Protect Datacenter, VCert will automatically update API access and 
+refresh tokens within the playbook. This feature ensures continuous operation without manual intervention. It leverages 
+a refresh token to acquire a new access token when needed, an approach that's particularly effective when paired with a 
+long-lasting refresh/grant token and a short-lived access token, such as a 3-year refresh token and a 1-hour access 
+token.
 
 ## Getting started
 VCert Playbook functionality is invoked using the `vcert run` command.
@@ -32,23 +49,25 @@ VCert Playbook functionality is invoked using the `vcert run` command.
     ```sh
     vcert run -f path/to/my/playbook.yaml
     ```
-3. Setup a cronjob (or Windows scheduled task) to execute the playbook on a regular basis (usually daily)
-   Sample cronjob entry:
+3. Set up a cronjob (or Windows scheduled task) to execute the playbook on a regular basis (usually daily). Sample 
+cronjob entry:
     ```
     0 23 * * *     /usr/bin/sudo /usr/local/bin/vcert run -f ~/playbook.yaml >> /var/log/vcert-playbook.log 2>&1
     ```
-> **Recommended**: For a detailed walkthrough for automating certificate lifecycle management using a VCert Playbook for NGINX, check out the guide on [Dev Central](https://developer.venafi.com/tlsprotectcloud/docs/vcert-auto-cert-mgt-using-tlspc)!
+> **Recommended**: For a detailed walkthrough for automating certificate lifecycle management using a VCert Playbook 
+for NGINX, check out the guide on [Dev Central](https://developer.venafi.com/tlsprotectcloud/docs/vcert-auto-cert-mgt-using-tlspc)!
 
 ## Usage
+
 VCert run playbook functionality is invoked using the `vcert run` command with additional arguments:
 ```sh
 vcert run [OPTIONAL ARGUMENTS]
 ```
 For example, the following command will execute the playbook in ./path/to/my/playbook.yaml with debug output enabled:
-
 ```sh
 vcert run --file path/to/my/playbook.yaml --debug
 ```
+
 ### VCert playbook arguments
 The following arguments are available with the `vcert run` command:
 
@@ -71,7 +90,8 @@ Several playbook samples are provided in the [examples folder](./examples/playbo
 * [Playbook for Firefly using user/password authorization](./examples/playbook/sample.firefly.user-password.yaml)
 
 ## Playbook file structure and options
-The playbook file is a YAML file that provides access information to either TLS Protect Cloud or TLS Protect Datacenter, defines the details of the certificate to request, and specifies the locations where the certificate should be installed.
+The playbook file is a YAML file that provides access information to either TLS Protect Cloud or TLS Protect Datacenter, 
+defines the details of the certificate to request, and specifies the locations where the certificate should be installed.
 
 The top-level structure of the file is described as follows:
 
@@ -99,22 +119,27 @@ The top-level structure of the file is described as follows:
 
 ### Credentials
 
-| Field        | Type   | TLSPDC         | TLSPC          | FIREFLY    | Description                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-|--------------|--------|----------------|----------------|------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| accessToken  | string | *Optional*     | *Optional*     | n/a        | Used when [Connection.platform](#connection) is `tlspdc` for authenticating to the REST API.<br/>If omitted, invalid, or expired, vcert will attempt to use the [Credential.p12Task](#credentials) or [Credential.refreshToken](#credentials) to get a valid accessToken.<br/>Upon successful refresh, this value will be overwritten with the new valid accessToken.                                                                             |
-| apiKey       | string | n/a            | ***Required*** | n/a        | Used when [Connection.platform](#connection) is `tlspc` for authenticating to the REST API.                                                                                                                                                                                                                                                                                                                                                       |
-| audience     | string | n/a            | n/a            | *Optional* | Used when [Connection.platform](#connection) is `firefly` to map the audience for the authorization token request from the OAuth2 Provider. Not all OAuth2 providers require this value.                                                                                                                                                                                                                                                          |
-| clientId     | string | *Optional*     | n/a            | *Optional* | Used when [Connection.platform](#connection) is `tlspc` to map to the API integration to be used. If omitted, uses `vcert-sdk` as default.<br/><br/>Used when [Connection.platform](#connection) is `firefly` along with `clientSecret` to follow a `credentials authorization flow`.                                                                                                                                                             |
-| clientSecret | string | n/a            | n/a            | *Optional* | Used when [Connection.platform](#connection) is `firefly` along with `clientId` to follow a `credentials authorization flow` to get an authorization token from the OAuth2 Provider.                                                                                                                                                                                                                                                              |
- | externalJWT  | string | n/a            | *Optional*     | n/a        | Used when [Connection.platform](#connection) is `tlspc` along with `tenantId` to request a new authorization token from a service account.                                                                                                                                                                                                                                                                                                        |
-| p12Task      | string | *Optional*     | n/a            | n/a        | Used when [Connection.platform](#connection) is `tlspdc` to reference a configured [CertificateTasks.name](#certificatetask) to be used for certificate authentication.<br/>Will be used to get a new accessToken when `accessToken` is missing, invalid, or expired.<br/>Referenced `certificateTask` must have an installation of type `pkcs12`.                                                                                                |
-| password     | string | n/a            | n/a            | *Optional* | Used when [Connection.platform](#connection) is `firefly` along with `user` to follow a `password authorization flow` to request a new authorization token from the OAuth2 Provider.                                                                                                                                                                                                                                                              |
-| refreshToken | string | *Optional*     | n/a            | n/a        | Used when [Connection.platform](#connection) is `tlspdc` to refresh the `accessToken` if it is missing, invalid, or expired.<br/>If omitted, the `accessToken` will not be refreshed when it expires.<br/>When a refresh token is used, a new accessToken *and* refreshToken are issued and the previous refreshToken is then invalid (one-time use only).<br/>vCert will attempt to update the refreshToken and accessToken fields upon refresh. |
-| scope        | string | *Optional*     | n/a            | *Optional* | Used when [Connection.platform](#connection) is `tlspdc` to determine the scope of the token when refreshing the access token, or when getting a new grant using a `pkcs12` certificate. Defaults to `certificate:manage` if omitted.<br/><br/>Used when [Connection.platform](#connection) is `firefly` to determine the scope of the token to be requested to the OAuth2 provider. Some providers may have default scopes while others dont.    |
- | tenantId     | string | n/a            | *Optional*     | n/a        | Used when [Connection.platform](#connection) is `tlspc` along with `externalJWT` to request a new authorization token from a service account.                                                                                                                                                                                                                                                                                                     |
-| tokenURL     | string | ***Required*** | n/a            | n/a        | Used when [Connection.platform](#connection) is `firefly` to request a new authorization token to the OAuth2 Provider.                                                                                                                                                                                                                                                                                                                            |
-| user         | string | n/a            | n/a            | *Optional* | Used when [Connection.platform](#connection) is `firefly` along with `password` to follow a `password` authorization flow to request a new authorization token from the OAuth2 Provider.                                                                                                                                                                                                                                                          |
+| Field        | Type                                         | TLSPDC     | TLSPC      | FIREFLY        | Description                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+|--------------|----------------------------------------------|------------|------------|----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| accessToken  | string                                       | *Optional* | *Optional* | n/a            | Used when [Connection.platform](#connection) is `tlspdc` for authenticating to the REST API.<br/>If omitted, invalid, or expired, vcert will attempt to use the [Credential.p12Task](#credentials) or [Credential.refreshToken](#credentials) to get a valid accessToken.<br/>Upon successful refresh, this value will be overwritten with the new valid accessToken.                                                                             |
+| apiKey       | string                                       | n/a        | *Optional* | n/a            | Used when [Connection.platform](#connection) is `tlspc` for authenticating to the REST API.                                                                                                                                                                                                                                                                                                                                                       |
+| clientId     | string                                       | *Optional* | n/a        | *Optional*     | Used when [Connection.platform](#connection) is `tlspc` to map to the API integration to be used. If omitted, uses `vcert-sdk` as default.<br/><br/>Used when [Connection.platform](#connection) is `firefly` along with `clientSecret` to follow a `credentials authorization flow`.                                                                                                                                                             |
+| clientSecret | string                                       | n/a        | n/a        | *Optional*     | Used when [Connection.platform](#connection) is `firefly` along with `clientId` to follow a `credentials authorization flow` to get an authorization token from the OAuth2 Provider.                                                                                                                                                                                                                                                              |
+| externalJWT  | string                                       | n/a        | *Optional* | n/a            | Used when [Connection.platform](#connection) is `tlspc` along with `tokenURL` to request a new authorization token from a service account.                                                                                                                                                                                                                                                                                                        |
+| idP          | [IdentityProvider](#identityprovider) object | n/a        | n/a        | ***Required*** | Used when [Connection.platform](#connection) is `firefly` to request a new authorization token to the OAuth2 Provider.                                                                                                                                                                                                                                                                                                                            |
+| p12Task      | string                                       | *Optional* | n/a        | n/a            | Used when [Connection.platform](#connection) is `tlspdc` to reference a configured [CertificateTasks.name](#certificatetask) to be used for certificate authentication.<br/>Will be used to get a new accessToken when `accessToken` is missing, invalid, or expired.<br/>Referenced `certificateTask` must have an installation of type `pkcs12`.                                                                                                |
+| password     | string                                       | n/a        | n/a        | *Optional*     | Used when [Connection.platform](#connection) is `firefly` along with `user` to follow a `password authorization flow` to request a new authorization token from the OAuth2 Provider.                                                                                                                                                                                                                                                              |
+| refreshToken | string                                       | *Optional* | n/a        | n/a            | Used when [Connection.platform](#connection) is `tlspdc` to refresh the `accessToken` if it is missing, invalid, or expired.<br/>If omitted, the `accessToken` will not be refreshed when it expires.<br/>When a refresh token is used, a new accessToken *and* refreshToken are issued and the previous refreshToken is then invalid (one-time use only).<br/>vCert will attempt to update the refreshToken and accessToken fields upon refresh. |
+| scope        | string                                       | *Optional* | n/a        | *Optional*     | Used when [Connection.platform](#connection) is `tlspdc` to determine the scope of the token when refreshing the access token, or when getting a new grant using a `pkcs12` certificate. Defaults to `certificate:manage` if omitted.<br/><br/>Used when [Connection.platform](#connection) is `firefly` to determine the scope of the token to be requested to the OAuth2 provider. Some providers may have default scopes while others dont.    |
+| tokenURL     | string                                       | n/a        | *Optional* | n/a            | Used when [Connection.platform](#connection) is `tlspc` along with `externalJWT` to request a new authorization token from a service account.                                                                                                                                                                                                                                                                                                     |
+| user         | string                                       | n/a        | n/a        | *Optional*     | Used when [Connection.platform](#connection) is `firefly` along with `password` to follow a `password authorization flow` to request a new authorization token from the OAuth2 Provider.                                                                                                                                                                                                                                                          |
 
+### IdentityProvider
+
+| Field    | Type   | TLSPDC | TLSPC | FIREFLY        | Description                                                                                                                                                                              |
+|----------|--------|--------|-------|----------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| audience | string | n/a    | n/a   | *Optional*     | Used when [Connection.platform](#connection) is `firefly` to map the audience for the authorization token request from the OAuth2 Provider. Not all OAuth2 providers require this value. |
+| tokenURL | string |        | n/a   | ***Required*** | Used when [Connection.platform](#connection) is `firefly` to request a new authorization token to the OAuth2 Provider.                                                                   |
 
 ### CertificateTask
 
@@ -156,7 +181,6 @@ The top-level structure of the file is described as follows:
 | fields      | array of [CustomField](#customfield) objects | *Optional*     | - Sets the specified custom field on certificate object. Only valid when [Connection.platform](#connection) is `tpp`.                                                                                                                                                                                                                                                                                                                                                                                                           |
 | issuerHint  | string                                       | *Optional*     | - Used only when [Request.validDays](#request) is specified to determine the correct Specific End Date attribute to set on the TPP certificate object. Valid options are `DIGICERT`, `MICROSOFT`, `ENTRUST`, `ALL_ISSUERS`. If not defined, but `validDays` are set, the attribute 'Specific End Date' will be used. Only valid when [Connection.platform](#connection) is `tpp`.                                                                                                                                               |
 | keyCurve    | string                                       | ***Required*** | when [Request.keyType](#request) is `ECDSA`, `EC`, or `ECC`. Valid values are `P256`, `P384`, `P521`, `ED25519`.                                                                                                                                                                                                                                                                                                                                                                                                                |
-| keyPassword | string                                       | ***Required*** | when [Installation.format](#installation) is `JKS` or `PKCS#12`. Otherwise **OPTIONAL**. Specifies the password to encrypt the private key. If not specified for `PEM` [Installation.format](#installation), the private key will be stored in an unencrypted PEM format.                                                                                                                                                                                                                                                       |
 | keySize     | integer                                      | *Optional*     | - Specifies the key size when specified [Request.keyType](#request) is `RSA`. Supported values are `1024`, `2048`, `4096`, and `8192`. Defaults to 2048.                                                                                                                                                                                                                                                                                                                                                                        |
 | keyType     | string                                       | *Optional*     | - Specify the key type of the requested certificate. Valid options are `RSA`, `ECDSA`, `EC`, `ECC` and `ED25519`. Default is `RSA`.                                                                                                                                                                                                                                                                                                                                                                                             |
 | location    | [Location](#location) object                 | *Optional*     | - Use to provide the name/address of the compute instance and an identifier for the workload using the certificate. This results in a device (node) and application (workload) being associated with the certificate in the Venafi Platform.<br/>Example: `node:workload`.                                                                                                                                                                                                                                                      |
@@ -181,13 +205,13 @@ The top-level structure of the file is described as follows:
 
 ### Location
 
-| Field      | Type    | Required       | Description                                                                                                                                      |
-|------------|---------|----------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
-| instance   | string  | ***Required*** | Specifies the name of the installed node (typically the hostname).                                                                               |
-| replace    | boolean | *Optional*     | Replace the current object with new information. Defaults to `false`.                                                                            |
-| tlsAddress | string  | ***Required*** | Specifies the IP address or hostname and port where the certificate can be validated by the Venafi Platform. <br/>Example: `192.168.100.23:443`. |
-| workload   | string  | *Optional*     | Use to provide an identifier for the workload using the certificate. Example: `workload`.                                                        |
-| zone       | string  | *Optional*     | Use to provide a different policy folder for the device object to be created in, when platform is TPP. If excluded, the device object is created in the same policy folder as the certificate. Example: `Installations\Agentless\Datacenters\PHX`|
+| Field      | Type    | Required       | Description                                                                                                                                                                                                                                       |
+|------------|---------|----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| instance   | string  | ***Required*** | Specifies the name of the installed node (typically the hostname).                                                                                                                                                                                |
+| replace    | boolean | *Optional*     | Replace the current object with new information. Defaults to `false`.                                                                                                                                                                             |
+| tlsAddress | string  | ***Required*** | Specifies the IP address or hostname and port where the certificate can be validated by the Venafi Platform. <br/>Example: `192.168.100.23:443`.                                                                                                  |
+| workload   | string  | *Optional*     | Use to provide an identifier for the workload using the certificate. Example: `workload`.                                                                                                                                                         |
+| zone       | string  | *Optional*     | Use to provide a different policy folder for the device object to be created in, when platform is TPP. If excluded, the device object is created in the same policy folder as the certificate. Example: `Installations\Agentless\Datacenters\PHX` |
 
 ### Subject
 

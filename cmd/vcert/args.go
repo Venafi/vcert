@@ -44,8 +44,8 @@ var (
 
 type commandFlags struct {
 	apiKey               string
-	vaasTenantID         string
 	externalJWT          string
+	tokenURL             string
 	appInfo              string
 	audience             string
 	caDN                 string

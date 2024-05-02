@@ -103,7 +103,7 @@ func validateConnectionFlags(commandName string) error {
 			flags.password != "" ||
 			flags.token != "" ||
 			flags.url != "" ||
-			flags.vaasTenantID != "" ||
+			flags.tokenURL != "" ||
 			flags.externalJWT != "" ||
 			flags.testMode {
 			return fmt.Errorf("connection details cannot be specified with flags when --config is used")

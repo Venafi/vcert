@@ -42,6 +42,13 @@ var (
 		Aliases:     []string{"u"},
 	}
 
+	flagTokenUrl = &cli.StringFlag{
+		Name: "token-url",
+		Usage: "REQUIRED/VCP. Use to specify the URL to retrieve an access token for Venafi Control Plane. Use in combination with --external-jwt flag." +
+			"\n\t\tExample: --token-url https://api.venafi.cloud/v1/oauth2/v2.0/aaaaaaaa-bbbb-cccc/token",
+		Destination: &flags.tokenURL,
+	}
+
 	flagUrlDeprecated = &cli.StringFlag{
 		Name:        "venafi-saas-url",
 		Usage:       "",
@@ -57,15 +64,9 @@ var (
 		Aliases:     []string{"k"},
 	}
 
-	flagTenantID = &cli.StringFlag{
-		Name:        "tenant-id",
-		Usage:       "REQUIRED/VaaS. The ID of your tenant/company in VaaS. Use it along --external-jwt to retrieve an access token for VaaS",
-		Destination: &flags.vaasTenantID,
-	}
-
 	flagExternalJWT = &cli.StringFlag{
 		Name:        "external-jwt",
-		Usage:       "REQUIRED/VaaS. The JWT of the Identity Provider associated to the service account to be used. Use it along --tenant-id flag to retrieve an access token for VaaS",
+		Usage:       "REQUIRED/VCP. Use to specify the JWT of the Identity Provider associated with the service account that is requesting a new access token for Venafi Control Plane. Use in combination with --token-url option.",
 		Destination: &flags.externalJWT,
 	}
 
@@ -864,7 +865,7 @@ var (
 		flagAudience,
 		flagDeviceURL,
 		commonFlags,
-		flagTenantID,
+		flagTokenUrl,
 		flagExternalJWT,
 	))
 

@@ -8,8 +8,8 @@ const (
 	vCertZone         = "VCERT_ZONE"
 	vCertToken        = "VCERT_TOKEN"  // #nosec G101
 	vCertApiKey       = "VCERT_APIKEY" // #nosec G101
-	vCertTenantID     = "VCERT_TENANT_ID"
 	vCertExternalJWT  = "VCERT_EXTERNAL_JWT"
+	vCertTokenURL     = "VCERT_TOKEN_URL" // #nosec G101
 	vCertTrustBundle  = "VCERT_TRUST_BUNDLE"
 	vcertUser         = "VCERT_USER"
 	vcertPassword     = "VCERT_PASSWORD"
@@ -52,9 +52,9 @@ var (
 			FlagName:    "-k",
 		},
 		{
-			EnvVarName:  vCertTenantID,
-			Destination: &flags.vaasTenantID,
-			FlagName:    "--tenant-id",
+			EnvVarName:  vCertTokenURL,
+			Destination: &flags.tokenURL,
+			FlagName:    "--token-url",
 		},
 		{
 			EnvVarName:  vCertExternalJWT,
