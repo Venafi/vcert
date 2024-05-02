@@ -1,7 +1,6 @@
 package cloud
 
 import (
-	"github.com/Venafi/vcert/v5/internal/datasource/cloudkeystores"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
 )
 
@@ -9,12 +8,6 @@ type CloudKeystoreProvisioningResult struct {
 	Arn                        string `json:"arn"`
 	CloudProviderCertificateId string `json:"cloudProviderCertificateId"`
 	Error                      error  `json:"error"`
-}
-
-type ProvisioningMetadata struct {
-	AwsCertMetadata   *cloudkeystores.CloudKeystore_AWSCertificateMetadata
-	AzureCertMetadata *cloudkeystores.CloudKeystore_AzureCertificateMetadata
-	GcpCertMetadata   *cloudkeystores.CloudKeystore_GCPCertificateMetadata
 }
 
 type CloudProvisioningMetadata struct {

@@ -84,7 +84,7 @@ func (wsc *WebsocketClient) ReadMessages() (*WorkflowResponse, error) {
 	} else {
 		prettified, err = json.MarshalIndent(ar, "", "    ")
 		if err != nil {
-			log.Printf(err.Error())
+			log.Println(err.Error())
 		}
 	}
 
@@ -94,13 +94,12 @@ func (wsc *WebsocketClient) ReadMessages() (*WorkflowResponse, error) {
 }
 
 func (wsc *WebsocketClient) writeMessages() {
-	interrupt := make(chan os.Signal)
-	signal.Notify(interrupt, os.Interrupt, syscall.SIGINT, syscall.SIGKILL)
+	interrupt := make(chan os.Signal, 1)
+	signal.Notify(interrupt, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 	ticker := time.NewTicker(wsc.wsOptions.PingPeriod)
 	defer func() {
 		signal.Stop(interrupt)
-
 		ticker.Stop()
 	}()
 
@@ -174,7 +173,9 @@ func Subscribe(apiKey string, baseUrl string, wsClientId string) (*websocket.Con
 func ReadResponse(wsConn *websocket.Conn) (*WorkflowResponse, error) {
 
 	_, msg, err := wsConn.ReadMessage()
-	fmt.Println(string(msg))
+	if err != nil {
+		return nil, err
+	}
 
 	defer func() {
 		_ = wsConn.Close()
@@ -188,7 +189,7 @@ func ReadResponse(wsConn *websocket.Conn) (*WorkflowResponse, error) {
 	} else {
 		wfResponse, err = json.MarshalIndent(ar, "", "    ")
 		if err != nil {
-			log.Printf(err.Error())
+			log.Println(err.Error())
 		}
 	}
 	log.Printf("<---- Workflow Response:\n%s", wfResponse)
