@@ -19,21 +19,34 @@ package endpoint
 // Authentication provides a struct for authentication data. Either specify User and Password for Trust Protection Platform
 // or Firefly or ClientId and ClientSecret for Firefly or specify an APIKey for TLS Protect Cloud.
 type Authentication struct {
-	User         string `yaml:"user,omitempty"`
-	Password     string `yaml:"password,omitempty"`
-	APIKey       string `yaml:"apiKey,omitempty"`
+	// TPP Auth methods
+	// user and password
+	User     string `yaml:"user,omitempty"`     //**DEPRECATED** Use access/refresh token or client certificate instead
+	Password string `yaml:"password,omitempty"` //**DEPRECATED** Use access/refresh token or client certificate instead
+	// tokens
+	AccessToken  string `yaml:"accessToken,omitempty"`
 	RefreshToken string `yaml:"refreshToken,omitempty"`
-	Scope        string `yaml:"scope,omitempty"`
+	// client certificate
+	ClientPKCS12 bool `yaml:"-"`
+
+	// VCP Auth methods
+	// API key
+	APIKey string `yaml:"apiKey,omitempty"`
+	// Service account
+	TokenURL    string `yaml:"tokenURL,omitempty"`
+	ExternalJWT string `yaml:"externalJWT,omitempty"`
+
+	// OIDC Auth methods
 	ClientId     string `yaml:"clientId,omitempty"`
 	ClientSecret string `yaml:"clientSecret,omitempty"`
-	AccessToken  string `yaml:"accessToken,omitempty"`
-	ClientPKCS12 bool   `yaml:"-"`
+	Scope        string `yaml:"scope,omitempty"`
 	// IdentityProvider specify the OAuth 2.0 which VCert will be working for authorization purposes
 	IdentityProvider *OAuthProvider `yaml:"idP,omitempty"`
 }
 
 // OAuthProvider provides a struct for the OAuth 2.0 providers information
 type OAuthProvider struct {
+	// OIDC Auth methods
 	DeviceURL string `yaml:"-"`
 	TokenURL  string `yaml:"tokenURL,omitempty"`
 	Audience  string `yaml:"audience,omitempty"`

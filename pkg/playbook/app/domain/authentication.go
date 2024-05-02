@@ -29,11 +29,14 @@ const (
 	apiKey       = "apiKey"
 	clientID     = "clientId"
 	clientSecret = "clientSecret"
-	refreshToken = "refreshToken"
-	p12Task      = "p12Task"
-	scope        = "scope"
+	externalJWT  = "externalJWT"
+	idP          = "idP"
 	idPTokenURL  = "tokenURL"
 	idPAudience  = "audience"
+	p12Task      = "p12Task"
+	refreshToken = "refreshToken"
+	scope        = "scope"
+	tokenURL     = "tokenURL"
 )
 
 // Authentication holds the credentials to connect to Venafi platforms: TPP and TLSPC
@@ -59,14 +62,18 @@ func (a Authentication) MarshalYAML() (interface{}, error) {
 	if a.ClientSecret != "" {
 		values[clientSecret] = a.ClientSecret
 	}
+	if a.ExternalJWT != "" {
+		values[externalJWT] = a.ExternalJWT
+	}
 	if a.IdentityProvider != nil {
-		if a.IdentityProvider.TokenURL != "" {
-			values[idPTokenURL] = a.IdentityProvider.TokenURL
-		}
+		idpMap := make(map[string]interface{})
 		if a.IdentityProvider.Audience != "" {
-			values[idPAudience] = a.IdentityProvider.Audience
+			idpMap[idPAudience] = a.IdentityProvider.Audience
 		}
-		//values[idP] = a.IdentityProvider
+		if a.IdentityProvider.TokenURL != "" {
+			idpMap[idPTokenURL] = a.IdentityProvider.TokenURL
+		}
+		values[idP] = idpMap
 	}
 	if a.RefreshToken != "" {
 		values[refreshToken] = a.RefreshToken
@@ -76,6 +83,9 @@ func (a Authentication) MarshalYAML() (interface{}, error) {
 	}
 	if a.Scope != "" {
 		values[scope] = a.Scope
+	}
+	if a.TokenURL != "" {
+		values[tokenURL] = a.TokenURL
 	}
 
 	return values, nil
@@ -101,6 +111,9 @@ func (a *Authentication) UnmarshalYAML(value *yaml.Node) error {
 	if val, found := authMap[clientSecret]; found {
 		a.ClientSecret = val.(string)
 	}
+	if val, found := authMap[externalJWT]; found {
+		a.ExternalJWT = val.(string)
+	}
 	if val, found := authMap[refreshToken]; found {
 		a.RefreshToken = val.(string)
 	}
@@ -110,12 +123,17 @@ func (a *Authentication) UnmarshalYAML(value *yaml.Node) error {
 	if val, found := authMap[scope]; found {
 		a.Scope = val.(string)
 	}
-
-	provider, err := unmarshallIdP(authMap)
-	if err != nil {
-		return err
+	if val, found := authMap[tokenURL]; found {
+		a.TokenURL = val.(string)
 	}
-	a.IdentityProvider = provider
+
+	if val, found := authMap[idP]; found {
+		provider, err := unmarshallIdP(val)
+		if err != nil {
+			return err
+		}
+		a.IdentityProvider = provider
+	}
 
 	return nil
 }
@@ -129,8 +147,8 @@ func unmarshallIdP(value interface{}) (*endpoint.OAuthProvider, error) {
 		return nil, fmt.Errorf("expected map but got %v", value)
 	}
 
-	tokenURL, tokenURLFound := authMap[idPTokenURL]
-	audience, audienceFound := authMap[idPAudience]
+	url, tokenURLFound := authMap[idPTokenURL]
+	aud, audienceFound := authMap[idPAudience]
 
 	if !tokenURLFound && !audienceFound {
 		return nil, nil
@@ -138,10 +156,10 @@ func unmarshallIdP(value interface{}) (*endpoint.OAuthProvider, error) {
 
 	provider := &endpoint.OAuthProvider{}
 	if tokenURLFound {
-		provider.TokenURL = tokenURL.(string)
+		provider.TokenURL = url.(string)
 	}
 	if audienceFound {
-		provider.Audience = audience.(string)
+		provider.Audience = aud.(string)
 	}
 
 	return provider, nil

@@ -22,6 +22,8 @@ import (
 	"testing"
 
 	"github.com/Venafi/vcert/v5/pkg/certificate"
+	"github.com/Venafi/vcert/v5/pkg/endpoint"
+	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -65,6 +67,102 @@ func TestParseZoneResponse(t *testing.T) {
 	_, err = parseZoneConfigurationResult(http.StatusNotFound, "Not Found", errorGetZoneByTag)
 	if err == nil {
 		t.Fatalf("err nil, expected error back")
+	}
+}
+
+func Test_toPolicy(t *testing.T) {
+	for _, test := range []struct {
+		certTempl *certificateTemplate
+		expPolicy endpoint.Policy
+	}{
+		{
+			certTempl: &certificateTemplate{},
+			expPolicy: endpoint.Policy{},
+		},
+		{
+			certTempl: &certificateTemplate{
+				SubjectCNRegexes: []string{"cn1", "cn2"},
+				SubjectORegexes:  []string{"o1", "o2"},
+				SubjectOURegexes: []string{"ou1", "ou2"},
+				SubjectSTRegexes: []string{"st1", "st2"},
+				SubjectLRegexes:  []string{"l1", "l2"},
+				SubjectCValues:   []string{"c1", "c2"},
+
+				SANRegexes:                          []string{"dns1", "dns2"},
+				SanRfc822NameRegexes:                []string{"email1", "email2"},
+				SanIpAddressRegexes:                 []string{"ip1", "ip2"},
+				SanUniformResourceIdentifierRegexes: []string{"uri1", "uri2"},
+			},
+			expPolicy: endpoint.Policy{
+				SubjectCNRegexes: []string{"^cn1$", "^cn2$"},
+				SubjectORegexes:  []string{"^o1$", "^o2$"},
+				SubjectOURegexes: []string{"^ou1$", "^ou2$"},
+				SubjectSTRegexes: []string{"^st1$", "^st2$"},
+				SubjectLRegexes:  []string{"^l1$", "^l2$"},
+				SubjectCRegexes:  []string{"^c1$", "^c2$"},
+
+				DnsSanRegExs:   []string{"^dns1$", "^dns2$"},
+				EmailSanRegExs: []string{"^email1$", "^email2$"},
+				IpSanRegExs:    []string{"^ip1$", "^ip2$"},
+				UriSanRegExs:   []string{"^uri1$", "^uri2$"},
+				UpnSanRegExs:   nil,
+			},
+		},
+		{
+			certTempl: &certificateTemplate{
+				KeyReuse:   true,
+				SANRegexes: []string{".*example.com"},
+			},
+			expPolicy: endpoint.Policy{
+				DnsSanRegExs: []string{"^.*example.com$"},
+
+				AllowKeyReuse:  true,
+				AllowWildcards: true,
+			},
+		},
+		{
+			certTempl: &certificateTemplate{
+				KeyTypes: []allowedKeyType{
+					{
+						KeyType:    "RSA",
+						KeyLengths: []int{88888},
+					},
+				},
+			},
+			expPolicy: endpoint.Policy{
+				AllowedKeyConfigurations: []endpoint.AllowedKeyConfiguration{
+					{
+						KeyType:  certificate.KeyTypeRSA,
+						KeySizes: []int{88888},
+					},
+				},
+			},
+		},
+		{
+			certTempl: &certificateTemplate{
+				KeyTypes: []allowedKeyType{
+					{
+						KeyType:   "EC",
+						KeyCurves: []string{"P256", "P-384", "ED25519"},
+					},
+				},
+			},
+			expPolicy: endpoint.Policy{
+				AllowedKeyConfigurations: []endpoint.AllowedKeyConfiguration{
+					{
+						KeyType: certificate.KeyTypeECDSA,
+						KeyCurves: []certificate.EllipticCurve{
+							certificate.EllipticCurveP256,
+							certificate.EllipticCurveP384,
+							certificate.EllipticCurveED25519,
+						},
+					},
+				},
+			},
+		},
+	} {
+		policy := test.certTempl.toPolicy()
+		require.Equal(t, test.expPolicy, policy)
 	}
 }
 

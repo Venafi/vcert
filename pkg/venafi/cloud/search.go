@@ -181,7 +181,7 @@ func formatSearchCertificateArguments(cn string, sans *certificate.Sans, certMin
 				{
 					Field:    "validityPeriodDays",
 					Operator: GTE,
-					Value:    certMinTimeDays,
+					Value:    &certMinTimeDays,
 				},
 			},
 		},
@@ -200,7 +200,7 @@ func formatSearchCertificateArguments(cn string, sans *certificate.Sans, certMin
 		addOperand(req, Operand{
 			Field:    "subjectCN",
 			Operator: EQ,
-			Value:    cn,
+			Value:    &cn,
 		})
 	}
 

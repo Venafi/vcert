@@ -31,6 +31,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-http-utils/headers"
+
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
 )
@@ -84,6 +86,7 @@ type certificateRequest struct {
 	Devices                 []device        `json:",omitempty"`
 	CertificateType         string          `json:",omitempty"`
 	Reenable                bool            `json:",omitempty"`
+	WorkToDoTimeout         string          `json:",omitempty"`
 }
 
 type certificateRetrieveRequest struct {
@@ -489,6 +492,7 @@ func (c *Connector) request(method string, resource urlResource, data interface{
 
 	r, _ := http.NewRequest(method, url, payload)
 	r.Close = true
+	r.Header.Set(headers.UserAgent, c.userAgent)
 	if c.accessToken != "" {
 		r.Header.Add("Authorization", fmt.Sprintf("Bearer %s", c.accessToken))
 	} else if c.apiKey != "" {

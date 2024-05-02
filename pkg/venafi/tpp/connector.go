@@ -48,6 +48,7 @@ type Connector struct {
 	trust       *x509.CertPool
 	zone        string
 	client      *http.Client
+	userAgent   string
 }
 
 func (c *Connector) IsCSRServiceGenerated(req *certificate.Request) (bool, error) {
@@ -64,7 +65,7 @@ func (c *Connector) RetrieveAvailableSSHTemplates() (response []certificate.SshA
 
 // NewConnector creates a new TPP Connector object used to communicate with TPP
 func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (*Connector, error) {
-	c := Connector{verbose: verbose, trust: trust, zone: zone}
+	c := Connector{verbose: verbose, trust: trust, zone: zone, userAgent: util.DefaultUserAgent}
 	var err error
 	c.baseURL, err = normalizeURL(url)
 	if err != nil {
@@ -91,6 +92,10 @@ func normalizeURL(url string) (normalizedURL string, err error) {
 
 func (c *Connector) SetZone(z string) {
 	c.zone = z
+}
+
+func (c *Connector) SetUserAgent(userAgent string) {
+	c.userAgent = userAgent
 }
 
 func (c *Connector) GetType() endpoint.ConnectorType {
@@ -291,15 +296,6 @@ func (c *Connector) RevokeAccessToken(auth *endpoint.Authentication) (err error)
 }
 
 func processAuthData(c *Connector, url urlResource, data interface{}) (resp interface{}, err error) {
-
-	//isReachable, err := c.isAuthServerReachable()
-	//if err != nil {
-	//	return nil, err
-	//}
-	//if !isReachable {
-	//	return nil, fmt.Errorf("authentication server is not reachable: %s", c.baseURL)
-	//}
-
 	statusCode, status, body, err := c.request("POST", url, data)
 	if err != nil {
 		return resp, err
@@ -652,6 +648,17 @@ func (c *Connector) prepareRequest(req *certificate.Request, zone string) (tppRe
 	//    - false: Default. Do not renew a previously disabled certificate.
 	//    - true: Clear the Disabled attribute, reenable, and then renew the certificate (in this request). Reuse the same CertificateDN, that is also known as a Certificate object.
 	tppReq.Reenable = true
+
+	// If "Timeout" is defined by the user in the request, we use it in order to
+	// override API's timeout for the CA to finish issuance. In TLSPDC this means
+	// using WorkToDoTimeout attribute.
+	// We make sure to get the seconds from
+	// "Timeout" as it is a "TimeDuration" and remote (TLSPDC) only expects value in seconds.
+	if req.Timeout > 0 {
+		seconds := int64(req.Timeout.Seconds())
+		secondsString := strconv.FormatInt(seconds, 10)
+		tppReq.WorkToDoTimeout = secondsString
+	}
 
 	return tppReq, err
 }

@@ -21,6 +21,7 @@ import (
 	"crypto/x509/pkix"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"go.uber.org/zap"
@@ -82,31 +83,124 @@ func EnrollCertificate(config domain.Config, request domain.PlaybookRequest) (*c
 }
 
 func buildClient(config domain.Config, zone string) (endpoint.Connector, error) {
-	vConfig := &vcert.Config{
-		ConnectorType: config.Connection.GetConnectorType(),
-		BaseUrl:       config.Connection.URL,
-		Zone:          zone,
-		Credentials: &endpoint.Authentication{
-			APIKey:       config.Connection.Credentials.APIKey,
-			Scope:        config.Connection.Credentials.Scope,
-			ClientId:     config.Connection.Credentials.ClientId,
-			AccessToken:  config.Connection.Credentials.AccessToken,
-			ClientSecret: config.Connection.Credentials.ClientSecret,
-		},
+	vcertConfig := &vcert.Config{
+		ConnectorType:   config.Connection.GetConnectorType(),
+		BaseUrl:         config.Connection.URL,
+		Zone:            zone,
 		ConnectionTrust: loadTrustBundle(config.Connection.TrustBundlePath),
 		LogVerbose:      false,
 	}
 
-	if config.Connection.Credentials.IdentityProvider != nil {
-		vConfig.Credentials.IdentityProvider = config.Connection.Credentials.IdentityProvider
+	// build Authentication object
+	vcertAuth, err := buildVCertAuthentication(config.Connection.Credentials)
+	if err != nil {
+		return nil, err
 	}
+	vcertConfig.Credentials = vcertAuth
 
-	client, err := vcert.NewClient(vConfig)
+	client, err := vcert.NewClient(vcertConfig)
 	if err != nil {
 		return nil, err
 	}
 
 	return client, nil
+}
+
+func buildVCertAuthentication(playbookAuth domain.Authentication) (*endpoint.Authentication, error) {
+	attrPrefix := "config.connection.credentials.%s"
+
+	vcertAuth := &endpoint.Authentication{}
+
+	// VCP API key
+	apiKey, err := getAttributeValue(fmt.Sprintf(attrPrefix, "apiKey"), playbookAuth.APIKey)
+	if err != nil {
+		return nil, err
+	}
+	vcertAuth.APIKey = apiKey
+
+	// VCP service account
+	jwt, err := getAttributeValue(fmt.Sprintf(attrPrefix, "externalJWT"), playbookAuth.ExternalJWT)
+	if err != nil {
+		return nil, err
+	}
+	vcertAuth.ExternalJWT = jwt
+
+	tokenURL, err := getAttributeValue(fmt.Sprintf(attrPrefix, "tokenURL"), playbookAuth.TokenURL)
+	if err != nil {
+		return nil, err
+	}
+	vcertAuth.TokenURL = tokenURL
+
+	// TPP/VCP/Firefly Access token
+	accessToken, err := getAttributeValue(fmt.Sprintf(attrPrefix, "accessToken"), playbookAuth.AccessToken)
+	if err != nil {
+		return nil, err
+	}
+	vcertAuth.AccessToken = accessToken
+
+	// Scope
+	scope, err := getAttributeValue(fmt.Sprintf(attrPrefix, "scope"), playbookAuth.Scope)
+	if err != nil {
+		return nil, err
+	}
+	vcertAuth.Scope = scope
+
+	// Client ID
+	clientID, err := getAttributeValue(fmt.Sprintf(attrPrefix, "clientId"), playbookAuth.ClientId)
+	if err != nil {
+		return nil, err
+	}
+	vcertAuth.ClientId = clientID
+
+	// Client secret
+	clientSecret, err := getAttributeValue(fmt.Sprintf(attrPrefix, "clientSecret"), playbookAuth.ClientSecret)
+	if err != nil {
+		return nil, err
+	}
+	vcertAuth.ClientSecret = clientSecret
+
+	// Return here as Identity provider is nil
+	if playbookAuth.IdentityProvider == nil {
+		return vcertAuth, nil
+	}
+
+	idp := &endpoint.OAuthProvider{}
+
+	// OAuth provider token url
+	idpTokenURL, err := getAttributeValue(fmt.Sprintf(attrPrefix, "idP.tokenURL"), playbookAuth.IdentityProvider.TokenURL)
+	if err != nil {
+		return nil, err
+	}
+	idp.TokenURL = idpTokenURL
+
+	// OAuth provider audience
+	audience, err := getAttributeValue(fmt.Sprintf(attrPrefix, "idP.audience"), playbookAuth.IdentityProvider.Audience)
+	if err != nil {
+		return nil, err
+	}
+	idp.Audience = audience
+
+	vcertAuth.IdentityProvider = idp
+
+	return vcertAuth, nil
+}
+
+func getAttributeValue(attrName string, attrValue string) (string, error) {
+	offset := len(filePrefix)
+	attrValue = strings.TrimSpace(attrValue)
+
+	// No file prefix, return value as is
+	if !strings.HasPrefix(attrValue, filePrefix) {
+		return attrValue, nil
+	}
+
+	data, err := readFile(attrValue[offset:])
+	if err != nil {
+		return "", fmt.Errorf("failed to read value [%s] from authentication object: %w", attrName, err)
+	}
+	fileValue := strings.TrimSpace(string(data))
+
+	return fileValue, nil
 }
 
 func buildRequest(request domain.PlaybookRequest) certificate.Request {

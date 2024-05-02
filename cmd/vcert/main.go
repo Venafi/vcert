@@ -106,24 +106,26 @@ AUTHOR:
    {{range .Authors}}{{ . }}
    {{end}}{{end}}{{if .Commands}}
 ACTIONS:
-   gencsr       To generate a certificate signing request (CSR)
-   enroll       To enroll a certificate
-   pickup       To retrieve a certificate
-   renew        To renew a certificate
-   retire       To retire a certificate
-   revoke       To revoke a certificate
-   run          To retrieve and install certificates using a vcert playbook file
+   Command       Platform             Description
 
-   getpolicy    To retrieve the certificate policy of a zone
-   setpolicy    To apply a certificate policy specification to a zone
+   gencsr                             To generate a certificate signing request (CSR)
+   enroll        tpp | vcp | firefly  To enroll a certificate
+   pickup        tpp | vcp            To retrieve a certificate
+   renew         tpp | vcp            To renew a certificate
+   retire        tpp | vcp            To retire a certificate
+   revoke        tpp                  To revoke a certificate
+   run           tpp | vcp | firefly  To retrieve and install certificates using a vcert playbook file
 
-   getcred      To obtain a new TPP authentication token or Firefly access token or register for a new VaaS user API key
-   checkcred    To check the validity of a token and grant
-   voidcred     To invalidate an authentication grant
+   getpolicy     tpp | vcp            To retrieve the certificate policy of a zone
+   setpolicy     tpp | vcp            To apply a certificate policy specification to a zone
 
-   sshenroll    To enroll a SSH certificate
-   sshpickup    To retrieve a SSH certificate
-   sshgetconfig To get the SSH CA public key and default principals
+   getcred       tpp | vcp | oidc     To obtain a new authentication token from any Venafi platform or to register for a new Venafi Control Plane user API key
+   checkcred     tpp                  To check the validity of a Trust Protection Platform token and grant
+   voidcred      tpp                  To invalidate a Trust Protection Platform authentication token
+
+   sshenroll     tpp                  To enroll an SSH certificate
+   sshpickup     tpp                  To retrieve an SSH certificate
+   sshgetconfig  tpp                  To get the SSH CA public key and default principals
 
 OPTIONS:
    {{range .VisibleFlags}}{{.}}

@@ -1,6 +1,9 @@
 module github.com/Venafi/vcert/v5
 
+go 1.21
+
 require (
+	github.com/go-http-utils/headers v0.0.0-20181008091004-fed159eddc2a
 	github.com/google/uuid v1.3.0
 	github.com/howeyc/gopass v0.0.0-20170109162249-bf9dde6d0d2c
 	github.com/pavel-v-chernykh/keystore-go/v4 v4.1.0
@@ -17,6 +20,7 @@ require (
 	gopkg.in/ini.v1 v1.51.0
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
+	k8s.io/utils v0.0.0-20240310230437-4693a0247e57
 	software.sslmate.com/src/go-pkcs12 v0.4.0
 )
 
@@ -46,5 +50,3 @@ require (
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 )
-
-go 1.20

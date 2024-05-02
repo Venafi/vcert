@@ -27,4 +27,4 @@ Feature: Enroll certificate using Firefly
       And it should write CSR to the file named "csr.pem"
       And it should write private key to the file named "k.pem"
     And I enroll a random certificate with defined platform Firefly with -csr file:csr.pem
-      Then the output should contain "The '-cn' option cannot be used in -csr file: provided mode"
+      Then the output should contain "the '--cn' option cannot be used in --csr file: provided mode"
