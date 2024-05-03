@@ -2,29 +2,32 @@ config:
   connection:
     platform: tpp
     url: https://my.tpp.instance.company.com # URL to TPP instance
-    trustBundle: /path/to/my/trustbundle.pem # TrustBundle for TPP connection
+    trustBundle: /path/to/my/trustbundle.pem # Optional TrustBundle for TPP connection
     credentials:
       accessToken: '{{ Env "TPP_ACCESS_TOKEN" }}'
       refreshToken: '{{ Env "TPP_REFRESH_TOKEN" }}'
-      clientId: vcert-sdk
 certificateTasks:
-  - name: myCertificate # Task Identifier, no relevance in tool run
+  - name: MSSQL TLS Certificate
     renewBefore: 31d
     request:
-      csr: service
+      csr: local
       subject:
-        # Templating needs to go between quotes to avoid issues when refreshing tokens
+        # Templating needs to go between single quotes to avoid issues when refreshing tokens
         commonName: '{{ Hostname | ToLower -}}.{{- Env "USERDNSDOMAIN" | ToLower }}'
         country: US
         locality: Salt Lake City
         state: Utah
-        organization: Venafi Inc
+        organization: Venafi, Inc.
         orgUnits:
           - engineering
           - marketing
+        sanDNS:
+          - '{{ Hostname | ToLower -}}.{{- Env "USERDNSDOMAIN" | ToLower }}'
+          - sqldb.example.com
       zone: "Open Source\\vcert"
     installations:
       - format: CAPI
-        location: "LocalMachine\MY"
+        capiLocation: LocalMachine\MY
+        capiFriendlyName: Venafi vCert Managed - MSSQL TLS
         capiIsNonExportable: True
-        afterInstallAction: "echo Success!!!"
+        

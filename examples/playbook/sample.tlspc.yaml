@@ -7,7 +7,7 @@ certificateTasks:
   - name: myCertificate # Task Identifier, no relevance in tool run
     renewBefore: 31d
     request:
-      csr: service
+      csr: local
       subject:
         # Templating needs to go between single quotes to avoid issues when refreshing tokens and saving back
         commonName: '{{ Hostname | ToLower -}}.{{- Env "USERDNSDOMAIN" | ToLower }}'

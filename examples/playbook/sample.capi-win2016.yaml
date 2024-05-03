@@ -1,0 +1,22 @@
+config:
+  connection:
+    platform: tpp
+    url: https://my.tpp.instance.company.com # URL to TPP instance
+    # trustBundle: /path/to/my/trustbundle.pem # Optional TrustBundle for TPP connection
+    credentials:
+      accessToken: '{{ Env "TPP_ACCESS_TOKEN" }}'
+      refreshToken: '{{ Env "TPP_REFRESH_TOKEN" }}'
+certificateTasks:
+  - name: IIS Default Website
+    renewBefore: 31d
+    request:
+      csr: local
+      subject:
+        commonName: '{{ Hostname | ToLower -}}.{{- Env "USERDNSDOMAIN" | ToLower }}'
+      zone: Certificates\vcert
+    installations:
+      - format: CAPI
+        capiLocation: LocalMachine\MY
+        capiFriendlyName: Venafi vCert Managed - IIS Default Website
+        capiIsNonExportable: True
+        useLegacyPkcs12: True   # Win2016 requires legacy key wrapping (3DES-SHA1)
