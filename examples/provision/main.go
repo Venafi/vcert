@@ -55,7 +55,12 @@ func main() {
 
 	optionsInput := endpoint.ProvisioningOptions(options)
 
-	certMetaData, err := connector.ProvisionCertificate(certificateId, nil, nil, &keystoreId, &optionsInput)
+	req := &endpoint.ProvisioningRequest{
+		CertificateId: &certificateId,
+		KeystoreId:    &keystoreId,
+	}
+
+	certMetaData, err := connector.ProvisionCertificate(req, &optionsInput)
 	if err != nil {
 		log.Fatalf("error provisioning: %s", err.Error())
 	}

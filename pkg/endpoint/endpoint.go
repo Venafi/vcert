@@ -102,7 +102,7 @@ type Connector interface {
 	RequestCertificate(req *certificate.Request) (requestID string, err error)
 	// RetrieveCertificate immediately returns an enrolled certificate. Otherwise, RetrieveCertificate waits and retries during req.Timeout.
 	RetrieveCertificate(req *certificate.Request) (certificates *certificate.PEMCollection, err error)
-	ProvisionCertificate(certificateId string, providerName *string, keystoreName *string, keystoreId *string, options *ProvisioningOptions) (provisioningMetadata ProvisioningMetadata, err error)
+	ProvisionCertificate(req *ProvisioningRequest, options *ProvisioningOptions) (provisioningMetadata ProvisioningMetadata, err error)
 	IsCSRServiceGenerated(req *certificate.Request) (bool, error)
 	RevokeCertificate(req *certificate.RevocationRequest) error
 	RenewCertificate(req *certificate.RenewalRequest) (requestID string, err error)

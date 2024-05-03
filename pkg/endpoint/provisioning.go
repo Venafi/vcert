@@ -1,5 +1,13 @@
 package endpoint
 
+type ProvisioningRequest struct {
+	CertificateId *string
+	PickupId      *string
+	KeystoreId    *string
+	KeystoreName  *string
+	ProviderName  *string
+}
+
 type ProvisioningMetadata interface {
 	GetAwsMetadata() AwsMetadata
 	GetAzureMetadata() AzureMetadata
