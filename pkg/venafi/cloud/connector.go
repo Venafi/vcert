@@ -312,37 +312,13 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (*certificate.
 		req.PickupID = certificateRequestId
 	}
 
-	startTime := time.Now()
-	//Wait for certificate to be issued by checking its PickupID
-	//If certID is filled then certificate should be already issued.
 	var certificateId string
-	if req.CertID == "" {
-		for {
-			if req.PickupID == "" {
-				break
-			}
-			certStatus, err := c.getCertificateStatus(req.PickupID)
-			if err != nil {
-				return nil, fmt.Errorf("unable to retrieve: %s", err)
-			}
-			if certStatus.Status == "ISSUED" {
-				certificateId = certStatus.CertificateIdsList[0]
-				break // to fetch the cert itself
-			} else if certStatus.Status == "FAILED" {
-				return nil, fmt.Errorf("failed to retrieve certificate. Status: %v", certStatus)
-			}
-			// status.Status == "REQUESTED" || status.Status == "PENDING"
-			if req.Timeout == 0 {
-				return nil, endpoint.ErrCertificatePending{CertificateID: req.PickupID, Status: certStatus.Status}
-			} else {
-				log.Println("Issuance of certificate is pending...")
-			}
-			if time.Now().After(startTime.Add(req.Timeout)) {
-				return nil, endpoint.ErrRetrieveCertificateTimeout{CertificateID: req.PickupID}
-			}
-			// fmt.Printf("pending... %s\n", status.Status)
-			time.Sleep(2 * time.Second)
+	if req.CertID == "" && req.PickupID != "" {
+		certId, err := c.getCertIDFromPickupID(req.PickupID, req.Timeout)
+		if err != nil {
+			return nil, err
 		}
+		certificateId = *certId
 	} else {
 		certificateId = req.CertID
 	}
@@ -783,6 +759,11 @@ func (c *Connector) ProvisionCertificate(req *endpoint.ProvisioningRequest, opti
 	}
 
 	reqData := *req
+
+	if reqData.Timeout == 0 {
+		reqData.Timeout = 180 * time.Second
+	}
+
 	log.Println("Validating inputs")
 	err = validateProvisioningInputs(reqData)
 	if err != nil {
@@ -798,19 +779,25 @@ func (c *Connector) ProvisionCertificate(req *endpoint.ProvisioningRequest, opti
 	}
 	log.Println("Certificate is valid for provisioning (VCP generated)")
 
-	if req.KeystoreId == nil && (req.KeystoreName != nil && req.ProviderName != nil) {
+	if reqData.KeystoreId == nil && (reqData.KeystoreName != nil && reqData.ProviderName != nil) {
 		log.Println("Keystore ID was not provided. Trying to find out by using keystore and provider names")
 		// TODO: Add logic to get keystore ID from Keystore's Name and its Provider Name once filters are ready
 		// here should feed up "keystoreId" var for next validation
-		if req.KeystoreId == nil {
+		if reqData.KeystoreId == nil {
 			return nil, fmt.Errorf("could not find Keystore ID for Keystore Name %s and Cloud Provider Name %s", *(req.KeystoreName), *(req.ProviderName))
 		}
 	}
-	keystoreIdString := *(req.KeystoreId)
+	keystoreIdString := *(reqData.KeystoreId)
 	log.Printf("Keystore ID for provisioning: %s", keystoreIdString)
 
-	// TODO: Fetch certificateID by using PickupID (for VCP: Certificate Request ID)
-	certificateIdString := *req.CertificateId
+	if reqData.CertificateId == nil {
+		certId, err := c.getCertIDFromPickupID(*(reqData.PickupId), reqData.Timeout)
+		if err != nil {
+			return nil, err
+		}
+		reqData.CertificateId = certId
+	}
+	certificateIdString := *(reqData.CertificateId)
 	log.Printf("Certificate ID for provisioning: %s", certificateIdString)
 
 	// setting options for provisioning
@@ -875,6 +862,40 @@ func (c *Connector) ProvisionCertificate(req *endpoint.ProvisioningRequest, opti
 
 	log.Printf("Successfully finished Provisioning Flow for Certificate ID %s and Keystore ID %s", certificateIdString, keystoreIdString)
 	return cloudMetadata, nil
+}
+
+func (c *Connector) getCertIDFromPickupID(pickupId string, timeout time.Duration) (*string, error) {
+	startTime := time.Now()
+	//Wait for certificate to be issued by checking its PickupID
+	//If certID is filled then certificate should be already issued.
+
+	var certificateId string
+	for {
+		certStatus, err := c.getCertificateStatus(pickupId)
+		if err != nil {
+			return nil, fmt.Errorf("unable to retrieve: %s", err)
+		}
+		if certStatus.Status == "ISSUED" {
+			certificateId = certStatus.CertificateIdsList[0]
+			break // to fetch the cert itself
+		} else if certStatus.Status == "FAILED" {
+			return nil, fmt.Errorf("failed to retrieve certificate. Status: %v", certStatus)
+		}
+		if timeout == 0 {
+			return nil, endpoint.ErrCertificatePending{CertificateID: pickupId, Status: certStatus.Status}
+		} else {
+			log.Println("Issuance of certificate is pending...")
+		}
+		if time.Now().After(startTime.Add(timeout)) {
+			return nil, endpoint.ErrRetrieveCertificateTimeout{CertificateID: pickupId}
+		}
+		time.Sleep(2 * time.Second)
+	}
+	if certificateId == "" {
+		return nil, fmt.Errorf("something went wrong during polling cert status and we still got and empty CertificateID at the end")
+	}
+
+	return &certificateId, nil
 }
 
 func (c *Connector) getGraphqlClient() graphql.Client {
@@ -1049,6 +1070,9 @@ func validateProvisioningInputs(req endpoint.ProvisioningRequest) error {
 			return fmt.Errorf("missing keystoreName")
 		}
 		return fmt.Errorf("missing to provide any of keystoreId or keystoreName and providerName")
+	}
+	if (req.CertificateId == nil && req.PickupId == nil) || (req.CertificateId != nil && req.PickupId != nil) {
+		return fmt.Errorf("must only provide one of certificate ID or Pickup ID")
 	}
 	return nil
 }

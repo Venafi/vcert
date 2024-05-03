@@ -1,13 +1,16 @@
 package main
 
 import (
+	"crypto/x509/pkix"
 	"fmt"
+	"log"
+	"os"
+
 	"github.com/Venafi/vcert/v5"
+	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
 	"github.com/Venafi/vcert/v5/pkg/util"
 	"github.com/Venafi/vcert/v5/pkg/venafi/cloud"
-	"log"
-	"os"
 )
 
 const (
@@ -44,7 +47,32 @@ func main() {
 		log.Fatalf("error creating client: %s", err.Error())
 	}
 
-	certificateId := "<insert Certificate ID here>"
+	request := &certificate.Request{
+		Subject: pkix.Name{
+			CommonName:         "common.name.venafi.example.com",
+			Organization:       []string{"Venafi.com"},
+			OrganizationalUnit: []string{"Integration Team"},
+			Locality:           []string{"Salt Lake"},
+			Province:           []string{"Salt Lake"},
+			Country:            []string{"US"},
+		},
+		DNSNames:  []string{"www.client.venafi.example.com", "ww1.client.venafi.example.com"},
+		CsrOrigin: certificate.ServiceGeneratedCSR,
+		KeyType:   certificate.KeyTypeRSA,
+		KeyLength: certificate.DefaultRSAlength,
+	}
+
+	err = connector.GenerateRequest(nil, request)
+	if err != nil {
+		log.Fatalf("could not generate certificate request: %s", err)
+	}
+
+	requestID, err := connector.RequestCertificate(request)
+	if err != nil {
+		log.Fatalf("could not submit certificate request: %s", err)
+	}
+	log.Printf("Successfully submitted certificate request. Will pickup certificate by ID %s", requestID)
+
 	keystoreId := "<insert Keystore ID here>"
 	googleCertName := "<insert google cert name>" // e.g. test2-venafi-com
 
@@ -56,8 +84,8 @@ func main() {
 	optionsInput := endpoint.ProvisioningOptions(options)
 
 	req := &endpoint.ProvisioningRequest{
-		CertificateId: &certificateId,
-		KeystoreId:    &keystoreId,
+		KeystoreId: &keystoreId,
+		PickupId:   &requestID,
 	}
 
 	certMetaData, err := connector.ProvisionCertificate(req, &optionsInput)

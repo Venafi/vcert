@@ -1,11 +1,14 @@
 package endpoint
 
+import "time"
+
 type ProvisioningRequest struct {
 	CertificateId *string
 	PickupId      *string
 	KeystoreId    *string
 	KeystoreName  *string
 	ProviderName  *string
+	Timeout       time.Duration
 }
 
 type ProvisioningMetadata interface {
