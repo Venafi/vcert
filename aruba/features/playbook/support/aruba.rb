@@ -21,6 +21,7 @@ class Installation;
   attr_accessor :backupFiles # will add the .bak for creating a copy of the generated file
   attr_accessor :keyPassword
   attr_accessor :p12Password
+  attr_accessor :useLegacyPcks12
 
 end
 

@@ -428,3 +428,34 @@ Feature: playbook
     Examples:
       | platform | config-file       |
       | VaaS     | playbook-vaas.yml |
+
+Scenario Outline: Run playbook with default configuration and performs pkcs12 installation using legacy flag
+    Given I have playbook with <platform> connection details
+    And I have playbook with certificateTasks block
+    And I have playbook with task named "myCertificateInstallationLegacyPKCS12"
+    And task named "myCertificateInstallationLegacyPKCS12" has renewBefore with value "31d"
+    And task named "myCertificateInstallationLegacyPKCS12" has request
+    And task named "myCertificateInstallationLegacyPKCS12" has request with "csr" value "service"
+    And task named "myCertificateInstallationLegacyPKCS12" has request with default "<platform>" zone
+    And task named "myCertificateInstallationLegacyPKCS12" request has subject
+    And task named "myCertificateInstallationLegacyPKCS12" request has subject with default values
+    And task named "myCertificateInstallationLegacyPKCS12" request has subject random CommonName
+    And task named "myCertificateInstallationLegacyPKCS12" has installations
+    And task named "myCertificateInstallationLegacyPKCS12" has installation format PKCS12 with cert name "cert.p12" and password "Passcode124!" and useLegacyPkcs12 "true" with validation
+    And I created playbook named "<config-file>" with previous content
+    And I run `vcert run -f <config-file>`
+    Then the output should contain "successfully installed certificate"
+    And the output should contain "playbook run finished"
+    And "cert.p12" should be PKCS#12 archive in legacy mode with password "Passcode124!"
+    And I uninstall file named "cert.p12"
+
+
+    @TPP
+    Examples:
+      | platform | config-file       |
+      | TPP      | playbook-tpp.yml  |
+
+    @VAAS
+    Examples:
+      | platform | config-file       |
+      | VaaS     | playbook-vaas.yml |
