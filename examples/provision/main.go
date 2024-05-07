@@ -15,8 +15,7 @@ const (
 	vcpApiKey    = "CLOUD_APIKEY"
 	envVarNotSet = "environment variable not set: %s"
 
-	name    = "example-provisioning"
-	version = "v0.0.1"
+	name = "example-provisioning"
 )
 
 func main() {
@@ -69,10 +68,11 @@ func main() {
 		log.Fatalf("error provisioning: %s", err.Error())
 	}
 
-	log.Printf("Certificate AWS Metadata ARN:\n%v", certMetaData.GetAWSCertificateMetadata().GetARN())
-	log.Printf("Certificate Azure Metadata ID:\n%v", certMetaData.GetAzureCertificateMetadata().GetID())
-	log.Printf("Certificate Azure Metadata Name:\n%v", certMetaData.GetAzureCertificateMetadata().GetName())
-	log.Printf("Certificate Azure Metadata Version:\n%v", certMetaData.GetAzureCertificateMetadata().GetVersion())
+	// Example to get values from other keystores machine identities metadata
+	//log.Printf("Certificate AWS Metadata ARN:\n%v", certMetaData.GetAWSCertificateMetadata().GetARN())
+	//log.Printf("Certificate Azure Metadata ID:\n%v", certMetaData.GetAzureCertificateMetadata().GetID())
+	//log.Printf("Certificate Azure Metadata Name:\n%v", certMetaData.GetAzureCertificateMetadata().GetName())
+	//log.Printf("Certificate Azure Metadata Version:\n%v", certMetaData.GetAzureCertificateMetadata().GetVersion())
 	log.Printf("Certificate GCP Metadata ID:\n%v", certMetaData.GetGCPCertificateMetadata().GetID())
 	log.Printf("Certificate GCP Metadata Name:\n%v", certMetaData.GetGCPCertificateMetadata().GetName())
 }
