@@ -139,7 +139,7 @@ func (c *Connector) ProvisionCertificate(req *endpoint.ProvisioningRequest, opti
 
 	if reqData.CertificateID == nil {
 		if reqData.PickupID == nil {
-			return nil, fmt.Errorf("neither Certificate ID or Pickup ID was provided for provisioning")
+			return nil, fmt.Errorf("no Certificate ID or Pickup ID were provided for provisioning")
 		}
 		log.Printf("Certificate ID was not provided in request. Fetching it by using Pickup ID %s", *(reqData.PickupID))
 		certID, err := c.getCertIDFromPickupID(*(reqData.PickupID), reqData.Timeout)
@@ -178,12 +178,8 @@ func (c *Connector) ProvisionCertificate(req *endpoint.ProvisioningRequest, opti
 		return nil, err
 	}
 
-	if len(data.CloudKeystores.Nodes) == 0 {
+	if len(data.CloudKeystores.Nodes) != 1 {
 		return nil, fmt.Errorf("could not find keystore with ID: %s", keystoreIDString)
-	}
-
-	if len(data.CloudKeystores.Nodes) > 1 {
-		return nil, fmt.Errorf("found more than one keystore for ID: %s", keystoreIDString)
 	}
 
 	// grabbing found keystore for later
