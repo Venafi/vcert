@@ -43,7 +43,7 @@ const (
 )
 
 func TestParseGetUserAccountData(t *testing.T) {
-	reg, err := parseData[userDetails](successGetUserAccount, verror.ServerError)
+	reg, err := parseJSON[userDetails](successGetUserAccount, verror.ServerError)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}

@@ -3,38 +3,34 @@ package endpoint
 import "time"
 
 type ProvisioningRequest struct {
-	CertificateId *string
-	PickupId      *string
-	KeystoreId    *string
+	CertificateID *string
+	PickupID      *string
+	KeystoreID    *string
 	KeystoreName  *string
 	ProviderName  *string
 	Timeout       time.Duration
 }
 
 type ProvisioningMetadata interface {
-	GetAwsMetadata() AwsMetadata
-	GetAzureMetadata() AzureMetadata
-	GetGcpMetadata() GcpMetadata
+	GetAWSCertificateMetadata() AWSCertificateMetadata
+	GetAzureCertificateMetadata() AzureCertificateMetadata
+	GetGCPCertificateMetadata() GCPCertificateMetadata
 }
 
-type AwsMetadata interface {
+type AWSCertificateMetadata interface {
 	GetARN() string
 }
 
-type AzureMetadata interface {
-	GetAKVID() string
-	GetCertificateName() string
+type AzureCertificateMetadata interface {
+	GetID() string
+	GetName() string
 	GetVersion() string
 }
 
-type GcpMetadata interface {
-	GetGCPID() string
-	GetCertificateName() string
+type GCPCertificateMetadata interface {
+	GetID() string
+	GetName() string
 }
-
-//type CertificateProvisioningOptions struct {
-//	Options cloudkeystores.CertificateProvisioningOptionsInput `json:"options"`
-//}
 
 type ProvisioningOptions interface {
 	GetType() string

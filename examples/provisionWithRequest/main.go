@@ -2,14 +2,12 @@ package main
 
 import (
 	"crypto/x509/pkix"
-	"fmt"
 	"log"
 	"os"
 
 	"github.com/Venafi/vcert/v5"
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
-	"github.com/Venafi/vcert/v5/pkg/util"
 	"github.com/Venafi/vcert/v5/pkg/venafi/cloud"
 )
 
@@ -33,13 +31,11 @@ func main() {
 		log.Fatalf(envVarNotSet, vcpZone)
 	}
 
-	userAgent := fmt.Sprintf("%s/%s %s", name, version, util.DefaultUserAgent)
 	config := &vcert.Config{
 		ConnectorType: endpoint.ConnectorTypeCloud,
 		BaseUrl:       url,
 		Zone:          zone,
 		Credentials:   &endpoint.Authentication{APIKey: os.Getenv(vcpApiKey)},
-		UserAgent:     &userAgent,
 	}
 
 	connector, err := vcert.NewClient(config)
@@ -73,19 +69,26 @@ func main() {
 	}
 	log.Printf("Successfully submitted certificate request. Will pickup certificate by ID %s", requestID)
 
-	keystoreId := "<insert Keystore ID here>"
-	googleCertName := "<insert google cert name>" // e.g. test2-venafi-com
+	keystoreID := "<insert Keystore ID here>"
+	certName := "<insert cert name>" // e.g. test2-venafi-com
 
 	// The ID is the Certificate name for Google, hence we send it as name
-	options := &cloud.CloudProvisioningGCPOptions{
-		Id: &googleCertName,
+	optionsGcp := &cloud.CloudProvisioningGCPOptions{
+		ID: &certName,
 	}
 
-	optionsInput := endpoint.ProvisioningOptions(options)
+	// Example for Azure Options
+	// optionsAzure := &cloud.CloudProvisioningAzureOptions{
+	//   Name: &certName,
+	// }
+	//
+	// optionsInput := endpoint.ProvisioningOptions(optionsAzure)
+
+	optionsInput := endpoint.ProvisioningOptions(optionsGcp)
 
 	req := &endpoint.ProvisioningRequest{
-		KeystoreId: &keystoreId,
-		PickupId:   &requestID,
+		KeystoreID: &keystoreID,
+		PickupID:   &requestID,
 	}
 
 	certMetaData, err := connector.ProvisionCertificate(req, &optionsInput)
@@ -93,7 +96,10 @@ func main() {
 		log.Fatalf("error provisioning: %s", err.Error())
 	}
 
-	log.Printf("Certificate AWS Metadata:\n%v", certMetaData.GetAwsMetadata())
-	log.Printf("Certificate Azure Metadata:\n%v", certMetaData.GetAzureMetadata())
-	log.Printf("Certificate GCP Metadata:\n%v", certMetaData.GetGcpMetadata())
+	log.Printf("Certificate AWS Metadata ARN:\n%v", certMetaData.GetAWSCertificateMetadata().GetARN())
+	log.Printf("Certificate Azure Metadata ID:\n%v", certMetaData.GetAzureCertificateMetadata().GetID())
+	log.Printf("Certificate Azure Metadata Name:\n%v", certMetaData.GetAzureCertificateMetadata().GetName())
+	log.Printf("Certificate Azure Metadata Version:\n%v", certMetaData.GetAzureCertificateMetadata().GetVersion())
+	log.Printf("Certificate GCP Metadata ID:\n%v", certMetaData.GetGCPCertificateMetadata().GetID())
+	log.Printf("Certificate GCP Metadata Name:\n%v", certMetaData.GetGCPCertificateMetadata().GetName())
 }

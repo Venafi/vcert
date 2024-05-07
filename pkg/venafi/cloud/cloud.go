@@ -334,9 +334,9 @@ func (c *Connector) request(method string, url string, data interface{}, authNot
 
 	r.Header.Set(headers.UserAgent, c.userAgent)
 	if c.accessToken != "" {
-		r.Header.Add(headers.Authorization, fmt.Sprintf("%s %s", oauthTokenType, c.accessToken))
+		r.Header.Add(headers.Authorization, fmt.Sprintf("%s%s", util.HeaderOauthToken, c.accessToken))
 	} else if c.apiKey != "" {
-		r.Header.Add("tppl-api-key", c.apiKey)
+		r.Header.Add(util.HeaderTpplApikey, c.apiKey)
 	}
 
 	if method == http.MethodPost || method == http.MethodPut {
@@ -371,7 +371,7 @@ func (c *Connector) request(method string, url string, data interface{}, authNot
 
 func parseUserDetailsResult(expectedStatusCode int, httpStatusCode int, httpStatus string, body []byte) (*userDetails, error) {
 	if httpStatusCode == expectedStatusCode {
-		return parseData[userDetails](body, verror.ServerError)
+		return parseJSON[userDetails](body, verror.ServerError)
 	}
 	respErrors, err := parseResponseErrors(body)
 	if err != nil {
@@ -392,7 +392,7 @@ func parseUserDetailsResult(expectedStatusCode int, httpStatusCode int, httpStat
 
 func parseUserDetailsResultFromPOST(httpStatusCode int, httpStatus string, body []byte) (*userDetails, error) {
 	if httpStatusCode == http.StatusCreated || httpStatusCode == http.StatusAccepted {
-		return parseData[userDetails](body, verror.ServerError)
+		return parseJSON[userDetails](body, verror.ServerError)
 	}
 	respErrors, err := parseResponseErrors(body)
 	if err != nil {
@@ -405,7 +405,7 @@ func parseUserDetailsResultFromPOST(httpStatusCode int, httpStatus string, body 
 	return nil, fmt.Errorf("%w: %v", verror.ServerError, respError)
 }
 
-func parseData[T any](b []byte, errorMessage error) (*T, error) {
+func parseJSON[T any](b []byte, errorMessage error) (*T, error) {
 	var data T
 	err := json.Unmarshal(b, &data)
 	if err != nil {
@@ -416,7 +416,7 @@ func parseData[T any](b []byte, errorMessage error) (*T, error) {
 
 func parseUserByIdResult(expectedStatusCode int, httpStatusCode int, httpStatus string, body []byte) (*user, error) {
 	if httpStatusCode == expectedStatusCode {
-		return parseData[user](body, verror.ServerError)
+		return parseJSON[user](body, verror.ServerError)
 	}
 	respErrors, err := parseResponseErrors(body)
 	if err != nil {
@@ -431,7 +431,7 @@ func parseUserByIdResult(expectedStatusCode int, httpStatusCode int, httpStatus 
 
 func parseUsersByNameResult(expectedStatusCode int, httpStatusCode int, httpStatus string, body []byte) (*users, error) {
 	if httpStatusCode == expectedStatusCode {
-		return parseData[users](body, verror.ServerError)
+		return parseJSON[users](body, verror.ServerError)
 	}
 	respErrors, err := parseResponseErrors(body)
 	if err != nil {
@@ -446,13 +446,13 @@ func parseUsersByNameResult(expectedStatusCode int, httpStatusCode int, httpStat
 
 func parseCertByIdResult(expectedStatusCode int, httpStatusCode int, httpStatus string, body []byte) (*VenafiCertificate, error) {
 	if httpStatusCode == expectedStatusCode {
-		return parseData[VenafiCertificate](body, verror.ServerError)
+		return parseJSON[VenafiCertificate](body, verror.ServerError)
 	}
 	respErrors, err := parseResponseErrors(body)
 	if err != nil {
 		return nil, err // parseResponseErrors always return verror.ServerError
 	}
-	respError := fmt.Sprintf("unexpected status code on retrieval of users by name. Status: %s\n", httpStatus)
+	respError := fmt.Sprintf("unexpected status code on retrieval of certificate by ID. Status: %s\n", httpStatus)
 	for _, e := range respErrors {
 		respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
 	}
@@ -461,7 +461,7 @@ func parseCertByIdResult(expectedStatusCode int, httpStatusCode int, httpStatus 
 
 func parseTeamsResult(expectedStatusCode int, httpStatusCode int, httpStatus string, body []byte) (*teams, error) {
 	if httpStatusCode == expectedStatusCode {
-		return parseData[teams](body, verror.ServerError)
+		return parseJSON[teams](body, verror.ServerError)
 	}
 	respErrors, err := parseResponseErrors(body)
 	if err != nil {
@@ -477,7 +477,7 @@ func parseTeamsResult(expectedStatusCode int, httpStatusCode int, httpStatus str
 func parseZoneConfigurationResult(httpStatusCode int, httpStatus string, body []byte) (*zone, error) {
 	switch httpStatusCode {
 	case http.StatusOK:
-		return parseData[zone](body, verror.ServerError)
+		return parseJSON[zone](body, verror.ServerError)
 	case http.StatusBadRequest, http.StatusNotFound:
 		return nil, verror.ZoneNotFoundError
 	default:
@@ -500,7 +500,7 @@ func parseZoneConfigurationResult(httpStatusCode int, httpStatus string, body []
 func parseCertificateTemplateResult(httpStatusCode int, httpStatus string, body []byte) (*certificateTemplate, error) {
 	switch httpStatusCode {
 	case http.StatusOK:
-		return parseData[certificateTemplate](body, verror.ServerError)
+		return parseJSON[certificateTemplate](body, verror.ServerError)
 	case http.StatusBadRequest:
 		return nil, verror.ZoneNotFoundError
 	case http.StatusUnauthorized:
@@ -525,7 +525,7 @@ func parseCertificateTemplateResult(httpStatusCode int, httpStatus string, body 
 func parseCertificateRequestResult(httpStatusCode int, httpStatus string, body []byte) (*certificateRequestResponse, error) {
 	switch httpStatusCode {
 	case http.StatusCreated:
-		return parseData[certificateRequestResponse](body, verror.ServerError)
+		return parseJSON[certificateRequestResponse](body, verror.ServerError)
 	default:
 		respErrors, err := parseResponseErrors(body)
 		if err != nil {
@@ -543,7 +543,7 @@ func parseCertificateRequestResult(httpStatusCode int, httpStatus string, body [
 func checkCertificateRetireResults(httpStatusCode int, httpStatus string, body []byte) error {
 	switch httpStatusCode {
 	case 200:
-		resp, err := parseData[certificateRetireResponse](body, verror.ServerError)
+		resp, err := parseJSON[certificateRetireResponse](body, verror.ServerError)
 		if err != nil {
 			return err
 		} else if resp.Count == 0 {
@@ -577,7 +577,7 @@ func certThumbprint(asn1 []byte) string {
 func parseApplicationDetailsResult(httpStatusCode int, httpStatus string, body []byte) (*ApplicationDetails, error) {
 	switch httpStatusCode {
 	case http.StatusOK:
-		return parseData[ApplicationDetails](body, verror.ServerError)
+		return parseJSON[ApplicationDetails](body, verror.ServerError)
 	case http.StatusBadRequest:
 		return nil, verror.ApplicationNotFoundError
 	case http.StatusUnauthorized:

@@ -15,7 +15,13 @@ import (
 	"github.com/youmark/pkcs8"
 )
 
-const LegacyPem = "legacy-pem"
+const (
+	LegacyPem        = "legacy-pem"
+	HeaderTpplApikey = "tppl-api-key"
+	OauthTokenType   = "Bearer"
+	HeaderOauthToken = OauthTokenType + " %s"
+	DefaultTimeout   = 180 // seconds
+)
 
 func ConvertSecondsToTime(t int64) time.Time {
 	return time.Unix(0, t*int64(time.Second))
