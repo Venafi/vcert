@@ -799,6 +799,10 @@ func (c *Connector) ProvisionCertificate(req *endpoint.ProvisioningRequest, opti
 		return nil, err
 	}
 
+	if data == nil || data.CloudKeystores == nil {
+		return nil, fmt.Errorf("could not find keystore with ID: %s", keystoreIDString)
+	}
+
 	if len(data.CloudKeystores.Nodes) != 1 {
 		return nil, fmt.Errorf("could not find keystore with ID: %s", keystoreIDString)
 	}
