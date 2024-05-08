@@ -53,7 +53,7 @@ type Installation struct {
 	// Deprecated: Location is deprecated in favor of CAPILocation. It will be removed on a future release
 	Location     string             `yaml:"location,omitempty"`
 	P12Password  string             `yaml:"p12Password,omitempty"`
-	UseLegacyP12 bool               `yaml:"useLegacyPkcs12,omitempty"`
+	UseLegacyP12 bool               `yaml:"useLegacyP12,omitempty"`
 	Type         InstallationFormat `yaml:"format,omitempty"`
 }
 
