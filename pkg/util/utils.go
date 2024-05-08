@@ -19,7 +19,6 @@ const (
 	LegacyPem        = "legacy-pem"
 	HeaderTpplApikey = "tppl-api-key"
 	OauthTokenType   = "Bearer"
-	HeaderOauthToken = OauthTokenType + " "
 	DefaultTimeout   = 180 // seconds
 )
 

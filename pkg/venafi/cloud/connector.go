@@ -25,8 +25,6 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"golang.org/x/crypto/nacl/box"
-	"golang.org/x/net/context"
 	"io"
 	"log"
 	"net/http"
@@ -36,6 +34,8 @@ import (
 
 	"github.com/go-http-utils/headers"
 	"github.com/google/uuid"
+	"golang.org/x/crypto/nacl/box"
+	"golang.org/x/net/context"
 
 	"github.com/Venafi/vcert/v5/internal/datasource/cloudkeystores"
 	"github.com/Venafi/vcert/v5/pkg/certificate"

@@ -3,6 +3,7 @@ package cloud
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/Khan/genqlient/graphql"
@@ -10,7 +11,6 @@ import (
 	"github.com/Venafi/vcert/v5/internal/datasource/cloudkeystores"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
 	"github.com/Venafi/vcert/v5/pkg/framework"
-	"net/http"
 )
 
 type CloudKeystoreProvisioningResult struct {

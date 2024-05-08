@@ -2,9 +2,11 @@ package framework
 
 import (
 	"fmt"
-	"github.com/Venafi/vcert/v5/pkg/util"
-	"github.com/go-http-utils/headers"
 	"net/http"
+
+	"github.com/go-http-utils/headers"
+
+	"github.com/Venafi/vcert/v5/pkg/util"
 )
 
 type AuthedTransportApi struct {
@@ -15,7 +17,7 @@ type AuthedTransportApi struct {
 
 func (t *AuthedTransportApi) RoundTrip(req *http.Request) (*http.Response, error) {
 	if t.AccessToken != "" {
-		req.Header.Add(headers.Authorization, fmt.Sprintf("%s%s", util.HeaderOauthToken, t.AccessToken))
+		req.Header.Add(headers.Authorization, fmt.Sprintf("%s %s", util.OauthTokenType, t.AccessToken))
 	} else if t.ApiKey != "" {
 		req.Header.Set(util.HeaderTpplApikey, t.ApiKey)
 	}
