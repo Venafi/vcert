@@ -238,6 +238,22 @@ And(/^task named "(.*)" has installation format PKCS12 with cert name "(.*)" and
   current_certificate_task.installations.push(aux_installation)
 end
 
+And(/^task named "(.*)" has installation format PKCS12 with cert name "(.*)" and password "(.*)" and useLegacyP12 (?: with)( installation)?(?: and|)( validation)?$/) do |task_name, cert_name, p12_password, installation, validation|
+  current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
+  aux_installation = Installation.new
+  aux_installation.format = "PKCS12"
+  aux_installation.file = "{{- Env \"PWD\" }}" + $path_separator + $temp_path + $path_separator + cert_name
+  aux_installation.p12Password = p12_password
+  aux_installation.useLegacyP12 = true
+  if installation
+    aux_installation.afterInstallAction = "echo SuccessInstall"
+  end
+  if validation
+    aux_installation.installValidationAction = "echo SuccessValidation"
+  end
+  current_certificate_task.installations.push(aux_installation)
+end
+
 And(/^task named "(.*)" has setenvvars "(.*)"$/) do |task_name, set_env_vars|
   current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
   current_certificate_task.setenvvars = set_env_vars.split(',')
