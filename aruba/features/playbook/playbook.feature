@@ -441,7 +441,7 @@ Scenario Outline: Run playbook with default configuration and performs pkcs12 in
     And task named "myCertificateInstallationLegacyPKCS12" request has subject with default values
     And task named "myCertificateInstallationLegacyPKCS12" request has subject random CommonName
     And task named "myCertificateInstallationLegacyPKCS12" has installations
-    And task named "myCertificateInstallationLegacyPKCS12" has installation format PKCS12 with cert name "cert.p12" and password "Passcode124!" and useLegacyP12 "true" with validation
+    And task named "myCertificateInstallationLegacyPKCS12" has installation format PKCS12 with cert name "cert.p12" and password "Passcode124!" and useLegacyP12 with validation
     And I created playbook named "<config-file>" with previous content
     And I run `vcert run -f <config-file>`
     Then the output should contain "successfully installed certificate"
