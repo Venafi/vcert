@@ -2174,6 +2174,10 @@ func (c *Connector) RetrieveSSHCertificate(req *certificate.SshCertRequest) (res
 	return RetrieveSshCertificate(c, req)
 }
 
+func (c *Connector) ProvisionCertificate(req *endpoint.ProvisioningRequest, options *endpoint.ProvisioningOptions) (provisioningMetadata endpoint.ProvisioningMetadata, err error) {
+	panic("operation is not supported yet")
+}
+
 func (c *Connector) RetrieveCertificateMetaData(dn string) (*certificate.CertificateMetaData, error) {
 
 	//first step convert dn to guid
