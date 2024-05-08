@@ -454,6 +454,10 @@ func (c *Connector) RetrieveSSHCertificate(_ *certificate.SshCertRequest) (respo
 	panic("operation is not supported yet")
 }
 
+func (c *Connector) ProvisionCertificate(req *endpoint.ProvisioningRequest, options *endpoint.ProvisioningOptions) (provisioningMetadata endpoint.ProvisioningMetadata, err error) {
+	panic("operation is not supported yet")
+}
+
 func (c *Connector) RetrieveCertificateMetaData(_ string) (*certificate.CertificateMetaData, error) {
 	panic("operation is not supported yet")
 }

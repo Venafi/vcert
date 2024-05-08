@@ -21,9 +21,11 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
-	"github.com/stretchr/testify/require"
+	"github.com/Venafi/vcert/v5/pkg/verror"
 )
 
 var (
@@ -41,7 +43,7 @@ const (
 )
 
 func TestParseGetUserAccountData(t *testing.T) {
-	reg, err := parseUserDetailsData(successGetUserAccount)
+	reg, err := parseJSON[userDetails](successGetUserAccount, verror.ServerError)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}

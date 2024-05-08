@@ -1,0 +1,217 @@
+package cloud
+
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"time"
+
+	"github.com/Khan/genqlient/graphql"
+
+	"github.com/Venafi/vcert/v5/internal/datasource/cloudkeystores"
+	"github.com/Venafi/vcert/v5/pkg/endpoint"
+	"github.com/Venafi/vcert/v5/pkg/framework"
+)
+
+type CloudKeystoreProvisioningResult struct {
+	Arn                        string `json:"arn"`
+	CloudProviderCertificateID string `json:"cloudProviderCertificateId"`
+	CloudCertificateName       string `json:"cloudProviderCertificateName"`
+	CloudCertificateVersion    string `json:"cloudProviderCertificateVersion"`
+	Error                      error  `json:"error"`
+}
+
+type CloudProvisioningMetadata struct {
+	awsMetadata   CloudAwsMetadata
+	azureMetadata CloudAzureMetadata
+	gcpMetadata   CloudGcpMetadata
+}
+
+func (cpm *CloudProvisioningMetadata) GetAWSCertificateMetadata() endpoint.AWSCertificateMetadata {
+	return &cpm.awsMetadata
+}
+
+func (cpm *CloudProvisioningMetadata) GetAzureCertificateMetadata() endpoint.AzureCertificateMetadata {
+	return &cpm.azureMetadata
+}
+
+func (cpm *CloudProvisioningMetadata) GetGCPCertificateMetadata() endpoint.GCPCertificateMetadata {
+	return &cpm.gcpMetadata
+}
+
+type CloudAwsMetadata struct {
+	result CloudKeystoreProvisioningResult
+}
+
+func (cawm *CloudAwsMetadata) GetARN() string {
+	return cawm.result.Arn
+}
+
+type CloudGcpMetadata struct {
+	result CloudKeystoreProvisioningResult
+}
+
+func (cgm *CloudGcpMetadata) GetID() string {
+	return cgm.result.CloudProviderCertificateID
+}
+
+func (cgm *CloudGcpMetadata) GetName() string {
+	return cgm.result.CloudCertificateName
+}
+
+type CloudAzureMetadata struct {
+	result CloudKeystoreProvisioningResult
+}
+
+func (cam *CloudAzureMetadata) GetName() string {
+	return cam.result.CloudCertificateName
+}
+
+func (cam *CloudAzureMetadata) GetVersion() string {
+	return cam.result.CloudCertificateVersion
+}
+
+func (cam *CloudAzureMetadata) GetID() string {
+	return cam.result.CloudProviderCertificateID
+}
+
+// GCMCertificateScope Indicates the Scope for a certificate provisioned to GCP Certificate Manager
+type GCMCertificateScope string
+
+const (
+	// GCMCertificateScopeDefault Certificates with default scope are served from core Google data centers.
+	// If unsure, choose this option.
+	GCMCertificateScopeDefault GCMCertificateScope = "DEFAULT"
+	// GCMCertificateScopeEdgeCache Certificates with scope EDGE_CACHE are special-purposed certificates,
+	// served from Edge Points of Presence.
+	// See https://cloud.google.com/vpc/docs/edge-locations.
+	GCMCertificateScopeEdgeCache GCMCertificateScope = "EDGE_CACHE"
+)
+
+type CertificateTagOption struct {
+	Name  string
+	Value string
+}
+
+type CloudProvisioningAzureOptions struct {
+	Name       *string
+	Enabled    *bool
+	Exportable *bool
+	Reusekey   *bool
+	Tags       []*CertificateTagOption
+}
+
+func (cpao CloudProvisioningAzureOptions) GetType() string {
+	return "AKV"
+}
+
+type CloudProvisioningGCPOptions struct {
+	ID          *string
+	Description *string
+	Scope       *GCMCertificateScope
+	Labels      []*CertificateTagOption
+}
+
+func (cpgo CloudProvisioningGCPOptions) GetType() string {
+	return "GCM"
+}
+
+func setProvisioningOptions(options *endpoint.ProvisioningOptions) (*cloudkeystores.CertificateProvisioningOptionsInput, error) {
+	var cloudOptions *cloudkeystores.CertificateProvisioningOptionsInput
+	dataOptions, err := json.Marshal(options)
+	if err != nil {
+		return nil, err
+	}
+
+	graphqlAzureOptions := &cloudkeystores.CertificateProvisioningAzureOptionsInput{}
+	graphqlGCPOptions := &cloudkeystores.CertificateProvisioningGCPOptionsInput{}
+
+	if options != nil {
+		switch (*options).GetType() {
+		case string(cloudkeystores.CloudKeystoreTypeAcm):
+			// nothing
+		case string(cloudkeystores.CloudKeystoreTypeAkv):
+			err = json.Unmarshal(dataOptions, graphqlAzureOptions)
+			if err != nil {
+				return nil, err
+			}
+		case string(cloudkeystores.CloudKeystoreTypeGcm):
+			err = json.Unmarshal(dataOptions, graphqlGCPOptions)
+			if err != nil {
+				return nil, err
+			}
+		default:
+			return nil, fmt.Errorf("unknown cloud keystore type: %s", (*options).GetType())
+		}
+	}
+
+	cloudOptions = &cloudkeystores.CertificateProvisioningOptionsInput{
+		AwsOptions:   nil,
+		AzureOptions: graphqlAzureOptions,
+		GcpOptions:   graphqlGCPOptions,
+	}
+	return cloudOptions, nil
+}
+
+func (c *Connector) validateIfCertIsVCPGeneratedByID(certificateId string) error {
+	cert, err := c.getCertificates(certificateId)
+	if err != nil {
+		return fmt.Errorf("error trying to get certificate details for cert with ID: %s, error: %s", certificateId, err.Error())
+	}
+	if cert.DekHash == "" {
+		return fmt.Errorf("error trying to provisioning certificate with ID: %s. Provided certificate is not VCP generated", certificateId)
+	}
+	return nil
+}
+
+func (c *Connector) getGraphqlClient() graphql.Client {
+	graphqlURL := c.getURL(urlGraphql)
+
+	// We provide every type of auth here.
+	// The logic to decide which auth is inside struct's function: RoundTrip
+	httpclient := &http.Client{
+		Transport: &framework.AuthedTransportApi{
+			ApiKey:      c.apiKey,
+			AccessToken: c.accessToken,
+			Wrapped:     http.DefaultTransport,
+		},
+		Timeout: 30 * time.Second,
+	}
+
+	client := graphql.NewClient(graphqlURL, httpclient)
+	return client
+}
+
+func getCloudMetadataFromWebsocketResponse(respMap interface{}, keystoreType cloudkeystores.CloudKeystoreType, keystoreId string) (*CloudProvisioningMetadata, error) {
+
+	val := CloudKeystoreProvisioningResult{}
+	valJs, err := json.Marshal(respMap)
+	if err != nil {
+		return nil, fmt.Errorf("unable to encode response data! Error: %s", err.Error())
+	}
+	err = json.Unmarshal(valJs, &val)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse response data! Error: %s", err.Error())
+	}
+	if val.Error != nil {
+		return nil, fmt.Errorf("unable to provision certificate! Error: %s", val.Error)
+	}
+
+	if val.CloudProviderCertificateID == "" {
+		return nil, fmt.Errorf("provisioning is not successful, certificate ID from response is empty")
+	}
+
+	cloudMetadata := &CloudProvisioningMetadata{}
+	switch keystoreType {
+	case cloudkeystores.CloudKeystoreTypeAcm:
+		cloudMetadata.awsMetadata.result = val
+	case cloudkeystores.CloudKeystoreTypeAkv:
+		cloudMetadata.azureMetadata.result = val
+	case cloudkeystores.CloudKeystoreTypeGcm:
+		cloudMetadata.gcpMetadata.result = val
+	default:
+		err = fmt.Errorf("Unknown ConnectorType %v found for keystore with ID: %s", keystoreType, keystoreId)
+		return nil, err
+	}
+	return cloudMetadata, err
+}
