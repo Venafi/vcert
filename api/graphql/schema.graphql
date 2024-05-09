@@ -525,9 +525,6 @@ enum CertificateOrderField
 
     """Order by field lastModifiedTime"""
     LAST_MODIFIED_TIME @join__enumValue(graph: SEARCH)
-
-    """Order by field revocation.status"""
-    REVOCATION_STATUS @join__enumValue(graph: SEARCH)
 }
 
 """
@@ -741,9 +738,6 @@ input CertificateSearchAttributesInput
     """Filter by field 'origins'"""
     origins: CertificateOriginFilter
 
-    """Filter by field 'revocation.status'"""
-    revocationStatus: RevocationStatusFilter
-
     """Filter by field 'dekHash'"""
     dekHash: CertificateStringFilter
 
@@ -861,8 +855,11 @@ input CertificateSearchAttributesInput
     """
     clusterCertificateInstallationClusterSecretUsedBy: CertificateStringFilter
 
-    """Filter by field 'cloudInstallations.nodes.metadata.cloudId'"""
-    cloudInstallationsCloudId: CertificateStringFilter
+    """Filter by field 'cloudInstallations.nodes.metadata.arn'"""
+    cloudInstallationsMetadataArn: CertificateStringFilter
+
+    """Filter by field 'cloudInstallations.nodes.metadata.name'"""
+    cloudInstallationsMetadataName: CertificateStringFilter
 
     """Filter by field 'cloudInstallations.nodes.cloudKeystoreId'"""
     cloudInstallationsCloudKeystoreId: CertificateStringFilter
@@ -1063,6 +1060,17 @@ type CloudDiscovery
     endTime: DateTime
 }
 
+type CloudDiscoveryConfiguration
+@join__type(graph: CLOUD_PROVIDERS)
+{
+    """
+    A crontab expression representing when the scheduled discovery will run, eg: '00 03 * * *' -> 3 AM every day
+    """
+    scheduleSpecification: String
+    includeExpiredCertificates: Boolean!
+    includeRevokedCertificates: Boolean!
+}
+
 """Indicates the status of a cloud discovery"""
 enum CloudDiscoveryStatus
 @join__type(graph: CLOUD_PROVIDERS)
@@ -1111,6 +1119,7 @@ type CloudKeystore
     lastModifiedOn: DateTime!
     lastModifiedBy: User
     discovery: CloudDiscovery
+    discoveryConfiguration: CloudDiscoveryConfiguration!
 }
 
 type CloudKeystoreACMConfiguration
@@ -1190,7 +1199,9 @@ input CloudKeystoreFilterInput
 @join__type(graph: CLOUD_PROVIDERS)
 {
     cloudProviderId: UUID
+    cloudProviderName: String
     cloudKeystoreId: UUID
+    cloudKeystoreName: String
 }
 
 type CloudKeystoreGCMConfiguration
@@ -1440,6 +1451,14 @@ type CloudProviderEdge
 
     """The cursor for the cloud provider"""
     cursor: String!
+}
+
+input CloudProviderFilterInput
+@join__type(graph: CLOUD_PROVIDERS)
+{
+    status: CloudProviderStatus
+    type: CloudProviderType
+    name: String
 }
 
 type CloudProviderGCPConfiguration
@@ -3169,7 +3188,7 @@ type Query
     - last: non-negative integer, denoting the last `n` number of records to return before the `before` cursor value.
     Max value is 100
     """
-    cloudProviders(after: String, before: String, first: Int, last: Int, orderBy: CloudProviderOrderInput): CloudProviderConnection @join__field(graph: CLOUD_PROVIDERS)
+    cloudProviders(after: String, before: String, first: Int, last: Int, filter: CloudProviderFilterInput, orderBy: CloudProviderOrderInput): CloudProviderConnection @join__field(graph: CLOUD_PROVIDERS)
 
     """
     Retrieves Cloud Keystores.
@@ -3401,25 +3420,11 @@ enum RevocationReason
     CESSATION_OF_OPERATION @join__enumValue(graph: CAOPERATIONS)
 }
 
-"""Indicates the revocation status of a certificate"""
 enum RevocationStatus
 @join__type(graph: CAOPERATIONS)
-@join__type(graph: SEARCH)
 {
-    SUBMITTED @join__enumValue(graph: CAOPERATIONS) @join__enumValue(graph: SEARCH)
-    FAILED @join__enumValue(graph: CAOPERATIONS) @join__enumValue(graph: SEARCH)
-}
-
-input RevocationStatusFilter
-@join__type(graph: SEARCH)
-{
-    """The string value we want to match"""
-    eq: RevocationStatus
-
-    """
-    The boolean value that we want to assert whether the boolean field is null or not
-    """
-    hasValue: Boolean
+    SUBMITTED @join__enumValue(graph: CAOPERATIONS)
+    FAILED @join__enumValue(graph: CAOPERATIONS)
 }
 
 type RFC822Name

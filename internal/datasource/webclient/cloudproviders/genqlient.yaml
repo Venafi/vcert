@@ -3,7 +3,7 @@
 schema: ../../../api/graphql/schema.graphql
 operations:
   - genqlient.graphql
-generated: cloudkeystores.gen.go
+generated: cloudproviders.gen.go
 use_struct_references: true
 optional: pointer
 

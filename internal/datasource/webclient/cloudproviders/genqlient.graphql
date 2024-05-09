@@ -19,3 +19,16 @@ query GetCloudKeystoresByKeystoreId($cloudKeystoreId: UUID) {
         }
     }
 }
+
+query GetCloudProviderByName($name: String!){
+    cloudProviders(filter: {name: $name}){
+        nodes {
+            id
+            name
+            type
+            status
+            statusDetails
+            keystoresCount
+        }
+    }
+}
