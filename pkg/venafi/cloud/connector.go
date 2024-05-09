@@ -37,7 +37,7 @@ import (
 	"golang.org/x/crypto/nacl/box"
 	"golang.org/x/net/context"
 
-	"github.com/Venafi/vcert/v5/internal/datasource/cloudkeystores"
+	"github.com/Venafi/vcert/v5/internal/datasource/webclient/cloudproviders"
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
 	"github.com/Venafi/vcert/v5/pkg/policy"
@@ -794,7 +794,7 @@ func (c *Connector) ProvisionCertificate(req *endpoint.ProvisioningRequest, opti
 
 	// Getting Keystore to find type
 	log.Printf("fetching keystore information for KeystoreID: %s", keystoreIDString)
-	data, err := cloudkeystores.GetCloudKeystoresByKeystoreId(ctx, graphqlClient, req.KeystoreID)
+	data, err := cloudproviders.GetCloudKeystoresByKeystoreId(ctx, graphqlClient, req.KeystoreID)
 	if err != nil {
 		return nil, err
 	}
@@ -819,7 +819,7 @@ func (c *Connector) ProvisionCertificate(req *endpoint.ProvisioningRequest, opti
 	}
 
 	log.Printf("Provisioning Certificate ID %s for Keystore %s", certificateIDString, keystoreIDString)
-	_, err = cloudkeystores.ProvisionCertificate(ctx, graphqlClient, certificateIDString, keystoreIDString, wsClientID, provisioningOptions)
+	_, err = cloudproviders.ProvisionCertificate(ctx, graphqlClient, certificateIDString, keystoreIDString, wsClientID, provisioningOptions)
 	if err != nil {
 		return nil, err
 	}

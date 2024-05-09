@@ -8,9 +8,9 @@ import (
 
 	"github.com/Khan/genqlient/graphql"
 
-	"github.com/Venafi/vcert/v5/internal/datasource/cloudkeystores"
+	"github.com/Venafi/vcert/v5/internal/datasource/webclient/cloudproviders"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
-	"github.com/Venafi/vcert/v5/pkg/framework"
+	"github.com/Venafi/vcert/v5/pkg/httputils"
 )
 
 type CloudKeystoreProvisioningResult struct {
@@ -116,26 +116,26 @@ func (cpgo CloudProvisioningGCPOptions) GetType() string {
 	return "GCM"
 }
 
-func setProvisioningOptions(options *endpoint.ProvisioningOptions) (*cloudkeystores.CertificateProvisioningOptionsInput, error) {
-	var cloudOptions *cloudkeystores.CertificateProvisioningOptionsInput
+func setProvisioningOptions(options *endpoint.ProvisioningOptions) (*cloudproviders.CertificateProvisioningOptionsInput, error) {
+	var cloudOptions *cloudproviders.CertificateProvisioningOptionsInput
 	dataOptions, err := json.Marshal(options)
 	if err != nil {
 		return nil, err
 	}
 
-	graphqlAzureOptions := &cloudkeystores.CertificateProvisioningAzureOptionsInput{}
-	graphqlGCPOptions := &cloudkeystores.CertificateProvisioningGCPOptionsInput{}
+	graphqlAzureOptions := &cloudproviders.CertificateProvisioningAzureOptionsInput{}
+	graphqlGCPOptions := &cloudproviders.CertificateProvisioningGCPOptionsInput{}
 
 	if options != nil {
 		switch (*options).GetType() {
-		case string(cloudkeystores.CloudKeystoreTypeAcm):
+		case string(cloudproviders.CloudKeystoreTypeAcm):
 			// nothing
-		case string(cloudkeystores.CloudKeystoreTypeAkv):
+		case string(cloudproviders.CloudKeystoreTypeAkv):
 			err = json.Unmarshal(dataOptions, graphqlAzureOptions)
 			if err != nil {
 				return nil, err
 			}
-		case string(cloudkeystores.CloudKeystoreTypeGcm):
+		case string(cloudproviders.CloudKeystoreTypeGcm):
 			err = json.Unmarshal(dataOptions, graphqlGCPOptions)
 			if err != nil {
 				return nil, err
@@ -145,7 +145,7 @@ func setProvisioningOptions(options *endpoint.ProvisioningOptions) (*cloudkeysto
 		}
 	}
 
-	cloudOptions = &cloudkeystores.CertificateProvisioningOptionsInput{
+	cloudOptions = &cloudproviders.CertificateProvisioningOptionsInput{
 		AwsOptions:   nil,
 		AzureOptions: graphqlAzureOptions,
 		GcpOptions:   graphqlGCPOptions,
@@ -170,7 +170,7 @@ func (c *Connector) getGraphqlClient() graphql.Client {
 	// We provide every type of auth here.
 	// The logic to decide which auth is inside struct's function: RoundTrip
 	httpclient := &http.Client{
-		Transport: &framework.AuthedTransportApi{
+		Transport: &httputils.AuthedTransportApi{
 			ApiKey:      c.apiKey,
 			AccessToken: c.accessToken,
 			Wrapped:     http.DefaultTransport,
@@ -182,7 +182,7 @@ func (c *Connector) getGraphqlClient() graphql.Client {
 	return client
 }
 
-func getCloudMetadataFromWebsocketResponse(respMap interface{}, keystoreType cloudkeystores.CloudKeystoreType, keystoreId string) (*CloudProvisioningMetadata, error) {
+func getCloudMetadataFromWebsocketResponse(respMap interface{}, keystoreType cloudproviders.CloudKeystoreType, keystoreId string) (*CloudProvisioningMetadata, error) {
 
 	val := CloudKeystoreProvisioningResult{}
 	valJs, err := json.Marshal(respMap)
@@ -203,11 +203,11 @@ func getCloudMetadataFromWebsocketResponse(respMap interface{}, keystoreType clo
 
 	cloudMetadata := &CloudProvisioningMetadata{}
 	switch keystoreType {
-	case cloudkeystores.CloudKeystoreTypeAcm:
+	case cloudproviders.CloudKeystoreTypeAcm:
 		cloudMetadata.awsMetadata.result = val
-	case cloudkeystores.CloudKeystoreTypeAkv:
+	case cloudproviders.CloudKeystoreTypeAkv:
 		cloudMetadata.azureMetadata.result = val
-	case cloudkeystores.CloudKeystoreTypeGcm:
+	case cloudproviders.CloudKeystoreTypeGcm:
 		cloudMetadata.gcpMetadata.result = val
 	default:
 		err = fmt.Errorf("Unknown ConnectorType %v found for keystore with ID: %s", keystoreType, keystoreId)
