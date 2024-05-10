@@ -137,3 +137,10 @@ func NormalizeUrl(url string) string {
 	}
 	return modified
 }
+
+func StringPointerToString(input *string) string {
+	if input != nil {
+		return *input
+	}
+	return ""
+}

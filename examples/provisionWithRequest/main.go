@@ -68,7 +68,8 @@ func main() {
 	}
 	log.Printf("Successfully submitted certificate request. Will pickup certificate by ID %s", requestID)
 
-	keystoreID := "<insert Keystore ID here>"
+	keystoreName := "<insert Keystore Name here>"
+	providerName := "<insert Provider Name here>"
 	certName := "<insert cert name>" // e.g. test2-venafi-com
 
 	// The ID is the Certificate name for Google, hence we send it as name
@@ -86,8 +87,9 @@ func main() {
 	optionsInput := endpoint.ProvisioningOptions(optionsGcp)
 
 	req := &endpoint.ProvisioningRequest{
-		KeystoreID: &keystoreID,
-		PickupID:   &requestID,
+		KeystoreName: &keystoreName,
+		ProviderName: &providerName,
+		PickupID:     &requestID,
 	}
 
 	certMetaData, err := connector.ProvisionCertificate(req, &optionsInput)

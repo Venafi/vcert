@@ -10,8 +10,8 @@ mutation ProvisionCertificate(
     }
 }
 
-query GetCloudKeystoresByKeystoreId($cloudKeystoreId: UUID) {
-    cloudKeystores(filter: {cloudKeystoreId: $cloudKeystoreId}) {
+query GetCloudKeystores($cloudKeystoreId: UUID, $cloudKeystoreName: String, $cloudProviderId: UUID, $cloudProviderName: String) {
+    cloudKeystores(filter: {cloudKeystoreId: $cloudKeystoreId, cloudKeystoreName: $cloudKeystoreName, cloudProviderId: $cloudProviderId, cloudProviderName: $cloudProviderName}) {
         nodes {
             id
             name
