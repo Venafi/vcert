@@ -100,12 +100,26 @@ func readFile(location string) ([]byte, error) {
 func parseConfigTemplate(b []byte) ([]byte, error) {
 	// Valid functions for the config file template
 	fm := template.FuncMap{
-		"Env": func(e string) (string, error) {
-			value, found := os.LookupEnv(e)
-			if found {
-				return value, nil
+		"Env": func(es ...string) (string, error) {
+			if len(es) == 1 {
+				e := es[0]
+				value, found := os.LookupEnv(e)
+				if found {
+					return value, nil
+				}
+				return "", fmt.Errorf("environment variable not defined: %s", e)
+			} else if len(es) == 2 {
+				e := es[0]
+				d := es[1]
+				value, found := os.LookupEnv(e)
+				if found {
+					return value, nil
+				} else {
+					return d, nil
+				}
+			} else {
+				return "", fmt.Errorf("unsupported number of inputs provided: %d", len(es))
 			}
-			return "", fmt.Errorf("environment variable not defined: %s", e)
 		},
 		"Hostname": func() string {
 			hostname, err := os.Hostname()
