@@ -147,22 +147,22 @@ const (
 	GCMCertificateScopeEdgeCache GCMCertificateScope = "EDGE_CACHE"
 )
 
-// GetCloudKeystoresByKeystoreIdCloudKeystoresCloudKeystoreConnection includes the requested fields of the GraphQL type CloudKeystoreConnection.
+// GetCloudKeystoresByKeystoreCloudKeystoresCloudKeystoreConnection includes the requested fields of the GraphQL type CloudKeystoreConnection.
 // The GraphQL type's documentation follows.
 //
 // A page of CloudKeystore results
-type GetCloudKeystoresByKeystoreIdCloudKeystoresCloudKeystoreConnection struct {
+type GetCloudKeystoresByKeystoreCloudKeystoresCloudKeystoreConnection struct {
 	// CloudKeystores in the current page, without cursor
-	Nodes []*GetCloudKeystoresByKeystoreIdCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore `json:"nodes"`
+	Nodes []*GetCloudKeystoresByKeystoreCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore `json:"nodes"`
 }
 
-// GetNodes returns GetCloudKeystoresByKeystoreIdCloudKeystoresCloudKeystoreConnection.Nodes, and is useful for accessing the field via an interface.
-func (v *GetCloudKeystoresByKeystoreIdCloudKeystoresCloudKeystoreConnection) GetNodes() []*GetCloudKeystoresByKeystoreIdCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore {
+// GetNodes returns GetCloudKeystoresByKeystoreCloudKeystoresCloudKeystoreConnection.Nodes, and is useful for accessing the field via an interface.
+func (v *GetCloudKeystoresByKeystoreCloudKeystoresCloudKeystoreConnection) GetNodes() []*GetCloudKeystoresByKeystoreCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore {
 	return v.Nodes
 }
 
-// GetCloudKeystoresByKeystoreIdCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore includes the requested fields of the GraphQL type CloudKeystore.
-type GetCloudKeystoresByKeystoreIdCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore struct {
+// GetCloudKeystoresByKeystoreCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore includes the requested fields of the GraphQL type CloudKeystore.
+type GetCloudKeystoresByKeystoreCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore struct {
 	Id string `json:"id"`
 	// Cloud Keystore name
 	//
@@ -171,23 +171,23 @@ type GetCloudKeystoresByKeystoreIdCloudKeystoresCloudKeystoreConnectionNodesClou
 	Type CloudKeystoreType `json:"type"`
 }
 
-// GetId returns GetCloudKeystoresByKeystoreIdCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore.Id, and is useful for accessing the field via an interface.
-func (v *GetCloudKeystoresByKeystoreIdCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore) GetId() string {
+// GetId returns GetCloudKeystoresByKeystoreCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore.Id, and is useful for accessing the field via an interface.
+func (v *GetCloudKeystoresByKeystoreCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore) GetId() string {
 	return v.Id
 }
 
-// GetName returns GetCloudKeystoresByKeystoreIdCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore.Name, and is useful for accessing the field via an interface.
-func (v *GetCloudKeystoresByKeystoreIdCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore) GetName() string {
+// GetName returns GetCloudKeystoresByKeystoreCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore.Name, and is useful for accessing the field via an interface.
+func (v *GetCloudKeystoresByKeystoreCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore) GetName() string {
 	return v.Name
 }
 
-// GetType returns GetCloudKeystoresByKeystoreIdCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore.Type, and is useful for accessing the field via an interface.
-func (v *GetCloudKeystoresByKeystoreIdCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore) GetType() CloudKeystoreType {
+// GetType returns GetCloudKeystoresByKeystoreCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore.Type, and is useful for accessing the field via an interface.
+func (v *GetCloudKeystoresByKeystoreCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore) GetType() CloudKeystoreType {
 	return v.Type
 }
 
-// GetCloudKeystoresByKeystoreIdResponse is returned by GetCloudKeystoresByKeystoreId on success.
-type GetCloudKeystoresByKeystoreIdResponse struct {
+// GetCloudKeystoresByKeystoreResponse is returned by GetCloudKeystoresByKeystore on success.
+type GetCloudKeystoresByKeystoreResponse struct {
 	// Retrieves Cloud Keystores.
 	// The pagination can be either forward or backward. To enable forward pagination, two arguments
 	// are used: `after` and `first`. To enable backward pagination, two arguments are used: `before` and `last`.
@@ -202,11 +202,11 @@ type GetCloudKeystoresByKeystoreIdResponse struct {
 	// meaning that the results will be the last page, if `last` value is supplied
 	// - last: non-negative integer, denoting the last `n` number of records to return before the `before` cursor value.
 	// Max value is 100
-	CloudKeystores *GetCloudKeystoresByKeystoreIdCloudKeystoresCloudKeystoreConnection `json:"cloudKeystores"`
+	CloudKeystores *GetCloudKeystoresByKeystoreCloudKeystoresCloudKeystoreConnection `json:"cloudKeystores"`
 }
 
-// GetCloudKeystores returns GetCloudKeystoresByKeystoreIdResponse.CloudKeystores, and is useful for accessing the field via an interface.
-func (v *GetCloudKeystoresByKeystoreIdResponse) GetCloudKeystores() *GetCloudKeystoresByKeystoreIdCloudKeystoresCloudKeystoreConnection {
+// GetCloudKeystores returns GetCloudKeystoresByKeystoreResponse.CloudKeystores, and is useful for accessing the field via an interface.
+func (v *GetCloudKeystoresByKeystoreResponse) GetCloudKeystores() *GetCloudKeystoresByKeystoreCloudKeystoresCloudKeystoreConnection {
 	return v.CloudKeystores
 }
 
@@ -315,13 +315,29 @@ func (v *ProvisionCertificateResponse) GetProvisionToCloudKeystore() *ProvisionC
 	return v.ProvisionToCloudKeystore
 }
 
-// __GetCloudKeystoresByKeystoreIdInput is used internally by genqlient
-type __GetCloudKeystoresByKeystoreIdInput struct {
-	CloudKeystoreId *string `json:"cloudKeystoreId"`
+// __GetCloudKeystoresByKeystoreInput is used internally by genqlient
+type __GetCloudKeystoresByKeystoreInput struct {
+	CloudKeystoreId   *string `json:"cloudKeystoreId"`
+	CloudKeystoreName *string `json:"cloudKeystoreName"`
+	CloudProviderId   *string `json:"cloudProviderId"`
+	CloudProviderName *string `json:"cloudProviderName"`
 }
 
-// GetCloudKeystoreId returns __GetCloudKeystoresByKeystoreIdInput.CloudKeystoreId, and is useful for accessing the field via an interface.
-func (v *__GetCloudKeystoresByKeystoreIdInput) GetCloudKeystoreId() *string { return v.CloudKeystoreId }
+// GetCloudKeystoreId returns __GetCloudKeystoresByKeystoreInput.CloudKeystoreId, and is useful for accessing the field via an interface.
+func (v *__GetCloudKeystoresByKeystoreInput) GetCloudKeystoreId() *string { return v.CloudKeystoreId }
+
+// GetCloudKeystoreName returns __GetCloudKeystoresByKeystoreInput.CloudKeystoreName, and is useful for accessing the field via an interface.
+func (v *__GetCloudKeystoresByKeystoreInput) GetCloudKeystoreName() *string {
+	return v.CloudKeystoreName
+}
+
+// GetCloudProviderId returns __GetCloudKeystoresByKeystoreInput.CloudProviderId, and is useful for accessing the field via an interface.
+func (v *__GetCloudKeystoresByKeystoreInput) GetCloudProviderId() *string { return v.CloudProviderId }
+
+// GetCloudProviderName returns __GetCloudKeystoresByKeystoreInput.CloudProviderName, and is useful for accessing the field via an interface.
+func (v *__GetCloudKeystoresByKeystoreInput) GetCloudProviderName() *string {
+	return v.CloudProviderName
+}
 
 // __GetCloudProviderByNameInput is used internally by genqlient
 type __GetCloudProviderByNameInput struct {
@@ -353,10 +369,10 @@ func (v *__ProvisionCertificateInput) GetOptions() *CertificateProvisioningOptio
 	return v.Options
 }
 
-// The query or mutation executed by GetCloudKeystoresByKeystoreId.
-const GetCloudKeystoresByKeystoreId_Operation = `
-query GetCloudKeystoresByKeystoreId ($cloudKeystoreId: UUID) {
-	cloudKeystores(filter: {cloudKeystoreId:$cloudKeystoreId}) {
+// The query or mutation executed by GetCloudKeystoresByKeystore.
+const GetCloudKeystoresByKeystore_Operation = `
+query GetCloudKeystoresByKeystore ($cloudKeystoreId: UUID, $cloudKeystoreName: String, $cloudProviderId: UUID, $cloudProviderName: String) {
+	cloudKeystores(filter: {cloudKeystoreId:$cloudKeystoreId,cloudKeystoreName:$cloudKeystoreName,cloudProviderId:$cloudProviderId,cloudProviderName:$cloudProviderName}) {
 		nodes {
 			id
 			name
@@ -366,21 +382,27 @@ query GetCloudKeystoresByKeystoreId ($cloudKeystoreId: UUID) {
 }
 `
 
-func GetCloudKeystoresByKeystoreId(
+func GetCloudKeystoresByKeystore(
 	ctx_ context.Context,
 	client_ graphql.Client,
 	cloudKeystoreId *string,
-) (*GetCloudKeystoresByKeystoreIdResponse, error) {
+	cloudKeystoreName *string,
+	cloudProviderId *string,
+	cloudProviderName *string,
+) (*GetCloudKeystoresByKeystoreResponse, error) {
 	req_ := &graphql.Request{
-		OpName: "GetCloudKeystoresByKeystoreId",
-		Query:  GetCloudKeystoresByKeystoreId_Operation,
-		Variables: &__GetCloudKeystoresByKeystoreIdInput{
-			CloudKeystoreId: cloudKeystoreId,
+		OpName: "GetCloudKeystoresByKeystore",
+		Query:  GetCloudKeystoresByKeystore_Operation,
+		Variables: &__GetCloudKeystoresByKeystoreInput{
+			CloudKeystoreId:   cloudKeystoreId,
+			CloudKeystoreName: cloudKeystoreName,
+			CloudProviderId:   cloudProviderId,
+			CloudProviderName: cloudProviderName,
 		},
 	}
 	var err_ error
 
-	var data_ GetCloudKeystoresByKeystoreIdResponse
+	var data_ GetCloudKeystoresByKeystoreResponse
 	resp_ := &graphql.Response{Data: &data_}
 
 	err_ = client_.MakeRequest(
