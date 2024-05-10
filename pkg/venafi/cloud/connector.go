@@ -798,7 +798,7 @@ func (c *Connector) ProvisionCertificate(req *endpoint.ProvisioningRequest, opti
 	providerNameInput := util.StringPointerToString(reqData.ProviderName)
 
 	log.Printf("fetching keystore information for provided keystore information. KeystoreID: %s, KeystoreName: %s, ProviderName: %s", keystoreIDInput, keystoreNameInput, providerNameInput)
-	data, err := cloudproviders.GetCloudKeystoresByKeystore(ctx, graphqlClient, req.KeystoreID, reqData.KeystoreName, nil, reqData.ProviderName)
+	data, err := cloudproviders.GetCloudKeystoresByKeystoreInfo(ctx, graphqlClient, req.KeystoreID, reqData.KeystoreName, nil, reqData.ProviderName)
 	if err != nil {
 		return nil, err
 	}
