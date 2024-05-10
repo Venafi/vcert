@@ -752,12 +752,6 @@ func (c *Connector) ProvisionCertificate(req *endpoint.ProvisioningRequest, opti
 		reqData.Timeout = util.DefaultTimeout * time.Second
 	}
 
-	if reqData.KeystoreID == nil {
-		return nil, fmt.Errorf("keystore ID was not provided for provisioning")
-	}
-	keystoreIDString := *(reqData.KeystoreID)
-	log.Printf("Keystore ID for provisioning: %s", keystoreIDString)
-
 	if reqData.CertificateID == nil {
 		if reqData.PickupID == nil {
 			return nil, fmt.Errorf("no Certificate ID or Pickup ID were provided for provisioning")
@@ -788,28 +782,42 @@ func (c *Connector) ProvisionCertificate(req *endpoint.ProvisioningRequest, opti
 	}
 	log.Println("provisioning options successfully set")
 
+	if reqData.KeystoreID == nil {
+		if reqData.ProviderName == nil || reqData.KeystoreName == nil {
+			return nil, fmt.Errorf("any of keystore ID or both Provider Name and Keystore Name must be provided for provisioning")
+		}
+	}
+
 	graphqlClient := c.getGraphqlClient()
 
 	ctx := context.Background()
 
 	// Getting Keystore to find type
-	log.Printf("fetching keystore information for KeystoreID: %s", keystoreIDString)
-	data, err := cloudproviders.GetCloudKeystoresByKeystoreId(ctx, graphqlClient, req.KeystoreID)
+	keystoreIDInput := util.StringPointerToString(reqData.KeystoreID)
+	keystoreNameInput := util.StringPointerToString(reqData.KeystoreName)
+	providerNameInput := util.StringPointerToString(reqData.ProviderName)
+
+	log.Printf("fetching keystore information for provided keystore information. KeystoreID: %s, KeystoreName: %s, ProviderName: %s", keystoreIDInput, keystoreNameInput, providerNameInput)
+	data, err := cloudproviders.GetCloudKeystores(ctx, graphqlClient, req.KeystoreID, reqData.KeystoreName, nil, reqData.ProviderName)
 	if err != nil {
 		return nil, err
 	}
 
 	if data == nil || data.CloudKeystores == nil {
-		return nil, fmt.Errorf("could not find keystore with ID: %s", keystoreIDString)
+		return nil, fmt.Errorf("could not find keystore with provided information. KeystoreID: %s, KeystoreName: %s, ProviderName: %s", keystoreIDInput, keystoreNameInput, providerNameInput)
 	}
 
 	if len(data.CloudKeystores.Nodes) != 1 {
-		return nil, fmt.Errorf("could not find keystore with ID: %s", keystoreIDString)
+		return nil, fmt.Errorf("could not find keystore with provided information. KeystoreID: %s, KeystoreName: %s, ProviderName: %s", keystoreIDInput, keystoreNameInput, providerNameInput)
 	}
 
 	// grabbing found keystore for later
 	cloudKeystore := data.CloudKeystores.Nodes[0]
+
+	keystoreIDString := cloudKeystore.GetId()
+
 	log.Printf("successfully fetched keystore information for KeystoreID: %s", keystoreIDString)
+	log.Printf("Keystore ID for provisioning: %s", keystoreIDString)
 
 	wsClientID := uuid.New().String()
 
