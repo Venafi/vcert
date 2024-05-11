@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/Khan/genqlient/graphql"
-	"github.com/google/uuid"
 )
 
 //go:generate go run -mod=mod github.com/Khan/genqlient genqlient.yaml
@@ -41,7 +40,7 @@ func (c *CloudProvidersClient) GetCloudProviderByName(ctx context.Context, name 
 	}
 
 	return &CloudProvider{
-		ID:             uuid.MustParse(cp.GetId()),
+		ID:             cp.GetId(),
 		Name:           cp.GetName(),
 		Type:           string(cp.GetType()),
 		Status:         string(cp.GetStatus()),
