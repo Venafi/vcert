@@ -35,12 +35,17 @@ func (c *CloudProvidersClient) GetCloudProviderByName(ctx context.Context, name 
 
 	cp := resp.GetCloudProviders().Nodes[0]
 
+	statusDetails := ""
+	if cp.GetStatusDetails() != nil {
+		statusDetails = *cp.GetStatusDetails()
+	}
+
 	return &CloudProvider{
 		ID:             uuid.MustParse(cp.GetId()),
 		Name:           cp.GetName(),
 		Type:           string(cp.GetType()),
 		Status:         string(cp.GetStatus()),
-		StatusDetails:  *cp.GetStatusDetails(),
+		StatusDetails:  statusDetails,
 		KeystoresCount: cp.GetKeystoresCount(),
 	}, nil
 }
