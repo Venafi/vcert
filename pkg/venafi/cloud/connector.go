@@ -88,15 +88,16 @@ const (
 
 // Connector contains the base data needed to communicate with the Venafi Cloud servers
 type Connector struct {
-	baseURL     string
-	apiKey      string
-	accessToken string
-	verbose     bool
-	user        *userDetails
-	trust       *x509.CertPool
-	zone        cloudZone
-	client      *http.Client
-	userAgent   string
+	baseURL              string
+	apiKey               string
+	accessToken          string
+	verbose              bool
+	user                 *userDetails
+	trust                *x509.CertPool
+	zone                 cloudZone
+	client               *http.Client
+	userAgent            string
+	cloudProvidersClient *cloudproviders.CloudProvidersClient
 }
 
 // NewConnector creates a new Venafi Cloud Connector object used to communicate with Venafi Cloud
@@ -168,6 +169,9 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) error {
 		return err
 	}
 	c.user = ud
+
+	c.cloudProvidersClient = cloudproviders.NewCloudProvidersClient(c.getURL(urlGraphql), c.getGraphqlHTTPClient())
+
 	return nil
 }
 
