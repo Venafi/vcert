@@ -13,6 +13,7 @@ type AuthedTransportApi struct {
 	ApiKey      string
 	AccessToken string
 	Wrapped     http.RoundTripper
+	UserAgent   string
 }
 
 func (t *AuthedTransportApi) RoundTrip(req *http.Request) (*http.Response, error) {
@@ -21,5 +22,7 @@ func (t *AuthedTransportApi) RoundTrip(req *http.Request) (*http.Response, error
 	} else if t.ApiKey != "" {
 		req.Header.Set(util.HeaderTpplApikey, t.ApiKey)
 	}
+	req.Header.Set(headers.UserAgent, t.UserAgent)
+
 	return t.Wrapped.RoundTrip(req)
 }
