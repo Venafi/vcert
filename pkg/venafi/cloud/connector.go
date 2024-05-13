@@ -25,13 +25,17 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"golang.org/x/net/context"
 	"io"
 	"log"
 	"net/http"
 	netUrl "net/url"
 	"strings"
 	"time"
+
+	"github.com/go-http-utils/headers"
+	"github.com/google/uuid"
+	"golang.org/x/crypto/nacl/box"
+	"golang.org/x/net/context"
 
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
@@ -40,9 +44,6 @@ import (
 	"github.com/Venafi/vcert/v5/pkg/verror"
 	"github.com/Venafi/vcert/v5/pkg/webclient/cloudproviders"
 	"github.com/Venafi/vcert/v5/pkg/websocket"
-	"github.com/go-http-utils/headers"
-	"github.com/google/uuid"
-	"golang.org/x/crypto/nacl/box"
 )
 
 type urlResource string

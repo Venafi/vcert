@@ -3,12 +3,12 @@ package cloudproviders
 import (
 	"context"
 	"fmt"
-	"github.com/Venafi/vcert/v5/pkg/util"
 	"net/http"
 
 	"github.com/Khan/genqlient/graphql"
 
 	"github.com/Venafi/vcert/v5/pkg/domain"
+	"github.com/Venafi/vcert/v5/pkg/util"
 )
 
 //go:generate go run -mod=mod github.com/Khan/genqlient genqlient.yaml
