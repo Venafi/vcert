@@ -825,7 +825,7 @@ func (c *Connector) ProvisionCertificate(req *endpoint.ProvisioningRequest, opti
 
 	wsClientID := uuid.New().String()
 
-	wsConn, err := websocket.Subscribe(c.apiKey, c.baseURL, wsClientID)
+	wsConn, err := websocket.Subscribe(c.apiKey, c.accessToken, c.baseURL, wsClientID)
 	if err != nil {
 		return nil, err
 	}
