@@ -19,9 +19,8 @@ const (
 	LegacyPem = "legacy-pem"
 	//nolint: gosec  // Ignoring false positive "G101 Potential hardcoded credentials"
 	HeaderTpplApikey = "tppl-api-key"
-	//"Tppl-Api-Key"
-	OauthTokenType = "Bearer"
-	DefaultTimeout = 180 // seconds
+	OauthTokenType   = "Bearer"
+	DefaultTimeout   = 180 // seconds
 )
 
 func ConvertSecondsToTime(t int64) time.Time {
