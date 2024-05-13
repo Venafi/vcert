@@ -8,11 +8,12 @@ import (
 	"time"
 
 	"github.com/Khan/genqlient/graphql"
-	"github.com/Venafi/vcert/v5/pkg/util"
 
-	"github.com/Venafi/vcert/v5/internal/datasource/webclient/cloudproviders"
+	"github.com/Venafi/vcert/v5/pkg/domain"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
 	"github.com/Venafi/vcert/v5/pkg/httputils"
+	"github.com/Venafi/vcert/v5/pkg/util"
+	"github.com/Venafi/vcert/v5/pkg/webclient/cloudproviders"
 )
 
 type CloudKeystoreProvisioningResult struct {
@@ -199,7 +200,7 @@ func (c *Connector) getGraphqlHTTPClient() *http.Client {
 	return httpclient
 }
 
-func (c *Connector) GetCloudProviderByName(name string) (*cloudproviders.CloudProvider, error) {
+func (c *Connector) GetCloudProviderByName(name string) (*domain.CloudProvider, error) {
 	if name == "" {
 		return nil, fmt.Errorf("cloud provider name cannot be empty")
 	}

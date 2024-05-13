@@ -6,6 +6,8 @@ import (
 	"net/http"
 
 	"github.com/Khan/genqlient/graphql"
+
+	"github.com/Venafi/vcert/v5/pkg/domain"
 )
 
 //go:generate go run -mod=mod github.com/Khan/genqlient genqlient.yaml
@@ -20,7 +22,7 @@ func NewCloudProvidersClient(url string, httpClient *http.Client) *CloudProvider
 	}
 }
 
-func (c *CloudProvidersClient) GetCloudProviderByName(ctx context.Context, name string) (*CloudProvider, error) {
+func (c *CloudProvidersClient) GetCloudProviderByName(ctx context.Context, name string) (*domain.CloudProvider, error) {
 	if name == "" {
 		return nil, fmt.Errorf("cloud provider name cannot be empty")
 	}
@@ -39,7 +41,7 @@ func (c *CloudProvidersClient) GetCloudProviderByName(ctx context.Context, name 
 		statusDetails = *cp.GetStatusDetails()
 	}
 
-	return &CloudProvider{
+	return &domain.CloudProvider{
 		ID:             cp.GetId(),
 		Name:           cp.GetName(),
 		Type:           string(cp.GetType()),

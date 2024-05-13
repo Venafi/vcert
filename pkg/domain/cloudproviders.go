@@ -1,4 +1,4 @@
-package cloudproviders
+package domain
 
 type CloudProvider struct {
 	ID             string

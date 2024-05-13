@@ -37,12 +37,12 @@ import (
 	"golang.org/x/crypto/nacl/box"
 	"golang.org/x/net/context"
 
-	"github.com/Venafi/vcert/v5/internal/datasource/webclient/cloudproviders"
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
 	"github.com/Venafi/vcert/v5/pkg/policy"
 	"github.com/Venafi/vcert/v5/pkg/util"
 	"github.com/Venafi/vcert/v5/pkg/verror"
+	"github.com/Venafi/vcert/v5/pkg/webclient/cloudproviders"
 	"github.com/Venafi/vcert/v5/pkg/websocket"
 )
 
