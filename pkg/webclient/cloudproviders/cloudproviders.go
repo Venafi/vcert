@@ -3,6 +3,7 @@ package cloudproviders
 import (
 	"context"
 	"fmt"
+	"github.com/Venafi/vcert/v5/pkg/util"
 	"net/http"
 
 	"github.com/Khan/genqlient/graphql"
@@ -48,5 +49,63 @@ func (c *CloudProvidersClient) GetCloudProviderByName(ctx context.Context, name 
 		Status:         string(cp.GetStatus()),
 		StatusDetails:  statusDetails,
 		KeystoresCount: cp.GetKeystoresCount(),
+	}, nil
+}
+
+func (c *CloudProvidersClient) GetCloudKeystores(ctx context.Context, cloudKeystoreID *string, cloudKeystoreName *string, cloudProviderID *string, cloudProviderName *string) (*domain.CloudKeystore, error) {
+
+	if cloudKeystoreID == nil {
+		if cloudKeystoreName == nil || (cloudProviderID == nil && cloudProviderName == nil) {
+			return nil, fmt.Errorf("any of keystore ID or both (any of Provider Name of Provider ID) and Keystore Name must be provided for provisioning")
+		}
+	}
+
+	keystoreIDInput := util.StringPointerToString(cloudKeystoreID)
+	keystoreNameInput := util.StringPointerToString(cloudKeystoreName)
+	providerIDInput := util.StringPointerToString(cloudProviderID)
+	providerNameInput := util.StringPointerToString(cloudProviderName)
+	resp, err := GetCloudKeystores(ctx, c.graphqlClient, cloudKeystoreID, cloudKeystoreName, cloudProviderID, cloudProviderName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve Cloud Keystore with KeystoreID: %s, KeystoreName: %s, ProvderID: %s, ProviderName: %s: %w", keystoreIDInput, keystoreNameInput, providerIDInput, providerNameInput, err)
+	}
+
+	if resp == nil || resp.CloudKeystores == nil {
+		return nil, fmt.Errorf("could not find keystore with KeystoreID: %s, KeystoreName: %s, ProvderID: %s, ProviderName: %s: %w", keystoreIDInput, keystoreNameInput, providerIDInput, providerNameInput, err)
+	}
+
+	if len(resp.CloudKeystores.Nodes) != 1 {
+		return nil, fmt.Errorf("could not find keystore with with KeystoreID: %s, KeystoreName: %s, ProvderID: %s, ProviderName: %s: %w", keystoreIDInput, keystoreNameInput, providerIDInput, providerNameInput, err)
+	}
+
+	ck := resp.CloudKeystores.Nodes[0]
+
+	return &domain.CloudKeystore{
+		ID:   ck.GetId(),
+		Name: ck.GetName(),
+		Type: string(ck.GetType()),
+	}, nil
+}
+
+func (c *CloudProvidersClient) ProvisionCertificate(ctx context.Context, certificateID string, cloudKeystoreID string, wsClientID string, options *CertificateProvisioningOptionsInput) (*domain.ProvisioningResponse, error) {
+	if certificateID == "" {
+		return nil, fmt.Errorf("certificateID cannot be empty")
+	}
+	if cloudKeystoreID == "" {
+		return nil, fmt.Errorf("cloudKeystoreID cannot be empty")
+	}
+	if wsClientID == "" {
+		return nil, fmt.Errorf("wsClientID cannot be empty")
+	}
+	resp, err := ProvisionCertificate(ctx, c.graphqlClient, certificateID, cloudKeystoreID, wsClientID, options)
+	if err != nil {
+		return nil, fmt.Errorf("failed to provision certificate with certificate ID %s, keystore ID %s and websocket ID %s: %w", certificateID, cloudKeystoreID, wsClientID, err)
+	}
+	if resp == nil || resp.ProvisionToCloudKeystore == nil {
+
+	}
+
+	return &domain.ProvisioningResponse{
+		WorkflowId:   resp.GetProvisionToCloudKeystore().GetWorkflowId(),
+		WorkflowName: resp.GetProvisionToCloudKeystore().GetWorkflowName(),
 	}, nil
 }

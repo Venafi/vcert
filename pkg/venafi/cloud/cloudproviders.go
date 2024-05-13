@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/Venafi/vcert/v5/pkg/util"
 	"net/http"
 	"time"
 
@@ -12,7 +13,6 @@ import (
 	"github.com/Venafi/vcert/v5/pkg/domain"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
 	"github.com/Venafi/vcert/v5/pkg/httputils"
-	"github.com/Venafi/vcert/v5/pkg/util"
 	"github.com/Venafi/vcert/v5/pkg/webclient/cloudproviders"
 )
 
@@ -215,7 +215,7 @@ func (c *Connector) GetCloudProviderByName(name string) (*domain.CloudProvider, 
 	return cloudProvider, nil
 }
 
-func getCloudMetadataFromWebsocketResponse(respMap interface{}, keystoreType cloudproviders.CloudKeystoreType, keystoreId string) (*CloudProvisioningMetadata, error) {
+func getCloudMetadataFromWebsocketResponse(respMap interface{}, keystoreType string, keystoreId string) (*CloudProvisioningMetadata, error) {
 
 	val := CloudKeystoreProvisioningResult{}
 	valJs, err := json.Marshal(respMap)
@@ -236,11 +236,11 @@ func getCloudMetadataFromWebsocketResponse(respMap interface{}, keystoreType clo
 
 	cloudMetadata := &CloudProvisioningMetadata{}
 	switch keystoreType {
-	case cloudproviders.CloudKeystoreTypeAcm:
+	case string(cloudproviders.CloudKeystoreTypeAcm):
 		cloudMetadata.awsMetadata.result = val
-	case cloudproviders.CloudKeystoreTypeAkv:
+	case string(cloudproviders.CloudKeystoreTypeAkv):
 		cloudMetadata.azureMetadata.result = val
-	case cloudproviders.CloudKeystoreTypeGcm:
+	case string(cloudproviders.CloudKeystoreTypeGcm):
 		cloudMetadata.gcpMetadata.result = val
 	default:
 		err = fmt.Errorf("unknown type %v for keystore with ID: %s", keystoreType, keystoreId)
