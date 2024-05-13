@@ -70,11 +70,11 @@ func (c *CloudProvidersClient) GetCloudKeystore(ctx context.Context, cloudKeysto
 	}
 
 	if resp == nil || resp.CloudKeystores == nil {
-		return nil, fmt.Errorf("could not find keystore with KeystoreID: %s, KeystoreName: %s, ProvderID: %s, ProviderName: %s: %w", keystoreIDInput, keystoreNameInput, providerIDInput, providerNameInput, err)
+		return nil, fmt.Errorf("could not find keystore with KeystoreID: %s, KeystoreName: %s, ProvderID: %s, ProviderName: %s", keystoreIDInput, keystoreNameInput, providerIDInput, providerNameInput)
 	}
 
 	if len(resp.CloudKeystores.Nodes) != 1 {
-		return nil, fmt.Errorf("could not find keystore with with KeystoreID: %s, KeystoreName: %s, ProvderID: %s, ProviderName: %s: %w", keystoreIDInput, keystoreNameInput, providerIDInput, providerNameInput, err)
+		return nil, fmt.Errorf("could not find keystore with with KeystoreID: %s, KeystoreName: %s, ProvderID: %s, ProviderName: %s", keystoreIDInput, keystoreNameInput, providerIDInput, providerNameInput)
 	}
 
 	ck := resp.CloudKeystores.Nodes[0]
@@ -100,8 +100,9 @@ func (c *CloudProvidersClient) ProvisionCertificate(ctx context.Context, certifi
 	if err != nil {
 		return nil, fmt.Errorf("failed to provision certificate with certificate ID %s, keystore ID %s and websocket ID %s: %w", certificateID, cloudKeystoreID, wsClientID, err)
 	}
-	if resp == nil || resp.ProvisionToCloudKeystore == nil {
 
+	if resp == nil || resp.ProvisionToCloudKeystore == nil {
+		return nil, fmt.Errorf("failed to provision certificate with certificate ID %s, keystore ID %s and websocket ID %s", certificateID, cloudKeystoreID, wsClientID)
 	}
 
 	return &domain.ProvisioningResponse{
