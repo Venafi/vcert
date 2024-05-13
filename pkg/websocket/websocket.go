@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/Venafi/vcert/v5/pkg/util"
 	"github.com/go-http-utils/headers"
 	"log"
 	"net/http"
@@ -155,9 +156,9 @@ func Subscribe(apiKey string, accessToken string, baseUrl string, wsClientId str
 	notificationsUrl := url.URL{Scheme: "wss", Host: host, Path: fmt.Sprintf("ws/notificationclients/%s", wsClientId)}
 	httpHeader := http.Header{}
 	if accessToken != "" {
-		httpHeader = http.Header{headers.Authorization: {accessToken}}
+		httpHeader = http.Header{headers.Authorization: {fmt.Sprintf("%s %s", util.OauthTokenType, accessToken)}}
 	} else if apiKey != "" {
-		httpHeader = http.Header{"Tppl-Api-Key": {apiKey}}
+		httpHeader = http.Header{util.HeaderTpplApikey: {apiKey}}
 	}
 
 	wsConn, resp, err := websocket.DefaultDialer.Dial(notificationsUrl.String(), httpHeader)
