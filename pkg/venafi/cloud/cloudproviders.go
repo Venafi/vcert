@@ -1,6 +1,7 @@
 package cloud
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -8,9 +9,11 @@ import (
 
 	"github.com/Khan/genqlient/graphql"
 
-	"github.com/Venafi/vcert/v5/internal/datasource/webclient/cloudproviders"
+	"github.com/Venafi/vcert/v5/pkg/domain"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
 	"github.com/Venafi/vcert/v5/pkg/httputils"
+	"github.com/Venafi/vcert/v5/pkg/util"
+	"github.com/Venafi/vcert/v5/pkg/webclient/cloudproviders"
 )
 
 type CloudKeystoreProvisioningResult struct {
@@ -182,6 +185,36 @@ func (c *Connector) getGraphqlClient() graphql.Client {
 	return client
 }
 
+func (c *Connector) getGraphqlHTTPClient() *http.Client {
+	// We provide every type of auth here.
+	// The logic to decide which auth is inside struct's function: RoundTrip
+	httpclient := &http.Client{
+		Transport: &httputils.AuthedTransportApi{
+			ApiKey:      c.apiKey,
+			AccessToken: c.accessToken,
+			Wrapped:     http.DefaultTransport,
+			UserAgent:   util.DefaultUserAgent,
+		},
+		Timeout: 30 * time.Second,
+	}
+	return httpclient
+}
+
+func (c *Connector) GetCloudProviderByName(name string) (*domain.CloudProvider, error) {
+	if name == "" {
+		return nil, fmt.Errorf("cloud provider name cannot be empty")
+	}
+
+	cloudProvider, err := c.cloudProvidersClient.GetCloudProviderByName(context.Background(), name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve Cloud Provider with name %s: %w", name, err)
+	}
+	if cloudProvider == nil {
+		return nil, fmt.Errorf("could not find Cloud Provider with name %s", name)
+	}
+	return cloudProvider, nil
+}
+
 func getCloudMetadataFromWebsocketResponse(respMap interface{}, keystoreType cloudproviders.CloudKeystoreType, keystoreId string) (*CloudProvisioningMetadata, error) {
 
 	val := CloudKeystoreProvisioningResult{}
@@ -210,7 +243,7 @@ func getCloudMetadataFromWebsocketResponse(respMap interface{}, keystoreType clo
 	case cloudproviders.CloudKeystoreTypeGcm:
 		cloudMetadata.gcpMetadata.result = val
 	default:
-		err = fmt.Errorf("Unknown ConnectorType %v found for keystore with ID: %s", keystoreType, keystoreId)
+		err = fmt.Errorf("unknown type %v for keystore with ID: %s", keystoreType, keystoreId)
 		return nil, err
 	}
 	return cloudMetadata, err

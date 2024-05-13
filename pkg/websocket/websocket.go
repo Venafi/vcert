@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/Venafi/vcert/v5/pkg/util"
+	"github.com/go-http-utils/headers"
 	"log"
 	"net/http"
 	"net/url"
@@ -140,7 +142,7 @@ func (wsc *WebsocketClient) writeMessages() {
 	}
 }
 
-func Subscribe(apiKey string, baseUrl string, wsClientId string) (*websocket.Conn, error) {
+func Subscribe(apiKey string, accessToken string, baseUrl string, wsClientId string) (*websocket.Conn, error) {
 
 	_, host, found := strings.Cut(baseUrl, "https://")
 	if !found {
@@ -152,8 +154,14 @@ func Subscribe(apiKey string, baseUrl string, wsClientId string) (*websocket.Con
 	}
 
 	notificationsUrl := url.URL{Scheme: "wss", Host: host, Path: fmt.Sprintf("ws/notificationclients/%s", wsClientId)}
-	wsConn, resp, err := websocket.DefaultDialer.Dial(notificationsUrl.String(), http.Header{"Tppl-Api-Key": {apiKey}})
-	// TODO: Add Service Account Auth logic as well
+	httpHeader := http.Header{}
+	if accessToken != "" {
+		httpHeader = http.Header{headers.Authorization: {fmt.Sprintf("%s %s", util.OauthTokenType, accessToken)}}
+	} else if apiKey != "" {
+		httpHeader = http.Header{util.HeaderTpplApikey: {apiKey}}
+	}
+
+	wsConn, resp, err := websocket.DefaultDialer.Dial(notificationsUrl.String(), httpHeader)
 	if err != nil {
 		return nil, err
 	}

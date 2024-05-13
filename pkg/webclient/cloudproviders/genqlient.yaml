@@ -1,6 +1,6 @@
 # For full documentation see:
 # https://github.com/Khan/genqlient/blob/main/docs/genqlient.yaml
-schema: ../../../../api/graphql/schema.graphql
+schema: ../../../api/graphql/schema.graphql
 operations:
   - genqlient.graphql
 generated: cloudproviders.gen.go

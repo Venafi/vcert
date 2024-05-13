@@ -37,12 +37,12 @@ import (
 	"golang.org/x/crypto/nacl/box"
 	"golang.org/x/net/context"
 
-	"github.com/Venafi/vcert/v5/internal/datasource/webclient/cloudproviders"
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
 	"github.com/Venafi/vcert/v5/pkg/policy"
 	"github.com/Venafi/vcert/v5/pkg/util"
 	"github.com/Venafi/vcert/v5/pkg/verror"
+	"github.com/Venafi/vcert/v5/pkg/webclient/cloudproviders"
 	"github.com/Venafi/vcert/v5/pkg/websocket"
 )
 
@@ -88,15 +88,16 @@ const (
 
 // Connector contains the base data needed to communicate with the Venafi Cloud servers
 type Connector struct {
-	baseURL     string
-	apiKey      string
-	accessToken string
-	verbose     bool
-	user        *userDetails
-	trust       *x509.CertPool
-	zone        cloudZone
-	client      *http.Client
-	userAgent   string
+	baseURL              string
+	apiKey               string
+	accessToken          string
+	verbose              bool
+	user                 *userDetails
+	trust                *x509.CertPool
+	zone                 cloudZone
+	client               *http.Client
+	userAgent            string
+	cloudProvidersClient *cloudproviders.CloudProvidersClient
 }
 
 // NewConnector creates a new Venafi Cloud Connector object used to communicate with Venafi Cloud
@@ -168,6 +169,9 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) error {
 		return err
 	}
 	c.user = ud
+
+	c.cloudProvidersClient = cloudproviders.NewCloudProvidersClient(c.getURL(urlGraphql), c.getGraphqlHTTPClient())
+
 	return nil
 }
 
@@ -821,7 +825,7 @@ func (c *Connector) ProvisionCertificate(req *endpoint.ProvisioningRequest, opti
 
 	wsClientID := uuid.New().String()
 
-	wsConn, err := websocket.Subscribe(c.apiKey, c.baseURL, wsClientID)
+	wsConn, err := websocket.Subscribe(c.apiKey, c.accessToken, c.baseURL, wsClientID)
 	if err != nil {
 		return nil, err
 	}
