@@ -52,29 +52,28 @@ func (c *CloudProvidersClient) GetCloudProviderByName(ctx context.Context, name 
 	}, nil
 }
 
-func (c *CloudProvidersClient) GetCloudKeystore(ctx context.Context, cloudKeystoreID *string, cloudKeystoreName *string, cloudProviderID *string, cloudProviderName *string) (*domain.CloudKeystore, error) {
+func (c *CloudProvidersClient) GetCloudKeystore(ctx context.Context, cloudKeystoreID *string, cloudKeystoreName *string, cloudProviderName *string) (*domain.CloudKeystore, error) {
 
 	if cloudKeystoreID == nil {
-		if cloudKeystoreName == nil || (cloudProviderID == nil && cloudProviderName == nil) {
-			return nil, fmt.Errorf("following are accepted for provisioning: keystore ID, or both keystore Name and provider Name, or both keystore Name and provider ID")
+		if cloudKeystoreName == nil || cloudProviderName == nil {
+			return nil, fmt.Errorf("following are accepted for provisioning: keystore ID, or both keystore Name and provider Name")
 		}
 	}
 
 	keystoreIDInput := util.StringPointerToString(cloudKeystoreID)
 	keystoreNameInput := util.StringPointerToString(cloudKeystoreName)
-	providerIDInput := util.StringPointerToString(cloudProviderID)
 	providerNameInput := util.StringPointerToString(cloudProviderName)
-	resp, err := GetCloudKeystores(ctx, c.graphqlClient, cloudKeystoreID, cloudKeystoreName, cloudProviderID, cloudProviderName)
+	resp, err := GetCloudKeystores(ctx, c.graphqlClient, cloudKeystoreID, cloudKeystoreName, nil, cloudProviderName)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve Cloud Keystore with KeystoreID: %s, KeystoreName: %s, ProvderID: %s, ProviderName: %s: %w", keystoreIDInput, keystoreNameInput, providerIDInput, providerNameInput, err)
+		return nil, fmt.Errorf("failed to retrieve Cloud Keystore with KeystoreID: %s, KeystoreName: %s, ProviderName: %s: %w", keystoreIDInput, keystoreNameInput, providerNameInput, err)
 	}
 
 	if resp == nil || resp.CloudKeystores == nil {
-		return nil, fmt.Errorf("could not find keystore with KeystoreID: %s, KeystoreName: %s, ProvderID: %s, ProviderName: %s", keystoreIDInput, keystoreNameInput, providerIDInput, providerNameInput)
+		return nil, fmt.Errorf("could not find keystore with KeystoreID: %s, KeystoreName: %s, ProviderName: %s", keystoreIDInput, keystoreNameInput, providerNameInput)
 	}
 
 	if len(resp.CloudKeystores.Nodes) != 1 {
-		return nil, fmt.Errorf("could not find keystore with with KeystoreID: %s, KeystoreName: %s, ProvderID: %s, ProviderName: %s", keystoreIDInput, keystoreNameInput, providerIDInput, providerNameInput)
+		return nil, fmt.Errorf("could not find keystore with with KeystoreID: %s, KeystoreName: %s, ProviderName: %s", keystoreIDInput, keystoreNameInput, providerNameInput)
 	}
 
 	ck := resp.CloudKeystores.Nodes[0]

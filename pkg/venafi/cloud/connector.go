@@ -799,7 +799,7 @@ func (c *Connector) ProvisionCertificate(req *endpoint.ProvisioningRequest, opti
 
 	log.Printf("fetching keystore information for provided keystore information. KeystoreID: %s, KeystoreName: %s, ProviderName: %s", keystoreIDInput, keystoreNameInput, providerNameInput)
 	ctx := context.Background()
-	cloudKeystore, err := c.cloudProvidersClient.GetCloudKeystore(ctx, req.KeystoreID, reqData.KeystoreName, nil, reqData.ProviderName)
+	cloudKeystore, err := c.cloudProvidersClient.GetCloudKeystore(ctx, req.KeystoreID, reqData.KeystoreName, reqData.ProviderName)
 	if err != nil {
 		return nil, err
 	}
