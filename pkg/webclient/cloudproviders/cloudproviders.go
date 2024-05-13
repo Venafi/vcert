@@ -52,11 +52,11 @@ func (c *CloudProvidersClient) GetCloudProviderByName(ctx context.Context, name 
 	}, nil
 }
 
-func (c *CloudProvidersClient) GetCloudKeystores(ctx context.Context, cloudKeystoreID *string, cloudKeystoreName *string, cloudProviderID *string, cloudProviderName *string) (*domain.CloudKeystore, error) {
+func (c *CloudProvidersClient) GetCloudKeystore(ctx context.Context, cloudKeystoreID *string, cloudKeystoreName *string, cloudProviderID *string, cloudProviderName *string) (*domain.CloudKeystore, error) {
 
 	if cloudKeystoreID == nil {
 		if cloudKeystoreName == nil || (cloudProviderID == nil && cloudProviderName == nil) {
-			return nil, fmt.Errorf("any of keystore ID or both (any of Provider Name of Provider ID) and Keystore Name must be provided for provisioning")
+			return nil, fmt.Errorf("following are accepted for provisioning: keystore ID, or both keystore Name and provider Name, or both keystore Name and provider ID")
 		}
 	}
 
