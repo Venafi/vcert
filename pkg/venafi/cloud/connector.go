@@ -141,35 +141,30 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) error {
 		return fmt.Errorf("failed to authenticate: missing credentials")
 	}
 
-	//1. Access token. Assign it to connector and return
+	//1. Access token. Assign it to connector
 	if auth.AccessToken != "" {
 		c.accessToken = auth.AccessToken
-		return nil
-	}
-
-	//2. JWT and token URL. use it to request new access token
-	if auth.TokenURL != "" && auth.ExternalJWT != "" {
+	} else if auth.TokenURL != "" && auth.ExternalJWT != "" {
+		//2. JWT and token URL. use it to request new access token
 		tokenResponse, err := c.GetAccessToken(auth)
 		if err != nil {
 			return err
 		}
 		c.accessToken = tokenResponse.AccessToken
-		return nil
+	} else if auth.APIKey != "" {
+		// 3. API key. Get user to test authentication
+		c.apiKey = auth.APIKey
+		url := c.getURL(urlResourceUserAccounts)
+		statusCode, status, body, err := c.request("GET", url, nil, true)
+		if err != nil {
+			return err
+		}
+		ud, err := parseUserDetailsResult(http.StatusOK, statusCode, status, body)
+		if err != nil {
+			return err
+		}
+		c.user = ud
 	}
-
-	// 3. API key. Get user to test authentication
-	c.apiKey = auth.APIKey
-	url := c.getURL(urlResourceUserAccounts)
-	statusCode, status, body, err := c.request("GET", url, nil, true)
-	if err != nil {
-		return err
-	}
-	ud, err := parseUserDetailsResult(http.StatusOK, statusCode, status, body)
-	if err != nil {
-		return err
-	}
-	c.user = ud
-
 	c.cloudProvidersClient = cloudproviders.NewCloudProvidersClient(c.getURL(urlGraphql), c.getGraphqlHTTPClient())
 
 	return nil
