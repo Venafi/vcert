@@ -23,7 +23,6 @@ import (
 	"crypto/x509/pkix"
 	"errors"
 	"fmt"
-	"github.com/Venafi/vcert/v5/pkg/verror"
 	"log"
 	"net/http"
 	"strings"
@@ -37,6 +36,7 @@ import (
 	"github.com/Venafi/vcert/v5/pkg/playbook/app/domain"
 	"github.com/Venafi/vcert/v5/pkg/util"
 	"github.com/Venafi/vcert/v5/pkg/venafi/tpp"
+	"github.com/Venafi/vcert/v5/pkg/verror"
 )
 
 // EnrollCertificate takes a Request object and requests a certificate to the Venafi platform defined by config.
