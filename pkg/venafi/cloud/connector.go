@@ -792,33 +792,19 @@ func (c *Connector) ProvisionCertificate(req *endpoint.ProvisioningRequest, opti
 		}
 	}
 
-	graphqlClient := c.getGraphqlClient()
-
-	ctx := context.Background()
-
 	// Getting Keystore to find type
 	keystoreIDInput := util.StringPointerToString(reqData.KeystoreID)
 	keystoreNameInput := util.StringPointerToString(reqData.KeystoreName)
 	providerNameInput := util.StringPointerToString(reqData.ProviderName)
 
 	log.Printf("fetching keystore information for provided keystore information. KeystoreID: %s, KeystoreName: %s, ProviderName: %s", keystoreIDInput, keystoreNameInput, providerNameInput)
-	data, err := cloudproviders.GetCloudKeystores(ctx, graphqlClient, req.KeystoreID, reqData.KeystoreName, nil, reqData.ProviderName)
+	ctx := context.Background()
+	cloudKeystore, err := c.cloudProvidersClient.GetCloudKeystore(ctx, req.KeystoreID, reqData.KeystoreName, reqData.ProviderName)
 	if err != nil {
 		return nil, err
 	}
 
-	if data == nil || data.CloudKeystores == nil {
-		return nil, fmt.Errorf("could not find keystore with provided information. KeystoreID: %s, KeystoreName: %s, ProviderName: %s", keystoreIDInput, keystoreNameInput, providerNameInput)
-	}
-
-	if len(data.CloudKeystores.Nodes) != 1 {
-		return nil, fmt.Errorf("could not find keystore with provided information. KeystoreID: %s, KeystoreName: %s, ProviderName: %s", keystoreIDInput, keystoreNameInput, providerNameInput)
-	}
-
-	// grabbing found keystore for later
-	cloudKeystore := data.CloudKeystores.Nodes[0]
-
-	keystoreIDString := cloudKeystore.GetId()
+	keystoreIDString := cloudKeystore.ID
 
 	log.Printf("successfully fetched keystore information for KeystoreID: %s", keystoreIDString)
 	log.Printf("Keystore ID for provisioning: %s", keystoreIDString)
@@ -831,7 +817,7 @@ func (c *Connector) ProvisionCertificate(req *endpoint.ProvisioningRequest, opti
 	}
 
 	log.Printf("Provisioning Certificate ID %s for Keystore %s", certificateIDString, keystoreIDString)
-	_, err = cloudproviders.ProvisionCertificate(ctx, graphqlClient, certificateIDString, keystoreIDString, wsClientID, provisioningOptions)
+	_, err = c.cloudProvidersClient.ProvisionCertificate(ctx, certificateIDString, keystoreIDString, wsClientID, provisioningOptions)
 	if err != nil {
 		return nil, err
 	}
@@ -855,7 +841,7 @@ func (c *Connector) ProvisionCertificate(req *endpoint.ProvisioningRequest, opti
 
 func (c *Connector) getCertIDFromPickupID(pickupId string, timeout time.Duration) (*string, error) {
 	if pickupId == "" {
-		return nil, fmt.Errorf("pickupId cannot be empty in order to get certificate ID")
+		return nil, fmt.Errorf("pickupID cannot be empty in order to get certificate ID")
 	}
 	startTime := time.Now()
 	//Wait for certificate to be issued by checking its PickupID

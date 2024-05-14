@@ -8,3 +8,14 @@ type CloudProvider struct {
 	StatusDetails  string
 	KeystoresCount int
 }
+
+type CloudKeystore struct {
+	ID   string
+	Name string
+	Type string
+}
+
+type ProvisioningResponse struct {
+	WorkflowId   string
+	WorkflowName string
+}
