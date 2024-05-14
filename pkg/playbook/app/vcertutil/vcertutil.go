@@ -111,7 +111,8 @@ func buildClient(config domain.Config, zone string, timeout int) (endpoint.Conne
 		}
 		vcertConfig.Client.Transport = &http.Transport{
 			TLSClientConfig: &tls.Config{
-				RootCAs: connectionTrustBundle,
+				RootCAs:    connectionTrustBundle,
+				MinVersion: tls.VersionTLS12,
 			},
 		}
 	}
