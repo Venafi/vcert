@@ -23,7 +23,6 @@ import (
 	"crypto/x509/pkix"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -105,7 +104,7 @@ func buildClient(config domain.Config, zone string, timeout int) (endpoint.Conne
 	var connectionTrustBundle *x509.CertPool
 
 	if vcertConfig.ConnectionTrust != "" {
-		log.Println("Using trust bundle in custom http client")
+		zap.L().Debug("Using trust bundle in custom http client")
 		connectionTrustBundle = x509.NewCertPool()
 		if !connectionTrustBundle.AppendCertsFromPEM([]byte(vcertConfig.ConnectionTrust)) {
 			return nil, fmt.Errorf("%w: failed to parse PEM trust bundle", verror.UserDataError)
