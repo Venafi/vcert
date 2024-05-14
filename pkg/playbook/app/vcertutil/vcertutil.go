@@ -18,9 +18,14 @@ package vcertutil
 
 import (
 	"crypto/rand"
+	"crypto/tls"
+	"crypto/x509"
 	"crypto/x509/pkix"
 	"errors"
 	"fmt"
+	"github.com/Venafi/vcert/v5/pkg/verror"
+	"log"
+	"net/http"
 	"strings"
 	"time"
 
@@ -38,7 +43,7 @@ import (
 //
 // Then it retrieves the certificate and returns it along with the certificate chain and the private key used.
 func EnrollCertificate(config domain.Config, request domain.PlaybookRequest) (*certificate.PEMCollection, *certificate.Request, error) {
-	client, err := buildClient(config, request.Zone)
+	client, err := buildClient(config, request.Zone, request.Timeout)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -82,13 +87,34 @@ func EnrollCertificate(config domain.Config, request domain.PlaybookRequest) (*c
 	return pcc, &vRequest, nil
 }
 
-func buildClient(config domain.Config, zone string) (endpoint.Connector, error) {
+func buildClient(config domain.Config, zone string, timeout int) (endpoint.Connector, error) {
 	vcertConfig := &vcert.Config{
 		ConnectorType:   config.Connection.GetConnectorType(),
 		BaseUrl:         config.Connection.URL,
 		Zone:            zone,
 		ConnectionTrust: loadTrustBundle(config.Connection.TrustBundlePath),
 		LogVerbose:      false,
+	}
+
+	vcertConfig.Client = &http.Client{
+		Timeout: time.Duration(DefaultTimeout) * time.Second,
+	}
+	if timeout > 0 {
+		vcertConfig.Client.Timeout = time.Duration(timeout) * time.Second
+	}
+	var connectionTrustBundle *x509.CertPool
+
+	if vcertConfig.ConnectionTrust != "" {
+		log.Println("Using trust bundle in custom http client")
+		connectionTrustBundle = x509.NewCertPool()
+		if !connectionTrustBundle.AppendCertsFromPEM([]byte(vcertConfig.ConnectionTrust)) {
+			return nil, fmt.Errorf("%w: failed to parse PEM trust bundle", verror.UserDataError)
+		}
+		vcertConfig.Client.Transport = &http.Transport{
+			TLSClientConfig: &tls.Config{
+				RootCAs: connectionTrustBundle,
+			},
+		}
 	}
 
 	// build Authentication object
