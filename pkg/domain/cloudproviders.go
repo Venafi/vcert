@@ -10,9 +10,10 @@ type CloudProvider struct {
 }
 
 type CloudKeystore struct {
-	ID   string
-	Name string
-	Type string
+	ID                     string
+	Name                   string
+	Type                   string
+	MachineIdentitiesCount int
 }
 
 type ProvisioningResponse struct {

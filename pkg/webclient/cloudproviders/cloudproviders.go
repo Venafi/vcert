@@ -76,9 +76,10 @@ func (c *CloudProvidersClient) GetCloudKeystore(ctx context.Context, cloudProvid
 	ck := resp.CloudKeystores.Nodes[0]
 
 	return &domain.CloudKeystore{
-		ID:   ck.GetId(),
-		Name: ck.GetName(),
-		Type: string(ck.GetType()),
+		ID:                     ck.GetId(),
+		Name:                   ck.GetName(),
+		Type:                   string(ck.GetType()),
+		MachineIdentitiesCount: ck.MachineIdentitiesCount,
 	}, nil
 }
 
