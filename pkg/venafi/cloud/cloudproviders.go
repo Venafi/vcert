@@ -215,6 +215,24 @@ func (c *Connector) GetCloudProviderByName(name string) (*domain.CloudProvider, 
 	return cloudProvider, nil
 }
 
+func (c *Connector) GetCloudKeystoreByName(cloudProviderID string, cloudKeystoreName string) (*domain.CloudKeystore, error) {
+	if cloudProviderID == "" {
+		return nil, fmt.Errorf("cloud provider ID cannot be empty")
+	}
+	if cloudKeystoreName == "" {
+		return nil, fmt.Errorf("cloud keystore name cannot be empty")
+	}
+
+	cloudKeystore, err := c.cloudProvidersClient.GetCloudKeystore(context.Background(), &cloudProviderID, nil, nil, &cloudKeystoreName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve Cloud Keystore with name %s from Cloud Provider with ID %s: %w", cloudKeystoreName, cloudProviderID, err)
+	}
+	if cloudKeystore == nil {
+		return nil, fmt.Errorf("could not find Cloud Keystore with name %s in Cloud Provider with ID %s", cloudKeystoreName, cloudProviderID)
+	}
+	return cloudKeystore, nil
+}
+
 func getCloudMetadataFromWebsocketResponse(respMap interface{}, keystoreType string, keystoreId string) (*CloudProvisioningMetadata, error) {
 
 	val := CloudKeystoreProvisioningResult{}

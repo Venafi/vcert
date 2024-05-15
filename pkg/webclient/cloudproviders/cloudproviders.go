@@ -8,7 +8,6 @@ import (
 	"github.com/Khan/genqlient/graphql"
 
 	"github.com/Venafi/vcert/v5/pkg/domain"
-	"github.com/Venafi/vcert/v5/pkg/util"
 )
 
 //go:generate go run -mod=mod github.com/Khan/genqlient genqlient.yaml
@@ -52,28 +51,26 @@ func (c *CloudProvidersClient) GetCloudProviderByName(ctx context.Context, name 
 	}, nil
 }
 
-func (c *CloudProvidersClient) GetCloudKeystore(ctx context.Context, cloudKeystoreID *string, cloudKeystoreName *string, cloudProviderName *string) (*domain.CloudKeystore, error) {
+func (c *CloudProvidersClient) GetCloudKeystore(ctx context.Context, cloudProviderID *string, cloudKeystoreID *string, cloudProviderName *string, cloudKeystoreName *string) (*domain.CloudKeystore, error) {
 
 	if cloudKeystoreID == nil {
-		if cloudKeystoreName == nil || cloudProviderName == nil {
-			return nil, fmt.Errorf("following are accepted for provisioning: keystore ID, or both keystore Name and provider Name")
+		if cloudKeystoreName == nil || (cloudProviderID == nil && cloudProviderName == nil) {
+			return nil, fmt.Errorf("following combinations are accepted for provisioning: keystore ID, or both provider Name and keystore Name, or both provider ID and keystore Name")
 		}
 	}
 
-	keystoreIDInput := util.StringPointerToString(cloudKeystoreID)
-	keystoreNameInput := util.StringPointerToString(cloudKeystoreName)
-	providerNameInput := util.StringPointerToString(cloudProviderName)
-	resp, err := GetCloudKeystores(ctx, c.graphqlClient, cloudKeystoreID, cloudKeystoreName, nil, cloudProviderName)
+	resp, err := GetCloudKeystores(ctx, c.graphqlClient, cloudKeystoreID, cloudKeystoreName, cloudProviderID, cloudProviderName)
+	msg := getKeystoreOptionsString(cloudProviderID, cloudKeystoreID, cloudProviderName, cloudKeystoreName)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve Cloud Keystore with KeystoreID: %s, KeystoreName: %s, ProviderName: %s: %w", keystoreIDInput, keystoreNameInput, providerNameInput, err)
+		return nil, fmt.Errorf("failed to retrieve Cloud Keystore with %s: %w", msg, err)
 	}
 
 	if resp == nil || resp.CloudKeystores == nil {
-		return nil, fmt.Errorf("could not find keystore with KeystoreID: %s, KeystoreName: %s, ProviderName: %s", keystoreIDInput, keystoreNameInput, providerNameInput)
+		return nil, fmt.Errorf("could not find keystore with %s", msg)
 	}
 
 	if len(resp.CloudKeystores.Nodes) != 1 {
-		return nil, fmt.Errorf("could not find keystore with with KeystoreID: %s, KeystoreName: %s, ProviderName: %s", keystoreIDInput, keystoreNameInput, providerNameInput)
+		return nil, fmt.Errorf("could not find keystore with with %s", msg)
 	}
 
 	ck := resp.CloudKeystores.Nodes[0]
@@ -83,6 +80,24 @@ func (c *CloudProvidersClient) GetCloudKeystore(ctx context.Context, cloudKeysto
 		Name: ck.GetName(),
 		Type: string(ck.GetType()),
 	}, nil
+}
+
+func getKeystoreOptionsString(cloudProviderID *string, cloudKeystoreID *string, cloudProviderName *string, cloudKeystoreName *string) string {
+	msg := ""
+	if cloudProviderID != nil {
+		msg += fmt.Sprintf("Cloud Provider ID: %s, ", *cloudProviderID)
+	}
+	if cloudKeystoreID != nil {
+		msg += fmt.Sprintf("Cloud Keystore ID: %s, ", *cloudKeystoreID)
+	}
+	if cloudProviderName != nil {
+		msg += fmt.Sprintf("Cloud Provider Name: %s, ", *cloudProviderName)
+	}
+	if cloudKeystoreName != nil {
+		msg += fmt.Sprintf("Cloud Keystore Name: %s", *cloudKeystoreName)
+	}
+
+	return msg
 }
 
 func (c *CloudProvidersClient) ProvisionCertificate(ctx context.Context, certificateID string, cloudKeystoreID string, wsClientID string, options *CertificateProvisioningOptionsInput) (*domain.ProvisioningResponse, error) {
