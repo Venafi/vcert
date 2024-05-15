@@ -73,7 +73,6 @@ func EnrollCertificate(config domain.Config, request domain.PlaybookRequest) (*c
 		zap.L().Debug("successfully requested certificate", zap.String("requestID", reqID))
 
 		vRequest.PickupID = reqID
-		vRequest.Timeout = 180 * time.Second
 
 		pcc, err = client.RetrieveCertificate(&vRequest)
 	}
