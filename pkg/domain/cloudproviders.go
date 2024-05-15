@@ -20,3 +20,10 @@ type ProvisioningResponse struct {
 	WorkflowId   string
 	WorkflowName string
 }
+
+type GetCloudKeystoreRequest struct {
+	CloudProviderID   *string
+	CloudProviderName *string
+	CloudKeystoreID   *string
+	CloudKeystoreName *string
+}

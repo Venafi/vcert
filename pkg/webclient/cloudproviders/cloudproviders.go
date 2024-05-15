@@ -51,16 +51,16 @@ func (c *CloudProvidersClient) GetCloudProviderByName(ctx context.Context, name 
 	}, nil
 }
 
-func (c *CloudProvidersClient) GetCloudKeystore(ctx context.Context, cloudProviderID *string, cloudKeystoreID *string, cloudProviderName *string, cloudKeystoreName *string) (*domain.CloudKeystore, error) {
+func (c *CloudProvidersClient) GetCloudKeystore(ctx context.Context, request domain.GetCloudKeystoreRequest) (*domain.CloudKeystore, error) {
 
-	if cloudKeystoreID == nil {
-		if cloudKeystoreName == nil || (cloudProviderID == nil && cloudProviderName == nil) {
+	if request.CloudKeystoreID == nil {
+		if request.CloudKeystoreName == nil || (request.CloudProviderID == nil && request.CloudProviderName == nil) {
 			return nil, fmt.Errorf("following combinations are accepted for provisioning: keystore ID, or both provider Name and keystore Name, or both provider ID and keystore Name")
 		}
 	}
 
-	resp, err := GetCloudKeystores(ctx, c.graphqlClient, cloudKeystoreID, cloudKeystoreName, cloudProviderID, cloudProviderName)
-	msg := getKeystoreOptionsString(cloudProviderID, cloudKeystoreID, cloudProviderName, cloudKeystoreName)
+	resp, err := GetCloudKeystores(ctx, c.graphqlClient, request.CloudKeystoreID, request.CloudKeystoreName, request.CloudProviderID, request.CloudProviderName)
+	msg := getKeystoreOptionsString(request.CloudProviderID, request.CloudKeystoreID, request.CloudProviderName, request.CloudKeystoreName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve Cloud Keystore with %s: %w", msg, err)
 	}

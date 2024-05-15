@@ -223,7 +223,14 @@ func (c *Connector) GetCloudKeystoreByName(cloudProviderID string, cloudKeystore
 		return nil, fmt.Errorf("cloud keystore name cannot be empty")
 	}
 
-	cloudKeystore, err := c.cloudProvidersClient.GetCloudKeystore(context.Background(), &cloudProviderID, nil, nil, &cloudKeystoreName)
+	request := domain.GetCloudKeystoreRequest{
+		CloudProviderID:   &cloudProviderID,
+		CloudProviderName: nil,
+		CloudKeystoreID:   nil,
+		CloudKeystoreName: &cloudKeystoreName,
+	}
+
+	cloudKeystore, err := c.cloudProvidersClient.GetCloudKeystore(context.Background(), request)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve Cloud Keystore with name %s from Cloud Provider with ID %s: %w", cloudKeystoreName, cloudProviderID, err)
 	}
