@@ -19,4 +19,4 @@ certificateTasks:
         capiLocation: LocalMachine\MY
         capiFriendlyName: Venafi vCert Managed - IIS Default Website
         capiIsNonExportable: True
-        useLegacyPkcs12: True   # Win2016 requires legacy key wrapping (3DES-SHA1)
+        useLegacyP12: True   # Win2016 requires legacy key wrapping (3DES-SHA1)
