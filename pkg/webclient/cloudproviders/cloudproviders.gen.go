@@ -167,8 +167,9 @@ type GetCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore st
 	// Cloud Keystore name
 	//
 	// A string between 3 and 250 characters
-	Name string            `json:"name"`
-	Type CloudKeystoreType `json:"type"`
+	Name                   string            `json:"name"`
+	Type                   CloudKeystoreType `json:"type"`
+	MachineIdentitiesCount int               `json:"machineIdentitiesCount"`
 }
 
 // GetId returns GetCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore.Id, and is useful for accessing the field via an interface.
@@ -184,6 +185,11 @@ func (v *GetCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystor
 // GetType returns GetCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore.Type, and is useful for accessing the field via an interface.
 func (v *GetCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore) GetType() CloudKeystoreType {
 	return v.Type
+}
+
+// GetMachineIdentitiesCount returns GetCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore.MachineIdentitiesCount, and is useful for accessing the field via an interface.
+func (v *GetCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore) GetMachineIdentitiesCount() int {
+	return v.MachineIdentitiesCount
 }
 
 // GetCloudKeystoresResponse is returned by GetCloudKeystores on success.
@@ -373,6 +379,7 @@ query GetCloudKeystores ($cloudKeystoreId: UUID, $cloudKeystoreName: String, $cl
 			id
 			name
 			type
+			machineIdentitiesCount
 		}
 	}
 }

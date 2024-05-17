@@ -16,6 +16,7 @@ query GetCloudKeystores($cloudKeystoreId: UUID, $cloudKeystoreName: String, $clo
             id
             name
             type
+            machineIdentitiesCount
         }
     }
 }
