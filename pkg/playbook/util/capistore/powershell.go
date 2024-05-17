@@ -166,7 +166,7 @@ func (ps PowerShell) executeScript(script, functionName string, parameters map[s
 func (ps PowerShell) runScript(scriptPath, functionName string, parameters map[string]string) (string, error) {
 
 	builder := strings.Builder{}
-	builder.WriteString(fmt.Sprintf("powershell -command \". %s; %s", scriptPath, functionName))
+	builder.WriteString(fmt.Sprintf("powershell -command \". %s %s", scriptPath, functionName))
 	for paramName, value := range parameters {
 		builder.WriteString(fmt.Sprintf(" -%s %s", paramName, quoteIfNeeded(value)))
 	}
