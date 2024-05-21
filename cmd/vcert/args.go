@@ -36,6 +36,8 @@ const (
 	commandSshPickupName    = "sshpickup"
 	commandSshEnrollName    = "sshenroll"
 	commandSshGetConfigName = "sshgetconfig"
+	commandProvisionName    = "provision"
+	subCommandCloudKeystore = "cloudkeystore"
 )
 
 var (
@@ -141,4 +143,9 @@ type commandFlags struct {
 	sshCertWindows       bool
 	sshFileCertEnroll    string
 	sshFileGetConfig     string
+	certificateID        string
+	keystoreID           string
+	providerName         string
+	keystoreName         string
+	keystoreCertName     string
 }

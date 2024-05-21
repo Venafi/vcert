@@ -18,7 +18,6 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"unicode"
 )
 
@@ -71,18 +70,4 @@ func wrapArgumentDescriptionText(text string) string {
 	}
 
 	return buf.String()
-}
-
-func showvcertUsage() {
-	fmt.Printf("\tTo obtain a new token for authentication, use the 'getcred' action.\n")
-	fmt.Printf("\tTo check whether an authentication token is valid, use the 'checkcred' action.\n")
-	fmt.Printf("\tTo invalidate an authentication token, use the 'voidcred' action.\n")
-	fmt.Printf("\tTo generate a certificate signing request (CSR), use the 'gencsr' action.\n")
-	fmt.Printf("\tTo enroll a certificate, use the 'enroll' action.\n")
-	fmt.Printf("\tTo retrieve a certificate, use the 'pickup' action.\n")
-	fmt.Printf("\tTo renew a certificate, use the 'renew' action.\n")
-	fmt.Printf("\tTo revoke a certificate, use the 'revoke' action.\n")
-	fmt.Printf("\tTo retire a certificate, use the 'retire' action.\n")
-	fmt.Printf("\tTo retrieve certificate policy, use the 'getpolicy' action.\n")
-	fmt.Printf("\tTo apply certificate policy, use the 'setpolicy' action.\n")
 }

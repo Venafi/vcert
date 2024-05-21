@@ -1,6 +1,9 @@
 package endpoint
 
-import "time"
+import (
+	"github.com/Venafi/vcert/v5/pkg/domain"
+	"time"
+)
 
 type ProvisioningRequest struct {
 	CertificateID *string
@@ -9,6 +12,7 @@ type ProvisioningRequest struct {
 	KeystoreName  *string
 	ProviderName  *string
 	Timeout       time.Duration
+	Keystore      *domain.CloudKeystore
 }
 
 type ProvisioningMetadata interface {

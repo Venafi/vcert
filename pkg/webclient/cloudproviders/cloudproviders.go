@@ -3,6 +3,7 @@ package cloudproviders
 import (
 	"context"
 	"fmt"
+	"github.com/Venafi/vcert/v5/pkg/util"
 	"net/http"
 
 	"github.com/Khan/genqlient/graphql"
@@ -60,7 +61,7 @@ func (c *CloudProvidersClient) GetCloudKeystore(ctx context.Context, request dom
 	}
 
 	resp, err := GetCloudKeystores(ctx, c.graphqlClient, request.CloudKeystoreID, request.CloudKeystoreName, request.CloudProviderID, request.CloudProviderName)
-	msg := getKeystoreOptionsString(request.CloudProviderID, request.CloudKeystoreID, request.CloudProviderName, request.CloudKeystoreName)
+	msg := util.GetKeystoreOptionsString(request.CloudProviderID, request.CloudKeystoreID, request.CloudProviderName, request.CloudKeystoreName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve Cloud Keystore with %s: %w", msg, err)
 	}
@@ -81,24 +82,6 @@ func (c *CloudProvidersClient) GetCloudKeystore(ctx context.Context, request dom
 		Type:                   string(ck.GetType()),
 		MachineIdentitiesCount: ck.MachineIdentitiesCount,
 	}, nil
-}
-
-func getKeystoreOptionsString(cloudProviderID *string, cloudKeystoreID *string, cloudProviderName *string, cloudKeystoreName *string) string {
-	msg := ""
-	if cloudProviderID != nil {
-		msg += fmt.Sprintf("Cloud Provider ID: %s, ", *cloudProviderID)
-	}
-	if cloudKeystoreID != nil {
-		msg += fmt.Sprintf("Cloud Keystore ID: %s, ", *cloudKeystoreID)
-	}
-	if cloudProviderName != nil {
-		msg += fmt.Sprintf("Cloud Provider Name: %s, ", *cloudProviderName)
-	}
-	if cloudKeystoreName != nil {
-		msg += fmt.Sprintf("Cloud Keystore Name: %s", *cloudKeystoreName)
-	}
-
-	return msg
 }
 
 func (c *CloudProvidersClient) ProvisionCertificate(ctx context.Context, certificateID string, cloudKeystoreID string, wsClientID string, options *CertificateProvisioningOptionsInput) (*domain.ProvisioningResponse, error) {

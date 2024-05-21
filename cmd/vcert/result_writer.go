@@ -33,6 +33,10 @@ import (
 	"github.com/Venafi/vcert/v5/pkg/util"
 )
 
+const (
+	formatJson = "json"
+)
+
 type Config struct {
 	Command     string
 	Format      string
@@ -54,6 +58,15 @@ type Result struct {
 	Pcc      *certificate.PEMCollection
 	PickupId string
 	Config   *Config
+}
+
+type ProvisioningResult struct {
+	ARN          *string `json:"arn"`
+	AzureID      *string `json:"azureId"`
+	AzureName    *string `json:"azureName"`
+	AzureVersion *string `json:"azureVersion"`
+	GcpID        *string `json:"gcpId"`
+	GcpName      *string `json:"gcpName"`
 }
 
 type Output struct {
@@ -315,24 +328,24 @@ func (r *Result) Flush() error {
 		allFileOutput.Chain = r.Pcc.Chain
 		allFileOutput.CSR = r.Pcc.CSR
 
-		var bytes []byte
+		var fileBytes []byte
 		if r.Config.Format == P12Format || r.Config.Format == LegacyP12Format {
-			bytes, err = allFileOutput.AsPKCS12(r.Config)
+			fileBytes, err = allFileOutput.AsPKCS12(r.Config)
 			if err != nil {
 				return fmt.Errorf("failed to encode pkcs12: %s", err)
 			}
 		} else if r.Config.Format == JKSFormat {
-			bytes, err = allFileOutput.AsJKS(r.Config)
+			fileBytes, err = allFileOutput.AsJKS(r.Config)
 			if err != nil {
 				return err
 			}
 		} else {
-			bytes, err = allFileOutput.Format(r.Config)
+			fileBytes, err = allFileOutput.Format(r.Config)
 			if err != nil {
 				return err
 			}
 		}
-		err = os.WriteFile(r.Config.AllFile, bytes, 0600)
+		err = os.WriteFile(r.Config.AllFile, fileBytes, 0600)
 		errors = append(errors, err)
 	} else {
 
@@ -388,11 +401,12 @@ func (r *Result) Flush() error {
 	}
 
 	// and flush the rest to STDOUT
-	bytes, err := stdOut.Format(r.Config)
+	configBytes, err := stdOut.Format(r.Config)
 	if err != nil {
 		return err // something worse than file permission problem
 	}
-	fmt.Fprint(os.Stdout, string(bytes))
+	_, err = fmt.Fprint(os.Stdout, string(configBytes))
+	errors = append(errors, err)
 
 	var finalError error
 	for _, e := range errors {
@@ -429,4 +443,46 @@ func outputJSON(resp interface{}) error {
 		fmt.Println(string(jsonData))
 	}
 	return err
+}
+
+func (r *ProvisioningResult) Flush(format string) error {
+
+	result, err := r.Format(format)
+	if err != nil {
+		return err
+	}
+
+	_, err = fmt.Fprint(os.Stdout, result)
+	if err != nil {
+		return fmt.Errorf("failed to print provisioning result to STDOUT: %w", err)
+	}
+
+	return nil
+}
+
+func (r *ProvisioningResult) Format(format string) (string, error) {
+	result := ""
+	switch strings.ToLower(format) {
+	case formatJson:
+		b, err := json.Marshal(r)
+		if err != nil {
+			return "", fmt.Errorf("failed to construct JSON: %s", err)
+		}
+		result = string(b)
+	default:
+		if r.ARN != nil {
+			result += fmt.Sprintf("arn: %s\n", util.StringPointerToString(r.ARN))
+		}
+		if r.AzureID != nil {
+			result += fmt.Sprintf("azureId: %s\n", util.StringPointerToString(r.AzureID))
+			result += fmt.Sprintf("azureName: %s\n", util.StringPointerToString(r.AzureName))
+			result += fmt.Sprintf("azureVersion: %s\n", util.StringPointerToString(r.AzureVersion))
+
+		}
+		if r.GcpID != nil {
+			result += fmt.Sprintf("gcpId %s:", util.StringPointerToString(r.GcpID))
+			result += fmt.Sprintf("gcpName %s:", util.StringPointerToString(r.GcpName))
+		}
+	}
+	return result, nil
 }

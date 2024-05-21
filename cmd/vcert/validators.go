@@ -657,6 +657,24 @@ func validateSshRetrieveFlags(commandName string) error {
 	return nil
 }
 
+func validateProvisionFlags(commandName string) error {
+	err := validateConnectionFlags(commandName)
+	if err != nil {
+		return err
+	}
+	err = validateCommonFlags(commandName)
+	if err != nil {
+		return err
+	}
+
+	err = readData(commandName)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func validateExistingFile(f string) error {
 	fileNames, err := getExistingSshFiles(f)
 

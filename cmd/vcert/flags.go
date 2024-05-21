@@ -708,6 +708,36 @@ var (
 		TakesFile:   true,
 	}
 
+	flagCertificateID = &cli.StringFlag{
+		Name:        "certificate-id",
+		Usage:       "The id of the certificate to be provisioned to a cloud keystore.",
+		Destination: &flags.certificateID,
+	}
+
+	flagKeystoreID = &cli.StringFlag{
+		Name:        "keystore-id",
+		Usage:       "The id of the cloud keystore where the certificate will be provisioned.",
+		Destination: &flags.keystoreID,
+	}
+
+	flagKeystoreName = &cli.StringFlag{
+		Name:        "keystore-name",
+		Usage:       "The name of the cloud keystore where the certificate will be provisioned. Must be set along with provider-name flag.",
+		Destination: &flags.keystoreName,
+	}
+
+	flagProviderName = &cli.StringFlag{
+		Name:        "provider-name",
+		Usage:       "Name of the cloud provider which owns the cloud keystore where the certificate will be provisioned. Must be set along with keystore-name flag.",
+		Destination: &flags.providerName,
+	}
+
+	flagKeystoreCertName = &cli.StringFlag{
+		Name:        "cloudkeystore-certname",
+		Usage:       "Use to specify Cloud Keystore Certificate Name if it supports it",
+		Destination: &flags.keystoreCertName,
+	}
+
 	commonFlags              = []cli.Flag{flagInsecure, flagVerbose, flagNoPrompt}
 	keyFlags                 = []cli.Flag{flagKeyType, flagKeySize, flagKeyCurve, flagKeyFile, flagKeyPassword}
 	sansFlags                = []cli.Flag{flagDNSSans, flagEmailSans, flagIPSans, flagURISans, flagUPNSans}
@@ -840,6 +870,22 @@ var (
 		credentialsFlags,
 		flagThumbprint,
 		flagDistinguishedName,
+		sortedFlags(flagsApppend(
+			commonFlags,
+			sortableCredentialsFlags,
+		)),
+	)
+
+	provisionFlags = flagsApppend(
+		credentialsFlags,
+		flagCertificateID,
+		flagPickupID,
+		flagPickupIDFile,
+		flagKeystoreID,
+		flagKeystoreName,
+		flagProviderName,
+		flagKeystoreCertName,
+		flagFormat,
 		sortedFlags(flagsApppend(
 			commonFlags,
 			sortableCredentialsFlags,

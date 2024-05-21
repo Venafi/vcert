@@ -121,6 +121,9 @@ func (cpgo CloudProvisioningGCPOptions) GetType() string {
 
 func setProvisioningOptions(options *endpoint.ProvisioningOptions) (*cloudproviders.CertificateProvisioningOptionsInput, error) {
 	var cloudOptions *cloudproviders.CertificateProvisioningOptionsInput
+	if options == nil {
+		return nil, fmt.Errorf("options for provisioning cannot be null when trying to set them")
+	}
 	dataOptions, err := json.Marshal(options)
 	if err != nil {
 		return nil, err
@@ -236,6 +239,18 @@ func (c *Connector) GetCloudKeystoreByName(cloudProviderID string, cloudKeystore
 	}
 	if cloudKeystore == nil {
 		return nil, fmt.Errorf("could not find Cloud Keystore with name %s in Cloud Provider with ID %s", cloudKeystoreName, cloudProviderID)
+	}
+	return cloudKeystore, nil
+}
+
+func (c *Connector) GetCloudKeystore(request domain.GetCloudKeystoreRequest) (*domain.CloudKeystore, error) {
+	cloudKeystore, err := c.cloudProvidersClient.GetCloudKeystore(context.Background(), request)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve Cloud Keystore: %w", err)
+	}
+	if cloudKeystore == nil {
+		msg := util.GetKeystoreOptionsString(request.CloudProviderID, request.CloudKeystoreID, request.CloudProviderName, request.CloudKeystoreName)
+		return nil, fmt.Errorf("could not find Cloud Keystore with %s: %w", msg, err)
 	}
 	return cloudKeystore, nil
 }

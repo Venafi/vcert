@@ -144,3 +144,21 @@ func StringPointerToString(input *string) string {
 	}
 	return ""
 }
+
+func GetKeystoreOptionsString(cloudProviderID *string, cloudKeystoreID *string, cloudProviderName *string, cloudKeystoreName *string) string {
+	msg := ""
+	if cloudProviderID != nil {
+		msg += fmt.Sprintf("Cloud Provider ID: %s, ", *cloudProviderID)
+	}
+	if cloudKeystoreID != nil {
+		msg += fmt.Sprintf("Cloud Keystore ID: %s, ", *cloudKeystoreID)
+	}
+	if cloudProviderName != nil {
+		msg += fmt.Sprintf("Cloud Provider Name: %s, ", *cloudProviderName)
+	}
+	if cloudKeystoreName != nil {
+		msg += fmt.Sprintf("Cloud Keystore Name: %s", *cloudKeystoreName)
+	}
+
+	return msg
+}
