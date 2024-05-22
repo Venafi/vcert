@@ -21,13 +21,22 @@ type CloudKeystoreProvisioningResult struct {
 	CloudProviderCertificateID string `json:"cloudProviderCertificateId"`
 	CloudCertificateName       string `json:"cloudProviderCertificateName"`
 	CloudCertificateVersion    string `json:"cloudProviderCertificateVersion"`
+	MachineIdentityActionType  string `json:"machineIdentityActionType"`
+	MachineIdentityId          string `json:"machineIdentityId"`
 	Error                      error  `json:"error"`
 }
 
+const (
+	KeystoreTypeACM = "ACM"
+	KeystoreTypeAKV = "AKV"
+	KeystoreTypeGCM = "GCM"
+)
+
 type CloudProvisioningMetadata struct {
-	awsMetadata   CloudAwsMetadata
-	azureMetadata CloudAzureMetadata
-	gcpMetadata   CloudGcpMetadata
+	awsMetadata     CloudAwsMetadata
+	azureMetadata   CloudAzureMetadata
+	gcpMetadata     CloudGcpMetadata
+	machineMetadata MachineIdentityMetadata
 }
 
 func (cpm *CloudProvisioningMetadata) GetAWSCertificateMetadata() endpoint.AWSCertificateMetadata {
@@ -40,6 +49,10 @@ func (cpm *CloudProvisioningMetadata) GetAzureCertificateMetadata() endpoint.Azu
 
 func (cpm *CloudProvisioningMetadata) GetGCPCertificateMetadata() endpoint.GCPCertificateMetadata {
 	return &cpm.gcpMetadata
+}
+
+func (cpm *CloudProvisioningMetadata) GetMachineIdentityMetadata() endpoint.MachineIdentityMetadata {
+	return &cpm.machineMetadata
 }
 
 type CloudAwsMetadata struct {
@@ -78,6 +91,18 @@ func (cam *CloudAzureMetadata) GetID() string {
 	return cam.result.CloudProviderCertificateID
 }
 
+type MachineIdentityMetadata struct {
+	result CloudKeystoreProvisioningResult
+}
+
+func (mim *MachineIdentityMetadata) GetID() string {
+	return mim.result.MachineIdentityId
+}
+
+func (mim *MachineIdentityMetadata) GetActionType() string {
+	return mim.result.MachineIdentityActionType
+}
+
 // GCMCertificateScope Indicates the Scope for a certificate provisioned to GCP Certificate Manager
 type GCMCertificateScope string
 
@@ -105,7 +130,7 @@ type CloudProvisioningAzureOptions struct {
 }
 
 func (cpao CloudProvisioningAzureOptions) GetType() string {
-	return "AKV"
+	return KeystoreTypeAKV
 }
 
 type CloudProvisioningGCPOptions struct {
@@ -116,7 +141,7 @@ type CloudProvisioningGCPOptions struct {
 }
 
 func (cpgo CloudProvisioningGCPOptions) GetType() string {
-	return "GCM"
+	return KeystoreTypeGCM
 }
 
 func setProvisioningOptions(options *endpoint.ProvisioningOptions) (*cloudproviders.CertificateProvisioningOptionsInput, error) {
@@ -218,31 +243,6 @@ func (c *Connector) GetCloudProviderByName(name string) (*domain.CloudProvider, 
 	return cloudProvider, nil
 }
 
-func (c *Connector) GetCloudKeystoreByName(cloudProviderID string, cloudKeystoreName string) (*domain.CloudKeystore, error) {
-	if cloudProviderID == "" {
-		return nil, fmt.Errorf("cloud provider ID cannot be empty")
-	}
-	if cloudKeystoreName == "" {
-		return nil, fmt.Errorf("cloud keystore name cannot be empty")
-	}
-
-	request := domain.GetCloudKeystoreRequest{
-		CloudProviderID:   &cloudProviderID,
-		CloudProviderName: nil,
-		CloudKeystoreID:   nil,
-		CloudKeystoreName: &cloudKeystoreName,
-	}
-
-	cloudKeystore, err := c.cloudProvidersClient.GetCloudKeystore(context.Background(), request)
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve Cloud Keystore with name %s from Cloud Provider with ID %s: %w", cloudKeystoreName, cloudProviderID, err)
-	}
-	if cloudKeystore == nil {
-		return nil, fmt.Errorf("could not find Cloud Keystore with name %s in Cloud Provider with ID %s", cloudKeystoreName, cloudProviderID)
-	}
-	return cloudKeystore, nil
-}
-
 func (c *Connector) GetCloudKeystore(request domain.GetCloudKeystoreRequest) (*domain.CloudKeystore, error) {
 	cloudKeystore, err := c.cloudProvidersClient.GetCloudKeystore(context.Background(), request)
 	if err != nil {
@@ -286,5 +286,8 @@ func getCloudMetadataFromWebsocketResponse(respMap interface{}, keystoreType str
 		err = fmt.Errorf("unknown type %v for keystore with ID: %s", keystoreType, keystoreId)
 		return nil, err
 	}
+
+	cloudMetadata.machineMetadata.result = val
+
 	return cloudMetadata, err
 }

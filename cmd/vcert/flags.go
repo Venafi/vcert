@@ -364,7 +364,7 @@ var (
 	}
 
 	flagPickupIDFile = &cli.StringFlag{
-		Name: "pickup-file",
+		Name: "pickup-id-file",
 		Usage: "Use to specify the file name from where to read or write the Pickup ID. " +
 			"Either --pickup-id or --pickup-id-file is required.",
 		Destination: &flags.pickupIDFile,
@@ -900,7 +900,7 @@ var (
 		flagKeystoreName,
 		flagKeystoreID,
 		flagFormat,
-		flagProvisionOutputFile,
+		flagProvisionOutputFile, // TODO: implement this flag
 	)
 
 	commonCredFlags = []cli.Flag{flagConfig, flagProfile, flagUrl, flagToken, flagTrustBundle}

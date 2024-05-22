@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/Venafi/vcert/v5/pkg/webclient/cloudproviders"
 	"log"
 	"os"
 	"strings"
@@ -29,7 +28,7 @@ var (
 
                 vcert provision cloudkeystore -k <VCP API key> --certificate-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --keystore-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --format json
 		        vcert provision cloudkeystore -k <VCP API key> --pickup-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --provider-name "My GCP Provider"--keystore-name "My GCP provider" --certificate-name "example-venafi-com"
-		        vcert provision cloudkeystore -p vcp -t <VCP access token> --certificate-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --provider-name "My GCP Provider"--keystore-name "My GCP provider" --file "/path/to/file.txt"`,
+		        vcert provision cloudkeystore -p vcp -t <VCP access token> --certificate-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --provider-name "My GCP Provider" --keystore-name "My GCP provider" --file "/path/to/file.txt"`,
 				Action: doCommandProvisionCloudKeystore,
 			},
 		},
@@ -100,22 +99,19 @@ func doCommandProvisionCloudKeystore(c *cli.Context) error {
 
 	result := ProvisioningResult{}
 	switch cloudKeystore.Type {
-	case string(cloudproviders.CloudKeystoreTypeAcm):
-		arn := metadata.GetAWSCertificateMetadata().GetARN()
-		result.ARN = &arn
-	case string(cloudproviders.CloudKeystoreTypeAkv):
-		azureID := metadata.GetAzureCertificateMetadata().GetID()
-		azureName := metadata.GetAzureCertificateMetadata().GetName()
-		azureVersion := metadata.GetAzureCertificateMetadata().GetVersion()
-		result.AzureID = &azureID
-		result.AzureName = &azureName
-		result.AzureVersion = &azureVersion
-	case string(cloudproviders.CloudKeystoreTypeGcm):
-		gcpID := metadata.GetGCPCertificateMetadata().GetID()
-		gcpName := metadata.GetGCPCertificateMetadata().GetName()
-		result.GcpID = &gcpID
-		result.GcpName = &gcpName
+	case cloud.KeystoreTypeACM:
+		result.ARN = metadata.GetAWSCertificateMetadata().GetARN()
+	case cloud.KeystoreTypeAKV:
+		result.AzureID = metadata.GetAzureCertificateMetadata().GetID()
+		result.AzureName = metadata.GetAzureCertificateMetadata().GetName()
+		result.AzureVersion = metadata.GetAzureCertificateMetadata().GetVersion()
+	case cloud.KeystoreTypeGCM:
+		result.GcpID = metadata.GetGCPCertificateMetadata().GetID()
+		result.GcpName = metadata.GetGCPCertificateMetadata().GetName()
 	}
+
+	result.MachineIdentityId = metadata.GetMachineIdentityMetadata().GetID()
+	result.MachineIdentityActionType = metadata.GetMachineIdentityMetadata().GetActionType()
 
 	err = result.Flush(flags.format)
 

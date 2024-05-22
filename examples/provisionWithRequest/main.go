@@ -104,4 +104,6 @@ func main() {
 	//log.Printf("Certificate Azure Metadata Version:\n%v", certMetaData.GetAzureCertificateMetadata().GetVersion())
 	log.Printf("Certificate GCP Metadata ID:\n%v", certMetaData.GetGCPCertificateMetadata().GetID())
 	log.Printf("Certificate GCP Metadata Name:\n%v", certMetaData.GetGCPCertificateMetadata().GetName())
+	log.Printf("Certificate Machine Identity Metadata ID:\n%v", certMetaData.GetMachineIdentityMetadata().GetID())
+	log.Printf("Certificate Machine Identity Action Type:\n%v", certMetaData.GetMachineIdentityMetadata().GetActionType())
 }

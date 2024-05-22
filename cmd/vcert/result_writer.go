@@ -61,12 +61,14 @@ type Result struct {
 }
 
 type ProvisioningResult struct {
-	ARN          *string `json:"arn,omitempty"`
-	AzureID      *string `json:"azureId,omitempty"`
-	AzureName    *string `json:"azureName,omitempty"`
-	AzureVersion *string `json:"azureVersion,omitempty"`
-	GcpID        *string `json:"gcpId,omitempty"`
-	GcpName      *string `json:"gcpName,omitempty"`
+	ARN                       string `json:"arn,omitempty"`
+	AzureID                   string `json:"azureId,omitempty"`
+	AzureName                 string `json:"azureName,omitempty"`
+	AzureVersion              string `json:"azureVersion,omitempty"`
+	GcpID                     string `json:"gcpId,omitempty"`
+	GcpName                   string `json:"gcpName,omitempty"`
+	MachineIdentityId         string `json:"machineIdentityId,omitempty"`
+	MachineIdentityActionType string `json:"machineIdentityActionType,omitempty"`
 }
 
 type Output struct {
@@ -468,23 +470,20 @@ func (r *ProvisioningResult) Format(format string) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("failed to construct JSON: %s", err)
 		}
-		if err != nil {
-			return "", err
-		}
 		result = string(b)
 	default:
-		if r.ARN != nil {
-			result += fmt.Sprintf("arn: %s\n", util.StringPointerToString(r.ARN))
+		if r.ARN != "" {
+			result += fmt.Sprintf("arn: %s\n", r.ARN)
 		}
-		if r.AzureID != nil {
-			result += fmt.Sprintf("azureId: %s\n", util.StringPointerToString(r.AzureID))
-			result += fmt.Sprintf("azureName: %s\n", util.StringPointerToString(r.AzureName))
-			result += fmt.Sprintf("azureVersion: %s\n", util.StringPointerToString(r.AzureVersion))
+		if r.AzureID != "" {
+			result += fmt.Sprintf("azureId: %s\n", r.AzureID)
+			result += fmt.Sprintf("azureName: %s\n", r.AzureName)
+			result += fmt.Sprintf("azureVersion: %s\n", r.AzureVersion)
 
 		}
-		if r.GcpID != nil {
-			result += fmt.Sprintf("gcpId %s\n", util.StringPointerToString(r.GcpID))
-			result += fmt.Sprintf("gcpName %s\n", util.StringPointerToString(r.GcpName))
+		if r.GcpID != "" {
+			result += fmt.Sprintf("gcpId %s\n", r.GcpID)
+			result += fmt.Sprintf("gcpName %s\n", r.GcpName)
 		}
 	}
 	return result, nil

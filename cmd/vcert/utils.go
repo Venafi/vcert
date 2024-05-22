@@ -629,13 +629,13 @@ func fillProvisioningRequest(req *endpoint.ProvisioningRequest, keystore domain.
 	if cf.keystoreCertName != "" {
 		switch keystore.Type {
 		case string(cloudproviders.CloudKeystoreTypeAkv):
+			optionsAkv := &cloud.CloudProvisioningAzureOptions{
+				Name: &cf.keystoreCertName,
+			}
+			options = endpoint.ProvisioningOptions(optionsAkv)
+		case string(cloudproviders.CloudKeystoreTypeGcm):
 			optionsGcp := &cloud.CloudProvisioningGCPOptions{
 				ID: &cf.keystoreCertName,
-			}
-			options = endpoint.ProvisioningOptions(optionsGcp)
-		case string(cloudproviders.CloudKeystoreTypeGcm):
-			optionsGcp := &cloud.CloudProvisioningAzureOptions{
-				Name: &cf.keystoreCertName,
 			}
 			options = endpoint.ProvisioningOptions(optionsGcp)
 		}
