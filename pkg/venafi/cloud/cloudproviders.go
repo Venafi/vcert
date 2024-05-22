@@ -16,6 +16,11 @@ import (
 	"github.com/Venafi/vcert/v5/pkg/webclient/cloudproviders"
 )
 
+const (
+	KeystoreTypeAKV = "AKV"
+	KeystoreTypeGCM = "GCM"
+)
+
 type CloudKeystoreProvisioningResult struct {
 	Arn                        string `json:"arn"`
 	CloudProviderCertificateID string `json:"cloudProviderCertificateId"`
@@ -104,8 +109,8 @@ type CloudProvisioningAzureOptions struct {
 	Tags       []*CertificateTagOption
 }
 
-func (cpao CloudProvisioningAzureOptions) GetType() string {
-	return "AKV"
+func (cpo CloudProvisioningAzureOptions) GetType() string {
+	return KeystoreTypeAKV
 }
 
 type CloudProvisioningGCPOptions struct {
@@ -115,8 +120,8 @@ type CloudProvisioningGCPOptions struct {
 	Labels      []*CertificateTagOption
 }
 
-func (cpgo CloudProvisioningGCPOptions) GetType() string {
-	return "GCM"
+func (cpo CloudProvisioningGCPOptions) GetType() string {
+	return KeystoreTypeGCM
 }
 
 func setProvisioningOptions(options *endpoint.ProvisioningOptions) (*cloudproviders.CertificateProvisioningOptionsInput, error) {
