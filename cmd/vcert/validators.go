@@ -662,9 +662,19 @@ func validateProvisionFlags(commandName string) error {
 	if err != nil {
 		return err
 	}
-	err = validateCommonFlags(commandName)
-	if err != nil {
-		return err
+
+	if flags.format != "" && flags.format != "json" {
+		return fmt.Errorf("unexpected output format: %s", flags.format)
+	}
+
+	if flags.certificateID == "" && flags.provisionPickupID == "" {
+		return fmt.Errorf("please, provide any of certificate-id or pickup-id")
+	}
+
+	if flags.keystoreID == "" {
+		if flags.keystoreName == "" || flags.providerName == "" {
+			return fmt.Errorf("any of keystore object, keystore ID or both Provider Name and Keystore Name must be provided for provisioning")
+		}
 	}
 
 	err = readData(commandName)

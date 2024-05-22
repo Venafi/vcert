@@ -25,7 +25,6 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/v5/pkg/domain"
 	"io"
 	"log"
 	"net/http"
@@ -39,6 +38,7 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/Venafi/vcert/v5/pkg/certificate"
+	"github.com/Venafi/vcert/v5/pkg/domain"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
 	"github.com/Venafi/vcert/v5/pkg/policy"
 	"github.com/Venafi/vcert/v5/pkg/util"
@@ -793,7 +793,7 @@ func (c *Connector) ProvisionCertificate(req *endpoint.ProvisioningRequest, opti
 	if reqData.Keystore == nil {
 		if reqData.KeystoreID == nil {
 			if reqData.ProviderName == nil || reqData.KeystoreName == nil {
-				return nil, fmt.Errorf("any of keystore ID or both Provider Name and Keystore Name must be provided for provisioning")
+				return nil, fmt.Errorf("any of keystore object, keystore ID or both Provider Name and Keystore Name must be provided for provisioning")
 			}
 		}
 

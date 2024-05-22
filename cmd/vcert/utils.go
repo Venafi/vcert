@@ -23,9 +23,6 @@ import (
 	"encoding/hex"
 	"encoding/pem"
 	"fmt"
-	"github.com/Venafi/vcert/v5/pkg/domain"
-	"github.com/Venafi/vcert/v5/pkg/venafi/cloud"
-	"github.com/Venafi/vcert/v5/pkg/webclient/cloudproviders"
 	"io"
 	"log"
 	"math/rand"
@@ -40,8 +37,11 @@ import (
 
 	"github.com/Venafi/vcert/v5"
 	"github.com/Venafi/vcert/v5/pkg/certificate"
+	"github.com/Venafi/vcert/v5/pkg/domain"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
 	"github.com/Venafi/vcert/v5/pkg/util"
+	"github.com/Venafi/vcert/v5/pkg/venafi/cloud"
+	"github.com/Venafi/vcert/v5/pkg/webclient/cloudproviders"
 )
 
 const (
