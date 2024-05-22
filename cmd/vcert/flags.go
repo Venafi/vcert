@@ -364,7 +364,7 @@ var (
 	}
 
 	flagPickupIDFile = &cli.StringFlag{
-		Name: "pickup-id-file",
+		Name: "pickup-file",
 		Usage: "Use to specify the file name from where to read or write the Pickup ID. " +
 			"Either --pickup-id or --pickup-id-file is required.",
 		Destination: &flags.pickupIDFile,
@@ -733,9 +733,23 @@ var (
 	}
 
 	flagKeystoreCertName = &cli.StringFlag{
-		Name:        "cloudkeystore-certname",
+		Name:        "certificate-name",
 		Usage:       "Use to specify Cloud Keystore Certificate Name if it supports it",
 		Destination: &flags.keystoreCertName,
+	}
+
+	flagProvisionOutputFile = &cli.StringFlag{
+		Name: "file",
+		Usage: "Use to specify a file name and a location where the output should be written. " +
+			"Example: --file /path-to/provision-output",
+		Destination: &flags.provisionOutputFile,
+		TakesFile:   true,
+	}
+
+	flagProvisionPickupID = &cli.StringFlag{
+		Name:        "pickup-id",
+		Usage:       "Use to specify the Pickup ID (for VCP is the Request ID) of the certificate to be provisioned.",
+		Destination: &flags.provisionPickupID,
 	}
 
 	commonFlags              = []cli.Flag{flagInsecure, flagVerbose, flagNoPrompt}
@@ -879,17 +893,14 @@ var (
 	provisionFlags = flagsApppend(
 		credentialsFlags,
 		flagCertificateID,
-		flagPickupID,
+		flagProvisionPickupID,
 		flagPickupIDFile,
-		flagKeystoreID,
-		flagKeystoreName,
-		flagProviderName,
 		flagKeystoreCertName,
+		flagProviderName,
+		flagKeystoreName,
+		flagKeystoreID,
 		flagFormat,
-		sortedFlags(flagsApppend(
-			commonFlags,
-			sortableCredentialsFlags,
-		)),
+		flagProvisionOutputFile,
 	)
 
 	commonCredFlags = []cli.Flag{flagConfig, flagProfile, flagUrl, flagToken, flagTrustBundle}

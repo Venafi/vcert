@@ -41,7 +41,10 @@ const (
 )
 
 var (
-	flags commandFlags
+	flags             commandFlags
+	provisionCommands = stringSlice{
+		subCommandCloudKeystore,
+	}
 )
 
 type commandFlags struct {
@@ -148,4 +151,6 @@ type commandFlags struct {
 	providerName         string
 	keystoreName         string
 	keystoreCertName     string
+	provisionOutputFile  string
+	provisionPickupID    string
 }

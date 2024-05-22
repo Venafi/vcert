@@ -61,12 +61,12 @@ type Result struct {
 }
 
 type ProvisioningResult struct {
-	ARN          *string `json:"arn"`
-	AzureID      *string `json:"azureId"`
-	AzureName    *string `json:"azureName"`
-	AzureVersion *string `json:"azureVersion"`
-	GcpID        *string `json:"gcpId"`
-	GcpName      *string `json:"gcpName"`
+	ARN          *string `json:"arn,omitempty"`
+	AzureID      *string `json:"azureId,omitempty"`
+	AzureName    *string `json:"azureName,omitempty"`
+	AzureVersion *string `json:"azureVersion,omitempty"`
+	GcpID        *string `json:"gcpId,omitempty"`
+	GcpName      *string `json:"gcpName,omitempty"`
 }
 
 type Output struct {
@@ -464,9 +464,12 @@ func (r *ProvisioningResult) Format(format string) (string, error) {
 	result := ""
 	switch strings.ToLower(format) {
 	case formatJson:
-		b, err := json.Marshal(r)
+		b, err := json.MarshalIndent(r, "", "    ")
 		if err != nil {
 			return "", fmt.Errorf("failed to construct JSON: %s", err)
+		}
+		if err != nil {
+			return "", err
 		}
 		result = string(b)
 	default:
@@ -480,8 +483,8 @@ func (r *ProvisioningResult) Format(format string) (string, error) {
 
 		}
 		if r.GcpID != nil {
-			result += fmt.Sprintf("gcpId %s:", util.StringPointerToString(r.GcpID))
-			result += fmt.Sprintf("gcpName %s:", util.StringPointerToString(r.GcpName))
+			result += fmt.Sprintf("gcpId %s\n", util.StringPointerToString(r.GcpID))
+			result += fmt.Sprintf("gcpName %s\n", util.StringPointerToString(r.GcpName))
 		}
 	}
 	return result, nil

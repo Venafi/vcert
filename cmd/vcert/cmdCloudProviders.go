@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/Venafi/vcert/v5/pkg/webclient/cloudproviders"
 	"log"
 	"os"
 	"strings"
@@ -16,26 +17,40 @@ import (
 var (
 	commandProvision = &cli.Command{
 		Before: runBeforeCommand,
+		Action: doCommandProvision,
 		Name:   commandProvisionName,
-		Usage:  "To provision a certificate",
-		UsageText: ` vcert provision <Required Venafi Control Plane> <Options>
-
-		vcert provision cloudkeystore -k <VCP API key>
-		vcert provision cloudkeystore -k <VCP API key>
-		vcert provision cloudkeystore -p vcp -t <VCP access token>`,
+		Usage:  "To provision a certificate from Venafi Platform to a Cloud Keystore",
 		Subcommands: []*cli.Command{
 			{
-				Name:      subCommandCloudKeystore,
-				Flags:     provisionFlags,
-				Usage:     "set Cloud Keystore for provision",
-				UsageText: `vcert provision cloudkeystore`,
-				Action:    doCommandProvision,
+				Name:  subCommandCloudKeystore,
+				Flags: provisionFlags,
+				Usage: "provision certificate from Venafi Platform to Cloud Keystore",
+				UsageText: `vcert provision cloudkeystore <Required Venafi Control Plane> <Options>
+
+                vcert provision cloudkeystore -k <VCP API key> --certificate-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --keystore-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --format json
+		        vcert provision cloudkeystore -k <VCP API key> --pickup-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --provider-name "My GCP Provider"--keystore-name "My GCP provider" --certificate-name "example-venafi-com"
+		        vcert provision cloudkeystore -p vcp -t <VCP access token> --certificate-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --provider-name "My GCP Provider"--keystore-name "My GCP provider" --file "/path/to/file.txt"`,
+				Action: doCommandProvisionCloudKeystore,
 			},
 		},
 	}
 )
 
 func doCommandProvision(c *cli.Context) error {
+	return fmt.Errorf("the following subcommand(s) are required: \n%s", createBulletList(provisionCommands))
+}
+
+func createBulletList(items []string) string {
+	var builder strings.Builder
+	for _, item := range items {
+		builder.WriteString("• ")
+		builder.WriteString(item)
+		builder.WriteString("\n")
+	}
+	return builder.String()
+}
+
+func doCommandProvisionCloudKeystore(c *cli.Context) error {
 	err := validateProvisionFlags(c.Command.Name)
 	if err != nil {
 		return err
@@ -47,7 +62,7 @@ func doCommandProvision(c *cli.Context) error {
 
 	cfg, err := buildConfig(c, &flags)
 	if err != nil {
-		return fmt.Errorf("Failed to build vcert config: %s", err)
+		return fmt.Errorf("failed to build vcert config: %s", err)
 	}
 
 	connector, err := vcert.NewClient(&cfg)
@@ -83,20 +98,23 @@ func doCommandProvision(c *cli.Context) error {
 		return err
 	}
 
-	arn := metadata.GetAWSCertificateMetadata().GetARN()
-	azureID := metadata.GetAzureCertificateMetadata().GetID()
-	azureName := metadata.GetAzureCertificateMetadata().GetName()
-	azureVersion := metadata.GetAzureCertificateMetadata().GetVersion()
-	gcpID := metadata.GetGCPCertificateMetadata().GetID()
-	gcpName := metadata.GetGCPCertificateMetadata().GetName()
-
-	result := &ProvisioningResult{
-		ARN:          &arn,
-		AzureID:      &azureID,
-		AzureName:    &azureName,
-		AzureVersion: &azureVersion,
-		GcpID:        &gcpID,
-		GcpName:      &gcpName,
+	result := ProvisioningResult{}
+	switch cloudKeystore.Type {
+	case string(cloudproviders.CloudKeystoreTypeAcm):
+		arn := metadata.GetAWSCertificateMetadata().GetARN()
+		result.ARN = &arn
+	case string(cloudproviders.CloudKeystoreTypeAkv):
+		azureID := metadata.GetAzureCertificateMetadata().GetID()
+		azureName := metadata.GetAzureCertificateMetadata().GetName()
+		azureVersion := metadata.GetAzureCertificateMetadata().GetVersion()
+		result.AzureID = &azureID
+		result.AzureName = &azureName
+		result.AzureVersion = &azureVersion
+	case string(cloudproviders.CloudKeystoreTypeGcm):
+		gcpID := metadata.GetGCPCertificateMetadata().GetID()
+		gcpName := metadata.GetGCPCertificateMetadata().GetName()
+		result.GcpID = &gcpID
+		result.GcpName = &gcpName
 	}
 
 	err = result.Flush(flags.format)
