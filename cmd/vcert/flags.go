@@ -892,6 +892,7 @@ var (
 
 	provisionFlags = flagsApppend(
 		credentialsFlags,
+		flagPlatform,
 		flagCertificateID,
 		flagProvisionPickupID,
 		flagPickupIDFile,

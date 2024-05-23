@@ -20,8 +20,8 @@ var (
 		Usage: "provision certificate from Venafi Platform to Cloud Keystore",
 		UsageText: `vcert provision cloudkeystore <Required Venafi Control Plane> <Options>
 
-   vcert provision cloudkeystore -k <VCP API key> --certificate-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --keystore-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --format json
-   vcert provision cloudkeystore -k <VCP API key> --pickup-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --provider-name "My GCP Provider"--keystore-name "My GCP provider" --certificate-name "example-venafi-com"
+   vcert provision cloudkeystore --platform vcp -k <VCP API key> --certificate-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --keystore-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --format json
+   vcert provision cloudkeystore --platform vcp -k <VCP API key> --pickup-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --provider-name "My GCP Provider"--keystore-name "My GCP provider" --certificate-name "example-venafi-com"
    vcert provision cloudkeystore -p vcp -t <VCP access token> --certificate-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --provider-name "My GCP Provider" --keystore-name "My GCP provider" --file "/path/to/file.txt"`,
 		Action: doCommandProvisionCloudKeystore,
 	}
