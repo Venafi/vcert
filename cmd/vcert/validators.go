@@ -716,7 +716,7 @@ func validateProvisionFlags(commandName string) error {
 
 	if flags.keystoreID == "" {
 		if flags.keystoreName == "" || flags.providerName == "" {
-			return fmt.Errorf("any of keystore object, keystore ID or both Provider Name and Keystore Name must be provided for provisioning")
+			return fmt.Errorf("any of keystore ID or both Provider Name and Keystore Name must be provided for provisioning")
 		}
 	}
 

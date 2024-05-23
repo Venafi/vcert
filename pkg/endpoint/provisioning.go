@@ -1,8 +1,9 @@
 package endpoint
 
 import (
-	"github.com/Venafi/vcert/v5/pkg/domain"
 	"time"
+
+	"github.com/Venafi/vcert/v5/pkg/domain"
 )
 
 type ProvisioningRequest struct {
