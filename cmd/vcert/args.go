@@ -22,28 +22,28 @@ import (
 )
 
 const (
-	commandGenCSRName       = "gencsr"
-	commandEnrollName       = "enroll"
-	commandPickupName       = "pickup"
-	commandRevokeName       = "revoke"
-	commandRenewName        = "renew"
-	commandRetireName       = "retire"
-	commandGetCredName      = "getcred"
-	commandCheckCredName    = "checkcred"
-	commandVoidCredName     = "voidcred"
-	commandCreatePolicyName = "setpolicy"
-	commandGetePolicyName   = "getpolicy"
-	commandSshPickupName    = "sshpickup"
-	commandSshEnrollName    = "sshenroll"
-	commandSshGetConfigName = "sshgetconfig"
-	commandProvisionName    = "provision"
-	subCommandCloudKeystore = "cloudkeystore"
+	commandGenCSRName           = "gencsr"
+	commandEnrollName           = "enroll"
+	commandPickupName           = "pickup"
+	commandRevokeName           = "revoke"
+	commandRenewName            = "renew"
+	commandRetireName           = "retire"
+	commandGetCredName          = "getcred"
+	commandCheckCredName        = "checkcred"
+	commandVoidCredName         = "voidcred"
+	commandCreatePolicyName     = "setpolicy"
+	commandGetePolicyName       = "getpolicy"
+	commandSshPickupName        = "sshpickup"
+	commandSshEnrollName        = "sshenroll"
+	commandSshGetConfigName     = "sshgetconfig"
+	commandProvisionName        = "provision"
+	subCommandCloudKeystoreName = "cloudkeystore"
 )
 
 var (
 	flags             commandFlags
 	provisionCommands = stringSlice{
-		subCommandCloudKeystore,
+		subCommandCloudKeystoreName,
 	}
 )
 
