@@ -2,10 +2,12 @@ package cloudproviders
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/Khan/genqlient/graphql"
+	"github.com/google/uuid"
 
 	"github.com/Venafi/vcert/v5/pkg/domain"
 )
@@ -83,6 +85,24 @@ func (c *CloudProvidersClient) GetCloudKeystore(ctx context.Context, request dom
 	}, nil
 }
 
+func (c *CloudProvidersClient) GetMachineIdentity(ctx context.Context, request domain.GetCloudMachineIdentityRequest) (*domain.CloudMachineIdentity, error) {
+	if request.MachineIdentityID == nil {
+		return nil, fmt.Errorf("machine identity ID missing")
+	}
+
+	resp, err := GetMachineIdentities(ctx, c.graphqlClient, request.KeystoreID, request.MachineIdentityID, request.Fingerprints, request.NewlyDiscovered, request.Metadata)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve cloud machine identity with id %s: %w", *request.MachineIdentityID, err)
+	}
+	if len(resp.CloudMachineIdentities.Nodes) != 1 {
+		return nil, fmt.Errorf("could not find cloud machine identity with with ID %s", *request.MachineIdentityID)
+	}
+
+	mi := resp.CloudMachineIdentities.Nodes[0]
+
+	return mi.toDomain()
+}
+
 func getKeystoreOptionsString(cloudProviderID *string, cloudKeystoreID *string, cloudProviderName *string, cloudKeystoreName *string) string {
 	msg := ""
 	if cloudProviderID != nil {
@@ -124,4 +144,98 @@ func (c *CloudProvidersClient) ProvisionCertificate(ctx context.Context, certifi
 		WorkflowId:   resp.GetProvisionToCloudKeystore().GetWorkflowId(),
 		WorkflowName: resp.GetProvisionToCloudKeystore().GetWorkflowName(),
 	}, nil
+}
+
+func (v *GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity) toDomain() (*domain.CloudMachineIdentity, error) {
+	id, err := uuid.Parse(v.Id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse cloud machine identity id %s: %w", v.Id, err)
+	}
+	keystoreID, err := uuid.Parse(v.CloudKeystoreId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse cloud key store id %s: %w", v.CloudKeystoreId, err)
+	}
+	certificateID, err := uuid.Parse(v.CertificateId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse cloud certificate id %s: %w", v.CertificateId, err)
+	}
+	providerIDStr := ""
+	if v.CloudProviderId != nil {
+		providerIDStr = *v.CloudProviderId
+	}
+	providerID, err := uuid.Parse(providerIDStr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse cloud provider id %s: %w", providerIDStr, err)
+	}
+
+	keystoreName := ""
+	if v.CloudKeystoreName != nil {
+		keystoreName = *v.CloudKeystoreName
+	}
+	providerName := ""
+	if v.CloudProviderName != nil {
+		providerName = *v.CloudProviderName
+	}
+	statusDetails := ""
+	if v.StatusDetails != nil {
+		statusDetails = *v.StatusDetails
+	}
+	metadata, err := v.metadataToDomain()
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse cloud certificate metadata: %w", err)
+	}
+
+	return &domain.CloudMachineIdentity{
+		ID:                id,
+		CloudKeystoreID:   keystoreID,
+		CloudKeystoreName: keystoreName,
+		CloudProviderID:   providerID,
+		CloudProviderName: providerName,
+		CertificateID:     certificateID,
+		Metadata:          metadata,
+		Status:            v.Status.toDomain(),
+		StatusDetails:     statusDetails,
+	}, nil
+}
+
+func (mis MachineIdentityStatus) toDomain() domain.MachineIdentityStatus {
+	switch mis {
+	case MachineIdentityStatusNew:
+		return domain.MachineIdentityStatusNew
+	case MachineIdentityStatusPending:
+		return domain.MachineIdentityStatusPending
+	case MachineIdentityStatusInstalled:
+		return domain.MachineIdentityStatusInstalled
+	case MachineIdentityStatusDiscovered:
+		return domain.MachineIdentityStatusDiscovered
+	case MachineIdentityStatusValidated:
+		return domain.MachineIdentityStatusValidated
+	case MachineIdentityStatusMissing:
+		return domain.MachineIdentityStatusMissing
+	case MachineIdentityStatusFailed:
+		return domain.MachineIdentityStatusFailed
+	default:
+		return domain.MachineIdentityStatusUnknown
+	}
+}
+
+func (v *GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity) metadataToDomain() (*domain.CertificateCloudMetadata, error) {
+	if v.Metadata == nil {
+		return nil, nil
+	}
+	m := *v.Metadata
+
+	data, err := json.Marshal(m)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal cloud certificate metadata: %w", err)
+	}
+
+	values := make(map[string]interface{})
+	err = json.Unmarshal(data, &values)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal cloud certificate metadata: %w", err)
+	}
+
+	certMetadata := domain.NewCertificateCloudMetadata(values)
+	return &certMetadata, nil
 }

@@ -225,8 +225,6 @@ func (c *Connector) GetCloudKeystoreByName(cloudProviderID string, cloudKeystore
 
 	request := domain.GetCloudKeystoreRequest{
 		CloudProviderID:   &cloudProviderID,
-		CloudProviderName: nil,
-		CloudKeystoreID:   nil,
 		CloudKeystoreName: &cloudKeystoreName,
 	}
 
@@ -238,6 +236,23 @@ func (c *Connector) GetCloudKeystoreByName(cloudProviderID string, cloudKeystore
 		return nil, fmt.Errorf("could not find Cloud Keystore with name %s in Cloud Provider with ID %s", cloudKeystoreName, cloudProviderID)
 	}
 	return cloudKeystore, nil
+}
+
+func (c *Connector) GetMachineIdentityByID(machineIdentityID string) (*domain.CloudMachineIdentity, error) {
+	if machineIdentityID == "" {
+		return nil, fmt.Errorf("machine identity ID cannot be empty")
+	}
+	request := domain.GetCloudMachineIdentityRequest{
+		MachineIdentityID: &machineIdentityID,
+	}
+	machineIdentity, err := c.cloudProvidersClient.GetMachineIdentity(context.Background(), request)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve Cloud Machine Identity with ID %s: %w", machineIdentityID, err)
+	}
+	if machineIdentity == nil {
+		return nil, fmt.Errorf("could not find Cloud Machine Identity with ID %s", machineIdentityID)
+	}
+	return machineIdentity, nil
 }
 
 func getCloudMetadataFromWebsocketResponse(respMap interface{}, keystoreType string, keystoreId string) (*CloudProvisioningMetadata, error) {

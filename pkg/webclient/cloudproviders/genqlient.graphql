@@ -33,3 +33,32 @@ query GetCloudProviderByName($name: String!){
         }
     }
 }
+
+query GetMachineIdentities($cloudKeystoreId: UUID, $machineIdentityId: UUID, $fingerprints: [String!], $newlyDiscovered: Boolean, $metadata: String){
+    cloudMachineIdentities(filter: {cloudKeystoreId: $cloudKeystoreId, machineIdentityId: $machineIdentityId, fingerprints: $fingerprints, newlyDiscovered: $newlyDiscovered, metadata: $metadata}){
+        nodes {
+            id
+            cloudKeystoreId
+            cloudKeystoreName
+            cloudProviderId
+            cloudProviderName
+            metadata {
+                ... on AWSCertificateMetadata {
+                    arn
+                }
+                ... on AzureCertificateMetadata {
+                    azureId
+                    name
+                    version
+                }
+                ... on GCPCertificateMetadata {
+                    gcpId
+                    name
+                }
+            }
+            status
+            statusDetails
+            certificateId
+        }
+    }
+}
