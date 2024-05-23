@@ -752,6 +752,12 @@ var (
 		Destination: &flags.provisionPickupID,
 	}
 
+	flagProvisionFormat = &cli.StringFlag{
+		Name:        "format",
+		Usage:       "The format of the operation output: text or JSON. Defaults to text.",
+		Destination: &flags.provisionFormat,
+	}
+
 	commonFlags              = []cli.Flag{flagInsecure, flagVerbose, flagNoPrompt}
 	keyFlags                 = []cli.Flag{flagKeyType, flagKeySize, flagKeyCurve, flagKeyFile, flagKeyPassword}
 	sansFlags                = []cli.Flag{flagDNSSans, flagEmailSans, flagIPSans, flagURISans, flagUPNSans}
@@ -900,7 +906,7 @@ var (
 		flagProviderName,
 		flagKeystoreName,
 		flagKeystoreID,
-		flagFormat,
+		flagProvisionFormat,
 		flagProvisionOutputFile, // TODO: implement this flag
 	)
 

@@ -485,6 +485,10 @@ func (r *ProvisioningResult) Format(format string) (string, error) {
 			result += fmt.Sprintf("gcpId %s\n", r.GcpID)
 			result += fmt.Sprintf("gcpName %s\n", r.GcpName)
 		}
+		if r.MachineIdentityId != "" {
+			result += fmt.Sprintf("machineIdentityId %s\n", r.MachineIdentityId)
+			result += fmt.Sprintf("machineIdentityActionType %s\n", r.MachineIdentityActionType)
+		}
 	}
 	return result, nil
 }

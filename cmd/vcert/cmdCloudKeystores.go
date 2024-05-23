@@ -91,7 +91,7 @@ func doCommandProvisionCloudKeystore(c *cli.Context) error {
 	result.MachineIdentityId = metadata.GetMachineIdentityMetadata().GetID()
 	result.MachineIdentityActionType = metadata.GetMachineIdentityMetadata().GetActionType()
 
-	err = result.Flush(flags.format)
+	err = result.Flush(flags.provisionFormat)
 
 	if err != nil {
 		return fmt.Errorf("failed to output the results: %s", err)

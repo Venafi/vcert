@@ -706,7 +706,7 @@ func validateProvisionFlags(commandName string) error {
 		return err
 	}
 
-	if flags.format != "" && flags.format != "json" {
+	if flags.provisionFormat != "" && flags.provisionFormat != "json" {
 		return fmt.Errorf("unexpected output format: %s", flags.format)
 	}
 
