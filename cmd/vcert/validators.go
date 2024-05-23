@@ -98,9 +98,31 @@ func validateCommonFlags(commandName string) error {
 
 func validateConnectionFlags(commandName string) error {
 
-	err := commonConnectionFlagsValidations(commandName)
-	if err != nil {
-		return err
+	if flags.config != "" {
+		if flags.apiKey != "" ||
+			flags.userName != "" ||
+			flags.password != "" ||
+			flags.token != "" ||
+			flags.url != "" ||
+			flags.tokenURL != "" ||
+			flags.externalJWT != "" ||
+			flags.testMode {
+			return fmt.Errorf("connection details cannot be specified with flags when --config is used")
+		}
+		return nil
+	}
+
+	if flags.profile != "" {
+		return fmt.Errorf("--profile option cannot be used without --config option")
+	}
+
+	// Nothing to do in test mode
+	if flags.testMode {
+		if commandName == commandGetCredName {
+			// unless it is get credentials which cannot be emulated
+			return fmt.Errorf("there is no test mode for %s command", commandName)
+		}
+		return nil
 	}
 
 	switch flags.platform {
