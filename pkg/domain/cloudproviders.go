@@ -151,9 +151,9 @@ func (ccm *CertificateCloudMetadata) GetType() string {
 	case "AWSCertificateMetadata":
 		return CloudMetadataACM
 	case "AzureCertificateMetadata":
-		return CloudMetadataGCM
-	case "GCPCertificateMetadata":
 		return CloudMetadataAKV
+	case "GCPCertificateMetadata":
+		return CloudMetadataGCM
 	default:
 		return CloudMetadataUnknown
 	}
