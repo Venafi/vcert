@@ -10,6 +10,13 @@ mutation ProvisionCertificate(
     }
 }
 
+mutation ProvisionCertificateToMachineIdentity($machineIdentityId: UUID!, $wsClientId: UUID!, $certificateId: UUID){
+    provisionToCloudMachineIdentity(machineIdentityId: $machineIdentityId, wsClientId: $wsClientId,certificateId: $certificateId ){
+        workflowId
+        workflowName
+    }
+}
+
 query GetCloudProviders($status: CloudProviderStatus, $providerType: CloudProviderType, $name: String!){
     cloudProviders(filter: {status: $status, type: $providerType, name: $name}){
         nodes {

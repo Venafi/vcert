@@ -75,17 +75,13 @@ func doCommandProvisionCloudKeystore(c *cli.Context) error {
 		return err
 	}
 
-	result := ProvisioningResult{}
-	switch cloudKeystore.Type {
-	case cloud.KeystoreTypeACM:
-		result.ARN = metadata.GetAWSCertificateMetadata().GetARN()
-	case cloud.KeystoreTypeAKV:
-		result.AzureID = metadata.GetAzureCertificateMetadata().GetID()
-		result.AzureName = metadata.GetAzureCertificateMetadata().GetName()
-		result.AzureVersion = metadata.GetAzureCertificateMetadata().GetVersion()
-	case cloud.KeystoreTypeGCM:
-		result.GcpID = metadata.GetGCPCertificateMetadata().GetID()
-		result.GcpName = metadata.GetGCPCertificateMetadata().GetName()
+	result := ProvisioningResult{
+		ARN:          metadata.GetAWSCertificateMetadata().GetARN(),
+		AzureID:      metadata.GetAzureCertificateMetadata().GetID(),
+		AzureName:    metadata.GetAzureCertificateMetadata().GetName(),
+		AzureVersion: metadata.GetAzureCertificateMetadata().GetVersion(),
+		GcpID:        metadata.GetGCPCertificateMetadata().GetID(),
+		GcpName:      metadata.GetGCPCertificateMetadata().GetName(),
 	}
 
 	result.MachineIdentityId = metadata.GetMachineIdentityMetadata().GetID()
