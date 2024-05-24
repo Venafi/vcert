@@ -2,6 +2,54 @@ package domain
 
 import "github.com/google/uuid"
 
+type CloudProviderStatus int
+
+const (
+	CloudProviderStatusValidated = iota
+	CloudProviderStatusNotValidated
+
+	CloudProviderStatusValidatedStr    = "VALIDATED"
+	CloudProviderStatusNotValidatedStr = "NOT_VALIDATED"
+	CloudProviderStatusUnknownStr      = "UNKNOWN"
+)
+
+func (cps CloudProviderStatus) String() string {
+	switch cps {
+	case CloudProviderStatusValidated:
+		return CloudProviderStatusValidatedStr
+	case CloudProviderStatusNotValidated:
+		return CloudProviderStatusNotValidatedStr
+	default:
+		return CloudProviderStatusUnknownStr
+	}
+}
+
+type CloudProviderType int
+
+const (
+	CloudProviderTypeAWS = iota
+	CloudProviderTypeAzure
+	CloudProviderTypeGCP
+
+	CloudProviderTypeAWSStr     = "AWS"
+	CloudProviderTypeAzureStr   = "AZURE"
+	CloudProviderTypeGCPStr     = "GCP"
+	CloudProviderTypeUnknownStr = "UNKNOWN"
+)
+
+func (cps CloudProviderType) String() string {
+	switch cps {
+	case CloudProviderTypeAWS:
+		return CloudProviderTypeAWSStr
+	case CloudProviderTypeAzure:
+		return CloudProviderTypeAzureStr
+	case CloudProviderTypeGCP:
+		return CloudProviderTypeGCPStr
+	default:
+		return CloudProviderTypeUnknownStr
+	}
+}
+
 type CloudProvider struct {
 	ID             string
 	Name           string
@@ -9,6 +57,12 @@ type CloudProvider struct {
 	Status         string
 	StatusDetails  string
 	KeystoresCount int
+}
+
+type GetCloudProviderRequest struct {
+	Name   string
+	Status CloudProviderStatus
+	Type   CloudProviderType
 }
 
 type CloudKeystore struct {
@@ -75,27 +129,6 @@ func (mis MachineIdentityStatus) String() string {
 		return MachineIdentityStatusFailedStr
 	default:
 		return MachineIdentityStatusUnknownStr
-	}
-}
-
-func GetMachineIdentityStatus(status string) MachineIdentityStatus {
-	switch status {
-	case MachineIdentityStatusNewStr:
-		return MachineIdentityStatusNew
-	case MachineIdentityStatusPendingStr:
-		return MachineIdentityStatusPending
-	case MachineIdentityStatusInstalledStr:
-		return MachineIdentityStatusInstalled
-	case MachineIdentityStatusDiscoveredStr:
-		return MachineIdentityStatusDiscovered
-	case MachineIdentityStatusValidatedStr:
-		return MachineIdentityStatusValidated
-	case MachineIdentityStatusMissingStr:
-		return MachineIdentityStatusMissing
-	case MachineIdentityStatusFailedStr:
-		return MachineIdentityStatusFailed
-	default:
-		return MachineIdentityStatusUnknown
 	}
 }
 

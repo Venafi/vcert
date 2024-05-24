@@ -25,16 +25,23 @@ func NewCloudProvidersClient(url string, httpClient *http.Client) *CloudProvider
 	}
 }
 
-func (c *CloudProvidersClient) GetCloudProviderByName(ctx context.Context, name string) (*domain.CloudProvider, error) {
-	if name == "" {
+func (c *CloudProvidersClient) GetCloudProvider(ctx context.Context, request domain.GetCloudProviderRequest) (*domain.CloudProvider, error) {
+	if request.Name == "" {
 		return nil, fmt.Errorf("cloud provider name cannot be empty")
 	}
-	resp, err := GetCloudProviderByName(ctx, c.graphqlClient, name)
+
+	status := cloudProviderStatusFromDomain(request.Status)
+	providerType, err := cloudProviderTypeFromDomain(request.Type)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve Cloud Provider with name %s: %w", name, err)
+		return nil, err
+	}
+
+	resp, err := GetCloudProviders(ctx, c.graphqlClient, &status, &providerType, request.Name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve Cloud Provider with name %s: %w", request.Name, err)
 	}
 	if resp == nil || resp.GetCloudProviders() == nil || len(resp.GetCloudProviders().Nodes) != 1 {
-		return nil, fmt.Errorf("could not find Cloud Provider with name %s", name)
+		return nil, fmt.Errorf("could not find Cloud Provider with name %s", request.Name)
 	}
 
 	cp := resp.GetCloudProviders().Nodes[0]
@@ -55,7 +62,6 @@ func (c *CloudProvidersClient) GetCloudProviderByName(ctx context.Context, name 
 }
 
 func (c *CloudProvidersClient) GetCloudKeystore(ctx context.Context, request domain.GetCloudKeystoreRequest) (*domain.CloudKeystore, error) {
-
 	if request.CloudKeystoreID == nil {
 		if request.CloudKeystoreName == nil || (request.CloudProviderID == nil && request.CloudProviderName == nil) {
 			return nil, fmt.Errorf("following combinations are accepted for provisioning: keystore ID, or both provider Name and keystore Name, or both provider ID and keystore Name")
@@ -102,24 +108,6 @@ func (c *CloudProvidersClient) GetMachineIdentity(ctx context.Context, request d
 	mi := resp.CloudMachineIdentities.Nodes[0]
 
 	return mi.toDomain()
-}
-
-func getKeystoreOptionsString(cloudProviderID *string, cloudKeystoreID *string, cloudProviderName *string, cloudKeystoreName *string) string {
-	msg := ""
-	if cloudProviderID != nil {
-		msg += fmt.Sprintf("Cloud Provider ID: %s, ", *cloudProviderID)
-	}
-	if cloudKeystoreID != nil {
-		msg += fmt.Sprintf("Cloud Keystore ID: %s, ", *cloudKeystoreID)
-	}
-	if cloudProviderName != nil {
-		msg += fmt.Sprintf("Cloud Provider Name: %s, ", *cloudProviderName)
-	}
-	if cloudKeystoreName != nil {
-		msg += fmt.Sprintf("Cloud Keystore Name: %s", *cloudKeystoreName)
-	}
-
-	return msg
 }
 
 func (c *CloudProvidersClient) ProvisionCertificate(ctx context.Context, certificateID string, cloudKeystoreID string, wsClientID string, options *CertificateProvisioningOptionsInput) (*domain.ProvisioningResponse, error) {
@@ -239,4 +227,28 @@ func (v *GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNode
 
 	certMetadata := domain.NewCertificateCloudMetadata(values)
 	return &certMetadata, nil
+}
+
+func cloudProviderStatusFromDomain(status domain.CloudProviderStatus) CloudProviderStatus {
+	switch status {
+	case domain.CloudProviderStatusValidated:
+		return CloudProviderStatusValidated
+	case domain.CloudProviderStatusNotValidated:
+		return CloudProviderStatusNotValidated
+	default:
+		return CloudProviderStatusNotValidated
+	}
+}
+
+func cloudProviderTypeFromDomain(providerType domain.CloudProviderType) (CloudProviderType, error) {
+	switch providerType {
+	case domain.CloudProviderTypeAWS:
+		return CloudProviderTypeAws, nil
+	case domain.CloudProviderTypeAzure:
+		return CloudProviderTypeAzure, nil
+	case domain.CloudProviderTypeGCP:
+		return CloudProviderTypeGcp, nil
+	default:
+		return "UNKNOWN", fmt.Errorf("failed to determine cloud provider type for %s", providerType)
+	}
 }

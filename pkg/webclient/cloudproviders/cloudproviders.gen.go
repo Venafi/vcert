@@ -218,22 +218,22 @@ func (v *GetCloudKeystoresResponse) GetCloudKeystores() *GetCloudKeystoresCloudK
 	return v.CloudKeystores
 }
 
-// GetCloudProviderByNameCloudProvidersCloudProviderConnection includes the requested fields of the GraphQL type CloudProviderConnection.
+// GetCloudProvidersCloudProvidersCloudProviderConnection includes the requested fields of the GraphQL type CloudProviderConnection.
 // The GraphQL type's documentation follows.
 //
 // A page of CloudProvider results
-type GetCloudProviderByNameCloudProvidersCloudProviderConnection struct {
+type GetCloudProvidersCloudProvidersCloudProviderConnection struct {
 	// CloudProviders in the current page, without cursor
-	Nodes []*GetCloudProviderByNameCloudProvidersCloudProviderConnectionNodesCloudProvider `json:"nodes"`
+	Nodes []*GetCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider `json:"nodes"`
 }
 
-// GetNodes returns GetCloudProviderByNameCloudProvidersCloudProviderConnection.Nodes, and is useful for accessing the field via an interface.
-func (v *GetCloudProviderByNameCloudProvidersCloudProviderConnection) GetNodes() []*GetCloudProviderByNameCloudProvidersCloudProviderConnectionNodesCloudProvider {
+// GetNodes returns GetCloudProvidersCloudProvidersCloudProviderConnection.Nodes, and is useful for accessing the field via an interface.
+func (v *GetCloudProvidersCloudProvidersCloudProviderConnection) GetNodes() []*GetCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider {
 	return v.Nodes
 }
 
-// GetCloudProviderByNameCloudProvidersCloudProviderConnectionNodesCloudProvider includes the requested fields of the GraphQL type CloudProvider.
-type GetCloudProviderByNameCloudProvidersCloudProviderConnectionNodesCloudProvider struct {
+// GetCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider includes the requested fields of the GraphQL type CloudProvider.
+type GetCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider struct {
 	Id             string              `json:"id"`
 	Name           string              `json:"name"`
 	Type           CloudProviderType   `json:"type"`
@@ -242,38 +242,38 @@ type GetCloudProviderByNameCloudProvidersCloudProviderConnectionNodesCloudProvid
 	KeystoresCount int                 `json:"keystoresCount"`
 }
 
-// GetId returns GetCloudProviderByNameCloudProvidersCloudProviderConnectionNodesCloudProvider.Id, and is useful for accessing the field via an interface.
-func (v *GetCloudProviderByNameCloudProvidersCloudProviderConnectionNodesCloudProvider) GetId() string {
+// GetId returns GetCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider.Id, and is useful for accessing the field via an interface.
+func (v *GetCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider) GetId() string {
 	return v.Id
 }
 
-// GetName returns GetCloudProviderByNameCloudProvidersCloudProviderConnectionNodesCloudProvider.Name, and is useful for accessing the field via an interface.
-func (v *GetCloudProviderByNameCloudProvidersCloudProviderConnectionNodesCloudProvider) GetName() string {
+// GetName returns GetCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider.Name, and is useful for accessing the field via an interface.
+func (v *GetCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider) GetName() string {
 	return v.Name
 }
 
-// GetType returns GetCloudProviderByNameCloudProvidersCloudProviderConnectionNodesCloudProvider.Type, and is useful for accessing the field via an interface.
-func (v *GetCloudProviderByNameCloudProvidersCloudProviderConnectionNodesCloudProvider) GetType() CloudProviderType {
+// GetType returns GetCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider.Type, and is useful for accessing the field via an interface.
+func (v *GetCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider) GetType() CloudProviderType {
 	return v.Type
 }
 
-// GetStatus returns GetCloudProviderByNameCloudProvidersCloudProviderConnectionNodesCloudProvider.Status, and is useful for accessing the field via an interface.
-func (v *GetCloudProviderByNameCloudProvidersCloudProviderConnectionNodesCloudProvider) GetStatus() CloudProviderStatus {
+// GetStatus returns GetCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider.Status, and is useful for accessing the field via an interface.
+func (v *GetCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider) GetStatus() CloudProviderStatus {
 	return v.Status
 }
 
-// GetStatusDetails returns GetCloudProviderByNameCloudProvidersCloudProviderConnectionNodesCloudProvider.StatusDetails, and is useful for accessing the field via an interface.
-func (v *GetCloudProviderByNameCloudProvidersCloudProviderConnectionNodesCloudProvider) GetStatusDetails() *string {
+// GetStatusDetails returns GetCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider.StatusDetails, and is useful for accessing the field via an interface.
+func (v *GetCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider) GetStatusDetails() *string {
 	return v.StatusDetails
 }
 
-// GetKeystoresCount returns GetCloudProviderByNameCloudProvidersCloudProviderConnectionNodesCloudProvider.KeystoresCount, and is useful for accessing the field via an interface.
-func (v *GetCloudProviderByNameCloudProvidersCloudProviderConnectionNodesCloudProvider) GetKeystoresCount() int {
+// GetKeystoresCount returns GetCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider.KeystoresCount, and is useful for accessing the field via an interface.
+func (v *GetCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider) GetKeystoresCount() int {
 	return v.KeystoresCount
 }
 
-// GetCloudProviderByNameResponse is returned by GetCloudProviderByName on success.
-type GetCloudProviderByNameResponse struct {
+// GetCloudProvidersResponse is returned by GetCloudProviders on success.
+type GetCloudProvidersResponse struct {
 	// Retrieves Cloud Providers.
 	// The pagination can be either forward or backward. To enable forward pagination, two arguments
 	// are used: `after` and `first`. To enable backward pagination, two arguments are used: `before` and `last`.
@@ -288,11 +288,11 @@ type GetCloudProviderByNameResponse struct {
 	// meaning that the results will be the last page, if `last` value is supplied
 	// - last: non-negative integer, denoting the last `n` number of records to return before the `before` cursor value.
 	// Max value is 100
-	CloudProviders *GetCloudProviderByNameCloudProvidersCloudProviderConnection `json:"cloudProviders"`
+	CloudProviders *GetCloudProvidersCloudProvidersCloudProviderConnection `json:"cloudProviders"`
 }
 
-// GetCloudProviders returns GetCloudProviderByNameResponse.CloudProviders, and is useful for accessing the field via an interface.
-func (v *GetCloudProviderByNameResponse) GetCloudProviders() *GetCloudProviderByNameCloudProvidersCloudProviderConnection {
+// GetCloudProviders returns GetCloudProvidersResponse.CloudProviders, and is useful for accessing the field via an interface.
+func (v *GetCloudProvidersResponse) GetCloudProviders() *GetCloudProvidersCloudProvidersCloudProviderConnection {
 	return v.CloudProviders
 }
 
@@ -694,13 +694,21 @@ func (v *__GetCloudKeystoresInput) GetCloudProviderId() *string { return v.Cloud
 // GetCloudProviderName returns __GetCloudKeystoresInput.CloudProviderName, and is useful for accessing the field via an interface.
 func (v *__GetCloudKeystoresInput) GetCloudProviderName() *string { return v.CloudProviderName }
 
-// __GetCloudProviderByNameInput is used internally by genqlient
-type __GetCloudProviderByNameInput struct {
-	Name string `json:"name"`
+// __GetCloudProvidersInput is used internally by genqlient
+type __GetCloudProvidersInput struct {
+	Status       *CloudProviderStatus `json:"status"`
+	ProviderType *CloudProviderType   `json:"providerType"`
+	Name         string               `json:"name"`
 }
 
-// GetName returns __GetCloudProviderByNameInput.Name, and is useful for accessing the field via an interface.
-func (v *__GetCloudProviderByNameInput) GetName() string { return v.Name }
+// GetStatus returns __GetCloudProvidersInput.Status, and is useful for accessing the field via an interface.
+func (v *__GetCloudProvidersInput) GetStatus() *CloudProviderStatus { return v.Status }
+
+// GetProviderType returns __GetCloudProvidersInput.ProviderType, and is useful for accessing the field via an interface.
+func (v *__GetCloudProvidersInput) GetProviderType() *CloudProviderType { return v.ProviderType }
+
+// GetName returns __GetCloudProvidersInput.Name, and is useful for accessing the field via an interface.
+func (v *__GetCloudProvidersInput) GetName() string { return v.Name }
 
 // __GetMachineIdentitiesInput is used internally by genqlient
 type __GetMachineIdentitiesInput struct {
@@ -794,10 +802,10 @@ func GetCloudKeystores(
 	return &data_, err_
 }
 
-// The query or mutation executed by GetCloudProviderByName.
-const GetCloudProviderByName_Operation = `
-query GetCloudProviderByName ($name: String!) {
-	cloudProviders(filter: {name:$name}) {
+// The query or mutation executed by GetCloudProviders.
+const GetCloudProviders_Operation = `
+query GetCloudProviders ($status: CloudProviderStatus, $providerType: CloudProviderType, $name: String!) {
+	cloudProviders(filter: {status:$status,type:$providerType,name:$name}) {
 		nodes {
 			id
 			name
@@ -810,21 +818,25 @@ query GetCloudProviderByName ($name: String!) {
 }
 `
 
-func GetCloudProviderByName(
+func GetCloudProviders(
 	ctx_ context.Context,
 	client_ graphql.Client,
+	status *CloudProviderStatus,
+	providerType *CloudProviderType,
 	name string,
-) (*GetCloudProviderByNameResponse, error) {
+) (*GetCloudProvidersResponse, error) {
 	req_ := &graphql.Request{
-		OpName: "GetCloudProviderByName",
-		Query:  GetCloudProviderByName_Operation,
-		Variables: &__GetCloudProviderByNameInput{
-			Name: name,
+		OpName: "GetCloudProviders",
+		Query:  GetCloudProviders_Operation,
+		Variables: &__GetCloudProvidersInput{
+			Status:       status,
+			ProviderType: providerType,
+			Name:         name,
 		},
 	}
 	var err_ error
 
-	var data_ GetCloudProviderByNameResponse
+	var data_ GetCloudProvidersResponse
 	resp_ := &graphql.Response{Data: &data_}
 
 	err_ = client_.MakeRequest(

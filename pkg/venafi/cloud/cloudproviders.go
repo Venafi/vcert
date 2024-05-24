@@ -228,17 +228,13 @@ func (c *Connector) getGraphqlHTTPClient() *http.Client {
 	return httpclient
 }
 
-func (c *Connector) GetCloudProviderByName(name string) (*domain.CloudProvider, error) {
-	if name == "" {
-		return nil, fmt.Errorf("cloud provider name cannot be empty")
-	}
-
-	cloudProvider, err := c.cloudProvidersClient.GetCloudProviderByName(context.Background(), name)
+func (c *Connector) GetCloudProvider(request domain.GetCloudProviderRequest) (*domain.CloudProvider, error) {
+	cloudProvider, err := c.cloudProvidersClient.GetCloudProvider(context.Background(), request)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve Cloud Provider with name %s: %w", name, err)
+		return nil, fmt.Errorf("failed to retrieve Cloud Provider with name %s: %w", request.Name, err)
 	}
 	if cloudProvider == nil {
-		return nil, fmt.Errorf("could not find Cloud Provider with name %s", name)
+		return nil, fmt.Errorf("could not find Cloud Provider with name %s", request.Name)
 	}
 	return cloudProvider, nil
 }
@@ -255,19 +251,17 @@ func (c *Connector) GetCloudKeystore(request domain.GetCloudKeystoreRequest) (*d
 	return cloudKeystore, nil
 }
 
-func (c *Connector) GetMachineIdentityByID(machineIdentityID string) (*domain.CloudMachineIdentity, error) {
-	if machineIdentityID == "" {
+func (c *Connector) GetMachineIdentity(request domain.GetCloudMachineIdentityRequest) (*domain.CloudMachineIdentity, error) {
+	if request.MachineIdentityID == nil {
 		return nil, fmt.Errorf("machine identity ID cannot be empty")
 	}
-	request := domain.GetCloudMachineIdentityRequest{
-		MachineIdentityID: &machineIdentityID,
-	}
+
 	machineIdentity, err := c.cloudProvidersClient.GetMachineIdentity(context.Background(), request)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve Cloud Machine Identity with ID %s: %w", machineIdentityID, err)
+		return nil, fmt.Errorf("failed to retrieve Cloud Machine Identity with ID %s: %w", *request.MachineIdentityID, err)
 	}
 	if machineIdentity == nil {
-		return nil, fmt.Errorf("could not find Cloud Machine Identity with ID %s", machineIdentityID)
+		return nil, fmt.Errorf("could not find Cloud Machine Identity with ID %s", *request.MachineIdentityID)
 	}
 	return machineIdentity, nil
 }

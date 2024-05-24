@@ -10,19 +10,8 @@ mutation ProvisionCertificate(
     }
 }
 
-query GetCloudKeystores($cloudKeystoreId: UUID, $cloudKeystoreName: String, $cloudProviderId: UUID, $cloudProviderName: String) {
-    cloudKeystores(filter: {cloudKeystoreId: $cloudKeystoreId, cloudKeystoreName: $cloudKeystoreName, cloudProviderId: $cloudProviderId, cloudProviderName: $cloudProviderName}) {
-        nodes {
-            id
-            name
-            type
-            machineIdentitiesCount
-        }
-    }
-}
-
-query GetCloudProviderByName($name: String!){
-    cloudProviders(filter: {name: $name}){
+query GetCloudProviders($status: CloudProviderStatus, $providerType: CloudProviderType, $name: String!){
+    cloudProviders(filter: {status: $status, type: $providerType, name: $name}){
         nodes {
             id
             name
@@ -30,6 +19,17 @@ query GetCloudProviderByName($name: String!){
             status
             statusDetails
             keystoresCount
+        }
+    }
+}
+
+query GetCloudKeystores($cloudKeystoreId: UUID, $cloudKeystoreName: String, $cloudProviderId: UUID, $cloudProviderName: String) {
+    cloudKeystores(filter: {cloudKeystoreId: $cloudKeystoreId, cloudKeystoreName: $cloudKeystoreName, cloudProviderId: $cloudProviderId, cloudProviderName: $cloudProviderName}) {
+        nodes {
+            id
+            name
+            type
+            machineIdentitiesCount
         }
     }
 }
