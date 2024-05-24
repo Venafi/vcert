@@ -907,7 +907,7 @@ var (
 		flagKeystoreName,
 		flagKeystoreID,
 		flagProvisionFormat,
-		flagProvisionOutputFile, // TODO: implement this flag
+		flagProvisionOutputFile,
 	)
 
 	commonCredFlags = []cli.Flag{flagConfig, flagProfile, flagUrl, flagToken, flagTrustBundle}

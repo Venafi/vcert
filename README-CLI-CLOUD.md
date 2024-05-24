@@ -35,6 +35,7 @@ Use these links to quickly jump to a relevant section lower on this page:
   - [Certificate Retrieval Parameters](#certificate-retrieval-parameters)
   - [Certificate Renewal Parameters](#certificate-renewal-parameters)
   - [Certificate Retire Parameters](#certificate-retire-parameters)
+  - [Certificate Provisioning Parameters](#certificate-provisioning-parameters)
   - [Parameters for Applying Certificate Policy](#parameters-for-applying-certificate-policy)
   - [Parameters for Viewing Certificate Policy](#parameters-for-viewing-certificate-policy)
   - [Examples](#examples)
@@ -216,6 +217,29 @@ Options:
 |----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `--id`         | Use to specify the unique identifier of the certificate to retire.  Value may be specified as a string or read from a file using the `file:` prefix.            |
 | `--thumbprint` | Use to specify the SHA1 thumbprint of the certificate to retire. Value may be specified as a string or read from the certificate file using the `file:` prefix. |
+
+## Certificate Provisioning Parameters
+API key:
+```
+vcert provisioning cloudkeystore -p vcp -k <api key> [--certificate-id <certificate id> | --pickup-id <request id> | --pickup-id-file <file name>] [ --keystore-id <keystore id> | --keystore-name <keystore name> --provider-name <provider name>]
+```
+Access token:
+```
+vcert provisioning cloudkeystore -p vcp -t <access token> [--certificate-id <certificate id> | --pickup-id <request id> | --pickup-id-file <file name>] [ --keystore-id <keystore id> | --keystore-name <keystore name> --provider-name <provider name>]
+```
+Options:
+
+| Command              | Description                                                                                                                                                                                                            |
+|----------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `--certificate-id`   | The id of the certificate to be provisioned to a cloud keystore.                                                                                                                                                       |
+| `--pickup-id`        | Use to specify the unique identifier of the certificate returned by the enroll or renew actions if `--no-pickup` was used or a timeout occurred. Required when `--pickup-id-file` is not specified.                    |
+| `--pickup-id-file`   | Use to specify a file name that contains the unique identifier of the certificate returned by the enroll or renew actions if --no-pickup was used or a timeout occurred. Required when `--pickup-id` is not specified. |
+| `--certificate-name` | Use to specify Cloud Keystore Certificate Name if it supports it                                                                                                                                                       |
+| `--keystore-id`      | The id of the cloud keystore where the certificate will be provisioned.                                                                                                                                                |
+| `--provider-name`    | The name of the cloud provider which owns the cloud keystore where the certificate will be provisioned. Must be set along with keystore-name flag.                                                                     |
+| `--keystore-name`    | The name of the cloud keystore where the certificate will be provisioned. Must be set along with provider-name flag.                                                                                                   |
+| `--file`             | Use to specify a file name and a location where the output should be written. Example: --file /path-to/provision-output                                                                                                |
+| `--format`           | The format of the operation output: text or JSON. Defaults to text.                                                                                                                                                    |
 
 ## Parameters for Applying Certificate Policy
 API key:
