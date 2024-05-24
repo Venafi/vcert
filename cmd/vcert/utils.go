@@ -40,8 +40,6 @@ import (
 	"github.com/Venafi/vcert/v5/pkg/domain"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
 	"github.com/Venafi/vcert/v5/pkg/util"
-	"github.com/Venafi/vcert/v5/pkg/venafi/cloud"
-	"github.com/Venafi/vcert/v5/pkg/webclient/cloudproviders"
 )
 
 const (
@@ -620,29 +618,20 @@ func randRunes(n int) string {
 }
 
 // fillProvisioningRequest populates the provisioning request payload with values from command flags
-func fillProvisioningRequest(req *endpoint.ProvisioningRequest, keystore domain.CloudKeystore, cf *commandFlags) (*endpoint.ProvisioningRequest, *endpoint.ProvisioningOptions) {
+func fillProvisioningRequest(req *domain.ProvisioningRequest, keystore domain.CloudKeystore, cf *commandFlags) (*domain.ProvisioningRequest, *domain.ProvisioningOptions) {
 	req.CertificateID = cleanEmptyStringPointer(cf.certificateID)
 	req.Keystore = &keystore
 	req.PickupID = &(cf.pickupID)
 
-	var options endpoint.ProvisioningOptions
-	if cf.keystoreCertName != "" {
-		switch keystore.Type {
-		case string(cloudproviders.CloudKeystoreTypeAkv):
-			optionsAkv := &cloud.CloudProvisioningAzureOptions{
-				Name: &cf.keystoreCertName,
-			}
-			options = endpoint.ProvisioningOptions(optionsAkv)
-		case string(cloudproviders.CloudKeystoreTypeGcm):
-			optionsGcp := &cloud.CloudProvisioningGCPOptions{
-				ID: &cf.keystoreCertName,
-			}
-			options = endpoint.ProvisioningOptions(optionsGcp)
-		}
-		return req, &options
+	if cf.keystoreCertName == "" {
+		return req, nil
 	}
 
-	return req, nil
+	options := &domain.ProvisioningOptions{
+		CloudCertificateName: cf.keystoreCertName,
+	}
+	return req, options
+
 }
 
 func buildGetCloudKeystoreRequest(flags *commandFlags) domain.GetCloudKeystoreRequest {

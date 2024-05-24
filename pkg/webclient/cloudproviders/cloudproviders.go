@@ -54,8 +54,8 @@ func (c *CloudProvidersClient) GetCloudProvider(ctx context.Context, request dom
 	return &domain.CloudProvider{
 		ID:             cp.GetId(),
 		Name:           cp.GetName(),
-		Type:           string(cp.GetType()),
-		Status:         string(cp.GetStatus()),
+		Type:           cp.GetType().toDomain(),
+		Status:         cp.GetStatus().toDomain(),
 		StatusDetails:  statusDetails,
 		KeystoresCount: cp.GetKeystoresCount(),
 	}, nil
@@ -87,7 +87,7 @@ func (c *CloudProvidersClient) GetCloudKeystore(ctx context.Context, request dom
 	return &domain.CloudKeystore{
 		ID:                     ck.GetId(),
 		Name:                   ck.GetName(),
-		Type:                   string(ck.GetType()),
+		Type:                   ck.GetType().toDomain(),
 		MachineIdentitiesCount: ck.GetMachineIdentitiesCount(),
 	}, nil
 }
@@ -268,6 +268,17 @@ func (v *GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNode
 	return &certMetadata, nil
 }
 
+func (v CloudProviderStatus) toDomain() domain.CloudProviderStatus {
+	switch v {
+	case CloudProviderStatusValidated:
+		return domain.CloudProviderStatusValidated
+	case CloudProviderStatusNotValidated:
+		return domain.CloudProviderStatusNotValidated
+	default:
+		return domain.CloudProviderStatusUnknown
+	}
+}
+
 func cloudProviderStatusFromDomain(status domain.CloudProviderStatus) CloudProviderStatus {
 	switch status {
 	case domain.CloudProviderStatusValidated:
@@ -276,6 +287,19 @@ func cloudProviderStatusFromDomain(status domain.CloudProviderStatus) CloudProvi
 		return CloudProviderStatusNotValidated
 	default:
 		return CloudProviderStatusNotValidated
+	}
+}
+
+func (v CloudProviderType) toDomain() domain.CloudProviderType {
+	switch v {
+	case CloudProviderTypeAws:
+		return domain.CloudProviderTypeAWS
+	case CloudProviderTypeAzure:
+		return domain.CloudProviderTypeAzure
+	case CloudProviderTypeGcp:
+		return domain.CloudProviderTypeGCP
+	default:
+		return domain.CloudProviderTypeUnknown
 	}
 }
 
@@ -289,5 +313,18 @@ func cloudProviderTypeFromDomain(providerType domain.CloudProviderType) (CloudPr
 		return CloudProviderTypeGcp, nil
 	default:
 		return "UNKNOWN", fmt.Errorf("failed to determine cloud provider type for %s", providerType)
+	}
+}
+
+func (v CloudKeystoreType) toDomain() domain.CloudKeystoreType {
+	switch v {
+	case CloudKeystoreTypeAcm:
+		return domain.CloudKeystoreTypeACM
+	case CloudKeystoreTypeAkv:
+		return domain.CloudKeystoreTypeAKV
+	case CloudKeystoreTypeGcm:
+		return domain.CloudKeystoreTypeGCM
+	default:
+		return domain.CloudKeystoreTypeUnknown
 	}
 }

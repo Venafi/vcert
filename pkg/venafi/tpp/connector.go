@@ -32,6 +32,7 @@ import (
 	"time"
 
 	"github.com/Venafi/vcert/v5/pkg/certificate"
+	"github.com/Venafi/vcert/v5/pkg/domain"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
 	"github.com/Venafi/vcert/v5/pkg/policy"
 	"github.com/Venafi/vcert/v5/pkg/util"
@@ -2174,7 +2175,7 @@ func (c *Connector) RetrieveSSHCertificate(req *certificate.SshCertRequest) (res
 	return RetrieveSshCertificate(c, req)
 }
 
-func (c *Connector) ProvisionCertificate(req *endpoint.ProvisioningRequest, options *endpoint.ProvisioningOptions) (provisioningMetadata endpoint.ProvisioningMetadata, err error) {
+func (c *Connector) ProvisionCertificate(req *domain.ProvisioningRequest, options *domain.ProvisioningOptions) (provisioningMetadata domain.ProvisioningMetadata, err error) {
 	panic("operation is not supported yet")
 }
 

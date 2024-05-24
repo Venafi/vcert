@@ -1,11 +1,16 @@
 package domain
 
-import "github.com/google/uuid"
+import (
+	"strings"
+
+	"github.com/google/uuid"
+)
 
 type CloudProviderStatus int
 
 const (
-	CloudProviderStatusValidated = iota
+	CloudProviderStatusUnknown CloudProviderStatus = iota
+	CloudProviderStatusValidated
 	CloudProviderStatusNotValidated
 
 	CloudProviderStatusValidatedStr    = "VALIDATED"
@@ -19,15 +24,29 @@ func (cps CloudProviderStatus) String() string {
 		return CloudProviderStatusValidatedStr
 	case CloudProviderStatusNotValidated:
 		return CloudProviderStatusNotValidatedStr
+	case CloudProviderStatusUnknown:
+		fallthrough
 	default:
 		return CloudProviderStatusUnknownStr
+	}
+}
+
+func GetCloudProviderStatus(status string) CloudProviderStatus {
+	switch strings.ToUpper(status) {
+	case CloudProviderStatusValidatedStr:
+		return CloudProviderStatusValidated
+	case CloudProviderStatusNotValidatedStr:
+		return CloudProviderStatusNotValidated
+	default:
+		return CloudProviderStatusUnknown
 	}
 }
 
 type CloudProviderType int
 
 const (
-	CloudProviderTypeAWS = iota
+	CloudProviderTypeUnknown CloudProviderType = iota
+	CloudProviderTypeAWS
 	CloudProviderTypeAzure
 	CloudProviderTypeGCP
 
@@ -37,14 +56,16 @@ const (
 	CloudProviderTypeUnknownStr = "UNKNOWN"
 )
 
-func (cps CloudProviderType) String() string {
-	switch cps {
+func (cpt CloudProviderType) String() string {
+	switch cpt {
 	case CloudProviderTypeAWS:
 		return CloudProviderTypeAWSStr
 	case CloudProviderTypeAzure:
 		return CloudProviderTypeAzureStr
 	case CloudProviderTypeGCP:
 		return CloudProviderTypeGCPStr
+	case CloudProviderTypeUnknown:
+		fallthrough
 	default:
 		return CloudProviderTypeUnknownStr
 	}
@@ -53,8 +74,8 @@ func (cps CloudProviderType) String() string {
 type CloudProvider struct {
 	ID             string
 	Name           string
-	Type           string
-	Status         string
+	Type           CloudProviderType
+	Status         CloudProviderStatus
 	StatusDetails  string
 	KeystoresCount int
 }
@@ -65,10 +86,39 @@ type GetCloudProviderRequest struct {
 	Type   CloudProviderType
 }
 
+type CloudKeystoreType int
+
+const (
+	CloudKeystoreTypeUnknown CloudKeystoreType = iota
+	CloudKeystoreTypeACM
+	CloudKeystoreTypeAKV
+	CloudKeystoreTypeGCM
+
+	CloudKeystoreTypeACMStr     = "ACM"
+	CloudKeystoreTypeAKVStr     = "AKV"
+	CloudKeystoreTypeGCMStr     = "GCM"
+	CloudKeystoreTypeUnknownStr = "UNKNOWN"
+)
+
+func (ckt CloudKeystoreType) String() string {
+	switch ckt {
+	case CloudKeystoreTypeACM:
+		return CloudKeystoreTypeACMStr
+	case CloudKeystoreTypeAKV:
+		return CloudKeystoreTypeAKVStr
+	case CloudKeystoreTypeGCM:
+		return CloudKeystoreTypeGCMStr
+	case CloudKeystoreTypeUnknown:
+		fallthrough
+	default:
+		return CloudKeystoreTypeUnknownStr
+	}
+}
+
 type CloudKeystore struct {
 	ID                     string
 	Name                   string
-	Type                   string
+	Type                   CloudKeystoreType
 	MachineIdentitiesCount int
 }
 
@@ -104,11 +154,6 @@ const (
 	MachineIdentityStatusValidatedStr  = "VALIDATED"
 	MachineIdentityStatusMissingStr    = "MISSING"
 	MachineIdentityStatusFailedStr     = "FAILED"
-
-	CloudMetadataACM     = "ACM"
-	CloudMetadataGCM     = "GCM"
-	CloudMetadataAKV     = "AKV"
-	CloudMetadataUnknown = "UNKNOWN"
 )
 
 func (mis MachineIdentityStatus) String() string {
@@ -127,6 +172,8 @@ func (mis MachineIdentityStatus) String() string {
 		return MachineIdentityStatusMissingStr
 	case MachineIdentityStatusFailed:
 		return MachineIdentityStatusFailedStr
+	case MachineIdentityStatusUnknown:
+		fallthrough
 	default:
 		return MachineIdentityStatusUnknownStr
 	}
@@ -142,20 +189,20 @@ func NewCertificateCloudMetadata(values map[string]interface{}) CertificateCloud
 	}
 }
 
-func (ccm *CertificateCloudMetadata) GetType() string {
+func (ccm *CertificateCloudMetadata) GetKeystoreType() CloudKeystoreType {
 	typ := ccm.GetValue("__typename")
 	if typ == nil {
-		return CloudMetadataUnknown
+		return CloudKeystoreTypeUnknown
 	}
 	switch typ {
 	case "AWSCertificateMetadata":
-		return CloudMetadataACM
+		return CloudKeystoreTypeACM
 	case "AzureCertificateMetadata":
-		return CloudMetadataAKV
+		return CloudKeystoreTypeAKV
 	case "GCPCertificateMetadata":
-		return CloudMetadataGCM
+		return CloudKeystoreTypeGCM
 	default:
-		return CloudMetadataUnknown
+		return CloudKeystoreTypeUnknown
 	}
 }
 

@@ -12,7 +12,6 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/Venafi/vcert/v5/pkg/domain"
-	"github.com/Venafi/vcert/v5/pkg/endpoint"
 	"github.com/Venafi/vcert/v5/pkg/httputils"
 	"github.com/Venafi/vcert/v5/pkg/util"
 	"github.com/Venafi/vcert/v5/pkg/webclient/cloudproviders"
@@ -28,83 +27,6 @@ type CloudKeystoreProvisioningResult struct {
 	Error                      error  `json:"error"`
 }
 
-const (
-	KeystoreTypeACM = "ACM"
-	KeystoreTypeAKV = "AKV"
-	KeystoreTypeGCM = "GCM"
-)
-
-type CloudProvisioningMetadata struct {
-	awsMetadata     CloudAwsMetadata
-	azureMetadata   CloudAzureMetadata
-	gcpMetadata     CloudGcpMetadata
-	machineMetadata MachineIdentityMetadata
-}
-
-func (cpm *CloudProvisioningMetadata) GetAWSCertificateMetadata() endpoint.AWSCertificateMetadata {
-	return &cpm.awsMetadata
-}
-
-func (cpm *CloudProvisioningMetadata) GetAzureCertificateMetadata() endpoint.AzureCertificateMetadata {
-	return &cpm.azureMetadata
-}
-
-func (cpm *CloudProvisioningMetadata) GetGCPCertificateMetadata() endpoint.GCPCertificateMetadata {
-	return &cpm.gcpMetadata
-}
-
-func (cpm *CloudProvisioningMetadata) GetMachineIdentityMetadata() endpoint.MachineIdentityMetadata {
-	return &cpm.machineMetadata
-}
-
-type CloudAwsMetadata struct {
-	result CloudKeystoreProvisioningResult
-}
-
-func (cawm *CloudAwsMetadata) GetARN() string {
-	return cawm.result.Arn
-}
-
-type CloudGcpMetadata struct {
-	result CloudKeystoreProvisioningResult
-}
-
-func (cgm *CloudGcpMetadata) GetID() string {
-	return cgm.result.CloudProviderCertificateID
-}
-
-func (cgm *CloudGcpMetadata) GetName() string {
-	return cgm.result.CloudCertificateName
-}
-
-type CloudAzureMetadata struct {
-	result CloudKeystoreProvisioningResult
-}
-
-func (cam *CloudAzureMetadata) GetName() string {
-	return cam.result.CloudCertificateName
-}
-
-func (cam *CloudAzureMetadata) GetVersion() string {
-	return cam.result.CloudCertificateVersion
-}
-
-func (cam *CloudAzureMetadata) GetID() string {
-	return cam.result.CloudProviderCertificateID
-}
-
-type MachineIdentityMetadata struct {
-	result CloudKeystoreProvisioningResult
-}
-
-func (mim *MachineIdentityMetadata) GetID() string {
-	return mim.result.MachineIdentityId
-}
-
-func (mim *MachineIdentityMetadata) GetActionType() string {
-	return mim.result.MachineIdentityActionType
-}
-
 // GCMCertificateScope Indicates the Scope for a certificate provisioned to GCP Certificate Manager
 type GCMCertificateScope string
 
@@ -118,119 +40,7 @@ const (
 	GCMCertificateScopeEdgeCache GCMCertificateScope = "EDGE_CACHE"
 )
 
-type CertificateTagOption struct {
-	Name  string
-	Value string
-}
-
-type CloudProvisioningAzureOptions struct {
-	Name       *string
-	Enabled    *bool
-	Exportable *bool
-	Reusekey   *bool
-	Tags       []*CertificateTagOption
-}
-
-func (cpao CloudProvisioningAzureOptions) GetType() string {
-	return KeystoreTypeAKV
-}
-
-type CloudProvisioningGCPOptions struct {
-	ID          *string
-	Description *string
-	Scope       *GCMCertificateScope
-	Labels      []*CertificateTagOption
-}
-
-func (cpgo CloudProvisioningGCPOptions) GetType() string {
-	return KeystoreTypeGCM
-}
-
-func setProvisioningOptions(options *endpoint.ProvisioningOptions) (*cloudproviders.CertificateProvisioningOptionsInput, error) {
-	var cloudOptions *cloudproviders.CertificateProvisioningOptionsInput
-	if options == nil {
-		return nil, fmt.Errorf("options for provisioning cannot be null when trying to set them")
-	}
-	dataOptions, err := json.Marshal(options)
-	if err != nil {
-		return nil, err
-	}
-
-	graphqlAzureOptions := &cloudproviders.CertificateProvisioningAzureOptionsInput{}
-	graphqlGCPOptions := &cloudproviders.CertificateProvisioningGCPOptionsInput{}
-
-	if options != nil {
-		switch (*options).GetType() {
-		case string(cloudproviders.CloudKeystoreTypeAcm):
-			// nothing
-		case string(cloudproviders.CloudKeystoreTypeAkv):
-			err = json.Unmarshal(dataOptions, graphqlAzureOptions)
-			if err != nil {
-				return nil, err
-			}
-		case string(cloudproviders.CloudKeystoreTypeGcm):
-			err = json.Unmarshal(dataOptions, graphqlGCPOptions)
-			if err != nil {
-				return nil, err
-			}
-		default:
-			return nil, fmt.Errorf("unknown cloud keystore type: %s", (*options).GetType())
-		}
-	}
-
-	cloudOptions = &cloudproviders.CertificateProvisioningOptionsInput{
-		AwsOptions:   nil,
-		AzureOptions: graphqlAzureOptions,
-		GcpOptions:   graphqlGCPOptions,
-	}
-	return cloudOptions, nil
-}
-
-func (c *Connector) validateIfCertIsVCPGeneratedByID(certificateId string) error {
-	cert, err := c.getCertificates(certificateId)
-	if err != nil {
-		return fmt.Errorf("error trying to get certificate details for cert with ID: %s, error: %s", certificateId, err.Error())
-	}
-	if cert.DekHash == "" {
-		return fmt.Errorf("error trying to provisioning certificate with ID: %s. Provided certificate is not VCP generated", certificateId)
-	}
-	return nil
-}
-
-func (c *Connector) getGraphqlClient() graphql.Client {
-	graphqlURL := c.getURL(urlGraphql)
-
-	// We provide every type of auth here.
-	// The logic to decide which auth is inside struct's function: RoundTrip
-	httpclient := &http.Client{
-		Transport: &httputils.AuthedTransportApi{
-			ApiKey:      c.apiKey,
-			AccessToken: c.accessToken,
-			Wrapped:     http.DefaultTransport,
-		},
-		Timeout: 30 * time.Second,
-	}
-
-	client := graphql.NewClient(graphqlURL, httpclient)
-	return client
-}
-
-func (c *Connector) getGraphqlHTTPClient() *http.Client {
-	// We provide every type of auth here.
-	// The logic to decide which auth to use is inside struct's function: RoundTrip
-	httpclient := &http.Client{
-		Transport: &httputils.AuthedTransportApi{
-			ApiKey:      c.apiKey,
-			AccessToken: c.accessToken,
-			Wrapped:     http.DefaultTransport,
-			UserAgent:   util.DefaultUserAgent,
-		},
-		Timeout: 30 * time.Second,
-	}
-	return httpclient
-}
-
-func (c *Connector) ProvisionCertificate(req *endpoint.ProvisioningRequest, options *endpoint.ProvisioningOptions) (provisioningMetadata endpoint.ProvisioningMetadata, err error) {
+func (c *Connector) ProvisionCertificate(req *domain.ProvisioningRequest, options *domain.ProvisioningOptions) (*domain.ProvisioningMetadata, error) {
 	log.Printf("Starting Provisioning Flow")
 
 	if req == nil {
@@ -259,28 +69,15 @@ func (c *Connector) ProvisionCertificate(req *endpoint.ProvisioningRequest, opti
 
 	// Is certificate generated by VCP?
 	log.Printf("Validating if certificate is generated by VCP")
-	err = c.validateIfCertIsVCPGeneratedByID(*(reqData.CertificateID))
+	err := c.validateIfCertIsVCPGeneratedByID(*(reqData.CertificateID))
 	if err != nil {
 		return nil, err
 	}
 	log.Println("Certificate is valid for provisioning (VCP generated)")
 
-	// setting options for provisioning
-	var provisioningOptions *cloudproviders.CertificateProvisioningOptionsInput
-	if options != nil {
-		log.Println("setting provisioning options")
-		provisioningOptions, err = setProvisioningOptions(options)
-		if err != nil {
-			return nil, err
-		}
-		log.Println("provisioning options successfully set")
-	}
+	cloudKeystore := reqData.Keystore
 
-	ctx := context.Background()
-
-	var keystoreIDString string
-
-	if reqData.Keystore == nil {
+	if cloudKeystore == nil {
 		if reqData.KeystoreID == nil {
 			if reqData.ProviderName == nil || reqData.KeystoreName == nil {
 				return nil, fmt.Errorf("any of keystore object, keystore ID or both Provider Name and Keystore Name must be provided for provisioning")
@@ -292,9 +89,8 @@ func (c *Connector) ProvisionCertificate(req *endpoint.ProvisioningRequest, opti
 		keystoreNameInput := util.StringPointerToString(reqData.KeystoreName)
 		providerNameInput := util.StringPointerToString(reqData.ProviderName)
 
-		log.Printf("fetching keystore information for provided keystore information. KeystoreID: %s, KeystoreName: %s, ProviderName: %s", keystoreIDInput, keystoreNameInput, providerNameInput)
-		cloudKeystore, err := c.GetCloudKeystore(domain.GetCloudKeystoreRequest{
-			CloudProviderID:   nil,
+		log.Printf("fetching keystore with KeystoreID: %s, KeystoreName: %s, ProviderName: %s", keystoreIDInput, keystoreNameInput, providerNameInput)
+		cloudKeystore, err = c.GetCloudKeystore(domain.GetCloudKeystoreRequest{
 			CloudProviderName: req.ProviderName,
 			CloudKeystoreID:   req.KeystoreID,
 			CloudKeystoreName: req.KeystoreName,
@@ -303,45 +99,51 @@ func (c *Connector) ProvisionCertificate(req *endpoint.ProvisioningRequest, opti
 			return nil, err
 		}
 
-		keystoreIDString = cloudKeystore.ID
-
-		log.Printf("successfully fetched keystore information for KeystoreID: %s", keystoreIDString)
-	} else {
-		log.Printf("Keystore was provided")
-		keystoreIDString = reqData.Keystore.ID
+		log.Printf("successfully fetched keystore information")
 	}
-	log.Printf("Keystore ID for provisioning: %s", keystoreIDString)
-	wsClientID := uuid.New().String()
+	log.Printf("Keystore ID for provisioning: %s", cloudKeystore.ID)
 
+	// setting options for provisioning
+	var provisioningOptions *cloudproviders.CertificateProvisioningOptionsInput
+	if options != nil {
+		log.Println("setting provisioning options")
+		provisioningOptions, err = setProvisioningOptions(*options, cloudKeystore.Type)
+		if err != nil {
+			return nil, err
+		}
+		log.Println("provisioning options successfully set")
+	}
+
+	wsClientID := uuid.New().String()
 	wsConn, err := c.notificationSvcClient.Subscribe(wsClientID)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Printf("Provisioning Certificate ID %s for Keystore %s", certificateIDString, keystoreIDString)
-	_, err = c.cloudProvidersClient.ProvisionCertificate(ctx, certificateIDString, keystoreIDString, wsClientID, provisioningOptions)
+	log.Printf("Provisioning Certificate ID %s for Keystore %s", certificateIDString, cloudKeystore.ID)
+	_, err = c.cloudProvidersClient.ProvisionCertificate(context.Background(), certificateIDString, cloudKeystore.ID, wsClientID, provisioningOptions)
 	if err != nil {
 		return nil, err
 	}
 
-	ar, err := c.notificationSvcClient.ReadResponse(wsConn)
+	workflowResponse, err := c.notificationSvcClient.ReadResponse(wsConn)
 	if err != nil {
 		return nil, err
 	}
 
 	// parsing metadata from websocket response
-	log.Printf("Getting Cloud Metadata of Certificate ID %s and Keystore ID: %s", certificateIDString, keystoreIDString)
-	cloudMetadata, err := getCloudMetadataFromWebsocketResponse(ar.Data.Result)
+	log.Printf("Getting Cloud Metadata of Certificate ID %s and Keystore ID: %s", certificateIDString, cloudKeystore.ID)
+	cloudMetadata, err := getCloudMetadataFromWebsocketResponse(workflowResponse.Data.Result)
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("Successfully got Cloud Metadata for Certificate ID %s and Keystore ID: %s", certificateIDString, keystoreIDString)
+	log.Printf("Successfully got Cloud Metadata for Certificate ID %s and Keystore ID: %s", certificateIDString, cloudKeystore.ID)
 
-	log.Printf("Successfully finished Provisioning Flow for Certificate ID %s and Keystore ID %s", certificateIDString, keystoreIDString)
+	log.Printf("Successfully finished Provisioning Flow for Certificate ID %s and Keystore ID %s", certificateIDString, cloudKeystore.ID)
 	return cloudMetadata, nil
 }
 
-func (c *Connector) ProvisionCertificateToMachineIdentity(req endpoint.ProvisioningRequest) (endpoint.ProvisioningMetadata, error) {
+func (c *Connector) ProvisionCertificateToMachineIdentity(req domain.ProvisioningRequest) (*domain.ProvisioningMetadata, error) {
 	log.Printf("Starting Provisioning to Machine Identity Flow")
 
 	if req.MachineIdentityID == nil {
@@ -460,7 +262,74 @@ func (c *Connector) DeleteMachineIdentity(id uuid.UUID) (bool, error) {
 	return deleted, nil
 }
 
-func getCloudMetadataFromWebsocketResponse(resultMap interface{}) (*CloudProvisioningMetadata, error) {
+func setProvisioningOptions(options domain.ProvisioningOptions, keystoreType domain.CloudKeystoreType) (*cloudproviders.CertificateProvisioningOptionsInput, error) {
+	azureOptions := &cloudproviders.CertificateProvisioningAzureOptionsInput{}
+	gcpOptions := &cloudproviders.CertificateProvisioningGCPOptionsInput{}
+
+	switch keystoreType {
+	case domain.CloudKeystoreTypeACM:
+		// nothing
+	case domain.CloudKeystoreTypeAKV:
+		azureOptions.Name = &options.CloudCertificateName
+	case domain.CloudKeystoreTypeGCM:
+		gcpOptions.Id = &options.CloudCertificateName
+	default:
+		return nil, fmt.Errorf("unknown cloud keystore type: %s", keystoreType)
+	}
+
+	provisioningOptions := &cloudproviders.CertificateProvisioningOptionsInput{
+		AwsOptions:   nil,
+		AzureOptions: azureOptions,
+		GcpOptions:   gcpOptions,
+	}
+	return provisioningOptions, nil
+}
+
+func (c *Connector) validateIfCertIsVCPGeneratedByID(certificateId string) error {
+	cert, err := c.getCertificates(certificateId)
+	if err != nil {
+		return fmt.Errorf("error trying to get certificate details for cert with ID: %s, error: %s", certificateId, err.Error())
+	}
+	if cert.DekHash == "" {
+		return fmt.Errorf("error trying to provisioning certificate with ID: %s. Provided certificate is not VCP generated", certificateId)
+	}
+	return nil
+}
+
+func (c *Connector) getGraphqlClient() graphql.Client {
+	graphqlURL := c.getURL(urlGraphql)
+
+	// We provide every type of auth here.
+	// The logic to decide which auth is inside struct's function: RoundTrip
+	httpclient := &http.Client{
+		Transport: &httputils.AuthedTransportApi{
+			ApiKey:      c.apiKey,
+			AccessToken: c.accessToken,
+			Wrapped:     http.DefaultTransport,
+		},
+		Timeout: 30 * time.Second,
+	}
+
+	client := graphql.NewClient(graphqlURL, httpclient)
+	return client
+}
+
+func (c *Connector) getGraphqlHTTPClient() *http.Client {
+	// We provide every type of auth here.
+	// The logic to decide which auth to use is inside struct's function: RoundTrip
+	httpclient := &http.Client{
+		Transport: &httputils.AuthedTransportApi{
+			ApiKey:      c.apiKey,
+			AccessToken: c.accessToken,
+			Wrapped:     http.DefaultTransport,
+			UserAgent:   util.DefaultUserAgent,
+		},
+		Timeout: 30 * time.Second,
+	}
+	return httpclient
+}
+
+func getCloudMetadataFromWebsocketResponse(resultMap interface{}) (*domain.ProvisioningMetadata, error) {
 
 	result := CloudKeystoreProvisioningResult{}
 	resultBytes, err := json.Marshal(resultMap)
@@ -478,21 +347,25 @@ func getCloudMetadataFromWebsocketResponse(resultMap interface{}) (*CloudProvisi
 		return nil, fmt.Errorf("provisioning failed, certificate ID from response is empty")
 	}
 
-	cloudMetadata := &CloudProvisioningMetadata{
-		machineMetadata: MachineIdentityMetadata{
-			result: result,
-		},
+	cloudMetadata := &domain.ProvisioningMetadata{
+		CloudKeystoreType:         domain.CloudKeystoreTypeUnknown,
+		ARN:                       result.Arn,
+		CertificateID:             result.CloudProviderCertificateID,
+		CertificateName:           result.CloudCertificateName,
+		CertificateVersion:        result.CloudCertificateVersion,
+		MachineIdentityID:         result.MachineIdentityId,
+		MachineIdentityActionType: result.MachineIdentityActionType,
 	}
 
 	// Only ACM returns an ARN value
 	if result.Arn != "" {
-		cloudMetadata.awsMetadata.result = result
+		cloudMetadata.CloudKeystoreType = domain.CloudKeystoreTypeACM
 	} else if result.CloudCertificateVersion != "" {
 		// Only Azure returns a certificate version value
-		cloudMetadata.azureMetadata.result = result
+		cloudMetadata.CloudKeystoreType = domain.CloudKeystoreTypeAKV
 	} else {
 		// No ARN and no certificate version, default to GCM
-		cloudMetadata.gcpMetadata.result = result
+		cloudMetadata.CloudKeystoreType = domain.CloudKeystoreTypeGCM
 	}
 
 	return cloudMetadata, err
