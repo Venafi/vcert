@@ -2175,7 +2175,7 @@ func (c *Connector) RetrieveSSHCertificate(req *certificate.SshCertRequest) (res
 	return RetrieveSshCertificate(c, req)
 }
 
-func (c *Connector) ProvisionCertificate(req *domain.ProvisioningRequest, options *domain.ProvisioningOptions) (provisioningMetadata domain.ProvisioningMetadata, err error) {
+func (c *Connector) ProvisionCertificate(_ *domain.ProvisioningRequest, _ *domain.ProvisioningOptions) (*domain.ProvisioningMetadata, error) {
 	panic("operation is not supported yet")
 }
 

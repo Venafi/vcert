@@ -39,7 +39,7 @@ type Connector struct {
 	verbose bool
 }
 
-func (c *Connector) ProvisionCertificate(req *domain.ProvisioningRequest, options *domain.ProvisioningOptions) (provisioningMetadata domain.ProvisioningMetadata, err error) {
+func (c *Connector) ProvisionCertificate(_ *domain.ProvisioningRequest, _ *domain.ProvisioningOptions) (*domain.ProvisioningMetadata, error) {
 	panic("operation is not supported yet")
 }
 
