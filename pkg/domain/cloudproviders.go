@@ -105,7 +105,7 @@ const (
 	MachineIdentityStatusMissingStr    = "MISSING"
 	MachineIdentityStatusFailedStr     = "FAILED"
 
-	CloudMetadataACM     = "AWS"
+	CloudMetadataACM     = "ACM"
 	CloudMetadataGCM     = "GCM"
 	CloudMetadataAKV     = "AKV"
 	CloudMetadataUnknown = "UNKNOWN"
