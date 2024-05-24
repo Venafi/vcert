@@ -37,8 +37,11 @@ import (
 
 	"github.com/Venafi/vcert/v5"
 	"github.com/Venafi/vcert/v5/pkg/certificate"
+	"github.com/Venafi/vcert/v5/pkg/domain"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
 	"github.com/Venafi/vcert/v5/pkg/util"
+	"github.com/Venafi/vcert/v5/pkg/venafi/cloud"
+	"github.com/Venafi/vcert/v5/pkg/webclient/cloudproviders"
 )
 
 const (
@@ -616,33 +619,47 @@ func randRunes(n int) string {
 	return string(b)
 }
 
-func getUserParameterProvidedForGetCred() (string, error) {
+// fillProvisioningRequest populates the provisioning request payload with values from command flags
+func fillProvisioningRequest(req *endpoint.ProvisioningRequest, keystore domain.CloudKeystore, cf *commandFlags) (*endpoint.ProvisioningRequest, *endpoint.ProvisioningOptions) {
+	req.CertificateID = cleanEmptyStringPointer(cf.certificateID)
+	req.Keystore = &keystore
+	req.PickupID = &(cf.pickupID)
 
-	tokenS := flags.token
-	if tokenS == "" {
-		tokenS = getPropertyFromEnvironment(vCertToken)
-	}
-
-	identityParameters := map[string]bool{
-		flagUser.Name:      flags.userName != "",
-		flagToken.Name:     tokenS != "",
-		flagClientP12.Name: flags.clientP12 != "",
-		flagEmail.Name:     flags.email != "",
-	}
-
-	var uniqueIdentity string
-	for identityName, identityValue := range identityParameters {
-		if identityValue {
-			if uniqueIdentity != "" {
-				return "", fmt.Errorf("only one of either --username, --p12-file, -t or --email can be specified")
+	var options endpoint.ProvisioningOptions
+	if cf.keystoreCertName != "" {
+		switch keystore.Type {
+		case string(cloudproviders.CloudKeystoreTypeAkv):
+			optionsAkv := &cloud.CloudProvisioningAzureOptions{
+				Name: &cf.keystoreCertName,
 			}
-			uniqueIdentity = identityName
+			options = endpoint.ProvisioningOptions(optionsAkv)
+		case string(cloudproviders.CloudKeystoreTypeGcm):
+			optionsGcp := &cloud.CloudProvisioningGCPOptions{
+				ID: &cf.keystoreCertName,
+			}
+			options = endpoint.ProvisioningOptions(optionsGcp)
 		}
+		return req, &options
 	}
 
-	if uniqueIdentity == "" {
-		return "", fmt.Errorf("either --username, --p12-file, -t or --email must be specified")
+	return req, nil
+}
+
+func buildGetCloudKeystoreRequest(flags *commandFlags) domain.GetCloudKeystoreRequest {
+
+	getKeystoreReq := domain.GetCloudKeystoreRequest{
+		CloudProviderID:   nil,
+		CloudProviderName: cleanEmptyStringPointer(flags.providerName),
+		CloudKeystoreID:   cleanEmptyStringPointer(flags.keystoreID),
+		CloudKeystoreName: cleanEmptyStringPointer(flags.keystoreName),
 	}
 
-	return uniqueIdentity, nil
+	return getKeystoreReq
+}
+
+func cleanEmptyStringPointer(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
 }

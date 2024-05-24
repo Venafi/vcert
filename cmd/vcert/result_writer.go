@@ -33,6 +33,10 @@ import (
 	"github.com/Venafi/vcert/v5/pkg/util"
 )
 
+const (
+	formatJson = "json"
+)
+
 type Config struct {
 	Command     string
 	Format      string
@@ -54,6 +58,17 @@ type Result struct {
 	Pcc      *certificate.PEMCollection
 	PickupId string
 	Config   *Config
+}
+
+type ProvisioningResult struct {
+	ARN                       string `json:"arn,omitempty"`
+	AzureID                   string `json:"azureId,omitempty"`
+	AzureName                 string `json:"azureName,omitempty"`
+	AzureVersion              string `json:"azureVersion,omitempty"`
+	GcpID                     string `json:"gcpId,omitempty"`
+	GcpName                   string `json:"gcpName,omitempty"`
+	MachineIdentityId         string `json:"machineIdentityId,omitempty"`
+	MachineIdentityActionType string `json:"machineIdentityActionType,omitempty"`
 }
 
 type Output struct {
@@ -315,24 +330,24 @@ func (r *Result) Flush() error {
 		allFileOutput.Chain = r.Pcc.Chain
 		allFileOutput.CSR = r.Pcc.CSR
 
-		var bytes []byte
+		var fileBytes []byte
 		if r.Config.Format == P12Format || r.Config.Format == LegacyP12Format {
-			bytes, err = allFileOutput.AsPKCS12(r.Config)
+			fileBytes, err = allFileOutput.AsPKCS12(r.Config)
 			if err != nil {
 				return fmt.Errorf("failed to encode pkcs12: %s", err)
 			}
 		} else if r.Config.Format == JKSFormat {
-			bytes, err = allFileOutput.AsJKS(r.Config)
+			fileBytes, err = allFileOutput.AsJKS(r.Config)
 			if err != nil {
 				return err
 			}
 		} else {
-			bytes, err = allFileOutput.Format(r.Config)
+			fileBytes, err = allFileOutput.Format(r.Config)
 			if err != nil {
 				return err
 			}
 		}
-		err = os.WriteFile(r.Config.AllFile, bytes, 0600)
+		err = os.WriteFile(r.Config.AllFile, fileBytes, 0600)
 		errors = append(errors, err)
 	} else {
 
@@ -388,11 +403,12 @@ func (r *Result) Flush() error {
 	}
 
 	// and flush the rest to STDOUT
-	bytes, err := stdOut.Format(r.Config)
+	configBytes, err := stdOut.Format(r.Config)
 	if err != nil {
 		return err // something worse than file permission problem
 	}
-	fmt.Fprint(os.Stdout, string(bytes))
+	_, err = fmt.Fprint(os.Stdout, string(configBytes))
+	errors = append(errors, err)
 
 	var finalError error
 	for _, e := range errors {
@@ -429,4 +445,50 @@ func outputJSON(resp interface{}) error {
 		fmt.Println(string(jsonData))
 	}
 	return err
+}
+
+func (r *ProvisioningResult) Flush(format string) error {
+
+	result, err := r.Format(format)
+	if err != nil {
+		return err
+	}
+
+	_, err = fmt.Fprint(os.Stdout, result)
+	if err != nil {
+		return fmt.Errorf("failed to print provisioning result to STDOUT: %w", err)
+	}
+
+	return nil
+}
+
+func (r *ProvisioningResult) Format(format string) (string, error) {
+	result := ""
+	switch strings.ToLower(format) {
+	case formatJson:
+		b, err := json.MarshalIndent(r, "", "    ")
+		if err != nil {
+			return "", fmt.Errorf("failed to construct JSON: %s", err)
+		}
+		result = string(b)
+	default:
+		if r.ARN != "" {
+			result += fmt.Sprintf("arn: %s\n", r.ARN)
+		}
+		if r.AzureID != "" {
+			result += fmt.Sprintf("azureId: %s\n", r.AzureID)
+			result += fmt.Sprintf("azureName: %s\n", r.AzureName)
+			result += fmt.Sprintf("azureVersion: %s\n", r.AzureVersion)
+
+		}
+		if r.GcpID != "" {
+			result += fmt.Sprintf("gcpId %s\n", r.GcpID)
+			result += fmt.Sprintf("gcpName %s\n", r.GcpName)
+		}
+		if r.MachineIdentityId != "" {
+			result += fmt.Sprintf("machineIdentityId %s\n", r.MachineIdentityId)
+			result += fmt.Sprintf("machineIdentityActionType %s\n", r.MachineIdentityActionType)
+		}
+	}
+	return result, nil
 }

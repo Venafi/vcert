@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/Venafi/vcert/v5/pkg/domain"
+	"github.com/Venafi/vcert/v5/pkg/util"
 )
 
 //go:generate go run -mod=mod github.com/Khan/genqlient genqlient.yaml
@@ -62,7 +63,7 @@ func (c *CloudProvidersClient) GetCloudKeystore(ctx context.Context, request dom
 	}
 
 	resp, err := GetCloudKeystores(ctx, c.graphqlClient, request.CloudKeystoreID, request.CloudKeystoreName, request.CloudProviderID, request.CloudProviderName)
-	msg := getKeystoreOptionsString(request.CloudProviderID, request.CloudKeystoreID, request.CloudProviderName, request.CloudKeystoreName)
+	msg := util.GetKeystoreOptionsString(request.CloudProviderID, request.CloudKeystoreID, request.CloudProviderName, request.CloudKeystoreName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve Cloud Keystore with %s: %w", msg, err)
 	}

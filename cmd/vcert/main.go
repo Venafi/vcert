@@ -86,6 +86,7 @@ func main() {
 			commandSshEnroll,
 			commandSshGetConfig,
 			commandRunPlaybook,
+			commandProvision,
 		},
 		EnableBashCompletion: true, //todo: write BashComplete function for options
 		Authors:              authors,
@@ -115,6 +116,7 @@ ACTIONS:
    retire        tpp | vcp            To retire a certificate
    revoke        tpp                  To revoke a certificate
    run           tpp | vcp | firefly  To retrieve and install certificates using a vcert playbook file
+   provision           vcp            To provision a certificate to cloud keystore
 
    getpolicy     tpp | vcp            To retrieve the certificate policy of a zone
    setpolicy     tpp | vcp            To apply a certificate policy specification to a zone

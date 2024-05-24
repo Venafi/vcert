@@ -97,6 +97,7 @@ func validateCommonFlags(commandName string) error {
 }
 
 func validateConnectionFlags(commandName string) error {
+
 	if flags.config != "" {
 		if flags.apiKey != "" ||
 			flags.userName != "" ||
@@ -150,6 +151,70 @@ func validateConnectionFlags(commandName string) error {
 		// should be TPP service
 		return validateConnectionFlagsTPP(commandName)
 	}
+}
+
+func validateProvisionConnectionFlags(commandName string) error {
+	err := commonConnectionFlagsValidations(commandName)
+	if err != nil {
+		return err
+	}
+
+	switch flags.platform {
+	case venafi.TPP:
+		return fmt.Errorf("command %s not supported for %s", commandName, venafi.TPP.String())
+	case venafi.TLSPCloud:
+		return validateConnectionFlagsCloud(commandName)
+	case venafi.Firefly:
+		return fmt.Errorf("command %s not supported for %s", commandName, venafi.TPP.String())
+	}
+
+	tppToken := flags.token
+	if tppToken == "" {
+		tppToken = getPropertyFromEnvironment(vCertToken)
+	}
+
+	//Guessing the platform by checking flags
+	//	- Firefly not present here as it is required to pass the platform flag
+	//	- Token empty is considered to mean Cloud connector to keep previous behavior where token was exclusive to TPP
+	//	- To use token with VaaS, the platform flag is required.
+	//	- If the platform flag is set we would not be guessing here
+	if flags.userName == "" && tppToken == "" && flags.clientP12 == "" {
+		// should be SaaS endpoint
+		return validateConnectionFlagsCloud(commandName)
+	} else {
+		// should be TPP service
+		return fmt.Errorf("command %s not supported for %s", commandName, venafi.TPP.String())
+	}
+}
+
+func commonConnectionFlagsValidations(commandName string) error {
+	if flags.config != "" {
+		if flags.apiKey != "" ||
+			flags.userName != "" ||
+			flags.password != "" ||
+			flags.token != "" ||
+			flags.url != "" ||
+			flags.tokenURL != "" ||
+			flags.externalJWT != "" ||
+			flags.testMode {
+			return fmt.Errorf("connection details cannot be specified with flags when --config is used")
+		}
+		return nil
+	}
+
+	if flags.profile != "" {
+		return fmt.Errorf("--profile option cannot be used without --config option")
+	}
+
+	// Nothing to do in test mode
+	if flags.testMode {
+		if commandName == commandGetCredName {
+			// unless it is get credentials which cannot be emulated
+			return fmt.Errorf("there is no test mode for %s command", commandName)
+		}
+		return nil
+	}
+	return nil
 }
 
 func validatePKCS12Flags(commandName string) error {
@@ -654,6 +719,34 @@ func validateSshRetrieveFlags(commandName string) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func validateProvisionFlags(commandName string) error {
+	err := validateProvisionConnectionFlags(commandName)
+	if err != nil {
+		return err
+	}
+
+	if flags.provisionFormat != "" && flags.provisionFormat != "json" {
+		return fmt.Errorf("unexpected output format: %s", flags.format)
+	}
+
+	if flags.certificateID == "" && flags.provisionPickupID == "" {
+		return fmt.Errorf("please, provide any of certificate-id or pickup-id")
+	}
+
+	if flags.keystoreID == "" {
+		if flags.keystoreName == "" || flags.providerName == "" {
+			return fmt.Errorf("any of keystore ID or both Provider Name and Keystore Name must be provided for provisioning")
+		}
+	}
+
+	err = readData(commandName)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
