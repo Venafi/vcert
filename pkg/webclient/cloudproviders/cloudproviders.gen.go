@@ -138,6 +138,17 @@ const (
 	CloudProviderTypeGcp CloudProviderType = "GCP"
 )
 
+// DeleteMachineIdentitiesResponse is returned by DeleteMachineIdentities on success.
+type DeleteMachineIdentitiesResponse struct {
+	// Deletes a list of Cloud machine identities
+	DeleteCloudMachineIdentities bool `json:"deleteCloudMachineIdentities"`
+}
+
+// GetDeleteCloudMachineIdentities returns DeleteMachineIdentitiesResponse.DeleteCloudMachineIdentities, and is useful for accessing the field via an interface.
+func (v *DeleteMachineIdentitiesResponse) GetDeleteCloudMachineIdentities() bool {
+	return v.DeleteCloudMachineIdentities
+}
+
 // Indicates the Scope for a certificate provisioned to GCP Certificate Manager
 type GCMCertificateScope string
 
@@ -674,6 +685,16 @@ func (v *ProvisionCertificateResponse) GetProvisionToCloudKeystore() *ProvisionC
 	return v.ProvisionToCloudKeystore
 }
 
+// __DeleteMachineIdentitiesInput is used internally by genqlient
+type __DeleteMachineIdentitiesInput struct {
+	MachineIdentityIds []string `json:"machineIdentityIds"`
+}
+
+// GetMachineIdentityIds returns __DeleteMachineIdentitiesInput.MachineIdentityIds, and is useful for accessing the field via an interface.
+func (v *__DeleteMachineIdentitiesInput) GetMachineIdentityIds() []string {
+	return v.MachineIdentityIds
+}
+
 // __GetCloudKeystoresInput is used internally by genqlient
 type __GetCloudKeystoresInput struct {
 	CloudKeystoreId   *string `json:"cloudKeystoreId"`
@@ -754,6 +775,39 @@ func (v *__ProvisionCertificateInput) GetWsClientId() string { return v.WsClient
 // GetOptions returns __ProvisionCertificateInput.Options, and is useful for accessing the field via an interface.
 func (v *__ProvisionCertificateInput) GetOptions() *CertificateProvisioningOptionsInput {
 	return v.Options
+}
+
+// The query or mutation executed by DeleteMachineIdentities.
+const DeleteMachineIdentities_Operation = `
+mutation DeleteMachineIdentities ($machineIdentityIds: [UUID!]!) {
+	deleteCloudMachineIdentities(machineIdentityIds: $machineIdentityIds)
+}
+`
+
+func DeleteMachineIdentities(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	machineIdentityIds []string,
+) (*DeleteMachineIdentitiesResponse, error) {
+	req_ := &graphql.Request{
+		OpName: "DeleteMachineIdentities",
+		Query:  DeleteMachineIdentities_Operation,
+		Variables: &__DeleteMachineIdentitiesInput{
+			MachineIdentityIds: machineIdentityIds,
+		},
+	}
+	var err_ error
+
+	var data_ DeleteMachineIdentitiesResponse
+	resp_ := &graphql.Response{Data: &data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return &data_, err_
 }
 
 // The query or mutation executed by GetCloudKeystores.

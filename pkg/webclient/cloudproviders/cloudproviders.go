@@ -40,11 +40,11 @@ func (c *CloudProvidersClient) GetCloudProvider(ctx context.Context, request dom
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve Cloud Provider with name %s: %w", request.Name, err)
 	}
-	if resp == nil || resp.GetCloudProviders() == nil || len(resp.GetCloudProviders().Nodes) != 1 {
+	if resp == nil || resp.GetCloudProviders() == nil || len(resp.GetCloudProviders().GetNodes()) != 1 {
 		return nil, fmt.Errorf("could not find Cloud Provider with name %s", request.Name)
 	}
 
-	cp := resp.GetCloudProviders().Nodes[0]
+	cp := resp.GetCloudProviders().GetNodes()[0]
 
 	statusDetails := ""
 	if cp.GetStatusDetails() != nil {
@@ -74,21 +74,21 @@ func (c *CloudProvidersClient) GetCloudKeystore(ctx context.Context, request dom
 		return nil, fmt.Errorf("failed to retrieve Cloud Keystore with %s: %w", msg, err)
 	}
 
-	if resp == nil || resp.CloudKeystores == nil {
+	if resp == nil || resp.GetCloudKeystores() == nil {
 		return nil, fmt.Errorf("could not find keystore with %s", msg)
 	}
 
-	if len(resp.CloudKeystores.Nodes) != 1 {
+	if len(resp.GetCloudKeystores().GetNodes()) != 1 {
 		return nil, fmt.Errorf("could not find keystore with with %s", msg)
 	}
 
-	ck := resp.CloudKeystores.Nodes[0]
+	ck := resp.GetCloudKeystores().GetNodes()[0]
 
 	return &domain.CloudKeystore{
 		ID:                     ck.GetId(),
 		Name:                   ck.GetName(),
 		Type:                   string(ck.GetType()),
-		MachineIdentitiesCount: ck.MachineIdentitiesCount,
+		MachineIdentitiesCount: ck.GetMachineIdentitiesCount(),
 	}, nil
 }
 
@@ -101,13 +101,24 @@ func (c *CloudProvidersClient) GetMachineIdentity(ctx context.Context, request d
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve cloud machine identity with id %s: %w", *request.MachineIdentityID, err)
 	}
-	if len(resp.CloudMachineIdentities.Nodes) != 1 {
+	if len(resp.GetCloudMachineIdentities().GetNodes()) != 1 {
 		return nil, fmt.Errorf("could not find cloud machine identity with with ID %s", *request.MachineIdentityID)
 	}
 
-	mi := resp.CloudMachineIdentities.Nodes[0]
+	mi := resp.GetCloudMachineIdentities().GetNodes()[0]
 
 	return mi.toDomain()
+}
+
+func (c *CloudProvidersClient) DeleteMachineIdentity(ctx context.Context, id string) (bool, error) {
+	if id == "" {
+		return false, fmt.Errorf("machine identity ID missing")
+	}
+	resp, err := DeleteMachineIdentities(ctx, c.graphqlClient, []string{id})
+	if err != nil {
+		return false, fmt.Errorf("failed to delete machine identity with id %s: %w", id, err)
+	}
+	return resp.GetDeleteCloudMachineIdentities(), nil
 }
 
 func (c *CloudProvidersClient) ProvisionCertificate(ctx context.Context, certificateID string, cloudKeystoreID string, wsClientID string, options *CertificateProvisioningOptionsInput) (*domain.ProvisioningResponse, error) {

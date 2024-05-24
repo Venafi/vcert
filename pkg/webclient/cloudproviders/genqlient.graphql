@@ -62,3 +62,7 @@ query GetMachineIdentities($cloudKeystoreId: UUID, $machineIdentityId: UUID, $fi
         }
     }
 }
+
+mutation DeleteMachineIdentities($machineIdentityIds: [UUID!]!){
+    deleteCloudMachineIdentities(machineIdentityIds: $machineIdentityIds)
+}

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Khan/genqlient/graphql"
+	"github.com/google/uuid"
 
 	"github.com/Venafi/vcert/v5/pkg/domain"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
@@ -264,6 +265,17 @@ func (c *Connector) GetMachineIdentity(request domain.GetCloudMachineIdentityReq
 		return nil, fmt.Errorf("could not find Cloud Machine Identity with ID %s", *request.MachineIdentityID)
 	}
 	return machineIdentity, nil
+}
+
+func (c *Connector) DeleteMachineIdentity(id uuid.UUID) (bool, error) {
+	if id == uuid.Nil {
+		return false, fmt.Errorf("invalid machine identity ID: %s", id)
+	}
+	deleted, err := c.cloudProvidersClient.DeleteMachineIdentity(context.Background(), id.String())
+	if err != nil {
+		return false, fmt.Errorf("failed to delete machine identity with ID %s: %w", id, err)
+	}
+	return deleted, nil
 }
 
 func getCloudMetadataFromWebsocketResponse(respMap interface{}, keystoreType string, keystoreId string) (*CloudProvisioningMetadata, error) {
