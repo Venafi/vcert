@@ -733,7 +733,7 @@ func validateProvisionFlags(commandName string) error {
 	}
 
 	if flags.certificateID == "" && flags.provisionPickupID == "" && flags.pickupIDFile == "" {
-		return fmt.Errorf("please, provide any of --certificate-id or pickup-id or --pickup-id-file")
+		return fmt.Errorf("please, provide any of --certificate-id or --pickup-id or --pickup-id-file")
 	}
 
 	if flags.pickupIDFile != "" {
