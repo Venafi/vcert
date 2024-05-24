@@ -2,7 +2,7 @@ package domain
 
 type WorkFlowResponseData struct {
 	Result       interface{} `json:"result"`
-	WorkflowId   string      `json:"workflowId"`
+	WorkflowID   string      `json:"workflowId"`
 	WorkflowName string      `json:"workflowName"`
 	WsClientId   string      `json:"wsClientId"`
 }
@@ -19,6 +19,6 @@ type WorkflowResponse struct {
 	EventKind       string               `json:"eventkind"`
 	EventResource   string               `json:"eventresource"`
 	Recipient       string               `json:"recipient"`
-	CorrelationId   string               `json:"correlationid"`
+	CorrelationID   string               `json:"correlationid"`
 	Stream          string               `json:"stream"`
 }
