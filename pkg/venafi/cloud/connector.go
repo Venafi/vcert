@@ -775,42 +775,54 @@ func (c *Connector) ProvisionCertificate(req *endpoint.ProvisioningRequest, opti
 	log.Println("Certificate is valid for provisioning (VCP generated)")
 
 	// setting options for provisioning
-	log.Println("setting provisioning options")
-	provisioningOptions, err := setProvisioningOptions(options)
-	if err != nil {
-		return nil, err
-	}
-	log.Println("provisioning options successfully set")
-
-	if reqData.KeystoreID == nil {
-		if reqData.ProviderName == nil || reqData.KeystoreName == nil {
-			return nil, fmt.Errorf("any of keystore ID or both Provider Name and Keystore Name must be provided for provisioning")
+	var provisioningOptions *cloudproviders.CertificateProvisioningOptionsInput
+	if options != nil {
+		log.Println("setting provisioning options")
+		provisioningOptions, err = setProvisioningOptions(options)
+		if err != nil {
+			return nil, err
 		}
+		log.Println("provisioning options successfully set")
 	}
 
-	// Getting Keystore to find type
-	keystoreIDInput := util.StringPointerToString(reqData.KeystoreID)
-	keystoreNameInput := util.StringPointerToString(reqData.KeystoreName)
-	providerNameInput := util.StringPointerToString(reqData.ProviderName)
-
-	log.Printf("fetching keystore information for provided keystore information. KeystoreID: %s, KeystoreName: %s, ProviderName: %s", keystoreIDInput, keystoreNameInput, providerNameInput)
 	ctx := context.Background()
-	request := domain.GetCloudKeystoreRequest{
-		CloudProviderID:   nil,
-		CloudProviderName: req.ProviderName,
-		CloudKeystoreID:   req.KeystoreID,
-		CloudKeystoreName: req.KeystoreName,
-	}
-	cloudKeystore, err := c.cloudProvidersClient.GetCloudKeystore(ctx, request)
-	if err != nil {
-		return nil, err
-	}
 
-	keystoreIDString := cloudKeystore.ID
+	var keystoreIDString string
+	var cloudKeystoreType string
 
-	log.Printf("successfully fetched keystore information for KeystoreID: %s", keystoreIDString)
+	if reqData.Keystore == nil {
+		if reqData.KeystoreID == nil {
+			if reqData.ProviderName == nil || reqData.KeystoreName == nil {
+				return nil, fmt.Errorf("any of keystore object, keystore ID or both Provider Name and Keystore Name must be provided for provisioning")
+			}
+		}
+
+		// Getting Keystore to find type
+		keystoreIDInput := util.StringPointerToString(reqData.KeystoreID)
+		keystoreNameInput := util.StringPointerToString(reqData.KeystoreName)
+		providerNameInput := util.StringPointerToString(reqData.ProviderName)
+
+		log.Printf("fetching keystore information for provided keystore information. KeystoreID: %s, KeystoreName: %s, ProviderName: %s", keystoreIDInput, keystoreNameInput, providerNameInput)
+		cloudKeystore, err := c.GetCloudKeystore(domain.GetCloudKeystoreRequest{
+			CloudProviderID:   nil,
+			CloudProviderName: req.ProviderName,
+			CloudKeystoreID:   req.KeystoreID,
+			CloudKeystoreName: req.KeystoreName,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		keystoreIDString = cloudKeystore.ID
+		cloudKeystoreType = cloudKeystore.Type
+
+		log.Printf("successfully fetched keystore information for KeystoreID: %s", keystoreIDString)
+	} else {
+		log.Printf("Keystore was provided")
+		keystoreIDString = reqData.Keystore.ID
+		cloudKeystoreType = reqData.Keystore.Type
+	}
 	log.Printf("Keystore ID for provisioning: %s", keystoreIDString)
-
 	wsClientID := uuid.New().String()
 
 	wsConn, err := websocket.Subscribe(c.apiKey, c.accessToken, c.baseURL, wsClientID)
@@ -831,7 +843,7 @@ func (c *Connector) ProvisionCertificate(req *endpoint.ProvisioningRequest, opti
 
 	// parsing metadata from websocket response
 	log.Printf("Getting Cloud Metadata of Certificate ID %s and Keystore ID: %s", certificateIDString, keystoreIDString)
-	cloudMetadata, err := getCloudMetadataFromWebsocketResponse(ar.Data.Result, cloudKeystore.Type, keystoreIDString)
+	cloudMetadata, err := getCloudMetadataFromWebsocketResponse(ar.Data.Result, cloudKeystoreType, keystoreIDString)
 	if err != nil {
 		return nil, err
 	}

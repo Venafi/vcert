@@ -22,24 +22,29 @@ import (
 )
 
 const (
-	commandGenCSRName       = "gencsr"
-	commandEnrollName       = "enroll"
-	commandPickupName       = "pickup"
-	commandRevokeName       = "revoke"
-	commandRenewName        = "renew"
-	commandRetireName       = "retire"
-	commandGetCredName      = "getcred"
-	commandCheckCredName    = "checkcred"
-	commandVoidCredName     = "voidcred"
-	commandCreatePolicyName = "setpolicy"
-	commandGetePolicyName   = "getpolicy"
-	commandSshPickupName    = "sshpickup"
-	commandSshEnrollName    = "sshenroll"
-	commandSshGetConfigName = "sshgetconfig"
+	commandGenCSRName           = "gencsr"
+	commandEnrollName           = "enroll"
+	commandPickupName           = "pickup"
+	commandRevokeName           = "revoke"
+	commandRenewName            = "renew"
+	commandRetireName           = "retire"
+	commandGetCredName          = "getcred"
+	commandCheckCredName        = "checkcred"
+	commandVoidCredName         = "voidcred"
+	commandCreatePolicyName     = "setpolicy"
+	commandGetePolicyName       = "getpolicy"
+	commandSshPickupName        = "sshpickup"
+	commandSshEnrollName        = "sshenroll"
+	commandSshGetConfigName     = "sshgetconfig"
+	commandProvisionName        = "provision"
+	subCommandCloudKeystoreName = "cloudkeystore"
 )
 
 var (
-	flags commandFlags
+	flags             commandFlags
+	provisionCommands = stringSlice{
+		subCommandCloudKeystoreName,
+	}
 )
 
 type commandFlags struct {
@@ -141,4 +146,12 @@ type commandFlags struct {
 	sshCertWindows       bool
 	sshFileCertEnroll    string
 	sshFileGetConfig     string
+	certificateID        string
+	keystoreID           string
+	providerName         string
+	keystoreName         string
+	keystoreCertName     string
+	provisionOutputFile  string
+	provisionPickupID    string
+	provisionFormat      string
 }

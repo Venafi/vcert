@@ -708,6 +708,56 @@ var (
 		TakesFile:   true,
 	}
 
+	flagCertificateID = &cli.StringFlag{
+		Name:        "certificate-id",
+		Usage:       "The id of the certificate to be provisioned to a cloud keystore.",
+		Destination: &flags.certificateID,
+	}
+
+	flagKeystoreID = &cli.StringFlag{
+		Name:        "keystore-id",
+		Usage:       "The id of the cloud keystore where the certificate will be provisioned.",
+		Destination: &flags.keystoreID,
+	}
+
+	flagKeystoreName = &cli.StringFlag{
+		Name:        "keystore-name",
+		Usage:       "The name of the cloud keystore where the certificate will be provisioned. Must be set along with provider-name flag.",
+		Destination: &flags.keystoreName,
+	}
+
+	flagProviderName = &cli.StringFlag{
+		Name:        "provider-name",
+		Usage:       "Name of the cloud provider which owns the cloud keystore where the certificate will be provisioned. Must be set along with keystore-name flag.",
+		Destination: &flags.providerName,
+	}
+
+	flagKeystoreCertName = &cli.StringFlag{
+		Name:        "certificate-name",
+		Usage:       "Use to specify Cloud Keystore Certificate Name if it supports it",
+		Destination: &flags.keystoreCertName,
+	}
+
+	flagProvisionOutputFile = &cli.StringFlag{
+		Name: "file",
+		Usage: "Use to specify a file name and a location where the output should be written. " +
+			"Example: --file /path-to/provision-output",
+		Destination: &flags.provisionOutputFile,
+		TakesFile:   true,
+	}
+
+	flagProvisionPickupID = &cli.StringFlag{
+		Name:        "pickup-id",
+		Usage:       "Use to specify the Pickup ID (for VCP is the Request ID) of the certificate to be provisioned.",
+		Destination: &flags.provisionPickupID,
+	}
+
+	flagProvisionFormat = &cli.StringFlag{
+		Name:        "format",
+		Usage:       "The format of the operation output: text or JSON. Defaults to text.",
+		Destination: &flags.provisionFormat,
+	}
+
 	commonFlags              = []cli.Flag{flagInsecure, flagVerbose, flagNoPrompt}
 	keyFlags                 = []cli.Flag{flagKeyType, flagKeySize, flagKeyCurve, flagKeyFile, flagKeyPassword}
 	sansFlags                = []cli.Flag{flagDNSSans, flagEmailSans, flagIPSans, flagURISans, flagUPNSans}
@@ -844,6 +894,20 @@ var (
 			commonFlags,
 			sortableCredentialsFlags,
 		)),
+	)
+
+	provisionFlags = flagsApppend(
+		credentialsFlags,
+		flagPlatform,
+		flagCertificateID,
+		flagProvisionPickupID,
+		flagPickupIDFile,
+		flagKeystoreCertName,
+		flagProviderName,
+		flagKeystoreName,
+		flagKeystoreID,
+		flagProvisionFormat,
+		flagProvisionOutputFile, // TODO: implement this flag
 	)
 
 	commonCredFlags = []cli.Flag{flagConfig, flagProfile, flagUrl, flagToken, flagTrustBundle}
