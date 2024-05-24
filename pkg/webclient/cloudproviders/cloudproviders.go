@@ -136,13 +136,41 @@ func (c *CloudProvidersClient) ProvisionCertificate(ctx context.Context, certifi
 		return nil, fmt.Errorf("failed to provision certificate with certificate ID %s, keystore ID %s and websocket ID %s: %w", certificateID, cloudKeystoreID, wsClientID, err)
 	}
 
-	if resp == nil || resp.ProvisionToCloudKeystore == nil {
+	if resp == nil || resp.GetProvisionToCloudKeystore() == nil {
 		return nil, fmt.Errorf("failed to provision certificate with certificate ID %s, keystore ID %s and websocket ID %s", certificateID, cloudKeystoreID, wsClientID)
 	}
 
 	return &domain.ProvisioningResponse{
 		WorkflowId:   resp.GetProvisionToCloudKeystore().GetWorkflowId(),
 		WorkflowName: resp.GetProvisionToCloudKeystore().GetWorkflowName(),
+	}, nil
+}
+
+func (c *CloudProvidersClient) ProvisionCertificateToMachineIdentity(ctx context.Context, certificateID *string, machineIdentityID string, wsClientID string) (*domain.ProvisioningResponse, error) {
+	if machineIdentityID == "" {
+		return nil, fmt.Errorf("machineIdentityID cannot be empty")
+	}
+	if wsClientID == "" {
+		return nil, fmt.Errorf("wsClientID cannot be empty")
+	}
+
+	certID := "nil"
+	if certificateID != nil {
+		certID = *certificateID
+	}
+
+	resp, err := ProvisionCertificateToMachineIdentity(ctx, c.graphqlClient, machineIdentityID, wsClientID, certificateID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to provision certificate with ID %s, to machine identity with ID %s: %w", certID, machineIdentityID, err)
+	}
+
+	if resp == nil || resp.GetProvisionToCloudMachineIdentity() == nil {
+		return nil, fmt.Errorf("failed to provision certificate with ID %s, to machine identity with ID %s", certID, machineIdentityID)
+	}
+
+	return &domain.ProvisioningResponse{
+		WorkflowId:   resp.GetProvisionToCloudMachineIdentity().GetWorkflowId(),
+		WorkflowName: resp.GetProvisionToCloudMachineIdentity().GetWorkflowName(),
 	}, nil
 }
 

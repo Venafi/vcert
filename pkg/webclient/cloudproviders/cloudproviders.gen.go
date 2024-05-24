@@ -685,6 +685,33 @@ func (v *ProvisionCertificateResponse) GetProvisionToCloudKeystore() *ProvisionC
 	return v.ProvisionToCloudKeystore
 }
 
+// ProvisionCertificateToMachineIdentityProvisionToCloudMachineIdentityWorkflowResult includes the requested fields of the GraphQL type WorkflowResult.
+type ProvisionCertificateToMachineIdentityProvisionToCloudMachineIdentityWorkflowResult struct {
+	WorkflowId   string `json:"workflowId"`
+	WorkflowName string `json:"workflowName"`
+}
+
+// GetWorkflowId returns ProvisionCertificateToMachineIdentityProvisionToCloudMachineIdentityWorkflowResult.WorkflowId, and is useful for accessing the field via an interface.
+func (v *ProvisionCertificateToMachineIdentityProvisionToCloudMachineIdentityWorkflowResult) GetWorkflowId() string {
+	return v.WorkflowId
+}
+
+// GetWorkflowName returns ProvisionCertificateToMachineIdentityProvisionToCloudMachineIdentityWorkflowResult.WorkflowName, and is useful for accessing the field via an interface.
+func (v *ProvisionCertificateToMachineIdentityProvisionToCloudMachineIdentityWorkflowResult) GetWorkflowName() string {
+	return v.WorkflowName
+}
+
+// ProvisionCertificateToMachineIdentityResponse is returned by ProvisionCertificateToMachineIdentity on success.
+type ProvisionCertificateToMachineIdentityResponse struct {
+	// Provision to existing Cloud Machine Identity. If `certificateId` is not provided a re-provisioning of the existing certificate would be triggered
+	ProvisionToCloudMachineIdentity *ProvisionCertificateToMachineIdentityProvisionToCloudMachineIdentityWorkflowResult `json:"provisionToCloudMachineIdentity"`
+}
+
+// GetProvisionToCloudMachineIdentity returns ProvisionCertificateToMachineIdentityResponse.ProvisionToCloudMachineIdentity, and is useful for accessing the field via an interface.
+func (v *ProvisionCertificateToMachineIdentityResponse) GetProvisionToCloudMachineIdentity() *ProvisionCertificateToMachineIdentityProvisionToCloudMachineIdentityWorkflowResult {
+	return v.ProvisionToCloudMachineIdentity
+}
+
 // __DeleteMachineIdentitiesInput is used internally by genqlient
 type __DeleteMachineIdentitiesInput struct {
 	MachineIdentityIds []string `json:"machineIdentityIds"`
@@ -775,6 +802,26 @@ func (v *__ProvisionCertificateInput) GetWsClientId() string { return v.WsClient
 // GetOptions returns __ProvisionCertificateInput.Options, and is useful for accessing the field via an interface.
 func (v *__ProvisionCertificateInput) GetOptions() *CertificateProvisioningOptionsInput {
 	return v.Options
+}
+
+// __ProvisionCertificateToMachineIdentityInput is used internally by genqlient
+type __ProvisionCertificateToMachineIdentityInput struct {
+	MachineIdentityId string  `json:"machineIdentityId"`
+	WsClientId        string  `json:"wsClientId"`
+	CertificateId     *string `json:"certificateId"`
+}
+
+// GetMachineIdentityId returns __ProvisionCertificateToMachineIdentityInput.MachineIdentityId, and is useful for accessing the field via an interface.
+func (v *__ProvisionCertificateToMachineIdentityInput) GetMachineIdentityId() string {
+	return v.MachineIdentityId
+}
+
+// GetWsClientId returns __ProvisionCertificateToMachineIdentityInput.WsClientId, and is useful for accessing the field via an interface.
+func (v *__ProvisionCertificateToMachineIdentityInput) GetWsClientId() string { return v.WsClientId }
+
+// GetCertificateId returns __ProvisionCertificateToMachineIdentityInput.CertificateId, and is useful for accessing the field via an interface.
+func (v *__ProvisionCertificateToMachineIdentityInput) GetCertificateId() *string {
+	return v.CertificateId
 }
 
 // The query or mutation executed by DeleteMachineIdentities.
@@ -1000,6 +1047,46 @@ func ProvisionCertificate(
 	var err_ error
 
 	var data_ ProvisionCertificateResponse
+	resp_ := &graphql.Response{Data: &data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return &data_, err_
+}
+
+// The query or mutation executed by ProvisionCertificateToMachineIdentity.
+const ProvisionCertificateToMachineIdentity_Operation = `
+mutation ProvisionCertificateToMachineIdentity ($machineIdentityId: UUID!, $wsClientId: UUID!, $certificateId: UUID) {
+	provisionToCloudMachineIdentity(machineIdentityId: $machineIdentityId, wsClientId: $wsClientId, certificateId: $certificateId) {
+		workflowId
+		workflowName
+	}
+}
+`
+
+func ProvisionCertificateToMachineIdentity(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	machineIdentityId string,
+	wsClientId string,
+	certificateId *string,
+) (*ProvisionCertificateToMachineIdentityResponse, error) {
+	req_ := &graphql.Request{
+		OpName: "ProvisionCertificateToMachineIdentity",
+		Query:  ProvisionCertificateToMachineIdentity_Operation,
+		Variables: &__ProvisionCertificateToMachineIdentityInput{
+			MachineIdentityId: machineIdentityId,
+			WsClientId:        wsClientId,
+			CertificateId:     certificateId,
+		},
+	}
+	var err_ error
+
+	var data_ ProvisionCertificateToMachineIdentityResponse
 	resp_ := &graphql.Response{Data: &data_}
 
 	err_ = client_.MakeRequest(

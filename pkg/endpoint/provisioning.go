@@ -7,13 +7,14 @@ import (
 )
 
 type ProvisioningRequest struct {
-	CertificateID *string
-	PickupID      *string
-	KeystoreID    *string
-	KeystoreName  *string
-	ProviderName  *string
-	Timeout       time.Duration
-	Keystore      *domain.CloudKeystore
+	MachineIdentityID *string
+	CertificateID     *string
+	PickupID          *string
+	KeystoreID        *string
+	KeystoreName      *string
+	ProviderName      *string
+	Timeout           time.Duration
+	Keystore          *domain.CloudKeystore
 }
 
 type ProvisioningMetadata interface {
