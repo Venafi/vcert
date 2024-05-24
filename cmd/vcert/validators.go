@@ -732,8 +732,17 @@ func validateProvisionFlags(commandName string) error {
 		return fmt.Errorf("unexpected output format: %s", flags.format)
 	}
 
-	if flags.certificateID == "" && flags.provisionPickupID == "" {
-		return fmt.Errorf("please, provide any of certificate-id or pickup-id")
+	if flags.certificateID == "" && flags.provisionPickupID == "" && flags.pickupIDFile == "" {
+		return fmt.Errorf("please, provide any of certificate-id or pickup-id or pickup-id-file")
+	}
+
+	if flags.pickupIDFile != "" {
+		if flags.pickupID != "" {
+			return fmt.Errorf("both -pickup-id and -pickup-id-file options cannot be specified at the same time")
+		}
+		if flags.certificateID != "" {
+			return fmt.Errorf("both -certificate-id and -pickup-id-file options cannot be specified at the same time")
+		}
 	}
 
 	if flags.keystoreID == "" {
