@@ -4,7 +4,7 @@ type WorkFlowResponseData struct {
 	Result       interface{} `json:"result"`
 	WorkflowID   string      `json:"workflowId"`
 	WorkflowName string      `json:"workflowName"`
-	WsClientId   string      `json:"wsClientId"`
+	WsClientID   string      `json:"wsClientId"`
 }
 
 type WorkflowResponse struct {
