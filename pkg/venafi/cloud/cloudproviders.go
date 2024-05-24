@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Khan/genqlient/graphql"
+	"github.com/google/uuid"
 
 	"github.com/Venafi/vcert/v5/pkg/domain"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
@@ -228,17 +229,13 @@ func (c *Connector) getGraphqlHTTPClient() *http.Client {
 	return httpclient
 }
 
-func (c *Connector) GetCloudProviderByName(name string) (*domain.CloudProvider, error) {
-	if name == "" {
-		return nil, fmt.Errorf("cloud provider name cannot be empty")
-	}
-
-	cloudProvider, err := c.cloudProvidersClient.GetCloudProviderByName(context.Background(), name)
+func (c *Connector) GetCloudProvider(request domain.GetCloudProviderRequest) (*domain.CloudProvider, error) {
+	cloudProvider, err := c.cloudProvidersClient.GetCloudProvider(context.Background(), request)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve Cloud Provider with name %s: %w", name, err)
+		return nil, fmt.Errorf("failed to retrieve Cloud Provider with name %s: %w", request.Name, err)
 	}
 	if cloudProvider == nil {
-		return nil, fmt.Errorf("could not find Cloud Provider with name %s", name)
+		return nil, fmt.Errorf("could not find Cloud Provider with name %s", request.Name)
 	}
 	return cloudProvider, nil
 }
@@ -253,6 +250,32 @@ func (c *Connector) GetCloudKeystore(request domain.GetCloudKeystoreRequest) (*d
 		return nil, fmt.Errorf("could not find Cloud Keystore with %s: %w", msg, err)
 	}
 	return cloudKeystore, nil
+}
+
+func (c *Connector) GetMachineIdentity(request domain.GetCloudMachineIdentityRequest) (*domain.CloudMachineIdentity, error) {
+	if request.MachineIdentityID == nil {
+		return nil, fmt.Errorf("machine identity ID cannot be empty")
+	}
+
+	machineIdentity, err := c.cloudProvidersClient.GetMachineIdentity(context.Background(), request)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve Cloud Machine Identity with ID %s: %w", *request.MachineIdentityID, err)
+	}
+	if machineIdentity == nil {
+		return nil, fmt.Errorf("could not find Cloud Machine Identity with ID %s", *request.MachineIdentityID)
+	}
+	return machineIdentity, nil
+}
+
+func (c *Connector) DeleteMachineIdentity(id uuid.UUID) (bool, error) {
+	if id == uuid.Nil {
+		return false, fmt.Errorf("invalid machine identity ID: %s", id)
+	}
+	deleted, err := c.cloudProvidersClient.DeleteMachineIdentity(context.Background(), id.String())
+	if err != nil {
+		return false, fmt.Errorf("failed to delete machine identity with ID %s: %w", id, err)
+	}
+	return deleted, nil
 }
 
 func getCloudMetadataFromWebsocketResponse(respMap interface{}, keystoreType string, keystoreId string) (*CloudProvisioningMetadata, error) {

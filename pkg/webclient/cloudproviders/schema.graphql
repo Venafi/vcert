@@ -68,21 +68,6 @@ type ApplicationMatchingRule
     included: Boolean
 }
 
-"""
-ApplicationMatchingRuleResourceConfig provides a configuration structure for applications that should be included in matching
-"""
-input ApplicationMatchingRuleResourceConfig
-@join__type(graph: COMPLIANCE_POLICY)
-{
-    """ApplicationID is the ID of the application to be used in matching"""
-    applicationID: String!
-
-    """
-    Included states if this application is included or excluded in matching
-    """
-    included: Boolean
-}
-
 enum AttributeEnumOperator
 @join__type(graph: TLSPK)
 {
@@ -224,12 +209,12 @@ type Certificate
     All other versions of the current certificate. This will return null for nested certificates.
     The pagination can be either forward or backward. To enable forward pagination, two arguments are
     used: `after` and `first`. To enable backward pagination, two arguments are used: `before` and `last`.
-    However, 'after' and 'before' arguments are only valid for 'certificate' queries.
+    However, 'after' and 'before' arguments are only valid for 'certificate' queries (i.e. single certificate result)
     If arguments for both forward and backward pagination are supplied, forward pagination will be used. If no arguments
-    are supplied, it returns the first page of 10 certificates (i.e. defaults `first` to 10). The result is sorted by
-    fingerprints in ascending order.
+    are supplied, it returns the first page of 10 certificates (i.e. defaults `first` to 10). If orderBy is not
+    specified, the result will be sorted by fingerprints in ascending order.
     """
-    relatedCertificates(after: String, before: String, first: Int, last: Int): CertificateConnection @join__field(graph: CERTIFICATE_INVENTORY)
+    relatedCertificates(after: String, before: String, first: Int, last: Int, orderBy: [RelatedCertificateOrderInput!]): CertificateConnection @join__field(graph: CERTIFICATE_INVENTORY)
     certificateValidationErrors: [ValidationError!] @join__field(graph: CERTIFICATE_INVENTORY)
     certificateErrorCount: ValidationErrorCount! @join__field(graph: CERTIFICATE_INVENTORY) @join__field(graph: COMPUTED_FIELDS, external: true)
     origins: [String!]! @join__field(graph: CERTIFICATE_INVENTORY, override: "computed-fields")
@@ -414,6 +399,24 @@ type CertificateEdge
 }
 
 """
+CertificateEvaluationRuleAttributesInput provides information on which attributes are used for evaluation
+"""
+input CertificateEvaluationRuleAttributesInput
+@join__type(graph: COMPLIANCE_POLICY)
+{
+    """
+    CertificateAuthorityFingerprints allows to filter by certificate authority for Issuing CA evaluation type
+    """
+    certificateAuthorityFingerprints: CompliancePolicyFieldStringFilter
+
+    """And allows for chaining AND logic"""
+    and: [CertificateEvaluationRuleAttributesInput!]
+
+    """Or allows for chaining OR logic"""
+    or: [CertificateEvaluationRuleAttributesInput!]
+}
+
+"""
 Identifies the intended usage for which the public-key certificate has been issued
 """
 enum CertificateKeyUsage
@@ -471,14 +474,33 @@ input CertificateListFilter
     hasValue: Boolean
 }
 
+"""
+CertificateMatchingRuleAttributesInput provides information on which attributes are used for matching for certificate resources
+"""
+input CertificateMatchingRuleAttributesInput
+@join__type(graph: COMPLIANCE_POLICY)
+{
+    """ApplicationIDs allows to filter by application"""
+    applicationIDs: CompliancePolicyFieldStringFilter
+
+    """Tags allows to filter by application"""
+    tags: CompliancePolicyFieldStringFilter
+
+    """And allows for chaining AND logic"""
+    and: [CertificateMatchingRuleAttributesInput!]
+
+    """Or allows for chaining OR logic"""
+    or: [CertificateMatchingRuleAttributesInput!]
+}
+
 input CertificateNumberFilter
 @join__type(graph: SEARCH)
 {
     """The generic number value for certificate we want to match"""
-    eq: Int
+    eq: Int64
 
     """The generic number value for certificate we don't want to match"""
-    neq: Int
+    neq: Int64
 
     """
     The generic number range value for certificate that we want to assert whether the number value is within the specified range
@@ -495,10 +517,10 @@ input CertificateNumberRange
 @join__type(graph: SEARCH)
 {
     """The minimum number value we want to match on"""
-    gte: Int
+    gte: Int64
 
     """The maximum number value we want to match on"""
-    lte: Int
+    lte: Int64
 }
 
 """CertificateOrderField defines the fields that can be used for ordering"""
@@ -525,6 +547,9 @@ enum CertificateOrderField
 
     """Order by field lastModifiedTime"""
     LAST_MODIFIED_TIME @join__enumValue(graph: SEARCH)
+
+    """Order by field revocation.status"""
+    REVOCATION_STATUS @join__enumValue(graph: SEARCH)
 }
 
 """
@@ -738,6 +763,9 @@ input CertificateSearchAttributesInput
     """Filter by field 'origins'"""
     origins: CertificateOriginFilter
 
+    """Filter by field 'revocation.status'"""
+    revocationStatus: RevocationStatusFilter
+
     """Filter by field 'dekHash'"""
     dekHash: CertificateStringFilter
 
@@ -760,7 +788,7 @@ input CertificateSearchAttributesInput
     publicKeyInformationOID: CertificateStringFilter
 
     """Filter by field 'subjectHashAlgorithm'"""
-    signatureHashAlgorithm: CertificateStringFilter
+    signatureHashAlgorithm: SignatureHashAlgorithmFilter
 
     """Filter by field 'status'"""
     status: CertificateStatusFilter
@@ -835,6 +863,9 @@ input CertificateSearchAttributesInput
     """Filter by field 'validity.to'"""
     validityTo: CertificateDateFilter
 
+    """Filter by field 'validity.period'"""
+    validityPeriod: CertificateNumberFilter
+
     """Filter by field 'clusterCertificateInstallations.nodes.__typename'"""
     clusterCertificateInstallationTypeName: CertificateStringFilter
 
@@ -855,11 +886,8 @@ input CertificateSearchAttributesInput
     """
     clusterCertificateInstallationClusterSecretUsedBy: CertificateStringFilter
 
-    """Filter by field 'cloudInstallations.nodes.metadata.arn'"""
-    cloudInstallationsMetadataArn: CertificateStringFilter
-
-    """Filter by field 'cloudInstallations.nodes.metadata.name'"""
-    cloudInstallationsMetadataName: CertificateStringFilter
+    """Filter by field 'cloudInstallations.nodes.metadata.cloudId'"""
+    cloudInstallationsCloudId: CertificateStringFilter
 
     """Filter by field 'cloudInstallations.nodes.cloudKeystoreId'"""
     cloudInstallationsCloudKeystoreId: CertificateStringFilter
@@ -970,6 +998,20 @@ input CertificateStringFilter
     hasValue: Boolean
 }
 
+"""
+CertificateType defines what type of certificate the trusted CA cert is
+"""
+enum CertificateType
+@join__type(graph: CERTIFICATE)
+{
+    ROOT_CA @join__enumValue(graph: CERTIFICATE)
+    SELF_ISSUED_CA @join__enumValue(graph: CERTIFICATE)
+    CA @join__enumValue(graph: CERTIFICATE)
+    CROSS_CA @join__enumValue(graph: CERTIFICATE)
+    END_ENTITY @join__enumValue(graph: CERTIFICATE)
+    END_ENTITY_AC @join__enumValue(graph: CERTIFICATE)
+}
+
 type CertificateValidationError implements ValidationError
 @join__implements(graph: CERTIFICATE_INVENTORY, interface: "ValidationError")
 @join__type(graph: CERTIFICATE_INVENTORY)
@@ -998,6 +1040,9 @@ type CertificateValidity
 {
     from: DateTime
     to: DateTime
+
+    """ certificate validity period in seconds"""
+    period: Int64
 }
 
 type ChainValidationError implements ValidationError
@@ -1069,6 +1114,17 @@ type CloudDiscoveryConfiguration
     scheduleSpecification: String
     includeExpiredCertificates: Boolean!
     includeRevokedCertificates: Boolean!
+}
+
+input CloudDiscoveryConfigurationInput
+@join__type(graph: CLOUD_PROVIDERS)
+{
+    """
+    A crontab expression representing when the scheduled discovery will run, eg: '00 03 * * *' -> 3 AM every day
+    """
+    scheduleSpecification: String
+    includeExpiredCertificates: Boolean
+    includeRevokedCertificates: Boolean
 }
 
 """Indicates the status of a cloud discovery"""
@@ -1239,6 +1295,7 @@ input CloudKeystoreInput
     acmConfiguration: CloudKeystoreACMConfigurationInput
     akvConfiguration: CloudKeystoreAKVConfigurationInput
     gcmConfiguration: CloudKeystoreGCMConfigurationInput
+    discoveryConfiguration: CloudDiscoveryConfigurationInput
 }
 
 """
@@ -1321,12 +1378,14 @@ input CloudKeystoreUpdateInput
     name: String
     teamId: UUID
     authorizedTeams: [UUID!]
+    discoveryConfiguration: CloudDiscoveryConfigurationInput
 }
 
 input CloudMachineIdentitiesFilterInput
 @join__type(graph: CLOUD_PROVIDERS)
 {
     cloudKeystoreId: UUID
+    machineIdentityId: UUID
     fingerprints: [String!]
     newlyDiscovered: Boolean
     metadata: String
@@ -1641,9 +1700,14 @@ type Cluster
     serviceAccount: ServiceAccount
 
     """
-    CertificateConnection is the connection to list of certificates per cluster
+    Certificates is the connection to list of certificates per cluster that were sent to cert-inventory
     """
     certificates: CertificateConnection
+
+    """
+    UniqueCertificates is the total number of unique certificates currently in the cluster
+    """
+    uniqueCertificates: Int!
 }
 
 type ClusterCertificateBinding
@@ -1847,8 +1911,16 @@ type CompliancePolicy
     """Findings is a list of findings found per policy"""
     findings: CompliancePolicyFindingConnection
 
-    """CreatedOn shows the time the compliance policy was created"""
-    createdOn: String
+    """UpdatedOn shows the time the compliance policy was last updated"""
+    updatedOn: String
+
+    """Active states whether this policy is active for evaluation"""
+    active: Boolean
+
+    """
+    RemediationText is text used to inform a user of what steps can be taken to fix issues
+    """
+    remediationText: String
 }
 
 """
@@ -1883,14 +1955,19 @@ input CompliancePolicyCreateInput
     description: String
 
     """
+    RemediationText is the input to provide feedback on how to resolve policy issues
+    """
+    remediationText: String
+
+    """
     MatchingRules is the configured matching rules to attach to the compliance policy
     """
-    matchingRules: [CompliancePolicyMatchingRuleInput!]
+    matchingRules: CompliancePolicyMatchingRuleInput
 
     """
     EvaluationRules is the configured evaluation rules to attach to the compliance policy
     """
-    evaluationRules: [CompliancePolicyEvaluationRuleInput!]
+    evaluationRules: CompliancePolicyEvaluationRuleInput
 }
 
 """CompliancePolicyEdge is used for the CompliancePolicyConnection"""
@@ -1914,7 +1991,7 @@ type CompliancePolicyEvaluationRule
     type: CompliancePolicyEvaluationRuleType
 
     """Severity shows the level of importance for the policy in its findings"""
-    severity: CompliancePolicyEvaluationRuleSeverity
+    severity: CompliancePolicySeverity
 
     """
     EvaluationValue is used to display information about the configuration of the evaluation rule
@@ -1928,38 +2005,23 @@ CompliancePolicyEvaluationRuleInput provides details about an evaluation rule to
 input CompliancePolicyEvaluationRuleInput
 @join__type(graph: COMPLIANCE_POLICY)
 {
-    """Type is used to determine which grouping this evaluation rule targets"""
-    type: CompliancePolicyEvaluationRuleType
-
-    """EvaluationValues stores a list of values related to the configuration"""
-    evaluationValues: [EvaluationRuleValueInput!]
-
     """
-    Severity allows the client to set a severity level for the evaluation rule
+    CertificateEvaluationValues stores a list of values related to the configuration
     """
-    severity: CompliancePolicyEvaluationRuleSeverity
+    certificateEvaluationValues: CompliancePolicyEvaluationRuleRootInput
 }
 
 """
-CompliancePolicyEvalutionRuleSeverity denotes how severe the finding is in its evaluation result for a policy
+CompliancePolicyEvaluationRuleRootInput provides the root level matching operators for evaluation rules
 """
-enum CompliancePolicyEvaluationRuleSeverity
+input CompliancePolicyEvaluationRuleRootInput
 @join__type(graph: COMPLIANCE_POLICY)
 {
-    """Critical determines critical severity"""
-    CRITICAL @join__enumValue(graph: COMPLIANCE_POLICY)
+    """And allows for chaining AND logic at the root level"""
+    and: [CertificateEvaluationRuleAttributesInput!]
 
-    """High determines high severity"""
-    HIGH @join__enumValue(graph: COMPLIANCE_POLICY)
-
-    """Medium determines medium severity"""
-    MEDIUM @join__enumValue(graph: COMPLIANCE_POLICY)
-
-    """Low determines low severity"""
-    LOW @join__enumValue(graph: COMPLIANCE_POLICY)
-
-    """Info determines info severity"""
-    INFO @join__enumValue(graph: COMPLIANCE_POLICY)
+    """Or allows for chaining OR logic at the root level"""
+    or: [CertificateEvaluationRuleAttributesInput!]
 }
 
 """
@@ -1968,8 +2030,26 @@ CompliancePolicyEvaluationRuleType denotes what group of rules an evaluation rul
 enum CompliancePolicyEvaluationRuleType
 @join__type(graph: COMPLIANCE_POLICY)
 {
-    """Certificate_Authorities is for the group of rules related to CAs"""
-    CERTIFICATE_AUTHORITIES @join__enumValue(graph: COMPLIANCE_POLICY)
+    """IssuingCA is for the group of rules related to issuing CAs"""
+    ISSUING_CA @join__enumValue(graph: COMPLIANCE_POLICY)
+}
+
+"""
+CompliancePolicyFieldStringFilter provides a list of options for fields in matching and evaluation rules
+"""
+input CompliancePolicyFieldStringFilter
+@join__type(graph: COMPLIANCE_POLICY)
+{
+    """Includes is used for checking if elements are in list"""
+    includes: [String!]
+
+    """Excludes is used for checking if elements are not in list"""
+    excludes: [String!]
+
+    """
+    HasValue is used to include/exclude all of a resource (all applications, etc.)
+    """
+    hasValue: Boolean
 }
 
 """
@@ -1981,10 +2061,16 @@ type CompliancePolicyFinding
     """
     Type is used to differentiate which type of finding resource is in the finding
     """
-    type: CompliancePolicyFindingType
+    type: CompliancePolicyResourceType
 
     """CompliancePolicy is the policy that evaluated and created this finding"""
     compliancePolicy: CompliancePolicy
+
+    """Status is used to show the status of the finding"""
+    status: CompliancePolicyFindingStatus
+
+    """Severity shows the level of importance for the policy for this finding"""
+    severity: CompliancePolicySeverity
 
     """FindingResource is the parent resource that this finding came from"""
     findingResource: FindingResource
@@ -2027,18 +2113,47 @@ type CompliancePolicyFindingEdge
 }
 
 """
-CompliancePolicyFindingType denotes which resource was evaluated against for the finding
+CompliancePolicyFindingResource is the resource generated for a finding and is used to store the CompliancePolicyFinding
 """
-enum CompliancePolicyFindingType
+type CompliancePolicyFindingResource
 @join__type(graph: COMPLIANCE_POLICY)
 {
-    """
-    Certificate is used to show the evaluation found a finding on a certificate
-    """
-    CERTIFICATE @join__enumValue(graph: COMPLIANCE_POLICY)
+    """ID is the ID of the compliance policy finding evaluation"""
+    id: UUID!
 
-    """Ingress is used to show the evaluation found a finding on an ingress"""
-    INGRESS @join__enumValue(graph: COMPLIANCE_POLICY)
+    """
+    EvaluationRuleID is the ID of the evaluation rule that the compliance policy finding evaluation is associated with
+    """
+    evaluationRuleId: UUID!
+
+    """
+    ResourceType is the type of resource that the compliance policy finding evaluation is associated with
+    """
+    resourceType: String!
+
+    """
+    ResourceId is the ID of the resource that the compliance policy finding evaluation is associated with
+    """
+    resourceId: String!
+
+    """Status is the status of the compliance policy finding evaluation"""
+    status: CompliancePolicyFindingStatus
+
+    """
+    CreatedAt is the time the compliance policy finding evaluation was created
+    """
+    createdAt: String
+}
+
+"""CompliancePolicyFindingStatus denotes the status of the policy finding"""
+enum CompliancePolicyFindingStatus
+@join__type(graph: COMPLIANCE_POLICY)
+{
+    """Passed states that the finding passed evaluation"""
+    PASSED @join__enumValue(graph: COMPLIANCE_POLICY)
+
+    """Failed states that the finding failed evaluation"""
+    FAILED @join__enumValue(graph: COMPLIANCE_POLICY)
 }
 
 """
@@ -2048,50 +2163,46 @@ type CompliancePolicyMatchingRule
 @join__type(graph: COMPLIANCE_POLICY)
 {
     """Type is used to differentiate which type of matching rule is stored"""
-    type: CompliancePolicyMatchingRuleType
+    type: CompliancePolicyResourceType
+
+    """AllApplications is the flag to determine if all applications are set"""
+    allApplications: Boolean
 
     """
     Applications is the list of all applications that have been set for this matching rule
     """
     applications: [ApplicationMatchingRule!]
 
+    """AllTags is the flag to determine if all tags are set"""
+    allTags: Boolean
+
     """Tags is the list of all tags that have been set for this matching rule"""
     tags: [TagMatchingRule!]
 }
 
 """
-CompliancePolicyMatchingRuleInput provides information on a matching rule
+CompliancePolicyMatchingRuleInput provides details about a matching rule to be processed
 """
 input CompliancePolicyMatchingRuleInput
 @join__type(graph: COMPLIANCE_POLICY)
 {
     """
-    Type determines what type of resource is being looked for in matching resources
+    CertificateMatchingValues stores a list of values related to the configuration
     """
-    type: CompliancePolicyMatchingRuleType
-
-    """
-    Applications stores all the config for applications that should be checked in matching
-    """
-    applications: [ApplicationMatchingRuleResourceConfig!]
-
-    """Tags stores all the config for tags that should be checked in matching"""
-    tags: [TagMatchingRuleResourceConfig!]
+    certificateMatchingValues: CompliancePolicyMatchingRuleRootInput
 }
 
 """
-CompliancePolicyMatchingRuleType denotes which resource type the matching rule will target
+CompliancePolicyMatchingRuleRootInput provides the root level matching operators for matching rules
 """
-enum CompliancePolicyMatchingRuleType
+input CompliancePolicyMatchingRuleRootInput
 @join__type(graph: COMPLIANCE_POLICY)
 {
-    """
-    Certificate is used to show the matching is evaluating certificate resources
-    """
-    CERTIFICATE @join__enumValue(graph: COMPLIANCE_POLICY)
+    """And allows for chaining AND logic at the root level"""
+    and: [CertificateMatchingRuleAttributesInput!]
 
-    """Ingress is used to show the matching is evaluating ingress resources"""
-    INGRESS @join__enumValue(graph: COMPLIANCE_POLICY)
+    """Or allows for chaining OR logic at the root level"""
+    or: [CertificateMatchingRuleAttributesInput!]
 }
 
 """CompliancePolicyOrderDirection denotes the different ordering types"""
@@ -2122,6 +2233,21 @@ input CompliancePolicyOrderInput
 
     """Direction determines if ascending or descending direction"""
     direction: CompliancePolicyOrderDirection
+}
+
+"""
+CompliancePolicyResourceType denotes which resource type the matching rule will target
+"""
+enum CompliancePolicyResourceType
+@join__type(graph: COMPLIANCE_POLICY)
+{
+    """
+    Certificate is used to show the matching is evaluating certificate resources
+    """
+    CERTIFICATE @join__enumValue(graph: COMPLIANCE_POLICY)
+
+    """Ingress is used to show the matching is evaluating ingress resources"""
+    INGRESS @join__enumValue(graph: COMPLIANCE_POLICY)
 }
 
 """
@@ -2157,6 +2283,28 @@ input CompliancePolicySearchFilterInput
 }
 
 """
+CompliancePolicySeverity denotes how severe the finding is in its evaluation result for a policy
+"""
+enum CompliancePolicySeverity
+@join__type(graph: COMPLIANCE_POLICY)
+{
+    """Critical determines critical severity"""
+    CRITICAL @join__enumValue(graph: COMPLIANCE_POLICY)
+
+    """High determines high severity"""
+    HIGH @join__enumValue(graph: COMPLIANCE_POLICY)
+
+    """Medium determines medium severity"""
+    MEDIUM @join__enumValue(graph: COMPLIANCE_POLICY)
+
+    """Low determines low severity"""
+    LOW @join__enumValue(graph: COMPLIANCE_POLICY)
+
+    """Info determines info severity"""
+    INFO @join__enumValue(graph: COMPLIANCE_POLICY)
+}
+
+"""
 CompliancePolicyStatus denotes the status for a compliance policy in terms of activity
 """
 enum CompliancePolicyStatus
@@ -2165,13 +2313,23 @@ enum CompliancePolicyStatus
     """Created refers to a policy that has been created but not activated"""
     CREATED @join__enumValue(graph: COMPLIANCE_POLICY)
 
-    """Active refers to a policy that has been created and activated"""
+    """
+    Running refers to a policy when it is currently evaluating (will switch to ACTIVE or INACTIVE)
+    """
+    RUNNING @join__enumValue(graph: COMPLIANCE_POLICY)
+
+    """
+    Active refers to a policy that has finished running and is actively listening to resources for evaluation
+    """
     ACTIVE @join__enumValue(graph: COMPLIANCE_POLICY)
 
     """
-    Inactive refers to a policy that has been created, activated, and then inactivated
+    Inactive refers to a policy that has finished running and is set to an inactive status to not actively listen to resources for evaluation
     """
     INACTIVE @join__enumValue(graph: COMPLIANCE_POLICY)
+
+    """Error refers to a policy that has run into an error during evaluation"""
+    ERROR @join__enumValue(graph: COMPLIANCE_POLICY)
 }
 
 """
@@ -2212,14 +2370,19 @@ input CompliancePolicyUpdateInput
     description: String
 
     """
+    RemediationText is the input to provide feedback on how to resolve policy issues
+    """
+    remediationText: String
+
+    """
     MatchingRules is the configured matching rules to attach to the compliance policy
     """
-    matchingRules: [CompliancePolicyMatchingRuleInput!]
+    matchingRules: CompliancePolicyMatchingRuleInput
 
     """
     EvaluationRules is the configured evaluation rules to attach to the compliance policy
     """
-    evaluationRules: [CompliancePolicyEvaluationRuleInput!]
+    evaluationRules: CompliancePolicyEvaluationRuleInput
 }
 
 input ConditionInputForEnum
@@ -2289,12 +2452,43 @@ of the RFC 3339 profile of the ISO 8601 standard for representation of dates and
 """
 scalar DateTime
 @join__type(graph: CAOPERATIONS)
+@join__type(graph: CERTIFICATE)
 @join__type(graph: CERTIFICATE_INVENTORY)
 @join__type(graph: CLOUD_PROVIDERS)
 @join__type(graph: ENTITLEMENTS)
 @join__type(graph: LEGACY)
 @join__type(graph: OUTAGEDETECTION)
 @join__type(graph: SEARCH)
+
+"""
+DeleteCertificateInput defines the input required for deleting a retired certificates
+"""
+input DeleteCertificateInput
+@join__type(graph: CERTIFICATE_INVENTORY)
+{
+    """The fingerprint for the certificate to delete"""
+    fingerprint: ID!
+}
+
+"""
+DeleteCertificatePayload holds the result of deleting a retired certificate
+"""
+type DeleteCertificatePayload
+@join__type(graph: CERTIFICATE_INVENTORY)
+{
+    """The fingerprint for the certificate that was deleted"""
+    fingerprint: ID!
+}
+
+"""
+DeleteCertificatesInput defines the input required for deleting one or more retired certificates
+"""
+input DeleteCertificatesInput
+@join__type(graph: CERTIFICATE_INVENTORY)
+{
+    """List of certificates to delete"""
+    certificates: [DeleteCertificateInput!]!
+}
 
 """Represents the payload for deleting an integration."""
 type DeleteIntegrationPayload
@@ -2398,42 +2592,13 @@ type ErrorInformation
 }
 
 """
-EvaluationCertificateAuthorities provides a configuration on which CAs of a certificate are evaluated against and how they should be treated
+EvaluationIssuingCAs provides a configuration on which CAs of a certificate are evaluated against and how they should be treated
 """
-type EvaluationCertificateAuthorities
+type EvaluationIssuingCAs
 @join__type(graph: COMPLIANCE_POLICY)
 {
     """Approved stores a list of IDs approved for evaluation"""
-    approved: [String!]
-
-    """
-    Unapproved stores a list of IDs that should result in a finding in evaluation
-    """
-    unapproved: [String!]
-
-    """
-    UnknownAsUnapproved stores whether unknown CAs should be counted as unapproved
-    """
-    unknownAsUnapproved: Boolean
-}
-
-"""
-EvaluationRuleValueInput provides options for a specific value to be used for a evaluation rule key
-"""
-input EvaluationRuleValueInput
-@join__type(graph: COMPLIANCE_POLICY)
-{
-    """Key defines what element is being stored in the evaluation rule"""
-    key: String
-
-    """StringValue stores string values for a particular key"""
-    stringValue: String
-
-    """ListValue stores list values for a particular key"""
-    listValue: [String!]
-
-    """BooleanValue stores boolean values for a particular key"""
-    booleanValue: Boolean
+    trustedCAs: [TrustedCAEvaluationRule!]
 }
 
 """
@@ -2441,8 +2606,8 @@ EvaluationRuleValueType is a collection of types that will provide a structure f
 """
 union EvaluationRuleValueType
 @join__type(graph: COMPLIANCE_POLICY)
-@join__unionMember(graph: COMPLIANCE_POLICY, member: "EvaluationCertificateAuthorities")
-= EvaluationCertificateAuthorities
+@join__unionMember(graph: COMPLIANCE_POLICY, member: "EvaluationIssuingCAs")
+= EvaluationIssuingCAs
 
 """Represents an individual feature."""
 type Feature
@@ -2573,6 +2738,11 @@ type IdentityEdge
     node: Identity!
 }
 
+"""A data type that represents a 64 bit signed integer"""
+scalar Int64
+@join__type(graph: CERTIFICATE_INVENTORY)
+@join__type(graph: SEARCH)
+
 """Represents a configured integration details."""
 type Integration
 @join__type(graph: MESSAGING)
@@ -2677,6 +2847,7 @@ scalar join__FieldSet
 
 enum join__Graph {
     CAOPERATIONS @join__graph(name: "caoperations", url: "http://caoperations-service:2522/system/graphql")
+    CERTIFICATE @join__graph(name: "certificate", url: "http://certificate-service:2322/system/graphql")
     CERTIFICATE_INVENTORY @join__graph(name: "certificate-inventory", url: "http://certificate-query-service:80/graphql")
     CLOUD_PROVIDERS @join__graph(name: "cloud-providers", url: "http://cloudproviders-service:4488/graphql")
     COMPLIANCE_POLICY @join__graph(name: "compliance-policy", url: "http://compliance-policy-service:8080/graphql")
@@ -2896,6 +3067,7 @@ enum MachineInstallationStatus
 
 type Mutation
 @join__type(graph: CAOPERATIONS)
+@join__type(graph: CERTIFICATE_INVENTORY)
 @join__type(graph: CLOUD_PROVIDERS)
 @join__type(graph: COMPLIANCE_POLICY)
 @join__type(graph: MESSAGING)
@@ -2903,6 +3075,18 @@ type Mutation
 {
     """Revoke a certificate by SHA1 fingerprint"""
     revokeCertificate(fingerprint: ID!, certificateAuthorityAccountId: UUID, revocationReason: RevocationReason!, revocationComment: String): Certificate @join__field(graph: CAOPERATIONS)
+
+    """
+    Retire one or more certificates. If a current certificate (i.e. latest version of a certificate) is retired, all
+    previous versions of the certificate will be retired as well.
+    """
+    retireCertificates(input: RetireCertificatesInput!): [RetireCertificatePayload]! @join__field(graph: CERTIFICATE_INVENTORY)
+
+    """Recover one or more retired certificates."""
+    recoverCertificates(input: RecoverCertificatesInput!): [RecoverCertificatePayload]! @join__field(graph: CERTIFICATE_INVENTORY)
+
+    """Delete one or more retired certificates."""
+    deleteCertificates(input: DeleteCertificatesInput!): [DeleteCertificatePayload]! @join__field(graph: CERTIFICATE_INVENTORY)
 
     """Creates a Cloud Provider"""
     createCloudProvider(input: CloudProviderInput!): CloudProvider @join__field(graph: CLOUD_PROVIDERS)
@@ -3002,6 +3186,7 @@ PageInfo provides pagination information as defined by [https://relay.dev/graphq
 """
 type PageInfo
 @join__type(graph: CAOPERATIONS)
+@join__type(graph: CERTIFICATE)
 @join__type(graph: CERTIFICATE_INVENTORY)
 @join__type(graph: CLOUD_PROVIDERS)
 @join__type(graph: COMPLIANCE_POLICY)
@@ -3118,6 +3303,7 @@ input PublicKeyInformationTypeFilter
 """The query root of Venafi Control Plane GraphQL interface."""
 type Query
 @join__type(graph: CAOPERATIONS)
+@join__type(graph: CERTIFICATE)
 @join__type(graph: CERTIFICATE_INVENTORY)
 @join__type(graph: CLOUD_PROVIDERS)
 @join__type(graph: COMPLIANCE_POLICY)
@@ -3143,6 +3329,15 @@ type Query
     - last: returns the last _n_ certificate authority accounts from the list
     """
     certificateAuthorityAccounts(after: String, before: String, first: Int, last: Int): CertificateAuthorityAccountConnection @join__field(graph: CAOPERATIONS)
+
+    """
+    Returns a list of trusted CA certificates.
+    - after: returns the trusted CA certificates in the list that come after the specified cursor
+    - before: returns the trusted CA certificates in the list that come before the specified cursor
+    - first: returns the first _n_ trusted CA certificates from the list
+    - last: returns the last _n_ trusted CA certificates from the list
+    """
+    trustedCaCertificates(after: String, before: String, first: Int, last: Int): TrustedCaCertificatesConnection @join__field(graph: CERTIFICATE)
 
     """Deprecated, use `certificate` instead"""
     getCertificate(fingerprint: ID!): Certificate @join__field(graph: CERTIFICATE_INVENTORY) @deprecated(reason: "Deprecated, use `certificate` instead")
@@ -3399,6 +3594,110 @@ type Query
     clustersSummary: TlspkClustersSummary @join__field(graph: TLSPK)
 }
 
+"""
+RecoverCertificateInput defines the input required for recovering a retired certificate
+"""
+input RecoverCertificateInput
+@join__type(graph: CERTIFICATE_INVENTORY)
+{
+    """The fingerprint for the certificate to recover"""
+    fingerprint: ID!
+}
+
+"""
+RecoverCertificatePayload holds the result of recovering a retired certificate
+"""
+type RecoverCertificatePayload
+@join__type(graph: CERTIFICATE_INVENTORY)
+{
+    """The fingerprint for the certificate that was recovered"""
+    fingerprint: ID!
+}
+
+"""
+RecoverCertificateInput defines the input required for recovering one or more retired certificates
+"""
+input RecoverCertificatesInput
+@join__type(graph: CERTIFICATE_INVENTORY)
+{
+    """List of certificates to recover"""
+    certificates: [RecoverCertificateInput!]!
+
+    """
+    An optional list of application IDs to associate with the recovered certificates
+    """
+    applicationIds: [ID!]
+}
+
+"""
+RelatedCertificateOrderDirection represents the ordering direction for related certificates.
+"""
+enum RelatedCertificateOrderDirection
+@join__type(graph: CERTIFICATE_INVENTORY)
+{
+    """ASC is the ascending order"""
+    ASC @join__enumValue(graph: CERTIFICATE_INVENTORY)
+
+    """DESC is the descending order"""
+    DESC @join__enumValue(graph: CERTIFICATE_INVENTORY)
+}
+
+"""
+RelatedCertificateOrderField defines the fields that can be used for ordering the related certificates.
+"""
+enum RelatedCertificateOrderField
+@join__type(graph: CERTIFICATE_INVENTORY)
+{
+    """Order by field 'fingerprint'"""
+    FINGERPRINT @join__enumValue(graph: CERTIFICATE_INVENTORY)
+
+    """Order by field 'archivedTime'"""
+    ARCHIVED_TIME @join__enumValue(graph: CERTIFICATE_INVENTORY)
+}
+
+"""
+RelatedCertificateOrderInput contains the ordering information for the related certificates.
+"""
+input RelatedCertificateOrderInput
+@join__type(graph: CERTIFICATE_INVENTORY)
+{
+    field: RelatedCertificateOrderField!
+    direction: RelatedCertificateOrderDirection!
+}
+
+"""
+RetireCertificateInput defines the input required for retiring a certificate
+"""
+input RetireCertificateInput
+@join__type(graph: CERTIFICATE_INVENTORY)
+{
+    """The fingerprint for the certificate to retire"""
+    fingerprint: ID!
+}
+
+"""RetireCertificatePayload holds the result of retiring a certificate"""
+type RetireCertificatePayload
+@join__type(graph: CERTIFICATE_INVENTORY)
+{
+    """The fingerprint for the certificate that was retired"""
+    fingerprint: ID!
+}
+
+"""
+RetireCertificatesInput defines the input required for retiring one or more certificates
+"""
+input RetireCertificatesInput
+@join__type(graph: CERTIFICATE_INVENTORY)
+{
+    """List of certificates to retire"""
+    certificates: [RetireCertificateInput!]!
+
+    """
+    Indicate whether to add the certificates to the blocklist as well. If missing, defaults to false
+    """
+    addToBlocklist: Boolean
+}
+
 type Revocation
 @join__type(graph: CAOPERATIONS)
 {
@@ -3420,11 +3719,25 @@ enum RevocationReason
     CESSATION_OF_OPERATION @join__enumValue(graph: CAOPERATIONS)
 }
 
+"""Indicates the revocation status of a certificate"""
 enum RevocationStatus
 @join__type(graph: CAOPERATIONS)
+@join__type(graph: SEARCH)
 {
-    SUBMITTED @join__enumValue(graph: CAOPERATIONS)
-    FAILED @join__enumValue(graph: CAOPERATIONS)
+    SUBMITTED @join__enumValue(graph: CAOPERATIONS) @join__enumValue(graph: SEARCH)
+    FAILED @join__enumValue(graph: CAOPERATIONS) @join__enumValue(graph: SEARCH)
+}
+
+input RevocationStatusFilter
+@join__type(graph: SEARCH)
+{
+    """The string value we want to match"""
+    eq: RevocationStatus
+
+    """
+    The boolean value that we want to assert whether the boolean field is null or not
+    """
+    hasValue: Boolean
 }
 
 type RFC822Name
@@ -3513,6 +3826,39 @@ type ServiceAccountEdge
     node: ServiceAccount!
 }
 
+"""Indicates the signature hash algorithm of a certificate"""
+enum SignatureHashAlgorithm
+@join__type(graph: SEARCH)
+{
+    GOST_R3410_2001 @join__enumValue(graph: SEARCH)
+    GOST_R3410_94 @join__enumValue(graph: SEARCH)
+    GOST_R3411_2012 @join__enumValue(graph: SEARCH)
+    MD2 @join__enumValue(graph: SEARCH)
+    MD5 @join__enumValue(graph: SEARCH)
+    SHA1 @join__enumValue(graph: SEARCH)
+    SHA224 @join__enumValue(graph: SEARCH)
+    SHA256 @join__enumValue(graph: SEARCH)
+    SHA384 @join__enumValue(graph: SEARCH)
+    SHA512 @join__enumValue(graph: SEARCH)
+    SHA3_256 @join__enumValue(graph: SEARCH)
+    SHA3_512 @join__enumValue(graph: SEARCH)
+    SM3 @join__enumValue(graph: SEARCH)
+    RIPEMD160 @join__enumValue(graph: SEARCH)
+    UNKNOWN @join__enumValue(graph: SEARCH)
+}
+
+input SignatureHashAlgorithmFilter
+@join__type(graph: SEARCH)
+{
+    """The string value we want to match"""
+    eq: SignatureHashAlgorithm
+
+    """
+    The list of strings that we want to assert whether the string value is included in the provided list
+    """
+    in: [SignatureHashAlgorithm!]
+}
+
 """Identifies certificate's subject alternative name type"""
 enum SubjectAlternativeNameType
 @join__type(graph: SEARCH)
@@ -3588,19 +3934,6 @@ type TagMatchingRule
     """
     Included states whether this tag should be included in matching for resources
     """
-    included: Boolean
-}
-
-"""
-TagMatchingRuleResourceConfig provides a configuration structure for tags that should be included in matching
-"""
-input TagMatchingRuleResourceConfig
-@join__type(graph: COMPLIANCE_POLICY)
-{
-    """Tags is the tag to be used in matching"""
-    tag: String!
-
-    """Included states if this tag is included or excluded in matching"""
     included: Boolean
 }
 
@@ -3760,6 +4093,13 @@ type TlspkClustersIngressesWidget
     categories: [TlspkClustersIngressesCategory]
 }
 
+type TlspkClustersLLCertsNotManagedByCertManagerCategory
+@join__type(graph: TLSPK)
+{
+    id: String
+    count: Int
+}
+
 type TlspkClustersLLCertsNotManagedByCertManagerWidget
 @join__type(graph: TLSPK)
 {
@@ -3770,6 +4110,11 @@ type TlspkClustersLLCertsNotManagedByCertManagerWidget
     notManagedByCertManager is the number of long lived certfiicates found in clusters that are not managed by Cert-Manager
     """
     notManagedByCertManager: Int
+
+    """
+    categories is the list of long lived certificates found in clusters that are either managed by Cert-Manager or not managed by Cert-Manager
+    """
+    categories: [TlspkClustersLLCertsNotManagedByCertManagerCategory]
 }
 
 type TlspkClustersLongLivedCertificatesCategory
@@ -3932,6 +4277,85 @@ input TLSValidationErrorTypeFilter
     hasValue: Boolean
 }
 
+"""
+TrustedCaCertificate is the trusted CA certificate that is trusted by the user for use in issuing certificates
+"""
+type TrustedCaCertificate
+@join__type(graph: CERTIFICATE, key: "fingerprint")
+@join__type(graph: COMPLIANCE_POLICY, key: "fingerprint", resolvable: false)
+{
+    """Fingerprint of the trusted CA certificate"""
+    fingerprint: ID!
+
+    """
+    CertificateType defines what type of certificate the trusted CA cert is
+    """
+    certificateType: CertificateType! @join__field(graph: CERTIFICATE)
+
+    """Source defines how the certificate was loaded into the system"""
+    source: TrustedCACertificateSource! @join__field(graph: CERTIFICATE)
+
+    """SubjectCN of the trusted CA certificate"""
+    subjectCN: [String]! @join__field(graph: CERTIFICATE)
+}
+
+"""
+TrustedCaCertificatesConnection is used to provide pagination to trusted CA certificates
+"""
+type TrustedCaCertificatesConnection
+@join__type(graph: CERTIFICATE)
+{
+    """PageInfo is information for pagination"""
+    pageInfo: PageInfo!
+
+    """TotalCount of trusted CA certificates"""
+    totalCount: Int!
+
+    """Nodes of the trusted CA certificate connection for paginated results"""
+    nodes: [TrustedCaCertificate!]
+
+    """Edges of the trusted CA certificate connection for linking"""
+    edges: [TrustedCaCertificatesEdge]
+}
+
+"""
+TrustedCaCertificatesEdge is used for the TrustedCaCertificatesConnection edges
+"""
+type TrustedCaCertificatesEdge
+@join__type(graph: CERTIFICATE)
+{
+    """Node of the trusted CA certificate connection"""
+    node: TrustedCaCertificate!
+
+    """Cursor is the link to the next edge"""
+    cursor: String!
+}
+
+"""
+TrustedCACertificateSource defines how the certificate was loaded into the system
+"""
+enum TrustedCACertificateSource
+@join__type(graph: CERTIFICATE)
+{
+    GLOBALLY_TRUSTED @join__enumValue(graph: CERTIFICATE)
+    USER_PROVIDED @join__enumValue(graph: CERTIFICATE)
+}
+
+"""
+TrustedCAEvaluationRule wraps the Trusted CA type to add included to it
+"""
+type TrustedCAEvaluationRule
+@join__type(graph: COMPLIANCE_POLICY)
+{
+    """TrustedCA is the reference to the Trusted CA to include or exclude"""
+    trustedCA: TrustedCaCertificate
+
+    """
+    Included states whether this Trusted CA should be included in matching for resources
+    """
+    included: Boolean
+}
+
 type UniformResourceIdentifier
 @join__type(graph: CERTIFICATE_INVENTORY)
 {
@@ -4020,6 +4444,7 @@ enum UserStatus
 """A field whose value is a generic Universally Unique Identifier."""
 scalar UUID
 @join__type(graph: CAOPERATIONS)
+@join__type(graph: CERTIFICATE)
 @join__type(graph: CLOUD_PROVIDERS)
 @join__type(graph: COMPLIANCE_POLICY)
 @join__type(graph: LEGACY)
