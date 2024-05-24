@@ -447,10 +447,15 @@ func outputJSON(resp interface{}) error {
 	return err
 }
 
-func (r *ProvisioningResult) Flush(format string) error {
+func (r *ProvisioningResult) Flush(format string, filePath string) error {
 
 	result, err := r.Format(format)
 	if err != nil {
+		return err
+	}
+
+	if filePath != "" {
+		err = r.WriteFile(result, filePath)
 		return err
 	}
 
@@ -459,6 +464,14 @@ func (r *ProvisioningResult) Flush(format string) error {
 		return fmt.Errorf("failed to print provisioning result to STDOUT: %w", err)
 	}
 
+	return nil
+}
+
+func (r *ProvisioningResult) WriteFile(result string, filePath string) error {
+	err := os.WriteFile(filePath, []byte(result), 0600)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

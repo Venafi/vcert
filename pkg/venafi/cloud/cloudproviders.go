@@ -49,7 +49,7 @@ func (c *Connector) ProvisionCertificate(req *domain.ProvisioningRequest, option
 
 	reqData := *req
 
-	if reqData.Timeout == 0 {
+	if reqData.Timeout <= 0 {
 		reqData.Timeout = util.DefaultTimeout * time.Second
 	}
 
