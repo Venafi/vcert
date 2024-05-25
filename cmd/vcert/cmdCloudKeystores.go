@@ -93,7 +93,7 @@ func doCommandProvisionCloudKeystore(c *cli.Context) error {
 		return fmt.Errorf("unknown keystore metadata type: %s", metadata.CloudKeystoreType)
 	}
 
-	err = result.Flush(flags.provisionFormat)
+	err = result.Flush(flags.provisionFormat, flags.provisionOutputFile)
 	if err != nil {
 		return fmt.Errorf("failed to output the results: %s", err)
 	}
