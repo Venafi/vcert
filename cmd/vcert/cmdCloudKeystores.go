@@ -95,7 +95,6 @@ func doCommandProvisionCloudKeystore(c *cli.Context) error {
 
 func gettingIDsFromFiles(flags *commandFlags) (*commandFlags, error) {
 	if flags.pickupIDFile != "" {
-		fmt.Printf("pickupIDFILE is not empty string")
 		bytes, err := os.ReadFile(flags.pickupIDFile)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read Pickup ID value: %s", err)
