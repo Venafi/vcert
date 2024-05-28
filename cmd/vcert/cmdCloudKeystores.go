@@ -32,12 +32,18 @@ func doCommandProvisionCloudKeystore(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
+	var flagsP *commandFlags
+	flagsP, err = gettingIDsFromFiles(&flags)
+	if err != nil {
+		return err
+	}
+
 	err = setTLSConfig()
 	if err != nil {
 		return err
 	}
 
-	cfg, err := buildConfig(c, &flags)
+	cfg, err := buildConfig(c, flagsP)
 	if err != nil {
 		return fmt.Errorf("failed to build vcert config: %s", err)
 	}
@@ -53,22 +59,14 @@ func doCommandProvisionCloudKeystore(c *cli.Context) error {
 	var options *endpoint.ProvisioningOptions
 
 	log.Printf("fetching keystore information for provided keystore information from flags. KeystoreID: %s, KeystoreName: %s, ProviderName: %s", flags.keystoreID, flags.keystoreName, flags.providerName)
-	getKeystoreReq := buildGetCloudKeystoreRequest(&flags)
+	getKeystoreReq := buildGetCloudKeystoreRequest(flagsP)
 	cloudKeystore, err := connector.(*cloud.Connector).GetCloudKeystore(getKeystoreReq)
 	if err != nil {
 		return err
 	}
 	log.Printf("successfully fetched keystore")
 
-	if flags.pickupIDFile != "" {
-		bytes, err := os.ReadFile(flags.pickupIDFile)
-		if err != nil {
-			return fmt.Errorf("failed to read Pickup ID value: %s", err)
-		}
-		flags.pickupID = strings.TrimSpace(string(bytes))
-	}
-
-	req, options = fillProvisioningRequest(req, *cloudKeystore, &flags)
+	req, options = fillProvisioningRequest(req, *cloudKeystore, flagsP)
 
 	metadata, err := connector.ProvisionCertificate(req, options)
 	if err != nil {
@@ -93,4 +91,22 @@ func doCommandProvisionCloudKeystore(c *cli.Context) error {
 		return fmt.Errorf("failed to output the results: %s", err)
 	}
 	return nil
+}
+
+func gettingIDsFromFiles(flags *commandFlags) (*commandFlags, error) {
+	if flags.pickupIDFile != "" {
+		bytes, err := os.ReadFile(flags.pickupIDFile)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read Pickup ID value: %s", err)
+		}
+		flags.pickupID = strings.TrimSpace(string(bytes))
+	}
+	if flags.certificateIDFile != "" {
+		bytes, err := os.ReadFile(flags.certificateIDFile)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read Certificate ID value: %s", err)
+		}
+		flags.certificateID = strings.TrimSpace(string(bytes))
+	}
+	return flags, nil
 }

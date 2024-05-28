@@ -147,6 +147,7 @@ type commandFlags struct {
 	sshFileCertEnroll    string
 	sshFileGetConfig     string
 	certificateID        string
+	certificateIDFile    string
 	keystoreID           string
 	providerName         string
 	keystoreName         string
