@@ -714,6 +714,13 @@ var (
 		Destination: &flags.certificateID,
 	}
 
+	flagCertificateIDFile = &cli.StringFlag{
+		Name: "certificate-id-file",
+		Usage: "Use to specify the file name from where to read or write the Certificate ID. " +
+			"Either --certificate-id or --certificate-id-file is required.",
+		Destination: &flags.certificateIDFile,
+	}
+
 	flagKeystoreID = &cli.StringFlag{
 		Name:        "keystore-id",
 		Usage:       "The id of the cloud keystore where the certificate will be provisioned.",
@@ -900,6 +907,7 @@ var (
 		credentialsFlags,
 		flagPlatform,
 		flagCertificateID,
+		flagCertificateIDFile,
 		flagProvisionPickupID,
 		flagPickupIDFile,
 		flagKeystoreCertName,
