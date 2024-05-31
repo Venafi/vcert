@@ -251,13 +251,13 @@ func (c *Connector) GetMachineIdentity(request domain.GetCloudMachineIdentityReq
 	return machineIdentity, nil
 }
 
-func (c *Connector) DeleteMachineIdentity(id uuid.UUID) (bool, error) {
-	if id == uuid.Nil {
-		return false, fmt.Errorf("invalid machine identity ID: %s", id)
+func (c *Connector) DeleteMachineIdentity(machineIdentityID string) (bool, error) {
+	if machineIdentityID == "" {
+		return false, fmt.Errorf("machine identity ID cannot be nil")
 	}
-	deleted, err := c.cloudProvidersClient.DeleteMachineIdentity(context.Background(), id.String())
+	deleted, err := c.cloudProvidersClient.DeleteMachineIdentity(context.Background(), machineIdentityID)
 	if err != nil {
-		return false, fmt.Errorf("failed to delete machine identity with ID %s: %w", id, err)
+		return false, fmt.Errorf("failed to delete machine identity with ID %s: %w", machineIdentityID, err)
 	}
 	return deleted, nil
 }
