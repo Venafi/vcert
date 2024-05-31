@@ -621,7 +621,7 @@ func randRunes(n int) string {
 func fillProvisioningRequest(req *domain.ProvisioningRequest, keystore domain.CloudKeystore, cf *commandFlags) (*domain.ProvisioningRequest, *domain.ProvisioningOptions) {
 	req.CertificateID = cleanEmptyStringPointer(cf.certificateID)
 	req.Keystore = &keystore
-	req.PickupID = &(cf.pickupID)
+	req.PickupID = &(cf.provisionPickupID)
 
 	if cf.keystoreCertName == "" {
 		return req, nil

@@ -18,7 +18,6 @@ import (
 )
 
 type CloudKeystoreProvisioningResult struct {
-	Arn                        string `json:"arn"`
 	CloudProviderCertificateID string `json:"cloudProviderCertificateId"`
 	CloudCertificateName       string `json:"cloudProviderCertificateName"`
 	CloudCertificateVersion    string `json:"cloudProviderCertificateVersion"`
@@ -133,7 +132,7 @@ func (c *Connector) ProvisionCertificate(req *domain.ProvisioningRequest, option
 
 	// parsing metadata from websocket response
 	log.Printf("Getting Cloud Metadata of Certificate ID %s and Keystore ID: %s", certificateIDString, cloudKeystore.ID)
-	cloudMetadata, err := getCloudMetadataFromWebsocketResponse(workflowResponse.Data.Result)
+	cloudMetadata, err := getCloudMetadataFromWebsocketResponse(workflowResponse.Data.Result, cloudKeystore.Type)
 	if err != nil {
 		return nil, err
 	}
@@ -201,9 +200,24 @@ func (c *Connector) ProvisionCertificateToMachineIdentity(req domain.Provisionin
 		return nil, err
 	}
 
+	keystoreType := domain.CloudKeystoreTypeUnknown
+	if req.Keystore == nil {
+		log.Printf("fetching machine identity to get type")
+		machineIdentity, err := c.cloudProvidersClient.GetMachineIdentity(ctx, domain.GetCloudMachineIdentityRequest{
+			MachineIdentityID: req.MachineIdentityID,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to get machine identity: %w", err)
+		}
+		log.Printf("successfully fetched machine identity")
+		keystoreType = machineIdentity.Metadata.GetKeystoreType()
+	} else {
+		keystoreType = req.Keystore.Type
+	}
+
 	// parsing metadata from websocket response
 	log.Printf("Getting Cloud Metadata of Machine Identity with ID: %s", machineIdentityID)
-	cloudMetadata, err := getCloudMetadataFromWebsocketResponse(ar.Data.Result)
+	cloudMetadata, err := getCloudMetadataFromWebsocketResponse(ar.Data.Result, keystoreType)
 	if err != nil {
 		return nil, err
 	}
@@ -329,7 +343,7 @@ func (c *Connector) getGraphqlHTTPClient() *http.Client {
 	return httpclient
 }
 
-func getCloudMetadataFromWebsocketResponse(resultMap interface{}) (*domain.ProvisioningMetadata, error) {
+func getCloudMetadataFromWebsocketResponse(resultMap interface{}, keystoreType domain.CloudKeystoreType) (*domain.ProvisioningMetadata, error) {
 
 	result := CloudKeystoreProvisioningResult{}
 	resultBytes, err := json.Marshal(resultMap)
@@ -348,24 +362,12 @@ func getCloudMetadataFromWebsocketResponse(resultMap interface{}) (*domain.Provi
 	}
 
 	cloudMetadata := &domain.ProvisioningMetadata{
-		CloudKeystoreType:         domain.CloudKeystoreTypeUnknown,
-		ARN:                       result.Arn,
+		CloudKeystoreType:         keystoreType,
 		CertificateID:             result.CloudProviderCertificateID,
 		CertificateName:           result.CloudCertificateName,
 		CertificateVersion:        result.CloudCertificateVersion,
 		MachineIdentityID:         result.MachineIdentityId,
 		MachineIdentityActionType: result.MachineIdentityActionType,
-	}
-
-	// Only ACM returns an ARN value
-	if result.Arn != "" {
-		cloudMetadata.CloudKeystoreType = domain.CloudKeystoreTypeACM
-	} else if result.CloudCertificateVersion != "" {
-		// Only Azure returns a certificate version value
-		cloudMetadata.CloudKeystoreType = domain.CloudKeystoreTypeAKV
-	} else {
-		// No ARN and no certificate version, default to GCM
-		cloudMetadata.CloudKeystoreType = domain.CloudKeystoreTypeGCM
 	}
 
 	return cloudMetadata, err
