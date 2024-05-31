@@ -2,8 +2,6 @@ package domain
 
 import (
 	"strings"
-
-	"github.com/google/uuid"
 )
 
 type CloudProviderStatus int
@@ -221,12 +219,12 @@ func (ccm *CertificateCloudMetadata) GetValue(key string) interface{} {
 }
 
 type CloudMachineIdentity struct {
-	ID                uuid.UUID
-	CloudKeystoreID   uuid.UUID
+	ID                string
+	CloudKeystoreID   string
 	CloudKeystoreName string
-	CloudProviderID   uuid.UUID
+	CloudProviderID   string
 	CloudProviderName string
-	CertificateID     uuid.UUID
+	CertificateID     string
 	Metadata          *CertificateCloudMetadata
 	Status            MachineIdentityStatus
 	StatusDetails     string

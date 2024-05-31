@@ -7,8 +7,6 @@ import (
 	"net/http"
 
 	"github.com/Khan/genqlient/graphql"
-	"github.com/google/uuid"
-
 	"github.com/Venafi/vcert/v5/pkg/domain"
 	"github.com/Venafi/vcert/v5/pkg/util"
 )
@@ -172,27 +170,10 @@ func (c *CloudProvidersClient) ProvisionCertificateToMachineIdentity(ctx context
 }
 
 func (v *GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity) toDomain() (*domain.CloudMachineIdentity, error) {
-	id, err := uuid.Parse(v.Id)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse cloud machine identity id %s: %w", v.Id, err)
-	}
-	keystoreID, err := uuid.Parse(v.CloudKeystoreId)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse cloud key store id %s: %w", v.CloudKeystoreId, err)
-	}
-	certificateID, err := uuid.Parse(v.CertificateId)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse cloud certificate id %s: %w", v.CertificateId, err)
-	}
-	providerIDStr := ""
+	providerID := ""
 	if v.CloudProviderId != nil {
-		providerIDStr = *v.CloudProviderId
+		providerID = *v.CloudProviderId
 	}
-	providerID, err := uuid.Parse(providerIDStr)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse cloud provider id %s: %w", providerIDStr, err)
-	}
-
 	keystoreName := ""
 	if v.CloudKeystoreName != nil {
 		keystoreName = *v.CloudKeystoreName
@@ -211,12 +192,12 @@ func (v *GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNode
 	}
 
 	return &domain.CloudMachineIdentity{
-		ID:                id,
-		CloudKeystoreID:   keystoreID,
+		ID:                v.Id,
+		CloudKeystoreID:   v.CloudKeystoreId,
 		CloudKeystoreName: keystoreName,
 		CloudProviderID:   providerID,
 		CloudProviderName: providerName,
-		CertificateID:     certificateID,
+		CertificateID:     v.CertificateId,
 		Metadata:          metadata,
 		Status:            v.Status.toDomain(),
 		StatusDetails:     statusDetails,
