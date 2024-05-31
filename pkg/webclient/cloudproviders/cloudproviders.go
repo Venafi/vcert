@@ -7,8 +7,6 @@ import (
 	"net/http"
 
 	"github.com/Khan/genqlient/graphql"
-	"github.com/google/uuid"
-
 	"github.com/Venafi/vcert/v5/pkg/domain"
 	"github.com/Venafi/vcert/v5/pkg/util"
 )
@@ -31,12 +29,9 @@ func (c *CloudProvidersClient) GetCloudProvider(ctx context.Context, request dom
 	}
 
 	status := cloudProviderStatusFromDomain(request.Status)
-	providerType, err := cloudProviderTypeFromDomain(request.Type)
-	if err != nil {
-		return nil, err
-	}
+	providerType := cloudProviderTypeFromDomain(request.Type)
 
-	resp, err := GetCloudProviders(ctx, c.graphqlClient, &status, &providerType, request.Name)
+	resp, err := GetCloudProviders(ctx, c.graphqlClient, status, providerType, request.Name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve Cloud Provider with name %s: %w", request.Name, err)
 	}
@@ -54,8 +49,8 @@ func (c *CloudProvidersClient) GetCloudProvider(ctx context.Context, request dom
 	return &domain.CloudProvider{
 		ID:             cp.GetId(),
 		Name:           cp.GetName(),
-		Type:           string(cp.GetType()),
-		Status:         string(cp.GetStatus()),
+		Type:           cp.GetType().toDomain(),
+		Status:         cp.GetStatus().toDomain(),
 		StatusDetails:  statusDetails,
 		KeystoresCount: cp.GetKeystoresCount(),
 	}, nil
@@ -87,7 +82,7 @@ func (c *CloudProvidersClient) GetCloudKeystore(ctx context.Context, request dom
 	return &domain.CloudKeystore{
 		ID:                     ck.GetId(),
 		Name:                   ck.GetName(),
-		Type:                   string(ck.GetType()),
+		Type:                   ck.GetType().toDomain(),
 		MachineIdentitiesCount: ck.GetMachineIdentitiesCount(),
 	}, nil
 }
@@ -175,27 +170,10 @@ func (c *CloudProvidersClient) ProvisionCertificateToMachineIdentity(ctx context
 }
 
 func (v *GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity) toDomain() (*domain.CloudMachineIdentity, error) {
-	id, err := uuid.Parse(v.Id)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse cloud machine identity id %s: %w", v.Id, err)
-	}
-	keystoreID, err := uuid.Parse(v.CloudKeystoreId)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse cloud key store id %s: %w", v.CloudKeystoreId, err)
-	}
-	certificateID, err := uuid.Parse(v.CertificateId)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse cloud certificate id %s: %w", v.CertificateId, err)
-	}
-	providerIDStr := ""
+	providerID := ""
 	if v.CloudProviderId != nil {
-		providerIDStr = *v.CloudProviderId
+		providerID = *v.CloudProviderId
 	}
-	providerID, err := uuid.Parse(providerIDStr)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse cloud provider id %s: %w", providerIDStr, err)
-	}
-
 	keystoreName := ""
 	if v.CloudKeystoreName != nil {
 		keystoreName = *v.CloudKeystoreName
@@ -214,12 +192,12 @@ func (v *GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNode
 	}
 
 	return &domain.CloudMachineIdentity{
-		ID:                id,
-		CloudKeystoreID:   keystoreID,
+		ID:                v.Id,
+		CloudKeystoreID:   v.CloudKeystoreId,
 		CloudKeystoreName: keystoreName,
 		CloudProviderID:   providerID,
 		CloudProviderName: providerName,
-		CertificateID:     certificateID,
+		CertificateID:     v.CertificateId,
 		Metadata:          metadata,
 		Status:            v.Status.toDomain(),
 		StatusDetails:     statusDetails,
@@ -268,26 +246,68 @@ func (v *GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNode
 	return &certMetadata, nil
 }
 
-func cloudProviderStatusFromDomain(status domain.CloudProviderStatus) CloudProviderStatus {
-	switch status {
-	case domain.CloudProviderStatusValidated:
-		return CloudProviderStatusValidated
-	case domain.CloudProviderStatusNotValidated:
-		return CloudProviderStatusNotValidated
+func (v CloudProviderStatus) toDomain() domain.CloudProviderStatus {
+	switch v {
+	case CloudProviderStatusValidated:
+		return domain.CloudProviderStatusValidated
+	case CloudProviderStatusNotValidated:
+		return domain.CloudProviderStatusNotValidated
 	default:
-		return CloudProviderStatusNotValidated
+		return domain.CloudProviderStatusUnknown
 	}
 }
 
-func cloudProviderTypeFromDomain(providerType domain.CloudProviderType) (CloudProviderType, error) {
+func cloudProviderStatusFromDomain(status domain.CloudProviderStatus) *CloudProviderStatus {
+	switch status {
+	case domain.CloudProviderStatusValidated:
+		cpStatus := CloudProviderStatusValidated
+		return &cpStatus
+	case domain.CloudProviderStatusNotValidated:
+		cpStatus := CloudProviderStatusNotValidated
+		return &cpStatus
+	default:
+		return nil
+	}
+}
+
+func (v CloudProviderType) toDomain() domain.CloudProviderType {
+	switch v {
+	case CloudProviderTypeAws:
+		return domain.CloudProviderTypeAWS
+	case CloudProviderTypeAzure:
+		return domain.CloudProviderTypeAzure
+	case CloudProviderTypeGcp:
+		return domain.CloudProviderTypeGCP
+	default:
+		return domain.CloudProviderTypeUnknown
+	}
+}
+
+func cloudProviderTypeFromDomain(providerType domain.CloudProviderType) *CloudProviderType {
 	switch providerType {
 	case domain.CloudProviderTypeAWS:
-		return CloudProviderTypeAws, nil
+		cpType := CloudProviderTypeAws
+		return &cpType
 	case domain.CloudProviderTypeAzure:
-		return CloudProviderTypeAzure, nil
+		cpType := CloudProviderTypeAzure
+		return &cpType
 	case domain.CloudProviderTypeGCP:
-		return CloudProviderTypeGcp, nil
+		cpType := CloudProviderTypeGcp
+		return &cpType
 	default:
-		return "UNKNOWN", fmt.Errorf("failed to determine cloud provider type for %s", providerType)
+		return nil
+	}
+}
+
+func (v CloudKeystoreType) toDomain() domain.CloudKeystoreType {
+	switch v {
+	case CloudKeystoreTypeAcm:
+		return domain.CloudKeystoreTypeACM
+	case CloudKeystoreTypeAkv:
+		return domain.CloudKeystoreTypeAKV
+	case CloudKeystoreTypeGcm:
+		return domain.CloudKeystoreTypeGCM
+	default:
+		return domain.CloudKeystoreTypeUnknown
 	}
 }

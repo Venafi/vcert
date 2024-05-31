@@ -9,7 +9,7 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/Venafi/vcert/v5"
-	"github.com/Venafi/vcert/v5/pkg/endpoint"
+	"github.com/Venafi/vcert/v5/pkg/domain"
 	"github.com/Venafi/vcert/v5/pkg/venafi/cloud"
 )
 
@@ -55,8 +55,8 @@ func doCommandProvisionCloudKeystore(c *cli.Context) error {
 		logf("Successfully connected to %s", cfg.ConnectorType)
 	}
 
-	var req = &endpoint.ProvisioningRequest{}
-	var options *endpoint.ProvisioningOptions
+	var req = &domain.ProvisioningRequest{}
+	var options *domain.ProvisioningOptions
 
 	log.Printf("fetching keystore information for provided keystore information from flags. KeystoreID: %s, KeystoreName: %s, ProviderName: %s", flags.keystoreID, flags.keystoreName, flags.providerName)
 	getKeystoreReq := buildGetCloudKeystoreRequest(flagsP)
@@ -74,19 +74,24 @@ func doCommandProvisionCloudKeystore(c *cli.Context) error {
 	}
 
 	result := ProvisioningResult{
-		ARN:          metadata.GetAWSCertificateMetadata().GetARN(),
-		AzureID:      metadata.GetAzureCertificateMetadata().GetID(),
-		AzureName:    metadata.GetAzureCertificateMetadata().GetName(),
-		AzureVersion: metadata.GetAzureCertificateMetadata().GetVersion(),
-		GcpID:        metadata.GetGCPCertificateMetadata().GetID(),
-		GcpName:      metadata.GetGCPCertificateMetadata().GetName(),
+		MachineIdentityId:         metadata.MachineIdentityID,
+		MachineIdentityActionType: metadata.MachineIdentityActionType,
+	}
+	switch metadata.CloudKeystoreType {
+	case domain.CloudKeystoreTypeACM:
+		result.ARN = metadata.ARN
+	case domain.CloudKeystoreTypeAKV:
+		result.AzureID = metadata.CertificateID
+		result.AzureName = metadata.CertificateName
+		result.AzureVersion = metadata.CertificateVersion
+	case domain.CloudKeystoreTypeGCM:
+		result.GcpID = metadata.CertificateID
+		result.GcpName = metadata.CertificateName
+	default:
+		return fmt.Errorf("unknown keystore metadata type: %s", metadata.CloudKeystoreType)
 	}
 
-	result.MachineIdentityId = metadata.GetMachineIdentityMetadata().GetID()
-	result.MachineIdentityActionType = metadata.GetMachineIdentityMetadata().GetActionType()
-
 	err = result.Flush(flags.provisionFormat, flags.provisionOutputFile)
-
 	if err != nil {
 		return fmt.Errorf("failed to output the results: %s", err)
 	}

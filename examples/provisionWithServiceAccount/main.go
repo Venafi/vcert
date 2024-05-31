@@ -7,8 +7,8 @@ import (
 
 	"github.com/Venafi/vcert/v5"
 	"github.com/Venafi/vcert/v5/pkg/certificate"
+	"github.com/Venafi/vcert/v5/pkg/domain"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
-	"github.com/Venafi/vcert/v5/pkg/venafi/cloud"
 )
 
 const (
@@ -86,21 +86,11 @@ func main() {
 	providerName := "<insert Provider Name here>"
 	certName := "<insert cert name>" // e.g. test2-venafi-com
 
-	// The ID is the Certificate name for Google, hence we send it as name
-	optionsGcp := &cloud.CloudProvisioningGCPOptions{
-		ID: &certName,
+	optionsInput := domain.ProvisioningOptions{
+		CloudCertificateName: certName,
 	}
 
-	// Example for Azure Options
-	// optionsAzure := &cloud.CloudProvisioningAzureOptions{
-	//   Name: &certName,
-	// }
-	//
-	// optionsInput := endpoint.ProvisioningOptions(optionsAzure)
-
-	optionsInput := endpoint.ProvisioningOptions(optionsGcp)
-
-	req := &endpoint.ProvisioningRequest{
+	req := &domain.ProvisioningRequest{
 		KeystoreName: &keystoreName,
 		ProviderName: &providerName,
 		PickupID:     &requestID,
@@ -112,10 +102,16 @@ func main() {
 	}
 
 	// Example to get values from other keystores machine identities metadata
-	//log.Printf("Certificate AWS Metadata ARN:\n%v", certMetaData.GetAWSCertificateMetadata().GetARN())
-	//log.Printf("Certificate Azure Metadata ID:\n%v", certMetaData.GetAzureCertificateMetadata().GetID())
-	//log.Printf("Certificate Azure Metadata Name:\n%v", certMetaData.GetAzureCertificateMetadata().GetName())
-	//log.Printf("Certificate Azure Metadata Version:\n%v", certMetaData.GetAzureCertificateMetadata().GetVersion())
-	log.Printf("Certificate GCP Metadata ID:\n%v", certMetaData.GetGCPCertificateMetadata().GetID())
-	log.Printf("Certificate GCP Metadata Name:\n%v", certMetaData.GetGCPCertificateMetadata().GetName())
+	if certMetaData.CloudKeystoreType == domain.CloudKeystoreTypeACM {
+		log.Printf("Certificate AWS Metadata ARN:\n%v", certMetaData.ARN)
+	}
+	if certMetaData.CloudKeystoreType == domain.CloudKeystoreTypeAKV {
+		log.Printf("Certificate Azure Metadata ID:\n%v", certMetaData.CertificateID)
+		log.Printf("Certificate Azure Metadata Name:\n%v", certMetaData.CertificateName)
+		log.Printf("Certificate Azure Metadata Version:\n%v", certMetaData.CertificateVersion)
+	}
+	if certMetaData.CloudKeystoreType == domain.CloudKeystoreTypeGCM {
+		log.Printf("Certificate GCP Metadata ID:\n%v", certMetaData.CertificateID)
+		log.Printf("Certificate GCP Metadata Name:\n%v", certMetaData.CertificateName)
+	}
 }
