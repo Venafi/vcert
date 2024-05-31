@@ -31,12 +31,9 @@ func (c *CloudProvidersClient) GetCloudProvider(ctx context.Context, request dom
 	}
 
 	status := cloudProviderStatusFromDomain(request.Status)
-	providerType, err := cloudProviderTypeFromDomain(request.Type)
-	if err != nil {
-		return nil, err
-	}
+	providerType := cloudProviderTypeFromDomain(request.Type)
 
-	resp, err := GetCloudProviders(ctx, c.graphqlClient, &status, &providerType, request.Name)
+	resp, err := GetCloudProviders(ctx, c.graphqlClient, status, providerType, request.Name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve Cloud Provider with name %s: %w", request.Name, err)
 	}
@@ -279,14 +276,16 @@ func (v CloudProviderStatus) toDomain() domain.CloudProviderStatus {
 	}
 }
 
-func cloudProviderStatusFromDomain(status domain.CloudProviderStatus) CloudProviderStatus {
+func cloudProviderStatusFromDomain(status domain.CloudProviderStatus) *CloudProviderStatus {
 	switch status {
 	case domain.CloudProviderStatusValidated:
-		return CloudProviderStatusValidated
+		cpStatus := CloudProviderStatusValidated
+		return &cpStatus
 	case domain.CloudProviderStatusNotValidated:
-		return CloudProviderStatusNotValidated
+		cpStatus := CloudProviderStatusNotValidated
+		return &cpStatus
 	default:
-		return CloudProviderStatusNotValidated
+		return nil
 	}
 }
 
@@ -303,16 +302,19 @@ func (v CloudProviderType) toDomain() domain.CloudProviderType {
 	}
 }
 
-func cloudProviderTypeFromDomain(providerType domain.CloudProviderType) (CloudProviderType, error) {
+func cloudProviderTypeFromDomain(providerType domain.CloudProviderType) *CloudProviderType {
 	switch providerType {
 	case domain.CloudProviderTypeAWS:
-		return CloudProviderTypeAws, nil
+		cpType := CloudProviderTypeAws
+		return &cpType
 	case domain.CloudProviderTypeAzure:
-		return CloudProviderTypeAzure, nil
+		cpType := CloudProviderTypeAzure
+		return &cpType
 	case domain.CloudProviderTypeGCP:
-		return CloudProviderTypeGcp, nil
+		cpType := CloudProviderTypeGcp
+		return &cpType
 	default:
-		return "UNKNOWN", fmt.Errorf("failed to determine cloud provider type for %s", providerType)
+		return nil
 	}
 }
 
