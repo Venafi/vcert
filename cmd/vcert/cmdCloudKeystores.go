@@ -79,7 +79,7 @@ func doCommandProvisionCloudKeystore(c *cli.Context) error {
 	}
 	switch metadata.CloudKeystoreType {
 	case domain.CloudKeystoreTypeACM:
-		result.ARN = metadata.ARN
+		result.ARN = metadata.CertificateID
 	case domain.CloudKeystoreTypeAKV:
 		result.AzureID = metadata.CertificateID
 		result.AzureName = metadata.CertificateName

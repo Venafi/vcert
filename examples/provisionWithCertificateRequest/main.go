@@ -89,7 +89,7 @@ func main() {
 
 	// Example to get values from other keystores machine identities metadata
 	if certMetaData.CloudKeystoreType == domain.CloudKeystoreTypeACM {
-		log.Printf("Certificate AWS Metadata ARN:\n%v", certMetaData.ARN)
+		log.Printf("Certificate AWS Metadata ARN:\n%v", certMetaData.CertificateID)
 	}
 	if certMetaData.CloudKeystoreType == domain.CloudKeystoreTypeAKV {
 		log.Printf("Certificate Azure Metadata ID:\n%v", certMetaData.CertificateID)

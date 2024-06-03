@@ -17,7 +17,6 @@ type ProvisioningRequest struct {
 
 type ProvisioningMetadata struct {
 	CloudKeystoreType         CloudKeystoreType
-	ARN                       string
 	CertificateID             string
 	CertificateName           string
 	CertificateVersion        string
