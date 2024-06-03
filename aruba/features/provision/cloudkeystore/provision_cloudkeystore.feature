@@ -12,7 +12,7 @@ Feature: provision to cloud keystore
     And I remember the output
     And I use previous Pickup ID to provision from VCP a certificate to cloudkeystore "<cloudkeystore>" setting keystore and provider names
     And I remember the output
-    And it should output keystore ID
+    And it should output cloud ID
     Then I clean up previous installed certificate from cloudkeystore
     Examples:
       | cloudkeystore    |
@@ -23,7 +23,7 @@ Feature: provision to cloud keystore
     And I remember the output
     And I use previous Pickup ID to provision from VCP a certificate to cloudkeystore "<cloudkeystore>" setting keystore and provider names with -format json
     And I remember the output
-      And it should output keystore ID in JSON
+      And it should output cloud ID in JSON
     Then I clean up previous installed certificate from cloudkeystore
     Examples:
       | cloudkeystore    |

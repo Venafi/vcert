@@ -51,29 +51,29 @@ def build_provision_cmd(platform, cloudkeystore_type, keystore_provider_names, f
   return cmd
 end
 
-Then(/^it should output keystore ID( in JSON)?$/) do |json|
+Then(/^it should output cloud ID( in JSON)?$/) do |json|
 
   if @previous_command_output.nil?
     fail(ArgumentError.new('@previous_command_output is nil'))
   end
 
   Kernel.puts("Checking output:\n"+@previous_command_output)
-  keystore_id = ""
+  cloud_id = ""
   case @cloudkeystore_type
   when $keystore_type_aws
   when $keystore_type_azure
   when $keystore_type_gcp
-        keystore_id = "gcpId"
+    cloud_id = "gcpId"
   else
     fail(ArgumentError.new("Unexpected : #{@cloudkeystore_type}"))
   end
   if json
     json_string = extract_json_from_output(@previous_command_output)
     JSON.parse(json_string)
-    @keystore_id = unescape_text(normalize_json(json_string, "#{keystore_id}")).tr('"', '')
+    @cloud_id = unescape_text(normalize_json(json_string, "#{cloud_id}")).tr('"', '')
   else
-    m = @previous_command_output.match /#{keystore_id} (.+)$/
-    @keystore_id = m[1]
+    m = @previous_command_output.match /#{cloud_id} (.+)$/
+    @cloud_id = m[1]
   end
 end
 
@@ -90,6 +90,6 @@ end
 
 def cleanup_google
   client = create_certificate_manager_client
-  certificate_name = "projects/#{ENV['GCP_PROJECT']}/locations/#{ENV['GCP_REGION']}/certificates/#{@keystore_id}"
+  certificate_name = "projects/#{ENV['GCP_PROJECT']}/locations/#{ENV['GCP_REGION']}/certificates/#{@cloud_id}"
   delete_certificate(client, certificate_name)
 end
