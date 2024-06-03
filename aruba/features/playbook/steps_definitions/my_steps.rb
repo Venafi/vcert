@@ -8,7 +8,7 @@ Given(/^I have playbook with (\S+) connection details$/) do |platform|
     }
   }
 
-  if platform == "TPP"
+  if platform == $platform_tpp
     validate_tpp_envs
     connection_tpp = {
       platform: "tpp",
@@ -21,7 +21,7 @@ Given(/^I have playbook with (\S+) connection details$/) do |platform|
     }
     connection_tpp['credentials'] = credentials
     @playbook_data[:config][:connection] = connection_tpp
-  elsif platform == "VaaS"
+  elsif platform == $platform_vaas or platform == $platform_vcp
     validate_vaas_envs
     connection_vaas = {
       platform: "vaas"

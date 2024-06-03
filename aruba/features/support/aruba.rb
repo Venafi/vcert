@@ -5,9 +5,23 @@ Aruba.configure do |config|
   config.allow_absolute_paths = true
 end
 
-$path_separator = "/"
+$prefix_cn = "vcert"
 
+$platform_tpp = "TPP"
+$platform_vaas = "VaaS" # places already use it as is
+$platform_vcp = "VCP"
+$platform_firefly = "Firefly"
+
+$path_separator = "/"
 $temp_path = "tmp/aruba"
+
+$keystore_type_aws = "AWS"
+$keystore_type_azure = "AZURE"
+$keystore_type_gcp = "GOOGLE"
+
+$gcp_keystore_id = ENV["GCP_KEYSTORE_ID"]
+$gcp_keystore_name = ENV["GCP_KEYSTORE_NAME"]
+$gcp_provider_name = ENV["GCP_PROVIDER_NAME"]
 
 def last_json
   last_command_started.stdout.to_s

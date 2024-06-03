@@ -18,3 +18,4 @@ aruba/log.log
 credentials
 *.DS_Store
 vendor
+google_auth.json

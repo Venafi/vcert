@@ -26,7 +26,13 @@ RUN_COMMAND="docker run -t --rm \
           -e OKTA_SCOPE \
           -e FIREFLY_ZONE \
           -e FIREFLY_URL \
-          -e FIREFLY_CA_BUNDLE"
+          -e FIREFLY_CA_BUNDLE \
+          -e GCP_AUTH_PATH \
+          -e GCP_PROJECT \
+          -e GCP_REGION \
+          -e GCP_PROVIDER_NAME \
+          -e GCP_KEYSTORE_NAME \
+          -e GCP_KEYSTORE_ID"
 
 # Use getopts to handle command-line options
 while getopts "a:b:" opt; do

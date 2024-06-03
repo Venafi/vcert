@@ -88,6 +88,7 @@ And(/^it should( not)? write certificate to the file(?: named)? "(.+)"$/) do |ne
 end
 
 And(/^I remember the output$/) do
+  last_command_started
   @previous_command_output = last_command_started.output.to_s
 end
 

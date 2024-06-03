@@ -181,13 +181,30 @@ end
 
 When(/^I enroll(?: a)?( random)? certificate with defined platform (.*) with (.+)?$/) do |random, platform, flags|
   if random
-    cn = " -cn " + random_cn
+    cn = " -cn " + $prefix_cn + "-" + random_cn
   end
 
   platform_flag = " -platform " + platform
 
-  trust_bundle_flag = " -trust-bundle '#{ENV["FIREFLY_CA_BUNDLE"]}' "
+  trust_bundle_flag = ""
+  case platform
+  when $platform_tpp
+    trust_bundle_flag = " -trust-bundle '#{ENV["TPP_TRUST_BUNDLE"]}' "
+  when $platform_firefly
+    trust_bundle_flag = " -trust-bundle '#{ENV["FIREFLY_CA_BUNDLE"]}' "
+  end
 
-  cmd = "vcert enroll #{platform_flag} #{ENDPOINTS[platform]} #{ZONE[platform]} #{cn} #{flags} #{trust_bundle_flag}"
+
+  cmd = "vcert enroll #{platform_flag} #{ENDPOINTS[platform]} #{ZONE[platform]} #{cn} #{flags}"
+
+  if trust_bundle_flag != ""
+    cmd = "#{cmd} #{trust_bundle_flag}"
+  end
   steps %{Then I try to run `#{cmd}`}
+
+  # grabbing PickupID
+  m = last_command_started.output.match /^PickupID="(.+)"$/
+  if m
+    @pickup_id = m[1]
+  end
 end
