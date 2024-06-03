@@ -737,7 +737,7 @@ func validateProvisionFlags(commandName string) error {
 	}
 
 	if flags.pickupIDFile != "" {
-		if flags.pickupID != "" {
+		if flags.provisionPickupID != "" {
 			return fmt.Errorf("both --pickup-id and --pickup-id-file options cannot be specified at the same time")
 		}
 		if flags.certificateID != "" {
@@ -746,7 +746,7 @@ func validateProvisionFlags(commandName string) error {
 	}
 
 	if flags.certificateIDFile != "" {
-		if flags.pickupID != "" {
+		if flags.provisionPickupID != "" {
 			return fmt.Errorf("both --certificate-id and --pickup-id-file options cannot be specified at the same time")
 		}
 		if flags.certificateID != "" {
