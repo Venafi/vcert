@@ -741,8 +741,14 @@ var (
 
 	flagKeystoreCertName = &cli.StringFlag{
 		Name:        "certificate-name",
-		Usage:       "Use to specify Cloud Keystore Certificate Name if it supports it",
+		Usage:       "Use to specify Cloud Keystore Certificate Name to be set or replaced by provisioned certificate (only for Azure Key Vault and Google Certificate Manager)",
 		Destination: &flags.keystoreCertName,
+	}
+
+	flagKeystoreARN = &cli.StringFlag{
+		Name:        "arn",
+		Usage:       "Use to specify AWS Resource Name which provisioned certificate will replace (only for AWS Certificate Manager)",
+		Destination: &flags.keystoreARN,
 	}
 
 	flagProvisionOutputFile = &cli.StringFlag{
@@ -906,16 +912,17 @@ var (
 	provisionFlags = flagsApppend(
 		credentialsFlags,
 		flagPlatform,
+		flagKeystoreARN,
 		flagCertificateID,
 		flagCertificateIDFile,
+		flagKeystoreCertName,
+		flagProvisionOutputFile,
+		flagProvisionFormat,
+		flagKeystoreID,
+		flagKeystoreName,
 		flagProvisionPickupID,
 		flagPickupIDFile,
-		flagKeystoreCertName,
 		flagProviderName,
-		flagKeystoreName,
-		flagKeystoreID,
-		flagProvisionFormat,
-		flagProvisionOutputFile,
 	)
 
 	commonCredFlags = []cli.Flag{flagConfig, flagProfile, flagUrl, flagToken, flagTrustBundle}

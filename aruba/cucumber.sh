@@ -32,7 +32,13 @@ RUN_COMMAND="docker run -t --rm \
           -e GCP_REGION \
           -e GCP_PROVIDER_NAME \
           -e GCP_KEYSTORE_NAME \
-          -e GCP_KEYSTORE_ID"
+          -e GCP_KEYSTORE_ID \
+          -e AWS_ACCESS_KEY_ID \
+          -e AWS_REGION \
+          -e AWS_SECRET_ACCESS_KEY \
+          -e AWS_PROVIDER_NAME \
+          -e AWS_KEYSTORE_NAME \
+          -e AWS_KEYSTORE_ID"
 
 # Use getopts to handle command-line options
 while getopts "a:b:" opt; do

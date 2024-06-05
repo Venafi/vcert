@@ -152,6 +152,7 @@ type commandFlags struct {
 	providerName         string
 	keystoreName         string
 	keystoreCertName     string
+	keystoreARN          string
 	provisionOutputFile  string
 	provisionPickupID    string
 	provisionFormat      string
