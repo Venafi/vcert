@@ -3,6 +3,7 @@ MAINTAINER Venafi DevOps Integrations <opensource@venafi.com>
 
 RUN gem install aruba json_spec
 RUN gem install google-cloud-certificate_manager-v1
+RUN gem install aws-sdk-acm
 COPY . /vcert/
 ENV BUNDLE_PATH="/vcert/tpp"
 ENV GCP_AUTH_PATH="/vcert/cloud_providers"

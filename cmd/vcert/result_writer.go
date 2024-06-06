@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"github.com/Venafi/vcert/v5/pkg/domain"
 	"os"
 	"strings"
 	"time"
@@ -61,11 +62,9 @@ type Result struct {
 }
 
 type ProvisioningResult struct {
-	ARN                       string `json:"arn,omitempty"`
-	AzureID                   string `json:"azureId,omitempty"`
+	CloudID                   string `json:"cloudId,omitempty"`
 	AzureName                 string `json:"azureName,omitempty"`
 	AzureVersion              string `json:"azureVersion,omitempty"`
-	GcpID                     string `json:"gcpId,omitempty"`
 	GcpName                   string `json:"gcpName,omitempty"`
 	MachineIdentityId         string `json:"machineIdentityId,omitempty"`
 	MachineIdentityActionType string `json:"machineIdentityActionType,omitempty"`
@@ -447,9 +446,9 @@ func outputJSON(resp interface{}) error {
 	return err
 }
 
-func (r *ProvisioningResult) Flush(format string, filePath string) error {
+func (r *ProvisioningResult) Flush(format string, filePath string, keystoreType domain.CloudKeystoreType) error {
 
-	result, err := r.Format(format)
+	result, err := r.Format(format, keystoreType)
 	if err != nil {
 		return err
 	}
@@ -475,7 +474,7 @@ func (r *ProvisioningResult) WriteFile(result string, filePath string) error {
 	return nil
 }
 
-func (r *ProvisioningResult) Format(format string) (string, error) {
+func (r *ProvisioningResult) Format(format string, keystoreType domain.CloudKeystoreType) (string, error) {
 	result := ""
 	switch strings.ToLower(format) {
 	case formatJson:
@@ -485,22 +484,21 @@ func (r *ProvisioningResult) Format(format string) (string, error) {
 		}
 		result = string(b)
 	default:
-		if r.ARN != "" {
-			result += fmt.Sprintf("arn: %s\n", r.ARN)
-		}
-		if r.AzureID != "" {
-			result += fmt.Sprintf("azureId: %s\n", r.AzureID)
+		result += fmt.Sprintf("cloudId: %s\n", r.CloudID)
+		switch keystoreType {
+		case domain.CloudKeystoreTypeACM:
+			// do nothing
+		case domain.CloudKeystoreTypeAKV:
 			result += fmt.Sprintf("azureName: %s\n", r.AzureName)
 			result += fmt.Sprintf("azureVersion: %s\n", r.AzureVersion)
-
-		}
-		if r.GcpID != "" {
-			result += fmt.Sprintf("gcpId %s\n", r.GcpID)
-			result += fmt.Sprintf("gcpName %s\n", r.GcpName)
+		case domain.CloudKeystoreTypeGCM:
+			result += fmt.Sprintf("gcpName: %s\n", r.GcpName)
+		default:
+			return "", fmt.Errorf("during formatting response, got unknown keystore type: %v", keystoreType)
 		}
 		if r.MachineIdentityId != "" {
-			result += fmt.Sprintf("machineIdentityId %s\n", r.MachineIdentityId)
-			result += fmt.Sprintf("machineIdentityActionType %s\n", r.MachineIdentityActionType)
+			result += fmt.Sprintf("machineIdentityId: %s\n", r.MachineIdentityId)
+			result += fmt.Sprintf("machineIdentityActionType: %s\n", r.MachineIdentityActionType)
 		}
 	}
 	return result, nil

@@ -23,6 +23,10 @@ $gcp_keystore_id = ENV["GCP_KEYSTORE_ID"]
 $gcp_keystore_name = ENV["GCP_KEYSTORE_NAME"]
 $gcp_provider_name = ENV["GCP_PROVIDER_NAME"]
 
+$aws_keystore_id = ENV["AWS_KEYSTORE_ID"]
+$aws_keystore_name = ENV["AWS_KEYSTORE_NAME"]
+$aws_provider_name = ENV["AWS_PROVIDER_NAME"]
+
 def last_json
   last_command_started.stdout.to_s
 end

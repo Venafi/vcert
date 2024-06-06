@@ -200,7 +200,7 @@ func (c *Connector) ProvisionCertificateToMachineIdentity(req domain.Provisionin
 		return nil, err
 	}
 
-	keystoreType := domain.CloudKeystoreTypeUnknown
+	var keystoreType domain.CloudKeystoreType
 	if req.Keystore == nil {
 		log.Printf("fetching machine identity to get type")
 		machineIdentity, err := c.cloudProvidersClient.GetMachineIdentity(ctx, domain.GetCloudMachineIdentityRequest{
@@ -277,12 +277,13 @@ func (c *Connector) DeleteMachineIdentity(machineIdentityID string) (bool, error
 }
 
 func setProvisioningOptions(options domain.ProvisioningOptions, keystoreType domain.CloudKeystoreType) (*cloudproviders.CertificateProvisioningOptionsInput, error) {
+	awsOptions := &cloudproviders.CertificateProvisioningAWSOptionsInput{}
 	azureOptions := &cloudproviders.CertificateProvisioningAzureOptionsInput{}
 	gcpOptions := &cloudproviders.CertificateProvisioningGCPOptionsInput{}
 
 	switch keystoreType {
 	case domain.CloudKeystoreTypeACM:
-		// nothing
+		awsOptions.Arn = &options.ARN
 	case domain.CloudKeystoreTypeAKV:
 		azureOptions.Name = &options.CloudCertificateName
 	case domain.CloudKeystoreTypeGCM:
@@ -292,7 +293,7 @@ func setProvisioningOptions(options domain.ProvisioningOptions, keystoreType dom
 	}
 
 	provisioningOptions := &cloudproviders.CertificateProvisioningOptionsInput{
-		AwsOptions:   nil,
+		AwsOptions:   awsOptions,
 		AzureOptions: azureOptions,
 		GcpOptions:   gcpOptions,
 	}

@@ -623,13 +623,14 @@ func fillProvisioningRequest(req *domain.ProvisioningRequest, keystore domain.Cl
 	req.Keystore = &keystore
 	req.PickupID = &(cf.provisionPickupID)
 
-	if cf.keystoreCertName == "" {
-		return req, nil
+	var options *domain.ProvisioningOptions
+
+	if cf.keystoreCertName != "" || cf.keystoreARN != "" {
+		options = &domain.ProvisioningOptions{}
+		options.CloudCertificateName = cf.keystoreCertName
+		options.ARN = cf.keystoreARN
 	}
 
-	options := &domain.ProvisioningOptions{
-		CloudCertificateName: cf.keystoreCertName,
-	}
 	return req, options
 
 }

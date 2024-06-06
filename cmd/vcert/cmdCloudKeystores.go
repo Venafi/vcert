@@ -77,21 +77,20 @@ func doCommandProvisionCloudKeystore(c *cli.Context) error {
 		MachineIdentityId:         metadata.MachineIdentityID,
 		MachineIdentityActionType: metadata.MachineIdentityActionType,
 	}
+	result.CloudID = metadata.CertificateID
 	switch metadata.CloudKeystoreType {
 	case domain.CloudKeystoreTypeACM:
-		result.ARN = metadata.CertificateID
+		// do nothing
 	case domain.CloudKeystoreTypeAKV:
-		result.AzureID = metadata.CertificateID
 		result.AzureName = metadata.CertificateName
 		result.AzureVersion = metadata.CertificateVersion
 	case domain.CloudKeystoreTypeGCM:
-		result.GcpID = metadata.CertificateID
 		result.GcpName = metadata.CertificateName
 	default:
 		return fmt.Errorf("unknown keystore metadata type: %s", metadata.CloudKeystoreType)
 	}
 
-	err = result.Flush(flags.provisionFormat, flags.provisionOutputFile)
+	err = result.Flush(flags.provisionFormat, flags.provisionOutputFile, metadata.CloudKeystoreType)
 	if err != nil {
 		return fmt.Errorf("failed to output the results: %s", err)
 	}

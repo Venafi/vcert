@@ -25,5 +25,8 @@ type ProvisioningMetadata struct {
 }
 
 type ProvisioningOptions struct {
+	// for ACM only
+	ARN string
+	// for AKV and GCM only
 	CloudCertificateName string
 }

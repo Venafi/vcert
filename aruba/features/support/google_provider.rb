@@ -4,12 +4,12 @@ require 'google/cloud/certificate_manager/v1'
 ENV['GOOGLE_APPLICATION_CREDENTIALS'] = ENV['GCP_AUTH_PATH']
 
 # Initialize the Certificate Manager Client
-def create_certificate_manager_client
+def create_google_certificate_manager_client
   Google::Cloud::CertificateManager::V1::CertificateManager::Client.new
 end
 
 # Delete a certificate
-def delete_certificate(client, certificate_name)
+def delete_gcm_certificate(client, certificate_name)
   request = Google::Cloud::CertificateManager::V1::DeleteCertificateRequest.new(
     name: certificate_name
   )
