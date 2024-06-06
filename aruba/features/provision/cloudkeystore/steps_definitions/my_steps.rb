@@ -85,14 +85,14 @@ def get_cloud_id_from_output(json = false)
   end
 
   Kernel.puts("Checking output:\n"+@previous_command_output)
-  cloud_id_attr = "cloudId:"
+  cloud_id_attr = "cloudId"
 
   if json
     json_string = extract_json_from_output(@previous_command_output)
     JSON.parse(json_string)
     cloud_id = unescape_text(normalize_json(json_string, "#{cloud_id_attr}")).tr('"', '')
   else
-    m = @previous_command_output.match /#{cloud_id_attr} (.+)$/
+    m = @previous_command_output.match /#{cloud_id_attr}: (.+)$/
     cloud_id = m[1]
   end
   cloud_id
