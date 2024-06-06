@@ -126,7 +126,7 @@ end
 
 def cleanup_google(cloud_id = "")
   client = create_google_certificate_manager_client
-  if cloud_id
+  if cloud_id != ""
     certificate_name = "projects/#{ENV['GCP_PROJECT']}/locations/#{ENV['GCP_REGION']}/certificates/#{cloud_id}"
   else
     certificate_name = "projects/#{ENV['GCP_PROJECT']}/locations/#{ENV['GCP_REGION']}/certificates/#{@cloud_id}"
@@ -137,7 +137,7 @@ end
 
 def cleanup_aws(cloud_id = "")
   client = create_aws_certificate_manager_client
-  if cloud_id
+  if cloud_id != ""
     certificate_arn = cloud_id
   else
     certificate_arn = @cloud_id
