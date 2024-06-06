@@ -372,6 +372,8 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (*certificate.
 				return nil, err
 			}
 			err = req.CheckCertificate(certificates.Certificate)
+			// Add certificate id to the request
+			req.CertID = certificateId
 			return certificates, err
 		} else if statusCode == http.StatusConflict { // Http Status Code 409 means the certificate has not been signed by the ca yet.
 			return nil, endpoint.ErrCertificatePending{CertificateID: req.PickupID}
