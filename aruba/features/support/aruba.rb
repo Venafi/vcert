@@ -5,27 +5,31 @@ Aruba.configure do |config|
   config.allow_absolute_paths = true
 end
 
-$prefix_cn = "vcert"
+PREFIX_CN = "vcert"
 
-$platform_tpp = "TPP"
-$platform_vaas = "VaaS" # places already use it as is
-$platform_vcp = "VCP"
-$platform_firefly = "Firefly"
+PLATFORM_TPP = "TPP"
+PLATFORM_VAAS = "VaaS" # places already use it as is
+PLATFORM_VCP = "VCP"
+PLATFORM_FIREFLY = "Firefly"
 
-$path_separator = "/"
-$temp_path = "tmp/aruba"
+PATH_SEPARATOR = "/"
+TEMP_PATH = "tmp/aruba"
 
-$keystore_type_aws = "AWS"
-$keystore_type_azure = "AZURE"
-$keystore_type_gcp = "GOOGLE"
+KEYSTORE_TYPE_AWS = "AWS"
+KEYSTORE_TYPE_AZURE = "AZURE"
+KEYSTORE_TYPE_GCP = "GOOGLE"
 
-$gcp_keystore_id = ENV["GCP_KEYSTORE_ID"]
-$gcp_keystore_name = ENV["GCP_KEYSTORE_NAME"]
-$gcp_provider_name = ENV["GCP_PROVIDER_NAME"]
+GCP_KEYSTORE_ID = ENV["GCP_KEYSTORE_ID"]
+GCP_KEYSTORE_NAME = ENV["GCP_KEYSTORE_NAME"]
+GCP_PROVIDER_NAME = ENV["GCP_PROVIDER_NAME"]
 
-$aws_keystore_id = ENV["AWS_KEYSTORE_ID"]
-$aws_keystore_name = ENV["AWS_KEYSTORE_NAME"]
-$aws_provider_name = ENV["AWS_PROVIDER_NAME"]
+AWS_KEYSTORE_ID = ENV["AWS_KEYSTORE_ID"]
+AWS_KEYSTORE_NAME = ENV["AWS_KEYSTORE_NAME"]
+AWS_PROVIDER_NAME = ENV["AWS_PROVIDER_NAME"]
+
+AZURE_KEYSTORE_ID = ENV["AZURE_KEYSTORE_ID"]
+AZURE_KEYSTORE_NAME = ENV["AZURE_KEYSTORE_NAME"]
+AZURE_PROVIDER_NAME = ENV["AZURE_PROVIDER_NAME"]
 
 def last_json
   last_command_started.stdout.to_s
