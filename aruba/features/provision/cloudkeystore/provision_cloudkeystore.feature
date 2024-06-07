@@ -18,6 +18,7 @@ Feature: provision to cloud keystore
       | cloudkeystore    |
       | GOOGLE           |
       | AWS              |
+      | AZURE            |
 
   Scenario Outline: Enroll certificate and execute provisioning for cloud keystore and get output in JSON
     Given I enroll a random certificate with defined platform VCP with -csr service -no-prompt
@@ -47,3 +48,5 @@ Feature: provision to cloud keystore
     Examples:
       | cloudkeystore    |
       | AWS              |
+      | GOOGLE           |
+      | AZURE            |

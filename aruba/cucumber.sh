@@ -38,7 +38,14 @@ RUN_COMMAND="docker run -t --rm \
           -e AWS_SECRET_ACCESS_KEY \
           -e AWS_PROVIDER_NAME \
           -e AWS_KEYSTORE_NAME \
-          -e AWS_KEYSTORE_ID"
+          -e AWS_KEYSTORE_ID \
+          -e AZURE_CLIENT_ID \
+          -e AZURE_CLIENT_SECRET \
+          -e AZURE_TENANT_ID \
+          -e AZURE_KEYVAULT_NAME \
+          -e AZURE_PROVIDER_NAME \
+          -e AZURE_KEYSTORE_NAME \
+          -e AZURE_KEYSTORE_ID"
 
 # Use getopts to handle command-line options
 while getopts "a:b:" opt; do

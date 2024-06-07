@@ -20,9 +20,9 @@ ENDPOINTS = {
     "Firefly" => "-u '#{ENV['FIREFLY_URL']}' -t '#{ENV['IDP_ACCESS_TOKEN']}'"
 }
 
-ENDPOINTS[$platform_vaas] = ENDPOINTS["Cloud"]
+ENDPOINTS[PLATFORM_VAAS] = ENDPOINTS["Cloud"]
 
-ENDPOINTS[$platform_vcp] = ENDPOINTS[$platform_vaas]
+ENDPOINTS[PLATFORM_VCP] = ENDPOINTS[PLATFORM_VAAS]
 
 ZONE = {
     "test-mode" => "-z Default",
@@ -37,9 +37,9 @@ ZONE = {
 
     "Firefly" => "-z '#{ENV['FIREFLY_ZONE']}'"
 }
-ZONE[$platform_vaas] = ZONE["Cloud"]
+ZONE[PLATFORM_VAAS] = ZONE["Cloud"]
 
-ZONE[$platform_vcp] = ZONE[$platform_vaas]
+ZONE[PLATFORM_VCP] = ZONE[PLATFORM_VAAS]
 
 ENDPOINT_CONFIGS = {
     "test-mode" => "

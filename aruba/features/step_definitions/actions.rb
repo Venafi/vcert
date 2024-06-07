@@ -181,16 +181,16 @@ end
 
 When(/^I enroll(?: a)?( random)? certificate with defined platform (.*) with (.+)?$/) do |random, platform, flags|
   if random
-    cn = " -cn " + $prefix_cn + "-" + random_cn
+    cn = " -cn " + PREFIX_CN + "-" + random_cn
   end
 
   platform_flag = " -platform " + platform
 
   trust_bundle_flag = ""
   case platform
-  when $platform_tpp
+  when PLATFORM_TPP
     trust_bundle_flag = " -trust-bundle '#{ENV["TPP_TRUST_BUNDLE"]}' "
-  when $platform_firefly
+  when PLATFORM_FIREFLY
     trust_bundle_flag = " -trust-bundle '#{ENV["FIREFLY_CA_BUNDLE"]}' "
   end
 

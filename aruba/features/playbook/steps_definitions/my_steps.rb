@@ -8,7 +8,7 @@ Given(/^I have playbook with (\S+) connection details$/) do |platform|
     }
   }
 
-  if platform == $platform_tpp
+  if platform == PLATFORM_TPP
     validate_tpp_envs
     connection_tpp = {
       platform: "tpp",
@@ -21,7 +21,7 @@ Given(/^I have playbook with (\S+) connection details$/) do |platform|
     }
     connection_tpp['credentials'] = credentials
     @playbook_data[:config][:connection] = connection_tpp
-  elsif platform == $platform_vaas or platform == $platform_vcp
+  elsif platform == PLATFORM_VAAS or platform == PLATFORM_VCP
     validate_vaas_envs
     connection_vaas = {
       platform: "vaas"
@@ -189,9 +189,9 @@ And(/^task named "(.*)" has installation format PEM with file name "(.*)", chain
   current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
   aux_installation = Installation.new
   aux_installation.format = "PEM"
-  aux_installation.file = "{{- Env \"PWD\" }}" + $path_separator + $temp_path + $path_separator + cert_name
-  aux_installation.chainFile = "{{- Env \"PWD\" }}" + $path_separator + $temp_path + $path_separator + chain_name
-  aux_installation.keyFile = "{{- Env \"PWD\" }}" + $path_separator + $temp_path + $path_separator + + key_name
+  aux_installation.file = "{{- Env \"PWD\" }}" + PATH_SEPARATOR + TEMP_PATH + PATH_SEPARATOR + cert_name
+  aux_installation.chainFile = "{{- Env \"PWD\" }}" + PATH_SEPARATOR + TEMP_PATH + PATH_SEPARATOR + chain_name
+  aux_installation.keyFile = "{{- Env \"PWD\" }}" + PATH_SEPARATOR + TEMP_PATH + PATH_SEPARATOR + + key_name
   if password
     aux_installation.keyPassword = "Passcode123!"
   end
@@ -211,7 +211,7 @@ And(/^task named "(.*)" has installation format JKS with cert name "(.*)", jksAl
   current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
   aux_installation = Installation.new
   aux_installation.format = "JKS"
-  aux_installation.file = "{{- Env \"PWD\" }}" + $path_separator + $temp_path + $path_separator + cert_name
+  aux_installation.file = "{{- Env \"PWD\" }}" + PATH_SEPARATOR + TEMP_PATH + PATH_SEPARATOR + cert_name
   aux_installation.jksAlias = jks_alias
   aux_installation.jksPassword = jks_password
   if installation
@@ -227,7 +227,7 @@ And(/^task named "(.*)" has installation format PKCS12 with cert name "(.*)" and
   current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
   aux_installation = Installation.new
   aux_installation.format = "PKCS12"
-  aux_installation.file = "{{- Env \"PWD\" }}" + $path_separator + $temp_path + $path_separator + cert_name
+  aux_installation.file = "{{- Env \"PWD\" }}" + PATH_SEPARATOR + TEMP_PATH + PATH_SEPARATOR + cert_name
   aux_installation.p12Password = p12_password
   if installation
     aux_installation.afterInstallAction = "echo SuccessInstall"
@@ -242,7 +242,7 @@ And(/^task named "(.*)" has installation format PKCS12 with cert name "(.*)" and
   current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
   aux_installation = Installation.new
   aux_installation.format = "PKCS12"
-  aux_installation.file = "{{- Env \"PWD\" }}" + $path_separator + $temp_path + $path_separator + cert_name
+  aux_installation.file = "{{- Env \"PWD\" }}" + PATH_SEPARATOR + TEMP_PATH + PATH_SEPARATOR + cert_name
   aux_installation.p12Password = p12_password
   aux_installation.useLegacyP12 = true
   if installation
@@ -279,15 +279,15 @@ And(/^task named "(.*)" has request with nickname based on commonName$/) do |tas
 end
 
 And(/^I uninstall file named "(.*)"$/) do |file_name|
-  file_path = Dir.pwd + $path_separator + $temp_path + $path_separator + file_name
+  file_path = Dir.pwd + PATH_SEPARATOR + TEMP_PATH + PATH_SEPARATOR + file_name
   steps %{
     Then a file named "#{file_path}" does not exist
   }
 end
 
 When(/^playbook generated private key in "([^"]*)" and certificate in "([^"]*)" should have the same modulus(?: with password |)(.*)?$/) do |key_file, cert_file, password|
-  cert_path = Dir.pwd + $path_separator + $temp_path + $path_separator + cert_file
-  key_path = Dir.pwd + $path_separator + $temp_path + $path_separator + key_file
+  cert_path = Dir.pwd + PATH_SEPARATOR + TEMP_PATH + PATH_SEPARATOR + cert_file
+  key_path = Dir.pwd + PATH_SEPARATOR + TEMP_PATH + PATH_SEPARATOR + key_file
 
   if password != ""
     steps %{
@@ -305,7 +305,7 @@ When(/^playbook generated private key in "([^"]*)" and certificate in "([^"]*)" 
 end
 
 When(/^playbook generated "([^"]*)" should be PKCS#12 archive with password "([^"]*)"$/) do |filename, password|
-  cert_path = Dir.pwd + $path_separator + $temp_path + $path_separator + filename
+  cert_path = Dir.pwd + PATH_SEPARATOR + TEMP_PATH + PATH_SEPARATOR + filename
 
   steps %{
     Then I try to run `openssl pkcs12 -in "#{cert_path}" -passin pass:#{password} -noout`
@@ -323,7 +323,7 @@ And(/^"(.*)" should( not)? be encrypted "(.*)" private key$/) do |filename, nega
     fail(ArgumentError.new("Unexpected Key Type. Unknown Key Type: #{key_type}"))
   end
 
-  file_path = Dir.pwd + $path_separator + $temp_path + $path_separator + filename
+  file_path = Dir.pwd + PATH_SEPARATOR + TEMP_PATH + PATH_SEPARATOR + filename
   lines = File.open(file_path).first(2).map(&:strip)
 
   if lines[0] == header then

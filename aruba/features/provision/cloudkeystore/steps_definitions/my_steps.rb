@@ -15,13 +15,18 @@ end
 And(/^I use previous Pickup ID and cloud ID to provision again$/) do
   keystore_provider_names = true
   flags = ""
-  if @cloudkeystore_type == $keystore_type_aws
+  case @cloudkeystore_type
+  when KEYSTORE_TYPE_AWS
     flags +=  " -arn #{@cloud_id}"
-  elsif @cloudkeystore_type == $keystore_type_azure or @cloudkeystore_type == $keystore_type_gcp
-    flags +=  " -certificate-name #{@cloud_id}"
+  when KEYSTORE_TYPE_AZURE
+    flags +=  " -certificate-name #{@cloud_name}"
+  when KEYSTORE_TYPE_GCP
+      flags +=  " -certificate-name #{@cloud_id}"
+  else
+    fail(ArgumentError.new("Unknown cloud type: #{@cloudkeystore_type}"))
   end
   flags += @global_set_provision_flags
-  cmd = build_provision_cmd($platform_vcp, @cloudkeystore_type, keystore_provider_names, flags)
+  cmd = build_provision_cmd(PLATFORM_VCP, @cloudkeystore_type, keystore_provider_names, flags)
   steps %{Then I try to run `#{cmd}`}
 end
 
@@ -31,27 +36,36 @@ def build_provision_cmd(platform, cloudkeystore_type, keystore_provider_names, f
 
   platform_flag = " -platform " + platform
 
-  cmd = "vcert provision cloudkeystore #{platform_flag} #{ENDPOINTS[$platform_vcp]} -pickup-id #{@pickup_id}"
+  cmd = "vcert provision cloudkeystore #{platform_flag} #{ENDPOINTS[PLATFORM_VCP]} -pickup-id #{@pickup_id}"
 
   keystore_name = ""
   provider_name = ""
   keystore_id = ""
   case cloudkeystore_type
-  when $keystore_type_aws
+  when KEYSTORE_TYPE_AWS
+    @cloudkeystore_type = KEYSTORE_TYPE_AWS
     if keystore_provider_names
-      keystore_name = $aws_keystore_name
-      provider_name = $aws_provider_name
-      @cloudkeystore_type = $keystore_type_aws
+      keystore_name = AWS_KEYSTORE_NAME
+      provider_name = AWS_PROVIDER_NAME
+
     else
-      keystore_name = $aws_keystore_id
+      keystore_id = AWS_KEYSTORE_ID
     end
-  when $keystore_type_gcp
+  when KEYSTORE_TYPE_AZURE
+    @cloudkeystore_type = KEYSTORE_TYPE_AZURE
     if keystore_provider_names
-      keystore_name = $gcp_keystore_name
-      provider_name = $gcp_provider_name
-      @cloudkeystore_type = $keystore_type_gcp
+      keystore_name = AZURE_KEYSTORE_NAME
+      provider_name = AZURE_PROVIDER_NAME
     else
-      keystore_id = $gcp_keystore_id
+      keystore_id = AZURE_KEYSTORE_ID
+    end
+  when KEYSTORE_TYPE_GCP
+    @cloudkeystore_type = KEYSTORE_TYPE_GCP
+    if keystore_provider_names
+      keystore_name = GCP_KEYSTORE_NAME
+      provider_name = GCP_PROVIDER_NAME
+    else
+      keystore_id = GCP_KEYSTORE_ID
     end
   else
     fail(ArgumentError.new("Unexpected : #{cloudkeystore_type}"))
@@ -75,32 +89,48 @@ end
 
 Then(/^I grab cloud ID from( JSON)? output$/) do |json|
 
-  @cloud_id = get_cloud_id_from_output(json)
-
+  @cloud_id = get_value_from_output("cloudId",json)
+  if @cloudkeystore_type == KEYSTORE_TYPE_AZURE
+    @cloud_name = get_value_from_output("azureName",json)
+  end
 end
 
-def get_cloud_id_from_output(json = false)
+def get_value_from_output(value, json = false)
   if @previous_command_output.nil?
     fail(ArgumentError.new('@previous_command_output is nil'))
   end
 
   Kernel.puts("Checking output:\n"+@previous_command_output)
-  cloud_id_attr = "cloudId"
 
   if json
     json_string = extract_json_from_output(@previous_command_output)
     JSON.parse(json_string)
-    cloud_id = unescape_text(normalize_json(json_string, "#{cloud_id_attr}")).tr('"', '')
+    extracted_val = unescape_text(normalize_json(json_string, "#{value}")).tr('"', '')
   else
-    m = @previous_command_output.match /#{cloud_id_attr}: (.+)$/
-    cloud_id = m[1]
+    m = @previous_command_output.match /#{value}: (.+)$/
+    extracted_val = m[1]
   end
-  cloud_id
+  extracted_val
 end
 
 Then(/^the output( in JSON)? should contain the previous cloud ID$/) do |json|
+  validate_provision_replace(json)
+end
+
+def validate_provision_replace(json)
+  # for azure case we want to check the name instead
+  if @cloudkeystore_type == KEYSTORE_TYPE_AZURE
+    old_cloud_name = @cloud_name
+    new_cloud_name = get_value_from_output("azureName", json)
+    if old_cloud_name != new_cloud_name
+      cleanup_keystore(old_cloud_name)
+      cleanup_keystore(new_cloud_name)
+      fail(ArgumentError.new("Expected old Cloud Name: #{old_cloud_name} to be same as new Cloud Name, but got: #{new_cloud_name}"))
+    end
+    return
+  end
   old_cloud_id = @cloud_id
-  new_cloud_id = get_cloud_id_from_output(json)
+  new_cloud_id = get_value_from_output("cloudId", json)
   if old_cloud_id != new_cloud_id
     cleanup_keystore(old_cloud_id)
     cleanup_keystore(new_cloud_id)
@@ -114,10 +144,11 @@ end
 
 def cleanup_keystore(cloud_id = "")
   case @cloudkeystore_type
-  when $keystore_type_aws
+  when KEYSTORE_TYPE_AWS
     cleanup_aws(cloud_id)
-  when $keystore_type_azure
-  when $keystore_type_gcp
+  when KEYSTORE_TYPE_AZURE
+    cleanup_akv(@cloud_name)
+  when KEYSTORE_TYPE_GCP
     cleanup_google(cloud_id)
   else
     fail(ArgumentError.new("Unexpected : #{@cloudkeystore_type}"))
@@ -144,4 +175,14 @@ def cleanup_aws(cloud_id = "")
   end
 
   delete_acm_certificate(client, certificate_arn)
+end
+
+def cleanup_akv(cloud_name = "")
+  if cloud_name != ""
+    certificate_name = cloud_name
+  else
+    certificate_name = @cloud_name
+  end
+
+  delete_azure_certificate(certificate_name)
 end
