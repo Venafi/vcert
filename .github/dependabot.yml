@@ -1,0 +1,9 @@
+version: 2
+updates:
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      time: "09:00"
+      day: "monday"
+      timezone: "America/Inuvik"
