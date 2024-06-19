@@ -31,6 +31,7 @@ Feature: provision to cloud keystore
       | cloudkeystore    |
       | GOOGLE           |
       | AWS              |
+      | AZURE            |
 
   Scenario Outline: Enroll certificate, execute provisioning and then provisioning again for replace
     Given I enroll a random certificate with defined platform VCP with -csr service -no-prompt
