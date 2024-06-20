@@ -15,9 +15,10 @@ import (
 
 var (
 	subCommandCloudKeystore = &cli.Command{
-		Name:  subCommandCloudKeystoreName,
-		Flags: provisionFlags,
-		Usage: "provision certificate from Venafi Platform to Cloud Keystore",
+		Before: runBeforeProvisionCommand,
+		Name:   subCommandCloudKeystoreName,
+		Flags:  provisionFlags,
+		Usage:  "provision certificate from Venafi Platform to Cloud Keystore",
 		UsageText: `vcert provision cloudkeystore <Required Venafi Control Plane> <Options>
 
    vcert provision cloudkeystore --platform vcp -k <VCP API key> --certificate-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --keystore-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --format json
