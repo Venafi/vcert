@@ -605,7 +605,7 @@ type cloudZone struct {
 	templateAlias string
 }
 
-func (z cloudZone) String() string {
+func (z *cloudZone) String() string {
 	return z.zone
 }
 
