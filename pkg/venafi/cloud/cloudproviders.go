@@ -300,7 +300,6 @@ func setProvisioningOptions(options domain.ProvisioningOptions, keystoreType dom
 	return provisioningOptions, nil
 }
 
-// IsVCPGeneratedByID
 func (c *Connector) validateCertificate(certificateId string) error {
 	cert, err := c.getCertificates(certificateId)
 	if err != nil {
