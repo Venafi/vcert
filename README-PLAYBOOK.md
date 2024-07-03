@@ -99,7 +99,7 @@ The top-level structure of the file is described as follows:
 
 | Field            | Type                                                 | Required       | Description                                                                                                     |
 |------------------|------------------------------------------------------|----------------|-----------------------------------------------------------------------------------------------------------------|
-| certificateTasks | array of [CertificateTak](#certificatetask) objects  | ***Required*** | One or more [CertificateTask](#certificatetask) objects to be executed by VCert.                                |
+| certificateTasks | array of [CertificateTask](#certificatetask) objects  | ***Required*** | One or more [CertificateTask](#certificatetask) objects to be executed by VCert.                                |
 | config           | [Config](#config) object                             | ***Required*** | Contains one [Connection](#connection) object to either TLS Protect Cloud, TLS Protect Datacenter, or Firefly.  | 
 
 ### Config
