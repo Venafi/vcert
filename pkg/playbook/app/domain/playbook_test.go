@@ -505,25 +505,27 @@ func (s *PlaybookSuite) SetupTest() {
 				},
 			},
 		},
-		{
-			err:  ErrInvalidCAPIStoreName,
-			name: "InvalidCAPIStoreName",
-			pb: Playbook{
-				Config: config,
-				CertificateTasks: CertificateTasks{
-					CertificateTask{
-						Name:    "testTask",
-						Request: req,
-						Installations: Installations{
-							Installation{
-								Type:     FormatCAPI,
-								Location: "LocalMachine\\foo",
-							},
-						},
-					},
-				},
-			},
-		},
+		// Removing to facilitate changes referenced in installation.go:
+		// https://learn.microsoft.com/en-us/iis/get-started/whats-new-in-iis-8/iis-80-server-name-indication-sni-ssl-scalability
+		// {
+		// 	err:  ErrInvalidCAPIStoreName,
+		// 	name: "InvalidCAPIStoreName",
+		// 	pb: Playbook{
+		// 		Config: config,
+		// 		CertificateTasks: CertificateTasks{
+		// 			CertificateTask{
+		// 				Name:    "testTask",
+		// 				Request: req,
+		// 				Installations: Installations{
+		// 					Installation{
+		// 						Type:     FormatCAPI,
+		// 						Location: "LocalMachine\\foo",
+		// 					},
+		// 				},
+		// 			},
+		// 		},
+		// 	},
+		// },
 		{
 			err:  nil,
 			name: "ValidCAPIConfig",
