@@ -1,0 +1,20 @@
+config:
+  connection:
+    platform: vaas
+    credentials:
+      tokenURL: <Your Service Account Token URL - Copy from VCP> 
+      externalJWT: '{{ Env "TLSPC_EXTERNAL_JWT" }}'
+certificateTasks:
+  - name: myCertificate
+    renewBefore: 31d
+    request:
+      csr: service
+      subject:
+        commonName: "ansibletest.lab.corp.net"
+      zone: "<myapp>\\<issuingtemplate>"
+    installations:
+      - format: PEM
+        file: "./cert.cer"
+        chainFile: "./chain.cer"
+        keyFile: "./key.pem" 
+        afterInstallAction: "echo Success!!!"
