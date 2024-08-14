@@ -13,9 +13,9 @@ Each Sample uses:
 - A OAuth2.0 enabled application or OAuth API integration with an IDP that will return a [JSON Web Token (JWT)](https://jwt.io/)
 - The OAuth 2.0 Client Credential authentication method for authenticating to the IDP Oauth2.0 endpoint.
 
-Prior Work you must do before usingg these playbooks:
+Prior Work you must do before using these playbooks:
 - VCert must be installed on all servers that you wish to run playbooks on.
-  -** Note:** the playbooks assume VCert is installed in your PATH. If it is not, you will need to edit the playbooks to contain the full path to the VCert binary. 
+    - **Note:** the playbooks assume VCert is installed in your PATH. If it is not, you will need to edit the playbooks to contain the full path to the VCert binary. 
 - A VCP Custom API Intgration Service account already configured in TLSPC.
 - An application or API integration must be configured in your IDP
 
