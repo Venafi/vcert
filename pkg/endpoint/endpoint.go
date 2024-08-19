@@ -23,7 +23,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"log"
 	"net"
 	"net/http"
 	"regexp"
@@ -54,7 +53,6 @@ const (
 )
 
 func init() {
-	log.SetPrefix("vCert: ")
 	LocalIP = getPrimaryNetAddr()
 }
 
