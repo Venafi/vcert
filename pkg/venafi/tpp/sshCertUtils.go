@@ -18,6 +18,7 @@ package tpp
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -319,7 +320,7 @@ func GetAvailableSshTemplates(c *Connector) ([]certificate.SshAvaliableTemplate,
 		}
 	case http.StatusNotFound:
 		// Return NotFound as this API method is unavailable in SSH Protect versions prior 21.4.0
-		return nil, fmt.Errorf(status)
+		return nil, errors.New(status)
 	default:
 		return nil, fmt.Errorf("error while retriving avaliable SSH templates, error body:%s, status:%s and status code:%v", string(body), status, statusCode)
 	}

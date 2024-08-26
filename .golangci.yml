@@ -4,8 +4,6 @@ run:
 
 linters:
   disable:
-    - deadcode
-    - varcheck
     - unused
   enable:
     - gosec
