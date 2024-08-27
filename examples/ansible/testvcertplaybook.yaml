@@ -5,16 +5,24 @@ config:
       tokenURL: <Your Service Account Token URL - Copy from VCP> 
       externalJWT: '{{ Env "TLSPC_EXTERNAL_JWT" }}'
 certificateTasks:
-  - name: myCertificate
+  - name: appcert
+    setEnvVars: #delete the environment variables that you do not need.  
+      - "thumbprint"     #VCERT_TASKNAME_THUMBPRINT
+      - "serial"         #VCERT_TASKNAME_SERIAL
+      - "base64"         #VCERT_TASKNAME_BASE64
     renewBefore: 31d
-    request:
-      csr: service
+    request: #change the request parameters to fit your certificate needs.
+      csr: local
       subject:
-        commonName: "ansibletest.lab.corp.net"
+        commonName: 'myapp.corp.net' 
+      sanDNS: 
+        - 'myapp.corp.net'
       zone: "<myapp>\\<issuingtemplate>"
     installations:
       - format: PEM
         file: "./cert.cer"
         chainFile: "./chain.cer"
         keyFile: "./key.pem" 
-        afterInstallAction: "echo Success!!!"
+        backupFiles: false
+        #replace "TASKNAME" below with the name of the certificxate task that the after install action will run for. Example: VCERT_APPCERT_SERIAL
+        afterInstallAction: "echo $VCERT_TASKNAME_THUMBPRINT $VCERT_TASKNAME_SERIAL $VCERT_TASKNAME_BASE64"
