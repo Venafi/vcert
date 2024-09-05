@@ -45,7 +45,6 @@ type Connector struct {
 	apiKey      string
 	accessToken string
 	verbose     bool
-	Identity    identity
 	trust       *x509.CertPool
 	zone        string
 	client      *http.Client
@@ -118,8 +117,22 @@ func (c *Connector) Ping() (err error) {
 	return
 }
 
-// Authenticate authenticates the user to the TPP
-func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
+// Authenticate sets the Authentication details for the TPP Server and
+// verifies that it can retrieve Self Identity.
+func (c *Connector) Authenticate(auth *endpoint.Authentication) error {
+	if err := c.SetAuthentication(auth); err != nil {
+		return err
+	}
+
+	if _, err := c.retrieveSelfIdentity(); err != nil {
+		return fmt.Errorf("%w: %s", verror.AuthError, err)
+	}
+
+	return nil
+}
+
+// SetAuthentication sets the Authentication details for the TPP Server.
+func (c *Connector) SetAuthentication(auth *endpoint.Authentication) (err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("%w: %s", verror.AuthError, err)
@@ -143,13 +156,6 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 
 		resp := result.(authorizeResponse)
 		c.apiKey = resp.APIKey
-
-		if c.client != nil {
-			c.Identity, err = c.retrieveSelfIdentity()
-			if err != nil {
-				return err
-			}
-		}
 		return nil
 
 	} else if auth.RefreshToken != "" {
@@ -161,24 +167,12 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 
 		resp := result.(OauthRefreshAccessTokenResponse)
 		c.accessToken = resp.Access_token
+		auth.AccessToken = resp.Access_token
 		auth.RefreshToken = resp.Refresh_token
-		if c.client != nil {
-			c.Identity, err = c.retrieveSelfIdentity()
-			if err != nil {
-				return err
-			}
-		}
 		return nil
 
 	} else if auth.AccessToken != "" {
 		c.accessToken = auth.AccessToken
-
-		if c.client != nil {
-			c.Identity, err = c.retrieveSelfIdentity()
-			if err != nil {
-				return err
-			}
-		}
 		return nil
 	}
 	return fmt.Errorf("failed to authenticate: can't determine valid credentials set")
