@@ -2,6 +2,7 @@ package cloud
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -27,7 +28,7 @@ func parseCertificateInfo(httpStatusCode int, httpStatus string, body []byte) (*
 				for _, e := range respErrors {
 					respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
 				}
-				return nil, fmt.Errorf(respError)
+				return nil, errors.New(respError)
 			}
 		}
 		return nil, fmt.Errorf("unexpected status code on Venafi Cloud certificate search. Status: %s", httpStatus)
@@ -51,7 +52,7 @@ func parseDEKInfo(httpStatusCode int, httpStatus string, body []byte) (*EdgeEncr
 				for _, e := range respErrors {
 					respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
 				}
-				return nil, fmt.Errorf(respError)
+				return nil, errors.New(respError)
 			}
 		}
 		return nil, fmt.Errorf("unexpected status code on VaaS retrieving DEK's info. Status. Status: %s", httpStatus)

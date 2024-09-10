@@ -24,6 +24,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -1045,7 +1046,7 @@ func (c *Connector) getCertificateStatus(requestID string) (certStatus *certific
 		for _, e := range respErrors {
 			respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
 		}
-		return nil, fmt.Errorf(respError)
+		return nil, errors.New(respError)
 	}
 
 	return nil, fmt.Errorf("unexpected status code on Venafi Cloud certificate search. Status: %d", statusCode)
@@ -1297,7 +1298,7 @@ func (c *Connector) getCertificate(certificateId string) (*managedCertificate, e
 				for _, e := range respErrors {
 					respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
 				}
-				return nil, fmt.Errorf(respError)
+				return nil, errors.New(respError)
 			}
 		}
 		return nil, fmt.Errorf("unexpected status code on Venafi Cloud certificate search. Status: %d", statusCode)
