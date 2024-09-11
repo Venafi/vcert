@@ -169,7 +169,7 @@ func X509EncryptPEMBlock(rand io.Reader, blockType string, data, password []byte
 	}
 	iv := make([]byte, ciph.blockSize)
 	if _, err := io.ReadFull(rand, iv); err != nil {
-		return nil, fmt.Errorf("x509: cannot generate IV: " + err.Error())
+		return nil, fmt.Errorf("x509: cannot generate IV: %s", err.Error())
 	}
 	// The salt is the first 8 bytes of the initialization vector,
 	// matching the key derivation in DecryptPEMBlock.

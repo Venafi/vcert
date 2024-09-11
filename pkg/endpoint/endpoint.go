@@ -22,6 +22,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -337,7 +338,7 @@ func (p *Policy) ValidateCertificateRequest(request *certificate.Request) error 
 				}
 			}
 			if !keyValid {
-				return fmt.Errorf(keyError)
+				return errors.New(keyError)
 			}
 		}
 
@@ -361,7 +362,7 @@ func (p *Policy) ValidateCertificateRequest(request *certificate.Request) error 
 
 		if len(p.AllowedKeyConfigurations) > 0 {
 			if !checkKey(request.KeyType, request.KeyLength, request.KeyCurve.String(), p.AllowedKeyConfigurations) {
-				return fmt.Errorf(keyError)
+				return errors.New(keyError)
 			}
 		}
 	}
