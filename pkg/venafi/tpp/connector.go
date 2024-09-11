@@ -113,7 +113,7 @@ func (c *Connector) Ping() (err error) {
 		return
 	}
 	if statusCode != http.StatusOK {
-		err = fmt.Errorf(status)
+		err = errors.New(status)
 	}
 	return
 }
@@ -847,7 +847,7 @@ func (c *Connector) ResetCertificate(req *certificate.Request, restart bool) (er
 		}
 
 		if strings.HasSuffix(decodedResetResponse.Error, "does not exist or you do not have sufficient rights to the object.") {
-			return &ErrCertNotFound{fmt.Errorf(decodedResetResponse.Error)}
+			return &ErrCertNotFound{errors.New(decodedResetResponse.Error)}
 		}
 
 		return fmt.Errorf("while resetting: %s", decodedResetResponse.Error)
@@ -890,7 +890,7 @@ func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) 
 	}
 
 	if checkPolicyResponse.Error != "" {
-		return nil, fmt.Errorf(checkPolicyResponse.Error)
+		return nil, errors.New(checkPolicyResponse.Error)
 	}
 
 	log.Println("Building policy")
@@ -972,7 +972,7 @@ func PolicyExist(policyName string, c *Connector) (bool, error) {
 	} else if (response.Error != "") && (response.Result == 400) {
 		return false, nil
 	} else {
-		return false, fmt.Errorf(response.Error)
+		return false, errors.New(response.Error)
 	}
 
 }
@@ -1994,7 +1994,7 @@ func createPolicyAttribute(c *Connector, at string, av []string, n string, l boo
 	}
 
 	if response.Error != "" {
-		err = fmt.Errorf(response.Error)
+		err = errors.New(response.Error)
 		return statusCode, statusText, body, err
 	}
 
@@ -2158,7 +2158,7 @@ func resetTPPAttribute(c *Connector, at, zone string) error {
 	}
 
 	if response.Error != "" {
-		err = fmt.Errorf(response.Error)
+		err = errors.New(response.Error)
 		return err
 	}
 

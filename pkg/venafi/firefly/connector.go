@@ -19,6 +19,7 @@ package firefly
 import (
 	"context"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -89,7 +90,7 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) error {
 	if auth == nil {
 		msg := "failed to authenticate: no credentials provided"
 		zap.L().Error(msg, fieldPlatform)
-		return fmt.Errorf(msg)
+		return errors.New(msg)
 	}
 
 	if auth.AccessToken == "" {
@@ -121,7 +122,7 @@ func (c *Connector) Authorize(auth *endpoint.Authentication) (token *oauth2.Toke
 	if auth == nil {
 		msg := "failed to authenticate: missing credentials"
 		zap.L().Error(msg, fieldPlatform)
-		return nil, fmt.Errorf(msg)
+		return nil, errors.New(msg)
 	}
 
 	successMsg := "successfully authorized to OAuth2 server"
@@ -198,7 +199,7 @@ func (c *Connector) Authorize(auth *endpoint.Authentication) (token *oauth2.Toke
 
 	errMsg := "authorization failed: cannot determine the authorization flow required for the credentials provided"
 	zap.L().Error(errMsg, fieldPlatform)
-	return token, fmt.Errorf(errMsg)
+	return token, errors.New(errMsg)
 }
 
 // SynchronousRequestCertificate It's not supported yet in VaaS

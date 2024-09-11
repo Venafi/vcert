@@ -18,6 +18,7 @@ package cloud
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"math"
@@ -138,7 +139,7 @@ func ParseCertificateSearchResponse(httpStatusCode int, body []byte) (searchResu
 				for _, e := range respErrors {
 					respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
 				}
-				return nil, fmt.Errorf(respError)
+				return nil, errors.New(respError)
 			}
 		}
 		return nil, fmt.Errorf("unexpected status code on Venafi Cloud certificate search. Status: %d", httpStatusCode)
