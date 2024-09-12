@@ -19,3 +19,9 @@ credentials
 *.DS_Store
 vendor
 google_auth.json
+.env
+cov_tpp.out
+cov_vaas.out
+cov_firefly.out
+cov_cmd.out
+cov_playbook.out
