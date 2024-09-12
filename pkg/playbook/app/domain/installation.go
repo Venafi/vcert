@@ -38,18 +38,19 @@ var validStoreNames = []string{"addressbook", "authroot", "certificateauthority"
 // Installation represents a location in which a certificate will be installed,
 // along with the format in which it will be installed
 type Installation struct {
-	AfterAction         string `yaml:"afterInstallAction,omitempty"`
-	BackupFiles         bool   `yaml:"backupFiles,omitempty"`
-	CAPIFriendlyName    string `yaml:"capiFriendlyName,omitempty"` // In a future version of vCert this will become REQUIRED!
-	CAPIIsNonExportable bool   `yaml:"capiIsNonExportable,omitempty"`
-	CAPILocation        string `yaml:"capiLocation,omitempty"` // This is an alias for Location
-	ChainFile           string `yaml:"chainFile,omitempty"`
-	File                string `yaml:"file,omitempty"`
-	InstallValidation   string `yaml:"installValidationAction,omitempty"`
-	JKSAlias            string `yaml:"jksAlias,omitempty"`
-	JKSPassword         string `yaml:"jksPassword,omitempty"`
-	KeyFile             string `yaml:"keyFile,omitempty"`
-	KeyPassword         string `yaml:"keyPassword,omitempty"`
+	AfterAction               string `yaml:"afterInstallAction,omitempty"`
+	BackupFiles               bool   `yaml:"backupFiles,omitempty"`
+	CAPIFriendlyName          string `yaml:"capiFriendlyName,omitempty"` // In a future version of vCert this will become REQUIRED!
+	CAPIIsNonExportable       bool   `yaml:"capiIsNonExportable,omitempty"`
+	CAPILocation              string `yaml:"capiLocation,omitempty"` // This is an alias for Location
+	SkipCAPIValidateStoreName bool   `yaml:"skipCapiStoreValidation,omitempty"`
+	ChainFile                 string `yaml:"chainFile,omitempty"`
+	File                      string `yaml:"file,omitempty"`
+	InstallValidation         string `yaml:"installValidationAction,omitempty"`
+	JKSAlias                  string `yaml:"jksAlias,omitempty"`
+	JKSPassword               string `yaml:"jksPassword,omitempty"`
+	KeyFile                   string `yaml:"keyFile,omitempty"`
+	KeyPassword               string `yaml:"keyPassword,omitempty"`
 	// Deprecated: Location is deprecated in favor of CAPILocation. It will be removed on a future release
 	Location     string             `yaml:"location,omitempty"`
 	P12Password  string             `yaml:"p12Password,omitempty"`
@@ -129,10 +130,14 @@ func validateCAPI(installation Installation) error {
 	// valid store names from https://learn.microsoft.com/en-us/dotnet/api/system.security.cryptography.x509certificates.storename?view=net-7.0
 	// Although it is unlikely that you'd want to install a certificate and private key in anything but "my", here for completeness
 	isValidStoreName := false
-	for _, v := range validStoreNames {
-		if v == strings.ToLower(segments[1]) {
-			isValidStoreName = true
-			break
+	if installation.SkipCAPIValidateStoreName {
+		isValidStoreName = true
+	} else {
+		for _, v := range validStoreNames {
+			if v == strings.ToLower(segments[1]) {
+				isValidStoreName = true
+				break
+			}
 		}
 	}
 
