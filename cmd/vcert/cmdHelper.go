@@ -79,6 +79,10 @@ func runBeforeCommand(c *cli.Context) error {
 		uri, _ := url.Parse(stringURI)
 		flags.uriSans = append(flags.uriSans, uri)
 	}
+	for _, stringExtKeyUsage := range c.StringSlice("eku") {
+		eku, _ := certificate.ParseExtKeyUsage(stringExtKeyUsage)
+		flags.extKeyUsage.Add(eku)
+	}
 
 	if flags.platformString != "" {
 		flags.platform = venafi.GetPlatformType(flags.platformString)
