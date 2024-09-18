@@ -141,29 +141,39 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) error {
 		return fmt.Errorf("failed to authenticate: missing credentials")
 	}
 
-	//1. Access token. Assign it to connector
-	if auth.AccessToken != "" {
-		c.accessToken = auth.AccessToken
-	} else if auth.TokenURL != "" && auth.ExternalJWT != "" {
-		//2. JWT and token URL. use it to request new access token
-		tokenResponse, err := c.GetAccessToken(auth)
-		if err != nil {
-			return err
+	// trying to authenticate for more time
+	startTime := time.Now()
+	timeout := util.DefaultTimeout * time.Second // 3 min
+	for {
+		//1. Access token. Assign it to connector
+		if auth.AccessToken != "" {
+			c.accessToken = auth.AccessToken
+		} else if auth.TokenURL != "" && auth.ExternalJWT != "" {
+			//2. JWT and token URL. use it to request new access token
+			tokenResponse, err := c.GetAccessToken(auth)
+			if err != nil {
+				if !(strings.Contains(err.Error(), "server unavailable") && timeout != time.Duration(0)) || time.Now().After(startTime.Add(timeout)) {
+					return err
+				}
+			}
+			c.accessToken = tokenResponse.AccessToken
+		} else if auth.APIKey != "" {
+			// 3. API key. Get user to test authentication
+			c.apiKey = auth.APIKey
+			url := c.getURL(urlResourceUserAccounts)
+			statusCode, status, body, err := c.request("GET", url, nil, true)
+			if err != nil {
+				if !(strings.Contains(err.Error(), "server unavailable") && timeout != time.Duration(0)) || time.Now().After(startTime.Add(timeout)) {
+					return err
+				}
+			}
+			ud, err := parseUserDetailsResult(http.StatusOK, statusCode, status, body)
+			if err != nil {
+				return err
+			}
+			c.user = ud
 		}
-		c.accessToken = tokenResponse.AccessToken
-	} else if auth.APIKey != "" {
-		// 3. API key. Get user to test authentication
-		c.apiKey = auth.APIKey
-		url := c.getURL(urlResourceUserAccounts)
-		statusCode, status, body, err := c.request("GET", url, nil, true)
-		if err != nil {
-			return err
-		}
-		ud, err := parseUserDetailsResult(http.StatusOK, statusCode, status, body)
-		if err != nil {
-			return err
-		}
-		c.user = ud
+		time.Sleep(2 * time.Second)
 	}
 
 	// Initialize clients
