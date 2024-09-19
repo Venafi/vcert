@@ -1102,27 +1102,20 @@ func retrieveServiceGeneratedCertData(c *Connector, req *certificate.Request, de
 
 }
 
-func getDekInfo(c *Connector, cerId string) (*EdgeEncryptionKey, error) {
+func getDekInfo(c *Connector, certId string) (*EdgeEncryptionKey, error) {
 	//get certificate details for getting DekHash
-	url := c.getURL(urlResourceCertificateByID)
-	url = fmt.Sprintf(url, cerId)
 
-	statusCode, status, body, err := c.request("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	managedCert, err := parseCertificateInfo(statusCode, status, body)
+	managedCert, err := c.getCertificate(certId)
 
 	if err != nil {
 		return nil, err
 	}
 
 	//get Dek info for getting DEK's key
-	url = c.getURL(urlDekPublicKey)
+	url := c.getURL(urlDekPublicKey)
 	url = fmt.Sprintf(url, managedCert.DekHash)
 
-	statusCode, status, body, err = c.request("GET", url, nil)
+	statusCode, status, body, err := c.request("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -1274,34 +1267,54 @@ type managedCertificate struct {
 }
 
 func (c *Connector) getCertificate(certificateId string) (*managedCertificate, error) {
-	var err error
+	// Flow renew certificate
+	//var err error
 	url := c.getURL(urlResourceCertificateByID)
 	url = fmt.Sprintf(url, certificateId)
-	statusCode, _, body, err := c.request("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
 
-	switch statusCode {
-	case http.StatusOK:
-		var res = &managedCertificate{}
-		err = json.Unmarshal(body, res)
+	timeout := time.Duration(60) * time.Second
+
+	startTime := time.Now()
+	for {
+		statusCode, _, body, err := c.request("GET", url, nil)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse search results: %s, body: %s", err, body)
+			return nil, err
 		}
-		return res, nil
-	default:
-		if body != nil {
-			respErrors, err := parseResponseErrors(body)
-			if err == nil {
-				respError := fmt.Sprintf("unexpected status code on Venafi Cloud certificate search. Status: %d\n", statusCode)
-				for _, e := range respErrors {
-					respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
+
+		switch statusCode {
+		case http.StatusOK:
+			var res = &managedCertificate{}
+			err = json.Unmarshal(body, res)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse search results: %s, body: %s", err, body)
+			}
+			return res, nil
+		default:
+			if body != nil {
+				respErrors, err := parseResponseErrors(body)
+				if err == nil {
+					if timeout != time.Duration(0) {
+						if time.Now().After(startTime.Add(timeout)) {
+							return nil, endpoint.ErrRetrieveCertificateTimeout{CertificateID: certificateId}
+						}
+					} else {
+						respError := fmt.Sprintf("unexpected status code on Venafi Cloud certificate search. Status: %d\n", statusCode)
+						for _, e := range respErrors {
+							respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
+						}
+						return nil, errors.New(respError)
+					}
 				}
-				return nil, errors.New(respError)
+			}
+			if timeout != time.Duration(0) {
+				if time.Now().After(startTime.Add(timeout)) {
+					return nil, endpoint.ErrRetrieveCertificateTimeout{CertificateID: certificateId}
+				}
+			} else {
+				return nil, fmt.Errorf("unexpected status code on Venafi Cloud certificate search. Status: %d", statusCode)
 			}
 		}
-		return nil, fmt.Errorf("unexpected status code on Venafi Cloud certificate search. Status: %d", statusCode)
+		time.Sleep(2 * time.Second)
 	}
 }
 
