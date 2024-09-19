@@ -3,6 +3,9 @@ require "json_spec/cucumber"
 
 Aruba.configure do |config|
   config.allow_absolute_paths = true
+  config.announce_stdout = true
+  config.announce_stderr = true
+  config.announce_cmd = true
 end
 
 PREFIX_CN = "vcert"
