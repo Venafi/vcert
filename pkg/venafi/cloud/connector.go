@@ -1270,6 +1270,9 @@ func (c *Connector) getCertificate(certificateId string) (*managedCertificate, e
 	url := c.getURL(urlResourceCertificateByID)
 	url = fmt.Sprintf(url, certificateId)
 
+	// TODO: Remove following retry logic once VC-31590 is fixed
+	// retry logic involves the loop to constantly, during 1 minute, to retry
+	// to get certificate each 2 seconds when it is not found in certificate inventory
 	timeout := time.Duration(60) * time.Second
 
 	startTime := time.Now()
@@ -1291,7 +1294,7 @@ func (c *Connector) getCertificate(certificateId string) (*managedCertificate, e
 			if body != nil {
 				respErrors, err := parseResponseErrors(body)
 				if err == nil {
-					if timeout != time.Duration(0) {
+					if statusCode == http.StatusNotFound {
 						if time.Now().After(startTime.Add(timeout)) {
 							return nil, endpoint.ErrRetrieveCertificateTimeout{CertificateID: certificateId}
 						}
@@ -1304,7 +1307,7 @@ func (c *Connector) getCertificate(certificateId string) (*managedCertificate, e
 					}
 				}
 			}
-			if timeout != time.Duration(0) {
+			if statusCode == http.StatusNotFound {
 				if time.Now().After(startTime.Add(timeout)) {
 					return nil, endpoint.ErrRetrieveCertificateTimeout{CertificateID: certificateId}
 				}
