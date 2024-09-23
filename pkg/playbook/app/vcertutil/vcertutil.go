@@ -122,12 +122,12 @@ func buildClient(config domain.Config, zone string, timeout int) (endpoint.Conne
 		if !connectionTrustBundle.AppendCertsFromPEM([]byte(vcertConfig.ConnectionTrust)) {
 			return nil, fmt.Errorf("%w: failed to parse PEM trust bundle", verror.UserDataError)
 		}
-		vcertConfig.Client.Transport = &http.Transport{
-			TLSClientConfig: &tls.Config{
-				RootCAs:    connectionTrustBundle,
-				MinVersion: tls.VersionTLS12,
-			},
+		netTransport.TLSClientConfig = &tls.Config{
+			RootCAs:    connectionTrustBundle,
+			MinVersion: tls.VersionTLS12,
 		}
+
+		vcertConfig.Client.Transport = netTransport
 	}
 
 	// build Authentication object

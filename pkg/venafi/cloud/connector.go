@@ -1267,8 +1267,6 @@ type managedCertificate struct {
 }
 
 func (c *Connector) getCertificate(certificateId string) (*managedCertificate, error) {
-	// Flow renew certificate
-	//var err error
 	url := c.getURL(urlResourceCertificateByID)
 	url = fmt.Sprintf(url, certificateId)
 
