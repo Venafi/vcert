@@ -1102,27 +1102,20 @@ func retrieveServiceGeneratedCertData(c *Connector, req *certificate.Request, de
 
 }
 
-func getDekInfo(c *Connector, cerId string) (*EdgeEncryptionKey, error) {
+func getDekInfo(c *Connector, certId string) (*EdgeEncryptionKey, error) {
 	//get certificate details for getting DekHash
-	url := c.getURL(urlResourceCertificateByID)
-	url = fmt.Sprintf(url, cerId)
 
-	statusCode, status, body, err := c.request("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	managedCert, err := parseCertificateInfo(statusCode, status, body)
+	managedCert, err := c.getCertificate(certId)
 
 	if err != nil {
 		return nil, err
 	}
 
 	//get Dek info for getting DEK's key
-	url = c.getURL(urlDekPublicKey)
+	url := c.getURL(urlDekPublicKey)
 	url = fmt.Sprintf(url, managedCert.DekHash)
 
-	statusCode, status, body, err = c.request("GET", url, nil)
+	statusCode, status, body, err := c.request("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -1274,35 +1267,67 @@ type managedCertificate struct {
 }
 
 func (c *Connector) getCertificate(certificateId string) (*managedCertificate, error) {
-	var err error
 	url := c.getURL(urlResourceCertificateByID)
 	url = fmt.Sprintf(url, certificateId)
-	statusCode, _, body, err := c.request("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
 
-	switch statusCode {
-	case http.StatusOK:
-		var res = &managedCertificate{}
-		err = json.Unmarshal(body, res)
+	// TODO: Remove following retry logic once VC-31590 is fixed
+	// retry logic involves the loop to constantly, during 1 minute, to retry
+	// to get certificate each 2 seconds when it is not found in certificate inventory
+	timeout := time.Duration(60) * time.Second
+
+	startTime := time.Now()
+	for {
+		statusCode, _, body, err := c.request("GET", url, nil)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse search results: %s, body: %s", err, body)
+			return nil, err
 		}
-		return res, nil
-	default:
-		if body != nil {
-			respErrors, err := parseResponseErrors(body)
-			if err == nil {
-				respError := fmt.Sprintf("unexpected status code on Venafi Cloud certificate search. Status: %d\n", statusCode)
-				for _, e := range respErrors {
-					respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
+
+		switch statusCode {
+		case http.StatusOK:
+			var res = &managedCertificate{}
+			err = json.Unmarshal(body, res)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse search results: %s, body: %s", err, body)
+			}
+			return res, nil
+		default:
+			if body != nil {
+				respErrors, err := parseResponseErrors(body)
+				if err == nil {
+					err = validateNotFoundTimeout(statusCode, startTime, timeout, certificateId, respErrors)
+					if err != nil {
+						return nil, err
+					}
 				}
-				return nil, errors.New(respError)
+				return nil, err
+			}
+			err = validateNotFoundTimeout(statusCode, startTime, timeout, certificateId, []responseError{})
+			if err != nil {
+				return nil, err
 			}
 		}
-		return nil, fmt.Errorf("unexpected status code on Venafi Cloud certificate search. Status: %d", statusCode)
+		time.Sleep(2 * time.Second)
 	}
+}
+
+// validateNotFoundTimeout function that returns nil for not found error if waiting time for timeout is not
+// completed. This is while status code is NotFound
+func validateNotFoundTimeout(statusCode int, startTime time.Time, timeout time.Duration, certificateId string, respErrors []responseError) error {
+	respError := fmt.Sprintf("unexpected status code on Venafi Cloud certificate search. Status: %d\n", statusCode)
+	if statusCode == http.StatusNotFound {
+		if time.Now().After(startTime.Add(timeout)) {
+			return endpoint.ErrRetrieveCertificateTimeout{CertificateID: certificateId}
+		}
+	} else {
+		if len(respErrors) > 0 {
+			for _, e := range respErrors {
+				respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
+			}
+			return errors.New(respError)
+		}
+		return errors.New(respError)
+	}
+	return nil
 }
 
 func (c *Connector) getCertsBatch(page, pageSize int, withExpired bool) ([]certificate.CertificateInfo, error) {

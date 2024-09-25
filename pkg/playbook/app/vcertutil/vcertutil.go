@@ -23,6 +23,7 @@ import (
 	"crypto/x509/pkix"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -86,6 +87,18 @@ func EnrollCertificate(config domain.Config, request domain.PlaybookRequest) (*c
 }
 
 func buildClient(config domain.Config, zone string, timeout int) (endpoint.Connector, error) {
+	var netTransport = &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   time.Duration(timeout) * time.Second,
+			KeepAlive: time.Duration(timeout) * time.Second,
+		}).DialContext,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
+
 	vcertConfig := &vcert.Config{
 		ConnectorType:   config.Connection.GetConnectorType(),
 		BaseUrl:         config.Connection.URL,
@@ -95,7 +108,8 @@ func buildClient(config domain.Config, zone string, timeout int) (endpoint.Conne
 	}
 
 	vcertConfig.Client = &http.Client{
-		Timeout: time.Duration(DefaultTimeout) * time.Second,
+		Timeout:   time.Duration(DefaultTimeout) * time.Second,
+		Transport: netTransport,
 	}
 	if timeout > 0 {
 		vcertConfig.Client.Timeout = time.Duration(timeout) * time.Second
@@ -108,12 +122,12 @@ func buildClient(config domain.Config, zone string, timeout int) (endpoint.Conne
 		if !connectionTrustBundle.AppendCertsFromPEM([]byte(vcertConfig.ConnectionTrust)) {
 			return nil, fmt.Errorf("%w: failed to parse PEM trust bundle", verror.UserDataError)
 		}
-		vcertConfig.Client.Transport = &http.Transport{
-			TLSClientConfig: &tls.Config{
-				RootCAs:    connectionTrustBundle,
-				MinVersion: tls.VersionTLS12,
-			},
+		netTransport.TLSClientConfig = &tls.Config{
+			RootCAs:    connectionTrustBundle,
+			MinVersion: tls.VersionTLS12,
 		}
+
+		vcertConfig.Client.Transport = netTransport
 	}
 
 	// build Authentication object
