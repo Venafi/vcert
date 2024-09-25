@@ -1294,29 +1294,40 @@ func (c *Connector) getCertificate(certificateId string) (*managedCertificate, e
 			if body != nil {
 				respErrors, err := parseResponseErrors(body)
 				if err == nil {
-					if statusCode == http.StatusNotFound {
-						if time.Now().After(startTime.Add(timeout)) {
-							return nil, endpoint.ErrRetrieveCertificateTimeout{CertificateID: certificateId}
-						}
-					} else {
-						respError := fmt.Sprintf("unexpected status code on Venafi Cloud certificate search. Status: %d\n", statusCode)
-						for _, e := range respErrors {
-							respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
-						}
-						return nil, errors.New(respError)
+					err = validateNotFoundTimeout(statusCode, startTime, timeout, certificateId, respErrors)
+					if err != nil {
+						return nil, err
 					}
 				}
+				return nil, err
 			}
-			if statusCode == http.StatusNotFound {
-				if time.Now().After(startTime.Add(timeout)) {
-					return nil, endpoint.ErrRetrieveCertificateTimeout{CertificateID: certificateId}
-				}
-			} else {
-				return nil, fmt.Errorf("unexpected status code on Venafi Cloud certificate search. Status: %d", statusCode)
+			err = validateNotFoundTimeout(statusCode, startTime, timeout, certificateId, []responseError{})
+			if err != nil {
+				return nil, err
 			}
 		}
 		time.Sleep(2 * time.Second)
 	}
+}
+
+// validateNotFoundTimeout function that returns nil for not found error if waiting time for timeout is not
+// completed. This is while status code is NotFound
+func validateNotFoundTimeout(statusCode int, startTime time.Time, timeout time.Duration, certificateId string, respErrors []responseError) error {
+	respError := fmt.Sprintf("unexpected status code on Venafi Cloud certificate search. Status: %d\n", statusCode)
+	if statusCode == http.StatusNotFound {
+		if time.Now().After(startTime.Add(timeout)) {
+			return endpoint.ErrRetrieveCertificateTimeout{CertificateID: certificateId}
+		}
+	} else {
+		if len(respErrors) > 0 {
+			for _, e := range respErrors {
+				respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
+			}
+			return errors.New(respError)
+		}
+		return errors.New(respError)
+	}
+	return nil
 }
 
 func (c *Connector) getCertsBatch(page, pageSize int, withExpired bool) ([]certificate.CertificateInfo, error) {
