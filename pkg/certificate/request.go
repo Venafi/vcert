@@ -22,15 +22,21 @@ import (
 // Request contains data needed to generate a certificate request
 // CSR is a PEM-encoded Certificate Signing Request
 type Request struct {
-	CADN               string
-	Subject            pkix.Name
-	DNSNames           []string
-	OmitSANs           bool
-	EmailAddresses     []string
-	IPAddresses        []net.IP
-	URIs               []*url.URL
-	UPNs               []string
-	Attributes         []pkix.AttributeTypeAndValueSET
+	CADN           string
+	Subject        pkix.Name
+	DNSNames       []string
+	OmitSANs       bool
+	EmailAddresses []string
+	IPAddresses    []net.IP
+	URIs           []*url.URL
+	UPNs           []string
+	// Deprecated: Attributes is deprecated from X509.CertificateRequest. See ExtraExtensions
+	// instead. Values override any extensions that would otherwise be produced based on the
+	// other fields but are overridden by any extensions specified in Attributes.
+	Attributes []pkix.AttributeTypeAndValueSET
+	// ExtraExtensions may include SAN values and ExtKeyUsage values. If these are
+	// specified as part of ExtraExtensions, they will override the other specified values.
+	ExtraExtensions    []pkix.Extension
 	SignatureAlgorithm x509.SignatureAlgorithm
 	FriendlyName       string
 	KeyType            KeyType
@@ -88,6 +94,9 @@ type Request struct {
 	// directly in the TPP UI.
 	Contacts []string
 
+	// Allow user to specify whether to include
+	ExtKeyUsages ExtKeyUsageSlice
+
 	// Deprecated: use ValidityDuration instead, this field is ignored if ValidityDuration is set
 	ValidityHours int
 }
@@ -123,9 +132,26 @@ func (request *Request) GetCSR() []byte {
 func (request *Request) GenerateCSR() error {
 	certificateRequest := x509.CertificateRequest{}
 	certificateRequest.Subject = request.Subject
+
 	if !request.OmitSANs {
 		addSubjectAltNames(&certificateRequest, request.DNSNames, request.EmailAddresses, request.IPAddresses, request.URIs, request.UPNs)
 	}
+
+	if request.ExtKeyUsages != nil {
+		err := addExtKeyUsage(&certificateRequest, request.ExtKeyUsages)
+		if err != nil {
+			return fmt.Errorf("%w: %s %w", verror.VcertError, "failed to add requested EKUs", err)
+		}
+	}
+
+	// If ExtraExtensions are included in request, they may override the SANs and ExtKeyUsages
+	//  that were included. This is by design, so that developers using the SDK are able to
+	//  craft specific and strange CSRs if required by their use-case, and they won't be clobbered
+	//  by other settings.
+	if request.ExtraExtensions != nil {
+		certificateRequest.ExtraExtensions = request.ExtraExtensions
+	}
+
 	certificateRequest.Attributes = request.Attributes
 
 	csr, err := x509.CreateCertificateRequest(rand.Reader, &certificateRequest, request.PrivateKey)
