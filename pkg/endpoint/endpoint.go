@@ -85,6 +85,10 @@ type Connector interface {
 	// SetHTTPClient allows to set custom http.Client to this Connector.
 	SetHTTPClient(client *http.Client)
 	Ping() (err error)
+	// SetAuthentication can be used to set the authentication details for the connector, it does not perform the validation
+	// done by Authenticate. It is useful when you want to set the authentication details without validating them.
+	SetAuthentication(auth *Authentication) (err error)
+	// Authenticate calls SetAuthentication and then validates the authentication details by making a request to the server.
 	// Authenticate is usually called by NewClient and it is not required that you manually call it.
 	Authenticate(auth *Authentication) (err error)
 
