@@ -16,11 +16,14 @@
 
 package cloud
 
+import "time"
+
 type VenafiCertificate struct {
-	ID                   string `json:"id,omitempty"`
-	CertificateStatus    string `json:"certificateStatus,omitempty"`
-	CertificateRequestId string `json:"certificateRequestId,omitempty"`
-	DekHash              string `json:"dekHash,omitempty"`
-	Fingerprint          string `json:"fingerprint,omitempty"`
-	CertificateSource    string `json:"certificateSource,omitempty"`
+	ID                   string    `json:"id,omitempty"`
+	CertificateStatus    string    `json:"certificateStatus,omitempty"`
+	CertificateRequestId string    `json:"certificateRequestId,omitempty"`
+	DekHash              string    `json:"dekHash,omitempty"`
+	Fingerprint          string    `json:"fingerprint,omitempty"`
+	CertificateSource    string    `json:"certificateSource,omitempty"`
+	ValidityEnd          time.Time `json:"validityEnd"`
 }
