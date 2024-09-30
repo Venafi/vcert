@@ -84,15 +84,15 @@ test: get linter
 	go tool cover -func=cov_cmd.out
 
 tpp_test: get
-	go test -v $(GOFLAGS) -coverprofile=cov_tpp.out ./pkg/venafi/tpp -timeout $(TEST_TIMEOUT)
+	go test -v $(GOFLAGS) -coverprofile=cov_tpp.out ./pkg/venafi/tpp -timeout $$TEST_TIMEOUT
 	go tool cover -func=cov_tpp.out
 
 cloud_test: get
-	go test -v $(GOFLAGS) -coverprofile=cov_vaas.out ./pkg/venafi/cloud -timeout $(TEST_TIMEOUT)
+	go test -v $(GOFLAGS) -coverprofile=cov_vaas.out ./pkg/venafi/cloud -timeout $$TEST_TIMEOUT
 	go tool cover -func=cov_vaas.out
 
 firefly_test: get
-	go test -v $(GOFLAGS) -coverprofile=cov_firefly.out ./pkg/venafi/firefly -timeout $(TEST_TIMEOUT)
+	go test -v $(GOFLAGS) -coverprofile=cov_firefly.out ./pkg/venafi/firefly -timeout $$TEST_TIMEOUT
 	go tool cover -func=cov_firefly.out
 
 cmd_test: get
