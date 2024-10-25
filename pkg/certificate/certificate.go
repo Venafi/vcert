@@ -41,7 +41,7 @@ const (
 )
 
 func AllSupportedKeySizes() []int {
-	return []int{1024, DefaultRSAlength, 4096, 8192}
+	return []int{1024, DefaultRSAlength, 3072, 4096, 8192}
 }
 
 //SSH Certificate structures
