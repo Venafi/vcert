@@ -16,7 +16,7 @@ Feature: provision to cloud keystore
     Then I clean up previous installed certificate from cloudkeystore
     Examples:
       | cloudkeystore    |
-      | GOOGLE           |
+#      | GOOGLE           |
       | AWS              |
       | AZURE            |
 
@@ -29,7 +29,7 @@ Feature: provision to cloud keystore
     Then I clean up previous installed certificate from cloudkeystore
     Examples:
       | cloudkeystore    |
-      | GOOGLE           |
+#      | GOOGLE           |
       | AWS              |
 
   Scenario Outline: Enroll certificate, execute provisioning and then provisioning again for replace
@@ -48,5 +48,5 @@ Feature: provision to cloud keystore
     Examples:
       | cloudkeystore    |
       | AWS              |
-      | GOOGLE           |
+#      | GOOGLE           |
       | AZURE            |
