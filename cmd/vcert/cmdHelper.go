@@ -43,7 +43,7 @@ import (
 var tlsConfig tls.Config
 
 func runBeforeCommand(c *cli.Context) error {
-	//TODO: move all flag validations here
+	//TODO: refactor flags to specified command. If command doesn't use it, flag should be ignored.
 	flags.orgUnits = c.StringSlice("ou")
 	flags.dnsSans = c.StringSlice("san-dns")
 	flags.emailSans = c.StringSlice("san-email")
@@ -95,6 +95,13 @@ func runBeforeCommand(c *cli.Context) error {
 		}
 	}
 
+	return nil
+}
+
+func runBeforeProvisionCommand(c *cli.Context) error {
+	if flags.platformString != "" {
+		flags.platform = venafi.GetPlatformType(flags.platformString)
+	}
 	return nil
 }
 
