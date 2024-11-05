@@ -2002,7 +2002,7 @@ func TestReadPolicyConfiguration(t *testing.T) {
 				[]string{"^Utah$"},
 				[]string{"^Salt Lake$"},
 				[]string{"^US$"},
-				[]endpoint.AllowedKeyConfiguration{{certificate.KeyTypeRSA, []int{2048, 4096, 8192}, nil}},
+				[]endpoint.AllowedKeyConfiguration{{certificate.KeyTypeRSA, []int{2048, 3072, 4096, 8192}, nil}},
 				[]string{`^([\p{L}\p{N}-*]+\.)*vfidev\.com$`, `^([\p{L}\p{N}-*]+\.)*vfidev\.net$`, `^([\p{L}\p{N}-*]+\.)*vfide\.org$`},
 				[]string{".*"},
 				[]string{".*"},
