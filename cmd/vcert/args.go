@@ -156,4 +156,5 @@ type commandFlags struct {
 	provisionOutputFile  string
 	provisionPickupID    string
 	provisionFormat      string
+	extKeyUsage          certificate.ExtKeyUsageSlice
 }
