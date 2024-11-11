@@ -17,10 +17,10 @@ func validateConnectionFlagsCloud(commandName string) error {
 		emailPresent := flags.email != ""
 
 		if tokenURLPresent && !jwtPresent {
-			return fmt.Errorf("missing jwt for service account authentication. Set the jwt using --idp-jwt flag")
+			return fmt.Errorf("missing jwt for service account authentication. Set the jwt using --external-jwt flag")
 		}
 
-		advice := "Use --token-url/--idp-jwt for authentication or --email for registration"
+		advice := "Use --token-url/--external-jwt for authentication or --email for registration"
 		if !svcAccountPresent && !emailPresent {
 			return fmt.Errorf("missing flags for Venafi Cloud Platform authentication. %s", advice)
 		}
