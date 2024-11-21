@@ -2863,6 +2863,9 @@ func TestSetPolicyValuesAndValidate(t *testing.T) {
 func TestCreateSshCertServiceGeneratedKP(t *testing.T) {
 
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
 
 	duration := 4
 
@@ -2927,6 +2930,10 @@ func TestCreateSshCertServiceGeneratedKP(t *testing.T) {
 func TestCreateSshCertLocalGeneratedKP(t *testing.T) {
 
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
 
 	duration := 4
 

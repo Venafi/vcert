@@ -57,7 +57,7 @@ func RequestSshCertificate(c *Connector, req *certificate.SshCertRequest) (*cert
 	response, err := parseSshCertOperationResponse(statusCode, status, body)
 
 	if err != nil {
-		if &response != nil && response.Response.ErrorMessage != "" && c.verbose {
+		if response.Response.ErrorMessage != "" && c.verbose {
 			log.Println(util.GetJsonAsString(response.Response))
 		}
 		return nil, err
