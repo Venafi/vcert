@@ -1814,7 +1814,6 @@ func TestRenewCertRestoringValues(t *testing.T) {
 	req.KeyType = certificate.KeyTypeECDSA
 	req.KeyCurve = certificate.EllipticCurveP521
 	req.CsrOrigin = certificate.ServiceGeneratedCSR
-	req.Timeout = time.Second * 10
 	err = tpp.GenerateRequest(&endpoint.ZoneConfiguration{}, req)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
@@ -2288,7 +2287,6 @@ func TestEnrollWithLocation(t *testing.T) {
 
 	req := certificate.Request{}
 	req.Subject.CommonName = cn
-	req.Timeout = time.Second * 10
 	req.Location = &certificate.Location{
 		Instance:   "instance",
 		Workload:   workload,
@@ -2305,7 +2303,6 @@ func TestEnrollWithLocation(t *testing.T) {
 	}
 	req = certificate.Request{}
 	req.Subject.CommonName = cn
-	req.Timeout = time.Second * 10
 	req.Location = &certificate.Location{
 		Instance:   "instance",
 		Workload:   workload,
@@ -2322,7 +2319,6 @@ func TestEnrollWithLocation(t *testing.T) {
 	}
 	req = certificate.Request{}
 	req.Subject.CommonName = cn
-	req.Timeout = time.Second * 10
 	req.Location = &certificate.Location{
 		Instance:   "instance",
 		Workload:   workload,
@@ -2880,7 +2876,6 @@ func TestCreateSshCertServiceGeneratedKP(t *testing.T) {
 	req.ValidityPeriod = fmt.Sprint(duration, "h")
 	req.Template = os.Getenv("TPP_SSH_CA")
 	req.SourceAddresses = []string{"test.com"}
-	req.Timeout = time.Second * 10
 
 	respData, err := tpp.RequestSSHCertificate(req)
 
@@ -2959,7 +2954,6 @@ func TestCreateSshCertLocalGeneratedKP(t *testing.T) {
 	req.ValidityPeriod = fmt.Sprint(duration, "h")
 	req.Template = os.Getenv("TPP_SSH_CA")
 	req.SourceAddresses = []string{"test.com"}
-	req.Timeout = time.Second * 10
 
 	sPubKey := string(pub)
 
