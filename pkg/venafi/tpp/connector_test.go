@@ -1827,6 +1827,11 @@ func TestRenewCertRestoringValues(t *testing.T) {
 	req.FetchPrivateKey = true
 	req.KeyPassword = os.Getenv("TPP_PASSWORD")
 
+	req.Timeout = time.Second * 30 // explicitly setting this value here
+	// to make sure we only wait for certificate issuance for 30 seconds because
+	// setting it before the RequestCertificate function, will override
+	// workToDoTimeout to only wait to 30 seconds
+
 	pcc, err := tpp.RetrieveCertificate(req)
 	if err != nil {
 		t.Fatal(err)
@@ -1846,11 +1851,11 @@ func TestRenewCertRestoringValues(t *testing.T) {
 	renewReq := certificate.RenewalRequest{
 		CertificateDN: req.PickupID,
 	}
-	pickupdID, err := tpp.RenewCertificate(&renewReq)
+	pickupID, err := tpp.RenewCertificate(&renewReq)
 	if err != nil {
 		t.Fatal(err)
 	}
-	req = &certificate.Request{PickupID: pickupdID, Timeout: 30 * time.Second}
+	req = &certificate.Request{PickupID: pickupID, Timeout: 30 * time.Second}
 	pcc, err = tpp.RetrieveCertificate(req)
 	if err != nil {
 		t.Fatal(err)

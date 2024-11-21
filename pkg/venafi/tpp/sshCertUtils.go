@@ -46,7 +46,9 @@ func RequestSshCertificate(c *Connector, req *certificate.SshCertRequest) (*cert
 	}
 
 	//TODO: Maybe, there is a better way to set the timeout.
-	c.client.Timeout = time.Duration(req.Timeout) * time.Second
+	if req.Timeout > 0 {
+		c.client.Timeout = req.Timeout * time.Second
+	}
 	statusCode, status, body, err := c.request("POST", urlResourceSshCertReq, sshCertReq)
 	if err != nil {
 		return nil, err
@@ -55,7 +57,7 @@ func RequestSshCertificate(c *Connector, req *certificate.SshCertRequest) (*cert
 	response, err := parseSshCertOperationResponse(statusCode, status, body)
 
 	if err != nil {
-		if response.Response.ErrorMessage != "" && c.verbose {
+		if &response != nil && response.Response.ErrorMessage != "" && c.verbose {
 			log.Println(util.GetJsonAsString(response.Response))
 		}
 		return nil, err
