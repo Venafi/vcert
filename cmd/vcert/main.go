@@ -35,6 +35,10 @@ var (
 	exit   = os.Exit
 )
 
+func init() {
+	log.SetPrefix(UtilityShortName + ": ")
+}
+
 // UtilityName is the full name of the command-line utility
 const UtilityName string = "Venafi Certificate Utility"
 
