@@ -6,7 +6,7 @@ require (
 	github.com/Khan/genqlient v0.7.0
 	github.com/go-http-utils/headers v0.0.0-20181008091004-fed159eddc2a
 	github.com/google/uuid v1.6.0
-	github.com/gorilla/websocket v1.5.1
+	github.com/gorilla/websocket v1.5.3
 	github.com/howeyc/gopass v0.0.0-20170109162249-bf9dde6d0d2c
 	github.com/pavel-v-chernykh/keystore-go/v4 v4.1.0
 	github.com/pkg/errors v0.8.1
