@@ -12,6 +12,21 @@ Feature: provision to cloud keystore
     And I remember the output
     And I use previous Pickup ID to provision from VCP a certificate to cloudkeystore "<cloudkeystore>" setting keystore and provider names
     And I remember the output
+      And the output should not contain "Warning: --platform not set. Attempting to best-guess platform from connection flags"
+    And I grab cloud ID from output
+    Then I clean up previous installed certificate from cloudkeystore
+    Examples:
+      | cloudkeystore    |
+      | GOOGLE           |
+      | AWS              |
+      | AZURE            |
+
+  Scenario Outline: Enroll certificate and execute provisioning for cloud keystore without Platform flags
+    Given I enroll a random certificate with defined platform VCP with -csr service -no-prompt
+    And I remember the output
+    And I use previous Pickup ID to provision without set Platform flag from VCP a certificate to cloudkeystore "<cloudkeystore>" setting keystore and provider names
+    And I remember the output
+      And the output should contain "Warning: --platform not set. Attempting to best-guess platform from connection flags"
     And I grab cloud ID from output
     Then I clean up previous installed certificate from cloudkeystore
     Examples:
@@ -31,6 +46,7 @@ Feature: provision to cloud keystore
       | cloudkeystore    |
       | GOOGLE           |
       | AWS              |
+      | AZURE            |
 
   Scenario Outline: Enroll certificate, execute provisioning and then provisioning again for replace
     Given I enroll a random certificate with defined platform VCP with -csr service -no-prompt

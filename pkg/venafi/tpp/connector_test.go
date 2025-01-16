@@ -1814,7 +1814,6 @@ func TestRenewCertRestoringValues(t *testing.T) {
 	req.KeyType = certificate.KeyTypeECDSA
 	req.KeyCurve = certificate.EllipticCurveP521
 	req.CsrOrigin = certificate.ServiceGeneratedCSR
-	req.Timeout = time.Second * 10
 	err = tpp.GenerateRequest(&endpoint.ZoneConfiguration{}, req)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
@@ -1827,6 +1826,11 @@ func TestRenewCertRestoringValues(t *testing.T) {
 
 	req.FetchPrivateKey = true
 	req.KeyPassword = os.Getenv("TPP_PASSWORD")
+
+	req.Timeout = time.Second * 30 // explicitly setting this value here
+	// to make sure we only wait for certificate issuance for 30 seconds because
+	// setting it before the RequestCertificate function, will override
+	// workToDoTimeout to only wait to 30 seconds
 
 	pcc, err := tpp.RetrieveCertificate(req)
 	if err != nil {
@@ -1847,11 +1851,11 @@ func TestRenewCertRestoringValues(t *testing.T) {
 	renewReq := certificate.RenewalRequest{
 		CertificateDN: req.PickupID,
 	}
-	pickupdID, err := tpp.RenewCertificate(&renewReq)
+	pickupID, err := tpp.RenewCertificate(&renewReq)
 	if err != nil {
 		t.Fatal(err)
 	}
-	req = &certificate.Request{PickupID: pickupdID, Timeout: 30 * time.Second}
+	req = &certificate.Request{PickupID: pickupID, Timeout: 30 * time.Second}
 	pcc, err = tpp.RetrieveCertificate(req)
 	if err != nil {
 		t.Fatal(err)
@@ -2002,7 +2006,7 @@ func TestReadPolicyConfiguration(t *testing.T) {
 				[]string{"^Utah$"},
 				[]string{"^Salt Lake$"},
 				[]string{"^US$"},
-				[]endpoint.AllowedKeyConfiguration{{certificate.KeyTypeRSA, []int{2048, 4096, 8192}, nil}},
+				[]endpoint.AllowedKeyConfiguration{{certificate.KeyTypeRSA, []int{2048, 3072, 4096, 8192}, nil}},
 				[]string{`^([\p{L}\p{N}-*]+\.)*vfidev\.com$`, `^([\p{L}\p{N}-*]+\.)*vfidev\.net$`, `^([\p{L}\p{N}-*]+\.)*vfide\.org$`},
 				[]string{".*"},
 				[]string{".*"},
@@ -2288,7 +2292,6 @@ func TestEnrollWithLocation(t *testing.T) {
 
 	req := certificate.Request{}
 	req.Subject.CommonName = cn
-	req.Timeout = time.Second * 10
 	req.Location = &certificate.Location{
 		Instance:   "instance",
 		Workload:   workload,
@@ -2305,7 +2308,6 @@ func TestEnrollWithLocation(t *testing.T) {
 	}
 	req = certificate.Request{}
 	req.Subject.CommonName = cn
-	req.Timeout = time.Second * 10
 	req.Location = &certificate.Location{
 		Instance:   "instance",
 		Workload:   workload,
@@ -2322,7 +2324,6 @@ func TestEnrollWithLocation(t *testing.T) {
 	}
 	req = certificate.Request{}
 	req.Subject.CommonName = cn
-	req.Timeout = time.Second * 10
 	req.Location = &certificate.Location{
 		Instance:   "instance",
 		Workload:   workload,
@@ -2862,6 +2863,9 @@ func TestSetPolicyValuesAndValidate(t *testing.T) {
 func TestCreateSshCertServiceGeneratedKP(t *testing.T) {
 
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
 
 	duration := 4
 
@@ -2880,7 +2884,6 @@ func TestCreateSshCertServiceGeneratedKP(t *testing.T) {
 	req.ValidityPeriod = fmt.Sprint(duration, "h")
 	req.Template = os.Getenv("TPP_SSH_CA")
 	req.SourceAddresses = []string{"test.com"}
-	req.Timeout = time.Second * 10
 
 	respData, err := tpp.RequestSSHCertificate(req)
 
@@ -2928,6 +2931,10 @@ func TestCreateSshCertLocalGeneratedKP(t *testing.T) {
 
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+
 	duration := 4
 
 	tpp.verbose = true
@@ -2959,7 +2966,6 @@ func TestCreateSshCertLocalGeneratedKP(t *testing.T) {
 	req.ValidityPeriod = fmt.Sprint(duration, "h")
 	req.Template = os.Getenv("TPP_SSH_CA")
 	req.SourceAddresses = []string{"test.com"}
-	req.Timeout = time.Second * 10
 
 	sPubKey := string(pub)
 

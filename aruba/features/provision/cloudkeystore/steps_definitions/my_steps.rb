@@ -1,13 +1,20 @@
 And(/^I use previous Pickup ID to provision (?:from|using) (\S+) a certificate to cloudkeystore "(.*)"( setting keystore and provider names)?$/) do |platform, cloudkeystore_type, keystore_provider_names|
 
-  cmd = build_provision_cmd(platform, cloudkeystore_type, keystore_provider_names)
+  cmd = build_provision_cmd(platform, cloudkeystore_type, keystore_provider_names, "",true)
+
+  steps %{Then I try to run `#{cmd}`}
+end
+
+And(/^I use previous Pickup ID to provision without set Platform flag (?:from|using) (\S+) a certificate to cloudkeystore "(.*)"( setting keystore and provider names)?$/) do |platform, cloudkeystore_type, keystore_provider_names|
+
+  cmd = build_provision_cmd(platform, cloudkeystore_type, keystore_provider_names, "",false)
 
   steps %{Then I try to run `#{cmd}`}
 end
 
 And(/^I use previous Pickup ID to provision (?:from|using) (\S+) a certificate to cloudkeystore "(.*)"( setting keystore and provider names)? with (.+)?/) do |platform, cloudkeystore_type, keystore_provider_names, flags|
 
-  cmd = build_provision_cmd(platform, cloudkeystore_type, keystore_provider_names, flags)
+  cmd = build_provision_cmd(platform, cloudkeystore_type, keystore_provider_names, flags, true)
 
   steps %{Then I try to run `#{cmd}`}
 end
@@ -26,17 +33,20 @@ And(/^I use previous Pickup ID and cloud ID to provision again$/) do
     fail(ArgumentError.new("Unknown cloud type: #{@cloudkeystore_type}"))
   end
   flags += @global_set_provision_flags
-  cmd = build_provision_cmd(PLATFORM_VCP, @cloudkeystore_type, keystore_provider_names, flags)
+  cmd = build_provision_cmd(PLATFORM_VCP, @cloudkeystore_type, keystore_provider_names, flags, true)
   steps %{Then I try to run `#{cmd}`}
 end
 
-def build_provision_cmd(platform, cloudkeystore_type, keystore_provider_names, flags = "")
+def build_provision_cmd(platform, cloudkeystore_type, keystore_provider_names, flags = "", set_platform_flag=true)
 
   @global_set_provision_flags = flags
 
-  platform_flag = " -platform " + platform
+  cmd = "vcert provision cloudkeystore #{ENDPOINTS[PLATFORM_VCP]} -pickup-id #{@pickup_id}"
 
-  cmd = "vcert provision cloudkeystore #{platform_flag} #{ENDPOINTS[PLATFORM_VCP]} -pickup-id #{@pickup_id}"
+  if set_platform_flag
+    platform_flag = " -platform " + platform
+    cmd = cmd + platform_flag
+  end
 
   keystore_name = ""
   provider_name = ""
