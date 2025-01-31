@@ -32,8 +32,10 @@ const (
 	capiLocationLocalMachine = "localmachine"
 )
 
-var validStoreNames = []string{"addressbook", "authroot", "certificateauthority", "disallowed", "my", "root",
-	"trustedpeople", "trustedpublisher"}
+// Recommend removing store validation - this can cause conflicts for scenarios such as SNI:
+// https://learn.microsoft.com/en-us/iis/get-started/whats-new-in-iis-8/iis-80-server-name-indication-sni-ssl-scalability
+// var validStoreNames = []string{"addressbook", "authroot", "certificateauthority", "disallowed", "my", "root",
+// 	"trustedpeople", "trustedpublisher"}
 
 // Installation represents a location in which a certificate will be installed,
 // along with the format in which it will be installed
@@ -128,17 +130,20 @@ func validateCAPI(installation Installation) error {
 
 	// valid store names from https://learn.microsoft.com/en-us/dotnet/api/system.security.cryptography.x509certificates.storename?view=net-7.0
 	// Although it is unlikely that you'd want to install a certificate and private key in anything but "my", here for completeness
-	isValidStoreName := false
-	for _, v := range validStoreNames {
-		if v == strings.ToLower(segments[1]) {
-			isValidStoreName = true
-			break
-		}
-	}
 
-	if !isValidStoreName {
-		return ErrInvalidCAPIStoreName
-	}
+	// Removing validation check. Web Hosting is a common CAPI store location specifically designed to scale for IIS installations using a large number of certificates:
+	// https://learn.microsoft.com/en-us/iis/get-started/whats-new-in-iis-8/iis-80-server-name-indication-sni-ssl-scalability
+	// isValidStoreName := false
+	// for _, v := range validStoreNames {
+	// 	if v == strings.ToLower(segments[1]) {
+	// 		isValidStoreName = true
+	// 		break
+	// 	}
+	// }
+
+	// if !isValidStoreName {
+	// 	return ErrInvalidCAPIStoreName
+	// }
 
 	return nil
 }
