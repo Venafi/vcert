@@ -47,9 +47,11 @@ Use these links to quickly jump to a relevant section lower on this page:
 
 Review these prerequisites to get started. You'll need the following:
 
-1. Verify that the Venafi Control Plane REST API at [https://api.venafi.cloud](https://api.venafi.cloud/vaas) or 
-[https://api.venafi.eu](https://api.eu.venafi.cloud/vaas) (if you have an EU account) is accessible from the system where 
-VCert will be run.
+1. Verify that the Venafi Control Plane REST API is accessible from the system where
+   VCert will be run. Currently, we support the following regions:
+    - [https://api.venafi.cloud](https://api.venafi.cloud/vaas) [US]
+    - [https://api.venafi.eu](https://api.eu.venafi.cloud/vaas) [EU]
+    - [https://api.au.venafi.cloud](https://api.au.venafi.cloud/vaas) [AU]
 2. You have successfully registered for a Venafi Control Plane account, have been granted at least the "Resource Owner" 
 role, and know your API key. You can use the `getcred` action to
 [register and obtain an API key](#registering-and-obtaining-an-api-key), but you will need an administrator to update 
@@ -89,7 +91,7 @@ The following options apply to the `enroll`, `pickup`, and `renew` actions:
 | `--test-mode-delay`  | Use to specify the maximum number of seconds for the random test-mode connection delay.  Default is 15 (seconds).                                                                                                                                                                                                                                                                                                                             |
 | `--timeout`          | Use to specify the maximum amount of time to wait in seconds for a certificate to be processed by Venafi Control Plane. Default is 120 (seconds).                                                                                                                                                                                                                                                                                             |
 | `--trust-bundle`     | Use to specify a file with PEM formatted certificates to be used as trust anchors when communicating with Venafi Control Plane.  Generally not needed because VCP is secured by a publicly trusted certificate, but it may be needed if your organization requires VCert to traverse a proxy server. VCert uses the trust store of your operating system for this purpose if not specified.<br/>Example: `--trust-bundle /path-to/bundle.pem` |
-| `-u` or `--url`      | Use to specify the URL of the Venafi Control Plane API server. If it's omitted, then VCert will use [https://api.venafi.cloud](https://api.venafi.cloud/vaas) as API server. <br/>Example: `-u https://api.venafi.eu`                                                                                                                                                                                                                         |
+| `-u` or `--url`      | Use to specify the URL of the Venafi Control Plane API server. Currently, we support the following regions:<br/>- `https://api.venafi.cloud` (US region).<br/>- `https://api.venafi.eu` (EU region).<br/>- `https://api.au.venafi.cloud` (AU region).<br/> If it's omitted, then VCert will default to US region. <br/>Example: `-u https://api.venafi.eu`                                                                                    |
 | `--verbose`          | Use to increase the level of logging detail, which is helpful when troubleshooting issues.                                                                                                                                                                                                                                                                                                                                                    |
 
 ### Environment Variables
@@ -302,8 +304,11 @@ Options:
 
 For the purposes of the following examples, assume the following:
 
-- The Venafi Control Plane REST API is accessible at [https://api.venafi.cloud](https://api.venafi.cloud/vaas) 
-or [https://api.eu.venafi.cloud](https://api.eu.venafi.cloud/vaas)
+- The Venafi Control Plane REST API is accessible from the system where
+  VCert will be run. Currently, we support the following regions:
+    - [https://api.venafi.cloud](https://api.venafi.cloud/vaas) [US]
+    - [https://api.venafi.eu](https://api.eu.venafi.cloud/vaas) [EU]
+    - [https://api.au.venafi.cloud](https://api.au.venafi.cloud/vaas) [AU]
 - A user has been registered and granted at least the `OP Resource Owner` role and has an API key. 
 - A CA Account and Issuing Template have been created and configured appropriately (organization, city, state, country, 
 key length, allowed domains, etc.). 
