@@ -138,7 +138,7 @@ COPYRIGHT:
 SUPPORT:
    opensource@venafi.com
 {{end}}
-`, vcert.GetFormattedVersionString(), vcert.GetFormatedBuildTimeStamp())
+`, vcert.GetFormattedVersionString(), vcert.GetFormattedBuildTimeStamp())
 
 	cli.CommandHelpTemplate = `NAME:
    {{.HelpName}} - {{.Usage}}
