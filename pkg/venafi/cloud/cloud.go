@@ -313,7 +313,7 @@ func (c *Connector) getHTTPClient() *http.Client {
 }
 
 func (c *Connector) request(method string, url string, data interface{}, authNotRequired ...bool) (statusCode int, statusText string, body []byte, err error) {
-	if (c.accessToken == "" && c.user == nil) || (c.user != nil && c.user.Company == nil) {
+	if c.accessToken == "" && c.apiKey == "" {
 		if !(len(authNotRequired) == 1 && authNotRequired[0]) {
 			err = fmt.Errorf("%w: must be autheticated to make requests to TLSPC API", verror.VcertError)
 			return
