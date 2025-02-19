@@ -51,7 +51,7 @@ func (task CertificateTask) IsValid() (bool, error) {
 	}
 
 	// This task has no installations defined
-	if task.Installations == nil || len(task.Installations) < 1 {
+	if len(task.Installations) < 1 {
 		rValid = false
 		rErr = errors.Join(rErr, fmt.Errorf("\t\t%w", ErrNoInstallations))
 	}
