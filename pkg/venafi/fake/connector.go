@@ -176,6 +176,10 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 	return
 }
 
+func (c *Connector) SetAuthentication(auth *endpoint.Authentication) (err error) {
+	return
+}
+
 type fakeRequestID struct {
 	Req *certificate.Request
 	CSR string

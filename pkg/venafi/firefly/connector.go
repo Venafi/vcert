@@ -86,7 +86,20 @@ func (c *Connector) GetType() endpoint.ConnectorType {
 	return endpoint.ConnectorTypeFirefly
 }
 
+// Authenticate authenticates the connector to the Firefly server.
+// In the future, this method will send a request to the Firefly server to validate the authentication.
 func (c *Connector) Authenticate(auth *endpoint.Authentication) error {
+	if err := c.SetAuthentication(auth); err != nil {
+		return err
+	}
+
+	// TODO: use the access token to send a request and validate the authentication.
+
+	return nil
+}
+
+// SetAuthentication sets the authentication details to connect to the Firefly server
+func (c *Connector) SetAuthentication(auth *endpoint.Authentication) error {
 	if auth == nil {
 		msg := "failed to authenticate: no credentials provided"
 		zap.L().Error(msg, fieldPlatform)

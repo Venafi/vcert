@@ -91,7 +91,6 @@ type Connector struct {
 	apiKey                string
 	accessToken           string
 	verbose               bool
-	user                  *userDetails
 	trust                 *x509.CertPool
 	zone                  cloudZone
 	client                *http.Client
@@ -135,35 +134,45 @@ func (c *Connector) Ping() (err error) {
 	return nil
 }
 
-// Authenticate authenticates the user with Venafi Cloud using the provided API Key
+// Authenticate sets the authentication credentials for the Venafi Cloud API.
+// It will send a request to the API to verify the credentials are correct.
 func (c *Connector) Authenticate(auth *endpoint.Authentication) error {
+	if err := c.SetAuthentication(auth); err != nil {
+		return err
+	}
+
+	if _, err := c.getUserDetails(); err != nil {
+		return fmt.Errorf("%w: %s", verror.AuthError, err)
+	}
+
+	return nil
+}
+
+// SetAuthentication sets the authentication credentials for the Venafi Cloud API.
+func (c *Connector) SetAuthentication(auth *endpoint.Authentication) (err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("%w: %s", verror.AuthError, err)
+		}
+	}()
+
 	if auth == nil {
 		return fmt.Errorf("failed to authenticate: missing credentials")
 	}
 
-	//1. Access token. Assign it to connector
 	if auth.AccessToken != "" {
+		// 1. Access token. Assign it to connector
 		c.accessToken = auth.AccessToken
 	} else if auth.TokenURL != "" && auth.ExternalJWT != "" {
-		//2. JWT and token URL. use it to request new access token
+		// 2. JWT and token URL. use it to request new access token
 		tokenResponse, err := c.GetAccessToken(auth)
 		if err != nil {
 			return err
 		}
 		c.accessToken = tokenResponse.AccessToken
 	} else if auth.APIKey != "" {
-		// 3. API key. Get user to test authentication
+		// 3. API key. Assign it to connector
 		c.apiKey = auth.APIKey
-		url := c.getURL(urlResourceUserAccounts)
-		statusCode, status, body, err := c.request("GET", url, nil, true)
-		if err != nil {
-			return err
-		}
-		ud, err := parseUserDetailsResult(http.StatusOK, statusCode, status, body)
-		if err != nil {
-			return err
-		}
-		c.user = ud
 	}
 
 	// Initialize clients
@@ -948,7 +957,7 @@ func (c *Connector) isAuthenticated() bool {
 		return true
 	}
 
-	if c.user != nil && c.user.Company != nil {
+	if c.apiKey != "" {
 		return true
 	}
 
@@ -1456,12 +1465,10 @@ func (c *Connector) CreateUserAccount(userAccount *userAccount) (int, *userDetai
 	if err != nil {
 		return statusCode, nil, err
 	}
-	//c.user = ud
 	return statusCode, ud, nil
 }
 
 func (c *Connector) getUserDetails() (*userDetails, error) {
-
 	url := c.getURL(urlResourceUserAccounts)
 	statusCode, status, body, err := c.request("GET", url, nil)
 	if err != nil {
@@ -1471,7 +1478,6 @@ func (c *Connector) getUserDetails() (*userDetails, error) {
 	if err != nil {
 		return nil, err
 	}
-	c.user = ud
 	return ud, nil
 }
 
