@@ -174,6 +174,9 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 			req.KeyCurve = cf.keyCurve
 		}
 		req.CsrOrigin = certificate.LocalGeneratedCSR
+		if len(cf.extKeyUsage) > 0 {
+			req.ExtKeyUsages = cf.extKeyUsage
+		}
 	}
 
 	if cf.validDays != "" {
