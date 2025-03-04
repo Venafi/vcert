@@ -453,7 +453,7 @@ func (c *Connector) retrieveSelfIdentity() (response identity, err error) {
 	return identity{}, fmt.Errorf("failed to get Self. Status code: %d, Status text: %s", statusCode, statusText)
 }
 
-// requestSystemVersion returns the TPP system version of the connector context
+// RetrieveSystemVersion returns the TPP system version of the connector context
 func (c *Connector) RetrieveSystemVersion() (string, error) {
 	statusCode, status, body, err := c.request("GET", urlResourceSystemStatusVersion, "")
 	if err != nil {
@@ -633,6 +633,10 @@ func (c *Connector) prepareRequest(req *certificate.Request, zone string) (tppRe
 		}
 		tppReq.Devices = append(tppReq.Devices, dev)
 	}
+
+	//TODO: [TPP_25.1] I don't think we need to touch here now. The certificate request endpoints are backward compatible and
+	// would still understand the KeyAlgorithm/Size/EllipticCurve attributes. But when we add support for Post Quantum algorithms we
+	// need to update this to pass the PKIX attributes
 	switch req.KeyType {
 	case certificate.KeyTypeRSA:
 		tppReq.KeyAlgorithm = "RSA"
@@ -1136,6 +1140,24 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 		}
 	}
 
+	//TODO: [TPP_25.1] We need to update this to set PKIX Parameter Set (not sure about default), in case of TPP 25.1 or higher
+	/*
+		// Check the TPP version is 25.x or greater
+		tppVersionNumber := -1
+		tppVersion, err := c.RetrieveSystemVersion()
+		if err != nil {
+			...
+		}
+		if strings.Contains(tppVersion, ".") {
+			tppVersionNumber, err = strconv.Atoi(strings.Split(tppVersion, ".")[0])
+			if err != nil {
+				...
+			}
+		}
+		if tppVersionNumber >= 25 {
+			...
+		}
+	*/
 	//create Key Algorithm attribute
 	if tppPolicy.KeyAlgorithm != nil {
 		_, status, _, err = createPolicyAttribute(c, policy.TppKeyAlgorithm, []string{tppPolicy.KeyAlgorithm.Value}, *(tppPolicy.Name), tppPolicy.KeyAlgorithm.Locked)
