@@ -281,6 +281,10 @@ func (c *Connector) RevokeAccessToken(auth *endpoint.Authentication) (err error)
 	}
 
 	if auth.AccessToken != "" {
+		// Take a copy of any existing c.accessToken
+		// and Restore after our Revoke for any existing calls
+		origToken := c.accessToken
+		defer func(){ c.accessToken = origToken}
 		c.accessToken = auth.AccessToken
 		statusCode, statusText, _, err := c.request("GET", urlResource(urlResourceRevokeAccessToken), nil)
 		if err != nil {
