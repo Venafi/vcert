@@ -83,6 +83,7 @@ func getURIs(uris []string) []*url.URL {
 }
 
 func setKeyType(request domain.PlaybookRequest, vcertRequest *certificate.Request) {
+	//TODO: [TPP_25.1] I don't think we need to touch here now, but when we are adding support for Post Quantum algorithms
 	switch request.KeyType {
 	case certificate.KeyTypeRSA:
 		vcertRequest.KeyType = request.KeyType

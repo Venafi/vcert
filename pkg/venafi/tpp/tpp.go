@@ -519,11 +519,11 @@ func (c *Connector) request(method string, resource urlResource, data interface{
 		log.Println("#################")
 		log.Printf("Headers are:\n%s", r.Header)
 		if method == "POST" || method == "PUT" {
-			log.Printf("JSON sent for %s\n%s\n", url, string(b))
+			log.Printf("JSON sent for %s\nRequest:\n%s\n", url, string(b))
 		} else {
 			log.Printf("%s request sent to %s\n", method, url)
 		}
-		log.Printf("Response:\n%s\n", string(body))
+		log.Printf("\nResponse:\n%s\n", string(body))
 	} else if c.verbose {
 		log.Printf("Got %s status for %s %s\n", statusText, method, url)
 	}
@@ -568,6 +568,9 @@ func (c *Connector) getHTTPClient() *http.Client {
 
 // GenerateRequest creates a new certificate request, based on the zone/policy configuration and the user data
 func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *certificate.Request) (err error) {
+	//TODO: [TPP_25.1] I don't think we need to touch here now. The certificate request endpoints are backward compatible and
+	// would still understand the KeyAlgorithm/Size/EllipticCurve attributes. But when we add support for Post Quantum algorithms we
+	// need to update this to pass the PKIX attributes
 	if req.KeyType == certificate.KeyTypeED25519 {
 		return fmt.Errorf("Unable to request certificate from TPP, ed25519 key type is not for TPP")
 	}
@@ -820,6 +823,14 @@ type serverPolicy struct {
 	CsrGeneration        _strValue
 	KeyGeneration        _strValue
 	KeyPair              struct {
+		PkixParameterSet struct {
+			Locked bool
+			Values []string
+		}
+		DefaultPkixParameterSet struct {
+			Locked bool
+			Value  string
+		}
 		KeyAlgorithm _strValue
 		KeySize      struct {
 			Locked bool
@@ -860,6 +871,7 @@ func (sp serverPolicy) toZoneConfig(zc *endpoint.ZoneConfiguration) {
 	zc.OrganizationalUnit = sp.Subject.OrganizationalUnit.Values
 	zc.Province = sp.Subject.State.Value
 	zc.Locality = sp.Subject.City.Value
+	//TODO: [TPP_25.1] Do we need updates here?
 	key := endpoint.AllowedKeyConfiguration{}
 	err := key.KeyType.Set(sp.KeyPair.KeyAlgorithm.Value, sp.KeyPair.EllipticCurve.Value)
 	if err != nil {
@@ -982,6 +994,7 @@ func (sp serverPolicy) toPolicy() (p endpoint.Policy) {
 	} else {
 		p.UpnSanRegExs = []string{}
 	}
+	//TODO: [TPP_25.1] Handle PKIX
 	if sp.KeyPair.KeyAlgorithm.Locked {
 		var keyType certificate.KeyType
 		if err := keyType.Set(sp.KeyPair.KeyAlgorithm.Value, sp.KeyPair.EllipticCurve.Value); err != nil {
