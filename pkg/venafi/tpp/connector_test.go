@@ -412,6 +412,21 @@ func TestBadAuthorizeToTPP(t *testing.T) {
 	}
 }
 
+func TestRevokeAccessToken(t *testing.T){
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+
+	err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+	tpp.RevokeAccessToken(&endpoint.Authentication{AccessToken: "RandomAccessToken"})
+	// Ensure that our own access token is set back!
+	assert.Equal(t, tpp.accessToken, ctx.TPPaccessToken)
+}
+
 func TestReadConfigData(t *testing.T) {
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
