@@ -368,7 +368,7 @@ func (p *Policy) ValidateCertificateRequest(request *certificate.Request) error 
 	return nil
 }
 
-// SimpleValidateCertificateRequest functions just check Common Name and SANs mathching with policies
+// SimpleValidateCertificateRequest functions just check Common Name and SANs matching with policies
 func (p *Policy) SimpleValidateCertificateRequest(request certificate.Request) error {
 	csr := request.GetCSR()
 	const (

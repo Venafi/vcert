@@ -34,7 +34,7 @@ VERSION=$(RELEASE_VERSION)
 endif
 endif
 
-GO_LDFLAGS=-ldflags "-X github.com/Venafi/vcert/v5.versionString=$(VERSION) -X github.com/Venafi/vcert/v5.versionBuildTimeStamp=`date -u +%Y%m%d.%H%M%S` -s -w"
+GO_LDFLAGS=-ldflags "-X github.com/Venafi/vcert/v5.versionString=$(VERSION) -X github.com/Venafi/vcert/v5.versionBuildTimeStamp=`date -u +%Y%m%d.%H%M%S` -X github.com/Venafi/vcert/v5/pkg/util.versionString=$(VERSION) -s -w"
 version:
 	echo "$(VERSION)"
 
