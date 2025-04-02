@@ -367,7 +367,8 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (*certificate.
 		if err != nil {
 			return nil, err
 		}
-		if statusCode == http.StatusOK {
+		switch statusCode {
+		case http.StatusOK:
 			certificates, err := newPEMCollectionFromResponse(body, req.ChainOption)
 			if err != nil {
 				return nil, err
@@ -376,9 +377,9 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (*certificate.
 			// Add certificate id to the request
 			req.CertID = certificateId
 			return certificates, err
-		} else if statusCode == http.StatusConflict { // Http Status Code 409 means the certificate has not been signed by the ca yet.
+		case http.StatusConflict: // Http Status Code 409 means the certificate has not been signed by the Certificate Authority yet.
 			return nil, endpoint.ErrCertificatePending{CertificateID: req.PickupID}
-		} else {
+		default:
 			return nil, fmt.Errorf("failed to retrieve certificate. StatusCode: %d -- Status: %s", statusCode, status)
 		}
 	}
@@ -633,7 +634,7 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 	err = json.Unmarshal(body, &r)
 	if err != nil {
 		return nil, fmt.Errorf("%w: can`t unmarshal json response %s", verror.ServerError, err)
-	} else if !(len(r.CertificateInformations) == 1) {
+	} else if len(r.CertificateInformations) != 1 {
 		return nil, fmt.Errorf("%w: certificate was not imported on unknown reason", verror.ServerBadDataResponce)
 	}
 	time.Sleep(time.Second)
@@ -852,9 +853,13 @@ func (c *Connector) RetrieveSystemVersion() (response string, err error) {
 
 func getCertificateId(c *Connector, req *certificate.Request) (string, error) {
 	startTime := time.Now()
-	//Wait for certificate to be issued by checking its PickupID
-	//If certID is filled then certificate should be already issued.
+	if req == nil {
+		return "", fmt.Errorf("request is nil")
+	}
+	// Wait for certificate to be issued by checking its PickupID
+	// If certID is filled then certificate should be already issued.
 	for {
+		//nolint:staticcheck // QF1006 won't happen as we already have other exit conditions based on time
 		if req.PickupID == "" {
 			break
 		}
@@ -862,10 +867,12 @@ func getCertificateId(c *Connector, req *certificate.Request) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("unable to retrieve: %s", err)
 		}
-		if certStatus.Status == "ISSUED" {
+		switch certStatus.Status {
+		case "ISSUED":
 			return certStatus.CertificateIdsList[0], nil
-		} else if certStatus.Status == "FAILED" {
+		case "FAILED":
 			return "", fmt.Errorf("failed to retrieve certificate. Status: %v", certStatus)
+		default:
 		}
 		if req.Timeout == 0 {
 			return "", endpoint.ErrCertificatePending{CertificateID: req.PickupID, Status: certStatus.Status}
@@ -1093,12 +1100,11 @@ func retrieveServiceGeneratedCertData(c *Connector, req *certificate.Request, de
 		return nil, fmt.Errorf("failed to retrieve KeyStore on VaaS, status: %s", status)
 	}
 
-	rootFirst := false
 	if req.ChainOption == certificate.ChainOptionRootFirst {
-		rootFirst = true
+		return ConvertZipBytesToPem(body, true)
 	}
 
-	return ConvertZipBytesToPem(body, rootFirst)
+	return ConvertZipBytesToPem(body, false)
 
 }
 
@@ -1242,8 +1248,8 @@ func (c *Connector) searchCertificates(req *SearchRequest) (*CertificateSearchRe
 }
 
 func (c *Connector) searchCertificatesByFingerprint(fp string) (*CertificateSearchResponse, error) {
-	fp = strings.Replace(fp, ":", "", -1)
-	fp = strings.Replace(fp, ".", "", -1)
+	fp = strings.ReplaceAll(fp, ":", "")
+	fp = strings.ReplaceAll(fp, ".", "")
 	fp = strings.ToUpper(fp)
 	req := &SearchRequest{
 		Expression: &Expression{

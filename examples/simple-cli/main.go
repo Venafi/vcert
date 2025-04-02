@@ -242,22 +242,24 @@ func main() {
 	// 5. Retrieve certificate & key from new object
 	//
 	var importedRetriveReq = &certificate.Request{}
-	switch {
-	case config.ConnectorType == endpoint.ConnectorTypeTPP || config.ConnectorType == endpoint.ConnectorTypeFake:
+	switch config.ConnectorType {
+	case endpoint.ConnectorTypeFake:
+		fallthrough
+	case endpoint.ConnectorTypeTPP:
 		importedRetriveReq = &certificate.Request{
 			PickupID:        importResp.CertificateDN,
 			Timeout:         180 * time.Second,
 			KeyPassword:     "newPassw0rd!",
 			FetchPrivateKey: true,
 		}
-	case config.ConnectorType == endpoint.ConnectorTypeCloud:
-		//You can retrieve imported certificate by thumbprint or certificate Id.
+	case endpoint.ConnectorTypeCloud:
 		thumbprint := calcThumbprint(pcc.Certificate)
 		importedRetriveReq = &certificate.Request{
 			Thumbprint: thumbprint,
-			//CertID: importResp.CertId,
-			Timeout: 180 * time.Second,
+			Timeout:    180 * time.Second,
 		}
+	default:
+		t.Fatalf("unsupported connector type %s", config.ConnectorType)
 	}
 
 	pcc3, err := c.RetrieveCertificate(importedRetriveReq)

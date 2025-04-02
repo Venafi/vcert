@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+// Package tpp provides a TPP connector for Venafi VCert
+//
+// TODO: we are ignoring this error "ST1005: error strings should not end with punctuation or newlines" since we still need
+// to determine how feasible is to change the error message, even if we remove a newline
+//
+//nolint:staticcheck
 package tpp
 
 import (
@@ -832,10 +838,10 @@ func (c *Connector) ResetCertificate(req *certificate.Request, restart bool) (er
 		return fmt.Errorf("while resetting: %w", err)
 	}
 
-	switch {
-	case statusCode == http.StatusOK:
+	switch statusCode {
+	case http.StatusOK:
 		return nil
-	case statusCode == http.StatusBadRequest:
+	case http.StatusBadRequest:
 		var decodedResetResponse certificateRequestResponse
 		if err := json.Unmarshal(body, &decodedResetResponse); err != nil {
 			return fmt.Errorf("failed to decode reset response: HTTP %d: %s: %s", statusCode, status, body)
@@ -1572,14 +1578,15 @@ func (c *Connector) ReadPolicyConfiguration() (policy *endpoint.Policy, err erro
 		Policy serverPolicy
 		Error  string
 	}
-	if statusCode == http.StatusOK {
+	switch statusCode {
+	case http.StatusOK:
 		err = json.Unmarshal(body, &r)
 		if err != nil {
 			return nil, err
 		}
 		p := r.Policy.toPolicy()
 		policy = &p
-	} else if statusCode == http.StatusBadRequest {
+	case http.StatusBadRequest:
 		err = json.Unmarshal(body, &r)
 		if err != nil {
 			return nil, err
@@ -1587,7 +1594,7 @@ func (c *Connector) ReadPolicyConfiguration() (policy *endpoint.Policy, err erro
 		if zoneNonFoundregexp.Match([]byte(r.Error)) {
 			return nil, verror.ZoneNotFoundError
 		}
-	} else {
+	default:
 		return nil, fmt.Errorf("Invalid status: %s Server data: %s", status, body)
 	}
 	return
@@ -1609,7 +1616,9 @@ func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration,
 		Policy serverPolicy
 		Error  string
 	}
-	if statusCode == http.StatusOK {
+
+	switch statusCode {
+	case http.StatusOK:
 		err = json.Unmarshal(body, &r)
 		if err != nil {
 			return nil, err
@@ -1618,7 +1627,7 @@ func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration,
 		r.Policy.toZoneConfig(zoneConfig)
 		zoneConfig.Policy = p
 		return zoneConfig, nil
-	} else if statusCode == http.StatusBadRequest {
+	case http.StatusBadRequest:
 		err = json.Unmarshal(body, &r)
 		if err != nil {
 			return nil, err
@@ -1626,9 +1635,10 @@ func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration,
 		if zoneNonFoundregexp.Match([]byte(r.Error)) {
 			return nil, verror.ZoneNotFoundError
 		}
+	default:
+		return nil, fmt.Errorf("Invalid status: %s Server response: %s", status, string(body))
 	}
-	return nil, fmt.Errorf("Invalid status: %s Server response: %s", status, string(body))
-
+	return
 }
 
 func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certificate.ImportResponse, error) {

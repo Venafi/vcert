@@ -74,6 +74,9 @@ var rfc1423Algos = []rfc1423Algo{{
 }
 
 // IncorrectPasswordError is returned when an incorrect password is detected.
+// TODO: ignoring until we refactor "should have name of the form ErrFoo" (ST1012)
+//
+//nolint:staticcheck
 var IncorrectPasswordError = fmt.Errorf("x509: decryption password incorrect")
 
 func cipherByName(name string) *rfc1423Algo {

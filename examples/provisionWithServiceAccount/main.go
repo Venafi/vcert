@@ -15,7 +15,7 @@ const (
 	vcpURL       = "VCP_URL"
 	vcpZone      = "VCP_ZONE"
 	vcpApiKey    = "CLOUD_APIKEY"
-	vcpTokenURL  = "VCP_TOKEN_URL"
+	vcpTokenURL  = "VCP_TOKEN_URL" // #nosec G101 // This is not a hardcoded credential
 	vcpJWT       = "VCP_JWT"
 	envVarNotSet = "environment variable not set: %s"
 

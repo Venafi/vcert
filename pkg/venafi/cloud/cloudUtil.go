@@ -183,14 +183,15 @@ func getCsrAttributes(c *Connector, req *certificate.Request) (*CsrAttributes, e
 	}
 
 	keyTypeParam := &KeyTypeParameters{}
-	if req.KeyType == certificate.KeyTypeRSA {
+	switch req.KeyType {
+	case certificate.KeyTypeRSA:
 		keyTypeParam.KeyType = "RSA"
 		if req.KeyLength > 0 {
 			keyTypeParam.KeyLength = &req.KeyLength
 		} else {
 			keyTypeParam.KeyLength = util.GetIntRef(2048)
 		}
-	} else if req.KeyType == certificate.KeyTypeECDSA {
+	case certificate.KeyTypeECDSA:
 		keyTypeParam.KeyType = "EC"
 		if req.KeyCurve.String() != "" {
 			keyCurve := req.KeyCurve.String()
@@ -200,7 +201,9 @@ func getCsrAttributes(c *Connector, req *certificate.Request) (*CsrAttributes, e
 			defaultCurveStr := defaultCurve.String()
 			keyTypeParam.KeyCurve = &defaultCurveStr
 		}
+	default:
 	}
+
 	csrAttr.KeyTypeParameters = keyTypeParam
 
 	return &csrAttr, nil

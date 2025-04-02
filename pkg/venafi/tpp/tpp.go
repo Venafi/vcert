@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+// Package tpp defines necessary functions and structures to process TPP information
+//
+// TODO: we are ignoring this error "ST1005: error strings should not end with punctuation or newlines" since we still need
+// to determine how feasible is to change the error message, even if we remove a newline
+//
+//nolint:staticcheck
 package tpp
 
 import (
@@ -569,6 +575,7 @@ func (c *Connector) getHTTPClient() *http.Client {
 // GenerateRequest creates a new certificate request, based on the zone/policy configuration and the user data
 func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *certificate.Request) (err error) {
 	if req.KeyType == certificate.KeyTypeED25519 {
+		//nolint:staticcheck // TODO: we are ignoring ST1005 because we still need to determine if we are removing the newline char from error msg
 		return fmt.Errorf("Unable to request certificate from TPP, ed25519 key type is not for TPP")
 	}
 
@@ -681,6 +688,7 @@ func parseRequestResult(httpStatusCode int, httpStatus string, body []byte) (str
 		}
 		return reqData.CertificateDN, nil
 	default:
+		//nolint:staticcheck // TODO: we are ignoring ST1005 because we still need to determine if we are removing the newline char from error msg
 		return "", fmt.Errorf("Unexpected status code on TPP Certificate Request.\n Status:\n %s. \n Body:\n %s\n", httpStatus, body)
 	}
 }

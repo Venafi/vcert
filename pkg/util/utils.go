@@ -72,12 +72,13 @@ func EncryptPkcs1PrivateKey(privateKey, password string) (string, error) {
 	keyType := GetPrivateKeyType(privateKey, password)
 	var encrypted *pem.Block
 	var err error
-	if keyType == "RSA PRIVATE KEY" {
+	switch keyType {
+	case "RSA PRIVATE KEY":
 		encrypted, err = X509EncryptPEMBlock(rand.Reader, "RSA PRIVATE KEY", block.Bytes, []byte(password), PEMCipherAES256)
 		if err != nil {
 			return "", nil
 		}
-	} else if keyType == "EC PRIVATE KEY" {
+	case "EC PRIVATE KEY":
 		encrypted, err = X509EncryptPEMBlock(rand.Reader, "EC PRIVATE KEY", block.Bytes, []byte(password), PEMCipherAES256)
 		if err != nil {
 			return "", nil

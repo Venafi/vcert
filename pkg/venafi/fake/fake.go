@@ -46,6 +46,7 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 		return nil
 
 	default:
+		//nolint:staticcheck // TODO: we are ignoring ST1005 because we still need to determine if we are removing the newline char from error msg
 		return fmt.Errorf("Unexpected option in PrivateKeyOrigin")
 	}
 

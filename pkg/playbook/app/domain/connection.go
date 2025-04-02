@@ -105,47 +105,34 @@ func isValidTpp(c Connection) (bool, error) {
 
 func isValidVaaS(c Connection) (bool, error) {
 	// Check if an API key has been provided
-	apikey := false
-	if c.Credentials.APIKey != "" {
-		apikey = true
-	}
+	apikey := c.Credentials.APIKey != ""
 
-	accesstoken := false
-	if c.Credentials.AccessToken != "" {
-		accesstoken = true
-	}
-
+	venAccessToken := c.Credentials.AccessToken != ""
 	// Check if an TokenURL has been provided
-	tokenurl := false
-	if c.Credentials.TokenURL != "" {
-		tokenurl = true
-	}
+	tokenUrl := c.Credentials.TokenURL != ""
 
 	// Check if externalJWT has been provided
-	externaljwt := false
-	if c.Credentials.ExternalJWT != "" {
-		externaljwt = true
-	}
+	venExternalJWT := c.Credentials.ExternalJWT != ""
 
 	// There's a valid service account IF both externalJWT and tokenURL provided
 	svcaccount := false
-	if externaljwt && tokenurl {
+	if venExternalJWT && tokenUrl {
 		svcaccount = true
-	} else if externaljwt && !tokenurl {
+	} else if venExternalJWT && !tokenUrl {
 		// JWT Provided without token URL
 		return false, ErrNoVCPTokenURL
-	} else if tokenurl && !externaljwt {
+	} else if tokenUrl && !venExternalJWT {
 		// Token URL without an external JWT
 		return false, ErrNoExternalJWT
 	}
 
 	// At this point, there are no valid credentials. Figure out why.
-	if !apikey && !svcaccount && !accesstoken {
+	if !apikey && !svcaccount && !venAccessToken {
 		return false, ErrNoCredentials
 	}
 
 	// if we got here then at least one of the credential options was provided
-	if (svcaccount && apikey) || (svcaccount && accesstoken) || (apikey && accesstoken) {
+	if (svcaccount && apikey) || (svcaccount && venAccessToken) || (apikey && venAccessToken) {
 		// more than one credential option is not acceptable
 		return false, ErrAmbiguousVCPCreds
 	}
@@ -161,22 +148,13 @@ func isValidFirefly(c Connection) (bool, error) {
 	}
 
 	// Auth method: User-Password
-	userPassword := false
-	if c.Credentials.User != "" && c.Credentials.Password != "" {
-		userPassword = true
-	}
+	userPassword := c.Credentials.User != "" && c.Credentials.Password != ""
 
 	//Auth method: Client Secret
-	cSecret := false
-	if c.Credentials.ClientSecret != "" {
-		cSecret = true
-	}
+	cSecret := c.Credentials.ClientSecret != ""
 
 	//Auth method: Access Token
-	token := false
-	if c.Credentials.AccessToken != "" {
-		token = true
-	}
+	token := c.Credentials.AccessToken != ""
 
 	if !userPassword && !cSecret && !token {
 		return false, ErrNoCredentials

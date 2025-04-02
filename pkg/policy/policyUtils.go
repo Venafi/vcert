@@ -1062,10 +1062,11 @@ func BuildCloudCitRequest(ps *PolicySpecification, ca *CADetails) (*CloudPolicyR
 	var ecKeyType *KeyType
 	if ps.Policy != nil && ps.Policy.KeyPair != nil && len(ps.Policy.KeyPair.KeyTypes) > 0 {
 		for _, val := range ps.Policy.KeyPair.KeyTypes {
-			if val == "RSA" {
+			switch val {
+			case "RSA":
 				keyType = &KeyType{}
 				keyType.KeyType = val
-			} else if val == "EC" {
+			case "EC":
 				ecKeyType = &KeyType{}
 				ecKeyType.KeyType = val
 			}
@@ -1163,21 +1164,21 @@ func BuildCloudCitRequest(ps *PolicySpecification, ca *CADetails) (*CloudPolicyR
 		if ps.Default.KeyPair.KeyType != nil {
 
 			key.Type = *(ps.Default.KeyPair.KeyType)
-			if key.Type == "RSA" {
+			switch key.Type {
+			case "RSA":
 				if ps.Default.KeyPair.RsaKeySize != nil {
 					key.Length = *(ps.Default.KeyPair.RsaKeySize)
 				} else {
 					//default
 					key.Length = 2048
 				}
-			} else if key.Type == "EC" {
+			case "EC":
 				if ps.Default.KeyPair.EllipticCurve != nil && *(ps.Default.KeyPair.EllipticCurve) != "" {
 					key.Curve = *(ps.Default.KeyPair.EllipticCurve)
 				} else {
 					key.Curve = "P256"
 				}
 			}
-
 			shouldCreateKPRS = true
 		}
 	}
@@ -1508,17 +1509,18 @@ func VerifyPolicySpec(bytes []byte, fileExt string) error {
 	var err error
 	var policySpecification PolicySpecification
 
-	if fileExt == JsonExtension {
+	switch fileExt {
+	case JsonExtension:
 		err = json.Unmarshal(bytes, &policySpecification)
 		if err != nil {
 			return err
 		}
-	} else if fileExt == YamlExtension {
+	case YamlExtension:
 		err = yaml.Unmarshal(bytes, &policySpecification)
 		if err != nil {
 			return err
 		}
-	} else {
+	default:
 		return fmt.Errorf("the specified file is not supported")
 	}
 

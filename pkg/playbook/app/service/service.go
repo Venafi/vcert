@@ -75,10 +75,7 @@ func Execute(config domain.Config, task domain.CertificateTask) []error {
 
 	// Private Key should not be decrypted when csrOrigin is service and Platform is Firefly.
 	// Firefly does not support encryption of private keys
-	decryptPK := true
-	if config.Connection.Platform == venafi.Firefly && csrOrigin == certificate.ServiceGeneratedCSR {
-		decryptPK = false
-	}
+	decryptPK := config.Connection.Platform == venafi.Firefly && csrOrigin == certificate.ServiceGeneratedCSR
 
 	// This function will add the private key to the PCC when csrOrigin is local.
 	// It will also decrypt the Private Key if it is encrypted

@@ -313,21 +313,22 @@ func (p *Policy) ValidateCertificateRequest(request *certificate.Request) error 
 		}
 		if len(p.AllowedKeyConfigurations) > 0 {
 			var keyValid bool
-			if parsedCSR.PublicKeyAlgorithm == x509.RSA {
+			switch parsedCSR.PublicKeyAlgorithm {
+			case x509.RSA:
 				pubkey, ok := parsedCSR.PublicKey.(*rsa.PublicKey)
 				if ok {
 					keyValid = checkKey(certificate.KeyTypeRSA, pubkey.Size()*8, "", p.AllowedKeyConfigurations)
 				} else {
 					return fmt.Errorf("invalid key in csr")
 				}
-			} else if parsedCSR.PublicKeyAlgorithm == x509.ECDSA {
+			case x509.ECDSA:
 				pubkey, ok := parsedCSR.PublicKey.(*ecdsa.PublicKey)
 				if ok {
 					keyValid = checkKey(certificate.KeyTypeECDSA, 0, pubkey.Curve.Params().Name, p.AllowedKeyConfigurations)
 				} else {
 					return fmt.Errorf("invalid key in csr")
 				}
-			} else if parsedCSR.PublicKeyAlgorithm == x509.Ed25519 {
+			case x509.Ed25519:
 				_, ok := parsedCSR.PublicKey.(*ed25519.PublicKey)
 				if ok {
 					keyValid = checkKey(certificate.KeyTypeECDSA, 0, "ed25519", p.AllowedKeyConfigurations)

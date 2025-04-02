@@ -1,3 +1,7 @@
+// Package verror provides a set of error variables for the VCert package.
+// TODO: Every lint error in this file is because "should have name of the form ErrFoo" (ST1012)
+//
+//nolint:staticcheck
 package verror
 
 import "fmt"

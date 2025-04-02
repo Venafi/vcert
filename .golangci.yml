@@ -1,27 +1,43 @@
+version: "2"
 run:
-  tests: false
   modules-download-mode: readonly
-
+  tests: false
 linters:
-  disable:
-    - unused
   enable:
     - gosec
-
-issues:
-  exclude-rules:
-    - text: "composite literal uses unkeyed fields"
-      linters:
-        - govet
-    - text: "certificateRequest.Attributes"
-      linters:
-        - staticcheck
-    - text: "G505"
-      linters:
-        - gosec
-    - text: "G401"
-      linters:
-        - gosec
-    - text: "h.Write"
-      linters:
-        - errcheck
+  disable:
+    - unused
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - govet
+        text: composite literal uses unkeyed fields
+      - linters:
+          - staticcheck
+        text: certificateRequest.Attributes
+      - linters:
+          - gosec
+        text: G505
+      - linters:
+          - gosec
+        text: G401
+      - linters:
+          - errcheck
+        text: h.Write
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

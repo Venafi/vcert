@@ -314,7 +314,7 @@ func (c *Connector) getHTTPClient() *http.Client {
 
 func (c *Connector) request(method string, url string, data interface{}, authNotRequired ...bool) (statusCode int, statusText string, body []byte, err error) {
 	if (c.accessToken == "" && c.user == nil) || (c.user != nil && c.user.Company == nil) {
-		if !(len(authNotRequired) == 1 && authNotRequired[0]) {
+		if len(authNotRequired) != 1 || !authNotRequired[0] {
 			err = fmt.Errorf("%w: must be autheticated to make requests to TLSPC API", verror.VcertError)
 			return
 		}
@@ -548,6 +548,7 @@ func checkCertificateRetireResults(httpStatusCode int, httpStatus string, body [
 		if err != nil {
 			return err
 		} else if resp.Count == 0 {
+			//nolint:staticcheck // TODO: we are ignoring ST1005 because we still need to determine if we are removing the initial capital letter from error msg
 			return fmt.Errorf("Invalid thumbprint or certificate ID. No certificates were retired")
 		} else {
 			return nil

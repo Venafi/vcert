@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+// Package tpp provides a TPP connector for Venafi VCert
+//
+// TODO: we are ignoring this error "ST1005: error strings should not end with punctuation or newlines" since we still need
+// to determine how feasible is to change the error message, even if we remove a newline
+//
+//nolint:staticcheck
 package tpp
 
 import (
@@ -51,8 +57,8 @@ type CertificateDetailsResponse struct {
 }
 
 func (c *Connector) searchCertificatesByFingerprint(fp string) (*certificate.CertSearchResponse, error) {
-	fp = strings.Replace(fp, ":", "", -1)
-	fp = strings.Replace(fp, ".", "", -1)
+	fp = strings.ReplaceAll(fp, ":", "")
+	fp = strings.ReplaceAll(fp, ".", "")
 	fp = strings.ToUpper(fp)
 
 	var req certificate.SearchRequest
