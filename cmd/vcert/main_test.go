@@ -23,7 +23,6 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
 	"math/big"
 	"net"
 	"net/url"
@@ -664,7 +663,7 @@ func TestGenerateCertCSRFileRequest(t *testing.T) {
 
 func TestGetFileWriter(t *testing.T) {
 	//set the pem file var so we get a file handle
-	temp, err := ioutil.TempFile(os.TempDir(), "vcertTest")
+	temp, err := os.CreateTemp(os.TempDir(), "vcertTest")
 	if err != nil {
 		t.Fatalf("Failed to create temp file for testing getFileWriter.  Error: %s", err)
 	}
@@ -684,7 +683,7 @@ func TestReadPasswordFromInputFlags(t *testing.T) {
 
 	flags = commandFlags{}
 
-	f, err := ioutil.TempFile(os.TempDir(), "vcertTest")
+	f, err := os.CreateTemp(os.TempDir(), "vcertTest")
 	if err != nil {
 		t.Fatalf("Failed to create temp file for testing readPasswordsFromInputFlags.  Error: %s", err)
 	}
@@ -712,7 +711,7 @@ func TestReadPasswordFromInputFlags(t *testing.T) {
 	}
 
 	flags.password = fmt.Sprintf("file:%s", tempFileName)
-	f, err = ioutil.TempFile(os.TempDir(), "vcertTest")
+	f, err = os.CreateTemp(os.TempDir(), "vcertTest")
 	if err != nil {
 		t.Fatalf("Failed to create temp file for testing readPasswordsFromInputFlags.  Error: %s", err)
 	}
@@ -742,7 +741,7 @@ func TestReadPasswordFromInputFlags(t *testing.T) {
 
 func TestReadPasswordFromInput(t *testing.T) {
 
-	f, err := ioutil.TempFile(os.TempDir(), "vcertTest")
+	f, err := os.CreateTemp(os.TempDir(), "vcertTest")
 	if err != nil {
 		t.Fatalf("Failed to create temp file for testing readPasswordFromInput.  Error: %s", err)
 	}
@@ -779,7 +778,7 @@ func TestReadPasswordFromInput(t *testing.T) {
 }
 
 func TestReadPasswordFromFile(t *testing.T) {
-	f, err := ioutil.TempFile(os.TempDir(), "vcertTest")
+	f, err := os.CreateTemp(os.TempDir(), "vcertTest")
 	if err != nil {
 		t.Fatalf("Failed to create temp file for testing readPasswordFromFile.  Error: %s", err)
 	}

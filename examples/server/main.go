@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/Venafi/vcert/v5"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
@@ -21,9 +22,20 @@ func main() {
 	conf := initConfig()
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "It works! %v\n", r.Host)
+		_, err := fmt.Fprintf(w, "It works! %v\n", r.Host)
+		if err != nil {
+			return
+		}
 	})
-	log.Fatal(http.Serve(conf.NewListener("test.example.com:8443", "example.com"), mux))
+	server := &http.Server{
+		Addr:         ":8080",
+		Handler:      mux,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  120 * time.Second,
+	}
+	listener := conf.NewListener("test.example.com:8443", "example.com")
+	log.Fatal(server.Serve(listener))
 
 }
 
@@ -40,7 +52,11 @@ func initConfig() *vcert.Config {
 	}
 	trustBundleFilePath := os.Getenv("TRUST_BUNDLE_PATH")
 	if trustBundleFilePath != "" {
-		buf, err := ioutil.ReadFile(trustBundleFilePath)
+		file, err := os.Open(trustBundleFilePath)
+		if err != nil {
+			panic(err)
+		}
+		buf, err := io.ReadAll(file)
 		if err != nil {
 			panic(err)
 		}
