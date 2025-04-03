@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+// TODO: we are ignoring this error "ST1005: error strings should not end with punctuation or newlines" since we still need
+// to determine how feasible is to change the error message, even if we remove a newline
+//nolint:staticcheck
 package main
 
 import (
@@ -501,13 +503,13 @@ func doCommandRenew1(c *cli.Context) error {
 		// will be just sending CSR to backend
 		req = fillCertificateRequest(req, &flags)
 
-	case "local" == flags.csrOption || "" == flags.csrOption:
+	case flags.csrOption == "local" || flags.csrOption == "":
 		// restore certificate request from old certificate
 		req = certificate.NewRequest(oldCert)
 		// override values with those from command line flags
 		req = fillCertificateRequest(req, &flags)
 
-	case "service" == flags.csrOption:
+	case flags.csrOption == "service":
 		// logger.Panic("service side renewal is not implemented")
 		req = fillCertificateRequest(req, &flags)
 

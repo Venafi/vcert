@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+// TODO: we are ignoring this error "ST1005: error strings should not be capitalized" since we still need
+// to determine how feasible is to change the error message, even if we change the capitalized character(s)
+//nolint:staticcheck
 package main
 
 import (
@@ -263,15 +265,15 @@ func getVaaSCredentials(vaasConnector *cloud.Connector, cfg *vcert.Config) error
 			return outputJSON(apiKey)
 		} else {
 			var headerMessage string
-			if statusCode == http.StatusCreated {
+			switch statusCode {
+			case http.StatusCreated:
 				headerMessage = "the user account was created successfully. To complete the registration please review your email account and follow the link."
-			} else if statusCode == http.StatusAccepted {
+			case http.StatusAccepted:
 				headerMessage = "the user account already exists therefore the API Key was rotated. To complete the activation of the rotated API Key," +
 					" please review your email account and follow the link."
-			} else { // only is expected that the status code returned is 201 or 202
+			default: // we only expected that the status code returned is either 201 or 202
 				return fmt.Errorf("unexpected http status code when the useraccount is tried to be created or api key rotated: %d", statusCode)
 			}
-
 			fmt.Println(headerMessage)
 			fmt.Println("api_key: ", apiKey.Key)
 			fmt.Println("api_key_expires: ", apiKey.ValidityEndDateString)

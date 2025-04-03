@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+// TODO: we are ignoring this error "ST1005: error strings should not be capitalized" since we still need
+// to determine how feasible is to change the error message, even if we change the capitalized character(s)
+//nolint:staticcheck
 package main
 
 import (

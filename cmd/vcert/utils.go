@@ -134,7 +134,7 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 	req.CustomFields = append(req.CustomFields, certificate.CustomField{Name: "Origin", Value: origin, Type: certificate.CustomFieldOrigin})
 
 	switch true {
-	case 0 == strings.Index(cf.csrOption, "file:"):
+	case strings.Index(cf.csrOption, "file:") == 0:
 		var err error
 		csrFileName := cf.csrOption[5:]
 		csr, err := readCSRfromFile(csrFileName)
@@ -147,7 +147,7 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 		}
 		req.CsrOrigin = certificate.UserProvidedCSR
 
-	case "service" == cf.csrOption:
+	case cf.csrOption == "service":
 		if cf.keyType != nil {
 			req.KeyType = *cf.keyType
 		}
@@ -161,7 +161,7 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 		}
 		req.CsrOrigin = certificate.ServiceGeneratedCSR
 
-	default: // "local" == cf.csrOption:
+	default: // cf.csrOption == "local"
 		if cf.keyType != nil {
 			req.KeyType = *cf.keyType
 		}
@@ -225,7 +225,7 @@ func readThumbprintFromFile(fname string) (string, error) {
 
 	// check if there's a thumbprint in the file
 	s := strings.TrimSpace(string(bytes))
-	s = strings.Replace(s, ":", "", -1)
+	s = strings.ReplaceAll(s, ":", "")
 	s = strings.ToUpper(s)
 	matched, _ := regexp.MatchString("^[A-F0-9]{40}$", s)
 	if matched {

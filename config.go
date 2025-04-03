@@ -287,7 +287,7 @@ func validateSection(s *ini.Section) error {
 
 		if m.has(fireflyClientIdKey) {
 			//if it's not set any Flow Grant
-			if !((m.has(fireflyUserKey) && m.has(fireflyPasswordKey)) || m.has(fireflyClientSecretKey) || m.has(fireflyDeviceUrlKey)) {
+			if (!m.has(fireflyUserKey) || !m.has(fireflyPasswordKey)) && !m.has(fireflyClientSecretKey) && !m.has(fireflyDeviceUrlKey) {
 				return fmt.Errorf("configuration issue in section %s: The OAuth Client ID is set but is not set any OAuth Flow grant", s.Name())
 			}
 

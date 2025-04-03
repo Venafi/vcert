@@ -99,17 +99,18 @@ func doCommandCreatePolicy(c *cli.Context) error {
 	//based on the extension call the appropriate method to feed the policySpecification
 	//structure.
 	var policySpecification policy.PolicySpecification
-	if fileExt == policy.JsonExtension {
+	switch fileExt {
+	case policy.JsonExtension:
 		err = json.Unmarshal(bytes, &policySpecification)
 		if err != nil {
 			return err
 		}
-	} else if fileExt == policy.YamlExtension {
+	case policy.YamlExtension:
 		err = yaml.Unmarshal(bytes, &policySpecification)
 		if err != nil {
 			return err
 		}
-	} else {
+	default:
 		return fmt.Errorf("the specified file is not supported")
 	}
 
@@ -183,18 +184,19 @@ func doCommandGetPolicy(c *cli.Context) error {
 
 		fileExt := policy.GetFileType(policySpecLocation)
 		fileExt = strings.ToLower(fileExt)
-		if fileExt == policy.JsonExtension {
-			b, _ = json.MarshalIndent(ps, "", "  ")
+		switch fileExt {
+		case policy.JsonExtension:
+			b, err = json.MarshalIndent(ps, "", "  ")
 			if err != nil {
 				return err
 			}
-		} else if fileExt == policy.YamlExtension {
-			b, _ = yaml.Marshal(ps)
+		case policy.YamlExtension:
+			b, err = yaml.Marshal(ps)
 			if err != nil {
 				return err
 			}
-		} else {
-			return fmt.Errorf("the specified byte is not supported")
+		default:
+			return fmt.Errorf("the specified file is not supported")
 		}
 
 		err = os.WriteFile(policySpecLocation, b, 0600)
@@ -204,9 +206,7 @@ func doCommandGetPolicy(c *cli.Context) error {
 		log.Printf("policy was written in: %s", policySpecLocation)
 
 	} else {
-
-		b, _ = json.MarshalIndent(ps, "", "  ")
-
+		b, err = json.MarshalIndent(ps, "", "  ")
 		if err != nil {
 			return err
 		}

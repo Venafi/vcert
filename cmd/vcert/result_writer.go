@@ -330,17 +330,20 @@ func (r *Result) Flush() error {
 		allFileOutput.CSR = r.Pcc.CSR
 
 		var fileBytes []byte
-		if r.Config.Format == P12Format || r.Config.Format == LegacyP12Format {
+		switch r.Config.Format {
+		case LegacyP12Format:
+			fallthrough
+		case P12Format:
 			fileBytes, err = allFileOutput.AsPKCS12(r.Config)
 			if err != nil {
 				return fmt.Errorf("failed to encode pkcs12: %s", err)
 			}
-		} else if r.Config.Format == JKSFormat {
+		case JKSFormat:
 			fileBytes, err = allFileOutput.AsJKS(r.Config)
 			if err != nil {
 				return err
 			}
-		} else {
+		default:
 			fileBytes, err = allFileOutput.Format(r.Config)
 			if err != nil {
 				return err

@@ -76,7 +76,7 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 	}
 
 	if c.Command.Name == commandEnrollName || c.Command.Name == commandPickupName {
-		if cfg.Zone == "" && cfg.ConnectorType != endpoint.ConnectorTypeFake && !(flags.pickupID != "" || flags.pickupIDFile != "") {
+		if cfg.Zone == "" && cfg.ConnectorType != endpoint.ConnectorTypeFake && (flags.pickupID == "" && flags.pickupIDFile == "") {
 			return cfg, fmt.Errorf("zone cannot be empty. Use -z option")
 		}
 	}

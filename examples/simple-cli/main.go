@@ -22,7 +22,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
+	"io"
 	t "log"
 	"math/big"
 	"net"
@@ -67,8 +67,11 @@ func main() {
 	//
 	//Not all Venafi Cloud providers support IPAddress and EmailAddresses extensions.
 	var enrollReq = &certificate.Request{}
-	switch {
-	case config.ConnectorType == endpoint.ConnectorTypeTPP || config.ConnectorType == endpoint.ConnectorTypeFake:
+
+	switch config.ConnectorType {
+	case endpoint.ConnectorTypeFake:
+		fallthrough
+	case endpoint.ConnectorTypeTPP:
 		enrollReq = &certificate.Request{
 			Subject: pkix.Name{
 				CommonName:         commonName,
@@ -92,7 +95,7 @@ func main() {
 				{Name: "custom", Value: "2019-12-10"},
 			},
 		}
-	case config.ConnectorType == endpoint.ConnectorTypeCloud:
+	case endpoint.ConnectorTypeCloud:
 		enrollReq = &certificate.Request{
 			Subject: pkix.Name{
 				CommonName:         commonName,
@@ -109,7 +112,7 @@ func main() {
 			ChainOption: certificate.ChainOptionRootLast,
 			KeyPassword: "newPassw0rd!",
 		}
-
+	default:
 	}
 
 	//
@@ -209,8 +212,11 @@ func main() {
 	// 4. Import certificate to another object of the same Zone
 	//
 	var importReq = &certificate.ImportRequest{}
-	switch {
-	case config.ConnectorType == endpoint.ConnectorTypeTPP || config.ConnectorType == endpoint.ConnectorTypeFake:
+
+	switch config.ConnectorType {
+	case endpoint.ConnectorTypeFake:
+		fallthrough
+	case endpoint.ConnectorTypeTPP:
 		importObjectName := fmt.Sprintf("%s-imported", commonName)
 		importReq = &certificate.ImportRequest{
 			// if PolicyDN is empty, it is taken from cfg.Zone
@@ -220,7 +226,7 @@ func main() {
 			Password:        "newPassw0rd!",
 			Reconcile:       false,
 		}
-	case config.ConnectorType == endpoint.ConnectorTypeCloud:
+	case endpoint.ConnectorTypeCloud:
 		importObjectName := fmt.Sprintf("%s-imported", commonName)
 		importReq = &certificate.ImportRequest{
 			// if PolicyDN is empty, it is taken from cfg.Zone
@@ -229,7 +235,9 @@ func main() {
 			PrivateKeyData:  "",
 			Reconcile:       false,
 		}
+	default:
 	}
+
 	importResp, err := c.ImportCertificate(importReq)
 	if err != nil {
 		t.Fatalf("could not import certificate: %s", err)
@@ -276,7 +284,11 @@ func main() {
 		var connectionTrustBundle *x509.CertPool
 		trustBundleFilePath := os.Getenv("TRUST_BUNDLE_PATH")
 		if trustBundleFilePath != "" {
-			buf, err := ioutil.ReadFile(trustBundleFilePath)
+			file, err := os.Open(trustBundleFilePath)
+			if err != nil {
+				panic(err)
+			}
+			buf, err := io.ReadAll(file)
 			if err != nil {
 				panic(err)
 			}
