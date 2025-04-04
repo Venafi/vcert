@@ -1,44 +1,114 @@
 version: "2"
 run:
+  timeout: 10m
+  issues-exit-code: 0
   modules-download-mode: readonly
   tests: false
 linters:
+  default: none
   enable:
+    - misspell
+    - ineffassign
+    - unused
+    - errcheck
+    - staticcheck
     - gosec
+    - asciicheck
+    - bodyclose
+    - copyloopvar
+    - rowserrcheck
+    - unconvert
+    - makezero
+    - durationcheck
+    - prealloc
   disable:
     - unused
   settings:
+    gosec:
+      includes: [] # Include all rules
     staticcheck:
       checks: [ "S1002","S1004","S1007","S1009","S1010","S1012","S1019","S1020","S1021","S1024","S1030","SA2*","SA3*",
-                "SA4009","SA5*","SA6000","SA6001","SA6005", "-SA2002" ]
+                "SA4009","SA5*","SA6000","SA6001","SA6005", "-SA2002", "-ST1003" ]
+    revive:
+      severity: warning
+      confidence: 0.8
+      enable-all-rules: true
+      rules:
+        - name: blank-imports
+          disabled: false
+          severity: error
+        - name: context-as-argument
+          disabled: false
+          severity: error
+        - name: context-keys-type
+          disabled: false
+          severity: error
+        - name: dot-imports
+          disabled: false
+          severity: error
+        - name: error-return
+          disabled: false
+          severity: error
+        - name: error-strings
+          disabled: false
+          severity: error
+        - name: error-naming
+          disabled: false
+          severity: error
+        - name: exported
+          disabled: false
+          arguments:
+            - disableStutteringCheck
+        - name: if-return
+          disabled: false
+        - name: increment-decrement
+          disabled: false
+        - name: var-naming
+          disabled: false
+        - name: var-declaration
+          disabled: false
+        - name: package-comments
+          disabled: false
+        - name: range
+          disabled: false
+        - name: receiver-naming
+          disabled: false
+        - name: time-naming
+          disabled: false
+        - name: unexported-return
+          disabled: false
+        - name: indent-error-flow
+          disabled: false
+        - name: errorf
+          disabled: false
+        - name: empty-block
+          disabled: false
+        - name: superfluous-else
+          disabled: false
+        - name: unused-parameter
+          disabled: false
+        - name: unreachable-code
+          disabled: false
+        - name: redefines-builtin-id
+          disabled: false
   exclusions:
-    generated: lax
+    generated: strict
     presets:
       - comments
       - common-false-positives
       - legacy
       - std-error-handling
     rules:
-      - linters:
-          - govet
-        text: composite literal uses unkeyed fields
-      - linters:
-          - staticcheck
-        text: certificateRequest.Attributes
-      - linters:
-          - gosec
-        text: G505
-      - linters:
-          - gosec
-        text: G401
-      - linters:
+      - path: '_test\.go'
+        linters:
           - errcheck
-        text: h.Write
-    paths:
-      - third_party$
-      - builtin$
-      - examples$
+          - gosec
+          - rowserrcheck
+          - makezero
 formatters:
+  settings:
+    goimports:
+      local-prefixes: github.com/Venafi/vcert
   exclusions:
     generated: lax
     paths:

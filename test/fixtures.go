@@ -329,6 +329,6 @@ func IsArrayIntEqual(expectedValues, values []int) bool {
 	return true
 }
 
-func RandSshKeyId() string {
+func RandSSHKeyId() string {
 	return fmt.Sprintf("vcert-go-%d-%sSSHCert", time.Now().Unix(), randRunes(4))
 }

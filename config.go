@@ -61,7 +61,7 @@ type Config struct {
 	// ConnectionTrust  may contain a trusted CA or certificate of server if you use self-signed certificate.
 	ConnectionTrust string // *x509.CertPool
 	LogVerbose      bool
-	// http.Client to use durring construction
+	// http.Client to use during construction
 	Client *http.Client
 	// UserAgent is the value of the UserAgent header in HTTP requests to Venafi
 	// API endpoints.

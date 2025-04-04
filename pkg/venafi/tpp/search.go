@@ -17,6 +17,7 @@
 package tpp
 
 import (
+	// nolint:gosec // Although use weak cryptographic primitive (G401), we still needed it for test process only
 	"crypto/sha1"
 	"encoding/json"
 	"encoding/pem"
@@ -181,6 +182,7 @@ func formatSearchCertificateArguments(cn string, sans *certificate.Sans, certMin
 
 func calcThumbprint(cert string) string {
 	p, _ := pem.Decode([]byte(cert))
+	// nolint:gosec // Although use weak cryptographic primitive (G401), we still needed it for test process only
 	h := sha1.New()
 	h.Write(p.Bytes)
 	buf := h.Sum(nil)

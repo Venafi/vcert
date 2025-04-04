@@ -2879,7 +2879,7 @@ func TestCreateSshCertServiceGeneratedKP(t *testing.T) {
 
 	var req = &certificate.SshCertRequest{}
 
-	req.KeyId = test.RandSshKeyId()
+	req.KeyId = test.RandSSHKeyId()
 	req.ValidityPeriod = fmt.Sprint(duration, "h")
 	req.Template = os.Getenv("TPP_SSH_CA")
 	req.SourceAddresses = []string{"test.com"}
@@ -2946,7 +2946,7 @@ func TestCreateSshCertLocalGeneratedKP(t *testing.T) {
 	}
 
 	var req = &certificate.SshCertRequest{}
-	req.KeyId = test.RandSshKeyId()
+	req.KeyId = test.RandSSHKeyId()
 
 	priv, pub, err := util.GenerateSshKeyPair(3072, "", req.KeyId)
 
@@ -3057,7 +3057,7 @@ func TestCreateSshCertProvidedPubKey(t *testing.T) {
 
 	var req = &certificate.SshCertRequest{}
 
-	req.KeyId = test.RandSshKeyId()
+	req.KeyId = test.RandSSHKeyId()
 	req.ValidityPeriod = fmt.Sprint(duration, "h")
 	req.Template = os.Getenv("TPP_SSH_CA")
 	req.PublicKeyData = content

@@ -54,6 +54,13 @@ func (ns *NotificationServiceClient) Subscribe(wsClientId string) (*websocket.Co
 		return nil, err
 	}
 
+	defer func(f interface{}) {
+		tempErr := f.(func() error)()
+		if tempErr != nil {
+			err = tempErr
+		}
+	}(resp.Body.Close())
+
 	if resp.StatusCode != http.StatusSwitchingProtocols {
 		return nil, fmt.Errorf("failed switch protocols")
 	}
@@ -63,7 +70,8 @@ func (ns *NotificationServiceClient) Subscribe(wsClientId string) (*websocket.Co
 	return wsConn, nil
 }
 
-func (ns *NotificationServiceClient) ReadResponse(wsConn *websocket.Conn) (*domain.WorkflowResponse, error) {
+func (ns *NotificationServiceClient) ReadResponse(wsConn *websocket.Conn) (
+	*domain.WorkflowResponse, error) {
 	_, msg, err := wsConn.ReadMessage()
 	if err != nil {
 		return nil, err

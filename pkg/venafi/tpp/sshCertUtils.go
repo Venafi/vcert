@@ -47,7 +47,7 @@ func RequestSshCertificate(c *Connector, req *certificate.SshCertRequest) (*cert
 
 	//TODO: Maybe, there is a better way to set the timeout.
 	if req.Timeout > 0 {
-		c.client.Timeout = req.Timeout * time.Second
+		c.client.Timeout = req.Timeout
 	}
 	statusCode, status, body, err := c.request("POST", urlResourceSshCertReq, sshCertReq)
 	if err != nil {
@@ -193,7 +193,8 @@ func retrieveSshCerOnce(sshRetrieveReq certificate.TppSshCertRetrieveRequest, c 
 	if err != nil {
 		return nil, err
 	}
-	retrieveResponse, err := parseSshCertOperationResponse(statusCode, status, body)
+	retrieveResponse, err := parseSshCertOperationResponse(
+		statusCode, status, body)
 	if err != nil {
 		return nil, err
 	}
@@ -290,7 +291,7 @@ func RetrieveSshConfig(c *Connector, ca *certificate.SshCaTemplateRequest) (*cer
 		conf.CaPublicKey = string(body)
 
 	default:
-		return nil, fmt.Errorf("error while retriving CA public key, error body:%s, status:%s and status code:%v", string(body), status, statusCode)
+		return nil, fmt.Errorf("error while retreiving CA public key, error body:%s, status:%s and status code:%v", string(body), status, statusCode)
 	}
 
 	if c.accessToken != "" {
@@ -324,7 +325,7 @@ func GetAvailableSshTemplates(c *Connector) ([]certificate.SshAvaliableTemplate,
 		// Return NotFound as this API method is unavailable in SSH Protect versions prior 21.4.0
 		return nil, errors.New(status)
 	default:
-		return nil, fmt.Errorf("error while retriving avaliable SSH templates, error body:%s, status:%s and status code:%v", string(body), status, statusCode)
+		return nil, fmt.Errorf("error while retrieving available SSH templates, error body:%s, status:%s and status code:%v", string(body), status, statusCode)
 	}
 	return response, nil
 }
@@ -368,7 +369,6 @@ func parseSshCaDetailsRequestResult(httpStatusCode int, httpStatus string, body 
 		if !data.Response.Success {
 			return data, fmt.Errorf("error requesting CA template details, error code: %d, error description: %s", data.Response.ErrorCode, data.Response.ErrorMessage)
 		}
-
 		return data, nil
 
 	default:
