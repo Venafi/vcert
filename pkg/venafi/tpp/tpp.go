@@ -568,9 +568,6 @@ func (c *Connector) getHTTPClient() *http.Client {
 
 // GenerateRequest creates a new certificate request, based on the zone/policy configuration and the user data
 func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *certificate.Request) (err error) {
-	//TODO: [TPP_25.1] I don't think we need to touch here now. The certificate request endpoints are backward compatible and
-	// would still understand the KeyAlgorithm/Size/EllipticCurve attributes. But when we add support for Post Quantum algorithms we
-	// need to update this to pass the PKIX attributes
 	if req.KeyType == certificate.KeyTypeED25519 {
 		return fmt.Errorf("Unable to request certificate from TPP, ed25519 key type is not for TPP")
 	}

@@ -133,9 +133,6 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 	}
 	req.CustomFields = append(req.CustomFields, certificate.CustomField{Name: "Origin", Value: origin, Type: certificate.CustomFieldOrigin})
 
-	//TODO: [TPP_25.1] I don't think we need to touch here now. The certificate request endpoints are backward compatible and
-	// would still understand the KeyAlgorithm/Size/EllipticCurve attributes. But when we add support for Post Quantum algorithms we
-	// need to update this to pass the PKIX attributes
 	switch true {
 	case 0 == strings.Index(cf.csrOption, "file:"):
 		var err error

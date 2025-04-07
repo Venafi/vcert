@@ -633,10 +633,6 @@ func (c *Connector) prepareRequest(req *certificate.Request, zone string) (tppRe
 		}
 		tppReq.Devices = append(tppReq.Devices, dev)
 	}
-
-	//TODO: [TPP_25.1] I don't think we need to touch here now. The certificate request endpoints are backward compatible and
-	// would still understand the KeyAlgorithm/Size/EllipticCurve attributes. But when we add support for Post Quantum algorithms we
-	// need to update this to pass the PKIX attributes
 	switch req.KeyType {
 	case certificate.KeyTypeRSA:
 		tppReq.KeyAlgorithm = "RSA"
