@@ -3,6 +3,7 @@ package notificationservice
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -49,17 +50,17 @@ func (ns *NotificationServiceClient) Subscribe(wsClientId string) (*websocket.Co
 		httpHeader = http.Header{util.HeaderTpplApikey: {ns.apiKey}}
 	}
 
+	// nolint:bodyclose // TODO: figure out better way to close the body reponse so it is detected by the linter
 	wsConn, resp, err := websocket.DefaultDialer.Dial(notificationsUrl.String(), httpHeader)
 	if err != nil {
 		return nil, err
 	}
-
-	defer func(f interface{}) {
-		tempErr := f.(func() error)()
+	defer func(Body io.ReadCloser) {
+		tempErr := Body.Close()
 		if tempErr != nil {
 			err = tempErr
 		}
-	}(resp.Body.Close())
+	}(resp.Body)
 
 	if resp.StatusCode != http.StatusSwitchingProtocols {
 		return nil, fmt.Errorf("failed switch protocols")
