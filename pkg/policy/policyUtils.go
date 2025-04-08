@@ -13,7 +13,7 @@ import (
 )
 
 // TppKeyType represents the Private Key types supported by TPP
-var TppKeyType = []string{"RSA", "ECDSA"}
+var TppKeyType = []string{"RSA", "ECDSA", "ECC"}
 
 // TppRsaKeySize represents the Key sizes supported by TPP for RSA Private Keys
 var TppRsaKeySize = []int{512, 1024, 2048, 3072, 4096}
@@ -23,6 +23,21 @@ var CloudRsaKeySize = []int{1024, 2048, 3072, 4096}
 
 // TppEllipticCurves represents the curves supported by TPP for ECDSA Private Keys
 var TppEllipticCurves = []string{"P256", "P384", "P521"}
+
+// KeyAlgorithmsToPKIX represents the mapping of RSA and ECDSA/ECC Key Algorithms to the PKIX OIDs
+var KeyAlgorithmsToPKIX = map[string]map[string]string{
+	"RSA": {
+		"1024": "1.3.6.1.4.1.28783.10.1.1.1024",
+		"2048": "1.3.6.1.4.1.28783.10.1.1.2048",
+		"3072": "1.3.6.1.4.1.28783.10.1.1.3072",
+		"4096": "1.3.6.1.4.1.28783.10.1.1.4096",
+	},
+	"ECC": {
+		"P256": "1.3.6.1.4.1.28783.10.2.1.256",
+		"P384": "1.3.6.1.4.1.28783.10.2.1.384",
+		"P521": "1.3.6.1.4.1.28783.10.2.1.521",
+	},
+}
 
 func GetFileType(f string) string {
 	extension := filepath.Ext(f)
@@ -584,29 +599,30 @@ func BuildPolicySpecificationForTPP(checkPolicyResp CheckPolicyResponse) (*Polic
 		}
 	}
 
-	//resolve rsaKeySizes
-
-	if policy.KeyPairResponse.KeySize.Value > 0 {
-		if policy.KeyPairResponse.KeySize.Locked {
-			keyPair.RsaKeySizes = []int{policy.KeyPairResponse.KeySize.Value}
-		} else {
-			shouldCreateDefKeyPair = true
-			defaultKeyPair.RsaKeySize = &policy.KeyPairResponse.KeySize.Value
+	if strings.ToUpper(policy.KeyPairResponse.KeyAlgorithm.Value) == "RSA" {
+		//resolve rsaKeySizes
+		if policy.KeyPairResponse.KeySize.Value > 0 {
+			if policy.KeyPairResponse.KeySize.Locked {
+				keyPair.RsaKeySizes = []int{policy.KeyPairResponse.KeySize.Value}
+			} else {
+				shouldCreateDefKeyPair = true
+				defaultKeyPair.RsaKeySize = &policy.KeyPairResponse.KeySize.Value
+			}
+		}
+	} else {
+		//resolve ellipticCurve
+		if policy.KeyPairResponse.EllipticCurve.Value != "" {
+			if policy.KeyPairResponse.EllipticCurve.Locked {
+				shouldCreateKeyPair = true
+				keyPair.EllipticCurves = []string{policy.KeyPairResponse.EllipticCurve.Value}
+			} else {
+				shouldCreateDefKeyPair = true
+				defaultKeyPair.EllipticCurve = &policy.KeyPairResponse.EllipticCurve.Value
+			}
 		}
 	}
-	//resolve ellipticCurves
-	/*if tppPolicy.EllipticCurve != nil {
-		if tppPolicy.EllipticCurve.Locked {
-			shouldCreateKeyPair = true
-			keyPair.EllipticCurves = []string{tppPolicy.EllipticCurve.Value}
-		} else {
-			shouldCreateDefKeyPair = true
-			defaultKeyPair.EllipticCurve = &tppPolicy.EllipticCurve.Value
-		}
-	}*/
 
 	//resolve generationType
-
 	value := policy.CsrGeneration.Value
 	if value != "" {
 		booleanValue := true

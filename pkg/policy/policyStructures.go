@@ -146,10 +146,13 @@ type TppPolicy struct {
 	State              *LockedAttribute
 	Country            *LockedAttribute
 
-	//keypair attributes
-	KeyAlgorithm         *LockedAttribute
-	KeyBitStrength       *LockedAttribute
-	EllipticCurve        *LockedAttribute
+	// KeyPair attributes
+	PkixParameterSetDefault *LockedAttribute
+	PkixParameterSet        *LockedArrayAttribute
+
+	KeyAlgorithm         *LockedAttribute //Deprecated in TPP 25.1, use PkixParameterSet
+	KeyBitStrength       *LockedAttribute //Deprecated in TPP 25.1, use PkixParameterSet
+	EllipticCurve        *LockedAttribute //Deprecated in TPP 25.1, use PkixParameterSet
 	ManualCsr            *LockedAttribute
 	AllowPrivateKeyReuse *int
 	WantRenewal          *int
@@ -238,8 +241,9 @@ type PolicyResponse struct {
 }
 
 type KeyPairResponse struct {
-	KeyAlgorithm LockedAttribute    `json:"KeyAlgorithm"`
-	KeySize      LockedIntAttribute `json:"KeySize"`
+	KeyAlgorithm  LockedAttribute    `json:"KeyAlgorithm"`
+	KeySize       LockedIntAttribute `json:"KeySize"`
+	EllipticCurve LockedAttribute    `json:"EllipticCurve"`
 }
 
 type SubjectResponse struct {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2022 Venafi, Inc.
+ * Copyright 2018-2025 Venafi, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1136,45 +1136,79 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 		}
 	}
 
-	//TODO: [TPP_25.1] We need to update this to set PKIX Parameter Set (not sure about default), in case of TPP 25.1 or higher
-	/*
-		// Check the TPP version is 25.x or greater
-		tppVersionNumber := -1
-		tppVersion, err := c.RetrieveSystemVersion()
+	// Check the TPP version is 25.x or greater
+	tppVersionNumber := -1
+	tppVersion, err := c.RetrieveSystemVersion()
+	if err != nil {
+		return "", err
+	}
+	if strings.Contains(tppVersion, ".") {
+		tppVersionNumber, err = strconv.Atoi(strings.Split(tppVersion, ".")[0])
 		if err != nil {
-			...
+			return "", err
 		}
-		if strings.Contains(tppVersion, ".") {
-			tppVersionNumber, err = strconv.Atoi(strings.Split(tppVersion, ".")[0])
+	}
+
+	if tppVersionNumber >= 25 {
+		// create PKIX Parameter Set attribute
+		var pkixOid string
+		if tppPolicy.PkixParameterSet != nil {
+			_, status, _, err = createPolicyAttribute(c, policy.TppPkixParameterSetPolicy, tppPolicy.PkixParameterSet.Value, *(tppPolicy.Name), tppPolicy.PkixParameterSet.Locked)
 			if err != nil {
-				...
+				return "", err
+			}
+		} else {
+			// For backward compatibility, if the PKIX Parameter Set is not set, we need to set it using the Key Algorithm value
+			if tppPolicy.KeyAlgorithm != nil {
+				if algValues, ok := policy.KeyAlgorithmsToPKIX[tppPolicy.KeyAlgorithm.Value]; ok {
+					if tppPolicy.KeyBitStrength != nil {
+						pkixOid = algValues[tppPolicy.KeyBitStrength.Value]
+					}
+					if tppPolicy.EllipticCurve != nil {
+						pkixOid = algValues[tppPolicy.EllipticCurve.Value]
+					}
+					if pkixOid != "" {
+						_, status, _, err = createPolicyAttribute(c, policy.TppPkixParameterSetPolicy, []string{pkixOid}, *(tppPolicy.Name), tppPolicy.KeyAlgorithm.Locked)
+						if err != nil {
+							return "", err
+						}
+						_, status, _, err = createPolicyAttribute(c, policy.TppPkixParameterSetPolicyDefault, []string{pkixOid}, *(tppPolicy.Name), tppPolicy.KeyAlgorithm.Locked)
+						if err != nil {
+							return "", err
+						}
+					}
+				}
 			}
 		}
-		if tppVersionNumber >= 25 {
-			...
-		}
-	*/
-	//create Key Algorithm attribute
-	if tppPolicy.KeyAlgorithm != nil {
-		_, status, _, err = createPolicyAttribute(c, policy.TppKeyAlgorithm, []string{tppPolicy.KeyAlgorithm.Value}, *(tppPolicy.Name), tppPolicy.KeyAlgorithm.Locked)
-		if err != nil {
-			return "", err
-		}
-	}
 
-	//create Key Bit Strength
-	if tppPolicy.KeyBitStrength != nil {
-		_, status, _, err = createPolicyAttribute(c, policy.TppKeyBitStrength, []string{tppPolicy.KeyBitStrength.Value}, *(tppPolicy.Name), tppPolicy.KeyBitStrength.Locked)
-		if err != nil {
-			return "", err
+		// create PKIX Parameter Set Default attribute
+		if tppPolicy.PkixParameterSetDefault != nil {
+			_, status, _, err = createPolicyAttribute(c, policy.TppPkixParameterSetPolicyDefault, []string{tppPolicy.PkixParameterSetDefault.Value}, *(tppPolicy.Name), tppPolicy.PkixParameterSetDefault.Locked)
+			if err != nil {
+				return "", err
+			}
 		}
-	}
-
-	//create Elliptic Curve attribute
-	if tppPolicy.EllipticCurve != nil {
-		_, status, _, err = createPolicyAttribute(c, policy.TppEllipticCurve, []string{tppPolicy.EllipticCurve.Value}, *(tppPolicy.Name), tppPolicy.EllipticCurve.Locked)
-		if err != nil {
-			return "", err
+	} else {
+		//create Key Algorithm attribute
+		if tppPolicy.KeyAlgorithm != nil {
+			_, status, _, err = createPolicyAttribute(c, policy.TppKeyAlgorithm, []string{tppPolicy.KeyAlgorithm.Value}, *(tppPolicy.Name), tppPolicy.KeyAlgorithm.Locked)
+			if err != nil {
+				return "", err
+			}
+		}
+		//create Key Bit Strength
+		if tppPolicy.KeyBitStrength != nil {
+			_, status, _, err = createPolicyAttribute(c, policy.TppKeyBitStrength, []string{tppPolicy.KeyBitStrength.Value}, *(tppPolicy.Name), tppPolicy.KeyBitStrength.Locked)
+			if err != nil {
+				return "", err
+			}
+		}
+		//create Elliptic Curve attribute
+		if tppPolicy.EllipticCurve != nil {
+			_, status, _, err = createPolicyAttribute(c, policy.TppEllipticCurve, []string{tppPolicy.EllipticCurve.Value}, *(tppPolicy.Name), tppPolicy.EllipticCurve.Locked)
+			if err != nil {
+				return "", err
+			}
 		}
 	}
 
@@ -1193,7 +1227,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 		}
 	}
 
-	//Allow Private Key Reuse" & "Want Renewal
+	//Allow "Private Key Reuse" & "Want Renewal"
 	if tppPolicy.AllowPrivateKeyReuse != nil {
 		_, status, _, err = createPolicyAttribute(c, policy.TppAllowPrivateKeyReuse, []string{strconv.Itoa(*(tppPolicy.AllowPrivateKeyReuse))}, *(tppPolicy.Name), true)
 		if err != nil {
@@ -2118,6 +2152,17 @@ func resetTPPAttributes(zone string, c *Connector) error {
 
 	//reset Elliptic Curve attribute
 	err = resetTPPAttribute(c, policy.TppEllipticCurve, zone)
+	if err != nil {
+		return err
+	}
+
+	//reset PKIX Parameter Set Policy Default attribute
+	err = resetTPPAttribute(c, policy.TppPkixParameterSetPolicyDefault, zone)
+	if err != nil {
+		return err
+	}
+	//reset PKIX Parameter Set Policy attribute
+	err = resetTPPAttribute(c, policy.TppPkixParameterSetPolicy, zone)
 	if err != nil {
 		return err
 	}
