@@ -378,6 +378,13 @@ func BuildTppPolicy(ps *PolicySpecification) TppPolicy {
 		tppPolicy.Country = createLockedAttribute(*(ps.Default.Subject.Country), false)
 	}
 
+	if ps.Policy != nil && ps.Policy.KeyPair.PkixParameterSet != nil && len(ps.Policy.KeyPair.PkixParameterSet) > 0 {
+		tppPolicy.PkixParameterSet = createLockedArrayAttribute(ps.Policy.KeyPair.PkixParameterSet, true)
+	}
+	if ps.Default != nil && ps.Default.KeyPair != nil && (ps.Default.KeyPair.PkixParameterSetDefault != nil) && (*(ps.Default.KeyPair.PkixParameterSetDefault) != "") {
+		tppPolicy.PkixParameterSetDefault = createLockedAttribute(*(ps.Default.KeyPair.PkixParameterSetDefault), false)
+	}
+
 	if ps.Policy != nil && ps.Policy.KeyPair != nil && len(ps.Policy.KeyPair.KeyTypes) > 0 && ps.Policy.KeyPair.KeyTypes[0] != "" {
 		tppPolicy.KeyAlgorithm = createLockedAttribute(ps.Policy.KeyPair.KeyTypes[0], true)
 	} else if ps.Default != nil && ps.Default.KeyPair != nil && (ps.Default.KeyPair.KeyType != nil) && (*(ps.Default.KeyPair.KeyType) != "") {

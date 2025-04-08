@@ -868,7 +868,6 @@ func (sp serverPolicy) toZoneConfig(zc *endpoint.ZoneConfiguration) {
 	zc.OrganizationalUnit = sp.Subject.OrganizationalUnit.Values
 	zc.Province = sp.Subject.State.Value
 	zc.Locality = sp.Subject.City.Value
-	//TODO: [TPP_25.1] Do we need updates here?
 	key := endpoint.AllowedKeyConfiguration{}
 	err := key.KeyType.Set(sp.KeyPair.KeyAlgorithm.Value, sp.KeyPair.EllipticCurve.Value)
 	if err != nil {
@@ -991,7 +990,6 @@ func (sp serverPolicy) toPolicy() (p endpoint.Policy) {
 	} else {
 		p.UpnSanRegExs = []string{}
 	}
-	//TODO: [TPP_25.1] Handle PKIX
 	if sp.KeyPair.KeyAlgorithm.Locked {
 		var keyType certificate.KeyType
 		if err := keyType.Set(sp.KeyPair.KeyAlgorithm.Value, sp.KeyPair.EllipticCurve.Value); err != nil {
