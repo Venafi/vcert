@@ -96,16 +96,10 @@ func TestNewClientWithFileConfig(t *testing.T) {
 	}
 
 	tmpfile, err := ioutil.TempFile("", "")
-
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func(name string) {
-		err := os.Remove(name)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}(tmpfile.Name())
+	defer os.Remove(tmpfile.Name())
 
 	err = ioutil.WriteFile(tmpfile.Name(), []byte("test_mode = true"), 0644)
 	if err != nil {
