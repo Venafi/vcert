@@ -378,7 +378,7 @@ func BuildTppPolicy(ps *PolicySpecification) TppPolicy {
 		tppPolicy.Country = createLockedAttribute(*(ps.Default.Subject.Country), false)
 	}
 
-	if ps.Policy != nil && ps.Policy.KeyPair.PkixParameterSet != nil && len(ps.Policy.KeyPair.PkixParameterSet) > 0 {
+	if ps.Policy != nil && ps.Policy.KeyPair != nil && ps.Policy.KeyPair.PkixParameterSet != nil && len(ps.Policy.KeyPair.PkixParameterSet) > 0 {
 		tppPolicy.PkixParameterSet = createLockedArrayAttribute(ps.Policy.KeyPair.PkixParameterSet, true)
 	}
 	if ps.Default != nil && ps.Default.KeyPair != nil && (ps.Default.KeyPair.PkixParameterSetDefault != nil) && (*(ps.Default.KeyPair.PkixParameterSetDefault) != "") {
@@ -620,7 +620,6 @@ func BuildPolicySpecificationForTPP(checkPolicyResp CheckPolicyResponse) (*Polic
 		//resolve ellipticCurve
 		if policy.KeyPairResponse.EllipticCurve.Value != "" {
 			if policy.KeyPairResponse.EllipticCurve.Locked {
-				shouldCreateKeyPair = true
 				keyPair.EllipticCurves = []string{policy.KeyPairResponse.EllipticCurve.Value}
 			} else {
 				shouldCreateDefKeyPair = true

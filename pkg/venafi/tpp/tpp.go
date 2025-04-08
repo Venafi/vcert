@@ -820,14 +820,6 @@ type serverPolicy struct {
 	CsrGeneration        _strValue
 	KeyGeneration        _strValue
 	KeyPair              struct {
-		PkixParameterSet struct {
-			Locked bool
-			Values []string
-		}
-		DefaultPkixParameterSet struct {
-			Locked bool
-			Value  string
-		}
 		KeyAlgorithm _strValue
 		KeySize      struct {
 			Locked bool

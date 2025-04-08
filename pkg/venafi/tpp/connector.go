@@ -1169,7 +1169,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 						pkixOid = algValues[tppPolicy.EllipticCurve.Value]
 					}
 					if pkixOid != "" {
-						_, status, _, err = createPolicyAttribute(c, policy.TppPkixParameterSetPolicy, []string{pkixOid}, *(tppPolicy.Name), tppPolicy.KeyAlgorithm.Locked)
+						_, _, _, err = createPolicyAttribute(c, policy.TppPkixParameterSetPolicy, []string{pkixOid}, *(tppPolicy.Name), tppPolicy.KeyAlgorithm.Locked)
 						if err != nil {
 							return "", err
 						}
