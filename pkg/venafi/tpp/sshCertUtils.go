@@ -369,6 +369,7 @@ func parseSshCaDetailsRequestResult(httpStatusCode int, httpStatus string, body 
 		if !data.Response.Success {
 			return data, fmt.Errorf("error requesting CA template details, error code: %d, error description: %s", data.Response.ErrorCode, data.Response.ErrorMessage)
 		}
+
 		return data, nil
 
 	default:

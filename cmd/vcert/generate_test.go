@@ -19,7 +19,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io"
+	"io/ioutil"
 	t "log"
 	"os"
 	"testing"
@@ -54,9 +54,7 @@ func TestWriteOutKeyAndCsr(t *testing.T) {
 	if csr == nil {
 		t.Fatalf("CSR should not be nil")
 	}
-
-	temp, err := os.CreateTemp(os.TempDir(), "vcertTest")
-
+	temp, err := ioutil.TempFile(os.TempDir(), "vcertTest")
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -103,11 +101,7 @@ func TestGenerateCsrJson(t *testing.T) {
 	}
 
 	//Reads the csr file to validate the json format
-	file, err := os.Open(csrName)
-	if err != nil {
-		panic(err)
-	}
-	csrData, err := io.ReadAll(file)
+	csrData, err := ioutil.ReadFile(csrName)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -121,11 +115,7 @@ func TestGenerateCsrJson(t *testing.T) {
 	}
 
 	//Reads the private key file to validate the json format
-	file, err = os.Open(keyName)
-	if err != nil {
-		panic(err)
-	}
-	keyData, err := io.ReadAll(file)
+	keyData, err := ioutil.ReadFile(keyName)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}

@@ -50,7 +50,7 @@ func (ns *NotificationServiceClient) Subscribe(wsClientId string) (*websocket.Co
 		httpHeader = http.Header{util.HeaderTpplApikey: {ns.apiKey}}
 	}
 
-	// nolint:bodyclose // TODO: figure out better way to close the body reponse so it is detected by the linter
+	// nolint:bodyclose // TODO: figure out better way to close the body response so it is detected by the linter
 	wsConn, resp, err := websocket.DefaultDialer.Dial(notificationsUrl.String(), httpHeader)
 	if err != nil {
 		return nil, err
@@ -71,8 +71,7 @@ func (ns *NotificationServiceClient) Subscribe(wsClientId string) (*websocket.Co
 	return wsConn, nil
 }
 
-func (ns *NotificationServiceClient) ReadResponse(wsConn *websocket.Conn) (
-	*domain.WorkflowResponse, error) {
+func (ns *NotificationServiceClient) ReadResponse(wsConn *websocket.Conn) (*domain.WorkflowResponse, error) {
 	_, msg, err := wsConn.ReadMessage()
 	if err != nil {
 		return nil, err

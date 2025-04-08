@@ -17,6 +17,7 @@
 package vcert
 
 import (
+	"io/ioutil"
 	"os"
 	"testing"
 )
@@ -91,18 +92,18 @@ func TestLoadFromFile(t *testing.T) {
 		{false, invalidCloudConfig},
 	}
 	for _, test_case := range cases {
-		tmpFile, err := os.CreateTemp("", "")
+		tmpfile, err := ioutil.TempFile("", "")
 		if err != nil {
 			t.Fatal(err)
 		}
-		defer os.Remove(tmpFile.Name())
+		defer os.Remove(tmpfile.Name())
 
-		err = os.WriteFile(tmpFile.Name(), []byte(test_case.content), 0644)
+		err = os.WriteFile(tmpfile.Name(), []byte(test_case.content), 0644)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		_, err = LoadConfigFromFile(tmpFile.Name(), "")
+		_, err = LoadConfigFromFile(tmpfile.Name(), "")
 		if test_case.valid {
 			if err != nil {
 				t.Logf("config: %s", test_case.content)

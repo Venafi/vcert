@@ -23,7 +23,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
-	"io"
+	"io/ioutil"
 	t "log"
 	"math/big"
 	"net"
@@ -275,11 +275,7 @@ func main() {
 		var connectionTrustBundle *x509.CertPool
 		trustBundleFilePath := os.Getenv("TRUST_BUNDLE_PATH")
 		if trustBundleFilePath != "" {
-			file, err := os.Open(trustBundleFilePath)
-			if err != nil {
-				panic(err)
-			}
-			buf, err := io.ReadAll(file)
+			buf, err := ioutil.ReadFile(trustBundleFilePath)
 			if err != nil {
 				panic(err)
 			}

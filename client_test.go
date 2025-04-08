@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
 	"os"
@@ -94,7 +95,7 @@ func TestNewClientWithFileConfig(t *testing.T) {
 		}
 	}
 
-	tmpFile, err := os.CreateTemp("", "")
+	tmpfile, err := ioutil.TempFile("", "")
 
 	if err != nil {
 		t.Fatal(err)
@@ -104,14 +105,14 @@ func TestNewClientWithFileConfig(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-	}(tmpFile.Name())
+	}(tmpfile.Name())
 
-	err = os.WriteFile(tmpFile.Name(), []byte("test_mode = true"), 0644)
+	err = os.WriteFile(tmpfile.Name(), []byte("test_mode = true"), 0644)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	cfg, err := LoadConfigFromFile(tmpFile.Name(), "")
+	cfg, err := LoadConfigFromFile(tmpfile.Name(), "")
 	if err != nil {
 		t.Fatal(err)
 	}

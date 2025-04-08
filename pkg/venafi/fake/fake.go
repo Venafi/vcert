@@ -17,7 +17,7 @@
 package fake
 
 import (
-	"errors"
+	"fmt"
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
 )
@@ -38,14 +38,14 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 
 	case certificate.UserProvidedCSR:
 		if req.GetCSR() == nil {
-			return errors.New("CSR was supposed to be provided by user, but it's empty")
+			return fmt.Errorf("CSR was supposed to be provided by user, but it's empty")
 		}
 
 	case certificate.ServiceGeneratedCSR:
 		return nil
 
 	default:
-		return errors.New("Unexpected option in PrivateKeyOrigin")
+		return fmt.Errorf("Unexpected option in PrivateKeyOrigin")
 	}
 
 	return nil

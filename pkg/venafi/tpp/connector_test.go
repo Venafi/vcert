@@ -29,6 +29,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -735,7 +736,7 @@ func TestResetCertificate(t *testing.T) {
 				t.Errorf("expected request path %q but got %q", mockCalls[i].expectReqPath, r.URL.Path)
 			}
 
-			bytes, err := io.ReadAll(r.Body)
+			bytes, err := ioutil.ReadAll(r.Body)
 			if err != nil {
 				t.Errorf("failed to read request body: %s", err)
 			}
@@ -2879,7 +2880,7 @@ func TestCreateSshCertServiceGeneratedKP(t *testing.T) {
 
 	var req = &certificate.SshCertRequest{}
 
-	req.KeyId = test.RandSSHKeyId()
+	req.KeyId = test.RandSshKeyId()
 	req.ValidityPeriod = fmt.Sprint(duration, "h")
 	req.Template = os.Getenv("TPP_SSH_CA")
 	req.SourceAddresses = []string{"test.com"}
@@ -2946,7 +2947,7 @@ func TestCreateSshCertLocalGeneratedKP(t *testing.T) {
 	}
 
 	var req = &certificate.SshCertRequest{}
-	req.KeyId = test.RandSSHKeyId()
+	req.KeyId = test.RandSshKeyId()
 
 	priv, pub, err := util.GenerateSshKeyPair(3072, "", req.KeyId)
 
@@ -3027,11 +3028,7 @@ func TestCreateSshCertProvidedPubKey(t *testing.T) {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
 
-	file, err := os.Open(absPath)
-	if err != nil {
-		panic(err)
-	}
-	fileContent, err = io.ReadAll(file)
+	fileContent, err = ioutil.ReadFile(absPath)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
@@ -3057,7 +3054,7 @@ func TestCreateSshCertProvidedPubKey(t *testing.T) {
 
 	var req = &certificate.SshCertRequest{}
 
-	req.KeyId = test.RandSSHKeyId()
+	req.KeyId = test.RandSshKeyId()
 	req.ValidityPeriod = fmt.Sprint(duration, "h")
 	req.Template = os.Getenv("TPP_SSH_CA")
 	req.PublicKeyData = content
