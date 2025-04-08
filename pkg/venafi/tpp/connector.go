@@ -1150,7 +1150,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 	}
 
 	if tppVersionNumber >= 25 {
-		// create PKIX Parameter Set attribute
+		// create "PKIX Parameter Set" attribute
 		var pkixOid string
 		if tppPolicy.PkixParameterSet != nil {
 			_, status, _, err = createPolicyAttribute(c, policy.TppPkixParameterSetPolicy, tppPolicy.PkixParameterSet.Value, *(tppPolicy.Name), tppPolicy.PkixParameterSet.Locked)
@@ -1158,7 +1158,8 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 				return "", err
 			}
 		} else {
-			// For backward compatibility, if the PKIX Parameter Set is not set, we need to set it using the Key Algorithm value
+			// For backward compatibility, if the "PKIX Parameter Set" is not set, we need to set it using the "Key Algorithm",
+			// "Key Bit Strength" and "Elliptic Curve" attribute values
 			if tppPolicy.KeyAlgorithm != nil {
 				if algValues, ok := policy.KeyAlgorithmsToPKIX[tppPolicy.KeyAlgorithm.Value]; ok {
 					if tppPolicy.KeyBitStrength != nil {
@@ -1172,6 +1173,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 						if err != nil {
 							return "", err
 						}
+						// set the "PKIX Parameter Set Default" attribute value as well
 						_, status, _, err = createPolicyAttribute(c, policy.TppPkixParameterSetPolicyDefault, []string{pkixOid}, *(tppPolicy.Name), tppPolicy.KeyAlgorithm.Locked)
 						if err != nil {
 							return "", err
@@ -1181,7 +1183,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 			}
 		}
 
-		// create PKIX Parameter Set Default attribute
+		// create "PKIX Parameter Set Default" attribute
 		if tppPolicy.PkixParameterSetDefault != nil {
 			_, status, _, err = createPolicyAttribute(c, policy.TppPkixParameterSetPolicyDefault, []string{tppPolicy.PkixParameterSetDefault.Value}, *(tppPolicy.Name), tppPolicy.PkixParameterSetDefault.Locked)
 			if err != nil {
