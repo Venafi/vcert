@@ -98,7 +98,7 @@ func TestLoadFromFile(t *testing.T) {
 		}
 		defer os.Remove(tmpfile.Name())
 
-		err = os.WriteFile(tmpfile.Name(), []byte(test_case.content), 0644)
+		err = ioutil.WriteFile(tmpfile.Name(), []byte(test_case.content), 0644)
 		if err != nil {
 			t.Fatal(err)
 		}

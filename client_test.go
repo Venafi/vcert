@@ -107,7 +107,7 @@ func TestNewClientWithFileConfig(t *testing.T) {
 		}
 	}(tmpfile.Name())
 
-	err = os.WriteFile(tmpfile.Name(), []byte("test_mode = true"), 0644)
+	err = ioutil.WriteFile(tmpfile.Name(), []byte("test_mode = true"), 0644)
 	if err != nil {
 		t.Fatal(err)
 	}
