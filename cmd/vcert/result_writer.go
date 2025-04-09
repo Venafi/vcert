@@ -155,7 +155,7 @@ func (o *Output) AsJKS(c *Config) ([]byte, error) {
 		return nil, fmt.Errorf("at least certificate and private key are required")
 	}
 
-	var certificateChain []keystore.Certificate
+	certificateChain := make([]keystore.Certificate, 0)
 
 	//getting the certificate in bytes
 	p, _ := pem.Decode([]byte(o.Certificate))

@@ -475,7 +475,7 @@ var (
 		Destination: &flags.replaceInstance,
 	}
 
-	//todo: make check agains RevocationReasonOptions[]string variable
+	//todo: make check against RevocationReasonOptions[]string variable
 	flagRevocationReason = &cli.StringFlag{
 		Name: "reason",
 		Usage: `The revocation reason. Options include: 

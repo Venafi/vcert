@@ -18,6 +18,7 @@
 package main
 
 import (
+	// nolint:gosec // TODO: figure out a way to obtain cert thumbprint/fingerprint to remove the use of weak cryptographic primitive (G401)
 	"crypto/sha1"
 	"crypto/x509"
 	"encoding/hex"
@@ -251,6 +252,7 @@ func readThumbprintFromFile(fname string) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("failed to read certificate from file: %s: %s", fname, err)
 		}
+		// nolint:gosec // TODO: figure out a way to obtain cert fingerprint to remove the use of weak cryptographic primitive (G401)
 		fp := sha1.Sum(cert.Raw)
 		return strings.ToUpper(hex.EncodeToString(fp[:])), nil
 	}

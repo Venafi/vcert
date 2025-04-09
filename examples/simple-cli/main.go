@@ -17,6 +17,7 @@
 package main
 
 import (
+	// nolint:gosec // TODO: figure out a way to obtain cert thumbprint to remove the use of weak cryptographic primitive (G401)
 	"crypto/sha1"
 	"crypto/x509"
 	"crypto/x509/pkix"
@@ -329,7 +330,7 @@ func getSerial(crt string) *big.Int {
 	if block == nil || block.Type != "CERTIFICATE" {
 		t.Fatalf("could not get PEM certificate block")
 	}
-	newCert, err := x509.ParseCertificate([]byte(block.Bytes))
+	newCert, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
 		t.Fatalf("could not parse x509 certificate: %s", err)
 	}
@@ -338,8 +339,12 @@ func getSerial(crt string) *big.Int {
 
 func calcThumbprint(cert string) string {
 	p, _ := pem.Decode([]byte(cert))
+	// nolint:gosec // TODO: figure out a way to obtain cert thumbprint to remove the use of weak cryptographic primitive (G401)
 	h := sha1.New()
-	h.Write(p.Bytes)
+	_, err := h.Write(p.Bytes)
+	if err != nil {
+		t.Fatalf("could not get SHA1 hash: %s", err)
+	}
 	buf := h.Sum(nil)
 	return strings.ToUpper(fmt.Sprintf("%x", buf))
 }

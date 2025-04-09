@@ -96,7 +96,7 @@ func getNewClientArguments(args []interface{}) (*newClientArgs, error) {
 	if len(args) > 1 {
 		return nil, fmt.Errorf("too many arguments passed. " +
 			"Only a bool argument can be passed to indicate the returned Connector will be authenticated or not. " +
-			"If that argument is ommited, then by default the Connector will be authenticated")
+			"If that argument is omitted, then by default the Connector will be authenticated")
 	}
 
 	var authenticate bool
@@ -108,7 +108,7 @@ func getNewClientArguments(args []interface{}) (*newClientArgs, error) {
 		if !ok {
 			return nil, fmt.Errorf("only a bool argument can be passed to indicate the returned Connector " +
 				"will be authenticated or not. " +
-				"If that argument is ommited, then by default the Connector will be authenticated")
+				"If that argument is omitted, then by default the Connector will be authenticated")
 		}
 	}
 
