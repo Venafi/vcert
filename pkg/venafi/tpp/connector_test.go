@@ -2757,7 +2757,7 @@ func TestSetDefaultPolicyValuesAndValidate(t *testing.T) {
 	}
 
 	if *(remoteDefault.KeyPair.EllipticCurve) != *(localDefault.KeyPair.EllipticCurve) {
-		t.Fatalf("policy's default ellipticCurve is different expected: %s but get %s", *(localDefault.KeyPair.KeyType), *(remoteDefault.KeyPair.KeyType))
+		t.Fatalf("policy's default ellipticCurve is different expected: %s but get %s", *(localDefault.KeyPair.EllipticCurve), *(remoteDefault.KeyPair.EllipticCurve))
 	}
 
 	if *(remoteDefault.KeyPair.ServiceGenerated) != *(localDefault.KeyPair.ServiceGenerated) {
