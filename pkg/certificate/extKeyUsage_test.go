@@ -251,7 +251,7 @@ func TestExtKeyUsageSlice(t *testing.T) {
 		require.True(t, ekuSlice.Exists(ExtKeyUsageClientAuth))
 		require.True(t, ekuSlice.Exists(ExtKeyUsageCodeSigning))
 	})
-	t.Run("Add by String slice", func(t *testing.T) {
+	t.Run("Add by String slice UnknownExtKeyUsage", func(t *testing.T) {
 		ekuSlice := *NewExtKeyUsageSlice("ServerAuth")
 		err := ekuSlice.Add([]string{"ClientAuth", "UnknownExtKeyUsage"})
 		require.Error(t, err)
