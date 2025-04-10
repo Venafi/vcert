@@ -257,5 +257,3 @@ func TestExtKeyUsageSlice(t *testing.T) {
 		require.Error(t, err)
 	})
 }
-
-//*certificate.NewExtKeyUsageSlice("ServerAuth")
