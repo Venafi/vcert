@@ -120,7 +120,7 @@ release:
 	echo '```' > release.txt
 	cd artifacts; sha1sum * >> ../release.txt
 	echo '```' >> release.txt
-	go install github.com/tcnksm/ghr@latest
+	go install github.com/tcnksm/ghr@v0.16.2
 	export "PATH=$(PATH):$(shell go env GOPATH)/bin" && ghr -prerelease -n $$RELEASE_VERSION -body="$$(cat ./release.txt)" $$RELEASE_VERSION artifacts/
 
 linter:

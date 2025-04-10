@@ -18,6 +18,8 @@ package cloud
 
 import (
 	"bytes"
+	// nolint:gosec // we only use it for getting the certificate thumbprint / fingerprint
+	//TODO: although doesn't oppose a risk, we need to figure out a better to do this process so we can remove this library
 	"crypto/sha1"
 	"crypto/tls"
 	"encoding/json"
@@ -302,8 +304,9 @@ func (c *Connector) getHTTPClient() *http.Client {
 			tlsConfig = tlsConfig.Clone()
 		}
 		tlsConfig.RootCAs = c.trust
+		netTransport.TLSClientConfig = tlsConfig
 	}
-	netTransport.TLSClientConfig = tlsConfig
+
 	c.client = &http.Client{
 		Timeout:   time.Second * 30,
 		Transport: netTransport,
@@ -570,7 +573,8 @@ func newPEMCollectionFromResponse(data []byte, chainOrder certificate.ChainOptio
 }
 
 func certThumbprint(asn1 []byte) string {
-	h := sha1.Sum(asn1)
+	// nolint:gosec // we only use it for getting the certificate thumbprint / fingerprint
+	h := sha1.Sum(asn1) // TODO: although doesn't oppose a risk, we need to figure out a better to do this process
 	return strings.ToUpper(fmt.Sprintf("%x", h))
 }
 

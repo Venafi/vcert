@@ -212,7 +212,7 @@ func validateDefaultSubject(ps *PolicySpecification) error {
 			}
 			if defaultSubject.Country != nil && *(defaultSubject.Country) != "" {
 				if len(*(defaultSubject.Country)) != 2 {
-					return fmt.Errorf("number of defualt country's characters, doesn't match to two characters")
+					return fmt.Errorf("number of default country's characters, doesn't match to two characters")
 				}
 			}
 		} else {
@@ -1203,7 +1203,7 @@ func BuildCloudCitRequest(ps *PolicySpecification, ca *CADetails) (*CloudPolicyR
 }
 
 func ConvertToRegex(values []string, wildcardAllowed bool) []string {
-	var regexVals []string
+	regexVals := make([]string, 0)
 	for _, current := range values {
 		currentRegex := strings.ReplaceAll(current, ".", "\\.")
 		if wildcardAllowed {
@@ -1247,7 +1247,7 @@ func getIpRegexes(supportedIps []string) (ipRegexes []string) {
 }
 
 func ConvertToRfc822Regex(values []string) []string {
-	var regexVals []string
+	regexVals := make([]string, 0)
 	for _, current := range values {
 
 		currentRegex := strings.ReplaceAll(current, ".", "\\.")
@@ -1265,7 +1265,7 @@ func ConvertToRfc822Regex(values []string) []string {
 
 func convertToUriRegex(protocols, domains []string) []string {
 
-	var regexVals []string
+	regexVals := make([]string, 0)
 
 	protocolsS := strings.Join(protocols, "|")
 	protocolsS = fmt.Sprint("(", protocolsS, ")://.*\\.")
@@ -1286,7 +1286,7 @@ func convertToUriRegex(protocols, domains []string) []string {
 }
 
 func RemoveRegex(values []string) []string {
-	var regexVals []string
+	regexVals := make([]string, 0)
 	for _, current := range values {
 
 		current = strings.TrimPrefix(current, "[*a-z]{1}[a-z0-9.-]*\\.")

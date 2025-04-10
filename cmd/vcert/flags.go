@@ -27,8 +27,9 @@ var (
 	flagPlatform = &cli.StringFlag{
 		Name: "platform",
 		Usage: "Use to specify the platform VCert will use to execute the given command. Only accepted values are:\n" +
-			"\t\tFor getcred command: --platform [TPP | VAAS | OIDC]\n" +
-			"\t\tFor enroll command: --platform [TPP | VAAS | FIREFLY]",
+			"\t\tFor getcred command: --platform [TPP | VCP | OIDC]\n" +
+			"\t\tFor enroll command: --platform [TPP | VCP | FIREFLY]\n" +
+			"\t\tFor provision command: --platform [ VCP ]",
 		Destination: &flags.platformString,
 		Aliases:     []string{"p"},
 	}
@@ -481,7 +482,7 @@ var (
 		Destination: &flags.replaceInstance,
 	}
 
-	//todo: make check agains RevocationReasonOptions[]string variable
+	//todo: make check against RevocationReasonOptions[]string variable
 	flagRevocationReason = &cli.StringFlag{
 		Name: "reason",
 		Usage: `The revocation reason. Options include: 

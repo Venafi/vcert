@@ -74,9 +74,9 @@ func CopyFile(source string, destination string) error {
 		return fmt.Errorf("%s: %s", m, source)
 	}
 
-	sourceFile, err := os.Create(source)
+	sourceFile, err := os.Open(source)
 	if err != nil {
-		zap.L().Error("failed to create/truncate file", zap.String("file", source), zap.Error(err))
+		zap.L().Error("failed to open file", zap.String("file", source), zap.Error(err))
 		return err
 	}
 	defer sourceFile.Close()

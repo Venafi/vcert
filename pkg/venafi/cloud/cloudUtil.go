@@ -11,30 +11,6 @@ import (
 	"github.com/Venafi/vcert/v5/pkg/util"
 )
 
-func parseCertificateInfo(httpStatusCode int, httpStatus string, body []byte) (*managedCertificate, error) {
-	switch httpStatusCode {
-	case http.StatusOK:
-		var res = &managedCertificate{}
-		err := json.Unmarshal(body, res)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse search results: %s, body: %s", err, body)
-		}
-		return res, nil
-	default:
-		if body != nil {
-			respErrors, err := parseResponseErrors(body)
-			if err == nil {
-				respError := fmt.Sprintf("unexpected status code on Venafi Cloud certificate search. Status: %s\n", httpStatus)
-				for _, e := range respErrors {
-					respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
-				}
-				return nil, errors.New(respError)
-			}
-		}
-		return nil, fmt.Errorf("unexpected status code on Venafi Cloud certificate search. Status: %s", httpStatus)
-	}
-}
-
 func parseDEKInfo(httpStatusCode int, httpStatus string, body []byte) (*EdgeEncryptionKey, error) {
 	switch httpStatusCode {
 	case http.StatusOK:

@@ -489,7 +489,7 @@ func doCommandRenew1(c *cli.Context) error {
 	if oldCertBlock == nil || oldCertBlock.Type != "CERTIFICATE" {
 		return fmt.Errorf("Failed to fetch old certificate by id %s: PEM parse error", flags.distinguishedName)
 	}
-	oldCert, err := x509.ParseCertificate([]byte(oldCertBlock.Bytes))
+	oldCert, err := x509.ParseCertificate(oldCertBlock.Bytes)
 	if err != nil {
 		return fmt.Errorf("Failed to fetch old certificate by id %s: %s", flags.distinguishedName, err)
 	}

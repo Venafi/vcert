@@ -313,7 +313,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (pcc *certific
 		csrBlock *pem.Block
 		csr      *x509.CertificateRequest
 	)
-	csrBlock, _ = pem.Decode([]byte(csrPEMbytes))
+	csrBlock, _ = pem.Decode(csrPEMbytes)
 	if csrBlock == nil || !strings.HasSuffix(csrBlock.Type, "CERTIFICATE REQUEST") {
 		return nil, fmt.Errorf("Test-mode: could not parse requestID as base64 encoded certificate request block")
 	}
@@ -400,7 +400,7 @@ func (c *Connector) ReadPolicyConfiguration() (policy *endpoint.Policy, err erro
 }
 
 func (c *Connector) GetZonesByParent(parent string) ([]string, error) {
-	var zones []string
+	zones := make([]string, 0)
 
 	children := []string{"Alpha", "Epsilon", "Eta", "Iota", "Omicron", "Upsilon", "Omega"}
 	for _, child := range children {

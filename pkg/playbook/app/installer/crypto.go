@@ -18,6 +18,7 @@ package installer
 
 import (
 	"crypto"
+	// nolint:gosec // TODO: figure out a way to obtain cert thumbprint to remove the use of weak cryptographic primitive (G401)
 	"crypto/sha1"
 	"crypto/x509"
 	"encoding/hex"
@@ -245,6 +246,7 @@ func CreateX509Cert(pcc *certificate.PEMCollection, certReq *certificate.Request
 	if err != nil {
 		return nil, preparedPcc, err
 	}
+	// nolint:gosec // TODO: figure out a way to obtain cert thumbprint to remove the use of weak cryptographic primitive (G401)
 	thumbprint := sha1.Sum(x509Cert.Raw)
 	hexThumbprint := hex.EncodeToString(thumbprint[:])
 

@@ -254,7 +254,7 @@ func (c *Connector) VerifyAccessToken(auth *endpoint.Authentication) (resp Oauth
 
 	if auth.AccessToken != "" {
 		c.accessToken = auth.AccessToken
-		statusCode, statusText, body, err := c.request("GET", urlResource(urlResourceAuthorizeVerify), nil)
+		statusCode, statusText, body, err := c.request("GET", urlResourceAuthorizeVerify, nil)
 		if err != nil {
 			return resp, err
 		}
@@ -282,7 +282,7 @@ func (c *Connector) RevokeAccessToken(auth *endpoint.Authentication) (err error)
 
 	if auth.AccessToken != "" {
 		c.accessToken = auth.AccessToken
-		statusCode, statusText, _, err := c.request("GET", urlResource(urlResourceRevokeAccessToken), nil)
+		statusCode, statusText, _, err := c.request("GET", urlResourceRevokeAccessToken, nil)
 		if err != nil {
 			return err
 		}
@@ -343,7 +343,7 @@ func processAuthData(c *Connector, url urlResource, data interface{}) (resp inte
 }
 
 func (c *Connector) isAuthServerReachable() (bool, error) {
-	url := urlResource(urlResourceAuthorizeIsAuthServer)
+	url := urlResourceAuthorizeIsAuthServer
 
 	// Extended timeout to allow the server to wake up
 	c.getHTTPClient().Timeout = time.Second * 90
@@ -1216,7 +1216,7 @@ func (c *Connector) setContact(tppPolicy *policy.TppPolicy) (status string, err 
 }
 
 func (c *Connector) resolvePrefixedUniversals(filters []string) ([]string, error) {
-	var prefixedUniversals []string
+	prefixedUniversals := make([]string, 0)
 	identities, err := c.resolveIdentities(filters)
 	if err != nil {
 		return nil, err
@@ -1229,7 +1229,7 @@ func (c *Connector) resolvePrefixedUniversals(filters []string) ([]string, error
 }
 
 func (c *Connector) resolveIdentities(filters []string) ([]*IdentityEntry, error) {
-	var identities []*IdentityEntry
+	identities := make([]*IdentityEntry, 0)
 	uniqueContacts := getUniqueStringSlice(filters)
 	for _, contact := range uniqueContacts {
 		identityEntry, err := c.getIdentity(contact)
@@ -1435,7 +1435,7 @@ func (c *Connector) prepareRenewalRequest(renewReq *certificate.RenewalRequest) 
 	if oldCertBlock == nil || oldCertBlock.Type != "CERTIFICATE" {
 		return fmt.Errorf("Failed to fetch old certificate by id %s: PEM parse error", renewReq.CertificateDN)
 	}
-	oldCert, err := x509.ParseCertificate([]byte(oldCertBlock.Bytes))
+	oldCert, err := x509.ParseCertificate(oldCertBlock.Bytes)
 	if err != nil {
 		return fmt.Errorf("Failed to fetch old certificate by id %s: %s", renewReq.CertificateDN, err)
 	}
@@ -1946,7 +1946,7 @@ func (c *Connector) findObjectsOfClass(req *findObjectsOfClassRequest) (*findObj
 
 // GetZonesByParent returns a list of valid zones for a TPP parent folder specified by parent
 func (c *Connector) GetZonesByParent(parent string) ([]string, error) {
-	var zones []string
+	zones := make([]string, 0)
 
 	parentFolderDn := parent
 	if !strings.HasPrefix(parentFolderDn, "\\VED\\Policy") {

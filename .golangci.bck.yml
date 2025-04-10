@@ -1,0 +1,27 @@
+run:
+  tests: false
+  modules-download-mode: readonly
+
+linters:
+  disable:
+    - unused
+  enable:
+    - gosec
+
+issues:
+  exclude-rules:
+    - text: "composite literal uses unkeyed fields"
+      linters:
+        - govet
+    - text: "certificateRequest.Attributes"
+      linters:
+        - staticcheck
+    - text: "G505"
+      linters:
+        - gosec
+    - text: "G401"
+      linters:
+        - gosec
+    - text: "h.Write"
+      linters:
+        - errcheck

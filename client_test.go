@@ -106,10 +106,6 @@ func TestNewClientWithFileConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	//var cfg = &Config{
-	//	ConfigFile: tmpfile.Name(),
-	//}
-
 	cfg, err := LoadConfigFromFile(tmpfile.Name(), "")
 	if err != nil {
 		t.Fatal(err)

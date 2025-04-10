@@ -63,6 +63,7 @@ func testListener(t *testing.T, host string, domains []string, success bool) {
 	if r.StatusCode != 200 {
 		t.Fatalf("bad code: %v", r.StatusCode)
 	}
+
 	b, _ := ioutil.ReadAll(r.Body)
 	if string(b) != text {
 		t.Fatalf("bad text: %v", text)

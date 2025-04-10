@@ -1008,8 +1008,8 @@ func (sp serverPolicy) toPolicy() (p endpoint.Policy) {
 			} else {
 				key.KeyCurves = certificate.AllSupportedCurves()
 			}
-
 		}
+
 		p.AllowedKeyConfigurations = append(p.AllowedKeyConfigurations, key)
 	} else {
 		var ks []int

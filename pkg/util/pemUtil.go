@@ -205,6 +205,7 @@ func X509EncryptPEMBlock(rand io.Reader, blockType string, data, password []byte
 // with the number of bits our cipher requires. This algorithm was derived from
 // the OpenSSL source.
 func (c rfc1423Algo) deriveKey(password, salt []byte) []byte {
+	// nolint:gosec // TODO: figure out a away to remove the use of weak cryptographic primitive (G401)
 	hash := md5.New()
 	out := make([]byte, c.keySize)
 	var digest []byte

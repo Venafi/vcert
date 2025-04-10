@@ -311,7 +311,7 @@ func TestConvertServerPolicyToInternalPolicy(t *testing.T) {
 	if k.KeyType != certificate.KeyTypeRSA {
 		t.Fatal("invalid key type")
 	}
-	if len(k.KeySizes) != 3 || k.KeySizes[0] != 2048 || k.KeySizes[1] != 4096 || k.KeySizes[2] != 8192 {
+	if len(k.KeySizes) != 4 || k.KeySizes[0] != 2048 || k.KeySizes[1] != 3072 || k.KeySizes[2] != 4096 || k.KeySizes[3] != 8192 {
 		t.Fatal("bad key lengths")
 	}
 
@@ -399,7 +399,7 @@ func TestConvertServerPolicyToInternalPolicy(t *testing.T) {
 	if k.KeyType != certificate.KeyTypeRSA {
 		t.Fatal("invalid key type")
 	}
-	if len(k.KeySizes) != 3 || k.KeySizes[0] != 2048 || k.KeySizes[1] != 4096 || k.KeySizes[2] != 8192 {
+	if len(k.KeySizes) != 4 || k.KeySizes[0] != 2048 || k.KeySizes[1] != 3072 || k.KeySizes[2] != 4096 || k.KeySizes[3] != 8192 {
 		t.Fatal("bad key lengths")
 	}
 	k = p.AllowedKeyConfigurations[1]
