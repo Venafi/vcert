@@ -1165,7 +1165,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 					if tppPolicy.KeyBitStrength != nil {
 						pkixOid = algValues[tppPolicy.KeyBitStrength.Value]
 					}
-					if tppPolicy.EllipticCurve != nil {
+					if tppPolicy.EllipticCurve != nil && strings.ToUpper(tppPolicy.KeyAlgorithm.Value) != "RSA" {
 						pkixOid = algValues[tppPolicy.EllipticCurve.Value]
 					}
 					if pkixOid != "" {
