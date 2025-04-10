@@ -203,3 +203,59 @@ func TestExtKeyUsage_Parse(t *testing.T) {
 		})
 	})
 }
+
+func TestExtKeyUsageSlice(t *testing.T) {
+	t.Run("NewExtKeyUsageSlice by string", func(t *testing.T) {
+		ekuSlice := *NewExtKeyUsageSlice("ServerAuth")
+		require.NotNil(t, ekuSlice)
+		require.True(t, ekuSlice.Exists(ExtKeyUsageServerAuth))
+	})
+	t.Run("NewExtKeyUsageSlice copy", func(t *testing.T) {
+		ekuSlice := *NewExtKeyUsageSlice("ServerAuth")
+		ekuSliceCopy := *NewExtKeyUsageSlice(ekuSlice)
+		require.NotNil(t, ekuSliceCopy)
+		require.True(t, ekuSliceCopy.Exists(ExtKeyUsageServerAuth))
+	})
+	t.Run("Add by EkU", func(t *testing.T) {
+		ekuSlice := *NewExtKeyUsageSlice("ServerAuth")
+		err := ekuSlice.Add(ExtKeyUsageClientAuth)
+		require.NoError(t, err)
+		require.NotNil(t, ekuSlice)
+		require.True(t, ekuSlice.Exists(ExtKeyUsageServerAuth))
+		require.True(t, ekuSlice.Exists(ExtKeyUsageClientAuth))
+	})
+	t.Run("Add by EkU UnknownExtKeyUsage", func(t *testing.T) {
+		ekuSlice := *NewExtKeyUsageSlice("ServerAuth")
+		err := ekuSlice.Add(UnknownExtKeyUsage)
+		require.Error(t, err)
+	})
+	t.Run("Add by String", func(t *testing.T) {
+		ekuSlice := *NewExtKeyUsageSlice("ServerAuth")
+		err := ekuSlice.Add("ClientAuth")
+		require.NoError(t, err)
+		require.NotNil(t, ekuSlice)
+		require.True(t, ekuSlice.Exists(ExtKeyUsageServerAuth))
+		require.True(t, ekuSlice.Exists(ExtKeyUsageClientAuth))
+	})
+	t.Run("Add by String UnknownExtKeyUsage", func(t *testing.T) {
+		ekuSlice := *NewExtKeyUsageSlice("ServerAuth")
+		err := ekuSlice.Add("UnknownExtKeyUsage")
+		require.Error(t, err)
+	})
+	t.Run("Add by String slice", func(t *testing.T) {
+		ekuSlice := *NewExtKeyUsageSlice("ServerAuth")
+		err := ekuSlice.Add([]string{"ClientAuth", "CodeSigning"})
+		require.NoError(t, err)
+		require.NotNil(t, ekuSlice)
+		require.True(t, ekuSlice.Exists(ExtKeyUsageServerAuth))
+		require.True(t, ekuSlice.Exists(ExtKeyUsageClientAuth))
+		require.True(t, ekuSlice.Exists(ExtKeyUsageCodeSigning))
+	})
+	t.Run("Add by String slice", func(t *testing.T) {
+		ekuSlice := *NewExtKeyUsageSlice("ServerAuth")
+		err := ekuSlice.Add([]string{"ClientAuth", "UnknownExtKeyUsage"})
+		require.Error(t, err)
+	})
+}
+
+//*certificate.NewExtKeyUsageSlice("ServerAuth")
