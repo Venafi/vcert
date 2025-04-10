@@ -44,7 +44,7 @@ type PlaybookRequest struct {
 	Timeout        int                          `yaml:"timeout,omitempty"`
 	UPNs           []string                     `yaml:"sanUPN,omitempty"`
 	URIs           []string                     `yaml:"sanURI,omitempty"`
-	ExtKeyUsages   certificate.ExtKeyUsageSlice `yaml:"eKU,omitempty"`
+	ExtKeyUsages   certificate.ExtKeyUsageSlice `yaml:"eku,omitempty"`
 	ValidDays      string                       `yaml:"validDays,omitempty"`
 	Zone           string                       `yaml:"zone,omitempty"`
 }
