@@ -59,7 +59,7 @@ func getCertificateRequestForTest() *Request {
 	}
 	req.IPAddresses = ips
 
-	req.ExtKeyUsages = *NewExtKeyUsageSlice("ClientAuth")
+	req.ExtKeyUsages = *NewExtKeyUsageSlice("ServerAuth")
 
 	return &req
 }
