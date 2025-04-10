@@ -87,7 +87,7 @@ func addSubjectAltNames(req *x509.CertificateRequest, dnsNames []string, emailAd
 // Enhance crypto/x509 marshalSANs method to additionally support User Principal Name SANs
 // Based on https://github.com/golang/go/blob/master/src/crypto/x509/x509.go#L1656-L1678
 func marshalSANs(dnsNames, emailAddresses []string, ipAddresses []net.IP, uris []*url.URL, uPNames []string) (derBytes []byte, err error) {
-	var rawValues []asn1.RawValue
+	rawValues := make([]asn1.RawValue, 0)
 	for _, name := range dnsNames {
 		rawValues = append(rawValues, asn1.RawValue{Tag: nameTypeDNS, Class: 2, Bytes: []byte(name)})
 	}

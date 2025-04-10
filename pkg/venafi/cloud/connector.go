@@ -231,7 +231,7 @@ func (c *Connector) GetZonesByParent(parent string) ([]string, error) {
 		return nil, fmt.Errorf("must be autheticated to request a certificate")
 	}
 
-	var zones []string
+	zones := make([]string, 0)
 	appDetails, _, err := c.getAppDetailsByName(parent)
 	if err != nil {
 		return nil, err
