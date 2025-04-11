@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2022 Venafi, Inc.
+ * Copyright 2018-2025 Venafi, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -519,11 +519,11 @@ func (c *Connector) request(method string, resource urlResource, data interface{
 		log.Println("#################")
 		log.Printf("Headers are:\n%s", r.Header)
 		if method == "POST" || method == "PUT" {
-			log.Printf("JSON sent for %s\n%s\n", url, string(b))
+			log.Printf("JSON sent for %s\nRequest:\n%s\n", url, string(b))
 		} else {
 			log.Printf("%s request sent to %s\n", method, url)
 		}
-		log.Printf("Response:\n%s\n", string(body))
+		log.Printf("\nResponse:\n%s\n", string(body))
 	} else if c.verbose {
 		log.Printf("Got %s status for %s %s\n", statusText, method, url)
 	}

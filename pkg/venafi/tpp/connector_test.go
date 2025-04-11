@@ -2756,9 +2756,9 @@ func TestSetDefaultPolicyValuesAndValidate(t *testing.T) {
 		t.Fatalf("policy's default keyType is different expected: %s but get %s", *(localDefault.KeyPair.KeyType), *(remoteDefault.KeyPair.KeyType))
 	}
 
-	/*if *(remoteDefault.KeyPair.EllipticCurve) != *(localDefault.KeyPair.EllipticCurve) {
-		t.Fatalf("policy's default ellipticCurve is different expected: %s but get %s", *(localDefault.KeyPair.KeyType), * (remoteDefault.KeyPair.KeyType))
-	}*/
+	if remoteDefault.KeyPair.EllipticCurve != nil && localDefault.KeyPair.EllipticCurve != nil && *(remoteDefault.KeyPair.EllipticCurve) != *(localDefault.KeyPair.EllipticCurve) {
+		t.Fatalf("policy's default ellipticCurve is different expected: %s but get %s", *(localDefault.KeyPair.EllipticCurve), *(remoteDefault.KeyPair.EllipticCurve))
+	}
 
 	if *(remoteDefault.KeyPair.ServiceGenerated) != *(localDefault.KeyPair.ServiceGenerated) {
 		t.Fatalf("policy's default serviceGenerated is different expected: %s but get %s", strconv.FormatBool(*(localDefault.KeyPair.ServiceGenerated)), strconv.FormatBool(*(remoteDefault.KeyPair.ServiceGenerated)))
