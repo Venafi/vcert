@@ -21,6 +21,8 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/asn1"
 	"encoding/pem"
 	"math/big"
 	"net"
@@ -56,6 +58,9 @@ func getCertificateRequestForTest() *Request {
 
 	}
 	req.IPAddresses = ips
+
+	req.ExtKeyUsages = *NewExtKeyUsageSlice("ServerAuth")
+
 	return &req
 }
 
@@ -163,6 +168,8 @@ func TestGenerateCertificateRequestWithRSAKey(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error checking signature of generated Certificate Request\nError: %s", err)
 	}
+
+	validateExtendedKeyUsage(t, parsedReq)
 }
 
 func TestGenerateCertificateRequestWithECDSAKey(t *testing.T) {
@@ -220,6 +227,38 @@ func TestGenerateCertificateRequestWithED25519Key(t *testing.T) {
 	err = parsedReq.CheckSignature()
 	if err != nil {
 		t.Fatalf("Error checking signature of generated Certificate Request\nError: %s", err)
+	}
+}
+
+func validateExtendedKeyUsage(t *testing.T, parsedReq *x509.CertificateRequest) {
+	if parsedReq.Extensions == nil {
+		t.Fatalf("No extensions found in generated Certificate Request")
+	}
+
+	var extKeyUsages pkix.Extension
+	for _, extension := range parsedReq.Extensions {
+		if extension.Id.Equal(ExtensionExtKeyUsageOid) {
+			extKeyUsages = extension
+			break
+		}
+	}
+
+	if extKeyUsages.Id == nil {
+		t.Fatalf("No extension Extended Key Usages found in generated Certificate Request")
+	}
+
+	var b []asn1.ObjectIdentifier
+	_, err := asn1.Unmarshal(extKeyUsages.Value, &b)
+	if err != nil {
+		panic(err)
+	}
+
+	if len(b) != 1 {
+		t.Fatalf("Invalid extension Extended Key Usages found in generated Certificate Request. It was expected only one but it was gotten %q", len(b))
+	}
+
+	if !b[0].Equal(ExtKeyUsageServerAuthOid) {
+		t.Fatalf("Invalid extension Extended Key Usages found in generated Certificate Request. It was expected %q but it was gotten %q", ExtKeyUsageServerAuthOid, b[0])
 	}
 }
 

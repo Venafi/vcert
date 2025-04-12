@@ -240,6 +240,13 @@ var (
 		Hidden: true,
 	}
 
+	flagExtKeyUsage = &cli.StringSliceFlag{
+		Name: "eku",
+		Usage: "Use to specify an Extended Key Usage type to be included in the generated CSR. Common options include ServerAuth & ClientAuth. " +
+			"This option can be repeated to specify more than one value like this: --eku ServerAuth --eku ClientAuth etc. ",
+		Hidden: true,
+	}
+
 	flagFormat = &cli.StringFlag{
 		Name: "format",
 		Usage: "Use to specify the output format. Options include: pem | json | pkcs12 | jks | legacy-pem | legacy-pkcs12." +
@@ -803,6 +810,7 @@ var (
 		sansFlags,
 		flagCSRFile,
 		keyFlags,
+		flagExtKeyUsage,
 		flagNoPrompt,
 		flagVerbose,
 		flagCSRFormat,
@@ -840,6 +848,7 @@ var (
 			flagOmitSans,
 			flagValidDays,
 			flagValidPeriod,
+			flagExtKeyUsage,
 		)),
 	)
 
@@ -897,6 +906,7 @@ var (
 			sortableCredentialsFlags,
 			flagPickupIDFile,
 			flagOmitSans,
+			flagExtKeyUsage,
 		)),
 	)
 

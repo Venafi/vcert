@@ -591,6 +591,7 @@ func TestGenerateCertRequest(t *testing.T) {
 	flags.org = "Venafi"
 	flags.orgUnits = []string{"vcert Unit Testing"}
 	flags.validDays = "120#m"
+	flags.extKeyUsage = *certificate.NewExtKeyUsageSlice("ServerAuth")
 
 	//cf := createFromCommandFlags(commandEnroll)
 
@@ -601,6 +602,9 @@ func TestGenerateCertRequest(t *testing.T) {
 	}
 	if req.Subject.CommonName != flags.commonName {
 		t.Fatalf("generated request did not contain the expected common name, expected: %s -- actual: %s", flags.commonName, req.Subject.CommonName)
+	}
+	if !req.ExtKeyUsages.Exists(certificate.ExtKeyUsageServerAuth) {
+		t.Fatalf("generated request did not contain the expected Extended Key Usage, expected: %s -- actual: %s", flags.extKeyUsage.String(), req.ExtKeyUsages.String())
 	}
 }
 

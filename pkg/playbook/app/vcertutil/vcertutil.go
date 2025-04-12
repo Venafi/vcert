@@ -264,6 +264,7 @@ func buildRequest(request domain.PlaybookRequest) certificate.Request {
 		ChainOption:    request.ChainOption,
 		KeyPassword:    request.KeyPassword,
 		CustomFields:   request.CustomFields,
+		ExtKeyUsages:   request.ExtKeyUsages,
 	}
 
 	// Set timeout for cert retrieval
