@@ -28,6 +28,7 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/Venafi/vcert/v5"
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/playbook/app/domain"
 	"github.com/Venafi/vcert/v5/pkg/util"
@@ -238,4 +239,9 @@ func readFile(fileName string) ([]byte, error) {
 		return bytes, err
 	}
 	return bytes, nil
+}
+
+func getUserAgent() *string {
+	userAgent := fmt.Sprintf("vcert-playbook/%s", vcert.GetFormattedVersionString()[1:])
+	return &userAgent
 }

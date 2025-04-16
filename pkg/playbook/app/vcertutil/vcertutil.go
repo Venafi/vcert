@@ -105,6 +105,7 @@ func buildClient(config domain.Config, zone string, timeout int) (endpoint.Conne
 		Zone:            zone,
 		ConnectionTrust: loadTrustBundle(config.Connection.TrustBundlePath),
 		LogVerbose:      false,
+		UserAgent:       getUserAgent(),
 	}
 
 	vcertConfig.Client = &http.Client{
