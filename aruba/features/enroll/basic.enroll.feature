@@ -23,7 +23,7 @@ Feature: Enroll certificate
   @FAKE
   Scenario: Passphrases don't match
     When I run `vcert enroll -test-mode -test-mode-delay 0 -cn vfidev.example.com` interactively
-      And I type "newPassw0rd!"
+      And I type dummy password
       And I type "different password"
     Then it should fail with "Passphrases don't match"
 

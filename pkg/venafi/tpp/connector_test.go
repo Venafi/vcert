@@ -1273,7 +1273,7 @@ func TestRequestCertificateServiceGenerated(t *testing.T) {
 
 	req.CsrOrigin = certificate.ServiceGeneratedCSR
 	req.FetchPrivateKey = true
-	req.KeyPassword = "newPassw0rd!"
+	req.KeyPassword = os.Getenv(util.ENV_DUMMY_PASS)
 	config.UpdateCertificateRequest(req)
 
 	pickupId, err := tpp.RequestCertificate(req)

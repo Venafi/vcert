@@ -35,7 +35,7 @@ Feature: Managing credentials tokens from TPP
 
   Scenario: request with PKCS12 if possible with no password
     When I interactively get credentials from TPP with PKSC12 and no password
-    And I type "newPassw0rd!"
+    And I type dummy password
     And I remember the output
       And it should output access token
       And it should output refresh token

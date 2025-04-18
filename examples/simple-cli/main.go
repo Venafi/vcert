@@ -87,7 +87,7 @@ func main() {
 			KeyType:        certificate.KeyTypeRSA,
 			KeyLength:      2048,
 			ChainOption:    certificate.ChainOptionRootLast,
-			KeyPassword:    "newPassw0rd!",
+			KeyPassword:    os.Getenv(util.ENV_DUMMY_PASS),
 			//Before setting custom field in request you need to configure custom field on TPP
 			CustomFields: []certificate.CustomField{
 				{Name: "custom", Value: "2019-12-10"},
@@ -108,7 +108,7 @@ func main() {
 			KeyType:     certificate.KeyTypeRSA,
 			KeyLength:   2048,
 			ChainOption: certificate.ChainOptionRootLast,
-			KeyPassword: "newPassw0rd!",
+			KeyPassword: os.Getenv(util.ENV_DUMMY_PASS),
 		}
 
 	}
@@ -218,7 +218,7 @@ func main() {
 			ObjectName:      importObjectName,
 			CertificateData: pcc.Certificate,
 			PrivateKeyData:  pcc.PrivateKey,
-			Password:        "newPassw0rd!",
+			Password:        os.Getenv(util.ENV_DUMMY_PASS),
 			Reconcile:       false,
 		}
 	case config.ConnectorType == endpoint.ConnectorTypeCloud:
@@ -248,7 +248,7 @@ func main() {
 		importedRetriveReq = &certificate.Request{
 			PickupID:        importResp.CertificateDN,
 			Timeout:         180 * time.Second,
-			KeyPassword:     "newPassw0rd!",
+			KeyPassword:     os.Getenv(util.ENV_DUMMY_PASS),
 			FetchPrivateKey: true,
 		}
 	case config.ConnectorType == endpoint.ConnectorTypeCloud:

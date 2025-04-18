@@ -20,7 +20,7 @@ certificateTasks:
           - engineering
           - marketing
       csrOrigin: service
-      keyPassword: "newPassword!"
+      keyPassword: "Passcode123!"
     installations:
       - type: PEM
         location: "/Users/rvela/venafi/supertreat/pem"

@@ -47,9 +47,9 @@ Feature: PKCS#12 format output
     And "all.p12" should be PKCS#12 archive with password ""
 
   Scenario Outline: where all objects are written to one PKCS#12 archive with key password
-    When I enroll random certificate in <endpoint> with -format pkcs12 -file all.p12 -key-password newPassw0rd!
+    When I enroll random certificate with dummy password in <endpoint> with -format pkcs12 -file all.p12
     Then the exit status should be 0
-    And "all.p12" should be PKCS#12 archive with password "newPassw0rd!"
+    And "all.p12" should be PKCS#12 archive with dummy password
 
     @FAKE
     Examples:
@@ -67,9 +67,9 @@ Feature: PKCS#12 format output
       | Cloud     |
 
   Scenario Outline: where all objects are written to one PKCS#12 legacy archive with key password
-    When I enroll random certificate in <endpoint> with -format legacy-pkcs12 -file all.p12 -key-password newPassw0rd!
+    When I enroll random certificate with dummy password in <endpoint> with -format legacy-pkcs12 -file all.p12
     Then the exit status should be 0
-    And "all.p12" should be PKCS#12 archive in legacy mode with password "newPassw0rd!"
+    And "all.p12" should be PKCS#12 archive in legacy mode with dummy password
 
     @FAKE
     Examples:
@@ -166,8 +166,8 @@ Feature: PKCS#12 format output
 
   Scenario Outline: where it pickups up service-generated certificate and outputs it in PKCS#12 format
     When I enroll random certificate using <endpoint> with -no-prompt -no-pickup -csr service
-    And I retrieve the certificate using <endpoint> using the same Pickup ID with -timeout 180 -key-password newPassw0rd! -file all.p12 -format pkcs12
-    And "all.p12" should be PKCS#12 archive with password "newPassw0rd!"
+    And I retrieve the certificate using <endpoint> using the same Pickup ID and using a dummy password with -timeout 180 -file all.p12 -format pkcs12
+    And "all.p12" should be PKCS#12 archive with dummy password
 
     @FAKE
     Examples:
@@ -181,8 +181,8 @@ Feature: PKCS#12 format output
 
   Scenario Outline: where it pickups up service-generated certificate and outputs it in PKCS#12 legacy format
     When I enroll random certificate using <endpoint> with -no-prompt -no-pickup -csr service
-    And I retrieve the certificate using <endpoint> using the same Pickup ID with -timeout 180 -key-password newPassw0rd! -file all.p12 -format legacy-pkcs12
-    And "all.p12" should be PKCS#12 archive in legacy mode with password "newPassw0rd!"
+    And I retrieve the certificate using <endpoint> using the same Pickup ID and using a dummy password with -timeout 180 -file all.p12 -format legacy-pkcs12
+    And "all.p12" should be PKCS#12 archive in legacy mode with dummy password
 
     @FAKE
     Examples:
@@ -199,24 +199,24 @@ Feature: PKCS#12 format output
 #    Examples:
 #      | endpoint  |
 #      | Cloud     | # -csr service is not supported by Cloud
-
+#
 #  Scenario Outline: Pickup PKCS12 with typing pass phrases
 #    When I enroll random certificate using <endpoint> with -no-prompt -no-pickup -csr service
 #    And I interactively retrieve the certificate using <endpoint> using the same Pickup ID with -timeout 99 -file all.p12 -format pkcs12
-#    And I type "newPassw0rd!"
-#    And I type "newPassw0rd!"
+#    And I type dummy password
+#    And I type dummy password
 #    Then the exit status should be 0
-#    And "all.p12" should be PKCS#12 archive with password "newPassw0rd!"
+#    And "all.p12" should be PKCS#12 archive with dummy password
 #    Examples:
 #      | endpoint  |
 #      | test-mode |
-      # | TPP       |
-      # | Cloud     | # -csr service is not supported by Cloud
+#       | TPP       |
+#       | Cloud     | # -csr service is not supported by Cloud
 
   Scenario Outline: where it should enroll a PKCS12 certificate with -csr service and without file option (VEN-48622)
     When I enroll random certificate using <endpoint> with -csr service -no-prompt -no-pickup -format pkcs12
       Then it should post certificate request
-    Then I retrieve the certificate using <endpoint> using the same Pickup ID with -key-password newPassw0rd! -timeout 59
+    Then I retrieve the certificate using <endpoint> using the same Pickup ID and using a dummy password with -timeout 59
       And it should retrieve certificate
       And it should output encrypted private key
 

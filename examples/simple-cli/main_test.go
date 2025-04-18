@@ -65,7 +65,7 @@ func TestRequestCertificate(t *testing.T) {
 		KeyType:     certificate.KeyTypeRSA,
 		KeyLength:   2048,
 		ChainOption: certificate.ChainOptionRootLast,
-		KeyPassword: "newPassw0rd!",
+		KeyPassword: dummy_pass,
 	}
 
 	//
@@ -225,7 +225,7 @@ func TestImportCertificate(t *testing.T) {
 		KeyType:     certificate.KeyTypeRSA,
 		KeyLength:   2048,
 		ChainOption: certificate.ChainOptionRootLast,
-		KeyPassword: "newPassw0rd!",
+		KeyPassword: dummy_pass,
 	}
 
 	err = c.GenerateRequest(nil, req)
@@ -259,7 +259,7 @@ func TestImportCertificate(t *testing.T) {
 		ObjectName:      importCertDN,
 		CertificateData: pcc.Certificate,
 		PrivateKeyData:  pcc.PrivateKey,
-		Password:        "newPassw0rd!",
+		Password:        dummy_pass,
 		Reconcile:       false,
 	}
 	importResp, err := c.ImportCertificate(importReq)
@@ -275,7 +275,7 @@ func TestImportCertificate(t *testing.T) {
 	req = &certificate.Request{
 		PickupID:        importResp.CertificateDN,
 		Timeout:         180 * time.Second,
-		KeyPassword:     "newPassw0rd!",
+		KeyPassword:     dummy_pass,
 		FetchPrivateKey: true,
 	}
 	pcc2, err := c.RetrieveCertificate(req)

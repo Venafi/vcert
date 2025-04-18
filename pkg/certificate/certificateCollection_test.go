@@ -19,8 +19,11 @@ package certificate
 import (
 	"crypto/x509"
 	"encoding/pem"
+	"os"
 	"strings"
 	"testing"
+
+	"github.com/Venafi/vcert/v5/pkg/util"
 )
 
 var pkPEM = `-----BEGIN RSA PRIVATE KEY-----
@@ -330,7 +333,7 @@ func TestAddPrivateKey(t *testing.T) {
 	pk, _ := GenerateRSAPrivateKey(512)
 
 	pcc, _ := NewPEMCollection(nil, nil, nil)
-	err := pcc.AddPrivateKey(pk, []byte("newPassw0rd!"))
+	err := pcc.AddPrivateKey(pk, []byte(os.Getenv(util.ENV_DUMMY_PASS)))
 	if !strings.Contains(pcc.PrivateKey, "PRIVATE KEY") || err != nil {
 		t.Fatalf("collection should have PEM encoded private key")
 	}

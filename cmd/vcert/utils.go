@@ -53,6 +53,7 @@ const (
 	SshCertPubKeyLocal     = "local"
 	sshCertFileExt         = "-cert.pub"
 	sshPubKeyFileExt       = ".pub"
+	ENV_DUMMY_PASS         = "DUMMY_PASS"
 )
 
 func parseCustomField(s string) (key, value string, err error) {

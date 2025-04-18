@@ -204,8 +204,8 @@ Feature: JKS format output
 
   Scenario Outline: where it pickups up service-generated certificate and outputs it in JKS format
     When I enroll random certificate using <endpoint> with -no-prompt -no-pickup -csr service
-    And I retrieve the certificate using <endpoint> using the same Pickup ID with -timeout 180 -key-password newPassw0rd! -file all.jks -format jks -jks-alias abc
-    And "all.jks" should be JKS archive with password "newPassw0rd!"
+    And I retrieve the certificate using <endpoint> using the same Pickup ID and using a dummy password with -timeout 180 -file all.jks -format jks -jks-alias abc
+#    And "all.jks" should be JKS archive with password "dummy password" # currently, we don't have JKS steps
 
     @FAKE
     Examples:

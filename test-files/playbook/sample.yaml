@@ -19,7 +19,7 @@ certificateTasks:
           - engineering
           - marketing
       csrOrigin: service
-      keyPassword: "newPassword!"
+      keyPassword: "Passcode123!"
     installations:
       - type: PKCS12
         location: "/Users/rvela/venafi/supertreat/p12/foo.p12"
