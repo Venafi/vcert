@@ -120,7 +120,7 @@ Feature: few more tests from Ryan
     And that certificate should contain "email:zack.jackson@vcert.example"
     And that certificate should contain "IP Address:10.20.30.40"
     And that certificate should contain "IP Address:198.168.144.120"
-    And that certificate Subject should contain "CN = user-provided-with-sans.vcert.example"
+    And that certificate Subject should contain "CN=user-provided-with-sans.vcert.example"
 
 # cls
 # title ~ User Provided CSR with full Subject DN ~

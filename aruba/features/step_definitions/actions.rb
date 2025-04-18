@@ -131,7 +131,7 @@ When(/^I generate( random)? CSR( using dummy password)?(?: with flags (.+))?$/) 
     if dummy_password
       key_pass_flag = " -key-password #{DUMMY_PASSWORD}"
     end
-    cmd = "vcert gencsr#{cn}#{key_pass_flag}#{flags}"
+    cmd = "vcert gencsr#{cn} #{key_pass_flag} #{flags}"
     steps %{Then I try to run `#{cmd}`}
 end
 

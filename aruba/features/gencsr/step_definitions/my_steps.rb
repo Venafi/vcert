@@ -1,4 +1,4 @@
-And(/^I type dummy password$/) do |arg|
+And(/^I type dummy password$/) do
   steps %{
     And I type "#{DUMMY_PASSWORD}"
   }
