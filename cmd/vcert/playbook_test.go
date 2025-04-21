@@ -39,7 +39,7 @@ func TestPlaybook(t *testing.T) {
 }
 
 func (s *PlaybookSuite) TestPlaybook_SetTLSConfig() {
-	p12FileLocation := "../../test-files/playbook/new.p12"
+	p12FileLocation := "../../test-files/playbook/cert.p12"
 	p12Password := os.Getenv(util.ENV_DUMMY_PASS)
 
 	playbook := domain.Playbook{
