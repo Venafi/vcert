@@ -130,7 +130,7 @@ Feature: few more tests from Ryan
 # if ERRORLEVEL 1 goto :DONE
 # timeout /t 10
   Scenario: ~ User Provided CSR with full Subject DN ~
-    Given I generate CSR using dummy password with flags cn user-provided-full-subject.vcert.example -ou "DevOps Integrations" -o "Swordfish Security" -l "St. Petersburg" -st Russia -c RU -key-file user-provided-full-subject.key -csr-file user-provided-full-subject.req
+    Given I generate CSR using dummy password with flags -cn user-provided-full-subject.vcert.example -ou "DevOps Integrations" -o "Swordfish Security" -l "St. Petersburg" -st Russia -c RU -key-file user-provided-full-subject.key -csr-file user-provided-full-subject.req
     And I enroll certificate using TPP with -csr file:user-provided-full-subject.req -format json
     And I get JSON response
     Then that certificate Subject should contain "C = RU"
