@@ -121,7 +121,6 @@ When(/^I renew(?: the)? certificate( using a dummy password)? (?:from|in|using) 
     end
   end
   steps %{Then I try to run `#{cmd}`}
-  steps %{Then I try to run `#{cmd}`}
 end
 
 When(/^I generate( random)? CSR( using dummy password)?(?: with flags (.+))?$/) do |random, dummy_password, flags|
