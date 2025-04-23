@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"encoding/pem"
-	"fmt"
 	"net/http"
 	"os"
 	"testing"
@@ -42,7 +41,6 @@ func TestPlaybook(t *testing.T) {
 func (s *PlaybookSuite) TestPlaybook_SetTLSConfig() {
 	p12FileLocation := "../../test-files/playbook/cert.p12"
 	p12Password := os.Getenv(util.ENV_DUMMY_PASS)
-	fmt.Println("p12password: ", p12Password)
 
 	playbook := domain.Playbook{
 		CertificateTasks: domain.CertificateTasks{
