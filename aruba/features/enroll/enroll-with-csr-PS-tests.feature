@@ -13,7 +13,7 @@ Feature: few more tests from Ryan
 # if ERRORLEVEL 1 goto :DONE
 # timeout /t 10
   Scenario: ~ Service Generated CSR with RSA key ~
-    When I enroll a certificate in TPP with -csr service -key-type rsa -key-size 4096 -cn service-gen-rsa.vcert.example -format json -key-password newPassw0rd!
+    When I enroll a certificate with dummy password in TPP with -csr service -key-type rsa -key-size 4096 -cn service-gen-rsa.vcert.example -format json
     Then it should retrieve certificate
     Then I get JSON response
     And that certificate should contain "Public-Key: (4096 bit)"
@@ -24,7 +24,7 @@ Feature: few more tests from Ryan
 # if ERRORLEVEL 1 goto :DONE
 # timeout /t 10
   Scenario: ~ Service Generated CSR with ECC key ~
-    When I enroll random certificate using TPPecdsa with -csr service -key-type ecdsa -key-curve p521 -format json -key-password newPassw0rd!
+    When I enroll random certificate with dummy password using TPPecdsa with -csr service -key-type ecdsa -key-curve p521 -format json
     Then it should post certificate request
     And it should retrieve certificate
     And the JSON response at "PrivateKey" should include "-----BEGIN EC PRIVATE KEY-----"
@@ -42,7 +42,7 @@ Feature: few more tests from Ryan
   Scenario: ~ Service Generated CSR pickup later ID as param ~
     When I enroll certificate using TPP with -csr service -cn service-gen-pickup-id-as-param.vcert.example -no-pickup
     Then it should post certificate request
-    And I retrieve the certificate from TPP using the same Pickup ID with -key-password newPassw0rd! -timeout 59
+    And I retrieve the certificate from TPP using the same Pickup ID and using a dummy password with -timeout 59
     Then it should retrieve certificate
     Then it should output encrypted private key
 
@@ -57,7 +57,7 @@ Feature: few more tests from Ryan
   Scenario: ~ Service Generated CSR pickup later ID in file~
     When I enroll certificate using TPP with -csr service -cn service-gen-pickup-id-in-file.vcert.example -no-pickup -pickup-id-file pickup_id.txt
     Then it should post certificate request
-    And I retrieve the certificate from TPP with -pickup-id-file pickup_id.txt -key-password newPassw0rd! -timeout 59
+    And I retrieve the certificate using a dummy password from TPP with -pickup-id-file pickup_id.txt -timeout 59
     Then it should retrieve certificate
     Then it should output encrypted private key
 
@@ -96,7 +96,7 @@ Feature: few more tests from Ryan
 #  if ERRORLEVEL 1 goto :DONE
 #  timeout /t 10
   Scenario: ~ Service Generated CSR with SANS and should be no log output ~
-    When I enroll random certificate using TPP with -csr service -san-dns one.vcert.example -san-dns two.vcert.example -san-ip 10.20.30.40 -san-ip 198.168.144.120 -san-email zack.jackson@vcert.example -format json -key-password newPassw0rd!
+    When I enroll random certificate with dummy password using TPP with -csr service -san-dns one.vcert.example -san-dns two.vcert.example -san-ip 10.20.30.40 -san-ip 198.168.144.120 -san-email zack.jackson@vcert.example -format json
     And I get JSON response
     And that certificate should contain "DNS:one.vcert.example"
     And that certificate should contain "DNS:two.vcert.example"
@@ -112,7 +112,7 @@ Feature: few more tests from Ryan
 # if ERRORLEVEL 1 goto :DONE
 # timeout /t 10
   Scenario: ~ User Provided CSR with SANs ~
-    Given I generate CSR with -cn user-provided-with-sans.vcert.example -san-dns one.vcert.example -san-dns two.vcert.example -san-ip 10.20.30.40 -san-ip 198.168.144.120 -san-email zack.jackson@vcert.example -key-file user-provided-with-sans.key -csr-file user-provided-with-sans.req -key-password newPassw0rd!
+    Given I generate CSR using dummy password with flags -cn user-provided-with-sans.vcert.example -san-dns one.vcert.example -san-dns two.vcert.example -san-ip 10.20.30.40 -san-ip 198.168.144.120 -san-email zack.jackson@vcert.example -key-file user-provided-with-sans.key -csr-file user-provided-with-sans.req
     And I enroll certificate using TPP with -csr file:user-provided-with-sans.req -cert-file c.pem
     And I decode certificate from file "c.pem"
     And that certificate should contain "DNS:one.vcert.example"
@@ -130,7 +130,7 @@ Feature: few more tests from Ryan
 # if ERRORLEVEL 1 goto :DONE
 # timeout /t 10
   Scenario: ~ User Provided CSR with full Subject DN ~
-    Given I generate CSR with -cn user-provided-full-subject.vcert.example -ou "DevOps Integrations" -o "Swordfish Security" -l "St. Petersburg" -st Russia -c RU -key-file user-provided-full-subject.key -csr-file user-provided-full-subject.req -key-password newPassw0rd!
+    Given I generate CSR using dummy password with flags -cn user-provided-full-subject.vcert.example -ou "DevOps Integrations" -o "Swordfish Security" -l "St. Petersburg" -st Russia -c RU -key-file user-provided-full-subject.key -csr-file user-provided-full-subject.req
     And I enroll certificate using TPP with -csr file:user-provided-full-subject.req -format json
     And I get JSON response
     Then that certificate Subject should contain "C = RU"

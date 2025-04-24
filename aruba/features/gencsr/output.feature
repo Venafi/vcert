@@ -16,8 +16,8 @@ Feature: Generating simple certificate request
 
   Scenario: where CSR is generated interactively with non-empty key-password
     When I run `vcert gencsr -cn vfidev.example.com` interactively
-    And I type "newPassw0rd!"
-    And I type "newPassw0rd!"
+    And I type dummy password
+    And I type dummy password
     Then the exit status should be 0
     And it should output encrypted private key
     And it should output CSR
@@ -29,7 +29,7 @@ Feature: Generating simple certificate request
     And it should output CSR
 
   Scenario: where CSR is generated and the private key is encrypted
-    When I run `vcert gencsr -cn vfidev.example.com -key-password newPassw0rd!`
+    When I generate CSR using dummy password with flags -cn vfidev.example.com
     Then the exit status should be 0
     And it should output encrypted private key
     And it should output CSR

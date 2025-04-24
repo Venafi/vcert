@@ -13,7 +13,7 @@ Feature: Tests with deprecated TPP options
 # if ERRORLEVEL 1 goto :DONE
 # timeout /t 10
   Scenario: ~ Service Generated CSR with RSA key ~
-    When I enroll a certificate in TPPdeprecated with -csr service -key-type rsa -key-size 4096 -cn service-gen-rsa.vcert.example -format json -key-password newPassw0rd!
+    When I enroll a certificate with dummy password in TPPdeprecated with -csr service -key-type rsa -key-size 4096 -cn service-gen-rsa.vcert.example -format json
     Then it should retrieve certificate
     Then I get JSON response
     And that certificate should contain "Public-Key: (4096 bit)"
@@ -31,7 +31,7 @@ Feature: Tests with deprecated TPP options
   Scenario: ~ Service Generated CSR pickup later ID as param ~
     When I enroll certificate using TPPdeprecated with -csr service -cn service-gen-pickup-id-as-param.vcert.example -no-pickup
     Then it should post certificate request
-    And I retrieve the certificate from TPPdeprecated using the same Pickup ID with -key-password newPassw0rd! -timeout 59
+    And I retrieve the certificate from TPPdeprecated using the same Pickup ID and using a dummy password with -timeout 59
     Then it should retrieve certificate
     Then it should output encrypted private key
 
@@ -46,7 +46,7 @@ Feature: Tests with deprecated TPP options
   Scenario: ~ Service Generated CSR pickup later ID in file~
     When I enroll certificate using TPPdeprecated with -csr service -cn service-gen-pickup-id-in-file.vcert.example -no-pickup -pickup-id-file pickup_id.txt
     Then it should post certificate request
-    And I retrieve the certificate from TPPdeprecated with -pickup-id-file pickup_id.txt -key-password newPassw0rd! -timeout 59
+    And I retrieve the certificate using a dummy password from TPPdeprecated with -pickup-id-file pickup_id.txt -timeout 59
     Then it should retrieve certificate
     Then it should output encrypted private key
 

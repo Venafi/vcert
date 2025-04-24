@@ -9,7 +9,7 @@ When(/^I try to run `([^`]*)`$/)do |cmd|
   end
 end
 
-When(/^I enroll(?: a)?( random)? certificate (and_random_instance )?(?:in|from|using) (\S+) with (.+)?$/) do |random, random_instance, endpoint, flags|
+When(/^I enroll(?: a)?( random)? certificate( with dummy password)? (and_random_instance )?(?:in|from|using) (\S+) with (.+)?$/) do |random, dummy_password, random_instance, endpoint, flags|
   if random
     cn = " -cn " + random_cn
   end
@@ -17,7 +17,12 @@ When(/^I enroll(?: a)?( random)? certificate (and_random_instance )?(?:in|from|u
   if random_instance
     instance = "-instance devops-instance:" + random_string
   end
-  cmd = "vcert enroll #{ENDPOINTS[endpoint]} #{ZONE[endpoint]} #{cn} #{flags} #{instance}"
+
+  if dummy_password
+    key_pass_flag = " -key-password #{DUMMY_PASSWORD}"
+  end
+
+  cmd = "vcert enroll #{ENDPOINTS[endpoint]} #{ZONE[endpoint]} #{cn} #{flags} #{instance} #{key_pass_flag}"
   steps %{Then I try to run `#{cmd}`}
 
   m = last_command_started.output.match /^PickupID="(.+)"$/
@@ -27,19 +32,28 @@ When(/^I enroll(?: a)?( random)? certificate (and_random_instance )?(?:in|from|u
 end
 
 #I retreive the certificate from TPP using the same PickupID interactively
-When(/^I interactively retrieve(?: the) certificate (?:in|from|using) (\S+) using (the same Pickup ID)(?: with)?(.+)?$/) do |endpoint, same_pickup_id, flags|
-  cmd = "vcert pickup #{ENDPOINTS[endpoint]} -pickup-id '#{@pickup_id}'#{flags}"
+When(/^I interactively retrieve(?: the) certificate (?:in|from|using) (\S+) using the same Pickup ID( and using a dummy password)? (?: with)?(.+)?$/) do |endpoint, dummy_password, flags|
+  if dummy_password
+    key_pass_flag = " -key-password #{DUMMY_PASSWORD}"
+  end
+  cmd = "vcert pickup #{ENDPOINTS[endpoint]} -pickup-id '#{@pickup_id}'#{flags} #{key_pass_flag}"
   steps %{Then I try to run `#{cmd}` interactively}
 end
 
 #I retreive the certificate from TPP using the same PickupID
-When(/^I retrieve(?: the) certificate (?:in|from|using) (\S+) using (the same Pickup ID)(?: with)?(.+)?$/) do |endpoint, same_pickup_id, flags|
-  cmd = "vcert pickup #{ENDPOINTS[endpoint]} -pickup-id '#{@pickup_id}'#{flags}"
+When(/^I retrieve(?: the) certificate (?:in|from|using) (\S+) using the same Pickup ID( and using a dummy password)?(?: with)?(.+)?$/) do |endpoint, dummy_password, flags|
+  if dummy_password
+    key_pass_flag = " -key-password #{DUMMY_PASSWORD}"
+  end
+  cmd = "vcert pickup #{ENDPOINTS[endpoint]} -pickup-id '#{@pickup_id}'#{flags} #{key_pass_flag}"
   steps %{Then I try to run `#{cmd}`}
 end
 
-When(/^I retrieve(?: the) certificate (?:from|in|using) (\S+) with (.+)$/) do |endpoint, flags|
-  cmd = "vcert pickup #{ENDPOINTS[endpoint]} #{flags}"
+When(/^I retrieve(?: the) certificate( using a dummy password)? (?:from|in|using) (\S+) with (.+)$/) do |dummy_password, endpoint, flags|
+  if dummy_password
+    key_pass_flag = " -key-password #{DUMMY_PASSWORD}"
+  end
+  cmd = "vcert pickup #{ENDPOINTS[endpoint]} #{key_pass_flag} #{flags}"
   steps %{Then I try to run `#{cmd}`}
 end
 
@@ -68,14 +82,19 @@ When(/^I renew(?: the)? certificate (?:from|in|using) (\S+) with(?: flags)?(.+)$
 end
 
 # renewal via memorized PickupId or thumbprint
-When(/^I renew(?: the)? certificate (?:from|in|using) (\S+) using the same (Pickup ID|Thumbprint)(?: with)?(?: flags)?(.+)?$/) do |endpoint, field, flags|
+When(/^I renew(?: the)? certificate( using a dummy password)? (?:from|in|using) (\S+) using the same (Pickup ID|Thumbprint)(?: with)?(?: flags)?(.+)?$/) do |dummy_password, endpoint, field, flags|
   sleep 2
   if field == "Pickup ID"
-    cmd = "vcert renew #{ENDPOINTS[endpoint]} -id '#{@pickup_id}' #{flags}"
+    pickup_id_flag = " -id '#{@pickup_id}'"
   end
   if field == "Thumbprint"
-    cmd = "vcert renew #{ENDPOINTS[endpoint]} -thumbprint '#{@certificate_fingerprint}' #{flags}"
+    thumbprint_flag = " -thumbprint '#{@certificate_fingerprint}'"
   end
+  if dummy_password
+    key_pass_flag = " -key-password #{DUMMY_PASSWORD}"
+  end
+
+  cmd = "vcert renew #{ENDPOINTS[endpoint]} #{thumbprint_flag} #{pickup_id_flag} #{key_pass_flag} #{flags}"
   if flags != ""
     # we try to get key-password
     # This regex basically tries to get everything after and including "-key-password " (note the space in the string)
@@ -104,12 +123,15 @@ When(/^I renew(?: the)? certificate (?:from|in|using) (\S+) using the same (Pick
   steps %{Then I try to run `#{cmd}`}
 end
 
-When(/^I generate( random)? CSR(?: with)?(.+)?$/) do |random, flags|
-  if random
-    cn = " -cn " + random_cn
-  end
-  cmd = "vcert gencsr#{cn}#{flags}"
-  steps %{Then I try to run `#{cmd}`}
+When(/^I generate( random)? CSR( using dummy password)?(?: with flags (.+))?$/) do |random, dummy_password, flags|
+    if random
+      cn = " -cn " + random_cn
+    end
+    if dummy_password
+      key_pass_flag = " -key-password #{DUMMY_PASSWORD}"
+    end
+    cmd = "vcert gencsr#{cn} #{key_pass_flag} #{flags}"
+    steps %{Then I try to run `#{cmd}`}
 end
 
 # Getting credentials

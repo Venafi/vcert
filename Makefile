@@ -12,6 +12,8 @@ define cucumber_image_build
 	docker build --tag vcert.auto aruba/
 endef
 
+export DUMMY_PASS=CyberArkT3stP4ZZC0de%jQX^J=4H
+
 define cucumber_tests_run
     if [ -n "$(FEATURE)" ] && [ -n "$(PLATFORM)" ]; then \
 		echo "running cucumber tests for both feature $(FEATURE) and platform $(PLATFORM)"; \

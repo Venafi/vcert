@@ -6,4 +6,5 @@ const (
 	// DefaultUserAgent is the default value of the UserAgent header in HTTP
 	// requests to Venafi API endpoints.
 	DefaultUserAgent = "vcert/v5"
+	ENV_DUMMY_PASS   = "DUMMY_PASS"
 )

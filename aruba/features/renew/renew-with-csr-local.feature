@@ -65,14 +65,14 @@ Feature: renew action with -csr local (default) option
       | Cloud     |
 
   Scenario Outline: renew certificate using -id using `-csr local` with PKCS12 flag
-    Given I enroll random certificate using <endpoint> with -key-password Passcode123! -key-file k.pem -cert-file c.pem -csr local
+    Given I enroll random certificate with dummy password using <endpoint> with -key-file k.pem -cert-file c.pem -csr local
       And it should write private key to the file "k.pem"
       And it should write certificate to the file "c.pem"
       And it should output Pickup ID
     And I decode certificate from file "c.pem"
-    Then I renew the certificate in <endpoint> using the same Pickup ID with flags -key-password Passcode123! -file all.p12 -format pkcs12
+    Then I renew the certificate using a dummy password in <endpoint> using the same Pickup ID with flags -file all.p12 -format pkcs12
       And it should retrieve certificate
-      And "all.p12" should be PKCS#12 archive with password "Passcode123!"
+      And "all.p12" should be PKCS#12 archive with dummy password
 
     @TPP
     Examples:
@@ -85,14 +85,14 @@ Feature: renew action with -csr local (default) option
       | Cloud     |
 
   Scenario Outline: renew certificate using -id using `-csr local` with PKCS12 legacy flag
-    Given I enroll random certificate using <endpoint> with -key-password Passcode123! -key-file k.pem -cert-file c.pem -csr local
+    Given I enroll random certificate with dummy password using <endpoint> with -key-file k.pem -cert-file c.pem -csr local
       And it should write private key to the file "k.pem"
       And it should write certificate to the file "c.pem"
       And it should output Pickup ID
     And I decode certificate from file "c.pem"
-    Then I renew the certificate in <endpoint> using the same Pickup ID with flags -key-password Passcode123! -file all.p12 -format legacy-pkcs12
+    Then I renew the certificate using a dummy password in <endpoint> using the same Pickup ID with flags -file all.p12 -format legacy-pkcs12
       And it should retrieve certificate
-      And "all.p12" should be PKCS#12 archive in legacy mode with password "Passcode123!"
+      And "all.p12" should be PKCS#12 archive in legacy mode with dummy password
 
     @TPP
     Examples:

@@ -75,7 +75,7 @@ Feature: enrolling certificates with -csr option (VEN-40652)
       | Cloud     |
 
   Scenario Outline: where it enrolls certificates with -csr local -no-prompt -key-password ...
-    Given I enroll random certificate using <endpoint> with -csr local -no-prompt -key-password newPassw0rd!
+    Given I enroll random certificate with dummy password using <endpoint> with -csr local -no-prompt
     And it should post certificate request
     Then it should retrieve certificate
     And it should output encrypted private key
@@ -98,7 +98,7 @@ Feature: enrolling certificates with -csr option (VEN-40652)
 
 
   Scenario Outline: where it should however enroll a certificate with -csr service, empty -key-password and -no-pickup
-    When I enroll random certificate using <endpoint> with -csr service -no-prompt -no-pickup
+    When I enroll random certificate with dummy password using <endpoint> with -csr service -no-prompt -no-pickup
     Then it should post certificate request
 
     @FAKE
@@ -117,7 +117,7 @@ Feature: enrolling certificates with -csr option (VEN-40652)
       | Cloud     |
 
   Scenario Outline: where it should enroll a certificate with -csr service -no-prompt -key-password ...
-    When I enroll random certificate using <endpoint> with -csr service -no-prompt -key-password newPassw0rd!
+    When I enroll random certificate with dummy password using <endpoint> with -csr service -no-prompt
     Then it should post certificate request
       And it should retrieve certificate
       And it should output encrypted private key
@@ -138,7 +138,7 @@ Feature: enrolling certificates with -csr option (VEN-40652)
     Then I retrieve the certificate using <endpoint> using the same Pickup ID with -timeout 180
       And it should retrieve certificate
       And it should not output private key
-    Then I retrieve the certificate using <endpoint> using the same Pickup ID with -key-password newPassw0rd! -timeout 180
+    Then I retrieve the certificate using <endpoint> using the same Pickup ID and using a dummy password with -timeout 180
       And it should retrieve certificate
       And it should output encrypted private key
 

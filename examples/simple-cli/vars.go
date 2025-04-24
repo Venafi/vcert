@@ -29,6 +29,8 @@ import (
 
 var mockConfig, cloudConfig, tppConfig *vcert.Config
 
+var dummy_pass = "CyberArkT3stP4ZZC0de%jQX^J=4H"
+
 func init() {
 	mockConfig = &vcert.Config{
 		ConnectorType: endpoint.ConnectorTypeFake,

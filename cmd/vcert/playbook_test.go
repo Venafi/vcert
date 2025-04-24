@@ -15,6 +15,7 @@ import (
 	"golang.org/x/crypto/pkcs12"
 
 	"github.com/Venafi/vcert/v5/pkg/playbook/app/domain"
+	"github.com/Venafi/vcert/v5/pkg/util"
 	"github.com/Venafi/vcert/v5/pkg/venafi"
 )
 
@@ -39,7 +40,7 @@ func TestPlaybook(t *testing.T) {
 
 func (s *PlaybookSuite) TestPlaybook_SetTLSConfig() {
 	p12FileLocation := "../../test-files/playbook/cert.p12"
-	p12Password := "newPassword!"
+	p12Password := os.Getenv(util.ENV_DUMMY_PASS)
 
 	playbook := domain.Playbook{
 		CertificateTasks: domain.CertificateTasks{

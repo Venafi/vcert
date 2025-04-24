@@ -75,7 +75,7 @@ When(/^CSR in "([^"]*)" file and private key in "([^"]*)" file should( not)? hav
   steps %{
     When I run `openssl req -modulus -noout -in #{csr_file}`
     And I remember the output
-    And I run `openssl rsa -modulus -passin pass:newPassw0rd! -noout -in #{key_file}`
+    And I run `openssl rsa -modulus -passin pass:#{DUMMY_PASSWORD} -noout -in #{key_file}`
     Then the outputs should#{negated} be the same
   }
 end
@@ -84,7 +84,7 @@ When(/^CSR in "([^"]*)" and private key in "([^"]*)" and certificate in "([^"]*)
   steps %{
     Then I run `openssl req -modulus -noout -in #{csr_file}`
     And I remember the output
-    Then I run `openssl rsa -modulus -passin pass:newPassw0rd! -noout -in #{key_file}`
+    Then I run `openssl rsa -modulus -passin pass:#{DUMMY_PASSWORD} -noout -in #{key_file}`
     And the outputs should be the same
     And I remember the output
     And I run `openssl x509 -modulus -noout -in #{cert_file}`
@@ -134,9 +134,35 @@ When(/^"([^"]*)" should be PKCS#12 archive with password "([^"]*)"$/) do |filena
   # -nodes            Don't encrypt private keys
 end
 
+When(/^"([^"]*)" should be PKCS#12 archive with dummy password$/) do |filename|
+  steps %{
+    Then I try to run `openssl pkcs12 -in "#{filename}" -passin pass:#{DUMMY_PASSWORD} -noout`
+    And the exit status should be 0
+  }
+  # -nokeys           Don't output private keys
+  # -nocerts          Don't output certificates
+  # -clcerts          Only output client certificates
+  # -cacerts          Only output CA certificates
+  # -noout            Don't output anything, just verify
+  # -nodes            Don't encrypt private keys
+end
+
 When(/^"([^"]*)" should be PKCS#12 archive in legacy mode with password "([^"]*)"$/) do |filename, password|
   steps %{
     Then I try to run `openssl pkcs12 -in "#{filename}" -legacy -passin pass:#{password} -noout`
+    And the exit status should be 0
+  }
+  # -nokeys           Don't output private keys
+  # -nocerts          Don't output certificates
+  # -clcerts          Only output client certificates
+  # -cacerts          Only output CA certificates
+  # -noout            Don't output anything, just verify
+  # -nodes            Don't encrypt private keys
+end
+
+When(/^"([^"]*)" should be PKCS#12 archive in legacy mode with dummy password/) do |filename|
+  steps %{
+    Then I try to run `openssl pkcs12 -in "#{filename}" -legacy -passin pass:#{DUMMY_PASSWORD} -noout`
     And the exit status should be 0
   }
   # -nokeys           Don't output private keys
