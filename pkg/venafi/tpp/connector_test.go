@@ -29,7 +29,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -736,7 +735,7 @@ func TestResetCertificate(t *testing.T) {
 				t.Errorf("expected request path %q but got %q", mockCalls[i].expectReqPath, r.URL.Path)
 			}
 
-			bytes, err := ioutil.ReadAll(r.Body)
+			bytes, err := io.ReadAll(r.Body)
 			if err != nil {
 				t.Errorf("failed to read request body: %s", err)
 			}
@@ -3028,7 +3027,11 @@ func TestCreateSshCertProvidedPubKey(t *testing.T) {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
 
-	fileContent, err = ioutil.ReadFile(absPath)
+	file, err := os.Open(absPath)
+	if err != nil {
+		panic(err)
+	}
+	fileContent, err = io.ReadAll(file)
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
