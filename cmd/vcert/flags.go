@@ -853,6 +853,7 @@ var (
 	)
 
 	pickupFlags = flagsApppend(
+		flagPlatform,
 		credentialsFlags,
 		sortedFlags(flagsApppend(
 			sortableCredentialsFlags,
@@ -885,6 +886,7 @@ var (
 	)
 
 	renewFlags = flagsApppend(
+		flagPlatform,
 		flagDistinguishedName,
 		flagThumbprint,
 		credentialsFlags,
@@ -911,6 +913,7 @@ var (
 	)
 
 	retireFlags = flagsApppend(
+		flagPlatform,
 		credentialsFlags,
 		flagThumbprint,
 		flagDistinguishedName,
@@ -971,6 +974,7 @@ var (
 	))
 
 	createPolicyFlags = sortedFlags(flagsApppend(
+		flagPlatform,
 		flagKey,
 		flagUrl,
 		flagToken,
@@ -983,6 +987,7 @@ var (
 	))
 
 	getPolicyFlags = sortedFlags(flagsApppend(
+		flagPlatform,
 		flagKey,
 		flagUrl,
 		flagToken,
