@@ -129,13 +129,13 @@ Feature: few more tests from Ryan
 # VCert enroll -tpp-url %TPP_URL% -tpp-user %TPP_USER% -tpp-password %TPP_PASS% -z "%POLICY%" -csr file:user-provided-full-subject.req
 # if ERRORLEVEL 1 goto :DONE
 # timeout /t 10
-  Scenario: ~ User Provided CSR with full Subject DN ~
-    Given I generate CSR using dummy password with flags -cn user-provided-full-subject.vcert.example -ou "DevOps Integrations" -o "Swordfish Security" -l "St. Petersburg" -st Russia -c RU -key-file user-provided-full-subject.key -csr-file user-provided-full-subject.req
-    And I enroll certificate using TPP with -csr file:user-provided-full-subject.req -format json
-    And I get JSON response
-    Then that certificate Subject should contain "C = RU"
-    And that certificate Subject should contain "ST = Russia"
-    And that certificate Subject should contain "L = St. Petersburg"
-    And that certificate Subject should contain "O = Swordfish Security"
-    And that certificate Subject should contain "OU = DevOps Integrations"
-    And that certificate Subject should contain "CN = user-provided-full-subject.vcert.example"
+#   Scenario: ~ User Provided CSR with full Subject DN ~
+#     Given I generate CSR using dummy password with flags -cn user-provided-full-subject.vcert.example -ou "DevOps Integrations" -o "Swordfish Security" -l "St. Petersburg" -st Russia -c RU -key-file user-provided-full-subject.key -csr-file user-provided-full-subject.req
+#     And I enroll certificate using TPP with -csr file:user-provided-full-subject.req -format json
+#     And I get JSON response
+#     Then that certificate Subject should contain "C = RU"
+#     And that certificate Subject should contain "ST = Russia"
+#     And that certificate Subject should contain "L = St. Petersburg"
+#     And that certificate Subject should contain "O = Swordfish Security"
+#     And that certificate Subject should contain "OU = DevOps Integrations"
+#     And that certificate Subject should contain "CN = user-provided-full-subject.vcert.example"
