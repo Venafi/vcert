@@ -46,10 +46,15 @@ get: gofmt
 build_quick: get
 	env GOOS=linux   GOARCH=amd64 go build $(GO_LDFLAGS) -o bin/linux/vcert         ./cmd/vcert
 
+# Note for any future contributor that would like to add a new architecture: keep in mind that we do an internal signing
+# for VCert binaries, thus just updating here the new desired architecture won't be enough.
 build: get
 	env GOOS=linux   GOARCH=arm64 go build $(GO_LDFLAGS) -o bin/linux/vcert_arm       ./cmd/vcert
 	env GOOS=linux   GOARCH=amd64 go build $(GO_LDFLAGS) -o bin/linux/vcert           ./cmd/vcert
 	env GOOS=linux   GOARCH=386   go build $(GO_LDFLAGS) -o bin/linux/vcert86         ./cmd/vcert
+	env GOOS=linux   GOARCH=arm GOARM=5 go build $(GO_LDFLAGS) -o bin/linux/vcert_arm32v5       ./cmd/vcert
+	env GOOS=linux   GOARCH=arm GOARM=6 go build $(GO_LDFLAGS) -o bin/linux/vcert_arm32v6       ./cmd/vcert
+	env GOOS=linux   GOARCH=arm GOARM=7 go build $(GO_LDFLAGS) -o bin/linux/vcert_arm32v7       ./cmd/vcert
 	env GOOS=darwin  GOARCH=amd64 go build $(GO_LDFLAGS) -o bin/darwin/vcert          ./cmd/vcert
 	env GOOS=darwin  GOARCH=arm64 go build $(GO_LDFLAGS) -o bin/darwin/vcert_arm      ./cmd/vcert
 	env GOOS=windows GOARCH=amd64 go build $(GO_LDFLAGS) -o bin/windows/vcert.exe     ./cmd/vcert
