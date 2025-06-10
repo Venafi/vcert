@@ -158,6 +158,9 @@ const (
 	// Certificates with scope EDGE_CACHE are special-purposed certificates, served from Edge Points of Presence.
 	// See https://cloud.google.com/vpc/docs/edge-locations.
 	GCMCertificateScopeEdgeCache GCMCertificateScope = "EDGE_CACHE"
+	// Certificates with ALL_REGIONS scope are served from all Google Cloud
+	// regions. See https://cloud.google.com/compute/docs/regions-zones.
+	GCMCertificateScopeAllRegions GCMCertificateScope = "ALL_REGIONS"
 )
 
 // GetCloudKeystoresCloudKeystoresCloudKeystoreConnection includes the requested fields of the GraphQL type CloudKeystoreConnection.

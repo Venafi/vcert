@@ -226,17 +226,18 @@ Options:
 ## Certificate Provisioning Parameters
 API key:
 ```
-vcert provisioning cloudkeystore -p vcp -k <api key> [--certificate-id <certificate id> | --pickup-id <request id> | --pickup-id-file <file name>] [ --keystore-id <keystore id> | --keystore-name <keystore name> --provider-name <provider name>]
+vcert provisioning cloudkeystore -p vcp -k <api key> [--certificate-id <certificate id> | --pickup-id <request id> | --pickup-id-file <file name>] [ --keystore-id <keystore id> | --keystore-name <keystore name> --provider-name <provider name>] --gcm-cert-scope <gcm certificate scope>
 ```
 Access token:
 ```
-vcert provisioning cloudkeystore -p vcp -t <access token> [--certificate-id <certificate id> | --pickup-id <request id> | --pickup-id-file <file name>] [ --keystore-id <keystore id> | --keystore-name <keystore name> --provider-name <provider name>]
+vcert provisioning cloudkeystore -p vcp -t <access token> [--certificate-id <certificate id> | --pickup-id <request id> | --pickup-id-file <file name>] [ --keystore-id <keystore id> | --keystore-name <keystore name> --provider-name <provider name>] --gcm-cert-scope <gcm certificate scope>
 ```
 Options:
 
 | Command                 | Description                                                                                                                                                                                                            |
 |-------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `--arn`                 | Use to specify AWS Resource Name which provisioned certificate will replace (only for AWS Certificate Manager)                                                                                                         |
+| `--gcm-cert-scope`      | Use to specify Certificate Scope of the certificate to be provisioned (only for Google Cloud Certificate Manager). Supported values from GCM API documentation: DEFAULT, EDGE_CACHE, ALL_REGIONS.                      |
 | `--certificate-id`      | The id of the certificate to be provisioned to a cloud keystore.                                                                                                                                                       |
 | `--certificate-id-file` | Use to specify a file name that contains the unique identifier of the certificate. Required when `--certificate-id` is not specified.                                                                                  |
 | `--certificate-name`    | Use to specify Cloud Keystore Certificate Name to be set or replaced by provisioned certificate (only for Azure Key Vault and Google Certificate Manager)                                                              |

@@ -153,6 +153,7 @@ type commandFlags struct {
 	keystoreName         string
 	keystoreCertName     string
 	keystoreARN          string
+	gcmCertScope         string
 	provisionOutputFile  string
 	provisionPickupID    string
 	provisionFormat      string

@@ -29,4 +29,6 @@ type ProvisioningOptions struct {
 	ARN string
 	// for AKV and GCM only
 	CloudCertificateName string
+	//GCM Certificate Scope
+	GCMCertificateScope GCMCertificateScope
 }
