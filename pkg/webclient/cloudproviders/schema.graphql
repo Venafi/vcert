@@ -2652,7 +2652,7 @@ enum GCMCertificateScope
     Certificates with ALL_REGIONS scope are served from all Google Cloud
     regions. See https://cloud.google.com/compute/docs/regions-zones.
     """
-    ALL_REGIONS
+    ALL_REGIONS @join__enumValue(graph: CLOUD_PROVIDERS)
 }
 
 type GCPCertificateMetadata
