@@ -69,7 +69,7 @@ Feature: provision to cloud keystore
 
 
   Scenario Outline: Enroll certificate and execute provisioning for cloud keystore on GCM using certificate's scopes
-      Given I enroll a random certificate with defined platform VCP with -csr service -no-prompt -gcm-cert-scope ALL_REGIONS
+      Given I enroll a random certificate with defined platform VCP with -csr service -no-prompt -gcm-cert-scope DEFAULT
       And I remember the output
       And I use previous Pickup ID to provision from VCP a certificate to cloudkeystore "<cloudkeystore>" setting keystore and provider names
       And I remember the output
