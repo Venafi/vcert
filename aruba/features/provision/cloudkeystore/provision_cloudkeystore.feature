@@ -66,3 +66,16 @@ Feature: provision to cloud keystore
       | AWS              |
       | GOOGLE           |
       | AZURE            |
+
+
+  Scenario Outline: Enroll certificate and execute provisioning for cloud keystore on GCM using certificate's scopes
+      Given I enroll a random certificate with defined platform VCP with -csr service -no-prompt -gcm-cert-scope ALL_REGIONS
+      And I remember the output
+      And I use previous Pickup ID to provision from VCP a certificate to cloudkeystore "<cloudkeystore>" setting keystore and provider names
+      And I remember the output
+        And the output should not contain "Warning: --platform not set. Attempting to best-guess platform from connection flags"
+      And I grab cloud ID from output
+      Then I clean up previous installed certificate from cloudkeystore
+      Examples:
+        | cloudkeystore    |
+        | GOOGLE           |
