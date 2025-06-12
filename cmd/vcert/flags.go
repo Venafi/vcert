@@ -759,6 +759,15 @@ var (
 		Destination: &flags.keystoreARN,
 	}
 
+	flagGCMCertScope = &cli.StringFlag{
+		Name: "gcm-cert-scope",
+		Usage: "Use to specify Certificate Scope of the certificate to be provisioned (only for Google Cloud Certificate Manager).\n" +
+			"\t\t The possible values are the same defined by the 'scope' field in the certificatemanagercertificate API documentation: DEFAULT | EDGE_CACHE | ALL_REGIONS.\n" +
+			"\t\t https://cloud.google.com/config-connector/docs/reference/resource-docs/certificatemanager/certificatemanagercertificate\n" +
+			"\t\t Note: Only it will be take into account when the \"--" + flagKeystoreCertName.Name + "\" is provided. Otherwise it will be ignored.",
+		Destination: &flags.gcmCertScope,
+	}
+
 	flagProvisionOutputFile = &cli.StringFlag{
 		Name: "file",
 		Usage: "Use to specify a file name and a location where the output should be written. " +
@@ -927,6 +936,7 @@ var (
 		credentialsFlags,
 		flagPlatform,
 		flagKeystoreARN,
+		flagGCMCertScope,
 		flagCertificateID,
 		flagCertificateIDFile,
 		flagKeystoreCertName,

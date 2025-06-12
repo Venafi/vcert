@@ -226,27 +226,28 @@ Options:
 ## Certificate Provisioning Parameters
 API key:
 ```
-vcert provisioning cloudkeystore -p vcp -k <api key> [--certificate-id <certificate id> | --pickup-id <request id> | --pickup-id-file <file name>] [ --keystore-id <keystore id> | --keystore-name <keystore name> --provider-name <provider name>]
+vcert provisioning cloudkeystore -p vcp -k <api key> [--certificate-id <certificate id> | --pickup-id <request id> | --pickup-id-file <file name>] [ --keystore-id <keystore id> | --keystore-name <keystore name> --provider-name <provider name>] --certificate-name <certificate name> --gcm-cert-scope <gcm certificate scope>
 ```
 Access token:
 ```
-vcert provisioning cloudkeystore -p vcp -t <access token> [--certificate-id <certificate id> | --pickup-id <request id> | --pickup-id-file <file name>] [ --keystore-id <keystore id> | --keystore-name <keystore name> --provider-name <provider name>]
+vcert provisioning cloudkeystore -p vcp -t <access token> [--certificate-id <certificate id> | --pickup-id <request id> | --pickup-id-file <file name>] [ --keystore-id <keystore id> | --keystore-name <keystore name> --provider-name <provider name>] --certificate-name <certificate name> --gcm-cert-scope <gcm certificate scope>
 ```
 Options:
 
-| Command                 | Description                                                                                                                                                                                                            |
-|-------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `--arn`                 | Use to specify AWS Resource Name which provisioned certificate will replace (only for AWS Certificate Manager)                                                                                                         |
-| `--certificate-id`      | The id of the certificate to be provisioned to a cloud keystore.                                                                                                                                                       |
-| `--certificate-id-file` | Use to specify a file name that contains the unique identifier of the certificate. Required when `--certificate-id` is not specified.                                                                                  |
-| `--certificate-name`    | Use to specify Cloud Keystore Certificate Name to be set or replaced by provisioned certificate (only for Azure Key Vault and Google Certificate Manager)                                                              |
-| `--file`                | Use to specify a file name and a location where the output should be written. Example: --file /path-to/provision-output                                                                                                |
-| `--format`              | The format of the operation output: text or JSON. Defaults to text.                                                                                                                                                    |
-| `--keystore-id`         | The id of the cloud keystore where the certificate will be provisioned.                                                                                                                                                |
-| `--keystore-name`       | The name of the cloud keystore where the certificate will be provisioned. Must be set along with provider-name flag.                                                                                                   |
-| `--pickup-id`           | Use to specify the unique identifier of the certificate returned by the enroll or renew actions. Required when `--pickup-id-file` is not specified.                                                                    |
-| `--pickup-id-file`      | Use to specify a file name that contains the unique identifier of the certificate returned by the enroll or renew actions if --no-pickup was used or a timeout occurred. Required when `--pickup-id` is not specified. |
-| `--provider-name`       | The name of the cloud provider which owns the cloud keystore where the certificate will be provisioned. Must be set along with keystore-name flag.                                                                     |
+| Command                 | Description                                                                                                                                                                                                                                                |
+|-------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `--arn`                 | Use to specify AWS Resource Name which provisioned certificate will replace (only for AWS Certificate Manager)                                                                                                                                             |
+| `--gcm-cert-scope`      | Use to specify Certificate Scope of the certificate to be provisioned (only for Google Cloud Certificate Manager). Supported values from GCM API documentation: DEFAULT, EDGE_CACHE, ALL_REGIONS. If --certificate-name is not provided it will be ignored |
+| `--certificate-id`      | The id of the certificate to be provisioned to a cloud keystore.                                                                                                                                                                                           |
+| `--certificate-id-file` | Use to specify a file name that contains the unique identifier of the certificate. Required when `--certificate-id` is not specified.                                                                                                                      |
+| `--certificate-name`    | Use to specify Cloud Keystore Certificate Name to be set or replaced by provisioned certificate (only for Azure Key Vault and Google Certificate Manager)                                                                                                  |
+| `--file`                | Use to specify a file name and a location where the output should be written. Example: --file /path-to/provision-output                                                                                                                                    |
+| `--format`              | The format of the operation output: text or JSON. Defaults to text.                                                                                                                                                                                        |
+| `--keystore-id`         | The id of the cloud keystore where the certificate will be provisioned.                                                                                                                                                                                    |
+| `--keystore-name`       | The name of the cloud keystore where the certificate will be provisioned. Must be set along with provider-name flag.                                                                                                                                       |
+| `--pickup-id`           | Use to specify the unique identifier of the certificate returned by the enroll or renew actions. Required when `--pickup-id-file` is not specified.                                                                                                        |
+| `--pickup-id-file`      | Use to specify a file name that contains the unique identifier of the certificate returned by the enroll or renew actions if --no-pickup was used or a timeout occurred. Required when `--pickup-id` is not specified.                                     |
+| `--provider-name`       | The name of the cloud provider which owns the cloud keystore where the certificate will be provisioned. Must be set along with keystore-name flag.                                                                                                         |
 
 ## Parameters for Applying Certificate Policy
 API key:

@@ -26,19 +26,6 @@ type CloudKeystoreProvisioningResult struct {
 	Error                      error  `json:"error"`
 }
 
-// GCMCertificateScope Indicates the Scope for a certificate provisioned to GCP Certificate Manager
-type GCMCertificateScope string
-
-const (
-	// GCMCertificateScopeDefault Certificates with default scope are served from core Google data centers.
-	// If unsure, choose this option.
-	GCMCertificateScopeDefault GCMCertificateScope = "DEFAULT"
-	// GCMCertificateScopeEdgeCache Certificates with scope EDGE_CACHE are special-purposed certificates,
-	// served from Edge Points of Presence.
-	// See https://cloud.google.com/vpc/docs/edge-locations.
-	GCMCertificateScopeEdgeCache GCMCertificateScope = "EDGE_CACHE"
-)
-
 func (c *Connector) ProvisionCertificate(req *domain.ProvisioningRequest, options *domain.ProvisioningOptions) (*domain.ProvisioningMetadata, error) {
 	log.Printf("Starting Provisioning Flow")
 
@@ -288,6 +275,15 @@ func setProvisioningOptions(options domain.ProvisioningOptions, keystoreType dom
 		azureOptions.Name = &options.CloudCertificateName
 	case domain.CloudKeystoreTypeGCM:
 		gcpOptions.Id = &options.CloudCertificateName
+
+		//determining if it was provided a valid scope
+		if options.GCMCertificateScope == domain.GCMCertificateScopeUnknow {
+			return nil, fmt.Errorf("unknown GCM certificate scope")
+		}
+		gcmCertScope := GetGCMCertificateScope(options.GCMCertificateScope)
+		if gcmCertScope != nil {
+			gcpOptions.Scope = gcmCertScope
+		}
 	default:
 		return nil, fmt.Errorf("unknown cloud keystore type: %s", keystoreType)
 	}
@@ -384,4 +380,20 @@ func getCloudMetadataFromWebsocketResponse(resultMap interface{}, keystoreType d
 	}
 
 	return cloudMetadata, err
+}
+
+func GetGCMCertificateScope(scope domain.GCMCertificateScope) *cloudproviders.GCMCertificateScope {
+
+	switch scope {
+	case domain.GCMCertificateScopeDefault:
+		gcmCertificateScope := cloudproviders.GCMCertificateScopeDefault
+		return &gcmCertificateScope
+	case domain.GCMCertificateScopeEdgeCache:
+		gcmCertificateScope := cloudproviders.GCMCertificateScopeEdgeCache
+		return &gcmCertificateScope
+	case domain.GCMCertificateScopeAllRegions:
+		gcmCertificateScope := cloudproviders.GCMCertificateScopeAllRegions
+		return &gcmCertificateScope
+	}
+	return nil
 }

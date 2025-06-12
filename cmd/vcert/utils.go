@@ -635,6 +635,9 @@ func fillProvisioningRequest(req *domain.ProvisioningRequest, keystore domain.Cl
 		options = &domain.ProvisioningOptions{}
 		options.CloudCertificateName = cf.keystoreCertName
 		options.ARN = cf.keystoreARN
+		if cf.gcmCertScope != "" {
+			options.GCMCertificateScope = domain.GetScopeFromString(cf.gcmCertScope)
+		}
 	}
 
 	return req, options

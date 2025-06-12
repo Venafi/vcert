@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/Venafi/vcert/v5/pkg/certificate"
+	"github.com/Venafi/vcert/v5/pkg/domain"
 	"github.com/Venafi/vcert/v5/pkg/util"
 	"github.com/Venafi/vcert/v5/pkg/venafi"
 )
@@ -726,6 +727,10 @@ func validateProvisionFlags(commandName string) error {
 	err := validateProvisionConnectionFlags(commandName)
 	if err != nil {
 		return err
+	}
+
+	if flags.gcmCertScope != "" && domain.GetScopeFromString(flags.gcmCertScope) == domain.GCMCertificateScopeUnknow {
+		return fmt.Errorf("unexpected Google Cloud Certificate Scope provided in --%s: %s", flagGCMCertScope.Name, flags.gcmCertScope)
 	}
 
 	if flags.provisionFormat != "" && flags.provisionFormat != "json" {
