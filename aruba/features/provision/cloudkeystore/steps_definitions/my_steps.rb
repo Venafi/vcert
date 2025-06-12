@@ -77,7 +77,7 @@ def build_provision_cmd(platform, cloudkeystore_type, keystore_provider_names, f
     else
       keystore_id = GCP_KEYSTORE_ID
     end
-    cert_name_flag = " -certificate_name vcert-cert_" + random_string
+    cert_name_flag = " -certificaten-ame vcert-cert_" + random_string
     cmd = cmd + cert_name_flag
   else
     fail(ArgumentError.new("Unexpected : #{cloudkeystore_type}"))
