@@ -19,8 +19,11 @@ var (
 	// See https://cloud.google.com/compute/docs/regions-zones.
 	GCMCertificateScopeAllRegions GCMCertificateScope = addCertificateScope("ALL_REGIONS")
 
-	// GCMCertificateScopeUnknow value to set that the Certificate Scope is not matching to any of the valid scopes.
-	GCMCertificateScopeUnknow GCMCertificateScope = addCertificateScope("UNKNOWN")
+	// GCMCertificateScopeUnknown value to set that the Certificate Scope was not provided.
+	GCMCertificateScopeUnknown GCMCertificateScope = addCertificateScope("UNKNOWN")
+
+	// GCMCertificateScopeInvalid value to set that the Certificate Scope is not matching to any of the valid scopes.
+	GCMCertificateScopeInvalid GCMCertificateScope = addCertificateScope("INVALID")
 )
 
 var GCMCertificateScopes = map[GCMCertificateScope]bool{}
@@ -40,10 +43,14 @@ func addCertificateScope(scope string) GCMCertificateScope {
 func GetScopeFromString(scope string) GCMCertificateScope {
 	scope = strings.ToUpper(scope)
 
+	if scope == "" {
+		return GCMCertificateScopeUnknown
+	}
+
 	certificateScope := GCMCertificateScope(scope)
 
 	if !GCMCertificateScopes[certificateScope] {
-		return GCMCertificateScopeUnknow
+		return GCMCertificateScopeInvalid
 	}
 
 	return certificateScope

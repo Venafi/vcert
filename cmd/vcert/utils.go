@@ -631,13 +631,11 @@ func fillProvisioningRequest(req *domain.ProvisioningRequest, keystore domain.Cl
 
 	var options *domain.ProvisioningOptions
 
-	if cf.keystoreCertName != "" || cf.keystoreARN != "" {
+	if cf.keystoreCertName != "" || cf.keystoreARN != "" || cf.gcmCertScope != "" {
 		options = &domain.ProvisioningOptions{}
 		options.CloudCertificateName = cf.keystoreCertName
 		options.ARN = cf.keystoreARN
-		if cf.gcmCertScope != "" {
-			options.GCMCertificateScope = domain.GetScopeFromString(cf.gcmCertScope)
-		}
+		options.GCMCertificateScope = domain.GetScopeFromString(cf.gcmCertScope)
 	}
 
 	return req, options
