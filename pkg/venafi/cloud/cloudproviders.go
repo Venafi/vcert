@@ -274,12 +274,18 @@ func setProvisioningOptions(options domain.ProvisioningOptions, keystoreType dom
 	case domain.CloudKeystoreTypeAKV:
 		azureOptions.Name = &options.CloudCertificateName
 	case domain.CloudKeystoreTypeGCM:
-		gcpOptions.Id = &options.CloudCertificateName
+		if options.CloudCertificateName != "" {
+			gcpOptions.Id = &options.CloudCertificateName
+		}
 
 		//determining if it was provided a valid scope
-		if options.GCMCertificateScope == domain.GCMCertificateScopeUnknow {
-			return nil, fmt.Errorf("unknown GCM certificate scope")
+		if options.GCMCertificateScope == domain.GCMCertificateScopeInvalid {
+			return nil, fmt.Errorf("invalid GCM certificate scope")
 		}
+		//at this point, it's validated that the scope is not invalid, but it's possible
+		//that the scope was not provided so in that case should be UNKNOWN.
+		// The following method GetGCMCertificateScope returns nil if that was not a one
+		//of the accepted valid by GCM Cert Scope, so in that case the scope is not set.
 		gcmCertScope := GetGCMCertificateScope(options.GCMCertificateScope)
 		if gcmCertScope != nil {
 			gcpOptions.Scope = gcmCertScope

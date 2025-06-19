@@ -729,7 +729,7 @@ func validateProvisionFlags(commandName string) error {
 		return err
 	}
 
-	if flags.gcmCertScope != "" && domain.GetScopeFromString(flags.gcmCertScope) == domain.GCMCertificateScopeUnknow {
+	if flags.gcmCertScope != "" && domain.GetScopeFromString(flags.gcmCertScope) == domain.GCMCertificateScopeInvalid {
 		return fmt.Errorf("unexpected Google Cloud Certificate Scope provided in --%s: %s", flagGCMCertScope.Name, flags.gcmCertScope)
 	}
 

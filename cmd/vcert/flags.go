@@ -763,8 +763,7 @@ var (
 		Name: "gcm-cert-scope",
 		Usage: "Use to specify Certificate Scope of the certificate to be provisioned (only for Google Cloud Certificate Manager).\n" +
 			"\t\t The possible values are the same defined by the 'scope' field in the certificatemanagercertificate API documentation: DEFAULT | EDGE_CACHE | ALL_REGIONS.\n" +
-			"\t\t https://cloud.google.com/config-connector/docs/reference/resource-docs/certificatemanager/certificatemanagercertificate\n" +
-			"\t\t Note: Only it will be take into account when the \"--" + flagKeystoreCertName.Name + "\" is provided. Otherwise it will be ignored.",
+			"\t\t https://cloud.google.com/config-connector/docs/reference/resource-docs/certificatemanager/certificatemanagercertificate",
 		Destination: &flags.gcmCertScope,
 	}
 
