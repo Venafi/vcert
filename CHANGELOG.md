@@ -1,3 +1,51 @@
+## 5.10.2 (June 18th, 2025)
+- Allow to set a GCM Certificate scope without a certificate name.
+
+## 5.10.1 (June 12th, 2025)
+- Add support to provide GCM Certificate Scope for Provision Cloudkeystore
+
+## 5.10.0 (May 30th, 2025)
+- Support for Linux ARM 32 bit Binaries
+
+## 5.9.1 (May 28th, 2025)
+- Add missing support to use --platform flag with the following commands:
+  - pickup 
+  - renew 
+  - retire 
+  - getpolicy 
+  - setpolicy
+
+## 5.9.0 (April 19th, 2025)
+- TPP v25.1 support
+
+## 5.8.3 (March 19th, 2025)
+- Fix for Playbook's backup functionality ([#549](https://github.com/Venafi/vcert/issues/549))
+
+## 5.8.2 (March 7th, 2025)
+- Fix: fixes VCert logger import
+
+## 5.8.1 (January 17th, 2025)
+- Fix: bumps libraries
+
+## 5.8.0 (January 6th, 2025)
+- Enables RSA 3072 bit key size for TPP (VCert SDK)
+
+## 5.7.1 (June 7th, 2024)
+- Support for VCP Provisioning (final release)
+
+## 5.7.0: (May 28th, 2024)
+- Support for VCP Provisioning - (Pre-release)
+
+## 5.7.0-rc2 (May 22nd, 2024)
+- Enables Certificate Provisioning with Service Account Auth
+- Adds ability to provision certificate using keystore and provider name
+
+## 5.7.0-rc1 (May 8th, 2024)
+- NEW FEATURE: Support for VCP Provisioning (api-key support only)
+
+## 5.6.4 (April 11th, 2024)
+- Fix issues with proxy.golang.org which were introduced in VCert 5.6.3.
+
 ## 5.6.3 (April 9th, 2024)
 
 General:
