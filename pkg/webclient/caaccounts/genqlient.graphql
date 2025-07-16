@@ -1,0 +1,9 @@
+query ListCAAccounts{
+    certificateAuthorityAccounts {
+        nodes {
+            id
+            name
+            certificateAuthorityType
+        }
+    }
+}

@@ -114,6 +114,8 @@ const (
 	CloudKeystoreTypeAkv CloudKeystoreType = "AKV"
 	// Google Certificate Manager
 	CloudKeystoreTypeGcm CloudKeystoreType = "GCM"
+	// Akamai Content Delivery Network
+	CloudKeystoreTypeAkamaiCdn CloudKeystoreType = "AKAMAI_CDN"
 )
 
 // Indicates the status of a cloud provider
@@ -136,6 +138,8 @@ const (
 	CloudProviderTypeAzure CloudProviderType = "AZURE"
 	// Google cloud provider type
 	CloudProviderTypeGcp CloudProviderType = "GCP"
+	// Akamai cloud provider type
+	CloudProviderTypeAkamai CloudProviderType = "AKAMAI"
 )
 
 // DeleteMachineIdentitiesResponse is returned by DeleteMachineIdentities on success.
@@ -488,6 +492,16 @@ func (v *GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNode
 	return v.Arn
 }
 
+// GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAkamaiCertificateMetadata includes the requested fields of the GraphQL type AkamaiCertificateMetadata.
+type GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAkamaiCertificateMetadata struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAkamaiCertificateMetadata.Typename, and is useful for accessing the field via an interface.
+func (v *GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAkamaiCertificateMetadata) GetTypename() *string {
+	return v.Typename
+}
+
 // GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAzureCertificateMetadata includes the requested fields of the GraphQL type AzureCertificateMetadata.
 type GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAzureCertificateMetadata struct {
 	Typename *string `json:"__typename"`
@@ -520,6 +534,7 @@ func (v *GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNode
 //
 // GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataCertificateCloudMetadata is implemented by the following types:
 // GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAWSCertificateMetadata
+// GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAkamaiCertificateMetadata
 // GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAzureCertificateMetadata
 // GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataGCPCertificateMetadata
 type GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataCertificateCloudMetadata interface {
@@ -529,6 +544,8 @@ type GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMac
 }
 
 func (v *GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAWSCertificateMetadata) implementsGraphQLInterfaceGetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataCertificateCloudMetadata() {
+}
+func (v *GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAkamaiCertificateMetadata) implementsGraphQLInterfaceGetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataCertificateCloudMetadata() {
 }
 func (v *GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAzureCertificateMetadata) implementsGraphQLInterfaceGetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataCertificateCloudMetadata() {
 }
@@ -551,6 +568,9 @@ func __unmarshalGetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnect
 	switch tn.TypeName {
 	case "AWSCertificateMetadata":
 		*v = new(GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAWSCertificateMetadata)
+		return json.Unmarshal(b, *v)
+	case "AkamaiCertificateMetadata":
+		*v = new(GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAkamaiCertificateMetadata)
 		return json.Unmarshal(b, *v)
 	case "AzureCertificateMetadata":
 		*v = new(GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAzureCertificateMetadata)
@@ -577,6 +597,14 @@ func __marshalGetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectio
 		result := struct {
 			TypeName string `json:"__typename"`
 			*GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAWSCertificateMetadata
+		}{typename, v}
+		return json.Marshal(result)
+	case *GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAkamaiCertificateMetadata:
+		typename = "AkamaiCertificateMetadata"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAkamaiCertificateMetadata
 		}{typename, v}
 		return json.Marshal(result)
 	case *GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAzureCertificateMetadata:
