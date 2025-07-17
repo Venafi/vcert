@@ -18,8 +18,6 @@ package cloud
 
 import (
 	"bytes"
-	"github.com/Venafi/vcert/v5/pkg/webclient/caoperations"
-
 	// nolint:gosec // we only use it for getting the certificate thumbprint / fingerprint
 	//TODO: although doesn't oppose a risk, we need to figure out a better to do this process so we can remove this library
 	"crypto/sha1"
@@ -43,6 +41,7 @@ import (
 	"github.com/Venafi/vcert/v5/pkg/policy"
 	"github.com/Venafi/vcert/v5/pkg/util"
 	"github.com/Venafi/vcert/v5/pkg/verror"
+	"github.com/Venafi/vcert/v5/pkg/webclient/caoperations"
 )
 
 type apiKey struct {
