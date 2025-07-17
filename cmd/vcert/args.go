@@ -53,6 +53,7 @@ type commandFlags struct {
 	tokenURL             string
 	appInfo              string
 	audience             string
+	caAccountName        string
 	caDN                 string
 	certFile             string
 	chainFile            string

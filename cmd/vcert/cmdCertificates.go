@@ -77,7 +77,10 @@ var (
 		Flags:  revokeFlags,
 		Action: doCommandRevoke1,
 		Usage:  "To revoke a certificate",
-		UsageText: ` vcert revoke <Required Trust Protection Platform Config> <Options>
+		UsageText: ` vcert revoke <Required Venafi Control Plane -OR- Trust Protection Platform Config> <Options>
+
+		 vcert revoke -k <VCP API key> --thumbprint <cert SHA1 thumbprint>
+		 vcert revoke -p vcp -t <VCP access token> --thumbprint <cert SHA1 thumbprint>
 
 		 vcert revoke -u https://tpp.example.com -t <TPP access token> --thumbprint <cert SHA1 thumbprint>
 		 vcert revoke -u https://tpp.example.com -t <TPP access token> --id <ID value>
@@ -439,11 +442,25 @@ func doCommandRevoke1(c *cli.Context) error {
 
 	revReq.Reason = flags.revocationReason
 	revReq.Comments = "revocation request from command line utility"
+	revReq.CertificateAuthorityAccountName = flags.caAccountName
 
-	err = connector.RevokeCertificate(revReq)
+	requestResponse, err := connector.RevokeCertificate(revReq)
 	if err != nil {
-		return fmt.Errorf("Failed to revoke certificate: %s", err)
+		return fmt.Errorf("Failed to revoke certificate: %w", err)
 	}
+	if requestResponse != nil {
+		if requestResponse.Error != nil {
+			return fmt.Errorf("Failed to revoke certificate: %w", requestResponse.Error)
+		}
+
+		var reasonString string
+		if requestResponse.Reason != "" {
+			reasonString = fmt.Sprintf("\n\t\tReason: %s", requestResponse.Reason)
+		}
+
+		logf("Revocation request result: \n\t\tID: %s\n\t\tThumbprint: %s\n\t\tStatus: %s%s", requestResponse.ID, requestResponse.Thumbprint, requestResponse.Status, reasonString)
+	}
+
 	logf("Successfully created revocation request for %s", requestedFor)
 
 	return nil

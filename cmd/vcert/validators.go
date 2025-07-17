@@ -18,6 +18,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"regexp"
@@ -29,14 +30,32 @@ import (
 	"github.com/Venafi/vcert/v5/pkg/venafi"
 )
 
+const (
+	RevocationReasonNone                 = "none"
+	RevocationReasonKeyCompromise        = "key-compromise"
+	RevocationReasonCACompromise         = "ca-compromise"
+	RevocationReasonAffiliationChanged   = "affiliation-changed"
+	RevocationReasonSuperseded           = "superseded"
+	RevocationReasonCessationOfOperation = "cessation-of-operation"
+)
+
 // RevocationReasonOptions is an array of strings containing reasons for certificate revocation
 var RevocationReasonOptions = []string{
-	"none",
-	"key-compromise",
-	"ca-compromise",
-	"affiliation-changed",
-	"superseded",
-	"cessation-of-operation",
+	RevocationReasonNone,
+	RevocationReasonKeyCompromise,
+	RevocationReasonCACompromise,
+	RevocationReasonAffiliationChanged,
+	RevocationReasonSuperseded,
+	RevocationReasonCessationOfOperation,
+}
+
+// RevocationReasonOptionsVCP is a slice of strings containing reasons for certificate revocation
+var RevocationReasonOptionsVCP = []string{
+	RevocationReasonNone,
+	RevocationReasonKeyCompromise,
+	RevocationReasonAffiliationChanged,
+	RevocationReasonSuperseded,
+	RevocationReasonCessationOfOperation,
 }
 
 // JKSMinPasswordLen taken from keystore.minPasswordLen constant
@@ -564,17 +583,45 @@ func validateRevokeFlags1(commandName string) error {
 	if err != nil {
 		return err
 	}
-	if flags.distinguishedName == "" && flags.thumbprint == "" {
-		return fmt.Errorf("Certificate DN or Thumbprint is required to revoke the certificate")
+
+	platform := flags.platform
+
+	if platform == venafi.Fake || platform == venafi.Firefly {
+		return fmt.Errorf("revoke operation is only available for Venafi Control Plane and Trust Protection Platform")
 	}
 
-	if flags.distinguishedName != "" && flags.thumbprint != "" {
-		return fmt.Errorf("Either -id or -thumbprint can be used")
+	if platform == venafi.Undefined {
+		platform = determinePlatform()
+	}
+
+	var reasonOptions []string
+
+	switch platform {
+	case venafi.TPP:
+		if flags.distinguishedName == "" && flags.thumbprint == "" {
+			return errors.New("Certificate DN or Thumbprint is required to revoke the certificate")
+		}
+		if flags.distinguishedName != "" && flags.thumbprint != "" {
+			return errors.New("Either -id or -thumbprint can be used")
+		}
+		if flags.caAccountName != "" {
+			return errors.New("-ca-account-name can not be used on TPP")
+		}
+
+		reasonOptions = RevocationReasonOptions
+	case venafi.TLSPCloud:
+		if flags.thumbprint == "" {
+			return errors.New("certificate Thumbprint is required to revoke the certificate on VCP")
+		}
+		if flags.distinguishedName != "" {
+			return errors.New("-id can not be used on VCP")
+		}
+		reasonOptions = RevocationReasonOptionsVCP
 	}
 
 	if flags.revocationReason != "" {
 		isValidReason := func(reason string) bool {
-			for _, v := range RevocationReasonOptions {
+			for _, v := range reasonOptions {
 				if v == reason {
 					return true
 				}
@@ -583,7 +630,7 @@ func validateRevokeFlags1(commandName string) error {
 		}(flags.revocationReason)
 
 		if !isValidReason {
-			return fmt.Errorf("%s is not valid revocation reason. it should be one of %v", flags.revocationReason, RevocationReasonOptions)
+			return fmt.Errorf("%s is not valid revocation reason. it should be one of %v", flags.revocationReason, reasonOptions)
 		}
 	}
 
@@ -798,4 +845,23 @@ func validateExistingFile(f string) error {
 		}
 	}
 	return nil
+}
+
+// determinePlatform determines if the platform is TPP or VCP based on the authentication info provided
+func determinePlatform() venafi.Platform {
+	tppToken := flags.token
+	if tppToken == "" {
+		tppToken = getPropertyFromEnvironment(vCertToken)
+	}
+
+	//Guessing the platform by checking flags
+	//	- Firefly not present here as it is required to pass the platform flag
+	//	- Token empty is considered to mean Cloud connector to keep previous behavior where token was exclusive to TPP
+	//	- To use token with VaaS, the platform flag is required.
+	//	- If the platform flag is set we would not be guessing here
+	if flags.userName == "" && tppToken == "" && flags.clientP12 == "" {
+		return venafi.TLSPCloud
+	}
+
+	return venafi.TPP
 }
