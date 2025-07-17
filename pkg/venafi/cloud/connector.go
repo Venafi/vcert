@@ -27,8 +27,6 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"github.com/Venafi/vcert/v5/pkg/webclient/caaccounts"
-	"github.com/Venafi/vcert/v5/pkg/webclient/caoperations"
 	"io"
 	"log"
 	"net/http"
@@ -44,6 +42,8 @@ import (
 	"github.com/Venafi/vcert/v5/pkg/policy"
 	"github.com/Venafi/vcert/v5/pkg/util"
 	"github.com/Venafi/vcert/v5/pkg/verror"
+	"github.com/Venafi/vcert/v5/pkg/webclient/caaccounts"
+	"github.com/Venafi/vcert/v5/pkg/webclient/caoperations"
 	"github.com/Venafi/vcert/v5/pkg/webclient/cloudproviders"
 	"github.com/Venafi/vcert/v5/pkg/webclient/notificationservice"
 )

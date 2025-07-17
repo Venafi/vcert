@@ -440,7 +440,7 @@ func doCommandRevoke1(c *cli.Context) error {
 	revReq.Reason = flags.revocationReason
 	revReq.Comments = "revocation request from command line utility"
 
-	err = connector.RevokeCertificate(revReq)
+	_, err = connector.RevokeCertificate(revReq)
 	if err != nil {
 		return fmt.Errorf("Failed to revoke certificate: %s", err)
 	}
