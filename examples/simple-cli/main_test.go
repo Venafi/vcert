@@ -128,7 +128,7 @@ func TestRevokeCertificate(t *testing.T) {
 	//
 	// 2. Submit revocation request
 	//
-	err = c.RevokeCertificate(req)
+	_, err = c.RevokeCertificate(req)
 	if err != nil {
 		t.Fatalf("could not submit certificate revocation request: %s", err)
 	}

@@ -104,7 +104,7 @@ type Connector interface {
 	RetrieveCertificate(req *certificate.Request) (certificates *certificate.PEMCollection, err error)
 	ProvisionCertificate(req *domain.ProvisioningRequest, options *domain.ProvisioningOptions) (*domain.ProvisioningMetadata, error)
 	IsCSRServiceGenerated(req *certificate.Request) (bool, error)
-	RevokeCertificate(req *certificate.RevocationRequest) error
+	RevokeCertificate(req *certificate.RevocationRequest) (*certificate.RevocationRequestResponse, error)
 	RenewCertificate(req *certificate.RenewalRequest) (requestID string, err error)
 	RetireCertificate(req *certificate.RetireRequest) error
 	// ImportCertificate adds an existing certificate to Venafi Platform even if the certificate was not issued by Venafi Cloud or Venafi Platform. For information purposes.

@@ -59,7 +59,7 @@ func getTestConnector() *Connector {
 func TestRevokeCertificate(t *testing.T) {
 	var revReq = &certificate.RevocationRequest{}
 	var connector = getTestConnector()
-	err := connector.RevokeCertificate(revReq)
+	_, err := connector.RevokeCertificate(revReq)
 	if err == nil {
 		t.Fatal("should fail with not-supported error")
 	}

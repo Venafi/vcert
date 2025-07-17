@@ -18,6 +18,8 @@ package cloud
 
 import (
 	"bytes"
+	"github.com/Venafi/vcert/v5/pkg/webclient/caoperations"
+
 	// nolint:gosec // we only use it for getting the certificate thumbprint / fingerprint
 	//TODO: although doesn't oppose a risk, we need to figure out a better to do this process so we can remove this library
 	"crypto/sha1"
@@ -71,6 +73,32 @@ const (
 	UserType OwnerType = iota
 	TeamType
 )
+
+var CATypesSupportedForRevocation = map[string]bool{
+	"DIGICERT":  true,
+	"MICROSOFT": true,
+	"ZTPKI":     true,
+}
+
+// RevocationReasonsMap maps *certificate.RevocationRequest.Reason to ca-operations reasons
+var RevocationReasonsMap = map[string]caoperations.RevocationReason{
+	"":                       caoperations.RevocationReasonUnspecified,          // NoReason
+	"none":                   caoperations.RevocationReasonUnspecified,          //
+	"key-compromise":         caoperations.RevocationReasonKeyCompromise,        // UserKeyCompromised
+	"affiliation-changed":    caoperations.RevocationReasonAffiliationChanged,   // UserChangedAffiliation
+	"superseded":             caoperations.RevocationReasonSuperseded,           // CertificateSuperseded
+	"cessation-of-operation": caoperations.RevocationReasonCessationOfOperation, // OriginalUseNoLongerValid
+}
+
+// RevocationReasonsMap maps *certificate.RevocationRequest.Reason to ca-operations reasons
+var SupportedCAsForRevocationMap = map[string]caoperations.RevocationReason{
+	"":                       caoperations.RevocationReasonUnspecified,          // NoReason
+	"none":                   caoperations.RevocationReasonUnspecified,          //
+	"key-compromise":         caoperations.RevocationReasonKeyCompromise,        // UserKeyCompromised
+	"affiliation-changed":    caoperations.RevocationReasonAffiliationChanged,   // UserChangedAffiliation
+	"superseded":             caoperations.RevocationReasonSuperseded,           // CertificateSuperseded
+	"cessation-of-operation": caoperations.RevocationReasonCessationOfOperation, // OriginalUseNoLongerValid
+}
 
 func (o OwnerType) String() string {
 	switch o {
