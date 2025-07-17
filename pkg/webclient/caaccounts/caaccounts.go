@@ -2,10 +2,11 @@ package caaccounts
 
 import (
 	"context"
-	"github.com/Venafi/vcert/v5/pkg/domain"
 	"net/http"
 
 	"github.com/Khan/genqlient/graphql"
+
+	"github.com/Venafi/vcert/v5/pkg/domain"
 )
 
 //go:generate go run -mod=mod github.com/Khan/genqlient genqlient.yaml
