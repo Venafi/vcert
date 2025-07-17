@@ -90,16 +90,6 @@ var RevocationReasonsMap = map[string]caoperations.RevocationReason{
 	"cessation-of-operation": caoperations.RevocationReasonCessationOfOperation, // OriginalUseNoLongerValid
 }
 
-// RevocationReasonsMap maps *certificate.RevocationRequest.Reason to ca-operations reasons
-var SupportedCAsForRevocationMap = map[string]caoperations.RevocationReason{
-	"":                       caoperations.RevocationReasonUnspecified,          // NoReason
-	"none":                   caoperations.RevocationReasonUnspecified,          //
-	"key-compromise":         caoperations.RevocationReasonKeyCompromise,        // UserKeyCompromised
-	"affiliation-changed":    caoperations.RevocationReasonAffiliationChanged,   // UserChangedAffiliation
-	"superseded":             caoperations.RevocationReasonSuperseded,           // CertificateSuperseded
-	"cessation-of-operation": caoperations.RevocationReasonCessationOfOperation, // OriginalUseNoLongerValid
-}
-
 func (o OwnerType) String() string {
 	switch o {
 	case UserType:
