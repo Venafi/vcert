@@ -586,7 +586,7 @@ func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (re
 	}
 
 	//getting the CAAccountId from the CAAccountName
-	var certificateAuthorityAccountId string
+	var certificateAuthorityAccountId *string
 	if revReq.CertificateAuthorityAccountName != "" {
 		caAccountsMap, err := c.caAccountsClient.ListCAAccounts(context.Background())
 		if err != nil {
@@ -602,7 +602,7 @@ func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (re
 			return nil, fmt.Errorf("unsupported CA type for revocation: %s", caAccount.CertificateAuthorityType)
 		}
 
-		certificateAuthorityAccountId = caAccount.Id
+		certificateAuthorityAccountId = &caAccount.Id
 	}
 
 	//validating the request data
@@ -617,7 +617,12 @@ func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (re
 		return
 	}
 
-	revokeCertificateRequestResponse, err := c.caOperationsClient.RevokeCertificate(context.Background(), revReq.Thumbprint, certificateAuthorityAccountId, revocationReason, revReq.Comments)
+	var revComments *string
+	if revReq.Comments != "" {
+		revComments = &revReq.Comments
+	}
+
+	revokeCertificateRequestResponse, err := c.caOperationsClient.RevokeCertificate(context.Background(), revReq.Thumbprint, certificateAuthorityAccountId, revocationReason, revComments)
 	if err != nil {
 		return
 	}
