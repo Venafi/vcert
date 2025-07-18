@@ -502,6 +502,12 @@ var (
 		Destination: &flags.noRetire,
 	}
 
+	flagRevocationComments = &cli.StringFlag{
+		Name:        "comments",
+		Usage:       `Use it to add comments to the certificate revocation.`,
+		Destination: &flags.comments,
+	}
+
 	flagScope = &cli.StringFlag{
 		Name:        "scope",
 		Usage:       "Use to request specific scopes and restrictions.",
@@ -894,6 +900,7 @@ var (
 		sortedFlags(flagsApppend(
 			flagRevocationNoRetire,
 			flagRevocationReason,
+			flagRevocationComments,
 			flagCAAccountName,
 			flagThumbprint,
 			commonFlags,

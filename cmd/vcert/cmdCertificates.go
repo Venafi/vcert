@@ -441,16 +441,22 @@ func doCommandRevoke1(c *cli.Context) error {
 	}()
 
 	revReq.Reason = flags.revocationReason
+
 	revReq.Comments = "revocation request from command line utility"
+	if flags.comments != "" {
+		revReq.Comments = flags.comments
+	}
+
 	revReq.CertificateAuthorityAccountName = flags.caAccountName
 
 	requestResponse, err := connector.RevokeCertificate(revReq)
 	if err != nil {
 		return fmt.Errorf("Failed to revoke certificate: %w", err)
 	}
+	//The requestResponse can be nil for TPP due currently that connector is not returning any result
 	if requestResponse != nil {
 		if requestResponse.Error != nil {
-			return fmt.Errorf("Failed to revoke certificate: %w", requestResponse.Error)
+			return fmt.Errorf("failed to revoke certificate: \n\t\tID: %s\n\t\tThumbprint: %s\n\t\t%w", requestResponse.ID, requestResponse.Thumbprint, requestResponse.Error)
 		}
 
 		var reasonString string
@@ -459,9 +465,9 @@ func doCommandRevoke1(c *cli.Context) error {
 		}
 
 		logf("Revocation request result: \n\t\tID: %s\n\t\tThumbprint: %s\n\t\tStatus: %s%s", requestResponse.ID, requestResponse.Thumbprint, requestResponse.Status, reasonString)
+	} else {
+		logf("Successfully created revocation request for %s", requestedFor)
 	}
-
-	logf("Successfully created revocation request for %s", requestedFor)
 
 	return nil
 }

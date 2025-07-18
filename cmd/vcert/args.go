@@ -62,6 +62,7 @@ type commandFlags struct {
 	clientSecret         string
 	clientP12            string
 	clientP12PW          string
+	comments             string
 	commonName           string
 	config               string
 	country              string
