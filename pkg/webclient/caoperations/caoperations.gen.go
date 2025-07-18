@@ -69,7 +69,6 @@ func (v *RevokeCertificateRequestRevokeCertificate) GetSerialNumber() string { r
 // RevokeCertificateRequestRevokeCertificateRevocation includes the requested fields of the GraphQL type Revocation.
 type RevokeCertificateRequestRevokeCertificateRevocation struct {
 	Status          *RevocationStatus                                                         `json:"status"`
-	Comment         *string                                                                   `json:"comment"`
 	Error           *RevokeCertificateRequestRevokeCertificateRevocationErrorErrorInformation `json:"error"`
 	ApprovalDetails *RevokeCertificateRequestRevokeCertificateRevocationApprovalDetails       `json:"approvalDetails"`
 }
@@ -78,9 +77,6 @@ type RevokeCertificateRequestRevokeCertificateRevocation struct {
 func (v *RevokeCertificateRequestRevokeCertificateRevocation) GetStatus() *RevocationStatus {
 	return v.Status
 }
-
-// GetComment returns RevokeCertificateRequestRevokeCertificateRevocation.Comment, and is useful for accessing the field via an interface.
-func (v *RevokeCertificateRequestRevokeCertificateRevocation) GetComment() *string { return v.Comment }
 
 // GetError returns RevokeCertificateRequestRevokeCertificateRevocation.Error, and is useful for accessing the field via an interface.
 func (v *RevokeCertificateRequestRevokeCertificateRevocation) GetError() *RevokeCertificateRequestRevokeCertificateRevocationErrorErrorInformation {
@@ -127,16 +123,16 @@ func (v *RevokeCertificateRequestRevokeCertificateRevocationErrorErrorInformatio
 // __RevokeCertificateRequestInput is used internally by genqlient
 type __RevokeCertificateRequestInput struct {
 	Fingerprint                   string           `json:"fingerprint"`
-	CertificateAuthorityAccountId string           `json:"certificateAuthorityAccountId"`
+	CertificateAuthorityAccountId *string          `json:"certificateAuthorityAccountId"`
 	RevocationReason              RevocationReason `json:"revocationReason"`
-	RevocationComment             string           `json:"revocationComment"`
+	RevocationComment             *string          `json:"revocationComment"`
 }
 
 // GetFingerprint returns __RevokeCertificateRequestInput.Fingerprint, and is useful for accessing the field via an interface.
 func (v *__RevokeCertificateRequestInput) GetFingerprint() string { return v.Fingerprint }
 
-// GetCertificateAuthorityAccountId returns __RevokeCertificateRequestInput.CertificateAuthorityAccountName, and is useful for accessing the field via an interface.
-func (v *__RevokeCertificateRequestInput) GetCertificateAuthorityAccountId() string {
+// GetCertificateAuthorityAccountId returns __RevokeCertificateRequestInput.CertificateAuthorityAccountId, and is useful for accessing the field via an interface.
+func (v *__RevokeCertificateRequestInput) GetCertificateAuthorityAccountId() *string {
 	return v.CertificateAuthorityAccountId
 }
 
@@ -146,17 +142,16 @@ func (v *__RevokeCertificateRequestInput) GetRevocationReason() RevocationReason
 }
 
 // GetRevocationComment returns __RevokeCertificateRequestInput.RevocationComment, and is useful for accessing the field via an interface.
-func (v *__RevokeCertificateRequestInput) GetRevocationComment() string { return v.RevocationComment }
+func (v *__RevokeCertificateRequestInput) GetRevocationComment() *string { return v.RevocationComment }
 
 // The query or mutation executed by RevokeCertificateRequest.
 const RevokeCertificateRequest_Operation = `
-mutation RevokeCertificateRequest ($fingerprint: ID!, $certificateAuthorityAccountId: UUID!, $revocationReason: RevocationReason!, $revocationComment: String!) {
+mutation RevokeCertificateRequest ($fingerprint: ID!, $certificateAuthorityAccountId: UUID, $revocationReason: RevocationReason!, $revocationComment: String) {
 	revokeCertificate(fingerprint: $fingerprint, certificateAuthorityAccountId: $certificateAuthorityAccountId, revocationReason: $revocationReason, revocationComment: $revocationComment) {
 		id
 		fingerprint
 		revocation {
 			status
-			comment
 			error {
 				arguments
 				code
@@ -175,9 +170,9 @@ func RevokeCertificateRequest(
 	ctx_ context.Context,
 	client_ graphql.Client,
 	fingerprint string,
-	certificateAuthorityAccountId string,
+	certificateAuthorityAccountId *string,
 	revocationReason RevocationReason,
-	revocationComment string,
+	revocationComment *string,
 ) (*RevokeCertificateRequestResponse, error) {
 	req_ := &graphql.Request{
 		OpName: "RevokeCertificateRequest",
