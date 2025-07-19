@@ -351,7 +351,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (pcc *certific
 }
 
 // RevokeCertificate attempts to revoke the certificate
-func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (response *certificate.RevocationRequestResponse, err error) {
+func (c *Connector) RevokeCertificate(req *certificate.RevocationRequest) (response endpoint.RevocationRequestResponse, err error) {
 	return nil, fmt.Errorf("revocation is not supported in -test-mode")
 }
 

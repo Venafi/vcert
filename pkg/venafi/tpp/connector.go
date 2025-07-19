@@ -1559,7 +1559,7 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 }
 
 // RevokeCertificate attempts to revoke the certificate
-func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (response *certificate.RevocationRequestResponse, err error) {
+func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (response endpoint.RevocationRequestResponse, err error) {
 	reason, ok := RevocationReasonsMap[revReq.Reason]
 	if !ok {
 		return nil, fmt.Errorf("could not parse revocation reason `%s`", revReq.Reason)
