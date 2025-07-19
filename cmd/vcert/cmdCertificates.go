@@ -455,16 +455,10 @@ func doCommandRevoke1(c *cli.Context) error {
 	}
 	//The requestResponse can be nil for TPP due currently that connector is not returning any result
 	if requestResponse != nil {
-		if requestResponse.Error != nil {
-			return fmt.Errorf("failed to revoke certificate: \n\t\tID: %s\n\t\tThumbprint: %s\n\t\t%w", requestResponse.ID, requestResponse.Thumbprint, requestResponse.Error)
+		err = requestResponse.ToLog(logger)
+		if err != nil {
+			return err
 		}
-
-		var reasonString string
-		if requestResponse.Reason != "" {
-			reasonString = fmt.Sprintf("\n\t\tReason: %s", requestResponse.Reason)
-		}
-
-		logf("Revocation request result: \n\t\tID: %s\n\t\tThumbprint: %s\n\t\tStatus: %s%s", requestResponse.ID, requestResponse.Thumbprint, requestResponse.Status, reasonString)
 	} else {
 		logf("Successfully created revocation request for %s", requestedFor)
 	}
