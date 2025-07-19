@@ -159,14 +159,6 @@ type RevocationRequest struct {
 	Disable                         bool // for tpp
 }
 
-type RevocationRequestResponse struct {
-	ID         string
-	Thumbprint string
-	Status     string
-	Reason     string
-	Error      error
-}
-
 type RetireRequest struct {
 	CertificateDN string
 	Thumbprint    string
