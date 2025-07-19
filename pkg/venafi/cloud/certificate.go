@@ -16,7 +16,11 @@
 
 package cloud
 
-import "time"
+import (
+	"fmt"
+	"log"
+	"time"
+)
 
 type VenafiCertificate struct {
 	ID                   string    `json:"id,omitempty"`
@@ -26,4 +30,28 @@ type VenafiCertificate struct {
 	Fingerprint          string    `json:"fingerprint,omitempty"`
 	CertificateSource    string    `json:"certificateSource,omitempty"`
 	ValidityEnd          time.Time `json:"validityEnd"`
+}
+
+type RevocationRequestResponseCloud struct {
+	ID         string
+	Thumbprint string
+	Status     string
+	Reason     string
+	Error      error
+}
+
+func (r *RevocationRequestResponseCloud) ToLog(logger *log.Logger) error {
+
+	if r.Error != nil {
+		return fmt.Errorf("failed to revoke certificate: \n\t\tID: %s\n\t\tThumbprint: %s\n\t\t%w", r.ID, r.Thumbprint, r.Error)
+	}
+
+	var reasonString string
+	if r.Reason != "" {
+		reasonString = fmt.Sprintf("\n\t\tReason: %s", r.Reason)
+	}
+
+	logger.Printf("Revocation request result: \n\t\tID: %s\n\t\tThumbprint: %s\n\t\tStatus: %s%s", r.ID, r.Thumbprint, r.Status, reasonString)
+
+	return nil
 }

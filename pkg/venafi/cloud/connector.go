@@ -579,10 +579,9 @@ func (c *Connector) RetireCertificate(retireReq *certificate.RetireRequest) erro
 }
 
 // RevokeCertificate attempts to revoke the certificate
-func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (response *certificate.RevocationRequestResponse, err error) {
+func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (endpoint.RevocationRequestResponse, error) {
 	if !c.isAuthenticated() {
-		err = errors.New("must be authenticated to revoke a certificate")
-		return
+		return nil, errors.New("must be authenticated to revoke a certificate")
 	}
 
 	//getting the CAAccountId from the CAAccountName
@@ -607,14 +606,12 @@ func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (re
 
 	//validating the request data
 	if revReq.Thumbprint == "" {
-		err = errors.New("certificate fingerprint(thumbprint) is required")
-		return
+		return nil, errors.New("certificate fingerprint(thumbprint) is required")
 	}
 
 	revocationReason, ok := RevocationReasonsMap[revReq.Reason]
 	if !ok {
-		err = fmt.Errorf("unsupported revocation reason: %q", revReq.Reason)
-		return
+		return nil, fmt.Errorf("unsupported revocation reason: %q", revReq.Reason)
 	}
 
 	var revComments *string
@@ -624,22 +621,20 @@ func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (re
 
 	revokeCertificateRequestResponse, err := c.caOperationsClient.RevokeCertificate(context.Background(), revReq.Thumbprint, certificateAuthorityAccountId, revocationReason, revComments)
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	//validating that the response is returned
 	revokeCertificateResult := revokeCertificateRequestResponse.GetRevokeCertificate()
 	if revokeCertificateResult == nil {
-		err = errors.New("revoke certificate response is empty")
-		return
+		return nil, errors.New("revoke certificate response is empty")
 	}
 
 	if revokeCertificateResult.GetRevocation() == nil {
-		err = errors.New("revocation object in revoke certificate response is empty")
-		return
+		return nil, errors.New("revocation object in revoke certificate response is empty")
 	}
 
-	response = &certificate.RevocationRequestResponse{
+	revocationResponse := &RevocationRequestResponseCloud{
 		ID:         revokeCertificateResult.GetId(),
 		Thumbprint: revokeCertificateResult.Fingerprint,
 	}
@@ -655,18 +650,18 @@ func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (re
 		if revocationError.GetCode() != nil {
 			respError.Code = *revocationError.GetCode()
 		}
-		response.Error = &respError
+		revocationResponse.Error = &respError
 	} else {
 		if revokeCertificateResult.GetRevocation().GetStatus() != nil {
-			response.Status = string(*revokeCertificateResult.GetRevocation().GetStatus())
+			revocationResponse.Status = string(*revokeCertificateResult.GetRevocation().GetStatus())
 		}
 		approvalDetails := revokeCertificateResult.GetRevocation().GetApprovalDetails()
 		if approvalDetails != nil && approvalDetails.GetRejectionReason() != nil {
-			response.Reason = *approvalDetails.GetRejectionReason()
+			revocationResponse.Reason = *approvalDetails.GetRejectionReason()
 		}
 	}
 
-	return
+	return revocationResponse, nil
 }
 
 func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certificate.ImportResponse, error) {
