@@ -657,7 +657,7 @@ func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (en
 		}
 		approvalDetails := revokeCertificateResult.GetRevocation().GetApprovalDetails()
 		if approvalDetails != nil && approvalDetails.GetRejectionReason() != nil {
-			revocationResponse.Reason = *approvalDetails.GetRejectionReason()
+			revocationResponse.RejectionReason = *approvalDetails.GetRejectionReason()
 		}
 	}
 

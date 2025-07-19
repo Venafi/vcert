@@ -33,25 +33,35 @@ type VenafiCertificate struct {
 }
 
 type RevocationRequestResponseCloud struct {
-	ID         string
-	Thumbprint string
-	Status     string
-	Reason     string
-	Error      error
+	ID              string
+	Thumbprint      string
+	Status          string //The possible values are SUBMITTED, FAILED, PENDING_APPROVAL, PENDING_FINAL_APPROVAL, REJECTED_APPROVAL
+	RejectionReason string
+	Error           error
 }
 
 func (r *RevocationRequestResponseCloud) ToLog(logger *log.Logger) error {
 
-	if r.Error != nil {
-		return fmt.Errorf("failed to revoke certificate: \n\t\tID: %s\n\t\tThumbprint: %s\n\t\t%w", r.ID, r.Thumbprint, r.Error)
+	switch r.Status {
+	case "SUBMITTED":
+		logger.Printf("The revocation for the certificate ID: %q Thumbprint: %q was successfully submitted.", r.ID, r.Thumbprint)
+	case "FAILED":
+		if r.Error != nil {
+			return fmt.Errorf("failed to revoke certificate: ID: %q Thumbprint: %q Error: %w", r.ID, r.Thumbprint, r.Error)
+		}
+		return fmt.Errorf("failed to revoke certificate: ID: %q Thumbprint: %q", r.ID, r.Thumbprint)
+	case "PENDING_APPROVAL", "PENDING_FINAL_APPROVAL":
+		logger.Printf("The revocation for the certificate ID: %q Thumbprint: %q is pending for approval.", r.ID, r.Thumbprint)
+	case "REJECTED_APPROVAL":
+		if r.RejectionReason != "" {
+			logger.Printf("The revocation for the certificate ID: %q Thumbprint: %q was rejected. Reason: %s", r.ID, r.Thumbprint, r.RejectionReason)
+		} else {
+			logger.Printf("The revocation for the certificate ID: %q Thumbprint: %q was rejected.", r.ID, r.Thumbprint)
+		}
+	default:
+		if r.Error != nil {
+			return fmt.Errorf("failed to revoke certificate: ID: %q Thumbprint: %q Error: %w", r.ID, r.Thumbprint, r.Error)
+		}
 	}
-
-	var reasonString string
-	if r.Reason != "" {
-		reasonString = fmt.Sprintf("\n\t\tReason: %s", r.Reason)
-	}
-
-	logger.Printf("Revocation request result: \n\t\tID: %s\n\t\tThumbprint: %s\n\t\tStatus: %s%s", r.ID, r.Thumbprint, r.Status, reasonString)
-
 	return nil
 }
