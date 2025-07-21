@@ -584,6 +584,16 @@ func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (en
 		return nil, errors.New("must be authenticated to revoke a certificate")
 	}
 
+	//validating the request data
+	if revReq.Thumbprint == "" {
+		return nil, errors.New("certificate fingerprint(thumbprint) is required")
+	}
+
+	revocationReason, ok := RevocationReasonsMap[revReq.Reason]
+	if !ok {
+		return nil, fmt.Errorf("unsupported revocation reason: %q", revReq.Reason)
+	}
+
 	//getting the CAAccountId from the CAAccountName
 	var certificateAuthorityAccountId *string
 	if revReq.CertificateAuthorityAccountName != "" {
@@ -602,16 +612,6 @@ func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (en
 		}
 
 		certificateAuthorityAccountId = &caAccount.Id
-	}
-
-	//validating the request data
-	if revReq.Thumbprint == "" {
-		return nil, errors.New("certificate fingerprint(thumbprint) is required")
-	}
-
-	revocationReason, ok := RevocationReasonsMap[revReq.Reason]
-	if !ok {
-		return nil, fmt.Errorf("unsupported revocation reason: %q", revReq.Reason)
 	}
 
 	var revComments *string
