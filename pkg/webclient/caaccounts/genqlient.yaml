@@ -3,7 +3,7 @@
 schema: ../vaas-schema.graphql
 operations:
   - genqlient.graphql
-generated: caaccounts.gen.go
+generated: service/caaccountsservice.gen.go
 use_struct_references: true
 optional: pointer
 
