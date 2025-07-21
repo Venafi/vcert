@@ -7,23 +7,30 @@ import (
 	"github.com/Khan/genqlient/graphql"
 
 	"github.com/Venafi/vcert/v5/pkg/domain"
+	"github.com/Venafi/vcert/v5/pkg/webclient/caaccounts/service"
 )
 
 //go:generate go run -mod=mod github.com/Khan/genqlient genqlient.yaml
 
 type CAAccountsClient struct {
-	graphqlClient graphql.Client
+	caAccountsService service.CAAccountsServiceWrapper
 }
 
 func NewCAAccountsClient(url string, httpClient *http.Client) *CAAccountsClient {
 	return &CAAccountsClient{
-		graphqlClient: graphql.NewClient(url, httpClient),
+		caAccountsService: &CAAccountsService{
+			graphqlClient: graphql.NewClient(url, httpClient),
+		},
 	}
+}
+
+func (c *CAAccountsClient) SetCAAccountsService(caAccountsService service.CAAccountsServiceWrapper) {
+	c.caAccountsService = caAccountsService
 }
 
 // ListCAAccounts return a map containing the CAAccounts in the way CAAccountName<key> and domain.CAAccount<value>
 func (c *CAAccountsClient) ListCAAccounts(ctx context.Context) (map[string]domain.CAAccount, error) {
-	listCAAccountsResponse, err := ListCAAccounts(ctx, c.graphqlClient)
+	listCAAccountsResponse, err := c.caAccountsService.ListCAAccounts(ctx)
 
 	if err != nil {
 		return nil, err
@@ -44,4 +51,12 @@ func (c *CAAccountsClient) ListCAAccounts(ctx context.Context) (map[string]domai
 	}
 
 	return caAccounts, nil
+}
+
+type CAAccountsService struct {
+	graphqlClient graphql.Client
+}
+
+func (cs *CAAccountsService) ListCAAccounts(ctx context.Context) (*service.ListCAAccountsResponse, error) {
+	return service.ListCAAccounts(ctx, cs.graphqlClient)
 }

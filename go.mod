@@ -16,6 +16,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/urfave/cli/v2 v2.25.7
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a
+	go.uber.org/mock v0.5.2
 	go.uber.org/zap v1.23.0
 	golang.org/x/crypto v0.32.0
 	golang.org/x/oauth2 v0.10.0
@@ -31,6 +32,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/magiconair/properties v1.8.1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect

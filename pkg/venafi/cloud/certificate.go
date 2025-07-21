@@ -22,6 +22,15 @@ import (
 	"time"
 )
 
+const (
+	RevocationSubmittedFormattedMessage          = "The revocation for the certificate ID: %q Thumbprint: %q was successfully submitted."
+	RevocationFailedFormattedMessage             = "failed to revoke certificate: ID: %q Thumbprint: %q"
+	RevocationFailedWithErrorFormattedMessage    = "failed to revoke certificate: ID: %q Thumbprint: %q Error: %w"
+	RevocationApprovalPendingFormattedMessage    = "The revocation for the certificate ID: %q Thumbprint: %q is pending for approval."
+	RevocationRejectedFormattedMessage           = "The revocation for the certificate ID: %q Thumbprint: %q was rejected."
+	RevocationRejectedWithReasonFormattedMessage = "The revocation for the certificate ID: %q Thumbprint: %q was rejected. Reason: %s."
+)
+
 type VenafiCertificate struct {
 	ID                   string    `json:"id,omitempty"`
 	CertificateStatus    string    `json:"certificateStatus,omitempty"`
@@ -44,23 +53,23 @@ func (r *RevocationRequestResponseCloud) ToLog(logger *log.Logger) error {
 
 	switch r.Status {
 	case "SUBMITTED":
-		logger.Printf("The revocation for the certificate ID: %q Thumbprint: %q was successfully submitted.", r.ID, r.Thumbprint)
+		logger.Printf(RevocationSubmittedFormattedMessage, r.ID, r.Thumbprint)
 	case "FAILED":
 		if r.Error != nil {
-			return fmt.Errorf("failed to revoke certificate: ID: %q Thumbprint: %q Error: %w", r.ID, r.Thumbprint, r.Error)
+			return fmt.Errorf(RevocationFailedWithErrorFormattedMessage, r.ID, r.Thumbprint, r.Error)
 		}
-		return fmt.Errorf("failed to revoke certificate: ID: %q Thumbprint: %q", r.ID, r.Thumbprint)
+		return fmt.Errorf(RevocationFailedFormattedMessage, r.ID, r.Thumbprint)
 	case "PENDING_APPROVAL", "PENDING_FINAL_APPROVAL":
-		logger.Printf("The revocation for the certificate ID: %q Thumbprint: %q is pending for approval.", r.ID, r.Thumbprint)
+		logger.Printf(RevocationApprovalPendingFormattedMessage, r.ID, r.Thumbprint)
 	case "REJECTED_APPROVAL":
 		if r.RejectionReason != "" {
-			logger.Printf("The revocation for the certificate ID: %q Thumbprint: %q was rejected. Reason: %s", r.ID, r.Thumbprint, r.RejectionReason)
+			logger.Printf(RevocationRejectedWithReasonFormattedMessage, r.ID, r.Thumbprint, r.RejectionReason)
 		} else {
-			logger.Printf("The revocation for the certificate ID: %q Thumbprint: %q was rejected.", r.ID, r.Thumbprint)
+			logger.Printf(RevocationRejectedFormattedMessage, r.ID, r.Thumbprint)
 		}
 	default:
 		if r.Error != nil {
-			return fmt.Errorf("failed to revoke certificate: ID: %q Thumbprint: %q Error: %w", r.ID, r.Thumbprint, r.Error)
+			return fmt.Errorf(RevocationFailedWithErrorFormattedMessage, r.ID, r.Thumbprint, r.Error)
 		}
 	}
 	return nil
