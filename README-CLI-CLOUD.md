@@ -216,12 +216,12 @@ vcert revoke -p vcp -t <VCP access token> --thumbprint <cert SHA1 thumbprint>
 ```
 Options:
 
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Command&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Description                                                                                                                                                     |
-|---------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `--thumbprint`                                                                                          | Use to specify the SHA1 thumbprint of the certificate to revoke. Value may be specified as a string or read from the certificate file using the `file:` prefix. |
-| `--ca-account-name`                                                                                     | The Certificate Authority Account name. Optional when the certificate to revoke was issued by TLS Protect Cloud. Otherwise it's required to provide it.         |
-| `--reason`                                                                                              | Use to specify the revocation reason.<br/>Options: `none` (default), `key-compromise`, `affiliation-changed`, `superseded`, `cessation-of-operation`.           |
-| `--comments`                                                                                            | Use it to add comments to the certificate revocation.                                                                                                           |
+| Command             | Description                                                                                                                                                     |
+|---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `--thumbprint`      | Use to specify the SHA1 thumbprint of the certificate to revoke. Value may be specified as a string or read from the certificate file using the `file:` prefix. |
+| `--ca-account-name` | The Certificate Authority Account name. Optional when the certificate to revoke was issued by TLS Protect Cloud. Otherwise it's required to provide it.         |
+| `--reason`          | Use to specify the revocation reason.<br/>Options: `none` (default), `key-compromise`, `affiliation-changed`, `superseded`, `cessation-of-operation`.           |
+| `--comments`        | Use it to add comments to the certificate revocation.                                                                                                           |
 
 ## Certificate Retire Parameters
 API key:
