@@ -34,6 +34,7 @@ Use these links to quickly jump to a relevant section lower on this page:
   - [Certificate Request Parameters](#certificate-request-parameters)
   - [Certificate Retrieval Parameters](#certificate-retrieval-parameters)
   - [Certificate Renewal Parameters](#certificate-renewal-parameters)
+  - [Certificate Revocation Parameters](#certificate-revocation-parameters)
   - [Certificate Retire Parameters](#certificate-retire-parameters)
   - [Certificate Provisioning Parameters](#certificate-provisioning-parameters)
   - [Parameters for Applying Certificate Policy](#parameters-for-applying-certificate-policy)
@@ -206,6 +207,21 @@ Options:
 | `--san-ip`         | Use to specify an IP Address Subject Alternative Name.  To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-ip 10.20.30.40` `--san-ip 192.168.192.168`                                                                                                                                                                                 |
 | `--san-uri`        | Use to specify a Uniform Resource Indicator Subject Alternative Name.  To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-uri spiffe://workload1.example.com` `--san-uri spiffe://workload2.example.com`                                                                                                                              |
 | `--thumbprint`     | Use to specify the SHA1 thumbprint of the certificate to renew. Value may be specified as a string or read from the certificate file using the `file:` prefix.                                                                                                                                                                                                                |
+
+## Certificate Revocation Parameters
+```
+vcert revoke -k <VCP API key> --thumbprint <cert SHA1 thumbprint>
+
+vcert revoke -p vcp -t <VCP access token> --thumbprint <cert SHA1 thumbprint>
+```
+Options:
+
+| Command             | Description                                                                                                                                                     |
+|---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `--thumbprint`      | Use to specify the SHA1 thumbprint of the certificate to revoke. Value may be specified as a string or read from the certificate file using the `file:` prefix. |
+| `--ca-account-name` | The Certificate Authority Account name. Optional when the certificate to revoke was issued by TLS Protect Cloud. Otherwise it's required to provide it.         |
+| `--reason`          | Use to specify the revocation reason.<br/>Options: `none` (default), `key-compromise`, `affiliation-changed`, `superseded`, `cessation-of-operation`.           |
+| `--comments`        | Use it to add comments to the certificate revocation.                                                                                                           |
 
 ## Certificate Retire Parameters
 API key:
