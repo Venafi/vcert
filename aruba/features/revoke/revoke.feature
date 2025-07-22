@@ -17,7 +17,7 @@ Feature: certificate revocation
 
   Scenario: revoking certificate with incorrect reason
     When I revoke the certificate from TPP with -id someId -reason xxx
-    Then it should fail with "xxx is not valid revocation reason"
+    Then it should fail with "the revocation reason \"xxx\" is not valid"
 
   Scenario: revoking certificate using -id flag
     Given I enroll random certificate from TPP with -no-prompt
