@@ -445,7 +445,7 @@ var (
 
 	flagDistinguishedName = &cli.StringFlag{
 		Name: "id",
-		Usage: "Use to specify the ID of the certificate. Required unless --thumbprint is specified. For revocation," +
+		Usage: "Use to specify the ID of the certificate. Required unless --thumbprint is specified. For revocation (Only for Trust Protection Platform)," +
 			"marks the certificate as disabled so that no new certificate can be enrolled to replace it. " +
 			"If a replacement certificate will be enrolled, also specify --no-retire.",
 		Destination: &flags.distinguishedName,
@@ -486,14 +486,26 @@ var (
 	flagRevocationReason = &cli.StringFlag{
 		Name: "reason",
 		Usage: `The revocation reason. Options include: 
-        "none", "key-compromise", "ca-compromise", "affiliation-changed", "superseded", "cessation-of-operation"`,
+        "none", "key-compromise", "ca-compromise" (Only for Trust Protection Platform), "affiliation-changed", "superseded", "cessation-of-operation"`,
 		Destination: &flags.revocationReason,
+	}
+
+	flagCAAccountName = &cli.StringFlag{
+		Name:        "ca-account-name",
+		Usage:       `The Certificate Authority Account name. Only for Venafi Control Plane. Optional when the certificate to revoke was issued by TLS Protect Cloud. Otherwise it's required to provide it.`,
+		Destination: &flags.caAccountName,
 	}
 
 	flagRevocationNoRetire = &cli.BoolFlag{
 		Name:        "no-retire",
-		Usage:       "Do not disable certificate object. Works only with --id <certificate DN>",
+		Usage:       "Do not disable certificate object. Works only with --id <certificate DN>. Only for Trust Protection Platform.",
 		Destination: &flags.noRetire,
+	}
+
+	flagRevocationComments = &cli.StringFlag{
+		Name:        "comments",
+		Usage:       `Use it to add comments to the certificate revocation.`,
+		Destination: &flags.comments,
 	}
 
 	flagScope = &cli.StringFlag{
@@ -882,11 +894,14 @@ var (
 	)
 
 	revokeFlags = flagsApppend(
+		flagPlatform,
 		credentialsFlags,
 		flagDistinguishedName,
 		sortedFlags(flagsApppend(
 			flagRevocationNoRetire,
 			flagRevocationReason,
+			flagRevocationComments,
+			flagCAAccountName,
 			flagThumbprint,
 			commonFlags,
 			sortableCredentialsFlags,

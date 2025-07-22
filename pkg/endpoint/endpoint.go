@@ -24,6 +24,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"regexp"
@@ -104,7 +105,7 @@ type Connector interface {
 	RetrieveCertificate(req *certificate.Request) (certificates *certificate.PEMCollection, err error)
 	ProvisionCertificate(req *domain.ProvisioningRequest, options *domain.ProvisioningOptions) (*domain.ProvisioningMetadata, error)
 	IsCSRServiceGenerated(req *certificate.Request) (bool, error)
-	RevokeCertificate(req *certificate.RevocationRequest) error
+	RevokeCertificate(req *certificate.RevocationRequest) (RevocationRequestResponse, error)
 	RenewCertificate(req *certificate.RenewalRequest) (requestID string, err error)
 	RetireCertificate(req *certificate.RetireRequest) error
 	// ImportCertificate adds an existing certificate to Venafi Platform even if the certificate was not issued by Venafi Cloud or Venafi Platform. For information purposes.
@@ -186,6 +187,10 @@ func (err ErrCertificateRejected) Error() string {
 		return fmt.Sprintf("Certificate request was rejected. You may need to verify the certificate id: %s", err.CertificateID)
 	}
 	return fmt.Sprintf("Status: %s", err.Status)
+}
+
+type RevocationRequestResponse interface {
+	ToLog(logger *log.Logger) error
 }
 
 // Policy is struct that contains restrictions for certificates. Most of the fields contains list of regular expression.

@@ -18,6 +18,8 @@ package cloud
 
 import (
 	"bytes"
+	"github.com/Venafi/vcert/v5/pkg/webclient/caoperations/service"
+
 	// nolint:gosec // we only use it for getting the certificate thumbprint / fingerprint
 	//TODO: although doesn't oppose a risk, we need to figure out a better to do this process so we can remove this library
 	"crypto/sha1"
@@ -71,6 +73,26 @@ const (
 	UserType OwnerType = iota
 	TeamType
 )
+
+var CATypesSupportedForRevocationSlice = []string{
+	"DIGICERT", "MICROSOFT", "ZTPKI",
+}
+
+var CATypesSupportedForRevocation = map[string]bool{
+	CATypesSupportedForRevocationSlice[0]: true,
+	CATypesSupportedForRevocationSlice[1]: true,
+	CATypesSupportedForRevocationSlice[2]: true,
+}
+
+// RevocationReasonsMap maps *certificate.RevocationRequest.Reason to ca-operations reasons
+var RevocationReasonsMap = map[string]service.RevocationReason{
+	"":                       service.RevocationReasonUnspecified,          // NoReason
+	"none":                   service.RevocationReasonUnspecified,          //
+	"key-compromise":         service.RevocationReasonKeyCompromise,        // UserKeyCompromised
+	"affiliation-changed":    service.RevocationReasonAffiliationChanged,   // UserChangedAffiliation
+	"superseded":             service.RevocationReasonSuperseded,           // CertificateSuperseded
+	"cessation-of-operation": service.RevocationReasonCessationOfOperation, // OriginalUseNoLongerValid
+}
 
 func (o OwnerType) String() string {
 	switch o {

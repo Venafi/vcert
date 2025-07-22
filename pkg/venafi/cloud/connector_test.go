@@ -17,6 +17,7 @@
 package cloud
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha1"
@@ -36,13 +37,24 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
+
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
 	"github.com/Venafi/vcert/v5/pkg/policy"
 	"github.com/Venafi/vcert/v5/pkg/util"
+	"github.com/Venafi/vcert/v5/pkg/venafi/cloud/mocks"
 	"github.com/Venafi/vcert/v5/pkg/verror"
+	"github.com/Venafi/vcert/v5/pkg/webclient/caaccounts"
+	caaccountssservice "github.com/Venafi/vcert/v5/pkg/webclient/caaccounts/service"
+	"github.com/Venafi/vcert/v5/pkg/webclient/caoperations"
+	caoperationsservice "github.com/Venafi/vcert/v5/pkg/webclient/caoperations/service"
 	"github.com/Venafi/vcert/v5/test"
 )
+
+//go:generate go run go.uber.org/mock/mockgen -destination=./mocks/mock_caaccounts.go -package=mocks ../../webclient/caaccounts/service CAAccountsServiceWrapper
+//go:generate go run go.uber.org/mock/mockgen -destination=./mocks/mock_caoperations.go -package=mocks ../../webclient/caoperations/service CAOperationsServiceWrapper
 
 var ctx *test.Context
 
@@ -915,6 +927,200 @@ func TestRetireCertificateTwice(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
+}
+
+func TestRevokeCertificate(t *testing.T) {
+	conn := getTestConnector(ctx.CloudZone)
+
+	// The following block of code is to set the clients and accessToken
+	// given we omitted to call the conn.Authenticate() method to avoid the
+	// real connection to VCP
+	conn.accessToken = "myaccesstoken"
+	// Initialize clients
+	conn.caAccountsClient = caaccounts.NewCAAccountsClient(conn.getURL(urlGraphql), conn.getGraphqlHTTPClient())
+	conn.caOperationsClient = caoperations.NewCAOperationsClient(conn.getURL(urlGraphql), conn.getGraphqlHTTPClient())
+
+	t.Run("success", func(t *testing.T) {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		caAccountId := "myId"
+		caAccountName := "MyAccountName"
+		thumbprint := "MyThumbprint"
+
+		certificateId := "MyCertificateId"
+
+		revReq := &certificate.RevocationRequest{
+			Thumbprint:                      thumbprint,
+			Reason:                          "",
+			CertificateAuthorityAccountName: caAccountName,
+		}
+
+		//1. mocking the caAccountsClient
+		caAccountExpected := &caaccountssservice.ListCAAccountsCertificateAuthorityAccountsCertificateAuthorityAccountConnectionNodesCertificateAuthorityAccount{
+			Id:                       caAccountId,
+			Name:                     caAccountName,
+			CertificateAuthorityType: caaccountssservice.CertificateAuthorityTypeMicrosoft,
+		}
+
+		listCAAccountsResponse := &caaccountssservice.ListCAAccountsResponse{
+			CertificateAuthorityAccounts: &caaccountssservice.ListCAAccountsCertificateAuthorityAccountsCertificateAuthorityAccountConnection{
+				Nodes: []*caaccountssservice.ListCAAccountsCertificateAuthorityAccountsCertificateAuthorityAccountConnectionNodesCertificateAuthorityAccount{
+					caAccountExpected,
+				},
+			},
+		}
+
+		caAccountsService := mocks.NewMockCAAccountsServiceWrapper(mockCtrl)
+		caAccountsService.EXPECT().ListCAAccounts(context.Background()).Return(listCAAccountsResponse, nil)
+
+		//replacing the caAccountsService reference with the mock
+		conn.caAccountsClient.SetCAAccountsService(caAccountsService)
+
+		//2. mocking the caOperationsClient
+		statusSubmitted := caoperationsservice.RevocationStatusSubmitted
+		revokeCertResponse := &caoperationsservice.RevokeCertificateRequestResponse{
+			RevokeCertificate: &caoperationsservice.RevokeCertificateRequestRevokeCertificate{
+				Id:          certificateId,
+				Fingerprint: thumbprint,
+				Revocation: &caoperationsservice.RevokeCertificateRequestRevokeCertificateRevocation{
+					Status: &statusSubmitted,
+				},
+			},
+		}
+		caOperationsService := mocks.NewMockCAOperationsServiceWrapper(mockCtrl)
+		caOperationsService.EXPECT().RevokeCertificateRequest(context.Background(), revReq.Thumbprint, &caAccountId, caoperationsservice.RevocationReasonUnspecified, nil).Return(revokeCertResponse, nil)
+
+		//replacing the caOperationsService reference with the mock
+		conn.caOperationsClient.SetCAOperationsService(caOperationsService)
+
+		revokeCertificate, err := conn.RevokeCertificate(revReq)
+		require.NoError(t, err)
+		require.NotNil(t, revokeCertificate)
+		// Type assertion
+		revocationResponseCloud, ok := revokeCertificate.(*RevocationRequestResponseCloud)
+		require.True(t, ok)
+		require.Equal(t, revocationResponseCloud.Thumbprint, thumbprint)
+		require.Equal(t, revocationResponseCloud.Status, string(statusSubmitted))
+		require.Equal(t, revocationResponseCloud.ID, certificateId)
+	})
+	t.Run("failed-thumbprint did not provide", func(t *testing.T) {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		caAccountName := "MyAccountName"
+
+		revReq := &certificate.RevocationRequest{
+			Reason:                          "",
+			CertificateAuthorityAccountName: caAccountName,
+		}
+
+		revokeCertificate, err := conn.RevokeCertificate(revReq)
+		require.Nil(t, revokeCertificate)
+		require.Error(t, err)
+		require.ErrorContains(t, err, "certificate fingerprint(thumbprint) is required")
+	})
+	t.Run("failed-unsupported revocation reason", func(t *testing.T) {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		caAccountName := "MyAccountName"
+		thumbprint := "MyThumbprint"
+
+		revReq := &certificate.RevocationRequest{
+			Thumbprint:                      thumbprint,
+			Reason:                          "blahblah",
+			CertificateAuthorityAccountName: caAccountName,
+		}
+
+		revokeCertificate, err := conn.RevokeCertificate(revReq)
+		require.Nil(t, revokeCertificate)
+		require.Error(t, err)
+		require.ErrorContains(t, err, fmt.Sprintf("unsupported revocation reason: %q", revReq.Reason))
+	})
+	t.Run("failed-caaccount not found", func(t *testing.T) {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		caAccountId := "myId"
+		caAccountName := "MyAccountName"
+		thumbprint := "MyThumbprint"
+
+		revReq := &certificate.RevocationRequest{
+			Thumbprint:                      thumbprint,
+			Reason:                          "",
+			CertificateAuthorityAccountName: caAccountName,
+		}
+
+		//1. mocking the caAccountsClient
+		caAccountExpected := &caaccountssservice.ListCAAccountsCertificateAuthorityAccountsCertificateAuthorityAccountConnectionNodesCertificateAuthorityAccount{
+			Id:                       caAccountId,
+			Name:                     "MyOtherAccountName",
+			CertificateAuthorityType: caaccountssservice.CertificateAuthorityTypeMicrosoft,
+		}
+
+		listCAAccountsResponse := &caaccountssservice.ListCAAccountsResponse{
+			CertificateAuthorityAccounts: &caaccountssservice.ListCAAccountsCertificateAuthorityAccountsCertificateAuthorityAccountConnection{
+				Nodes: []*caaccountssservice.ListCAAccountsCertificateAuthorityAccountsCertificateAuthorityAccountConnectionNodesCertificateAuthorityAccount{
+					caAccountExpected,
+				},
+			},
+		}
+
+		caAccountsService := mocks.NewMockCAAccountsServiceWrapper(mockCtrl)
+		caAccountsService.EXPECT().ListCAAccounts(context.Background()).Return(listCAAccountsResponse, nil)
+
+		//replacing the caAccountsService reference with the mock
+		conn.caAccountsClient.SetCAAccountsService(caAccountsService)
+
+		revokeCertificate, err := conn.RevokeCertificate(revReq)
+		require.Nil(t, revokeCertificate)
+		require.Error(t, err)
+		require.ErrorContains(t, err, fmt.Sprintf("failed to find CA account %q", revReq.CertificateAuthorityAccountName))
+	})
+	t.Run("failed-unsupported ca type", func(t *testing.T) {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		caAccountId := "myId"
+		caAccountName := "MyAccountName"
+		thumbprint := "MyThumbprint"
+
+		revReq := &certificate.RevocationRequest{
+			Thumbprint:                      thumbprint,
+			Reason:                          "",
+			CertificateAuthorityAccountName: caAccountName,
+		}
+
+		//1. mocking the caAccountsClient
+		caAccountExpected := &caaccountssservice.ListCAAccountsCertificateAuthorityAccountsCertificateAuthorityAccountConnectionNodesCertificateAuthorityAccount{
+			Id:                       caAccountId,
+			Name:                     "MyAccountName",
+			CertificateAuthorityType: caaccountssservice.CertificateAuthorityTypeGlobalsign,
+		}
+
+		listCAAccountsResponse := &caaccountssservice.ListCAAccountsResponse{
+			CertificateAuthorityAccounts: &caaccountssservice.ListCAAccountsCertificateAuthorityAccountsCertificateAuthorityAccountConnection{
+				Nodes: []*caaccountssservice.ListCAAccountsCertificateAuthorityAccountsCertificateAuthorityAccountConnectionNodesCertificateAuthorityAccount{
+					caAccountExpected,
+				},
+			},
+		}
+
+		caAccountsService := mocks.NewMockCAAccountsServiceWrapper(mockCtrl)
+		caAccountsService.EXPECT().ListCAAccounts(context.Background()).Return(listCAAccountsResponse, nil)
+
+		//replacing the caAccountsService reference with the mock
+		conn.caAccountsClient.SetCAAccountsService(caAccountsService)
+
+		revokeCertificate, err := conn.RevokeCertificate(revReq)
+		require.Nil(t, revokeCertificate)
+		require.Error(t, err)
+		//require.ErrorContains(t, err, fmt.Sprintf("unsupported CA type for revocation: %s", caAccountExpected.CertificateAuthorityType))
+		require.ErrorContains(t, err, fmt.Sprintf("the CA type of the CA account %q is not supported for revocation. "+
+			"It is only supported CA accounts of type %s", caAccountExpected.Name, util.GetQuotedStrings(CATypesSupportedForRevocationSlice)))
+	})
+
 }
 
 func TestReadPolicyConfigurationOnlyEC(t *testing.T) {

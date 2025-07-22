@@ -53,6 +53,7 @@ type commandFlags struct {
 	tokenURL             string
 	appInfo              string
 	audience             string
+	caAccountName        string
 	caDN                 string
 	certFile             string
 	chainFile            string
@@ -61,6 +62,7 @@ type commandFlags struct {
 	clientSecret         string
 	clientP12            string
 	clientP12PW          string
+	comments             string
 	commonName           string
 	config               string
 	country              string

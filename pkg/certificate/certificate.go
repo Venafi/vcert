@@ -151,11 +151,12 @@ type ProcessingDetails struct {
 }
 
 type RevocationRequest struct {
-	CertificateDN string
-	Thumbprint    string
-	Reason        string
-	Comments      string
-	Disable       bool
+	CertificateAuthorityAccountName string // for vcp
+	CertificateDN                   string // for tpp
+	Thumbprint                      string
+	Reason                          string
+	Comments                        string
+	Disable                         bool // for tpp
 }
 
 type RetireRequest struct {

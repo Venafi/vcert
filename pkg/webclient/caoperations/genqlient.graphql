@@ -1,0 +1,18 @@
+mutation RevokeCertificateRequest($fingerprint: ID!, $certificateAuthorityAccountId: UUID, $revocationReason: RevocationReason!, $revocationComment: String ) {
+    revokeCertificate(fingerprint: $fingerprint, certificateAuthorityAccountId: $certificateAuthorityAccountId, revocationReason: $revocationReason, revocationComment: $revocationComment) {
+        id
+        fingerprint
+        revocation {
+            status
+            error {
+                arguments
+                code
+                message
+            }
+            approvalDetails {
+                rejectionReason
+            }
+        }
+        serialNumber
+    }
+}

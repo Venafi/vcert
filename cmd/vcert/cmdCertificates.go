@@ -77,7 +77,10 @@ var (
 		Flags:  revokeFlags,
 		Action: doCommandRevoke1,
 		Usage:  "To revoke a certificate",
-		UsageText: ` vcert revoke <Required Trust Protection Platform Config> <Options>
+		UsageText: ` vcert revoke <Required Venafi Control Plane -OR- Trust Protection Platform Config> <Options>
+
+		 vcert revoke -k <VCP API key> --thumbprint <cert SHA1 thumbprint>
+		 vcert revoke -p vcp -t <VCP access token> --thumbprint <cert SHA1 thumbprint>
 
 		 vcert revoke -u https://tpp.example.com -t <TPP access token> --thumbprint <cert SHA1 thumbprint>
 		 vcert revoke -u https://tpp.example.com -t <TPP access token> --id <ID value>
@@ -438,13 +441,27 @@ func doCommandRevoke1(c *cli.Context) error {
 	}()
 
 	revReq.Reason = flags.revocationReason
-	revReq.Comments = "revocation request from command line utility"
 
-	err = connector.RevokeCertificate(revReq)
-	if err != nil {
-		return fmt.Errorf("Failed to revoke certificate: %s", err)
+	revReq.Comments = "revocation request from command line utility"
+	if flags.comments != "" {
+		revReq.Comments = flags.comments
 	}
-	logf("Successfully created revocation request for %s", requestedFor)
+
+	revReq.CertificateAuthorityAccountName = flags.caAccountName
+
+	requestResponse, err := connector.RevokeCertificate(revReq)
+	if err != nil {
+		return fmt.Errorf("Failed to revoke certificate: %w", err)
+	}
+	//The requestResponse can be nil for TPP due currently that connector is not returning any result
+	if requestResponse != nil {
+		err = requestResponse.ToLog(logger)
+		if err != nil {
+			return err
+		}
+	} else {
+		logf("Successfully created revocation request for %s", requestedFor)
+	}
 
 	return nil
 }

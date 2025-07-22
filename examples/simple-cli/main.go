@@ -200,7 +200,7 @@ func main() {
 	// 3.2. Submit revocation request (not supported in Venafi Cloud)
 	//
 	if config.ConnectorType != endpoint.ConnectorTypeCloud {
-		err = c.RevokeCertificate(revokeReq)
+		_, err = c.RevokeCertificate(revokeReq)
 		if err != nil {
 			t.Fatalf("could not submit certificate revocation request: %s", err)
 		}

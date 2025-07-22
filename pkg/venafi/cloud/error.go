@@ -29,6 +29,10 @@ type responseError struct {
 	Args    interface{} `json:"args,omitempty"`
 }
 
+func (e responseError) Error() string {
+	return fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
+}
+
 type jsonData struct {
 	Errors []responseError `json:"errors,omitempty"`
 }

@@ -9,6 +9,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -161,4 +162,19 @@ func GetKeystoreOptionsString(cloudProviderID *string, cloudKeystoreID *string, 
 	}
 
 	return msg
+}
+
+// GetQuotedStrings returns a string of the slice values surrounded by double quotes
+// and separated by commas
+func GetQuotedStrings(values []string) string {
+
+	quotedStrings := make([]string, len(values))
+
+	// Iterate through of each value and quote it
+	for i, s := range values {
+		quotedStrings[i] = strconv.Quote(s)
+	}
+
+	// Joining the quoted strings and separating them with commas
+	return strings.Join(quotedStrings, ", ")
 }

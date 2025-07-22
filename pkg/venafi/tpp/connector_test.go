@@ -1216,7 +1216,7 @@ func DoRevokeAndDisableCertificate(t *testing.T, tpp *Connector) (req *certifica
 
 	t.Logf("Start revocation for %s", certDN)
 	revReq := &certificate.RevocationRequest{CertificateDN: certDN, Disable: true}
-	err = tpp.RevokeCertificate(revReq)
+	_, err = tpp.RevokeCertificate(revReq)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -1400,7 +1400,7 @@ func TestRevokeCertificate(t *testing.T) {
 
 	t.Logf("Start revocation for %s", certDN)
 	revReq := &certificate.RevocationRequest{CertificateDN: certDN, Disable: false}
-	err = tpp.RevokeCertificate(revReq)
+	_, err = tpp.RevokeCertificate(revReq)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -1425,7 +1425,7 @@ func TestRevokeNonIssuedCertificate(t *testing.T) {
 	}
 
 	revReq := &certificate.RevocationRequest{CertificateDN: certDN, Disable: false}
-	err = tpp.RevokeCertificate(revReq)
+	_, err = tpp.RevokeCertificate(revReq)
 	if err == nil {
 		t.Fatalf("It should NOT revoke certificate at %s which doesn't exist", certDN)
 	}
