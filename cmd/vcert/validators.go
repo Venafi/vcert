@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/Venafi/vcert/v5/pkg/certificate"
@@ -630,11 +631,24 @@ func validateRevokeFlags1(commandName string) error {
 		}(flags.revocationReason)
 
 		if !isValidReason {
-			return fmt.Errorf("%s is not valid revocation reason. it should be one of %v", flags.revocationReason, reasonOptions)
+			return fmt.Errorf("the revocation reason %q is not valid. It should be one of %s", flags.revocationReason, getQuotedStrings(reasonOptions))
 		}
 	}
 
 	return nil
+}
+
+func getQuotedStrings(values []string) string {
+
+	quotedStrings := make([]string, len(values))
+
+	// Iterate through of each value and quote it
+	for i, s := range values {
+		quotedStrings[i] = strconv.Quote(s)
+	}
+
+	// Joining the quoted strings and separating them with commas
+	return strings.Join(quotedStrings, ", ")
 }
 
 func validateRetireFlags(commandName string) error {
