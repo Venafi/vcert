@@ -408,7 +408,7 @@ func (c *Connector) RenewCertificate(_ *certificate.RenewalRequest) (requestID s
 	panic("operation is not supported yet")
 }
 
-func (c *Connector) RevokeCertificate(_ *certificate.RevocationRequest) (err error) {
+func (c *Connector) RevokeCertificate(req *certificate.RevocationRequest) (response endpoint.RevocationRequestResponse, err error) {
 	panic("operation is not supported yet")
 }
 

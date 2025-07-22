@@ -1559,10 +1559,10 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 }
 
 // RevokeCertificate attempts to revoke the certificate
-func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (err error) {
+func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (response endpoint.RevocationRequestResponse, err error) {
 	reason, ok := RevocationReasonsMap[revReq.Reason]
 	if !ok {
-		return fmt.Errorf("could not parse revocation reason `%s`", revReq.Reason)
+		return nil, fmt.Errorf("could not parse revocation reason `%s`", revReq.Reason)
 	}
 
 	var r = certificateRevokeRequest{
@@ -1574,14 +1574,14 @@ func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (er
 	}
 	statusCode, status, body, err := c.request("POST", urlResourceCertificateRevoke, r)
 	if err != nil {
-		return err
+		return
 	}
 	revokeResponse, err := parseRevokeResult(statusCode, status, body)
 	if err != nil {
 		return
 	}
 	if !revokeResponse.Success {
-		return fmt.Errorf("Revocation error: %s", revokeResponse.Error)
+		return nil, fmt.Errorf("Revocation error: %s", revokeResponse.Error)
 	}
 	return
 }

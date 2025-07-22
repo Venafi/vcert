@@ -19,6 +19,7 @@ package cloud
 import (
 	"archive/zip"
 	"bytes"
+	"context"
 	"crypto/rand"
 	"crypto/x509"
 	"encoding/base64"
@@ -41,6 +42,8 @@ import (
 	"github.com/Venafi/vcert/v5/pkg/policy"
 	"github.com/Venafi/vcert/v5/pkg/util"
 	"github.com/Venafi/vcert/v5/pkg/verror"
+	"github.com/Venafi/vcert/v5/pkg/webclient/caaccounts"
+	"github.com/Venafi/vcert/v5/pkg/webclient/caoperations"
 	"github.com/Venafi/vcert/v5/pkg/webclient/cloudproviders"
 	"github.com/Venafi/vcert/v5/pkg/webclient/notificationservice"
 )
@@ -96,6 +99,8 @@ type Connector struct {
 	zone                  cloudZone
 	client                *http.Client
 	userAgent             string
+	caAccountsClient      *caaccounts.CAAccountsClient
+	caOperationsClient    *caoperations.CAOperationsClient
 	cloudProvidersClient  *cloudproviders.CloudProvidersClient
 	notificationSvcClient *notificationservice.NotificationServiceClient
 }
@@ -167,6 +172,8 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) error {
 	}
 
 	// Initialize clients
+	c.caAccountsClient = caaccounts.NewCAAccountsClient(c.getURL(urlGraphql), c.getGraphqlHTTPClient())
+	c.caOperationsClient = caoperations.NewCAOperationsClient(c.getURL(urlGraphql), c.getGraphqlHTTPClient())
 	c.cloudProvidersClient = cloudproviders.NewCloudProvidersClient(c.getURL(urlGraphql), c.getGraphqlHTTPClient())
 	c.notificationSvcClient = notificationservice.NewNotificationServiceClient(c.baseURL, c.accessToken, c.apiKey)
 
@@ -278,7 +285,7 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 // RetrieveCertificate retrieves the certificate for the specified ID
 func (c *Connector) RetrieveCertificate(req *certificate.Request) (*certificate.PEMCollection, error) {
 	if !c.isAuthenticated() {
-		return nil, fmt.Errorf("must be autheticated to request a certificate")
+		return nil, fmt.Errorf("must be autheticated to retrieve a certificate")
 	}
 
 	if req.PickupID == "" && req.CertID == "" && req.Thumbprint != "" {
@@ -388,7 +395,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (*certificate.
 // RenewCertificate attempts to renew the certificate
 func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requestID string, err error) {
 	if !c.isAuthenticated() {
-		return "", fmt.Errorf("must be autheticated to request a certificate")
+		return "", fmt.Errorf("must be autheticated to renew a certificate")
 	}
 
 	/* 1st step is to get CertificateRequestId which is required to lookup managedCertificateId and zoneId */
@@ -508,7 +515,7 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 // RetireCertificate attempts to retire the certificate
 func (c *Connector) RetireCertificate(retireReq *certificate.RetireRequest) error {
 	if !c.isAuthenticated() {
-		return fmt.Errorf("must be autheticated to request a certificate")
+		return fmt.Errorf("must be autheticated to retire a certificate")
 	}
 
 	url := c.getURL(urlResourceCertificatesRetirement)
@@ -572,13 +579,95 @@ func (c *Connector) RetireCertificate(retireReq *certificate.RetireRequest) erro
 }
 
 // RevokeCertificate attempts to revoke the certificate
-func (c *Connector) RevokeCertificate(_ *certificate.RevocationRequest) (err error) {
-	return fmt.Errorf("not supported by endpoint")
+func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (endpoint.RevocationRequestResponse, error) {
+	if !c.isAuthenticated() {
+		return nil, errors.New("must be authenticated to revoke a certificate")
+	}
+
+	//validating the request data
+	if revReq.Thumbprint == "" {
+		return nil, errors.New("certificate fingerprint(thumbprint) is required")
+	}
+
+	revocationReason, ok := RevocationReasonsMap[revReq.Reason]
+	if !ok {
+		return nil, fmt.Errorf("unsupported revocation reason: %q", revReq.Reason)
+	}
+
+	//getting the CAAccountId from the CAAccountName
+	var certificateAuthorityAccountId *string
+	if revReq.CertificateAuthorityAccountName != "" {
+		caAccountsMap, err := c.caAccountsClient.ListCAAccounts(context.Background())
+		if err != nil {
+			return nil, fmt.Errorf("failed to list CA accounts: %w", err)
+		}
+		caAccount, ok := caAccountsMap[revReq.CertificateAuthorityAccountName]
+		if !ok {
+			return nil, fmt.Errorf("failed to find CA account %q", revReq.CertificateAuthorityAccountName)
+		}
+
+		//validating the CAType is into the set of supported types to perform revocation
+		if !CATypesSupportedForRevocation[caAccount.CertificateAuthorityType] {
+			return nil, fmt.Errorf("the CA type of the CA account %q is not supported for revocation. "+
+				"It is only supported CA accounts of type %s", caAccount.Name, util.GetQuotedStrings(CATypesSupportedForRevocationSlice))
+		}
+
+		certificateAuthorityAccountId = &caAccount.Id
+	}
+
+	var revComments *string
+	if revReq.Comments != "" {
+		revComments = &revReq.Comments
+	}
+
+	revokeCertificateRequestResponse, err := c.caOperationsClient.RevokeCertificate(context.Background(), revReq.Thumbprint, certificateAuthorityAccountId, revocationReason, revComments)
+	if err != nil {
+		return nil, err
+	}
+
+	//validating that the response is returned
+	revokeCertificateResult := revokeCertificateRequestResponse.GetRevokeCertificate()
+	if revokeCertificateResult == nil {
+		return nil, errors.New("revoke certificate response is empty")
+	}
+
+	if revokeCertificateResult.GetRevocation() == nil {
+		return nil, errors.New("revocation object in revoke certificate response is empty")
+	}
+
+	revocationResponse := &RevocationRequestResponseCloud{
+		ID:         revokeCertificateResult.GetId(),
+		Thumbprint: revokeCertificateResult.Fingerprint,
+	}
+
+	revocationError := revokeCertificateResult.GetRevocation().GetError()
+
+	if revocationError != nil {
+		respError := responseError{
+			Message: revocationError.GetMessage(),
+			Args:    revocationError.GetArguments(),
+		}
+		// given the code is coming as a pointer then it's required to validate that is not nil
+		if revocationError.GetCode() != nil {
+			respError.Code = *revocationError.GetCode()
+		}
+		revocationResponse.Error = &respError
+	} else {
+		if revokeCertificateResult.GetRevocation().GetStatus() != nil {
+			revocationResponse.Status = string(*revokeCertificateResult.GetRevocation().GetStatus())
+		}
+		approvalDetails := revokeCertificateResult.GetRevocation().GetApprovalDetails()
+		if approvalDetails != nil && approvalDetails.GetRejectionReason() != nil {
+			revocationResponse.RejectionReason = *approvalDetails.GetRejectionReason()
+		}
+	}
+
+	return revocationResponse, nil
 }
 
 func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certificate.ImportResponse, error) {
 	if !c.isAuthenticated() {
-		return nil, fmt.Errorf("must be autheticated to request a certificate")
+		return nil, fmt.Errorf("must be autheticated to import a certificate")
 	}
 
 	pBlock, _ := pem.Decode([]byte(req.CertificateData))
@@ -651,7 +740,7 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 
 func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.CertificateInfo, error) {
 	if !c.isAuthenticated() {
-		return nil, fmt.Errorf("must be autheticated to request a certificate")
+		return nil, fmt.Errorf("must be autheticated to list certificates")
 	}
 
 	if c.zone.String() == "" {
@@ -697,7 +786,7 @@ func (c *Connector) SearchCertificates(_ *certificate.SearchRequest) (*certifica
 
 func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.Sans, certMinTimeLeft time.Duration) (certificateInfo *certificate.CertificateInfo, err error) {
 	if !c.isAuthenticated() {
-		return nil, fmt.Errorf("must be autheticated to request a certificate")
+		return nil, fmt.Errorf("must be autheticated to search a certificate")
 	}
 
 	// retrieve application name from zone
@@ -782,7 +871,7 @@ func (c *Connector) getCertIDFromPickupID(pickupId string, timeout time.Duration
 
 func (c *Connector) IsCSRServiceGenerated(req *certificate.Request) (bool, error) {
 	if !c.isAuthenticated() {
-		return false, fmt.Errorf("must be autheticated to request a certificate")
+		return false, fmt.Errorf("must be autheticated to determine if the CSR was generate by the service")
 	}
 
 	if req.PickupID == "" && req.CertID == "" && req.Thumbprint != "" {
