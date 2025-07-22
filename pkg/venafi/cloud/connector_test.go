@@ -1076,7 +1076,7 @@ func TestRevokeCertificate(t *testing.T) {
 		revokeCertificate, err := conn.RevokeCertificate(revReq)
 		require.Nil(t, revokeCertificate)
 		require.Error(t, err)
-		require.ErrorContains(t, err, fmt.Sprintf("failed to find CA account %s", revReq.CertificateAuthorityAccountName))
+		require.ErrorContains(t, err, fmt.Sprintf("failed to find CA account %q", revReq.CertificateAuthorityAccountName))
 	})
 	t.Run("failed-unsupported ca type", func(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
@@ -1116,7 +1116,9 @@ func TestRevokeCertificate(t *testing.T) {
 		revokeCertificate, err := conn.RevokeCertificate(revReq)
 		require.Nil(t, revokeCertificate)
 		require.Error(t, err)
-		require.ErrorContains(t, err, fmt.Sprintf("unsupported CA type for revocation: %s", caAccountExpected.CertificateAuthorityType))
+		//require.ErrorContains(t, err, fmt.Sprintf("unsupported CA type for revocation: %s", caAccountExpected.CertificateAuthorityType))
+		require.ErrorContains(t, err, fmt.Sprintf("the CA type of the CA account %q is not supported for revocation. "+
+			"It is only supported CA accounts of type %s", caAccountExpected.Name, util.GetQuotedStrings(CATypesSupportedForRevocationSlice)))
 	})
 
 }

@@ -74,10 +74,14 @@ const (
 	TeamType
 )
 
+var CATypesSupportedForRevocationSlice = []string{
+	"DIGICERT", "MICROSOFT", "ZTPKI",
+}
+
 var CATypesSupportedForRevocation = map[string]bool{
-	"DIGICERT":  true,
-	"MICROSOFT": true,
-	"ZTPKI":     true,
+	CATypesSupportedForRevocationSlice[0]: true,
+	CATypesSupportedForRevocationSlice[1]: true,
+	CATypesSupportedForRevocationSlice[2]: true,
 }
 
 // RevocationReasonsMap maps *certificate.RevocationRequest.Reason to ca-operations reasons
