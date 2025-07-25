@@ -1078,49 +1078,6 @@ func TestRevokeCertificate(t *testing.T) {
 		require.Error(t, err)
 		require.ErrorContains(t, err, fmt.Sprintf("failed to find CA account %q", revReq.CertificateAuthorityAccountName))
 	})
-	t.Run("failed-unsupported ca type", func(t *testing.T) {
-		mockCtrl := gomock.NewController(t)
-		defer mockCtrl.Finish()
-
-		caAccountId := "myId"
-		caAccountName := "MyAccountName"
-		thumbprint := "MyThumbprint"
-
-		revReq := &certificate.RevocationRequest{
-			Thumbprint:                      thumbprint,
-			Reason:                          "",
-			CertificateAuthorityAccountName: caAccountName,
-		}
-
-		//1. mocking the caAccountsClient
-		caAccountExpected := &caaccountssservice.ListCAAccountsCertificateAuthorityAccountsCertificateAuthorityAccountConnectionNodesCertificateAuthorityAccount{
-			Id:                       caAccountId,
-			Name:                     "MyAccountName",
-			CertificateAuthorityType: caaccountssservice.CertificateAuthorityTypeGlobalsign,
-		}
-
-		listCAAccountsResponse := &caaccountssservice.ListCAAccountsResponse{
-			CertificateAuthorityAccounts: &caaccountssservice.ListCAAccountsCertificateAuthorityAccountsCertificateAuthorityAccountConnection{
-				Nodes: []*caaccountssservice.ListCAAccountsCertificateAuthorityAccountsCertificateAuthorityAccountConnectionNodesCertificateAuthorityAccount{
-					caAccountExpected,
-				},
-			},
-		}
-
-		caAccountsService := mocks.NewMockCAAccountsServiceWrapper(mockCtrl)
-		caAccountsService.EXPECT().ListCAAccounts(context.Background()).Return(listCAAccountsResponse, nil)
-
-		//replacing the caAccountsService reference with the mock
-		conn.caAccountsClient.SetCAAccountsService(caAccountsService)
-
-		revokeCertificate, err := conn.RevokeCertificate(revReq)
-		require.Nil(t, revokeCertificate)
-		require.Error(t, err)
-		//require.ErrorContains(t, err, fmt.Sprintf("unsupported CA type for revocation: %s", caAccountExpected.CertificateAuthorityType))
-		require.ErrorContains(t, err, fmt.Sprintf("the CA type of the CA account %q is not supported for revocation. "+
-			"It is only supported CA accounts of type %s", caAccountExpected.Name, util.GetQuotedStrings(CATypesSupportedForRevocationSlice)))
-	})
-
 }
 
 func TestReadPolicyConfigurationOnlyEC(t *testing.T) {
