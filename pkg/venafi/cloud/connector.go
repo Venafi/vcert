@@ -606,12 +606,6 @@ func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (en
 			return nil, fmt.Errorf("failed to find CA account %q", revReq.CertificateAuthorityAccountName)
 		}
 
-		//validating the CAType is into the set of supported types to perform revocation
-		if !CATypesSupportedForRevocation[caAccount.CertificateAuthorityType] {
-			return nil, fmt.Errorf("the CA type of the CA account %q is not supported for revocation. "+
-				"It is only supported CA accounts of type %s", caAccount.Name, util.GetQuotedStrings(CATypesSupportedForRevocationSlice))
-		}
-
 		certificateAuthorityAccountId = &caAccount.Id
 	}
 
