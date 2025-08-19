@@ -4,7 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
 	"time"
@@ -64,7 +64,10 @@ func testListener(t *testing.T, host string, domains []string, success bool) {
 		t.Fatalf("bad code: %v", r.StatusCode)
 	}
 
-	b, _ := ioutil.ReadAll(r.Body)
+	b, err := io.ReadAll(r.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if string(b) != text {
 		t.Fatalf("bad text: %v", text)
 	}
