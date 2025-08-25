@@ -37,6 +37,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
@@ -585,7 +586,7 @@ func TestGetCertificateStatus(t *testing.T) {
 }
 
 func TestRenewCertificate(t *testing.T) {
-	t.Skip() //todo: remove if condor team fix bug. check after 2020.04
+	//t.Skip() //todo: remove if condor team fix bug. check after 2020.04
 	conn := getTestConnector(ctx.CloudZone)
 	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
 	if err != nil {
@@ -599,6 +600,9 @@ func TestRenewCertificate(t *testing.T) {
 	req.Subject.CommonName = test.RandCN()
 	req.Subject.Organization = []string{"Venafi, Inc."}
 	req.Subject.OrganizationalUnit = []string{"Automated Tests"}
+	req.KeyType = certificate.KeyTypeRSA
+	req.KeyLength = 2048
+	req.Tags = []string{"testTag"}
 	err = conn.GenerateRequest(zoneConfig, req)
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -648,21 +652,60 @@ func TestRenewCertificate(t *testing.T) {
 	t.Logf("CERT: %s\n", pcc.Certificate)
 	t.Logf("FINGERPRINT: %s\n", fingerprint)
 
+	// renewing by Thumbprint and asserting that the renewed certificate contains the same tags as the old cert version
+	// given it was not passed the tags from the request
+	managedCertificate1 := renewCertificateRequest(t, conn, &certificate.RenewalRequest{Thumbprint: strings.ToUpper(fingerprint), CertificateRequest: &certificate.Request{}})
+	assert.Equal(t, []string{"testTag"}, managedCertificate1.Tags)
+
+	// renewing by CertificateID and asserting that the renewed certificate contains the tags passed from the request
+	managedCertificate2 := renewCertificateRequest(t, conn, &certificate.RenewalRequest{CertificateDN: managedCertificate1.CertificateRequestId, CertificateRequest: &certificate.Request{Tags: []string{"testTag2"}}})
+	assert.Equal(t, []string{"testTag2"}, managedCertificate2.Tags)
+
+	// renewing by CertificateID and asserting that the renewed certificate doesn't contain any of tags from the old cert version
+	// given it was passed an empty set of the tags from the request
+	managedCertificate3 := renewCertificateRequest(t, conn, &certificate.RenewalRequest{CertificateDN: managedCertificate2.CertificateRequestId, CertificateRequest: &certificate.Request{Tags: []string{}}})
+	assert.Empty(t, managedCertificate3.Tags)
+}
+
+func renewCertificateRequest(t *testing.T, conn *Connector, renewalRequest *certificate.RenewalRequest) *managedCertificate {
 	// time to renew
-	renewByFingerprint := &certificate.RenewalRequest{Thumbprint: strings.ToUpper(fingerprint)}
-	reqId3, err := conn.RenewCertificate(renewByFingerprint)
+	count := 0
+	var reqId = ""
+	var err error
+	//trying by 3 times
+	for {
+		count++
+		reqId, err = conn.RenewCertificate(renewalRequest)
+
+		if err != nil {
+			if count > 3 {
+				t.Fatal(err)
+			}
+		} else {
+			break
+		}
+		time.Sleep(2 * time.Second)
+	}
+
+	previousPickupID := renewalRequest.Thumbprint
+
+	if previousPickupID == "" {
+		previousPickupID = renewalRequest.CertificateDN
+	}
+
+	t.Logf("requested renewal for %s, will pickup by %s", previousPickupID, reqId)
+
+	certStatus, err := conn.getCertificateStatus(reqId)
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Logf("requested renewal for %s, will pickup by %s", fingerprint, reqId3)
-
-	renewByCertificateDN := &certificate.RenewalRequest{CertificateDN: reqId3}
-	reqId1, err := conn.RenewCertificate(renewByCertificateDN)
+	certificateId := certStatus.CertificateIdsList[0]
+	managedCert, err := conn.getCertificate(certificateId)
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Logf("requested renewal for %s, will pickup by %s", pickupID, reqId1)
 
+	return managedCert
 }
 
 func TestRenewCertificateWithUsageMetadata(t *testing.T) {
@@ -2611,4 +2654,71 @@ func TestSearchValidCertificate(t *testing.T) {
 	}
 
 	fmt.Printf("%v\n", util.GetJsonAsString(*certificate))
+}
+
+func TestGetCloudRequest(t *testing.T) {
+
+	conn := getTestConnector(ctx.CloudZone)
+	conn.verbose = true
+	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	zoneConfig, err := conn.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	req := certificate.Request{}
+	req.CsrOrigin = certificate.LocalGeneratedCSR
+	req.Subject.CommonName = test.RandCN()
+	req.Subject.Organization = []string{"Venafi, Inc."}
+	req.Subject.OrganizationalUnit = []string{"Automated Tests"}
+	err = conn.GenerateRequest(zoneConfig, &req)
+
+	assert.NoError(t, err)
+
+	t.Run("tags nil", func(t *testing.T) {
+
+		cloudReq, _ := conn.getCloudRequest(&req)
+		assert.NotNil(t, cloudReq)
+		assert.Nil(t, cloudReq.Tags)
+	})
+	t.Run("tags empty", func(t *testing.T) {
+
+		req.Tags = make([]string, 0)
+
+		cloudReq, _ := conn.getCloudRequest(&req)
+		assert.NotNil(t, cloudReq)
+		assert.Nil(t, cloudReq.Tags)
+	})
+	t.Run("tags provided", func(t *testing.T) {
+
+		tags := []string{"myTag"}
+
+		req.Tags = tags
+
+		cloudReq, _ := conn.getCloudRequest(&req)
+		assert.NotNil(t, cloudReq)
+		assert.Equal(t, tags, cloudReq.Tags)
+
+		// Marshal the struct into JSON bytes
+		/*jsonBytes, err := json.Marshal(cloudReq)
+		if err != nil {
+			fmt.Println("Error marshaling struct:", err)
+			return
+		}
+
+		// Unmarshal the JSON bytes into a map
+		var m map[string]interface{}
+		err = json.Unmarshal(jsonBytes, &m)
+		if err != nil {
+			fmt.Println("Error unmarshaling JSON:", err)
+			return
+		}
+
+		_, ok := m["tags"]
+
+		assert.False(t, ok)*/
+	})
 }
