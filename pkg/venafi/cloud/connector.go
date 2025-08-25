@@ -398,6 +398,11 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 		return "", fmt.Errorf("must be autheticated to renew a certificate")
 	}
 
+	// step 0.1 : confirming that the CertificateRequest was provided
+	if renewReq.CertificateRequest == nil {
+		return "", fmt.Errorf("the CertificateRequest entity from the certificate.RenewalRequest is nil")
+	}
+
 	/* 1st step is to get CertificateRequestId which is required to lookup managedCertificateId and zoneId */
 	var certificateRequestId string
 
@@ -493,13 +498,19 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 		}
 	}
 
-	if renewReq.CertificateRequest != nil && len(renewReq.CertificateRequest.GetCSR()) != 0 {
+	if len(renewReq.CertificateRequest.GetCSR()) != 0 {
 		req.CSR = string(renewReq.CertificateRequest.GetCSR())
 		req.ReuseCSR = false
 	} else {
 		req.ReuseCSR = true
-		return "", fmt.Errorf("reuseCSR option is not currently available for Renew Certificate operation. A new CSR must be provided in the request")
 	}
+
+	//The following cases are covered by the direct assignment:
+	// if the tags slice was provided, and it is not empty then these tags will be used for the new certificate
+	// if the tags slice was provided, but it is empty then none tag will be provided to the new certificate
+	// if the tags slice was not provided then the tags from the old cert will be used
+	req.Tags = renewReq.CertificateRequest.Tags
+
 	statusCode, status, body, err := c.request("POST", url, req)
 	if err != nil {
 		return
@@ -1105,6 +1116,10 @@ func (c *Connector) getCloudRequest(req *certificate.Request) (*certificateReque
 		cloudReq.ValidityPeriod = "PT" + strings.ToUpper((*validityDuration).Truncate(time.Second).String())
 	}
 
+	if req.Tags != nil && len(req.Tags) > 0 {
+		cloudReq.Tags = req.Tags
+	}
+
 	return &cloudReq, nil
 }
 
@@ -1343,10 +1358,11 @@ func (c *Connector) searchCertificatesByFingerprint(fp string) (*CertificateSear
 }
 
 type managedCertificate struct {
-	Id                   string `json:"id"`
-	CompanyId            string `json:"companyId"`
-	CertificateRequestId string `json:"certificateRequestId"`
-	DekHash              string `json:"dekHash,omitempty"`
+	Id                   string   `json:"id"`
+	CompanyId            string   `json:"companyId"`
+	CertificateRequestId string   `json:"certificateRequestId"`
+	DekHash              string   `json:"dekHash,omitempty"`
+	Tags                 []string `json:"tags,omitempty"`
 }
 
 func (c *Connector) getCertificate(certificateId string) (*managedCertificate, error) {
