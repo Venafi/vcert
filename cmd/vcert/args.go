@@ -19,6 +19,7 @@ package main
 import (
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/venafi"
+	"github.com/urfave/cli/v2"
 )
 
 const (
@@ -91,6 +92,7 @@ type commandFlags struct {
 	noPickup             bool
 	noPrompt             bool
 	noRetire             bool
+	noTags               bool
 	org                  string
 	orgUnits             stringSlice
 	pickupID             string
@@ -102,6 +104,7 @@ type commandFlags struct {
 	sshCred              bool
 	pmCred               bool
 	state                string
+	tags                 cli.StringSlice
 	testMode             bool
 	testModeDelay        int
 	thumbprint           string
