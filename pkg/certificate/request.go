@@ -99,9 +99,6 @@ type Request struct {
 
 	// Deprecated: use ValidityDuration instead, this field is ignored if ValidityDuration is set
 	ValidityHours int
-
-	//To support VCP certificate tags
-	Tags []string
 }
 
 // SetCSR sets CSR from PEM or DER format

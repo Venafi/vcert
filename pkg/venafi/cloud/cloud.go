@@ -18,6 +18,8 @@ package cloud
 
 import (
 	"bytes"
+	"github.com/Venafi/vcert/v5/pkg/webclient/caoperations/service"
+
 	// nolint:gosec // we only use it for getting the certificate thumbprint / fingerprint
 	//TODO: although doesn't oppose a risk, we need to figure out a better to do this process so we can remove this library
 	"crypto/sha1"
@@ -41,7 +43,6 @@ import (
 	"github.com/Venafi/vcert/v5/pkg/policy"
 	"github.com/Venafi/vcert/v5/pkg/util"
 	"github.com/Venafi/vcert/v5/pkg/verror"
-	"github.com/Venafi/vcert/v5/pkg/webclient/caoperations/service"
 )
 
 type apiKey struct {
@@ -131,7 +132,6 @@ type certificateRequest struct {
 	IsVaaSGenerated          bool                         `json:"isVaaSGenerated,omitempty"`
 	CsrAttributes            CsrAttributes                `json:"csrAttributes,omitempty"`
 	ApplicationServerTypeId  string                       `json:"applicationServerTypeId,omitempty"`
-	Tags                     []string                     `json:"tags"`
 }
 
 type certificateRetireRequest struct {
