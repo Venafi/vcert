@@ -533,7 +533,7 @@ func validateRenewFlags1(commandName string) error {
 	tagsProvided := len(flags.tags.Value()) > 0
 
 	if tagsProvided && flags.noTags {
-		return fmt.Errorf("--tags and --no-tags can not be provided together")
+		return fmt.Errorf("--tags and --no-tags can not be used together")
 	}
 
 	apiKey := flags.apiKey
