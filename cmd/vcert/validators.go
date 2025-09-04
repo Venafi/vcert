@@ -383,6 +383,10 @@ func validateEnrollFlags(commandName string) error {
 		return fmt.Errorf("--instance and --tls-address are not applicable to Venafi as a Service platform")
 	}
 
+	if len(flags.tags.Value()) > 0 && !isCloud {
+		return fmt.Errorf("--tags is only applicable to Venafi Control Plane")
+	}
+
 	return nil
 }
 
@@ -524,6 +528,26 @@ func validateRenewFlags1(commandName string) error {
 	err = validateJKSFlags(commandName)
 	if err != nil {
 		return err
+	}
+
+	tagsProvided := len(flags.tags.Value()) > 0
+
+	if tagsProvided && flags.noTags {
+		return fmt.Errorf("--tags and --no-tags can not be used together")
+	}
+
+	apiKey := flags.apiKey
+	if apiKey == "" {
+		apiKey = getPropertyFromEnvironment(vCertApiKey)
+	}
+	isCloud := apiKey != "" || flags.platform == venafi.TLSPCloud
+	if !isCloud {
+		if tagsProvided {
+			return fmt.Errorf("--tags is only applicable to Venafi Control Plane")
+		}
+		if flags.noTags {
+			return fmt.Errorf("--no-tags is only applicable to Venafi Control Plane")
+		}
 	}
 
 	return nil

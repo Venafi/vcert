@@ -208,6 +208,12 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 		req.ValidityPeriod = cf.validPeriod
 	}
 
+	if len(cf.tags.Value()) > 0 {
+		req.Tags = cf.tags.Value()
+	} else if cf.noTags {
+		req.Tags = make([]string, 0)
+	}
+
 	return req
 }
 

@@ -799,6 +799,22 @@ var (
 		Destination: &flags.provisionFormat,
 	}
 
+	flagTags = &cli.StringSliceFlag{
+		Name: "tags",
+		Usage: "Use to provide the certificate tags for a certificate to be enrolled or renewed. " +
+			"It can not be used if -no-tags is provided. Only for Venafi Control Plane.",
+		Destination: &flags.tags,
+	}
+
+	flagNotags = &cli.BoolFlag{
+		Name: "no-tags",
+		Usage: "Use to indicate that the certificate tags of a certificate to renew will be empty. " +
+			"That means if the old certificate has certificate tags associated then these will be ignored " +
+			"for the new certificate. It can not be used if -tags is provided. " +
+			"Only for Venafi Control Plane.",
+		Destination: &flags.noTags,
+	}
+
 	commonFlags              = []cli.Flag{flagInsecure, flagVerbose, flagNoPrompt}
 	keyFlags                 = []cli.Flag{flagKeyType, flagKeySize, flagKeyCurve, flagKeyFile, flagKeyPassword}
 	sansFlags                = []cli.Flag{flagDNSSans, flagEmailSans, flagIPSans, flagURISans, flagUPNSans}
@@ -869,6 +885,7 @@ var (
 			flagValidDays,
 			flagValidPeriod,
 			flagExtKeyUsage,
+			flagTags,
 		)),
 	)
 
@@ -932,6 +949,8 @@ var (
 			flagPickupIDFile,
 			flagOmitSans,
 			flagExtKeyUsage,
+			flagTags,
+			flagNotags,
 		)),
 	)
 
