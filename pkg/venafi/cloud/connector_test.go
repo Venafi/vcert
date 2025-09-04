@@ -2701,24 +2701,5 @@ func TestGetCloudRequest(t *testing.T) {
 		cloudReq, _ := conn.getCloudRequest(&req)
 		assert.NotNil(t, cloudReq)
 		assert.Equal(t, tags, cloudReq.Tags)
-
-		// Marshal the struct into JSON bytes
-		/*jsonBytes, err := json.Marshal(cloudReq)
-		if err != nil {
-			fmt.Println("Error marshaling struct:", err)
-			return
-		}
-
-		// Unmarshal the JSON bytes into a map
-		var m map[string]interface{}
-		err = json.Unmarshal(jsonBytes, &m)
-		if err != nil {
-			fmt.Println("Error unmarshaling JSON:", err)
-			return
-		}
-
-		_, ok := m["tags"]
-
-		assert.False(t, ok)*/
 	})
 }
