@@ -360,7 +360,7 @@ func TestKeyTypeSetByString(t *testing.T) {
 
 func TestGetPrivateKeyPEMBock(t *testing.T) {
 	var priv crypto.Signer
-	priv, err := GenerateRSAPrivateKey(512)
+	priv, err := GenerateRSAPrivateKey(1024)
 	if err != nil {
 		t.Fatalf("Error generating RSA Private Key\nError: %s", err)
 	}
@@ -392,7 +392,7 @@ func TestGetPrivateKeyPEMBock(t *testing.T) {
 
 func TestGetEncryptedPrivateKeyPEMBock(t *testing.T) {
 	var priv crypto.Signer
-	priv, err := GenerateRSAPrivateKey(512)
+	priv, err := GenerateRSAPrivateKey(1024)
 	if err != nil {
 		t.Fatalf("Error generating RSA Private Key\nError: %s", err)
 	}
@@ -464,7 +464,7 @@ func TestGetCertificatePEMBlock(t *testing.T) {
 func TestGetCertificateRequestPEMBlock(t *testing.T) {
 	certRequest := getCertificateRequestForTest()
 	var priv crypto.Signer
-	priv, err := GenerateRSAPrivateKey(512)
+	priv, err := GenerateRSAPrivateKey(1024)
 	if err != nil {
 		t.Fatalf("Error generating RSA Private Key\nError: %s", err)
 	}
@@ -479,7 +479,7 @@ func TestGetCertificateRequestPEMBlock(t *testing.T) {
 }
 
 func TestPublicKey(t *testing.T) {
-	priv, _ := GenerateRSAPrivateKey(512)
+	priv, _ := GenerateRSAPrivateKey(1024)
 	pub := PublicKey(priv)
 	if pub == nil {
 		t.Fatal("should return public key")
