@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/smartystreets/assertions"
+	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v2"
 )
 
@@ -145,8 +145,7 @@ func TestBuildTppPolicyWithDefaults(t *testing.T) {
 
 	tppPol := BuildTppPolicy(policySpecification)
 
-	assertions.ShouldNotBeEmpty(tppPol)
-
+	assert.NotEmpty(t, tppPol)
 }
 
 func TestValidateTppPolicySpecification(t *testing.T) {

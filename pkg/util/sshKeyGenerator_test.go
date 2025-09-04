@@ -1,10 +1,7 @@
 package util
 
 import (
-	"fmt"
 	"testing"
-
-	"github.com/smartystreets/assertions"
 )
 
 func TestGenerateSshKeyPair(t *testing.T) {
@@ -48,8 +45,6 @@ func TestGenerateSshKeyPairLegacyPem(t *testing.T) {
 		t.Fatalf("Error building ssh keys \nError: %s", err)
 	}
 
-	s := assertions.ShouldNotBeBlank("")
-	fmt.Println(s)
 	if len(privKey) == 0 {
 		t.Fatalf("private key is empty")
 	}
