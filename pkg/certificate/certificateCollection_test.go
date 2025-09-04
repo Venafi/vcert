@@ -330,7 +330,7 @@ func TestPEMCollectionFromBytes(t *testing.T) {
 }
 
 func TestAddPrivateKey(t *testing.T) {
-	pk, _ := GenerateRSAPrivateKey(2048)
+	pk, _ := GenerateRSAPrivateKey(512)
 
 	pcc, _ := NewPEMCollection(nil, nil, nil)
 	err := pcc.AddPrivateKey(pk, []byte(os.Getenv(util.ENV_DUMMY_PASS)))
