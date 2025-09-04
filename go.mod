@@ -1,6 +1,8 @@
 module github.com/Venafi/vcert/v5
 
-go 1.24.5
+go 1.23.0
+
+toolchain go1.23.12
 
 require (
 	github.com/Khan/genqlient v0.8.1
@@ -14,7 +16,7 @@ require (
 	github.com/spf13/viper v1.20.1
 	github.com/stretchr/testify v1.11.0
 	github.com/urfave/cli/v2 v2.27.7
-	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a
+	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78
 	go.uber.org/mock v0.6.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.41.0
