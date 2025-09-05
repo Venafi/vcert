@@ -1,8 +1,14 @@
-## 5.11.0 (September 5th, 2025)
+## 5.12.0 (September 5th, 2025)
 - Add support to provide VCP certificate tags for VCert CLI enroll command.
 - Add support to provide VCP certificate tags for VCert CLI renew command.
 - Upgrade dependencies.
 - Upgrade to Go 1.23.12 to avoid the vulneraibility ([CVE-2025-4674](https://nvd.nist.gov/vuln/detail/CVE-2025-4674))
+
+## 5.11.1 (August 5th, 2025)
+- Add support to revoke certificates in VCP using the CLI and the SDK.
+
+## 5.11.0-rc1 (June 22nd, 2025)
+- Release Candidate to support the certificate revocation in VCP.
 
 ## 5.10.2 (June 18th, 2025)
 - Allow to set a GCM Certificate scope without a certificate name.
