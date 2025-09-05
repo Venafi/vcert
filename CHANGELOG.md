@@ -1,3 +1,9 @@
+## 5.11.0 (September 5th, 2025)
+- Add support to provide VCP certificate tags for VCert CLI enroll command.
+- Add support to provide VCP certificate tags for VCert CLI renew command.
+- Upgrade dependencies.
+- Upgrade to Go 1.23.12 to avoid the vulneraibility ([CVE-2025-4674](https://nvd.nist.gov/vuln/detail/CVE-2025-4674))
+
 ## 5.10.2 (June 18th, 2025)
 - Allow to set a GCM Certificate scope without a certificate name.
 
