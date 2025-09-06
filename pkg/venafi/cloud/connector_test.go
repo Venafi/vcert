@@ -695,10 +695,24 @@ func renewCertificateRequest(t *testing.T, conn *Connector, renewalRequest *cert
 
 	t.Logf("requested renewal for %s, will pickup by %s", previousPickupID, reqId)
 
-	certStatus, err := conn.getCertificateStatus(reqId)
-	if err != nil {
-		t.Fatal(err)
+	var certStatus *certificateStatus
+	count = 0
+	//trying by 3 times to get issued state
+	for {
+		count++
+		certStatus, err = conn.getCertificateStatus(reqId)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if certStatus.Status == "ISSUED" || count > 3 {
+			break
+		}
+
+		time.Sleep(3 * time.Second)
 	}
+
 	certificateId := certStatus.CertificateIdsList[0]
 	managedCert, err := conn.getCertificate(certificateId)
 	if err != nil {
