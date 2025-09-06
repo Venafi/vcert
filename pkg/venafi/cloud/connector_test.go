@@ -710,7 +710,7 @@ func renewCertificateRequest(t *testing.T, conn *Connector, renewalRequest *cert
 			break
 		}
 
-		time.Sleep(3 * time.Second)
+		time.Sleep(5 * time.Second)
 	}
 
 	certificateId := certStatus.CertificateIdsList[0]
