@@ -9,8 +9,8 @@ We welcome and appreciate all contributions. Got questions or want to discuss so
 
 # VCert CLI for CyberArk Certificate Manager, SaaS
 
-CyberArk VCert is a command line tool designed to generate keys and simplify certificate acquisition, eliminating the 
-need to write code that's required to interact with the CyberArk REST API. VCert is available in 32- and 64-bit versions 
+VCert is a command line tool designed to generate keys and simplify certificate acquisition, eliminating the 
+need to write code that's required to interact with the REST API. VCert is available in 32- and 64-bit versions 
 for Linux, Windows, and macOS.
 
 This article applies to the latest version of VCert CLI, which you can [download here](https://github.com/Venafi/vcert/releases/latest).
@@ -58,7 +58,7 @@ Review these prerequisites to get started. You'll need the following:
 2. You have successfully registered for a CyberArk Certificate Manager, SaaS account, have been granted at least the "Resource Owner" 
 role, and know your API key. You can use the `getcred` action to
 [register and obtain an API key](#registering-and-obtaining-an-api-key), but you will need an administrator to update 
-your role if there are already 3 or more users registered for your company in CyberArk Certificate Manager, SaaS. Alternatively, you 
+your role if there are already 3 or more users registered for your company. Alternatively, you 
 have configured a service account, the service account has been granted the "Resource Owner" role, you have the 
 `token URL` and have obtained a `JWT` from the Identity Provider associated to the service-account.
 3. A CA Account and Issuing Template exist and have been configured with:
