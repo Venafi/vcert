@@ -34,8 +34,8 @@ var (
 		Name:      commandSshPickupName,
 		Flags:     sshPickupFlags,
 		Action:    doCommandSSHPickup,
-		Usage:     "To retrieve an SSH Certificate from Trust Protection Platform",
-		UsageText: `vcert sshpickup -u https://tpp.example.com -t <TPP access token> --pickup-id <ssh cert DN>`,
+		Usage:     "To retrieve an SSH Certificate from CyberArk SSH Manager for Machines",
+		UsageText: `vcert sshpickup -u https://sshmf.example.com -t <CyberArk SSH Manager for Machines access token> --pickup-id <ssh cert DN>`,
 	}
 
 	commandSshEnroll = &cli.Command{
@@ -43,8 +43,8 @@ var (
 		Name:      commandSshEnrollName,
 		Flags:     sshEnrollFlags,
 		Action:    doCommandSSHEnroll,
-		Usage:     "To enroll an SSH Certificate to Trust Protection Platform",
-		UsageText: `vcert sshenroll -u https://tpp.example.com -t <TPP access token> --template <val> --id <val> --principal bob --principal alice --valid-hours 1`,
+		Usage:     "To enroll an SSH Certificate to CyberArk SSH Manager for Machines",
+		UsageText: `vcert sshenroll -u https://sshmf.example.com -t <CyberArk SSH Manager for Machines access token> --template <val> --id <val> --principal bob --principal alice --valid-hours 1`,
 	}
 
 	commandSshGetConfig = &cli.Command{
@@ -52,8 +52,8 @@ var (
 		Name:      commandSshGetConfigName,
 		Flags:     sshGetConfigFlags,
 		Action:    doCommandSSHGetConfig,
-		Usage:     "To get the SSH CA public key and default principals from Trust Protection Platform",
-		UsageText: `vcert sshgetconfig -u https://tpp.example.com -t <TPP access token> --template <val>`,
+		Usage:     "To get the SSH CA public key and default principals from CyberArk SSH Manager for Machines",
+		UsageText: `vcert sshgetconfig -u https://sshmf.example.com -t <CyberArk SSH Manager for Machines access token> --template <val>`,
 	}
 )
 

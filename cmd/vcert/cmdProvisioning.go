@@ -12,7 +12,7 @@ var (
 		Before:      runBeforeCommand,
 		Action:      doCommandProvision,
 		Name:        commandProvisionName,
-		Usage:       "To provision a certificate from Venafi Platform to a Cloud Keystore",
+		Usage:       "To provision a certificate from CyberArk Certificate Manager, SaaS to a Cloud Keystore",
 		Subcommands: []*cli.Command{subCommandCloudKeystore},
 	}
 )
