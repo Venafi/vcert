@@ -9,7 +9,7 @@ We welcome and appreciate all contributions. Got questions or want to discuss so
 
 # VCert CLI for CyberArk Certificate Manager, Self-Hosted
 
-CyberArk VCert is a command line tool designed to generate keys and simplify certificate acquisition, eliminating the need to write code that's required to interact with the CyberArk REST API. VCert is available in 32- and 64-bit versions for Linux, Windows, and macOS.
+VCert is a command line tool designed to generate keys and simplify certificate acquisition, eliminating the need to write code that's required to interact with the CyberArk REST API. VCert is available in 32- and 64-bit versions for Linux, Windows, and macOS.
 
 This article applies to the latest version of VCert CLI, which you can [download here](https://github.com/Venafi/vcert/releases/latest).
 
@@ -47,7 +47,7 @@ Use these to quickly jump to a relevant section lower on this page:
 
 Review these prerequistes to get started. You'll need: 
 
-1. A user account that has an authentication token with "certificate:manage,revoke" scope (i.e. access to the "CyberArk VCert CLI" API Application as of 20.1) or has been granted WebSDK Access
+1. A user account that has an authentication token with "certificate:manage,revoke" scope (i.e. access to the "VCert CLI" API Application as of 20.1) or has been granted WebSDK Access
 2. A folder where the user has been granted the following permissions: View, Read, Write, Create, Revoke (for the revoke action), and Private Key Read; this is for the pickup action when the certificate signing request (CSR) is service-generated.
 3. A policy applied to the folder that specifies the following:
     1. Subject DN values for Organizational Unit (OU), Organization (O), City/Locality (L), State/Province (ST) and Country (C)
@@ -95,7 +95,7 @@ Options:
 
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Command&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Description                                                                                                                                                                                                                                                                                                                                                                   |
 |---------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `--app-info`                                                                                            | Use to identify the application requesting the certificate with details like vendor name and vendor product.<br/>Example: `--app-info "CyberArk VCert CLI"`                                                                                                                                                                                                                   |
+| `--app-info`                                                                                            | Use to identify the application requesting the certificate with details like vendor name and vendor product.<br/>Example: `--app-info "VCert CLI"`                                                                                                                                                                                                                            |
 | `--cert-file`                                                                                           | Use to specify the name and location of an output file that will contain only the end-entity certificate.<br/>Example: `--cert-file /path-to/example.crt`                                                                                                                                                                                                                     |
 | `--chain`                                                                                               | Use to include the certificate chain in the output, and to specify where to place it in the file.<br/>Options: `root-last` (default), `root-first`, `ignore`                                                                                                                                                                                                                  |
 | `--chain-file`                                                                                          | Use to specify the name and location of an output file that will contain only the root and intermediate certificates applicable to the end-entity certificate.                                                                                                                                                                                                                |

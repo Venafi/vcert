@@ -9,7 +9,7 @@ We welcome and appreciate all contributions. Got questions or want to discuss so
 
 # VCert CLI for CyberArk SSH Manager for Machines
 
-CyberArk VCert is a command line tool designed to generate keys and simplify certificate acquisition, eliminating the need to write code that's required to interact with the CyberArk REST API. VCert is available in 32- and 64-bit versions for Linux, Windows, and macOS.
+VCert is a command line tool designed to generate keys and simplify certificate acquisition, eliminating the need to write code that's required to interact with the CyberArk REST API. VCert is available in 32- and 64-bit versions for Linux, Windows, and macOS.
 
 This article applies to the latest version of VCert CLI, which you can [download here](https://github.com/Venafi/vcert/releases/latest).
 
@@ -29,7 +29,7 @@ Use these to quickly jump to a relevant section lower on this page:
 
 Review these prerequistes to get started. You'll need: 
 
-1. A user account that has an authentication token with "ssh:manage" scope (i.e. access to the "CyberArk VCert CLI" API Application as of 21.2)
+1. A user account that has an authentication token with "ssh:manage" scope (i.e. access to the "VCert CLI" API Application as of 21.2)
 2. A folder where the user has been granted the following permissions: View, Read, Write, Create, and Private Key Read; this is for the pickup action when the certificate signing request (CSR) is service-generated.
 
 ### Compatibility
