@@ -4,7 +4,7 @@ import "fmt"
 
 func validateConnectionFlagsFirefly(commandName string) error {
 	//sshgetconfig command
-	//This is not supported for Firefly as of now, but when (if) it does, it is going to be an unauthenticated endpoint, just like TPP
+	//This is not supported for CyberArk Workload Identity Manager as of now, but when (if) it does, it is going to be an unauthenticated endpoint, just like CyberArk Certificate Manager, Self-Hosted
 	if commandName == commandSshGetConfigName {
 		return nil
 	}
@@ -38,7 +38,7 @@ func validateConnectionFlagsFirefly(commandName string) error {
 
 		advice := "Use only one of --client-id/--client-secret/--client-id, --username/--password/--client-id or --device-url/--client-id"
 		if !credentialsFlowPresent && !passwordFlowPresent && !deviceFlowPresent {
-			return fmt.Errorf("missing flags for Venafi Firefly authentication. %s", advice)
+			return fmt.Errorf("missing flags for CyberArk Workload Identity Manager authentication. %s", advice)
 		}
 
 		return nil
@@ -48,11 +48,11 @@ func validateConnectionFlagsFirefly(commandName string) error {
 	tokenPresent := flags.token != "" || getPropertyFromEnvironment(vCertToken) != ""
 
 	if !urlPresent {
-		return fmt.Errorf("missing URL to Firefly server. Set the URL using --url (-u) flag")
+		return fmt.Errorf("missing URL to CyberArk Workload Identity Manager server. Set the URL using --url (-u) flag")
 	}
 
 	if !tokenPresent {
-		return fmt.Errorf("an access token is required for authentication to Firefly. Set the access token using --token (-t) flag")
+		return fmt.Errorf("an access token is required for authentication to CyberArk Workload Identity Manager. Set the access token using --token (-t) flag")
 	}
 
 	return nil

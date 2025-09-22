@@ -16,10 +16,10 @@
 
 package endpoint
 
-// Authentication provides a struct for authentication data. Either specify User and Password for Trust Protection Platform
-// or Firefly or ClientId and ClientSecret for Firefly or specify an APIKey for TLS Protect Cloud.
+// Authentication provides a struct for authentication data. Either specify User and Password for CyberArk Certificate Manager, Self-Hosted
+// or CyberArk Workload Identity Manager or ClientId and ClientSecret for CyberArk Workload Identity Manager or specify an APIKey for CyberArk Certificate Manager, SaaS.
 type Authentication struct {
-	// TPP Auth methods
+	// CyberArk Certificate Manager, Self-Hosted Auth methods
 	// user and password
 	User     string `yaml:"user,omitempty"`     //**DEPRECATED** Use access/refresh token or client certificate instead
 	Password string `yaml:"password,omitempty"` //**DEPRECATED** Use access/refresh token or client certificate instead
@@ -29,7 +29,7 @@ type Authentication struct {
 	// client certificate
 	ClientPKCS12 bool `yaml:"-"`
 
-	// VCP Auth methods
+	// CyberArk Certificate Manager, SaaS Auth methods
 	// API key
 	APIKey string `yaml:"apiKey,omitempty"`
 	// Service account

@@ -81,12 +81,12 @@ type certificateRequestResponse struct {
 }
 
 // GenerateRequest should generate a CertificateRequest based on the zone configuration when the csrOrigin was
-// set to LocalGeneratedCSR but given that is not supported by Firefly yet, then it's only validating if the CSR
+// set to LocalGeneratedCSR but given that is not supported by CyberArk Workload Identity Manager yet, then it's only validating if the CSR
 // was provided when the csrOrigin was set to UserProvidedCSR
 func (c *Connector) GenerateRequest(_ *endpoint.ZoneConfiguration, req *certificate.Request) (err error) {
 	switch req.CsrOrigin {
 	case certificate.LocalGeneratedCSR:
-		return fmt.Errorf("local generated CSR it's not supported by Firefly yet")
+		return fmt.Errorf("local generated CSR it's not supported by CyberArk Workload Identity Manager yet")
 	case certificate.UserProvidedCSR:
 		if len(req.GetCSR()) == 0 {
 			return fmt.Errorf("%w: CSR was supposed to be provided by user, but it's empty", verror.UserDataError)
@@ -220,7 +220,7 @@ func parseCertificateRequestResult(httpStatusCode int, httpStatus string, body [
 			return nil, err
 		}
 
-		return nil, fmt.Errorf("unexpected status code on Venafi Firefly. Status: %s: %w", httpStatus, respError)
+		return nil, fmt.Errorf("unexpected status code on CyberArk Workload Identity Manager. Status: %s: %w", httpStatus, respError)
 	}
 }
 

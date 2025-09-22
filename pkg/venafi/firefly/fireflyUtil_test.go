@@ -31,7 +31,7 @@ func TestGetRSASize(t *testing.T) {
 	t.Run("unsupported", func(t *testing.T) {
 		_, err := GetRSASize(1024)
 		if assert.Errorf(t, err, "I was expected an error but is nil") {
-			assert.ErrorContains(t, err, "key size 1024 is not supported. Valid RSA sizes for Firefly are ")
+			assert.ErrorContains(t, err, "key size 1024 is not supported. Valid RSA sizes for CyberArk Workload Identity Manager are ")
 		}
 	})
 }

@@ -40,13 +40,13 @@ func init() {
 }
 
 // UtilityName is the full name of the command-line utility
-const UtilityName string = "Venafi Certificate Utility"
+const UtilityName string = "CyberArk Certificate Utility"
 
 // UtilityShortName is the short name of the command-line utility
 const UtilityShortName string = "vCert"
 
 // OriginName is the full name for adding to meta information to certificate request
-const OriginName = "Venafi VCert CLI"
+const OriginName = "VCert CLI"
 
 func main() {
 	defer func() {
@@ -94,13 +94,13 @@ func main() {
 		},
 		EnableBashCompletion: true, //todo: write BashComplete function for options
 		Authors:              authors,
-		Copyright: `2018-2023 Venafi, Inc.
+		Copyright: `2018-2025 CyberArk, Inc.
 	 Licensed under the Apache License, Version 2.0`,
 	}
 
 	sort.Sort(cli.CommandsByName(app.Commands))
 
-	cli.AppHelpTemplate = fmt.Sprintf(`Venafi Certificate Utility
+	cli.AppHelpTemplate = fmt.Sprintf(`CyberArk Certificate Utility
    Version: %s
    Build Timestamp: %s
 
@@ -125,9 +125,9 @@ ACTIONS:
    getpolicy     tpp | vcp            To retrieve the certificate policy of a zone
    setpolicy     tpp | vcp            To apply a certificate policy specification to a zone
 
-   getcred       tpp | vcp | oidc     To obtain a new authentication token from any Venafi platform or to register for a new Venafi Control Plane user API key
-   checkcred     tpp                  To check the validity of a Trust Protection Platform token and grant
-   voidcred      tpp                  To invalidate a Trust Protection Platform authentication token
+   getcred       tpp | vcp | oidc     To obtain a new authentication token from any CyberArk platform or to register for a new CyberArk Certificate Manager, SaaS user API key
+   checkcred     tpp                  To check the validity of a CyberArk Certificate Manager, Self-Hosted token and grant
+   voidcred      tpp                  To invalidate a CyberArk Certificate Manager, Self-Hosted authentication token
 
    sshenroll     tpp                  To enroll an SSH certificate
    sshpickup     tpp                  To retrieve an SSH certificate
@@ -170,19 +170,19 @@ OPTIONS:
 
 var authors = []*cli.Author{
 	{
-		Name:  "Ryan Treat",
-		Email: "ryan.treat@venafi.com",
+		Name:  "Angel Moo",
+		Email: "angel.moo@cyberark.com",
 	},
 	{
-		Name:  "Russel Vela",
-		Email: "russel.vela@venafi.com",
+		Name:  "Eduardo Vazquez",
+		Email: "eduardo.vazquez@cyberark.com",
 	},
 	{
 		Name:  "Luis Presuel",
-		Email: "luis.presuel@venafi.com",
+		Email: "luis.presuel@cyberark.com",
 	},
 	{
 		Name:  "Marcos Albornoz",
-		Email: "marcos.albornoz@venafi.com",
+		Email: "marcos.albornoz@cyberark.com",
 	},
 }

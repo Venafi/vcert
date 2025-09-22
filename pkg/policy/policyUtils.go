@@ -12,16 +12,16 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// TppKeyType represents the Private Key types supported by TPP
+// TppKeyType represents the Private Key types supported by CyberArk Certificate Manager, Self-Hosted
 var TppKeyType = []string{"RSA", "ECDSA", "ECC"}
 
-// TppRsaKeySize represents the Key sizes supported by TPP for RSA Private Keys
+// TppRsaKeySize represents the Key sizes supported by CyberArk Certificate Manager, Self-Hosted for RSA Private Keys
 var TppRsaKeySize = []int{512, 1024, 2048, 3072, 4096}
 
-// CloudRsaKeySize represents the Key sizes supported by VaaS for RSA Private Keys
+// CloudRsaKeySize represents the Key sizes supported by CyberArk Certificate Manager, SaaS for RSA Private Keys
 var CloudRsaKeySize = []int{1024, 2048, 3072, 4096}
 
-// TppEllipticCurves represents the curves supported by TPP for ECDSA Private Keys
+// TppEllipticCurves represents the curves supported by CyberArk Certificate Manager, Self-Hosted for ECDSA Private Keys
 var TppEllipticCurves = []string{"P256", "P384", "P521"}
 
 // KeyAlgorithmsToPKIX represents the mapping of RSA and ECDSA/ECC Key Algorithms to the PKIX OIDs
@@ -731,7 +731,7 @@ func existValueInArray(array []string, value string) bool {
 	return false
 }
 
-//////////////////////---------------------Venafi Cloud policy management code-------------//////////////////////////////////////
+//////////////////////---------------------CyberArk Certificate Manager, SaaS policy management code-------------//////////////////////////////////////
 
 func validateDefaultStringCloudValues(array []string, value string) bool {
 	if len(array) == 1 {
@@ -761,7 +761,7 @@ func ValidateCloudPolicySpecification(ps *PolicySpecification) error {
 			if len(ps.Policy.KeyPair.RsaKeySizes) > 0 {
 				unSupported := getInvalidCloudRsaKeySizeValue(ps.Policy.KeyPair.RsaKeySizes)
 				if unSupported != nil {
-					return fmt.Errorf("specified attribute key length value: %s is not supported on VaaS", strconv.Itoa(*(unSupported)))
+					return fmt.Errorf("specified attribute key length value: %s is not supported on CyberArk Certificate Manager, SaaS", strconv.Itoa(*(unSupported)))
 				}
 			}
 		}
@@ -843,7 +843,7 @@ func ValidateCloudPolicySpecification(ps *PolicySpecification) error {
 
 		if ps.Default.KeyPair.KeyType != nil && *(ps.Default.KeyPair.KeyType) != "" {
 			if *(ps.Default.KeyPair.KeyType) != "RSA" && *(ps.Default.KeyPair.KeyType) != "EC" {
-				return fmt.Errorf("specified default attribute keyType value is not supported on VaaS")
+				return fmt.Errorf("specified default attribute keyType value is not supported on CyberArk Certificate Manager, SaaS")
 			}
 		}
 
@@ -851,7 +851,7 @@ func ValidateCloudPolicySpecification(ps *PolicySpecification) error {
 		if ps.Default.KeyPair.RsaKeySize != nil && *(ps.Default.KeyPair.RsaKeySize) != 0 {
 			unSupported := getInvalidCloudRsaKeySizeValue([]int{*(ps.Default.KeyPair.RsaKeySize)})
 			if unSupported != nil {
-				return fmt.Errorf("specified attribute key length value: %s is not supported on VaaS", strconv.Itoa(*(unSupported)))
+				return fmt.Errorf("specified attribute key length value: %s is not supported on CyberArk Certificate Manager, SaaS", strconv.Itoa(*(unSupported)))
 			}
 		}
 	}

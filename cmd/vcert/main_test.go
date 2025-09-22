@@ -41,7 +41,7 @@ var testEmail = "test@vcert.test"
 func getCertificateRequestForTest() *certificate.Request {
 	req := certificate.Request{}
 	req.Subject.CommonName = "vcert.test.vfidev.com"
-	req.Subject.Organization = []string{"Venafi, Inc."}
+	req.Subject.Organization = []string{"CyberArk, Inc."}
 	req.Subject.OrganizationalUnit = []string{"Engineering", "Automated Tests"}
 	req.Subject.Country = []string{"US"}
 	req.Subject.Locality = []string{"SLC"}
@@ -457,8 +457,8 @@ func TestGetCredFlagsTrustBundle(t *testing.T) {
 	var err error
 
 	flags.token = "3rlybZwAdV1qo/KpNJ5FWg=="
-	flags.url = "https://tpp.example.com"
-	flags.trustBundle = "/opt/venafi/bundle.pem"
+	flags.url = "https://cmsh.example.com"
+	flags.trustBundle = "/opt/cyberark/bundle.pem"
 
 	err = validateCredMgmtFlags1(commandGetCredName)
 	if err != nil {
@@ -473,7 +473,7 @@ func TestGetCredFlagsNoTrust(t *testing.T) {
 	var err error
 
 	flags.token = "3rlybZwAdV1qo/KpNJ5FWg=="
-	flags.url = "https://tpp.example.com"
+	flags.url = "https://cmsh.example.com"
 
 	err = validateCredMgmtFlags1(commandGetCredName)
 	if err != nil {
@@ -535,7 +535,7 @@ func TestRFC822NameSliceString(t *testing.T) {
 
 func TestRFC822NameSliceSetByString(t *testing.T) {
 	emails := rfc822NameSlice{}
-	data := []string{"email@email1.com", "email@email2.com", "email@email3.com", "barney.fife@venafi.com", "gpile@venafi.com", "andy@venafi.com", "some.other@anything.co.uk"}
+	data := []string{"email@email1.com", "email@email2.com", "email@email3.com", "barney.fife@cyberark.com", "gpile@cyberark.com", "andy@cyberark.com", "some.other@anything.co.uk"}
 	for i, s := range data {
 		err := emails.Set(s)
 		if err != nil {
@@ -548,7 +548,7 @@ func TestRFC822NameSliceSetByString(t *testing.T) {
 }
 
 func TestIsValidEmailAddress(t *testing.T) {
-	good := []string{"gomer.pile@venafi.com", "agriffith@venafi.com", "barney@venafi.com", "some.other@anything.co.uk"}
+	good := []string{"gomer.pile@cyberark.com", "agriffith@cyberark.com", "barney@cyberark.com", "some.other@anything.co.uk"}
 	bad := []string{"bob@bob", "User@", "user@a", "user@a.b.c.d.e.f.g.h.j.k.l.", "user@.com", "domain.com", "1.2.3.4"}
 
 	for _, e := range good {
@@ -588,7 +588,7 @@ func TestGenerateCertRequest(t *testing.T) {
 
 	flags.distinguishedName = "vcert Unit Test"
 	flags.commonName = "unit.test.vcert"
-	flags.org = "Venafi"
+	flags.org = "CyberArk"
 	flags.orgUnits = []string{"vcert Unit Testing"}
 	flags.validDays = "120#m"
 	flags.extKeyUsage = *certificate.NewExtKeyUsageSlice("ServerAuth")
@@ -616,7 +616,7 @@ func TestGenerateCertCSRServiceRequest(t *testing.T) {
 
 	flags.distinguishedName = "vcert Unit Test"
 	flags.commonName = "unit.test.vcert"
-	flags.org = "Venafi"
+	flags.org = "CyberArk"
 	flags.orgUnits = []string{"vcert Unit Testing"}
 	flags.validDays = "120#d"
 	flags.csrOption = "service"
@@ -649,7 +649,7 @@ func TestGenerateCertCSRFileRequest(t *testing.T) {
 
 	flags.distinguishedName = "vcert Unit Test"
 	flags.commonName = "unit.test.vcert"
-	flags.org = "Venafi"
+	flags.org = "CyberArk"
 	flags.orgUnits = []string{"vcert Unit Testing"}
 	flags.validDays = "120#e"
 	flags.csrOption = "file:../../test-files/test.csr"
@@ -836,7 +836,7 @@ func TestDoValuesMatch(t *testing.T) {
 }
 
 func TestWrapArgumentDescription(t *testing.T) {
-	desc := "This is an agrument which goes over the current limit of 80 characters causing this line to have 1 line break"
+	desc := "This is an argument which goes over the current limit of 80 characters causing this line to have 1 line break"
 
 	edited := wrapArgumentDescriptionText(desc)
 

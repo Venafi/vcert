@@ -150,14 +150,14 @@ func buildVCertAuthentication(playbookAuth domain.Authentication) (*endpoint.Aut
 
 	vcertAuth := &endpoint.Authentication{}
 
-	// VCP API key
+	// CyberArk Certificate Manager, SaaS API key
 	apiKey, err := getAttributeValue(fmt.Sprintf(attrPrefix, "apiKey"), playbookAuth.APIKey)
 	if err != nil {
 		return nil, err
 	}
 	vcertAuth.APIKey = apiKey
 
-	// VCP service account
+	// CyberArk Certificate Manager, SaaS service account
 	jwt, err := getAttributeValue(fmt.Sprintf(attrPrefix, "externalJWT"), playbookAuth.ExternalJWT)
 	if err != nil {
 		return nil, err
@@ -170,7 +170,7 @@ func buildVCertAuthentication(playbookAuth domain.Authentication) (*endpoint.Aut
 	}
 	vcertAuth.TokenURL = tokenURL
 
-	// TPP/VCP/Firefly Access token
+	// CyberArk Certificate Manager, Self-Hosted/Certificate Manager, SaaS/Workload Identity Manager Access token
 	accessToken, err := getAttributeValue(fmt.Sprintf(attrPrefix, "accessToken"), playbookAuth.AccessToken)
 	if err != nil {
 		return nil, err

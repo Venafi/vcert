@@ -46,11 +46,11 @@ const (
 	ConnectorTypeUndefined ConnectorType = iota
 	// ConnectorTypeFake is a fake connector for tests
 	ConnectorTypeFake
-	// ConnectorTypeCloud represents the Cloud connector type
+	// ConnectorTypeCloud represents the CyberArk Certificate Manager, SaaS connector type
 	ConnectorTypeCloud
-	// ConnectorTypeTPP represents the TPP connector type
+	// ConnectorTypeTPP represents the CyberArk Certificate Manager, Self-Hosted connector type
 	ConnectorTypeTPP
-	// ConnectorTypeFirefly represents the Firefly connector type
+	// ConnectorTypeFirefly represents the CyberArk Workload Identity Manager connector type
 	ConnectorTypeFirefly
 )
 
@@ -75,9 +75,9 @@ func (t ConnectorType) String() string {
 	}
 }
 
-// Connector provides a common interface for external communications with TPP or Venafi Cloud
+// Connector provides a common interface for external communications with CyberArk Certificate Manager, Self-Hosted or CyberArk Certificate Manager, SaaS
 type Connector interface {
-	// GetType returns a connector type (cloud/TPP/fake). Can be useful because some features are not supported by a Cloud connection.
+	// GetType returns a connector type. Can be useful because some features are not supported by a Cloud connection.
 	GetType() ConnectorType
 	// SetZone sets a zone (by name) for requests with this connector.
 	SetZone(z string)
@@ -108,7 +108,7 @@ type Connector interface {
 	RevokeCertificate(req *certificate.RevocationRequest) (RevocationRequestResponse, error)
 	RenewCertificate(req *certificate.RenewalRequest) (requestID string, err error)
 	RetireCertificate(req *certificate.RetireRequest) error
-	// ImportCertificate adds an existing certificate to Venafi Platform even if the certificate was not issued by Venafi Cloud or Venafi Platform. For information purposes.
+	// ImportCertificate adds an existing certificate to a CyberArk Platform even if the certificate was not issued by CyberArk Certificate Manager, Self-Hosted or CyberArk Certificate Manager, SaaS. For information purposes.
 	ImportCertificate(req *certificate.ImportRequest) (*certificate.ImportResponse, error)
 	// ListCertificates returns a list of certificates from inventory that matches the filter
 	ListCertificates(filter Filter) ([]certificate.CertificateInfo, error)
@@ -119,9 +119,9 @@ type Connector interface {
 	// exact matching zone [2], CN and sans.DNS [3] provided, with a minimum
 	// validity of `certMinTimeLeft`
 	//
-	// [1] the one with the longest validity; field named ValidTo for TPP and
-	// validityEnd for VaaS
-	// [2] application name for VaaS
+	// [1] the one with the longest validity; field named ValidTo for  CyberArk Certificate Manager, Self-Hosted and
+	// validityEnd for CyberArk Certificate Manager, SaaS
+	// [2] application name for CyberArk Certificate Manager, SaaS
 	// [3] an array of strings representing the DNS names
 	SearchCertificate(zone string, cn string, sans *certificate.Sans, certMinTimeLeft time.Duration) (*certificate.CertificateInfo, error)
 	RetrieveCertificateMetaData(dn string) (*certificate.CertificateMetaData, error)
@@ -142,7 +142,7 @@ type Connector interface {
 	RetrieveSystemVersion() (string, error)
 	WriteLog(req *LogRequest) error
 	// SetUserAgent sets the value of the UserAgent header in HTTP requests to
-	// Venafi API endpoints by this connector.
+	// CyberArk API endpoints by this connector.
 	// The default is `vcert/v5`.
 	// Further reading: https://www.rfc-editor.org/rfc/rfc9110#field.user-agent
 	SetUserAgent(userAgent string)
@@ -417,7 +417,7 @@ func checkKey(kt certificate.KeyType, bitsize int, curveStr string, allowed []Al
 				return curveInSlice(curve, allowedKey.KeyCurves)
 			case certificate.KeyTypeED25519:
 				// ED25519 Key is fixed by its own on size.
-				// Currently, as VaaS sees ED25519 as another curve, we do two things:
+				// Currently, as CyberArk Certificate Manager, SaaS sees ED25519 as another curve, we do two things:
 				// 1. If from flow of:
 				// -> cfg = ReadZoneConfiguration()
 				// -> cfg.ValidateCertificateRequest(enrollRequest)
@@ -431,7 +431,7 @@ func checkKey(kt certificate.KeyType, bitsize int, curveStr string, allowed []Al
 				return
 			}
 		} else if kt == certificate.KeyTypeED25519 && allowedKey.KeyType == certificate.KeyTypeECDSA {
-			// 2. else we validate as policy returns to us ED25199 as an elliptic curve from ECDSA from VaaS
+			// 2. else we validate as policy returns to us ED25199 as an elliptic curve from ECDSA from CyberArk Certificate Manager, SaaS
 			// flow - You already have a configuration, you read from it and you validate the policy against it:
 			// -> policy = cfg.ReadPolicyConfiguration()
 			// -> err = policy.ValidateCertificateRequest(enrollRequest)

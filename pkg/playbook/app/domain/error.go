@@ -78,16 +78,16 @@ var (
 	WarningNoCAPIFriendlyName = "no capiFriendlyName defined. It is strongly recommended to define a " +
 		"capiFriendlyName for CAPI installation type. This will become required in a future release"
 
-	// ErrNoFireflyURL is thrown when platform is Firefly but no url is specified inf config.credentials
-	ErrNoFireflyURL = fmt.Errorf("no url defined. Firefly platform requires an url to the Firefly instance")
-	// ErrNoClientId is thrown when platform is Firefly and no config.credentials.clientId is defined
-	ErrNoClientId = fmt.Errorf("no cliendId defined. Firefly platform requires a clientId to request OAuth2 token")
-	// ErrNoIdentityProviderURL is thrown when platform is Firefly and no config.credentials.tokenURL is defined to request an OAuth2 Token
+	// ErrNoFireflyURL is thrown when platform is CyberArk Workload Identity Manager but no url is specified inf config.credentials
+	ErrNoFireflyURL = fmt.Errorf("no url defined. CyberArk Workload Identity Manager platform requires an url to the CyberArk Workload Identity Manager instance")
+	// ErrNoClientId is thrown when platform is CyberArk Workload Identity Manager and no config.credentials.clientId is defined
+	ErrNoClientId = fmt.Errorf("no cliendId defined. CyberArk Workload Identity Manager platform requires a clientId to request OAuth2 token")
+	// ErrNoIdentityProviderURL is thrown when platform is CyberArk Workload Identity Manager and no config.credentials.tokenURL is defined to request an OAuth2 Token
 	ErrNoIdentityProviderURL = fmt.Errorf("no tokenURL defined in credentials. tokenURL is required to request OAuth2 token")
-	// ErrNoExternalJWT is thrown when platform is TLSPC/VAAS/VCP, a tokenURL has been passed but no config.credentials.ExternalJWT is set
-	ErrNoExternalJWT = fmt.Errorf("no externalJWT defined in credentials. externalJWT and tokenURL are both required to request an access token from VCP")
-	// ErrNoVaaSTokenURL is thrown when platform is TLSPC/VAAS/VCP, an externaJWT has been provided, but no config.credentials.TokenURL has been passed
-	ErrNoVCPTokenURL = fmt.Errorf("no tokenURL defined in credentials. tokenURL and externalJWT are both required to request an access token from VCP when using an externalJWT")
-	// ErrAmbiguousVCPCreds is thrown when platform is TLSPC/VAAS/VCP, and more than one type (apiKey, accessToken, or externalJWT) was provided
-	ErrAmbiguousVCPCreds = fmt.Errorf("unable to disambiguate multiple VCP credentials. Only ONE of apiKey, accessToken, or tokenURL WITH externalJWT should be defined")
+	// ErrNoExternalJWT is thrown when platform is CyberArk Certificate Manager, SaaS, a tokenURL has been passed but no config.credentials.ExternalJWT is set
+	ErrNoExternalJWT = fmt.Errorf("no externalJWT defined in credentials. externalJWT and tokenURL are both required to request an access token from  CyberArk Certificate Manager, SaaS")
+	// ErrNoVCPTokenURL is thrown when platform is CyberArk Certificate Manager, SaaS, an externaJWT has been provided, but no config.credentials.TokenURL has been passed
+	ErrNoVCPTokenURL = fmt.Errorf("no tokenURL defined in credentials. tokenURL and externalJWT are both required to request an access token from  CyberArk Certificate Manager, SaaS when using an externalJWT")
+	// ErrAmbiguousVCPCreds is thrown when platform is CyberArk Certificate Manager, SaaS, and more than one type (apiKey, accessToken, or externalJWT) was provided
+	ErrAmbiguousVCPCreds = fmt.Errorf("unable to disambiguate multiple  CyberArk Certificate Manager, SaaS credentials. Only ONE of apiKey, accessToken, or tokenURL WITH externalJWT should be defined")
 )

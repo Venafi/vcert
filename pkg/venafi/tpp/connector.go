@@ -39,7 +39,7 @@ import (
 	"github.com/Venafi/vcert/v5/pkg/verror"
 )
 
-// Connector contains the base data needed to communicate with a TPP Server
+// Connector contains the base data needed to communicate with a CyberArk Certificate Manager, Self-Hosted Server
 type Connector struct {
 	baseURL     string
 	apiKey      string
@@ -64,7 +64,7 @@ func (c *Connector) RetrieveAvailableSSHTemplates() (response []certificate.SshA
 	return GetAvailableSshTemplates(c)
 }
 
-// NewConnector creates a new TPP Connector object used to communicate with TPP
+// NewConnector creates a new Connector object used to communicate with CyberArk Certificate Manager, Self-Hosted
 func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (*Connector, error) {
 	c := Connector{verbose: verbose, trust: trust, zone: zone, userAgent: util.DefaultUserAgent}
 	var err error
@@ -75,7 +75,7 @@ func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (
 	return &c, nil
 }
 
-// normalizeURL normalizes the base URL used to communicate with TPP
+// normalizeURL normalizes the base URL used to communicate with CyberArk Certificate Manager, Self-Hosted
 func normalizeURL(url string) (normalizedURL string, err error) {
 
 	var baseUrlRegex = regexp.MustCompile(`^https://[a-z\d]+[-a-z\d.]+[a-z\d][:\d]*/$`)
@@ -85,7 +85,7 @@ func normalizeURL(url string) (normalizedURL string, err error) {
 	modified = strings.TrimSuffix(modified, "vedsdk/")
 
 	if loc := baseUrlRegex.FindStringIndex(modified); loc == nil {
-		return "", fmt.Errorf("The specified TPP URL is invalid. %s\nExpected TPP URL format 'https://tpp.company.com/vedsdk/'", url)
+		return "", fmt.Errorf("The specified CyberArk Certificate Manager, Self-Hosted URL is invalid. %s\nExpected CyberArk Certificate Manager, Self-Hosted URL format 'https://cmsh.company.com/vedsdk/'", url)
 	}
 
 	return modified, nil
@@ -103,7 +103,7 @@ func (c *Connector) GetType() endpoint.ConnectorType {
 	return endpoint.ConnectorTypeTPP
 }
 
-// Ping attempts to connect to the TPP Server WebSDK API and returns an error if it cannot
+// Ping attempts to connect to the CyberArk Certificate Manager, Self-Hosted Server WebSDK API and returns an error if it cannot
 func (c *Connector) Ping() (err error) {
 
 	//Extended timeout to allow the server to wake up
@@ -118,7 +118,7 @@ func (c *Connector) Ping() (err error) {
 	return
 }
 
-// Authenticate authenticates the user to the TPP
+// Authenticate authenticates the user to the CyberArk Certificate Manager, Self-Hosted
 func (c *Connector) Authenticate(auth *endpoint.Authentication) (err error) {
 	defer func() {
 		if err != nil {
@@ -336,7 +336,7 @@ func processAuthData(c *Connector, url urlResource, data interface{}) (resp inte
 			return resp, fmt.Errorf("can not determine data type")
 		}
 	} else {
-		return resp, fmt.Errorf("unexpected status code on TPP Authorize. Status: %s", status)
+		return resp, fmt.Errorf("unexpected status code on CyberArk Certificate Manager, Self-Hosted Authorize. Status: %s", status)
 	}
 
 	return resp, nil
@@ -453,7 +453,7 @@ func (c *Connector) retrieveSelfIdentity() (response identity, err error) {
 	return identity{}, fmt.Errorf("failed to get Self. Status code: %d, Status text: %s", statusCode, statusText)
 }
 
-// RetrieveSystemVersion returns the TPP system version of the connector context
+// RetrieveSystemVersion returns the CyberArk Certificate Manager, Self-Hosted system version of the connector context
 func (c *Connector) RetrieveSystemVersion() (string, error) {
 	statusCode, status, body, err := c.request("GET", urlResourceSystemStatusVersion, "")
 	if err != nil {
@@ -465,7 +465,7 @@ func (c *Connector) RetrieveSystemVersion() (string, error) {
 	case 401:
 		return "", fmt.Errorf("http status code '%s' was returned by the server. Hint: OAuth scope 'configuration' is required when using custom fields", status)
 	default:
-		return "", fmt.Errorf("Unexpected http status code while fetching TPP version. %s", status)
+		return "", fmt.Errorf("unexpected http status code while fetching CyberArk Certificate Manager, Self-Hosted version. %s", status)
 	}
 
 	var response struct{ Version string }
@@ -473,7 +473,7 @@ func (c *Connector) RetrieveSystemVersion() (string, error) {
 	return response.Version, err
 }
 
-// setCertificateMetadata submits the metadata to TPP for storage returning the lock status of the metadata stored
+// setCertificateMetadata submits the metadata to CyberArk Certificate Manager, Self-Hosted for storage returning the lock status of the metadata stored
 func (c *Connector) setCertificateMetadata(metadataRequest metadataSetRequest) (bool, error) {
 	if metadataRequest.DN == "" {
 		return false, fmt.Errorf("DN must be provided to setCertificateMetaData")
@@ -502,7 +502,7 @@ func (c *Connector) setCertificateMetadata(metadataRequest metadataSetRequest) (
 	case 17:
 		return false, fmt.Errorf("custom field value not a valid list item. Server returned error %v", result.Result)
 	default:
-		return false, fmt.Errorf("return code %v was returned while adding metadata to %v. Please refer to the Metadata Result Codes in the TPP WebSDK API documentation to determine if further action is needed", result.Result, metadataRequest.DN)
+		return false, fmt.Errorf("return code %v was returned while adding metadata to %v. Please refer to the Metadata Result Codes in the CyberArk Certificate Manager, Self-Hosted WebSDK API documentation to determine if further action is needed", result.Result, metadataRequest.DN)
 	}
 	return result.Locked, nil
 }
@@ -580,7 +580,7 @@ func (c *Connector) prepareRequest(req *certificate.Request, zone string) (tppRe
 		}
 	}
 
-	// Resolve emails to TPP identities if needed.
+	// Resolve emails to CyberArk Certificate Manager, Self-Hosted identities if needed.
 	var contacts []IdentityEntry
 	if req.Contacts != nil {
 		var err error
@@ -651,10 +651,10 @@ func (c *Connector) prepareRequest(req *certificate.Request, zone string) (tppRe
 	tppReq.Reenable = true
 
 	// If "Timeout" is defined by the user in the request, we use it in order to
-	// override API's timeout for the CA to finish issuance. In TLSPDC this means
+	// override API's timeout for the CA to finish issuance. In CyberArk Certificate Manager, Self-Hosted this means
 	// using WorkToDoTimeout attribute.
 	// We make sure to get the seconds from
-	// "Timeout" as it is a "TimeDuration" and remote (TLSPDC) only expects value in seconds.
+	// "Timeout" as it is a "TimeDuration" and remote (CyberArk Certificate Manager, Self-Hosted) only expects value in seconds.
 	if req.Timeout > 0 {
 		seconds := int64(req.Timeout.Seconds())
 		secondsString := strconv.FormatInt(seconds, 10)
@@ -708,7 +708,7 @@ func (c *Connector) proccessLocation(req *certificate.Request) error {
 	return nil
 }
 
-// RequestCertificate submits the CSR to TPP returning the DN of the requested
+// RequestCertificate submits the CSR to CyberArk Certificate Manager, Self-Hosted returning the DN of the requested
 // Certificate.
 func (c *Connector) RequestCertificate(req *certificate.Request) (requestID string, err error) {
 	if req.Location != nil {
@@ -737,7 +737,7 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 		return
 	}
 
-	// Handle legacy TPP custom field API
+	// Handle legacy CyberArk Certificate Manager, Self-Hosted custom field API
 	//Get the saved metadata for the current certificate, deep compare the
 	//saved metadata to the requested metadata. If all items match then no further
 	//changes need to be made. If they do not match, they try to update them using
@@ -791,7 +791,7 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 	return
 }
 
-// SynchronousRequestCertificate It's not supported yet in TPP
+// SynchronousRequestCertificate It's not supported yet in CyberArk Certificate Manager, Self-Hosted
 func (c *Connector) SynchronousRequestCertificate(_ *certificate.Request) (certificates *certificate.PEMCollection, err error) {
 	panic("operation is not supported yet")
 }
@@ -1136,7 +1136,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 		}
 	}
 
-	// Check the TPP version is 25.x or greater
+	// Check the CyberArk Certificate Manager, Self-Hosted version is 25.x or greater
 	tppVersionNumber := -1
 	tppVersion, err := c.RetrieveSystemVersion()
 	if err != nil {
@@ -1327,7 +1327,7 @@ func (c *Connector) getIdentity(filter string) (*IdentityEntry, error) {
 		return nil, err
 	}
 
-	// When TPP looks for a username that matches the filter, an implicit
+	// When CyberArk Certificate Manager, Self-Hosted looks for a username that matches the filter, an implicit
 	// wildcard is added to the end of the filter string. For example, imagining
 	// that `jsmith` and `jsmithson` are existing identities, searching for
 	// `jsmith` will return both `jsmith` and `jsmithson`. In the case of local
@@ -1340,7 +1340,7 @@ func (c *Connector) getIdentity(filter string) (*IdentityEntry, error) {
 	//
 	// The wildcard problem only affects usernames, not emails. That's because
 	// the LDAP query recommended for enabling user search by email in the
-	// Venafi Configuration Console is based on exact match, unlike `anr` used
+	// CyberArk Configuration Console is based on exact match, unlike `anr` used
 	// for searching usernames. Thus, we do not need to check for an exact match
 	// when an email is provided.
 
@@ -1521,8 +1521,8 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 		return "", fmt.Errorf("failed to create renewal request: CertificateDN or Thumbprint required")
 	}
 	if renewReq.CertificateRequest != nil && renewReq.CertificateRequest.OmitSANs {
-		// if OmitSANSs flag is presented we need to clean SANs values in TPP
-		// for preventing adding them to renew request on TPP side
+		// if OmitSANSs flag is presented we need to clean SANs values in CyberArk Certificate Manager, Self-Hosted
+		// for preventing adding them to renew request on CyberArk Certificate Manager, Self-Hosted side
 		err = c.putCertificateInfo(renewReq.CertificateDN, []nameSliceValuePair{
 			{"X509 SubjectAltName DNS", nil},
 			{"X509 SubjectAltName IPAddress", nil},
@@ -1647,7 +1647,7 @@ func (c *Connector) ReadPolicyConfiguration() (policy *endpoint.Policy, err erro
 	return
 }
 
-// ReadZoneConfiguration reads the policy data from TPP to get locked and pre-configured values for certificate requests
+// ReadZoneConfiguration reads the policy data from CyberArk Certificate Manager, Self-Hosted to get locked and pre-configured values for certificate requests
 func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration, err error) {
 	if c.zone == "" {
 		return nil, fmt.Errorf("empty zone")
@@ -1699,7 +1699,7 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 		r.PolicyDN = getPolicyDN(c.zone)
 	}
 
-	origin := endpoint.SDKName + " (+)" // standard suffix needed to differentiate certificates imported from enrolled in TPP
+	origin := endpoint.SDKName + " (+)" // standard suffix needed to differentiate certificates imported from enrolled in CyberArk Certificate Manager, Self-Hosted
 	for _, f := range req.CustomFields {
 		if f.Type == certificate.CustomFieldOrigin {
 			origin = f.Value + " (+)"
@@ -1998,7 +1998,7 @@ func (c *Connector) findObjectsOfClass(req *findObjectsOfClassRequest) (*findObj
 	return &response, nil
 }
 
-// GetZonesByParent returns a list of valid zones for a TPP parent folder specified by parent
+// GetZonesByParent returns a list of valid zones for a CyberArk Certificate Manager, Self-Hosted parent folder specified by parent
 func (c *Connector) GetZonesByParent(parent string) ([]string, error) {
 	zones := make([]string, 0)
 
@@ -2290,7 +2290,7 @@ func checkLogResponse(httpStatusCode int, httpStatus string, body []byte) error 
 			return nil
 		}
 	default:
-		return fmt.Errorf("Unexpected status code on TPP Post Log request.\n Status:\n %s. \n Body:\n %s\n", httpStatus, body)
+		return fmt.Errorf("unexpected status code on CyberArk Certificate Manager, Self-Hosted Post Log request.\n Status:\n %s. \n Body:\n %s\n", httpStatus, body)
 	}
 }
 
@@ -2303,7 +2303,7 @@ func parseDNToGUIDRequestResponse(httpStatusCode int, httpStatus string, body []
 		}
 		return reqData, nil
 	default:
-		return nil, fmt.Errorf("Unexpected status code on TPP DN to GUID request.\n Status:\n %s. \n Body:\n %s\n", httpStatus, body)
+		return nil, fmt.Errorf("unexpected status code on CyberArk Certificate Manager, Self-Hosted DN to GUID request.\n Status:\n %s. \n Body:\n %s\n", httpStatus, body)
 	}
 }
 
@@ -2321,7 +2321,7 @@ func parseCertificateMetaData(httpStatusCode int, httpStatus string, body []byte
 		}
 		return reqData, nil
 	default:
-		return nil, fmt.Errorf("Unexpected status code on TPP DN to GUID request.\n Status:\n %s. \n Body:\n %s\n", httpStatus, body)
+		return nil, fmt.Errorf("unexpected status code on CyberArk Certificate Manager, Self-Hosted DN to GUID request.\n Status:\n %s. \n Body:\n %s\n", httpStatus, body)
 	}
 }
 

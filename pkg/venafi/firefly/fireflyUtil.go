@@ -17,7 +17,7 @@ func GetRSASize(rsaSize int) (int, error) {
 		for size := range rsaSizes {
 			sizes = append(sizes, size)
 		}
-		return 0, fmt.Errorf("key size %d is not supported. Valid RSA sizes for Firefly are %v", rsaSize, sizes)
+		return 0, fmt.Errorf("key size %d is not supported. Valid RSA sizes for CyberArk Workload Identity Manager are %v", rsaSize, sizes)
 	}
 
 	return rsaSizeResult, nil

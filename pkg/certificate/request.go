@@ -46,7 +46,7 @@ type Request struct {
 	PrivateKey         crypto.Signer
 	CsrOrigin          CSrOriginOption
 	PickupID           string
-	//Cloud Certificate ID
+	//CyberArk Certificate Manager, SaaS Certificate ID
 	CertID          string
 	ChainOption     ChainOption
 	KeyPassword     string
@@ -55,16 +55,16 @@ type Request struct {
 		Code should be refactored so that RetrieveCertificate() uses some abstract search object, instead of *Request{PickupID} */
 	Thumbprint string
 	// Timeout usage:
-	// TPP (a.k.a TLSPDC): we use it in order to set WorkToDoTimeout, that overrides TPP default timeout waiting time for the CA to finish
-	// if the value is more than the maximum value, TPP will automatically set the maximum value supported (as of the moment of this
+	// CyberArk Certificate Manager, Self-Hosted: we use it in order to set WorkToDoTimeout, that overrides CyberArk Certificate Manager, Self-Hosted default timeout waiting time for the CA to finish
+	// if the value is more than the maximum value, CyberArk Certificate Manager, Self-Hosted will automatically set the maximum value supported (as of the moment of this
 	// commit, 120 seconds).
-	// Cloud (a.k.a VaaS a.k.a TLSPC) : We use this timeout in our RetrieveCertificate function which handles a retry logic
-	// TPP SSH feature: We override the http client default timeout to perform http requests.
-	// Firefly: not usage at all
+	// CyberArk Certificate Manager, SaaS : We use this timeout in our RetrieveCertificate function which handles a retry logic
+	// CyberArk SSH Manager for Machines feature: We override the http client default timeout to perform http requests.
+	// CyberArk Workload Identity Manager: not usage at all
 	//
 	// Note:
-	// In VCert CLI we have hardcoded 180 seconds for retrieve certificate operation. For VaaS it will set retry logic for
-	// 180 seconds and TPP will override CA timeout as the hardcoded value
+	// In VCert CLI we have hardcoded 180 seconds for retrieve certificate operation. For CyberArk Certificate Manager, SaaS it will set retry logic for
+	// 180 seconds and CyberArk Certificate Manager, Self-Hosted will override CA timeout as the hardcoded value
 	Timeout          time.Duration
 	CustomFields     []CustomField
 	Location         *Location
@@ -73,25 +73,25 @@ type Request struct {
 	IssuerHint       util.IssuerHint
 
 	// Contacts allows you to configure email addresses to send notifications
-	// about the certificate. This field is TPP-specific.
+	// about the certificate. This field is CyberArk Certificate Manager, Self-Hosted-specific.
 	//
 	// Note: the user who receives the notification isn't automatically given
 	// access to that certificate. Access is configured at the policy folder
 	// level; if the user doesn't permissions on that folder, they will not be
-	// able to see the certificate's status in TPP or remediate the problem
-	// through the TPP UI.
+	// able to see the certificate's status in CyberArk Certificate Manager, Self-Hosted or remediate the problem
+	// through the CyberArk Certificate Manager, Self-Hosted UI.
 	//
-	// When an email is used by multiple TPP identities, the first identity
+	// When an email is used by multiple CyberArk Certificate Manager, Self-Hosted identities, the first identity
 	// found is picked arbitrarily.
 	//
 	// The scope `configuration` is required. Since Contacts works by searching
 	// the emails in the same LDAP or AD as the user attached to the token, you
 	// must check that you are using a user in that same identity provider.
-	// Contacts doesn't work with the local TPP identities. Using Contacts
+	// Contacts doesn't work with the local CyberArk Certificate Manager, Self-Hosted identities. Using Contacts
 	// requires adding `mail` to the list of fields searched when performing a
-	// user search, which can be configured in the Venafi Configuration Console
-	// by RDP'ing into the TPP VM. This configuration cannot be performed
-	// directly in the TPP UI.
+	// user search, which can be configured in the CyberArk Configuration Console
+	// by RDP'ing into the CyberArk Certificate Manager, Self-Hosted VM. This configuration cannot be performed
+	// directly in the CyberArk Certificate Manager, Self-Hosted UI.
 	Contacts []string
 
 	// Allow user to specify whether to include
@@ -100,7 +100,7 @@ type Request struct {
 	// Deprecated: use ValidityDuration instead, this field is ignored if ValidityDuration is set
 	ValidityHours int
 
-	//To support VCP certificate tags
+	//To support CyberArk Certificate Manager, SaaS certificate tags
 	Tags []string
 }
 

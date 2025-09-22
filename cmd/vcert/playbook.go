@@ -130,12 +130,12 @@ func doRunPlaybook(_ *cli.Context) error {
 		os.Exit(1)
 	}
 
-	zap.L().Info("using Venafi Platform", zap.String("platform", playbook.Config.Connection.Platform.String()))
+	zap.L().Info("using CyberArk Platform", zap.String("platform", playbook.Config.Connection.Platform.String()))
 
 	if playbook.Config.Connection.Platform == venafi.TPP {
 		err = service.ValidateTPPCredentials(&playbook)
 		if err != nil {
-			zap.L().Error("invalid tpp credentials", zap.Error(err))
+			zap.L().Error("invalid CyberArk Certificate Manager, Self-Hosted credentials", zap.Error(err))
 			os.Exit(1)
 		}
 	}
@@ -162,10 +162,10 @@ func doRunPlaybook(_ *cli.Context) error {
 
 func setPlaybookTLSConfig(playbook domain.Playbook) error {
 	// NOTE: This should use the standard setTLSConfig from vCert once incorporated into vCert
-	//  added here mostly to deal with TPP servers that are enabled for certificate authentication
+	//  added here mostly to deal with CyberArk Certificate Manager, Self-Hosted servers that are enabled for certificate authentication
 	//  and to enable certificate authentication
 
-	// Set RenegotiateFreelyAsClient in case of we're communicating with MTLS enabled TPP server
+	// Set RenegotiateFreelyAsClient in case of we're communicating with MTLS enabled CyberArk Certificate Manager, Self-Hosted server
 	if playbook.Config.Connection.Platform == venafi.TPP {
 		tlsConfig.Renegotiation = tls.RenegotiateFreelyAsClient
 	}
@@ -176,7 +176,7 @@ func setPlaybookTLSConfig(playbook domain.Playbook) error {
 
 	// Try to set up certificate authentication if enabled
 	if playbook.Config.Connection.Platform == venafi.TPP && playbook.Config.Connection.Credentials.P12Task != "" {
-		zap.L().Info("attempting to enable certificate authentication to TPP")
+		zap.L().Info("attempting to enable certificate authentication to CyberArk Certificate Manager, Self-Hosted")
 		var p12FileLocation string
 		var p12Password string
 

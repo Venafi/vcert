@@ -7,9 +7,9 @@ import (
 )
 
 const (
-	tppTokenTestFlagValue = "tppTokenTest"
-	tppZoneTestFlagValue  = "tppZoneTest"
-	tppURlTestFlagValue   = "www.test.venafile.com"
+	tppTokenTestFlagValue = "cmshTokenTest"
+	tppZoneTestFlagValue  = "cmshZoneTest"
+	tppURlTestFlagValue   = "www.test.cyberark.com"
 	cloudApiKeyTestValue  = "apiKeyTest"
 	cloudZoneTestValue    = "cloudZoneTest"
 	validDaysData         = "20#M"
@@ -18,7 +18,7 @@ const (
 
 func setEnvironmentVariablesForTpp() {
 	os.Setenv(vCertZone, "devops")
-	os.Setenv(vCertURL, "www.tpp.venafi.com")
+	os.Setenv(vCertURL, "www.cmsh.cyberark.com")
 	os.Setenv(vCertToken, "abvcekjej3232ssss")
 }
 

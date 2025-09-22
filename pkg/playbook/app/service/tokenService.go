@@ -32,7 +32,7 @@ import (
 //
 // If the refreshing is successful it will save the new token pair in the playbook file.
 func ValidateTPPCredentials(playbook *domain.Playbook) error {
-	//Validate TPP tokens
+	//Validate CyberArk Certificate Manager, Self-Hosted tokens
 	if playbook.Config.Connection.Credentials.AccessToken != "" {
 		isValid, err := vcertutil.IsValidAccessToken(playbook.Config)
 		// Return any error besides 401 Unauthorized - need to properly handle errors unrelated to the state of the token (connectivity)
@@ -60,7 +60,7 @@ func ValidateTPPCredentials(playbook *domain.Playbook) error {
 
 	accessToken, refreshToken, err := vcertutil.RefreshTPPTokens(playbook.Config)
 	if err != nil {
-		zap.L().Error("failed to refresh TPP Tokens", zap.Error(err))
+		zap.L().Error("failed to refresh CyberArk Certificate Manager, Self-Hosted Tokens", zap.Error(err))
 		return err
 	}
 	zap.L().Info("successfully retrieved new refresh token")

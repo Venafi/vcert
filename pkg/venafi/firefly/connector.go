@@ -44,7 +44,7 @@ var (
 	fieldPlatform = zap.String("platform", venafi.Firefly.String())
 )
 
-// Connector contains the base data needed to communicate with a Firefly Server
+// Connector contains the base data needed to communicate with a CyberArk Workload Identity Manager Server
 type Connector struct {
 	baseURL     string
 	accessToken string
@@ -55,7 +55,7 @@ type Connector struct {
 	userAgent   string
 }
 
-// NewConnector creates a new Firefly Connector object used to communicate with Firefly
+// NewConnector creates a new Connector object used to communicate with CyberArk Workload Identity Manager
 func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (*Connector, error) {
 	if url != "" {
 		var err error
@@ -67,7 +67,7 @@ func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (
 	return &Connector{baseURL: url, zone: zone, verbose: verbose, trust: trust, userAgent: util.DefaultUserAgent}, nil
 }
 
-// normalizeURL normalizes the base URL used to communicate with Firefly
+// normalizeURL normalizes the base URL used to communicate with CyberArk Workload Identity Manager
 func normalizeURL(url string) (normalizedURL string, err error) {
 	normalizedURL = util.NormalizeUrl(url)
 	return normalizedURL, err
@@ -371,7 +371,7 @@ func (c *Connector) RetrieveSystemVersion() (string, error) {
 	panic("operation is not supported yet")
 }
 
-// RequestCertificate submits the CSR to the Venafi Firefly API for processing
+// RequestCertificate submits the CSR to the CyberArk Workload Identity Manager API for processing
 func (c *Connector) RequestCertificate(_ *certificate.Request) (requestID string, err error) {
 	panic("operation is not supported yet")
 }
