@@ -41,19 +41,19 @@ var (
 		Action: doCommandEnroll1,
 		Name:   commandEnrollName,
 		Usage:  "To enroll a certificate",
-		UsageText: ` vcert enroll <Required Venafi Control Plane -OR- Trust Protection Platform Config> <Options>
+		UsageText: ` vcert enroll <Required CyberArk Certificate Manager, SaaS -OR- CyberArk Certificate Manager, Self-Hosted> <Options>
 
-		vcert enroll -k <VCP API key> -z "<app name>\<CIT alias>" --cn <common name>
-		vcert enroll -k <VCP API key> -z "<app name>\<CIT alias>" --cn <common name> --key-type rsa --key-size 4096 --san-dns <alt name> --san-dns <alt name2>
-		vcert enroll -p vcp -t <VCP access token> -z "<app name>\<CIT alias>" --cn <common name>
+		vcert enroll -k <CyberArk Certificate Manager, SaaS API key> -z "<app name>\<CIT alias>" --cn <common name>
+		vcert enroll -k <CyberArk Certificate Manager, SaaS API key> -z "<app name>\<CIT alias>" --cn <common name> --key-type rsa --key-size 4096 --san-dns <alt name> --san-dns <alt name2>
+		vcert enroll -p vcp -t <CyberArk Certificate Manager, SaaS access token> -z "<app name>\<CIT alias>" --cn <common name>
 
-		vcert enroll -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --cn <common name>
-		vcert enroll -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --cn <common name> --key-size 4096 --san-dns <alt name> --san-dns <alt name2>
-		vcert enroll -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --cn <common name> --key-type ecdsa --key-curve p384 --san-dns <alt name> -san-dns <alt name2>
-		vcert enroll -u https://tpp.example.com -z "<policy folder DN>" --p12-file <PKCS#12 client cert> --p12-password <PKCS#12 password> --cn <common name>
-		vcert enroll -p tpp -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --cn <common name>
+		vcert enroll -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> -z "<policy folder DN>" --cn <common name>
+		vcert enroll -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> -z "<policy folder DN>" --cn <common name> --key-size 4096 --san-dns <alt name> --san-dns <alt name2>
+		vcert enroll -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> -z "<policy folder DN>" --cn <common name> --key-type ecdsa --key-curve p384 --san-dns <alt name> -san-dns <alt name2>
+		vcert enroll -u https://cmsh.example.com -z "<policy folder DN>" --p12-file <PKCS#12 client cert> --p12-password <PKCS#12 password> --cn <common name>
+		vcert enroll -p tpp -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> -z "<policy folder DN>" --cn <common name>
 
-		vcert enroll -p firefly -u <Firefly instance url> -t <OIDC access token> -z "<policy folder DN>" --cn <common name>`,
+		vcert enroll -p firefly -u <CyberArk Workload Identity Manager instance url> -t <OIDC access token> -z "<policy folder DN>" --cn <common name>`,
 	}
 
 	commandPickup = &cli.Command{
@@ -62,13 +62,13 @@ var (
 		Flags:  pickupFlags,
 		Action: doCommandPickup1,
 		Usage:  "To download a certificate",
-		UsageText: ` vcert pickup <Required Venafi Control Plane -OR- Trust Protection Platform Config> <Options>
+		UsageText: ` vcert pickup <Required CyberArk Certificate Manager, SaaS -OR- CyberArk Certificate Manager, Self-Hosted> <Options>
 
-		 vcert pickup -k <VCP API key> [--pickup-id <ID value> | --pickup-id-file <file containing ID value>]
-		 vcert pickup -p vcp -t <VCP access token> [--pickup-id <ID value> | --pickup-id-file <file containing ID value>]
+		 vcert pickup -k <CyberArk Certificate Manager, SaaS API key> [--pickup-id <ID value> | --pickup-id-file <file containing ID value>]
+		 vcert pickup -p vcp -t <CyberArk Certificate Manager, SaaS access token> [--pickup-id <ID value> | --pickup-id-file <file containing ID value>]
 
-		 vcert pickup -u https://tpp.example.com -t <TPP access token> --pickup-id <ID value>
-		 vcert pickup -p tpp -u https://tpp.example.com -t <TPP access token> --pickup-id <ID value>`,
+		 vcert pickup -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> --pickup-id <ID value>
+		 vcert pickup -p tpp -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> --pickup-id <ID value>`,
 	}
 
 	commandRevoke = &cli.Command{
@@ -77,14 +77,14 @@ var (
 		Flags:  revokeFlags,
 		Action: doCommandRevoke1,
 		Usage:  "To revoke a certificate",
-		UsageText: ` vcert revoke <Required Venafi Control Plane -OR- Trust Protection Platform Config> <Options>
+		UsageText: ` vcert revoke <Required CyberArk Certificate Manager, SaaS -OR- CyberArk Certificate Manager, Self-Hosted> <Options>
 
-		 vcert revoke -k <VCP API key> --thumbprint <cert SHA1 thumbprint>
-		 vcert revoke -p vcp -t <VCP access token> --thumbprint <cert SHA1 thumbprint>
+		 vcert revoke -k <CyberArk Certificate Manager, SaaS API key> --thumbprint <cert SHA1 thumbprint>
+		 vcert revoke -p vcp -t <CyberArk Certificate Manager, SaaS access token> --thumbprint <cert SHA1 thumbprint>
 
-		 vcert revoke -u https://tpp.example.com -t <TPP access token> --thumbprint <cert SHA1 thumbprint>
-		 vcert revoke -u https://tpp.example.com -t <TPP access token> --id <ID value>
-		 vcert revoke -p tpp -u https://tpp.example.com -t <TPP access token> --id <ID value>`,
+		 vcert revoke -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> --thumbprint <cert SHA1 thumbprint>
+		 vcert revoke -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> --id <ID value>
+		 vcert revoke -p tpp -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> --id <ID value>`,
 	}
 
 	commandRenew = &cli.Command{
@@ -93,12 +93,12 @@ var (
 		Flags:  renewFlags,
 		Action: doCommandRenew1,
 		Usage:  "To renew a certificate",
-		UsageText: ` vcert renew <Required Venafi Control Plane -OR- Trust Protection Platform Config> <Options>
+		UsageText: ` vcert renew <Required CyberArk Certificate Manager, SaaS -OR- CyberArk Certificate Manager, Self-Hosted> <Options>
 
-		vcert renew -k <VCP API key> --thumbprint <cert SHA1 fingerprint>
-		vcert renew -p vcp -t <VCP access token> --thumbprint <cert SHA1 fingerprint>
+		vcert renew -k <CyberArk Certificate Manager, SaaS API key> --thumbprint <cert SHA1 fingerprint>
+		vcert renew -p vcp -t <CyberArk Certificate Manager, SaaS access token> --thumbprint <cert SHA1 fingerprint>
 
-        vcert renew -u https://tpp.example.com -t <TPP access token> --id <ID value>`,
+        vcert renew -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> --id <ID value>`,
 	}
 
 	commandRetire = &cli.Command{
@@ -107,12 +107,12 @@ var (
 		Flags:  retireFlags,
 		Action: doCommandRetire,
 		Usage:  "To retire a certificate",
-		UsageText: ` vcert retire <Required Venafi Control Plane -OR- Trust Protection Platform Config> <Options>
+		UsageText: ` vcert retire <Required CyberArk Certificate Manager, SaaS -OR- CyberArk Certificate Manager, Self-Hosted> <Options>
 
-		 vcert retire -k <VCP API key> --thumbprint <cert SHA1 fingerprint>
-		 vcert retire -p vcp -t <VCP access token> --thumbprint <cert SHA1 fingerprint>
+		 vcert retire -k <CyberArk Certificate Manager, SaaS API key> --thumbprint <cert SHA1 fingerprint>
+		 vcert retire -p vcp -t <CyberArk Certificate Manager, SaaS access token> --thumbprint <cert SHA1 fingerprint>
 
-		 vcert retire -u https://tpp.example.com -t <TPP access token> --id <ID value>`,
+		 vcert retire -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> --id <ID value>`,
 	}
 
 	commandGenCSR = &cli.Command{

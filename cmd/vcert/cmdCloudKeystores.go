@@ -18,12 +18,12 @@ var (
 		Before: runBeforeProvisionCommand,
 		Name:   subCommandCloudKeystoreName,
 		Flags:  provisionFlags,
-		Usage:  "provision certificate from Venafi Platform to Cloud Keystore",
-		UsageText: `vcert provision cloudkeystore <Required Venafi Control Plane> <Options>
+		Usage:  "provision certificate from CyberArk Certificate Manager, SaaS to Cloud Keystore",
+		UsageText: `vcert provision cloudkeystore <Required CyberArk Certificate Manager, SaaS> <Options>
 
-   vcert provision cloudkeystore --platform vcp -k <VCP API key> --certificate-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --keystore-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --format json
-   vcert provision cloudkeystore --platform vcp -k <VCP API key> --pickup-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --provider-name "My GCP Provider"--keystore-name "My GCP provider" --certificate-name "example-venafi-com"
-   vcert provision cloudkeystore -p vcp -t <VCP access token> --certificate-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --provider-name "My GCP Provider" --keystore-name "My GCP provider" --file "/path/to/file.txt"`,
+   vcert provision cloudkeystore --platform vcp -k <CyberArk Certificate Manager, SaaS API key> --certificate-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --keystore-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --format json
+   vcert provision cloudkeystore --platform vcp -k <CyberArk Certificate Manager, SaaS API key> --pickup-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --provider-name "My GCP Provider"--keystore-name "My GCP provider" --certificate-name "example-cyberark-com"
+   vcert provision cloudkeystore -p vcp -t <CyberArk Certificate Manager, SaaS access token> --certificate-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --provider-name "My GCP Provider" --keystore-name "My GCP provider" --file "/path/to/file.txt"`,
 		Action: doCommandProvisionCloudKeystore,
 	}
 )

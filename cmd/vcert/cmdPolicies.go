@@ -37,9 +37,9 @@ var (
 		Flags:  createPolicyFlags,
 		Action: doCommandCreatePolicy,
 		Usage:  "To apply a certificate policy specification to a zone",
-		UsageText: ` vcert setpolicy <Required Venafi Control Plane -OR- Trust Protection Platform Config> <Options>
-        vcert setpolicy -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>" --file /path-to/policy.spec
-		vcert setpolicy -p vcp -t <VCP access token> -z "<app name>\<CIT alias>" --file /path-to/policy.spec`,
+		UsageText: ` vcert setpolicy <Required CyberArk Certificate Manager, SaaS -OR- CyberArk Certificate Manager, Self-Hosted> <Options>
+        vcert setpolicy -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> -z "<policy folder DN>" --file /path-to/policy.spec
+		vcert setpolicy -p vcp -t <CyberArk Certificate Manager, SaaS access token> -z "<app name>\<CIT alias>" --file /path-to/policy.spec`,
 	}
 
 	commandGetPolicy = &cli.Command{
@@ -48,9 +48,9 @@ var (
 		Flags:  getPolicyFlags,
 		Action: doCommandGetPolicy,
 		Usage:  "To retrieve the certificate policy of a zone",
-		UsageText: ` vcert getpolicy <Required Venafi Control Plane -OR- Trust Protection Platform Config> <Options>
-        vcert getpolicy -u https://tpp.example.com -t <TPP access token> -z "<policy folder DN>"
-		vcert getpolicy -p vcp -t <VCP access token> -z "<app name>\<CIT alias>"`,
+		UsageText: ` vcert getpolicy <Required CyberArk Certificate Manager, SaaS -OR- CyberArk Certificate Manager, Self-Hosted> <Options>
+        vcert getpolicy -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> -z "<policy folder DN>"
+		vcert getpolicy -p vcp -t <CyberArk Certificate Manager, SaaS access token> -z "<app name>\<CIT alias>"`,
 	}
 )
 

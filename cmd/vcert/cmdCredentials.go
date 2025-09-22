@@ -37,14 +37,14 @@ var (
 		Flags:  getCredFlags,
 		Action: doCommandCredMgmt1,
 		Usage:  "To obtain a new access token for authentication",
-		UsageText: ` vcert getcred --email <email address for Venafi Control Plane headless registration> [--password <password>] [--format (text|json)]
-		vcert getcred -p vcp --token-url <VCP token url> --external-jwt <JWT from Identity Provider>
+		UsageText: ` vcert getcred --email <email address for CyberArk Certificate Manager, SaaS headless registration> [--password <password>] [--format (text|json)]
+		vcert getcred -p vcp --token-url <CyberArk Certificate Manager, SaaS token url> --external-jwt <JWT from Identity Provider>
 		
-		vcert getcred -u https://tpp.example.com --username <TPP user> --password <TPP user password>
-		vcert getcred -u https://tpp.example.com --p12-file <PKCS#12 client cert> --p12-password <PKCS#12 password> --trust-bundle /path-to/bundle.pem
-		vcert getcred -u https://tpp.example.com -t <TPP refresh token>
-		vcert getcred -u https://tpp.example.com -t <TPP refresh token> --scope <scopes and restrictions>
-		vcert getcred -p tpp -u https://tpp.example.com -t <TPP refresh token>
+		vcert getcred -u https://cmsh.example.com --username <CyberArk Certificate Manager, Self-Hosted user> --password <CyberArk Certificate Manager, Self-Hosted user password>
+		vcert getcred -u https://cmsh.example.com --p12-file <PKCS#12 client cert> --p12-password <PKCS#12 password> --trust-bundle /path-to/bundle.pem
+		vcert getcred -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted refresh token>
+		vcert getcred -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted refresh token> --scope <scopes and restrictions>
+		vcert getcred -p tpp -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted refresh token>
 
 		vcert getcred -p oidc -u https://authorization-server.com/oauth/token --username <okta user> --password <okta user password> --scope okta.behaviors.manage
 		vcert getcred -p oidc -u https://authorization-server.com/oauth/token --client-id <okta client id> --client-secret <okta client secret> --scope okta.behaviors.manage`,
@@ -55,8 +55,8 @@ var (
 		Name:      commandCheckCredName,
 		Flags:     checkCredFlags,
 		Action:    doCommandCredMgmt1,
-		Usage:     "To verify whether a Trust Protection Platform access token is valid and view its attributes",
-		UsageText: " vcert checkcred -u https://tpp.example.com -t <TPP access token> --trust-bundle /path-to/bundle.pem",
+		Usage:     "To verify whether a CyberArk Certificate Manager, Self-Hosted access token is valid and view its attributes",
+		UsageText: " vcert checkcred -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> --trust-bundle /path-to/bundle.pem",
 	}
 
 	commandVoidCred = &cli.Command{
@@ -64,8 +64,8 @@ var (
 		Name:      commandVoidCredName,
 		Flags:     voidCredFlags,
 		Action:    doCommandCredMgmt1,
-		Usage:     "To invalidate a Trust Protection Platform access token",
-		UsageText: " vcert voidcred -u https://tpp.example.com -t <TPP access token> --trust-bundle /path-to/bundle.pem",
+		Usage:     "To invalidate a CyberArk Certificate Manager, Self-Hosted access token",
+		UsageText: " vcert voidcred -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> --trust-bundle /path-to/bundle.pem",
 	}
 )
 
