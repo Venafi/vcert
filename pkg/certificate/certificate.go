@@ -46,7 +46,7 @@ func AllSupportedKeySizes() []int {
 
 //SSH Certificate structures
 
-// SshCertRequest This request is a standard one, it will hold data for tpp request
+// SshCertRequest This request is a standard one, it will hold data for CyberArk Certificate Manager, Self-Hosted request
 // and in the future it will hold VaS data.
 type SshCertRequest struct {
 	Template             string
@@ -151,12 +151,12 @@ type ProcessingDetails struct {
 }
 
 type RevocationRequest struct {
-	CertificateAuthorityAccountName string // for vcp
-	CertificateDN                   string // for tpp
+	CertificateAuthorityAccountName string // for CyberArk Certificate Manager, SaaS
+	CertificateDN                   string // for CyberArk Certificate Manager, Self-Hosted
 	Thumbprint                      string
 	Reason                          string
 	Comments                        string
-	Disable                         bool // for tpp
+	Disable                         bool // for CyberArk Certificate Manager, Self-Hosted
 }
 
 type RetireRequest struct {

@@ -114,14 +114,14 @@ func buildConfigFromFlags(commandName string, flags *commandFlags) (*vcert.Confi
 
 	//Guessing the platform by checking flags
 	//	- Firefly not present here as it is required to pass the platform flag
-	//	- Token empty is considered to mean Cloud connector to keep previous behavior where token was exclusive to TPP
-	//	- To use token with VaaS, the platform flag is required.
+	//	- Token empty is considered to mean Cloud connector to keep previous behavior where token was exclusive to Certificate Manager, Self-Hosted
+	//	- To use token with CyberArk Certificate Manager, SaaS, the platform flag is required.
 	//	- If the platform flag is set we would not be guessing here
 	if flags.userName == "" && flags.token == "" {
-		// should be SaaS endpoint
+		// should be CyberArk Certificate Manager, SaaS endpoint
 		return buildConfigVaaS(flags)
 	} else {
-		// should be TPP service
+		// should be CyberArk Certificate Manager, Self-Hosted service
 		return buildConfigTPP(commandName, flags)
 	}
 }

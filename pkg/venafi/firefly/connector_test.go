@@ -110,14 +110,14 @@ func (s *ConnectorSuite) TestNewConnector() {
 
 func (s *ConnectorSuite) TestGetType() {
 	fireflyConnector, err := NewConnector(s.fireflyServer.serverURL, "", false, nil)
-	assert.Nil(s.T(), err, fmt.Errorf("error creating firefly connector: %w", err).Error())
+	assert.Nil(s.T(), err, fmt.Errorf("error creating CyberArk Workload Identity Manager connector: %w", err).Error())
 	assert.Equal(s.T(), endpoint.ConnectorTypeFirefly, fireflyConnector.GetType())
 }
 
 func (s *ConnectorSuite) TestAuthenticate() {
 	s.Run("AuthenticationConfNotProvided", func() {
 		fireflyConnector, err := NewConnector(s.fireflyServer.serverURL, "", false, nil)
-		assert.Nil(s.T(), err, fmt.Errorf("error creating firefly connector: %w", err).Error())
+		assert.Nil(s.T(), err, fmt.Errorf("error creating CyberArk Workload Identity Manager connector: %w", err).Error())
 
 		err = fireflyConnector.Authenticate(nil)
 
@@ -129,7 +129,7 @@ func (s *ConnectorSuite) TestAuthenticate() {
 
 	s.Run("Success", func() {
 		fireflyConnector, err := NewConnector(s.fireflyServer.serverURL, "", false, nil)
-		assert.Nil(s.T(), err, fmt.Errorf("error creating firefly connector: %w", err).Error())
+		assert.Nil(s.T(), err, fmt.Errorf("error creating CyberArk Workload Identity Manager connector: %w", err).Error())
 
 		err = fireflyConnector.Authenticate(s.createCredFlowAuth())
 
@@ -140,7 +140,7 @@ func (s *ConnectorSuite) TestAuthenticate() {
 
 func (s *ConnectorSuite) TestClientCredentialFlow() {
 	fireflyConnector, err := NewConnector(s.fireflyServer.serverURL, "", false, nil)
-	assert.Nil(s.T(), err, fmt.Errorf("error creating firefly connector: %w", err).Error())
+	assert.Nil(s.T(), err, fmt.Errorf("error creating CyberArk Workload Identity Manager connector: %w", err).Error())
 
 	oauthToken, err := fireflyConnector.Authorize(s.createCredFlowAuth())
 
@@ -150,7 +150,7 @@ func (s *ConnectorSuite) TestClientCredentialFlow() {
 
 func (s *ConnectorSuite) TestClientCredentialFlow_Unauthorized() {
 	fireflyConnector, err := NewConnector(s.fireflyServer.serverURL, "", false, nil)
-	assert.Nil(s.T(), err, fmt.Errorf("error creating firefly connector: %w", err).Error())
+	assert.Nil(s.T(), err, fmt.Errorf("error creating CyberArk Workload Identity Manager connector: %w", err).Error())
 
 	auth := s.createCredFlowAuth()
 	//changing the clientId
@@ -164,7 +164,7 @@ func (s *ConnectorSuite) TestClientCredentialFlow_Unauthorized() {
 
 func (s *ConnectorSuite) TestClientPasswordFlow() {
 	fireflyConnector, err := NewConnector(s.fireflyServer.serverURL, "", false, nil)
-	assert.Nil(s.T(), err, fmt.Errorf("error creating firefly connector: %w", err).Error())
+	assert.Nil(s.T(), err, fmt.Errorf("error creating CyberArk Workload Identity Manager connector: %w", err).Error())
 
 	oauthToken, err := fireflyConnector.Authorize(s.createPasswordFlowAuth())
 
@@ -174,7 +174,7 @@ func (s *ConnectorSuite) TestClientPasswordFlow() {
 
 func (s *ConnectorSuite) TestClientPasswordFlow_Unauthorized() {
 	fireflyConnector, err := NewConnector(s.fireflyServer.serverURL, "", false, nil)
-	assert.Nil(s.T(), err, fmt.Errorf("error creating firefly connector: %w", err).Error())
+	assert.Nil(s.T(), err, fmt.Errorf("error creating CyberArk Workload Identity Manager connector: %w", err).Error())
 
 	auth := s.createPasswordFlowAuth()
 	auth.ClientId = "unauthorized"
@@ -187,7 +187,7 @@ func (s *ConnectorSuite) TestClientPasswordFlow_Unauthorized() {
 
 func (s *ConnectorSuite) TestDeviceFlow() {
 	fireflyConnector, err := NewConnector(s.fireflyServer.serverURL, "", false, nil)
-	assert.Nil(s.T(), err, fmt.Errorf("error creating firefly connector: %w", err).Error())
+	assert.Nil(s.T(), err, fmt.Errorf("error creating CyberArk Workload Identity Manager connector: %w", err).Error())
 
 	oauthToken, err := fireflyConnector.Authorize(s.createDevFlowAuth())
 
@@ -197,7 +197,7 @@ func (s *ConnectorSuite) TestDeviceFlow() {
 
 func (s *ConnectorSuite) TestDeviceFlow_AuthPending() {
 	fireflyConnector, err := NewConnector(s.fireflyServer.serverURL, "", false, nil)
-	assert.Nil(s.T(), err, fmt.Errorf("error creating firefly connector: %w", err).Error())
+	assert.Nil(s.T(), err, fmt.Errorf("error creating CyberArk Workload Identity Manager connector: %w", err).Error())
 
 	auth := s.createDevFlowAuth()
 	auth.ClientId = TestingClientIDAuthPending
@@ -210,7 +210,7 @@ func (s *ConnectorSuite) TestDeviceFlow_AuthPending() {
 
 func (s *ConnectorSuite) TestDeviceFlow_SlowDown() {
 	fireflyConnector, err := NewConnector(s.fireflyServer.serverURL, "", false, nil)
-	assert.Nil(s.T(), err, fmt.Errorf("error creating firefly connector: %w", err).Error())
+	assert.Nil(s.T(), err, fmt.Errorf("error creating CyberArk Workload Identity Manager connector: %w", err).Error())
 
 	auth := s.createDevFlowAuth()
 	auth.ClientId = TestingClientIDSlowDown
@@ -223,7 +223,7 @@ func (s *ConnectorSuite) TestDeviceFlow_SlowDown() {
 
 func (s *ConnectorSuite) TestDeviceFlow_AccessDenied() {
 	fireflyConnector, err := NewConnector(s.fireflyServer.serverURL, "", false, nil)
-	assert.Nil(s.T(), err, fmt.Errorf("error creating firefly connector: %w", err).Error())
+	assert.Nil(s.T(), err, fmt.Errorf("error creating CyberArk Workload Identity Manager connector: %w", err).Error())
 
 	auth := s.createDevFlowAuth()
 	auth.ClientId = TestingClientIDAccessDenied
@@ -238,7 +238,7 @@ func (s *ConnectorSuite) TestDeviceFlow_AccessDenied() {
 
 func (s *ConnectorSuite) TestDeviceFlow_ExpiredToken() {
 	fireflyConnector, err := NewConnector(s.fireflyServer.serverURL, "", false, nil)
-	assert.Nil(s.T(), err, fmt.Errorf("error creating firefly connector: %w", err).Error())
+	assert.Nil(s.T(), err, fmt.Errorf("error creating CyberArk Workload Identity Manager connector: %w", err).Error())
 
 	auth := s.createDevFlowAuth()
 	auth.ClientId = TestingClientIDExpiredToken
@@ -253,7 +253,7 @@ func (s *ConnectorSuite) TestDeviceFlow_ExpiredToken() {
 
 func (s *ConnectorSuite) TestSynchronousRequestCertificate_CSR_Service_Generated() {
 	fireflyConnector, err := NewConnector(s.fireflyServer.serverURL, TestingPolicyName, false, nil)
-	assert.Nil(s.T(), err, fmt.Errorf("error creating firefly connector: %w", err).Error())
+	assert.Nil(s.T(), err, fmt.Errorf("error creating CyberArk Workload Identity Manager connector: %w", err).Error())
 
 	//connector authenticating
 	err = fireflyConnector.Authenticate(s.createDevFlowAuth())
@@ -288,7 +288,7 @@ func (s *ConnectorSuite) TestSynchronousRequestCertificate_CSR_Service_Generated
 		pemCollection, err := fireflyConnector.SynchronousRequestCertificate(&requestRSASize1024)
 
 		if assert.Errorf(s.T(), err, "expected to get an error but was gotten the certificate") {
-			assert.ErrorContains(s.T(), err, "key size 1024 is not supported. Valid RSA sizes for Firefly are ")
+			assert.ErrorContains(s.T(), err, "key size 1024 is not supported. Valid RSA sizes for CyberArk Workload Identity Manager are ")
 		}
 		assert.Nil(s.T(), pemCollection)
 	})
@@ -312,7 +312,7 @@ func (s *ConnectorSuite) TestSynchronousRequestCertificate_CSR_Service_Generated
 		pemCollection, err := fireflyConnector.SynchronousRequestCertificate(&requestWithoutSubject)
 
 		if assert.Errorf(s.T(), err, "expected to get an error but was gotten the certificate") {
-			assert.ErrorContains(s.T(), err, "unexpected status code on Venafi Firefly. Status: ")
+			assert.ErrorContains(s.T(), err, "unexpected status code on CyberArk Workload Identity Manager. Status: ")
 		}
 		assert.Nil(s.T(), pemCollection)
 	})
@@ -331,7 +331,7 @@ func (s *ConnectorSuite) TestSynchronousRequestCertificate_CSR_Service_Generated
 
 func (s *ConnectorSuite) TestSynchronousRequestCertificate_CSR_Provided() {
 	fireflyConnector, err := NewConnector(s.fireflyServer.serverURL, TestingPolicyName, false, nil)
-	assert.Nil(s.T(), err, fmt.Errorf("error creating firefly connector: %w", err).Error())
+	assert.Nil(s.T(), err, fmt.Errorf("error creating CyberArk Workload Identity Manager connector: %w", err).Error())
 
 	//connector authenticating
 	err = fireflyConnector.Authenticate(s.createDevFlowAuth())
@@ -370,7 +370,7 @@ func (s *ConnectorSuite) TestSynchronousRequestCertificate_CSR_Provided() {
 		pemCollection, err := fireflyConnector.SynchronousRequestCertificate(&requestWithoutSubject)
 
 		if assert.Errorf(s.T(), err, "expected to get an error but was gotten the certificate") {
-			assert.ErrorContains(s.T(), err, "unexpected status code on Venafi Firefly. Status: ")
+			assert.ErrorContains(s.T(), err, "unexpected status code on CyberArk Workload Identity Manager. Status: ")
 		}
 		assert.Nil(s.T(), pemCollection)
 	})

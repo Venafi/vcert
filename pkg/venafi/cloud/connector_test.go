@@ -882,8 +882,8 @@ func TestRetireCertificate(t *testing.T) {
 	hexThumbprint := hex.EncodeToString((thumbprint[:]))
 	retireReq.Thumbprint = hexThumbprint
 
-	// Letting VaaS some time to load certificate into inventory.
-	// VaaS may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
+	// Letting CyberArk Certificate Manager, SaaS some time to load certificate into inventory.
+	// CyberArk Certificate Manager, SaaS may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
 	// or even stuck into it
 	time.Sleep(time.Duration(2) * time.Second)
 	err = conn.RetireCertificate(retireReq)
@@ -918,8 +918,8 @@ func TestRetireCertificateWithPickUpID(t *testing.T) {
 	retireReq := &certificate.RetireRequest{}
 	retireReq.CertificateDN = pickupID
 
-	// Letting VaaS some time to load certificate into inventory.
-	// VaaS may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
+	// Letting CyberArk Certificate Manager, SaaS some time to load certificate into inventory.
+	// CyberArk Certificate Manager, SaaS may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
 	// or even stuck into it
 	time.Sleep(time.Duration(2) * time.Second)
 	err = conn.RetireCertificate(retireReq)
@@ -954,8 +954,8 @@ func TestRetireCertificateTwice(t *testing.T) {
 	retireReq := &certificate.RetireRequest{}
 	retireReq.CertificateDN = pickupID
 
-	// Letting VaaS some time to load certificate into inventory.
-	// VaaS may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
+	// Letting CyberArk Certificate Manager, SaaS some time to load certificate into inventory.
+	// CyberArk Certificate Manager, SaaS may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
 	// or even stuck into it
 	time.Sleep(time.Duration(2) * time.Second)
 	err = conn.RetireCertificate(retireReq)
@@ -977,7 +977,7 @@ func TestRevokeCertificate(t *testing.T) {
 
 	// The following block of code is to set the clients and accessToken
 	// given we omitted to call the conn.Authenticate() method to avoid the
-	// real connection to VCP
+	// real connection to CyberArk Certificate Manager, SaaS
 	conn.accessToken = "myaccesstoken"
 	// Initialize clients
 	conn.caAccountsClient = caaccounts.NewCAAccountsClient(conn.getURL(urlGraphql), conn.getGraphqlHTTPClient())
@@ -1125,7 +1125,7 @@ func TestRevokeCertificate(t *testing.T) {
 
 func TestReadPolicyConfigurationOnlyEC(t *testing.T) {
 	// IMPORTANT NOTE: Now in VCert, we are treating ED25519 Keys, as per it's a different algorithm from ECDSA, as another
-	// type of key. This is conflicting with how VaaS handles EC Keys, as it considers ED25519 as another curve, which is
+	// type of key. This is conflicting with how CyberArk Certificate Manager, SaaS handles EC Keys, as it considers ED25519 as another curve, which is
 	// it shouldn't, this test may need to change in the future once this is solved
 	//todo: add more zones
 	conn := getTestConnector(ctx.VAASzoneEC)

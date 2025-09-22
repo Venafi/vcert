@@ -30,7 +30,7 @@ const (
 
 // Playbook represents a set of tasks  to run.
 //
-// The Config object holds the values required to connect to a Venafi platform.
+// The Config object holds the values required to connect to a CyberArk platform.
 //
 // A task includes:
 //   - a Request object that defines the values of the certificate to request

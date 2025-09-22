@@ -16,7 +16,7 @@
 
 package domain
 
-// Config contains all the values necessary to connect to a given Venafi platform: TPP or TLSPC
+// Config contains all the values necessary to connect to a given CyberArk platform: CyberArk Certificate Manager, Self-Hosted or CyberArk Certificate Manager, SaaS
 type Config struct {
 	Connection Connection `yaml:"connection,omitempty"`
 	ForceRenew bool       `yaml:"-"`

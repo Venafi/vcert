@@ -27,7 +27,7 @@ Feature: renew action with `-csr service` option
 
   Scenario: where it should return an error if renew is used in TPP with -csr=service and empty -key-password
     When I renew the certificate in TPP with flags -id xxx -no-prompt -csr service
-    Then it should fail with "-key-password cannot be empty in -csr service mode for TPP unless -no-pickup specified"
+    Then it should fail with "-key-password cannot be empty in -csr service mode for CyberArk Certificate Manager, Self-Hosted unless -no-pickup specified"
 
   Scenario: renew user-provided-CSR certificate in TPP with `-csr service` option
     Given I enroll random certificate using TPP with -no-prompt -key-file k.pem -cert-file c.pem
