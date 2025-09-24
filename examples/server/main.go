@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -52,7 +52,11 @@ func initConfig() *vcert.Config {
 	}
 	trustBundleFilePath := os.Getenv("TRUST_BUNDLE_PATH")
 	if trustBundleFilePath != "" {
-		buf, err := ioutil.ReadFile(trustBundleFilePath)
+		file, err := os.Open(trustBundleFilePath)
+		if err != nil {
+			panic(err)
+		}
+		buf, err := io.ReadAll(file)
 		if err != nil {
 			panic(err)
 		}
