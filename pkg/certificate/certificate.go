@@ -65,7 +65,6 @@ type SshCertRequest struct {
 	Guid                      string
 	IncludePrivateKeyData     bool
 	PrivateKeyPassphrase      string
-	PrivateKeyFormat          string
 	IncludeCertificateDetails bool
 
 	Timeout time.Duration
@@ -100,7 +99,6 @@ type TppSshCertRetrieveRequest struct {
 	DN                        string
 	IncludePrivateKeyData     bool
 	PrivateKeyPassphrase      string
-	PrivateKeyFormat          string
 	IncludeCertificateDetails bool
 }
 
