@@ -724,6 +724,29 @@ func buildPolicySpecification(cit *certificateTemplate, info *policy.Certificate
 		subjectAlt.IpAllowed = util.GetBooleanRef(true)
 	}
 
+	if len(cit.SanUniformResourceIdentifierRegexes) > 0 {
+		subjectAlt := getSAN(&pol)
+		protocols := make([]string, 0)
+		for _, val := range cit.SanUniformResourceIdentifierRegexes {
+			index := strings.Index(val, ")://")
+			if index > -1 {
+				subStr := val[1:index]
+				currProtocols := strings.Split(subStr, "|")
+				for _, currentProtocol := range currProtocols {
+					if len(protocols) == 0 {
+						protocols = append(protocols, currentProtocol)
+					} else {
+						if !contains(protocols, currentProtocol) {
+							protocols = append(protocols, currentProtocol)
+						}
+					}
+				}
+			}
+		}
+		subjectAlt.UriProtocols = protocols
+		subjectAlt.UriAllowed = util.GetBooleanRef(true)
+	}
+
 	// ps.Policy.WildcardAllowed is pending.
 	if cit.ValidityPeriod != "" {
 		//they have the format P#D
