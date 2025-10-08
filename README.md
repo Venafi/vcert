@@ -1,4 +1,3 @@
-[![Venafi](https://raw.githubusercontent.com/Venafi/.github/master/images/Venafi_logo.png)](https://www.venafi.com/)
 [![Apache 2.0 License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 ![Community Supported](https://img.shields.io/badge/Support%20Level-Community-brightgreen)
 ![Compatible with TPP 17.3+ & VCP & Firefly](https://img.shields.io/badge/Compatibility-TPP%2017.3+%20%26%20VCP%20%26%20Firefly-f9a90c)  
@@ -16,18 +15,18 @@ We welcome and appreciate all contributions. Got questions or want to discuss so
 
 VCert is a Go library, SDK, and command line utility designed to simplify key generation and enrollment of machine identities
 (also known as SSL/TLS certificates and keys) that comply with enterprise security policy by using the
-[Venafi Trust Protection Platform](https://www.venafi.com/platform/trust-protection-platform) 
-or [Venafi Control Plane](https://www.venafi.com/venaficloud) or [Venafi Firefly](https://venafi.com/firefly/).
+[CyberArk Certificate Manager, Self-Hosted](https://www.venafi.com/platform/trust-protection-platform) 
+or [CyberArk Certificate Manager, SaaS](https://www.venafi.com/venaficloud) or [CyberArk Workload Identity Manager](https://www.cyberark.com/products/workload-identity-manager/).
 
-See [VCert CLI for Venafi Trust Protection Platform](README-CLI-PLATFORM.md) or
-[VCert CLI for Venafi Control Plane](README-CLI-CLOUD.md) or [VCert CLI for Venafi Firefly](README-CLI-FIREFLY.md) 
+See [VCert CLI for CyberArk Certificate Manager, Self-Hosted](README-CLI-PLATFORM.md) or
+[VCert CLI for CyberArk Certificate Manager, SaaS](README-CLI-CLOUD.md) or [VCert CLI for CyberArk Workload Identity Manager](README-CLI-FIREFLY.md) 
 to get started with the command line utility.
 
 #### Compatibility
 
-VCert releases are tested using the latest version of Trust Protection Platform. General functionality of the
-[latest VCert release](../../releases/latest) should be compatible with Trust Protection Platform 17.3 or higher.
-Custom Fields and Instance Tracking require TPP 18.2 or higher, and Token Authentication requires TPP 20.1 or higher.
+VCert releases are tested using the latest version of CyberArk Certificate Manager, Self-Hosted. General functionality of the
+[latest VCert release](../../releases/latest) should be compatible with CyberArk Certificate Manager, Self-Hosted 17.3 or higher.
+Custom Fields and Instance Tracking require CyberArk Certificate Manager, Self-Hosted 18.2 or higher, and Token Authentication requires CyberArk Certificate Manager, Self-Hosted 20.1 or higher.
 
 ## Developer Setup
 
@@ -54,7 +53,7 @@ Custom Fields and Instance Tracking require TPP 18.2 or higher, and Token Authen
    make build
    ```
 
-## Using VCert to integrate Venafi with your application
+## Using VCert to integrate CyberArk with your application
 
 For code samples of programmatic use, please review the files in [examples folder](./examples).
 
@@ -67,7 +66,7 @@ For code samples of programmatic use, please review the files in [examples folde
        "github.com/Venafi/vcert/v5/pkg/endpoint"
    )
    ```
-2. Create a configuration object of type `&vcert.Config` that specifies the Venafi connection details. Solutions are 
+2. Create a configuration object of type `&vcert.Config` that specifies the CyberArk connection details. Solutions are 
 typically designed to get those details from a secrets vault, .ini file, environment variables, or command line parameters.
 
 ### Enroll certificate
@@ -89,13 +88,13 @@ go build -o cli ./example
 go test -v ./example -run TestRequestCertificate
 ```
 
-## Prerequisites for using with Trust Protection Platform
+## Prerequisites for using with CyberArk Certificate Manager, Self-Hosted
 
 1. A user account that has been granted WebSDK Access
 2. A folder (zone) where the user has been granted the following permissions: `View`, `Read`, `Write`, `Create`, 
 `Revoke` (for the revoke action), and `Private Key Read` (for the pickup action when CSR is service generated)
 3. Policy applied to the folder which specifies:
-    1. CA Template that Trust Protection Platform will use to enroll certificate requests submitted by VCert
+    1. CA Template that CyberArk Certificate Manager, Self-Hosted will use to enroll certificate requests submitted by VCert
     2. Subject DN values for Organizational Unit (OU), Organization (O), City (L), State (ST) and Country (C)
     3. Management Type not locked or locked to 'Enrollment'
     4. Certificate Signing Request (CSR) Generation unlocked or not locked to 'Service Generated CSR'
@@ -104,24 +103,24 @@ go test -v ./example -run TestRequestCertificate
     7. (Recommended) Key Bit Strength set to 2048 or higher
     8. (Recommended) Domain Whitelisting policy appropriately assigned
 
-The requirement for the CA Template to be assigned by policy follows a long-standing Venafi best practice 
+The requirement for the CA Template to be assigned by policy follows a long-standing CyberArk best practice 
 which also met our design objective to keep the certificate request process simple for VCert users. 
-If you require the ability to specify the CA Template with the request you can use the TPP REST APIs 
-but please be advised this goes against Venafi recommendations.
+If you require the ability to specify the CA Template with the request you can use the CyberArk Certificate Manager, Self-Hosted REST APIs 
+but please be advised this goes against CyberArk recommendations.
 
-## Testing with Trust Protection Platform and Venafi Control Plane
+## Testing with CyberArk Certificate Manager, Self-Hosted and CyberArk Certificate Manager, SaaS
 
 Unit tests:
 ```sh
 make test
 ```
 
-Integration tests for Trust Protection Platform and Venafi Control Plane require access to those products. Environment 
-variables are used to specify required settings including credentials.  The Venafi Control Plane API key and zone value
+Integration tests for CyberArk Certificate Manager, Self-Hosted and CyberArk Certificate Manager, SaaS require access to those products. Environment 
+variables are used to specify required settings including credentials.  The CyberArk Certificate Manager, SaaS API key and zone value
 fragments (i.e. `Application Name`\\`Issuing Template API Alias`) are readily available in the web interface.
 
 ```sh
-export TPP_URL=https://tpp.venafi.example/vedsdk
+export TPP_URL=https://cmsh.cyberark.example/vedsdk
 export TPP_USER=tpp-user
 export TPP_PASSWORD=tpp-password
 export TPP_ZONE='some\suggested_policy'
@@ -169,7 +168,7 @@ For detailed explanations about the playbook and how it is build please check he
 
 ## Contributing to VCert
 
-Venafi welcomes contributions from the developer community.
+CyberArk welcomes contributions from the developer community.
 
 1. Fork it to your account (https://github.com/Venafi/vcert/fork)
 2. Clone your fork:
