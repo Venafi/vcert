@@ -509,8 +509,14 @@ func (c *Connector) setCertificateMetadata(metadataRequest metadataSetRequest) (
 
 func (c *Connector) prepareRequest(req *certificate.Request, zone string) (tppReq certificateRequest, err error) {
 	switch req.CsrOrigin {
-	case certificate.LocalGeneratedCSR, certificate.UserProvidedCSR:
+	case certificate.LocalGeneratedCSR:
 		tppReq.PKCS10 = string(req.GetCSR())
+	case certificate.UserProvidedCSR:
+		tppReq.PKCS10 = string(req.GetCSR())
+		tppReq.Subject = req.Subject.CommonName // TODO: there is some problem because Subject is not only CN
+		if !req.OmitSANs {
+			tppReq.SubjectAltNames = wrapAltNames(req)
+		}
 	case certificate.ServiceGeneratedCSR:
 		tppReq.Subject = req.Subject.CommonName // TODO: there is some problem because Subject is not only CN
 		if !req.OmitSANs {
