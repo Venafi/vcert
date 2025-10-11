@@ -28,7 +28,6 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"io/ioutil"
 	"net"
@@ -45,13 +44,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
 	"github.com/Venafi/vcert/v5/pkg/policy"
 	"github.com/Venafi/vcert/v5/pkg/util"
 	"github.com/Venafi/vcert/v5/pkg/verror"
 	"github.com/Venafi/vcert/v5/test"
-	"github.com/stretchr/testify/require"
 )
 
 var ctx *test.Context
