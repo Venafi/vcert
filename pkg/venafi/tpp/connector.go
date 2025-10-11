@@ -513,7 +513,6 @@ func (c *Connector) prepareRequest(req *certificate.Request, zone string) (tppRe
 		tppReq.PKCS10 = string(req.GetCSR())
 	case certificate.UserProvidedCSR:
 		tppReq.PKCS10 = string(req.GetCSR())
-		tppReq.Subject = req.Subject.CommonName // TODO: there is some problem because Subject is not only CN
 		if !req.OmitSANs {
 			tppReq.SubjectAltNames = wrapAltNames(req)
 		}
