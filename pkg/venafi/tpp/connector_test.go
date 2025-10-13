@@ -30,6 +30,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -43,13 +44,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
 	"github.com/Venafi/vcert/v5/pkg/policy"
 	"github.com/Venafi/vcert/v5/pkg/util"
 	"github.com/Venafi/vcert/v5/pkg/verror"
 	"github.com/Venafi/vcert/v5/test"
-	"github.com/stretchr/testify/require"
 )
 
 var ctx *test.Context
@@ -2388,6 +2391,59 @@ func TestEnrollWithLocation(t *testing.T) {
 	//   "ObjectDN":"\\VED\\Policy\\devops\\vcert\\1582237636-pgqlx.venafi.example.com",
 	//   "AttributeName":"Origin"
 	//}
+}
+
+func TestPrepareRequest(t *testing.T) {
+	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, expectedURL)
+	}
+	if tpp.apiKey == "" {
+		err = tpp.Authenticate(&endpoint.Authentication{AccessToken: ctx.TPPaccessToken})
+		if err != nil {
+			t.Fatalf("err is not nil, err: %s", err)
+		}
+	}
+	cn := test.RandCN()
+
+	t.Run("SansProvidedForUserProvidedCSR", func(t *testing.T) {
+		req := certificate.Request{
+			Subject: pkix.Name{
+				CommonName: cn,
+			},
+			KeyLength:   2048,
+			DNSNames:    []string{"www." + cn},
+			IPAddresses: []net.IP{[]byte{192, 168, 1, 1}},
+			OmitSANs:    false,
+			CsrOrigin:   certificate.UserProvidedCSR,
+			Timeout:     30 * time.Second,
+		}
+
+		tppReq, err := tpp.prepareRequest(&req, tpp.zone)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, tppReq.SubjectAltNames, "the subjectAltNames should not be empty")
+		assert.Len(t, tppReq.SubjectAltNames, 2)
+		assert.Contains(t, tppReq.SubjectAltNames, sanItem{2, "www." + cn})
+		assert.Contains(t, tppReq.SubjectAltNames, sanItem{7, "192.168.1.1"})
+	})
+
+	t.Run("SansProvidedForUserProvidedCSR - ignored", func(t *testing.T) {
+		req := certificate.Request{
+			Subject: pkix.Name{
+				CommonName: cn,
+			},
+			KeyLength: 2048,
+			DNSNames:  []string{"www." + cn, cn},
+			OmitSANs:  true,
+			CsrOrigin: certificate.UserProvidedCSR,
+			Timeout:   30 * time.Second,
+		}
+
+		tppReq, err := tpp.prepareRequest(&req, tpp.zone)
+
+		assert.NoError(t, err)
+		assert.Empty(t, tppReq.SubjectAltNames, "the subjectAltNames should be empty")
+	})
 }
 
 func TestOmitSans(t *testing.T) {
