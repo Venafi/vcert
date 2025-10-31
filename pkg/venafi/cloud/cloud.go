@@ -719,30 +719,32 @@ func buildPolicySpecification(cit *certificateTemplate, info *policy.Certificate
 		subjectAlt.EmailAllowed = util.GetBooleanRef(true)
 	}
 
+	if len(cit.SanIpAddressRegexes) > 0 {
+		subjectAlt := getSAN(&pol)
+		subjectAlt.IpAllowed = util.GetBooleanRef(true)
+	}
+
 	if len(cit.SanUniformResourceIdentifierRegexes) > 0 {
 		subjectAlt := getSAN(&pol)
 		protocols := make([]string, 0)
 		for _, val := range cit.SanUniformResourceIdentifierRegexes {
 			index := strings.Index(val, ")://")
-			subStr := val[1:index]
-			currProtocols := strings.Split(subStr, "|")
-			for _, currentProtocol := range currProtocols {
-				if len(protocols) == 0 {
-					protocols = append(protocols, currentProtocol)
-				} else {
-					if !contains(protocols, currentProtocol) {
+			if index > -1 {
+				subStr := val[1:index]
+				currProtocols := strings.Split(subStr, "|")
+				for _, currentProtocol := range currProtocols {
+					if len(protocols) == 0 {
 						protocols = append(protocols, currentProtocol)
+					} else {
+						if !contains(protocols, currentProtocol) {
+							protocols = append(protocols, currentProtocol)
+						}
 					}
 				}
 			}
 		}
 		subjectAlt.UriProtocols = protocols
 		subjectAlt.UriAllowed = util.GetBooleanRef(true)
-	}
-
-	if len(cit.SanIpAddressRegexes) > 0 {
-		subjectAlt := getSAN(&pol)
-		subjectAlt.IpAllowed = util.GetBooleanRef(true)
 	}
 
 	// ps.Policy.WildcardAllowed is pending.

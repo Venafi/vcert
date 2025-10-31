@@ -1,17 +1,16 @@
-![Venafi](https://raw.githubusercontent.com/Venafi/.github/master/images/Venafi_logo.png)
 [![Apache 2.0 License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 ![Community Supported](https://img.shields.io/badge/Support%20Level-Community-brightgreen)
-![Compatible with TPP 17.3+ & VCP](https://img.shields.io/badge/Compatibility-TPP%2017.3+%20%26%20VCP-f9a90c)  
+![Compatible with Certificate Manager, SaaS](https://img.shields.io/badge/Compatibility-Certificate%20Manager%2C%20SaaS-f9a90c)  
 _**This open source project is community-supported.** To report a problem or share an idea, use
 **[Issues](../../issues)**; and if you have a suggestion for fixing the issue, please include those details, too.
 In addition, use **[Pull Requests](../../pulls)** to contribute actual bug fixes or proposed enhancements.
 We welcome and appreciate all contributions. Got questions or want to discuss something with our team?
 **[Join us on Slack](https://join.slack.com/t/venafi-integrations/shared_invite/zt-i8fwc379-kDJlmzU8OiIQOJFSwiA~dg)**!_
 
-# VCert CLI for Venafi Control Plane
+# VCert CLI for CyberArk Certificate Manager, SaaS
 
-Venafi VCert is a command line tool designed to generate keys and simplify certificate acquisition, eliminating the 
-need to write code that's required to interact with the Venafi REST API. VCert is available in 32- and 64-bit versions 
+VCert is a command line tool designed to generate keys and simplify certificate acquisition, eliminating the 
+need to write code that's required to interact with the REST API. VCert is available in 32- and 64-bit versions 
 for Linux, Windows, and macOS.
 
 This article applies to the latest version of VCert CLI, which you can [download here](https://github.com/Venafi/vcert/releases/latest).
@@ -26,7 +25,7 @@ brew install venafi/tap/vcert
 
 Use these links to quickly jump to a relevant section lower on this page:
 
-- [VCert CLI for Venafi as a Service](#vcert-cli-for-venafi-control-plane)
+- [VCert CLI for CyberArk Certificate Manager, SaaS](#vcert-cli-for-cyberark-certificate-manager-saas)
   - [Quick Links](#quick-links)
   - [Prerequisites](#prerequisites)
   - [General Command Line Parameters](#general-command-line-parameters)
@@ -48,18 +47,18 @@ Use these links to quickly jump to a relevant section lower on this page:
 
 Review these prerequisites to get started. You'll need the following:
 
-1. Verify that the Venafi Control Plane REST API is accessible from the system where
+1. Verify that the CyberArk Certificate Manager, SaaS REST API is accessible from the system where
    VCert will be run. Currently, we support the following regions:
-    - [https://api.venafi.cloud](https://api.venafi.cloud/vaas) [US]
-    - [https://api.venafi.eu](https://api.eu.venafi.cloud/vaas) [EU]
-    - [https://api.au.venafi.cloud](https://api.au.venafi.cloud/vaas) [AU]
-    - [https://api.uk.venafi.cloud](https://api.uk.venafi.cloud/vaas) [UK]
-    - [https://api.sg.venafi.cloud](https://api.sg.venafi.cloud/vaas) [SG]
-    - [https://api.ca.venafi.cloud](https://api.ca.venafi.cloud/vaas) [CA]
-2. You have successfully registered for a Venafi Control Plane account, have been granted at least the "Resource Owner" 
+    - `https://api.venafi.cloud` [US]
+    - `https://api.venafi.eu` [EU]
+    - `https://api.au.venafi.cloud` [AU]
+    - `https://api.uk.venafi.cloud` [UK]
+    - `https://api.sg.venafi.cloud` [SG]
+    - `https://api.ca.venafi.cloud` [CA]
+2. You have successfully registered for a CyberArk Certificate Manager, SaaS account, have been granted at least the "Resource Owner" 
 role, and know your API key. You can use the `getcred` action to
 [register and obtain an API key](#registering-and-obtaining-an-api-key), but you will need an administrator to update 
-your role if there are already 3 or more users registered for your company in Venafi Control Plane. Alternatively, you 
+your role if there are already 3 or more users registered for your company. Alternatively, you 
 have configured a service account, the service account has been granted the "Resource Owner" role, you have the 
 `token URL` and have obtained a `JWT` from the Identity Provider associated to the service-account.
 3. A CA Account and Issuing Template exist and have been configured with:
@@ -84,33 +83,33 @@ have configured a service account, the service account has been granted the "Res
 
 The following options apply to the `enroll`, `pickup`, and `renew` actions:
 
-| Flag                 | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-|----------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `--config`           | Use to specify INI configuration file containing connection details. Available parameters: `cloud_apikey`, `cloud_zone`, `trust_bundle`, `test_mode`.                                                                                                                                                                                                                                                                                                                                                            |
-| `-k` or `--apiKey`   | Use to specify your API key for Venafi Control Plane.<br/>Example: -k aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `--no-prompt`        | Use to exclude password prompts. If you enable the prompt and you enter incorrect information, an error is displayed. This option is useful with scripting.                                                                                                                                                                                                                                                                                                                                                      |
-| `-p` or `--platform` | Use to specify Venafi Control Plane as the platform of choice to connect. Accepted value is `vcp`, case-insensitive.                                                                                                                                                                                                                                                                                                                                                                                             |
-| `-t` or `--token`    | Use to specify an access token for Venafi Control Plane. You need to set `--platform vcp` or `-p vcp` in order to use access tokens for Venafi Control Plane.                                                                                                                                                                                                                                                                                                                                                    |
-| `--test-mode`        | Use to test operations without connecting to Venafi Control Plane. This option is useful for integration tests where the test environment does not have access to Venafi Control Plane. Default is false.                                                                                                                                                                                                                                                                                                        |
-| `--test-mode-delay`  | Use to specify the maximum number of seconds for the random test-mode connection delay.  Default is 15 (seconds).                                                                                                                                                                                                                                                                                                                                                                                                |
-| `--timeout`          | Use to specify the maximum amount of time to wait in seconds for a certificate to be processed by Venafi Control Plane. Default is 120 (seconds).                                                                                                                                                                                                                                                                                                                                                                |
-| `--trust-bundle`     | Use to specify a file with PEM formatted certificates to be used as trust anchors when communicating with Venafi Control Plane.  Generally not needed because VCP is secured by a publicly trusted certificate, but it may be needed if your organization requires VCert to traverse a proxy server. VCert uses the trust store of your operating system for this purpose if not specified.<br/>Example: `--trust-bundle /path-to/bundle.pem`                                                                    |
-| `-u` or `--url`      | Use to specify the URL of the Venafi Control Plane API server. Currently, we support the following regions:<br/>- `https://api.venafi.cloud` (US region).<br/>- `https://api.venafi.eu` (EU region).<br/>- `https://api.au.venafi.cloud` (AU region).<br/> - `https://api.uk.venafi.cloud` (UK region).<br/> - `https://api.sg.venafi.cloud` (SG region).<br/> - `https://api.ca.venafi.cloud` (CA region).<br/> If it's omitted, then VCert will default to US region. <br/>Example: `-u https://api.venafi.eu` |
-| `--verbose`          | Use to increase the level of logging detail, which is helpful when troubleshooting issues.                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Flag                 | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+|----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `--config`           | Use to specify INI configuration file containing connection details. Available parameters: `cloud_apikey`, `cloud_zone`, `trust_bundle`, `test_mode`.                                                                                                                                                                                                                                                                                                                                                                          |
+| `-k` or `--apiKey`   | Use to specify your API key for CyberArk Certificate Manager, SaaS.<br/>Example: -k aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `--no-prompt`        | Use to exclude password prompts. If you enable the prompt and you enter incorrect information, an error is displayed. This option is useful with scripting.                                                                                                                                                                                                                                                                                                                                                                    |
+| `-p` or `--platform` | Use to specify CyberArk Certificate Manager, SaaS as the platform of choice to connect. Accepted value is `vcp`, case-insensitive.                                                                                                                                                                                                                                                                                                                                                                                             |
+| `-t` or `--token`    | Use to specify an access token for CyberArk Certificate Manager, SaaS. You need to set `--platform vcp` or `-p vcp` in order to use access tokens for CyberArk Certificate Manager, SaaS.                                                                                                                                                                                                                                                                                                                                      |
+| `--test-mode`        | Use to test operations without connecting to CyberArk Certificate Manager, SaaS. This option is useful for integration tests where the test environment does not have access to CyberArk Certificate Manager, SaaS. Default is false.                                                                                                                                                                                                                                                                                          |
+| `--test-mode-delay`  | Use to specify the maximum number of seconds for the random test-mode connection delay.  Default is 15 (seconds).                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `--timeout`          | Use to specify the maximum amount of time to wait in seconds for a certificate to be processed by CyberArk Certificate Manager, SaaS. Default is 120 (seconds).                                                                                                                                                                                                                                                                                                                                                                |
+| `--trust-bundle`     | Use to specify a file with PEM formatted certificates to be used as trust anchors when communicating with CyberArk Certificate Manager, SaaS.  Generally not needed because CyberArk Certificate Manager, SaaS is secured by a publicly trusted certificate, but it may be needed if your organization requires VCert to traverse a proxy server. VCert uses the trust store of your operating system for this purpose if not specified.<br/>Example: `--trust-bundle /path-to/bundle.pem`                                     |
+| `-u` or `--url`      | Use to specify the URL of the CyberArk Certificate Manager, SaaS API server. Currently, we support the following regions:<br/>- `https://api.venafi.cloud` (US region).<br/>- `https://api.venafi.eu` (EU region).<br/>- `https://api.au.venafi.cloud` (AU region).<br/> - `https://api.uk.venafi.cloud` (UK region).<br/> - `https://api.sg.venafi.cloud` (SG region).<br/> - `https://api.ca.venafi.cloud` (CA region).<br/> If it's omitted, then VCert will default to US region. <br/>Example: `-u https://api.venafi.eu` |
+| `--verbose`          | Use to increase the level of logging detail, which is helpful when troubleshooting issues.                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 
 ### Environment Variables
 
 VCert supports supplying flag values using environment variables:
 
-| Attribute                      | Flag               | Environment Variable |
-|--------------------------------|--------------------|----------------------|
-| API key                        | `-k` or `--apiKey` | `VCERT_APIKEY`       |
-| JWT from Identity Provider     | `--external-jwt`   | `VCERT_EXTERNAL_JWT` |
-| Venafi Control Plane token     | `-t` or `--token`  | `VCERT_TOKEN`        |
-| Venafi Control Plane token URL | `--token-url`      | `VCERT_TOKEN_URL`    |
-| Venafi Control Plane URL       | `-u` or `--url`    | `VCERT_URL`          |
-| Venafi platform                | `--platform`       | `VCERT_PLATFORM`     |
-| Zone                           | `-z` or `--zone`   | `VCERT_ZONE`         |
+| Attribute                                    | Flag               | Environment Variable |
+|----------------------------------------------|--------------------|----------------------|
+| API key                                      | `-k` or `--apiKey` | `VCERT_APIKEY`       |
+| JWT from Identity Provider                   | `--external-jwt`   | `VCERT_EXTERNAL_JWT` |
+| CyberArk Certificate Manager, SaaS token     | `-t` or `--token`  | `VCERT_TOKEN`        |
+| CyberArk Certificate Manager, SaaS token URL | `--token-url`      | `VCERT_TOKEN_URL`    |
+| CyberArk Certificate Manager, SaaS URL       | `-u` or `--url`    | `VCERT_URL`          |
+| CyberArk platform                            | `--platform`       | `VCERT_PLATFORM`     |
+| Zone                                         | `-z` or `--zone`   | `VCERT_ZONE`         |
 
 
 ## Certificate Request Parameters
@@ -131,7 +130,7 @@ Options:
 | `--chain`          | Use to include the certificate chain in the output, and to specify where to place it in the file.<br/>Options: `root-last` (default), `root-first`, `ignore`                                                                                                                                                                                                                  |
 | `--chain-file`     | Use to specify the name and location of an output file that will contain only the root and intermediate certificates applicable to the end-entity certificate.                                                                                                                                                                                                                |
 | `--cn`             | Use to specify the common name (CN). This is required for Enrollment.                                                                                                                                                                                                                                                                                                         |
-| `--csr`            | Use to specify the CSR and private key location. Options: `local` (default), `service`, `file`<br/>- local: private key and CSR will be generated locally<br/>- service: private key and CSR will be generated by a VSatellite in Venafi as a Service<br/>- file: CSR will be read from a file by name<br/>Example: `--csr file:/path-to/example.req`                         |
+| `--csr`            | Use to specify the CSR and private key location. Options: `local` (default), `service`, `file`<br/>- local: private key and CSR will be generated locally<br/>- service: private key and CSR will be generated by a VSatellite in CyberArk Certificate Manager, SaaS<br/>- file: CSR will be read from a file by name<br/>Example: `--csr file:/path-to/example.req`          |
 | `--file`           | Use to specify a name and location of an output file that will contain the private key and certificates when they are not written to their own files using `--key-file`, `--cert-file`, and/or `--chain-file`.<br/>Example: `--file /path-to/keycert.pem`                                                                                                                     |
 | `--format`         | Use to specify the output format.  The `--file` option must be used with the PKCS#12 and JKS formats to specify the keystore file. JKS format also requires `--jks-alias` and at least one password (see `--key-password` and `--jks-password`) <br/>Options: `pem` (default), `legacy-pem`, `json`, `pkcs12`, `legacy-pkcs12` (analogous to OpenSSL 3.x -legacy flag), `jks` |
 | `--jks-alias`      | Use to specify the alias of the entry in the JKS file when `--format jks` is used                                                                                                                                                                                                                                                                                             |
@@ -147,7 +146,7 @@ Options:
 | `--san-email`      | Use to specify an Email Subject Alternative Name.  To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-email me@example.com` `--san-email you@example.com`                                                                                                                                                                             |
 | `--san-ip`         | Use to specify an IP Address Subject Alternative Name.  To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-ip 10.20.30.40` `--san-ip 192.168.192.168`                                                                                                                                                                                 |
 | `--san-uri`        | Use to specify a Uniform Resource Indicator Subject Alternative Name.  To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-uri spiffe://workload1.example.com` `--san-uri spiffe://workload2.example.com`                                                                                                                              |
-| `--tags`           | Use to provide the certificate tags for a certificate to be enrolled. Only for Venafi Control Plane.<br/>Example: `--tags "myTag1" --tags "myTag2,myTag3:myValue"`                                                                                                                                                                                                            |
+| `--tags`           | Use to provide the certificate tags for a certificate to be enrolled. Only for CyberArk Certificate Manager, SaaS.<br/>Example: `--tags "myTag1" --tags "myTag2,myTag3:myValue"`                                                                                                                                                                                              |
 | `--valid-days`     | Use to specify the number of days a certificate needs to be valid.<br/>Example: `--valid-days 30`                                                                                                                                                                                                                                                                             |
 | `-z`               | Use to specify the name of the Application to which the certificate will be assigned and the API Alias of the Issuing Template that will handle the certificate request.<br/>Example: `-z "Business App\\Enterprise CIT"`                                                                                                                                                     |
 
@@ -189,7 +188,7 @@ Options:
 | `--chain`          | Use to include the certificate chain in the output, and to specify where to place it in the file.<br/>Options: `root-last` (default), `root-first`, `ignore`                                                                                                                                                                                                                 |
 | `--chain-file`     | Use to specify the name and location of an output file that will contain only the root and intermediate certificates applicable to the end-entity certificate.                                                                                                                                                                                                               |
 | `--cn`             | Use to specify the common name (CN). This is required for Enrollment.                                                                                                                                                                                                                                                                                                        |
-| `--csr`            | Use to specify the CSR and private key location. Options: `local` (default), `service`, `file`<br/>- local: private key and CSR will be generated locally<br/>- service: private key and CSR will be generated by a VSatellite in Venafi as a Service<br/>- file: CSR will be read from a file by name<br/>Example: `--csr file:/path-to/example.req`                        |
+| `--csr`            | Use to specify the CSR and private key location. Options: `local` (default), `service`, `file`<br/>- local: private key and CSR will be generated locally<br/>- service: private key and CSR will be generated by a VSatellite in CyberArk Certificate Manager, SaaS<br/>- file: CSR will be read from a file by name<br/>Example: `--csr file:/path-to/example.req`         |
 | `--file`           | Use to specify a name and location of an output file that will contain the private key and certificates when they are not written to their own files using `--key-file`, `--cert-file`, and/or `--chain-file`.<br/>Example: `--file /path-to/keycert.pem`                                                                                                                    |
 | `--format`         | Use to specify the output format. The `--file` option must be used with the PKCS#12 and JKS formats to specify the keystore file. JKS format also requires `--jks-alias` and at least one password (see `--key-password` and `--jks-password`) <br/>Options: `pem` (default), `legacy-pem`, `json`, `pkcs12`, `legacy-pkcs12` (analogous to OpenSSL 3.x -legacy flag), `jks` |
 | `--id`             | Use to specify the unique identifier of the certificate returned by the enroll or renew actions.  Value may be specified as a string or read from a file by using the file: prefix.<br/>Example: `--id file:cert_id.txt`                                                                                                                                                     |
@@ -201,30 +200,30 @@ Options:
 | `--key-size`       | Use to specify a key size for RSA keys. Default is 2048.                                                                                                                                                                                                                                                                                                                     |
 | `--key-type`       | Use to specify the key algorithm.<br/>Options: `rsa` (default), `ecdsa`                                                                                                                                                                                                                                                                                                      |
 | `--no-pickup`      | Use to disable the feature of VCert that repeatedly tries to retrieve the issued certificate.  When this is used you must run VCert again in pickup mode to retrieve the certificate that was requested.                                                                                                                                                                     |
-| `--no-tags`        | Use to indicate that the certificate tags of a given certificate to renew will be empty. That means if the old certificate has certificate tags associated then these will be ignored. It can not be used if `-tags` is provided. Only for Venafi Control Plane.                                                                                                             |
+| `--no-tags`        | Use to indicate that the certificate tags of a given certificate to renew will be empty. That means if the old certificate has certificate tags associated then these will be ignored. It can not be used if `-tags` is provided. Only for CyberArk Certificate Manager, SaaS.                                                                                               |
 | `--omit-sans`      | Ignore SANs in the previous certificate when preparing the renewal request. Workaround for CAs that forbid any SANs even when the SANs match those the CA automatically adds to the issued certificate.                                                                                                                                                                      |
 | `--pickup-id-file` | Use to specify a file name where the unique identifier for the certificate will be stored for subsequent use by `pickup`, `renew`, and `revoke` actions.  By default it is written to STDOUT.                                                                                                                                                                                |
 | `--san-dns`        | Use to specify a DNS Subject Alternative Name. To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-dns one.example.com` `--san-dns two.example.com`                                                                                                                                                                                   |
 | `--san-email`      | Use to specify an Email Subject Alternative Name.  To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-email me@example.com` `--san-email you@example.com`                                                                                                                                                                            |
 | `--san-ip`         | Use to specify an IP Address Subject Alternative Name.  To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-ip 10.20.30.40` `--san-ip 192.168.192.168`                                                                                                                                                                                |
 | `--san-uri`        | Use to specify a Uniform Resource Indicator Subject Alternative Name.  To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-uri spiffe://workload1.example.com` `--san-uri spiffe://workload2.example.com`                                                                                                                             |
-| `--tags`           | Use to provide the certificate tags for a given certificate to be renewed. It can not be used if `-no-tags` is provided. Only for Venafi Control Plane.<br/>Example: `--tags "myTag1" --tags "myTag2,myTag3:myValue"`                                                                                                                                                        |
+| `--tags`           | Use to provide the certificate tags for a given certificate to be renewed. It can not be used if `-no-tags` is provided. Only for CyberArk Certificate Manager, SaaS.<br/>Example: `--tags "myTag1" --tags "myTag2,myTag3:myValue"`                                                                                                                                          |
 | `--thumbprint`     | Use to specify the SHA1 thumbprint of the certificate to renew. Value may be specified as a string or read from the certificate file using the `file:` prefix.                                                                                                                                                                                                               |
 
 ## Certificate Revocation Parameters
 ```
-vcert revoke -k <VCP API key> --thumbprint <cert SHA1 thumbprint>
+vcert revoke -k <api key> --thumbprint <cert SHA1 thumbprint>
 
-vcert revoke -p vcp -t <VCP access token> --thumbprint <cert SHA1 thumbprint>
+vcert revoke -p vcp -t <access token> --thumbprint <cert SHA1 thumbprint>
 ```
 Options:
 
-| Command             | Description                                                                                                                                                     |
-|---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `--thumbprint`      | Use to specify the SHA1 thumbprint of the certificate to revoke. Value may be specified as a string or read from the certificate file using the `file:` prefix. |
-| `--ca-account-name` | The Certificate Authority Account name. Optional when the certificate to revoke was issued by TLS Protect Cloud. Otherwise it's required to provide it.         |
-| `--reason`          | Use to specify the revocation reason.<br/>Options: `none` (default), `key-compromise`, `affiliation-changed`, `superseded`, `cessation-of-operation`.           |
-| `--comments`        | Use it to add comments to the certificate revocation.                                                                                                           |
+| Command             | Description                                                                                                                                                              |
+|---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `--thumbprint`      | Use to specify the SHA1 thumbprint of the certificate to revoke. Value may be specified as a string or read from the certificate file using the `file:` prefix.          |
+| `--ca-account-name` | The Certificate Authority Account name. Optional when the certificate to revoke was issued by CyberArk Certificate Manager, SaaS. Otherwise it's required to provide it. |
+| `--reason`          | Use to specify the revocation reason.<br/>Options: `none` (default), `key-compromise`, `affiliation-changed`, `superseded`, `cessation-of-operation`.                    |
+| `--comments`        | Use it to add comments to the certificate revocation.                                                                                                                    |
 
 ## Certificate Retire Parameters
 API key:
@@ -285,7 +284,7 @@ Options:
 | `--verify` | Use to verify that a policy specification is valid. `-k` and `-z` are ignored with this option.                 |
 
 Notes:
-- The Venafi certificate policy specification is documented in detail [here](README-POLICY-SPEC.md).
+- The CyberArk certificate policy specification is documented in detail [here](README-POLICY-SPEC.md).
 - The PKI Administrator role is required to apply certificate policy.
 - Policy (Issuing Template rules) and defaults (Issuing Template recommended settings) revert to their default state if 
 they are not present in a policy specification applied by this action.
@@ -298,12 +297,12 @@ will attempt to make that assignment.
 - The syntax for the `certificateAuthority` policy value is _CA Account Type\\CA Account Name\\CA Product Name_ 
 (e.g. `DIGICERT\\DigiCert SSL Plus\\ssl_plus`).
 When not present in the policy specification, `certificateAuthority` defaults to `BUILTIN\\Built-In CA\\Default Product`.
-- The `autoInstalled` policy/defaults does not apply as automated installation of certificates by Venafi Control Plane 
+- The `autoInstalled` policy/defaults does not apply as automated installation of certificates by CyberArk Certificate Manager, SaaS 
 is not yet supported.
 - The `ellipticCurves` and `serviceGenerated` policy/defaults (`keyPair`) do not apply as ECC and central key generation 
-are not yet supported by Venafi Control Plane.
+are not yet supported by CyberArk Certificate Manager, SaaS.
 - The `ipAllowed`, `emailAllowed`, `uriAllowed`, and `upnAllowed` policy (`subjectAltNames`) do not apply as those SAN 
-types are not yet supported by Venafi Control Plane.
+types are not yet supported by CyberArk Certificate Manager, SaaS.
 - If undefined key/value pairs are included in the policy specification, they will be silently ignored by this action.
 This would include keys that are misspelled.
 
@@ -327,14 +326,15 @@ Options:
 
 For the purposes of the following examples, assume the following:
 
-- The Venafi Control Plane REST API is accessible from the system where
+- The CyberArk Certificate Manager, SaaS REST API is accessible from the system where
   VCert will be run. Currently, we support the following regions:
-    - [https://api.venafi.cloud](https://api.venafi.cloud/vaas) [US]
-    - [https://api.venafi.eu](https://api.eu.venafi.cloud/vaas) [EU]
-    - [https://api.au.venafi.cloud](https://api.au.venafi.cloud/vaas) [AU]
-    - [https://api.uk.venafi.cloud](https://api.uk.venafi.cloud/vaas) [UK]
-    - [https://api.sg.venafi.cloud](https://api.sg.venafi.cloud/vaas) [SG]
-    - [https://api.ca.venafi.cloud](https://api.ca.venafi.cloud/vaas) [CA]
+    - `https://api.venafi.cloud` [US]
+    - `https://api.venafi.eu` [EU]
+    - `https://api.au.venafi.cloud` [AU]
+    - `https://api.uk.venafi.cloud` [UK]
+    - `https://api.sg.venafi.cloud` [SG]
+    - `https://api.ca.venafi.cloud` [CA]
+
 - A user has been registered and granted at least the `OP Resource Owner` role and has an API key. 
 - A CA Account and Issuing Template have been created and configured appropriately (organization, city, state, country, 
 key length, allowed domains, etc.). 
@@ -346,47 +346,47 @@ Use the help to view the command line syntax for enroll:
 vcert enroll -h
 ```
 
-Submit a request to Venafi Control Plane for enrolling a certificate with a common name of `first-time.venafi.example` 
+Submit a request to CyberArk Certificate Manager, SaaS for enrolling a certificate with a common name of `first-time.venafi.example` 
 using an api key and have VCert prompt for the password to encrypt the private key:
 ```
 vcert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --cn first-time.venafi.example
 ```
 
-Submit a request to Venafi Control Plane for enrolling a certificate where the password for encrypting the private key 
+Submit a request to CyberArk Certificate Manager, SaaS for enrolling a certificate where the password for encrypting the private key 
 to be generated is specified in a text file called passwd.txt:
 ```
 vcert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --key-password file:passwd.txt --cn passwd-from-file.venafi.example
 ```
 
-Submit a request to Venafi Control Plane for enrolling a certificate where the private key to be generated is not 
+Submit a request to CyberArk Certificate Manager, SaaS for enrolling a certificate where the private key to be generated is not 
 password encrypted:
 ```
 vcert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --cn non-encrypted-key.venafi.example --no-prompt
 ```
 
-Submit a request to Venafi Control Plane for enrolling a certificate using an externally generated CSR:
+Submit a request to CyberArk Certificate Manager, SaaS for enrolling a certificate using an externally generated CSR:
 ```
 vcert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --csr file:/opt/pki/cert.req
 ```
 
-Submit a request to Venafi Control Plane for enrolling a certificate where the certificate and private key are output 
+Submit a request to CyberArk Certificate Manager, SaaS for enrolling a certificate where the certificate and private key are output 
 using JSON syntax to a file called json.txt:
 ```
 vcert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --key-password Passw0rd --cn json-to-file.venafi.example --format json --file keycert.json
 ```
 
-Submit a request to Venafi Control Plane for enrolling a certificate where only the certificate and private key are 
+Submit a request to CyberArk Certificate Manager, SaaS for enrolling a certificate where only the certificate and private key are 
 output, no chain certificates:
 ```
 vcert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --key-password Passw0rd --cn no-chain.venafi.example --chain ignore
 ```
 
-Submit a request to Venafi Control Plane for enrolling a certificate with three DNS subject alternative names:
+Submit a request to CyberArk Certificate Manager, SaaS for enrolling a certificate with three DNS subject alternative names:
 ```
 vcert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --no-prompt --cn three-sans.venafi.example --san-dns first-san.venafi.example --san-dns second-san.venafi.example --san-dns third-san.venafi.example
 ```
 
-Submit request to Venafi Control Plane for enrolling a certificate where the certificate is not issued after two 
+Submit request to CyberArk Certificate Manager, SaaS for enrolling a certificate where the certificate is not issued after two 
 minutes and then subsequently retrieve that certificate after it has been issued:
 ```
 vcert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --no-prompt --cn demo-pickup.venafi.example
@@ -394,7 +394,7 @@ vcert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trus
 vcert pickup -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 --pickup-id "{7428fac3-d0e8-4679-9f48-d9e867a326ca}"
 ```
 
-Submit request to Venafi Control Plane for enrolling a certificate that will be retrieved later using a Pickup ID from 
+Submit request to CyberArk Certificate Manager, SaaS for enrolling a certificate that will be retrieved later using a Pickup ID from 
 a text file:
 ```
 vcert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trust" --no-prompt --cn demo-pickup.venafi.example --no-pickup -pickup-id-file pickup_id.txt
@@ -402,13 +402,13 @@ vcert enroll -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 -z "Storefront\\Public Trus
 vcert pickup -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 --pickup-id-file pickup_id.txt
 ```
 
-Submit request to Venafi Control Plane for renewing a certificate using the enrollment (pickup) ID of the expiring 
+Submit request to CyberArk Certificate Manager, SaaS for renewing a certificate using the enrollment (pickup) ID of the expiring 
 certificate:
 ```
 vcert renew -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 --id "{7428fac3-d0e8-4679-9f48-d9e867a326ca}"
 ```
 
-Submit request to Venafi Control Plane for renewing a certificate using the expiring certificate file:
+Submit request to CyberArk Certificate Manager, SaaS for renewing a certificate using the expiring certificate file:
 ```
 vcert renew -k 3dfcc6dc-7309-4dcf-aa7c-5d7a2ee368b4 --thumbprint file:/opt/pki/demo.crt
 ```
@@ -421,11 +421,11 @@ vcert getcred --email <business email address>
 ```
 Options:
 
-| Command      | Description                                                                                                                                                                                                              |
-|--------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `--email`    | Use to specify a user's business email address. An email will be sent to this address with a link to activate the API key that is output by this action. This is required for (re)registering with Venafi Control Plane. |
-| `--format`   | Specify "json" to get more verbose JSON formatted output instead of the plain text default.                                                                                                                              |
-| `--password` | Use to specify the user's password if it is expected the user will need to login to the [Venafi Control Plane web UI](https://ui.venafi.cloud/).                                                                         |
+| Command      | Description                                                                                                                                                                                                                            |
+|--------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `--email`    | Use to specify a user's business email address. An email will be sent to this address with a link to activate the API key that is output by this action. This is required for (re)registering with CyberArk Certificate Manager, SaaS. |
+| `--format`   | Specify "json" to get more verbose JSON formatted output instead of the plain text default.                                                                                                                                            |
+| `--password` | Use to specify the user's password if it is expected the user will need to login to the [CyberArk Certificate Manager, SaaS web UI](https://ui.venafi.cloud/).                                                                         |
 
 ### Obtaining an access token from service account
 ```
@@ -433,11 +433,11 @@ vcert getcred -p vcp --token-url https://api.venafi.cloud/v1/oauth2/v2.0/aaa-bbb
 ```
 Options:
 
-| Flag                 | Description                                                                                                           |
-|----------------------|-----------------------------------------------------------------------------------------------------------------------|
-| `-p` or `--platform` | Use to specify Venafi Control Plane as the platform of choice to connect. Accepted value is `vcp`, no case-sensitive. |
-| `--token-url`        | The URL used to obtain the access token, provided by Venafi Control Plane's service account page                      |
-| `--external-jwt`     | The JWT of the Identity Provider associated to the service account that is going to grant the access token            |
+| Flag                 | Description                                                                                                                         |
+|----------------------|-------------------------------------------------------------------------------------------------------------------------------------|
+| `-p` or `--platform` | Use to specify CyberArk Certificate Manager, SaaS as the platform of choice to connect. Accepted value is `vcp`, no case-sensitive. |
+| `--token-url`        | The URL used to obtain the access token, provided by CyberArk Certificate Manager, SaaS's service account page                      |
+| `--external-jwt`     | The JWT of the Identity Provider associated to the service account that is going to grant the access token                          |
 
 ### Generating a new key pair and CSR
 ```
