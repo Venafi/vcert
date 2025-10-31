@@ -1,6 +1,6 @@
 [![Apache 2.0 License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 ![Community Supported](https://img.shields.io/badge/Support%20Level-Community-brightgreen)
-![Compatible with TPP 17.3+ & VCP & Firefly](https://img.shields.io/badge/Compatibility-TPP%2017.3+%20%26%20VCP%20%26%20Firefly-f9a90c)  
+![Compatible with Certificate Manager, Self-hosted 17.3+ & Certificate Manager, SaaS & Workload Identity Manager](https://img.shields.io/badge/Compatibility-Certificate%20Manager%2C%20Self--Hosted_17.3%2B_%26_Certificate%20Manager%2C%20SaaS_%26_Workload%20Identity%20Manager-f9a90c)  
 _**This open source project is community-supported.** To report a problem or share an idea, use
 **[Issues](../../issues)**; and if you have a suggestion for fixing the issue, please include those details, too.
 In addition, use **[Pull Requests](../../pulls)** to contribute actual bug fixes or proposed enhancements.
@@ -15,8 +15,8 @@ We welcome and appreciate all contributions. Got questions or want to discuss so
 
 VCert is a Go library, SDK, and command line utility designed to simplify key generation and enrollment of machine identities
 (also known as SSL/TLS certificates and keys) that comply with enterprise security policy by using the
-[CyberArk Certificate Manager, Self-Hosted](https://www.venafi.com/platform/trust-protection-platform) 
-or [CyberArk Certificate Manager, SaaS](https://www.venafi.com/venaficloud) or [CyberArk Workload Identity Manager](https://www.cyberark.com/products/workload-identity-manager/).
+[CyberArk Certificate Manager, Self-Hosted](https://www.cyberark.com/products/certificate-manager/) 
+or [CyberArk Certificate Manager, SaaS](https://www.cyberark.com/products/certificate-manager/) or [CyberArk Workload Identity Manager](https://www.cyberark.com/products/workload-identity-manager/).
 
 See [VCert CLI for CyberArk Certificate Manager, Self-Hosted](README-CLI-PLATFORM.md) or
 [VCert CLI for CyberArk Certificate Manager, SaaS](README-CLI-CLOUD.md) or [VCert CLI for CyberArk Workload Identity Manager](README-CLI-FIREFLY.md) 
@@ -192,8 +192,8 @@ CyberArk welcomes contributions from the developer community.
 
 ## License
 
-Copyright &copy; Venafi, Inc. All rights reserved.
+Copyright &copy; Venafi, Inc. and CyberArk Software Ltd. ("CyberArk")
 
 VCert is licensed under the Apache License, Version 2.0. See [LICENSE](./LICENSE) for the full license text.
 
-Please direct questions/comments to opensource@venafi.com.
+Please direct questions/comments to mis-opensource@cyberark.com.
