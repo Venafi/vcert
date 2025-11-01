@@ -85,7 +85,7 @@ func isValidTpp(c Connection) (bool, error) {
 		rErr = errors.Join(rErr, ErrNoCredentials)
 	}
 
-	// TPP connector requires a url
+	// CyberArk Certificate Manager, Self-Hosted connector requires a url
 	if c.URL == "" {
 		rValid = false
 		rErr = errors.Join(rErr, ErrNoTPPURL)

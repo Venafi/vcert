@@ -24,14 +24,14 @@ func parseDEKInfo(httpStatusCode int, httpStatus string, body []byte) (*EdgeEncr
 		if body != nil {
 			respErrors, err := parseResponseErrors(body)
 			if err == nil {
-				respError := fmt.Sprintf("unexpected status code on VaaS retrieving DEK's info. Status: %s\n", httpStatus)
+				respError := fmt.Sprintf("unexpected status code on CyberArk Certificate Manager, SaaS retrieving DEK's info. Status: %s\n", httpStatus)
 				for _, e := range respErrors {
 					respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
 				}
 				return nil, errors.New(respError)
 			}
 		}
-		return nil, fmt.Errorf("unexpected status code on VaaS retrieving DEK's info. Status. Status: %s", httpStatus)
+		return nil, fmt.Errorf("unexpected status code on CyberArk Certificate Manager, SaaS retrieving DEK's info. Status. Status: %s", httpStatus)
 	}
 }
 

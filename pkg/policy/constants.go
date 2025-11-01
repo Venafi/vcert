@@ -9,7 +9,7 @@ const (
 	PolicyClass          = "Policy"
 	PolicyAttributeClass = "X509 Certificate"
 
-	//tpp policy attributes
+	//CyberArk Certificate Manager, Self-Hosted policy attributes
 	TppContact                       = "Contact"
 	TppApprover                      = "Approver"
 	TppCertificateAuthority          = "Certificate Authority"

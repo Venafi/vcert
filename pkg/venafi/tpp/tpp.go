@@ -109,7 +109,7 @@ type certificateRetrieveResponse struct {
 
 type RevocationReason int
 
-// RevocationReasonsMap maps *certificate.RevocationRequest.Reason to TPP-specific webSDK codes
+// RevocationReasonsMap maps *certificate.RevocationRequest.Reason to CyberArk Certificate Manager, Self-Hosted-specific webSDK codes
 var RevocationReasonsMap = map[string]RevocationReason{
 	"":                       0, // NoReason
 	"none":                   0, //
@@ -569,7 +569,7 @@ func (c *Connector) getHTTPClient() *http.Client {
 // GenerateRequest creates a new certificate request, based on the zone/policy configuration and the user data
 func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *certificate.Request) (err error) {
 	if req.KeyType == certificate.KeyTypeED25519 {
-		return fmt.Errorf("Unable to request certificate from TPP, ed25519 key type is not for TPP")
+		return fmt.Errorf("unable to request certificate from CyberArk Certificate Manager, Self-Hosted, ed25519 key type is not for CyberArk Certificate Manager, Self-Hosted")
 	}
 
 	if config == nil {
@@ -581,7 +581,7 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 
 	tppMgmtType := config.CustomAttributeValues[tppAttributeManagementType]
 	if tppMgmtType == "Monitoring" || tppMgmtType == "Unassigned" {
-		return fmt.Errorf("Unable to request certificate from TPP, current TPP configuration would not allow the request to be processed")
+		return fmt.Errorf("unable to request certificate from CyberArk Certificate Manager, Self-Hosted, current CyberArk Certificate Manager, Self-Hosted configuration would not allow the request to be processed")
 	}
 
 	config.UpdateCertificateRequest(req)

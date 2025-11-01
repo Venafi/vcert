@@ -317,8 +317,8 @@ func TestFailRefreshAccessToken(t *testing.T) {
 		t.Fatalf("err should not be nil, er")
 	}
 
-	if !strings.Contains(err.Error(), "unexpected status code on TPP Authorize. Status: 400") {
-		t.Fatalf("error text should contain: 'unexpected status code on TPP Authorize. Status: 400'. but it is: '%s'", err)
+	if !strings.Contains(err.Error(), "unexpected status code on CyberArk Certificate Manager, Self-Hosted Authorize. Status: 400") {
+		t.Fatalf("error text should contain: 'unexpected status code on CyberArk Certificate Manager, Self-Hosted Authorize. Status: 400'. but it is: '%s'", err)
 	}
 }
 

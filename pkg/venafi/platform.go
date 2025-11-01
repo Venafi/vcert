@@ -31,11 +31,11 @@ const (
 	Undefined Platform = iota
 	// Fake is a fake platform for tests
 	Fake
-	// TLSPCloud represents the VCP platform type
+	// TLSPCloud represents the CyberArk Certificate Manager, SaaS platform type
 	TLSPCloud
-	// TPP represents the TPP platform type
+	// TPP represents the CyberArk Certificate Manager, Self-Hosted platform type
 	TPP
-	// Firefly represents the Firefly platform type
+	// Firefly represents the CyberArk Workload Identity Manager platform type
 	Firefly
 
 	// String representations of the Platform types
@@ -45,15 +45,15 @@ const (
 	strPlatformVCP     = "VCP"
 	strPlatformUnknown = "Unknown"
 
-	// alias for TPP
+	// alias for CyberArk Certificate Manager, Self-Hosted
 	strPlatformTLSPDC = "TLSPDC"
-	// alias for VCP
+	// alias for CyberArk Certificate Manager, SaaS
 	strPlatformTLSPC = "TLSPC"
-	// alias for VCP
+	// alias for CyberArk Certificate Manager, SaaS
 	strPlatformVaaS = "VAAS"
-	// NOTE: For now OIDC will be taken as an alias for Firefly
-	// given Firefly implements the logic to get an OAuth 2.0
-	// access token but OIDC will be available independently of Firefly.
+	// NOTE: For now OIDC will be taken as an alias for CyberArk Workload Identity Manager
+	// given CyberArk Workload Identity Manager implements the logic to get an OAuth 2.0
+	// access token but OIDC will be available independently of CyberArk Workload Identity Manager.
 	// So is pending to create an independent client to get an
 	// OAuth 2.0 access token
 	strPlatformOIDC = "OIDC"

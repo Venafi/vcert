@@ -149,7 +149,7 @@ func (s *ConnectionSuite) SetupTest() {
 			expectedValid: false,
 			expectedErr:   ErrNoIdentityProviderURL,
 		},
-		// TPP USE CASES
+		// CyberArk Certificate Manager, Self-Hosted USE CASES
 		{
 			name: "TPP_valid",
 			c: Connection{
@@ -207,7 +207,7 @@ func (s *ConnectionSuite) SetupTest() {
 			expectedValid: false,
 			expectedErr:   ErrTrustBundleNotExist,
 		},
-		// VAAS USE CASES
+		// CyberArk Certificate Manager, SaaS USE CASES
 		{
 			name: "VaaS_valid",
 			c: Connection{

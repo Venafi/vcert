@@ -30,7 +30,7 @@ func validateConnectionFlagsTPP(commandName string) error {
 
 	advice := "Use only one of --token (-t), --p12-file/--p12-password] or --username/--password"
 	if !tokenPresent && !userPasswordPresent && !clientCertificatePresent {
-		return fmt.Errorf("missing flags for Trust Protection Platform authentication. %s", advice)
+		return fmt.Errorf("missing flags for CyberArk Certificate Manager, Self-Hosted authentication. %s", advice)
 	}
 
 	// Warning not valid when using user/password to obtain a token

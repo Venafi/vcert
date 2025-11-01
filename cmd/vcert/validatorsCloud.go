@@ -4,7 +4,7 @@ import "fmt"
 
 func validateConnectionFlagsCloud(commandName string) error {
 	//sshgetconfig command
-	//This is not supported for VaaS as of now, but when (if) it does, it is going to be an unauthenticated endpoint, just like TPP
+	//For now this is not supported by CyberArk Certificate Manager, SaaS, but when (if) it does, it is going to be an unauthenticated endpoint, just like CyberArk Certificate Manager, Self-Hosted
 	if commandName == commandSshGetConfigName {
 		return nil
 	}
@@ -22,7 +22,7 @@ func validateConnectionFlagsCloud(commandName string) error {
 
 		advice := "Use --token-url/--external-jwt for authentication or --email for registration"
 		if !svcAccountPresent && !emailPresent {
-			return fmt.Errorf("missing flags for Venafi Cloud Platform authentication. %s", advice)
+			return fmt.Errorf("missing flags for CyberArk Certificate Manager, SaaS authentication. %s", advice)
 		}
 
 		return nil
@@ -35,7 +35,7 @@ func validateConnectionFlagsCloud(commandName string) error {
 	advice := "Use only one of --apiKey (-k) or --token (-t)"
 
 	if !apiKeyPresent && !tokenPresent {
-		return fmt.Errorf("missing flags for Venafi as a Service authentication. %s", advice)
+		return fmt.Errorf("missing flags for CyberArk Certificate Manager, SaaS authentication. %s", advice)
 	}
 
 	return nil

@@ -51,7 +51,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 
 	var status string
 
-	//validate if zone name is set and if zone already exist on Venafi cloud if not create it.
+	//validate if zone name is set and if zone already exist on CyberArk Certificate Manager, SaaS if not create it.
 	citName := policy.GetCitName(name)
 
 	if citName == "" {
@@ -137,7 +137,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 
 	}
 
-	//validate if appName is set and if app already exist on Venafi cloud if not create it
+	//validate if appName is set and if app already exist on CyberArk Certificate Manager, SaaS if not create it
 	//and as final steps link the app with the cit.
 	appName := policy.GetApplicationName(name)
 

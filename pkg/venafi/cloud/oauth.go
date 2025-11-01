@@ -29,7 +29,7 @@ func parseAccessTokenResponse(expectedStatusCode int, statusCode int, httpStatus
 		}
 		return nil, fmt.Errorf("%w: %s, %s", verror.ServerError, httpStatus, bodyText)
 	}
-	respError := fmt.Sprintf("unexpected status code on Venafi Cloud Authentication. Status: %s\n", httpStatus)
+	respError := fmt.Sprintf("unexpected status code on CyberArk Certificate Manager, SaaS Authentication. Status: %s\n", httpStatus)
 	for _, e := range errors {
 		respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
 	}

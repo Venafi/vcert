@@ -39,7 +39,7 @@ const (
 	tokenURL     = "tokenURL"
 )
 
-// Authentication holds the credentials to connect to Venafi platforms: TPP and TLSPC
+// Authentication holds the credentials to connect to CyberArk platforms: CyberArk Certificate Manager, Self-Hosted and CyberArk Certificate Manager, SaaS
 type Authentication struct {
 	endpoint.Authentication `yaml:"-"`
 	P12Task                 string `yaml:"p12Task,omitempty"`

@@ -42,7 +42,7 @@ const (
 // Execute takes the task and requests the certificate specified,
 // then it installs it in the locations defined by the installers.
 //
-// Config is used to make the connection to the Venafi platform for the certificate request.
+// Config is used to make the connection to the CyberArk platform for the certificate request.
 func Execute(config domain.Config, task domain.CertificateTask) []error {
 	// Check if certificate needs action
 	changed, err := isCertificateChanged(config, task)

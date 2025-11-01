@@ -162,14 +162,14 @@ func validateConnectionFlags(commandName string) error {
 
 	//Guessing the platform by checking flags
 	//	- Firefly not present here as it is required to pass the platform flag
-	//	- Token empty is considered to mean Cloud connector to keep previous behavior where token was exclusive to TPP
-	//	- To use token with VaaS, the platform flag is required.
+	//	- Token empty is considered to mean Cloud connector to keep previous behavior where token was exclusive to CyberArk Certificate Manager, Self-Hosted
+	//	- To use token with CyberArk Certificate Manager, SaaS, the platform flag is required.
 	//	- If the platform flag is set we would not be guessing here
 	if flags.userName == "" && tppToken == "" && flags.clientP12 == "" {
 		// should be SaaS endpoint
 		return validateConnectionFlagsCloud(commandName)
 	} else {
-		// should be TPP service
+		// should be CyberArk Certificate Manager, Self-Hosted service
 		return validateConnectionFlagsTPP(commandName)
 	}
 }
@@ -196,14 +196,14 @@ func validateProvisionConnectionFlags(commandName string) error {
 
 	//Guessing the platform by checking flags
 	//	- Firefly not present here as it is required to pass the platform flag
-	//	- Token empty is considered to mean Cloud connector to keep previous behavior where token was exclusive to TPP
-	//	- To use token with VaaS, the platform flag is required.
+	//	- Token empty is considered to mean Cloud connector to keep previous behavior where token was exclusive to CyberArk Certificate Manager, Self-Hosted
+	//	- To use token with CyberArk Certificate Manager, SaaS, the platform flag is required.
 	//	- If the platform flag is set we would not be guessing here
 	if flags.userName == "" && tppToken == "" && flags.clientP12 == "" {
 		// should be SaaS endpoint
 		return validateConnectionFlagsCloud(commandName)
 	} else {
-		// should be TPP service
+		// should be CyberArk Certificate Manager, Self-Hosted service
 		return fmt.Errorf("command %s not supported for %s", commandName, venafi.TPP.String())
 	}
 }
@@ -380,11 +380,11 @@ func validateEnrollFlags(commandName string) error {
 	addrInstPresent := flags.tlsAddress != "" || flags.instance != ""
 	isCloud := apiKey != "" || flags.platform == venafi.TLSPCloud
 	if addrInstPresent && isCloud {
-		return fmt.Errorf("--instance and --tls-address are not applicable to Venafi as a Service platform")
+		return fmt.Errorf("--instance and --tls-address are not applicable to CyberArk Certificate Manager, SaaS")
 	}
 
 	if len(flags.tags.Value()) > 0 && !isCloud {
-		return fmt.Errorf("--tags is only applicable to Venafi Control Plane")
+		return fmt.Errorf("--tags is only applicable to CyberArk Certificate Manager, SaaS")
 	}
 
 	return nil
@@ -477,7 +477,7 @@ func validateRenewFlags1(commandName string) error {
 
 	if flags.csrOption == "service" {
 		if !(flags.noPickup) && flags.noPrompt && len(flags.keyPassword) == 0 && (flags.userName != "" || flags.token != "") {
-			return fmt.Errorf("-key-password cannot be empty in -csr service mode for TPP unless -no-pickup specified")
+			return fmt.Errorf("-key-password cannot be empty in -csr service mode for CyberArk Certificate Manager, Self-Hosted unless -no-pickup specified")
 		}
 		if flags.commonName != "" ||
 			flags.country != "" ||
@@ -543,10 +543,10 @@ func validateRenewFlags1(commandName string) error {
 	isCloud := apiKey != "" || flags.platform == venafi.TLSPCloud
 	if !isCloud {
 		if tagsProvided {
-			return fmt.Errorf("--tags is only applicable to Venafi Control Plane")
+			return fmt.Errorf("--tags is only applicable to CyberArk Certificate Manager, SaaS")
 		}
 		if flags.noTags {
-			return fmt.Errorf("--no-tags is only applicable to Venafi Control Plane")
+			return fmt.Errorf("--no-tags is only applicable to CyberArk Certificate Manager, SaaS")
 		}
 	}
 
@@ -612,7 +612,7 @@ func validateRevokeFlags1(commandName string) error {
 	platform := flags.platform
 
 	if platform == venafi.Fake || platform == venafi.Firefly {
-		return fmt.Errorf("revoke operation is only available for Venafi Control Plane and Trust Protection Platform")
+		return fmt.Errorf("revoke operation is only available for CyberArk Certificate Manager, SaaS and CyberArk Certificate Manager, Self-Hosted")
 	}
 
 	if platform == venafi.Undefined {
@@ -630,16 +630,16 @@ func validateRevokeFlags1(commandName string) error {
 			return errors.New("Either -id or -thumbprint can be used")
 		}
 		if flags.caAccountName != "" {
-			return errors.New("-ca-account-name can not be used on TPP")
+			return errors.New("-ca-account-name can not be used on CyberArk Certificate Manager, Self-Hosted")
 		}
 
 		reasonOptions = RevocationReasonOptions
 	case venafi.TLSPCloud:
 		if flags.thumbprint == "" {
-			return errors.New("certificate Thumbprint is required to revoke the certificate on VCP")
+			return errors.New("certificate Thumbprint is required to revoke the certificate on CyberArk Certificate Manager, SaaS")
 		}
 		if flags.distinguishedName != "" {
-			return errors.New("-id can not be used on VCP")
+			return errors.New("-id can not be used on CyberArk Certificate Manager, SaaS")
 		}
 		reasonOptions = RevocationReasonOptionsVCP
 	}
@@ -885,7 +885,7 @@ func validateExistingFile(f string) error {
 	return nil
 }
 
-// determinePlatform determines if the platform is TPP or VCP based on the authentication info provided
+// determinePlatform determines if the platform is CyberArk Certificate Manager, Self-Hosted or CyberArk Certificate Manager, SaaS based on the authentication info provided
 func determinePlatform() venafi.Platform {
 	tppToken := flags.token
 	if tppToken == "" {
@@ -893,9 +893,9 @@ func determinePlatform() venafi.Platform {
 	}
 
 	//Guessing the platform by checking flags
-	//	- Firefly not present here as it is required to pass the platform flag
-	//	- Token empty is considered to mean Cloud connector to keep previous behavior where token was exclusive to TPP
-	//	- To use token with VaaS, the platform flag is required.
+	//	- CyberArk Workload Identity Manager not present here as it is required to pass the platform flag
+	//	- Token empty is considered to mean Cloud connector to keep previous behavior where token was exclusive to CyberArk Certificate Manager, Self-Hosted
+	//	- To use token with CyberArk Certificate Manager, SaaS, the platform flag is required.
 	//	- If the platform flag is set we would not be guessing here
 	if flags.userName == "" && tppToken == "" && flags.clientP12 == "" {
 		return venafi.TLSPCloud

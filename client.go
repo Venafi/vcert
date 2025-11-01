@@ -33,9 +33,9 @@ type newClientArgs struct {
 	authenticate bool
 }
 
-// NewClient returns a connector for either Trust Protection Platform (TPP) or Venafi Cloud based on provided configuration.
+// NewClient returns a connector for either CyberArk Certificate Manager, Self-Hosted or CyberArk Certificate Manager, SaaS based on provided configuration.
 // Config should have Credentials compatible with the selected ConnectorType.
-// Returned connector is a concurrency-safe interface to TPP or Venafi Cloud that can be reused without restriction.
+// Returned connector is a concurrency-safe interface to CyberArk Certificate Manager, Self-Hosted or CyberArk Certificate Manager, SaaS that can be reused without restriction.
 // Connector can also be of type "fake" for local tests, which doesn't connect to any backend and all certificates enroll locally.
 // The returned connector will be authenticated by default, but it's possible to pass a bool argument to indicate if it's
 // desired to get the connector authenticated already or not.
@@ -117,9 +117,9 @@ func getNewClientArguments(args []interface{}) (*newClientArgs, error) {
 	}, nil
 }
 
-// NewClient returns a connector for either Trust Protection Platform (TPP) or Venafi Cloud based on provided configuration.
+// NewClient returns a connector for either CyberArk Certificate Manager, Self-Hosted or CyberArk Certificate Manager, SaaS based on provided configuration.
 // Config should have Credentials compatible with the selected ConnectorType.
-// Returned connector is a concurrency-safe interface to TPP or Venafi Cloud that can be reused without restriction.
+// Returned connector is a concurrency-safe interface to CyberArk Certificate Manager, Self-Hosted or CyberArk Certificate Manager, SaaS that can be reused without restriction.
 // Connector can also be of type "fake" for local tests, which doesn't connect to any backend and all certificates enroll locally.
 // The returned connector will be authenticated by default, but it's possible to pass a bool argument to indicate if it's
 // desired to get the connector authenticated already or not.
