@@ -36,8 +36,8 @@ var (
 
 	flagUrl = &cli.StringFlag{
 		Name: "url",
-		Usage: "REQUIRED/TPP/Firefly/OIDC. The URL of the service. \n\t\tTPP example: -u https://tpp.example.com" +
-			"\n\t\tFirefly example: -u https://firefly.example.com" +
+		Usage: "REQUIRED/CyberArk Certificate Manager, Self-Hosted/CyberArk Workload Identity Manager/OIDC. The URL of the service. \n\t\tCyberArk Certificate Manager, Self-Hosted example: -u https://cmsh.example.com" +
+			"\n\t\tCyberArk Workload Identity Manager example: -u https://wim.example.com" +
 			"\n\t\tOIDC example: -u https://my.okta.domain//oauth2/v1/token",
 		Destination: &flags.url,
 		Aliases:     []string{"u"},
@@ -45,7 +45,7 @@ var (
 
 	flagTokenUrl = &cli.StringFlag{
 		Name: "token-url",
-		Usage: "REQUIRED/VCP. Use to specify the URL to retrieve an access token for Venafi Control Plane. Use in combination with --external-jwt flag." +
+		Usage: "REQUIRED/VCP. Use to specify the URL to retrieve an access token for CyberArk Certificate Manager, SaaS. Use in combination with --external-jwt flag." +
 			"\n\t\tExample: --token-url https://api.venafi.cloud/v1/oauth2/v2.0/aaaaaaaa-bbbb-cccc/token",
 		Destination: &flags.tokenURL,
 	}
@@ -60,26 +60,26 @@ var (
 
 	flagKey = &cli.StringFlag{
 		Name:        "apiKey",
-		Usage:       "REQUIRED/VaaS. Your API key for Venafi as a Service.  Example: -k aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+		Usage:       "REQUIRED/CyberArk Certificate Manager, SaaS. Your API key for CyberArk Certificate Manager, SaaS.  Example: -k aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
 		Destination: &flags.apiKey,
 		Aliases:     []string{"k"},
 	}
 
 	flagExternalJWT = &cli.StringFlag{
 		Name:        "external-jwt",
-		Usage:       "REQUIRED/VCP. Use to specify the JWT of the Identity Provider associated with the service account that is requesting a new access token for Venafi Control Plane. Use in combination with --token-url option.",
+		Usage:       "REQUIRED/VCP. Use to specify the JWT of the Identity Provider associated with the service account that is requesting a new access token for CyberArk Certificate Manager, SaaS. Use in combination with --token-url option.",
 		Destination: &flags.externalJWT,
 	}
 
 	flagDeviceURL = &cli.StringFlag{
 		Name:        "device-url",
-		Usage:       "REQUIRED/Firefly working in device flow. The url endpoint of the OAuth 2.0 identity provider to request a device code. Example for Okta: --device-url https://${yourOktaDomain}/device",
+		Usage:       "REQUIRED/CyberArk Workload Identity Manager working in device flow. The url endpoint of the OAuth 2.0 identity provider to request a device code. Example for Okta: --device-url https://${yourOktaDomain}/device",
 		Destination: &flags.deviceURL,
 	}
 
 	flagUser = &cli.StringFlag{
 		Name: "username",
-		Usage: "Use to specify the username of a Trust Protection Platform or the username of OAuth 2.0 password flow grant." +
+		Usage: "Use to specify the username of CyberArk Certificate Manager, Self-Hosted or the username of OAuth 2.0 password flow grant." +
 			"Required if -p12-file or -t is not present and may not be combined with either.",
 		Destination: &flags.userName,
 	}
@@ -93,13 +93,13 @@ var (
 
 	flagEmail = &cli.StringFlag{
 		Name:        "email",
-		Usage:       "REQUIRED/VaaS. Use to specify the email for headless registration on VaaS.",
+		Usage:       "REQUIRED/CyberArk Certificate Manager, SaaS. Use to specify the email for headless registration in CyberArk Certificate Manager, SaaS.",
 		Destination: &flags.email,
 	}
 
 	flagPassword = &cli.StringFlag{
 		Name:        "password",
-		Usage:       "Use to specify the Trust Protection Platform user's password or the optional password for the headless registration in VaaS or the password for OAuth 2.0 password flow grant.",
+		Usage:       "Use to specify the CyberArk Certificate Manager, Self-Hosted user's password or the optional password for the headless registration in CyberArk Certificate Manager, SaaS or the password for OAuth 2.0 password flow grant.",
 		Destination: &flags.password,
 	}
 
@@ -112,7 +112,7 @@ var (
 
 	flagToken = &cli.StringFlag{
 		Name: "token",
-		Usage: "REQUIRED/TPP/VaaS/Firefly. Your access token (or refresh token for getcred) for Trust Protection Platform, Venafi as a Service or Firefly. " +
+		Usage: "REQUIRED/CyberArk Certificate Manager, Self-Hosted/CyberArk Certificate Manager, SaaS/CyberArk Workload Identity Manager. Your access token (or refresh token for getcred) for CyberArk Certificate Manager, Self-Hosted, CyberArk Certificate Manager, SaaS or CyberArk Workload Identity Manager. " +
 			"Example: -t Ab01Cd23Ef45Uv67Wx89Yz==",
 		Destination: &flags.token,
 		Aliases:     []string{"t"},
@@ -126,7 +126,7 @@ var (
 	flagZone = &cli.StringFlag{
 		Name:        "zone",
 		Destination: &flags.zone,
-		Usage: "REQUIRED. The zone that defines the enrollment configuration. In Trust Protection Platform this is " +
+		Usage: "REQUIRED. The zone that defines the enrollment configuration. In CyberArk Certificate Manager, Self-Hosted this is " +
 			"equivalent to the policy folder path where the certificate object will be placed. " + UtilityShortName +
 			" prepends \\VED\\Policy\\, so you only need to specify child folders under the root Policy folder. " +
 			"Example: -z Corp\\Engineering",
@@ -349,8 +349,8 @@ var (
 	flagCSROption = &cli.StringFlag{
 		Name: "csr",
 		Usage: "Use to specify the CSR and private key location. Options include: local | service | file.\n" +
-			"\t\tlocal:   The private key and CSR will be generated locally (default for TPP and VaaS. For Firefly it doesn't apply)\n" +
-			"\t\tservice: The private key and CSR will be generated at service side(default for Firefly)\n" +
+			"\t\tlocal:   The private key and CSR will be generated locally (default for CyberArk Certificate Manager, Self-Hosted and CyberArk Certificate Manager, SaaS. For CyberArk Workload Identity Manager it doesn't apply)\n" +
+			"\t\tservice: The private key and CSR will be generated at service side(default for CyberArk Workload Identity Manager)\n" +
 			"\t\tfile:    The CSR will be read from a file by name. Example: --csr file:/path-to/csr.pem",
 		Destination: &flags.csrOption,
 	}
@@ -402,9 +402,9 @@ var (
 	flagConfig = &cli.StringFlag{
 		Name: "config",
 		Usage: "Use to specify INI configuration file containing connection details instead\n" +
-			"\t\tFor TPP: url, access_token, tpp_zone\n" +
-			"\t\tFor VaaS: cloud_apikey, cloud_zone\n" +
-			"\t\tTPP & VaaS: trust_bundle, test_mode",
+			"\t\tFor CyberArk Certificate Manager, Self-Hosted: url, access_token, tpp_zone\n" +
+			"\t\tFor CyberArk Certificate Manager, SaaS: cloud_apikey, cloud_zone\n" +
+			"\t\tCyberArk Certificate Manager, Self-Hosted & CyberArk Certificate Manager, SaaS: trust_bundle, test_mode",
 		Destination: &flags.config,
 		TakesFile:   true,
 	}
@@ -417,7 +417,7 @@ var (
 
 	flagClientP12 = &cli.StringFlag{
 		Name:        "p12-file",
-		Usage:       "Use to specify a client PKCS#12 archive for mutual TLS (for 2FA, use the getcred action to authenticate with Venafi Platform using a client certificate).",
+		Usage:       "Use to specify a client PKCS#12 archive for mutual TLS (for 2FA, use the getcred action to authenticate with CyberArk Platform using a client certificate).",
 		Destination: &flags.clientP12,
 		TakesFile:   true,
 	}
@@ -445,7 +445,7 @@ var (
 
 	flagDistinguishedName = &cli.StringFlag{
 		Name: "id",
-		Usage: "Use to specify the ID of the certificate. Required unless --thumbprint is specified. For revocation (Only for Trust Protection Platform)," +
+		Usage: "Use to specify the ID of the certificate. Required unless --thumbprint is specified. For revocation (Only for CyberArk Certificate Manager, Self-Hosted)," +
 			"marks the certificate as disabled so that no new certificate can be enrolled to replace it. " +
 			"If a replacement certificate will be enrolled, also specify --no-retire.",
 		Destination: &flags.distinguishedName,
@@ -486,19 +486,19 @@ var (
 	flagRevocationReason = &cli.StringFlag{
 		Name: "reason",
 		Usage: `The revocation reason. Options include: 
-        "none", "key-compromise", "ca-compromise" (Only for Trust Protection Platform), "affiliation-changed", "superseded", "cessation-of-operation"`,
+        "none", "key-compromise", "ca-compromise" (Only for CyberArk Certificate Manager, Self-Hosted), "affiliation-changed", "superseded", "cessation-of-operation"`,
 		Destination: &flags.revocationReason,
 	}
 
 	flagCAAccountName = &cli.StringFlag{
 		Name:        "ca-account-name",
-		Usage:       `The Certificate Authority Account name. Only for Venafi Control Plane. Optional when the certificate to revoke was issued by TLS Protect Cloud. Otherwise it's required to provide it.`,
+		Usage:       `The Certificate Authority Account name. Only for CyberArk Certificate Manager, SaaS. Optional when the certificate to revoke was issued by CyberArk Certificate Manager, SaaS. Otherwise it's required to provide it.`,
 		Destination: &flags.caAccountName,
 	}
 
 	flagRevocationNoRetire = &cli.BoolFlag{
 		Name:        "no-retire",
-		Usage:       "Do not disable certificate object. Works only with --id <certificate DN>. Only for Trust Protection Platform.",
+		Usage:       "Do not disable certificate object. Works only with --id <certificate DN>. Only for CyberArk Certificate Manager, Self-Hosted.",
 		Destination: &flags.noRetire,
 	}
 
@@ -575,16 +575,16 @@ var (
 
 	flagValidDays = &cli.StringFlag{
 		Name: "valid-days",
-		Usage: "Specify the number of days a certificate needs to be valid. For TPP, optionally indicate the target issuer by\n" +
+		Usage: "Specify the number of days a certificate needs to be valid. For CyberArk Certificate Manager, Self-Hosted, optionally indicate the target issuer by\n" +
 			"\tappending #D for DigiCert, #E for Entrust, or #M for Microsoft. Example: --valid-days 90#M.\n" +
-			"\tThis flag can be used also to provide the valid period for Firefly, but it's preferable to use valid-period flag.\n" +
-			"\tIf both flags are provided for Firefly then the valid-period flag will be taken into account.\n",
+			"\tThis flag can be used also to provide the valid period for CyberArk Workload Identity Manager, but it's preferable to use valid-period flag.\n" +
+			"\tIf both flags are provided for CyberArk Workload Identity Manager then the valid-period flag will be taken into account.\n",
 		Destination: &flags.validDays,
 	}
 
 	flagValidPeriod = &cli.StringFlag{
 		Name: "valid-period",
-		Usage: "Specify the validity period of a certificate needs to be valid expressed as an ISO 8601 duration in Firefly.\n" +
+		Usage: "Specify the validity period of a certificate needs to be valid expressed as an ISO 8601 duration in CyberArk Workload Identity Manager.\n" +
 			"\t For Example to set 90 days will be --valid-period P90D.\n" +
 			"\t If this flag is not set then the valid-days flag value it will be converted to ISO 8601 format and used.\n",
 		Destination: &flags.validPeriod,
@@ -593,7 +593,7 @@ var (
 	flagPolicyName = &cli.StringFlag{
 		Name: "zone",
 		Usage: "REQUIRED. Use to specify target zone for applying or retrieving certificate policy. " +
-			"In Trust Protection Platform this is the path (DN) of a policy folder and in Venafi as a Service " +
+			"In CyberArk Certificate Manager, Self-Hosted this is the path (DN) of a policy folder and in CyberArk Certificate Manager, SaaS " +
 			"this is the name of an Application and Issuing Template separated by a backslash. " +
 			"Example: -z Engineering\\Internal Certs",
 		Destination: &flags.policyName,
@@ -802,7 +802,7 @@ var (
 	flagTags = &cli.StringSliceFlag{
 		Name: "tags",
 		Usage: "Use to provide the certificate tags for a certificate to be enrolled or renewed. " +
-			"It can not be used if -no-tags is provided. Only for Venafi Control Plane.",
+			"It can not be used if -no-tags is provided. Only for CyberArk Certificate Manager, SaaS.",
 		Destination: &flags.tags,
 	}
 
@@ -811,7 +811,7 @@ var (
 		Usage: "Use to indicate that the certificate tags of a certificate to renew will be empty. " +
 			"That means if the old certificate has certificate tags associated then these will be ignored " +
 			"for the new certificate. It can not be used if -tags is provided. " +
-			"Only for Venafi Control Plane.",
+			"Only for CyberArk Certificate Manager, SaaS.",
 		Destination: &flags.noTags,
 	}
 

@@ -90,7 +90,7 @@ func runBeforeCommand(c *cli.Context) error {
 
 	if flags.platform == venafi.Firefly {
 		if flags.scope != "" {
-			//The separator in scope flag is ";" but Firefly use " " as separator
+			//The separator in scope flag is ";" but CyberArk Workload Identity Manager use " " as separator
 			flags.scope = strings.ReplaceAll(flags.scope, ";", " ")
 		}
 
@@ -258,7 +258,7 @@ func getVaaSCredentials(vaasConnector *cloud.Connector, cfg *vcert.Config) error
 
 		statusCode, userDetails, err := vaasConnector.CreateAPIUserAccount(cfg.Credentials.User, cfg.Credentials.Password)
 		if err != nil {
-			return fmt.Errorf("failed to create a User Account/rotate API Key in VaaS: %s", err)
+			return fmt.Errorf("failed to create a User Account/rotate API Key in CyberArk Certificate Manager, SaaS: %s", err)
 		}
 
 		apiKey := userDetails.APIKey
@@ -285,7 +285,7 @@ func getVaaSCredentials(vaasConnector *cloud.Connector, cfg *vcert.Config) error
 		// Request access token from VaaS service account
 		tokenResponse, err := vaasConnector.GetAccessToken(cfg.Credentials)
 		if err != nil {
-			return fmt.Errorf("failed to request access token from VCP: %w", err)
+			return fmt.Errorf("failed to request access token from CyberArk Certificate Manager, SaaS: %w", err)
 		}
 
 		if flags.credFormat == "json" {
