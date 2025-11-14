@@ -18,6 +18,7 @@
 package main
 
 import (
+	"crypto/rand"
 	// nolint:gosec // TODO: figure out a way to obtain cert thumbprint/fingerprint to remove the use of weak cryptographic primitive (G401)
 	"crypto/sha1"
 	"crypto/x509"
@@ -26,7 +27,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"math/rand"
 	"os"
 	"regexp"
 	"strconv"
@@ -619,14 +619,31 @@ func isTppConnector(commandName string) bool {
 	return false
 }
 
+// randRunes generates a cryptographically secure random string of length n.
+// It uses a character set including uppercase letters, lowercase letters, digits,
+// and special characters to ensure strong password generation.
+// This function uses crypto/rand for cryptographic randomness.
 func randRunes(n int) string {
-	var letterRunes = []rune("abcdefghijklmnopqrstuvwxyz")
-	b := make([]rune, n)
-	for i := range b {
-		/* #nosec */
-		b[i] = letterRunes[rand.Intn(len(letterRunes))]
+	// Character set includes: uppercase, lowercase, digits, and safe special characters
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+[]{}|;:,.<>?"
+
+	b := make([]byte, n)
+	charsetLen := len(charset)
+
+	// Read random bytes using crypto/rand
+	_, err := rand.Read(b)
+	if err != nil {
+		// Fall back to a basic secure approach if crypto/rand fails
+		log.Panicf("Failed to generate secure random string: %s", err)
 	}
-	return string(b)
+
+	// Map random bytes to charset
+	result := make([]byte, n)
+	for i := 0; i < n; i++ {
+		result[i] = charset[int(b[i])%charsetLen]
+	}
+
+	return string(result)
 }
 
 // fillProvisioningRequest populates the provisioning request payload with values from command flags
