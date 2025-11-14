@@ -1,3 +1,12 @@
+## 5.12.3 (November 14th, 2025)
+- CyberArk Rebranding.
+
+## 5.12.2 (October 13th, 2025)
+- Add support to pass dns sans values as well when CSR is provided for TPP.
+
+## 5.12.1 (October 3rd, 2025)
+- Fixes panic caused by SanURI in Cloud Zone.
+
 ## 5.12.0 (September 5th, 2025)
 - Add support to provide VCP certificate tags for VCert CLI enroll command.
 - Add support to provide VCP certificate tags for VCert CLI renew command.
