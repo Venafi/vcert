@@ -16,7 +16,7 @@ import (
 var TppKeyType = []string{"RSA", "ECDSA", "ECC"}
 
 // TppRsaKeySize represents the Key sizes supported by CyberArk Certificate Manager, Self-Hosted for RSA Private Keys
-var TppRsaKeySize = []int{512, 1024, 2048, 3072, 4096}
+var TppRsaKeySize = []int{1024, 2048, 3072, 4096}
 
 // CloudRsaKeySize represents the Key sizes supported by CyberArk Certificate Manager, SaaS for RSA Private Keys
 var CloudRsaKeySize = []int{1024, 2048, 3072, 4096}

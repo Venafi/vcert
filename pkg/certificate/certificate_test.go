@@ -120,7 +120,7 @@ func generateSelfSigned(request *Request, ku x509.KeyUsage, eku []x509.ExtKeyUsa
 }
 
 func TestGenerateRSAPrivateKey(t *testing.T) {
-	priv, err := GenerateRSAPrivateKey(512)
+	priv, err := GenerateRSAPrivateKey(2048)
 	if err != nil {
 		t.Fatalf("Error generating RSA Private Key\nError: %s", err)
 	}
@@ -144,7 +144,7 @@ func TestGenerateECDSAPrivateKey(t *testing.T) {
 func TestGenerateCertificateRequestWithRSAKey(t *testing.T) {
 	req := getCertificateRequestForTest()
 	var err error
-	req.PrivateKey, err = GenerateRSAPrivateKey(512)
+	req.PrivateKey, err = GenerateRSAPrivateKey(2048)
 	if err != nil {
 		t.Fatalf("Error generating RSA Private Key\nError: %s", err)
 	}
@@ -360,7 +360,7 @@ func TestKeyTypeSetByString(t *testing.T) {
 
 func TestGetPrivateKeyPEMBock(t *testing.T) {
 	var priv crypto.Signer
-	priv, err := GenerateRSAPrivateKey(512)
+	priv, err := GenerateRSAPrivateKey(2048)
 	if err != nil {
 		t.Fatalf("Error generating RSA Private Key\nError: %s", err)
 	}
@@ -392,7 +392,7 @@ func TestGetPrivateKeyPEMBock(t *testing.T) {
 
 func TestGetEncryptedPrivateKeyPEMBock(t *testing.T) {
 	var priv crypto.Signer
-	priv, err := GenerateRSAPrivateKey(512)
+	priv, err := GenerateRSAPrivateKey(2048)
 	if err != nil {
 		t.Fatalf("Error generating RSA Private Key\nError: %s", err)
 	}
@@ -464,7 +464,7 @@ func TestGetCertificatePEMBlock(t *testing.T) {
 func TestGetCertificateRequestPEMBlock(t *testing.T) {
 	certRequest := getCertificateRequestForTest()
 	var priv crypto.Signer
-	priv, err := GenerateRSAPrivateKey(512)
+	priv, err := GenerateRSAPrivateKey(2048)
 	if err != nil {
 		t.Fatalf("Error generating RSA Private Key\nError: %s", err)
 	}
@@ -479,7 +479,7 @@ func TestGetCertificateRequestPEMBlock(t *testing.T) {
 }
 
 func TestPublicKey(t *testing.T) {
-	priv, _ := GenerateRSAPrivateKey(512)
+	priv, _ := GenerateRSAPrivateKey(2048)
 	pub := PublicKey(priv)
 	if pub == nil {
 		t.Fatal("should return public key")
@@ -611,7 +611,7 @@ func TestRequest_CheckCertificate(t *testing.T) {
 }
 
 func Test_NewRequest(t *testing.T) {
-	rsaPk, err := GenerateRSAPrivateKey(512)
+	rsaPk, err := GenerateRSAPrivateKey(2048)
 	if err != nil {
 		t.Fatalf("Error generating RSA Private Key\nError: %s", err)
 	}
@@ -636,7 +636,7 @@ func Test_NewRequest(t *testing.T) {
 			certificate: &x509.Certificate{
 				PublicKey: rsaPk.Public(),
 			},
-			expRequest: Request{KeyType: KeyTypeRSA, KeyLength: 512},
+			expRequest: Request{KeyType: KeyTypeRSA, KeyLength: 2048},
 		},
 		{
 			name: "ecdsa key",
@@ -668,7 +668,7 @@ func TestRequest_SetCSR_and_GetCSR(t *testing.T) {
 	checkCN := "setcsr.example.com"
 	certificateRequest := x509.CertificateRequest{}
 	certificateRequest.Subject.CommonName = checkCN
-	pk, err := GenerateRSAPrivateKey(512)
+	pk, err := GenerateRSAPrivateKey(2048)
 	if err != nil {
 		t.Fatalf("Error generating RSA Private Key\nError: %s", err)
 	}
