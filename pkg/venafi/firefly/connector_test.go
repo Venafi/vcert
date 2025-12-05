@@ -469,7 +469,7 @@ func (s *ConnectorSuite) TestGetCertificateRequest() {
 
 		certReq, err := fireflyConnector.getCertificateRequest(&request)
 		if assert.Errorf(s.T(), err, "expected to get an error but was gotten the certificate") {
-			assert.ErrorContains(s.T(), err, "key size 1024 is not supported. Valid RSA sizes for Firefly are ")
+			assert.ErrorContains(s.T(), err, "key size 1024 is not supported. Valid RSA sizes for CyberArk Workload Identity Manager are ")
 		}
 		assert.Nil(s.T(), certReq)
 
