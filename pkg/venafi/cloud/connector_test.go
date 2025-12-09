@@ -59,6 +59,10 @@ import (
 
 var ctx *test.Context
 
+type CertificateRequestStatus = string
+
+const CertificateStatusIssued CertificateRequestStatus = "ISSUED"
+
 func init() {
 	ctx = test.GetEnvContext()
 	// http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
@@ -607,28 +611,10 @@ func renewCertificateRequest(t *testing.T, conn *Connector, renewalRequest *cert
 
 	t.Logf("requested renewal for %s, will pickup by %s", previousPickupID, reqId)
 
-	var certStatus *certificateStatus
-
 	//trying to wait until the renewal achieved the ISSUED state by 5 times each 3 seconds
-	for {
-		count++
-		certStatus, err = conn.getCertificateStatus(reqId)
-		if err != nil {
-			if count > 5 {
-				t.Fatal(err)
-			}
-		}
-		if certStatus != nil && certStatus.Status == "ISSUED" {
-			break
-		}
-		if count > 5 {
-			if certStatus != nil {
-				t.Fatalf("Certificate has not achieved to get issued after 15sec. Certificate status after 15sec %s", certStatus.Status)
-			}
-			t.Fatal("Certificate has not achieved to get issued after 15sec. It was not possible to get the Certificate status after 15sec")
-		}
-
-		time.Sleep(3 * time.Second)
+	certStatus, err := getCertificateStatus(conn, reqId, CertificateStatusIssued, 5, 3)
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	certificateId := certStatus.CertificateIdsList[0]
@@ -765,6 +751,16 @@ func TestRetireCertificate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
+
+	// Note: CyberArk Certificate Manager, SaaS may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
+	// or even stuck into it
+
+	//trying to wait until the request achieved the ISSUED state by 5 times each 3 seconds
+	_, err = getCertificateStatus(conn, pickupID, CertificateStatusIssued, 5, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	req.PickupID = pickupID
 	req.ChainOption = certificate.ChainOptionRootLast
 
@@ -777,13 +773,9 @@ func TestRetireCertificate(t *testing.T) {
 	cert, err := x509.ParseCertificate(p.Bytes)
 	retireReq := &certificate.RetireRequest{}
 	thumbprint := sha1.Sum(cert.Raw)
-	hexThumbprint := hex.EncodeToString((thumbprint[:]))
+	hexThumbprint := hex.EncodeToString(thumbprint[:])
 	retireReq.Thumbprint = hexThumbprint
 
-	// Letting CyberArk Certificate Manager, SaaS some time to load certificate into inventory.
-	// CyberArk Certificate Manager, SaaS may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
-	// or even stuck into it
-	time.Sleep(time.Duration(2) * time.Second)
 	err = conn.RetireCertificate(retireReq)
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -811,6 +803,36 @@ func retrieveCertificate(conn *Connector, req *certificate.Request, timeOutSec i
 		break
 	}
 	return pcc, err
+}
+
+func getCertificateStatus(conn *Connector, reqId string, certReqStatus CertificateRequestStatus, maxTimesToAchieveStatus int, waitSecondsBetweenAttempts int) (certStatus *certificateStatus, err error) {
+	count := 0
+
+	//trying to wait until the certificate request achieved the "certReqStatus" status by maxTimesToAchieveStatus times each waitSecondsBetweenAttempts seconds
+	for {
+		count++
+		certStatus, err = conn.getCertificateStatus(reqId)
+		if err != nil {
+			if count > maxTimesToAchieveStatus {
+				return
+			}
+		}
+		if certStatus != nil && certStatus.Status == certReqStatus {
+			break
+		}
+		if count > maxTimesToAchieveStatus {
+			if certStatus != nil {
+				err = fmt.Errorf("certificate has not achieved the status %s after %dsec. Certificate status after that time is %s", certReqStatus, maxTimesToAchieveStatus*waitSecondsBetweenAttempts, certStatus.Status)
+				return
+			}
+			err = fmt.Errorf("certificate has not achieved the status %s after %dsec. It was not possible to get the Certificate status after that time", certReqStatus, maxTimesToAchieveStatus*waitSecondsBetweenAttempts)
+			return
+		}
+
+		time.Sleep(time.Duration(waitSecondsBetweenAttempts) * time.Second)
+	}
+
+	return
 }
 
 func TestRetireCertificateWithPickUpID(t *testing.T) {
