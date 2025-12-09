@@ -1,6 +1,6 @@
 module github.com/Venafi/vcert/v5
 
-go 1.24.11
+go 1.24.6
 
 require (
 	github.com/Khan/genqlient v0.8.1
