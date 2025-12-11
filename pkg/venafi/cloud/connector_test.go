@@ -776,7 +776,11 @@ func TestRetireCertificate(t *testing.T) {
 	hexThumbprint := hex.EncodeToString(thumbprint[:])
 	retireReq.Thumbprint = hexThumbprint
 
-	err = conn.RetireCertificate(retireReq)
+	// Letting CyberArk Certificate Manager, SaaS some time to load certificate into inventory.
+	// CyberArk Certificate Manager, SaaS may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
+	// or even stuck into it
+
+	err = retireCertificate(conn, retireReq, 5, 3)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -806,30 +810,48 @@ func retrieveCertificate(conn *Connector, req *certificate.Request, timeOutSec i
 }
 
 func getCertificateStatus(conn *Connector, reqId string, certReqStatus CertificateRequestStatus, maxTimesToAchieveStatus int, waitSecondsBetweenAttempts int) (certStatus *certificateStatus, err error) {
-	count := 0
-
 	//trying to wait until the certificate request achieved the "certReqStatus" status by maxTimesToAchieveStatus times each waitSecondsBetweenAttempts seconds
-	for {
-		count++
+	for i := 0; i < maxTimesToAchieveStatus; i++ {
 		certStatus, err = conn.getCertificateStatus(reqId)
-		if err != nil {
-			if count > maxTimesToAchieveStatus {
-				return
-			}
-		}
 		if certStatus != nil && certStatus.Status == certReqStatus {
 			break
 		}
-		if count > maxTimesToAchieveStatus {
-			if certStatus != nil {
-				err = fmt.Errorf("certificate has not achieved the status %s after %dsec. Certificate status after that time is %s", certReqStatus, maxTimesToAchieveStatus*waitSecondsBetweenAttempts, certStatus.Status)
-				return
-			}
+		//for the last attempt is not required to sleep
+		if i < (maxTimesToAchieveStatus - 1) {
+			time.Sleep(time.Duration(waitSecondsBetweenAttempts) * time.Second)
+		}
+	}
+	//If at the end of the attempts it was not gotten an error then it's required to determine if a certstatus was gotten and
+	// if it's not of the expected type to return an error
+	if err == nil {
+		if certStatus == nil {
 			err = fmt.Errorf("certificate has not achieved the status %s after %dsec. It was not possible to get the Certificate status after that time", certReqStatus, maxTimesToAchieveStatus*waitSecondsBetweenAttempts)
 			return
 		}
+		if certStatus.Status != certReqStatus {
+			err = fmt.Errorf("certificate has not achieved the status %s after %dsec. Certificate status after that time is %s", certReqStatus, maxTimesToAchieveStatus*waitSecondsBetweenAttempts, certStatus.Status)
+			return
+		}
+	}
 
-		time.Sleep(time.Duration(waitSecondsBetweenAttempts) * time.Second)
+	return
+}
+
+func retireCertificate(conn *Connector, retireReq *certificate.RetireRequest, maxTimesToAchieveRetirement int, waitSecondsBetweenAttempts int) (err error) {
+
+	//trying to wait until the certificate retirement is achieved in maxTimesToAchieveStatus times each waitSecondsBetweenAttempts seconds
+	for i := 0; i < maxTimesToAchieveRetirement; i++ {
+		err = conn.RetireCertificate(retireReq)
+		if err == nil {
+			break
+		}
+		//for the last attempt is not required to sleep
+		if i < (maxTimesToAchieveRetirement - 1) {
+			time.Sleep(time.Duration(waitSecondsBetweenAttempts) * time.Second)
+		}
+	}
+	if err != nil {
+		err = fmt.Errorf("certificate was not retire after %dsec. %w", maxTimesToAchieveRetirement*waitSecondsBetweenAttempts, err)
 	}
 
 	return
