@@ -11,7 +11,7 @@ Feature: Showing usage text page
     When I run `vcert`
     Then the output should contain:
       """
-      Venafi Certificate Utility
+      CyberArk Certificate Utility
       """
 
   Scenario: Enroll help text

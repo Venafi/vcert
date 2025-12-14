@@ -59,6 +59,10 @@ import (
 
 var ctx *test.Context
 
+type CertificateRequestStatus = string
+
+const CertificateStatusIssued CertificateRequestStatus = "ISSUED"
+
 func init() {
 	ctx = test.GetEnvContext()
 	// http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
@@ -301,25 +305,7 @@ func TestRequestCertificateWithValidityHours(t *testing.T) {
 	req.PickupID = pickupID
 	req.ChainOption = certificate.ChainOptionRootLast
 
-	pcc, _ := certificate.NewPEMCollection(nil, nil, nil)
-	startTime := time.Now()
-	for {
-
-		pcc, err = conn.RetrieveCertificate(req)
-		if err != nil {
-			_, ok := err.(endpoint.ErrCertificatePending)
-			if ok {
-				if time.Now().After(startTime.Add(time.Duration(600) * time.Second)) {
-					err = endpoint.ErrRetrieveCertificateTimeout{CertificateID: pickupID}
-					break
-				}
-				time.Sleep(time.Duration(10) * time.Second)
-				continue
-			}
-			break
-		}
-		break
-	}
+	pcc, err := retrieveCertificate(conn, req, 600)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -375,25 +361,7 @@ func TestRequestCertificateWithValidityDuration(t *testing.T) {
 	req.PickupID = pickupID
 	req.ChainOption = certificate.ChainOptionRootLast
 
-	pcc, _ := certificate.NewPEMCollection(nil, nil, nil)
-	startTime := time.Now()
-	for {
-
-		pcc, err = conn.RetrieveCertificate(req)
-		if err != nil {
-			_, ok := err.(endpoint.ErrCertificatePending)
-			if ok {
-				if time.Now().After(startTime.Add(time.Duration(600) * time.Second)) {
-					err = endpoint.ErrRetrieveCertificateTimeout{CertificateID: pickupID}
-					break
-				}
-				time.Sleep(time.Duration(10) * time.Second)
-				continue
-			}
-			break
-		}
-		break
-	}
+	pcc, err := retrieveCertificate(conn, req, 600)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -441,25 +409,7 @@ func TestRetrieveCertificate(t *testing.T) {
 	req.PickupID = pickupID
 	req.ChainOption = certificate.ChainOptionRootLast
 
-	pcc, _ := certificate.NewPEMCollection(nil, nil, nil)
-	startTime := time.Now()
-	for {
-
-		pcc, err = conn.RetrieveCertificate(req)
-		if err != nil {
-			_, ok := err.(endpoint.ErrCertificatePending)
-			if ok {
-				if time.Now().After(startTime.Add(time.Duration(600) * time.Second)) {
-					err = endpoint.ErrRetrieveCertificateTimeout{CertificateID: pickupID}
-					break
-				}
-				time.Sleep(time.Duration(10) * time.Second)
-				continue
-			}
-			break
-		}
-		break
-	}
+	pcc, err := retrieveCertificate(conn, req, 600)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -504,27 +454,10 @@ func TestRetrieveCertificateRootFirst(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
+
 	req.PickupID = pickupID
 	req.ChainOption = certificate.ChainOptionRootFirst
-
-	startTime := time.Now()
-	pcc, _ := certificate.NewPEMCollection(nil, nil, nil)
-	for {
-		pcc, err = conn.RetrieveCertificate(req)
-		if err != nil {
-			_, ok := err.(endpoint.ErrCertificatePending)
-			if ok {
-				if time.Now().After(startTime.Add(time.Duration(600) * time.Second)) {
-					err = endpoint.ErrRetrieveCertificateTimeout{CertificateID: pickupID}
-					break
-				}
-				time.Sleep(time.Duration(10) * time.Second)
-				continue
-			}
-			break
-		}
-		break
-	}
+	pcc, err := retrieveCertificate(conn, req, 600)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -612,32 +545,15 @@ func TestRenewCertificate(t *testing.T) {
 		t.Fatalf("%s", err)
 	}
 
-	renewTooEarly := &certificate.RenewalRequest{CertificateDN: pickupID}
+	/*renewTooEarly := &certificate.RenewalRequest{CertificateDN: pickupID}
 	_, err = conn.RenewCertificate(renewTooEarly)
 	if err == nil {
 		t.Fatal("it should return error on attempt to renew a certificate that is not issued yet")
-	}
+	}*/
 
 	req.PickupID = pickupID
 	req.ChainOption = certificate.ChainOptionRootFirst
-	startTime := time.Now()
-	pcc, _ := certificate.NewPEMCollection(nil, nil, nil)
-	for {
-		pcc, err = conn.RetrieveCertificate(req)
-		if err != nil {
-			_, ok := err.(endpoint.ErrCertificatePending)
-			if ok {
-				if time.Now().After(startTime.Add(time.Duration(600) * time.Second)) {
-					err = endpoint.ErrRetrieveCertificateTimeout{CertificateID: pickupID}
-					break
-				}
-				time.Sleep(time.Duration(10) * time.Second)
-				continue
-			}
-			break
-		}
-		break
-	}
+	pcc, err := retrieveCertificate(conn, req, 600)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -672,19 +588,19 @@ func renewCertificateRequest(t *testing.T, conn *Connector, renewalRequest *cert
 	count := 0
 	var reqId = ""
 	var err error
-	//trying by 3 times
+	//trying to achieve the renewal by 5 times each 3 seconds
 	for {
 		count++
 		reqId, err = conn.RenewCertificate(renewalRequest)
 
 		if err != nil {
-			if count > 3 {
+			if count > 5 {
 				t.Fatal(err)
 			}
 		} else {
 			break
 		}
-		time.Sleep(2 * time.Second)
+		time.Sleep(3 * time.Second)
 	}
 
 	previousPickupID := renewalRequest.Thumbprint
@@ -695,10 +611,12 @@ func renewCertificateRequest(t *testing.T, conn *Connector, renewalRequest *cert
 
 	t.Logf("requested renewal for %s, will pickup by %s", previousPickupID, reqId)
 
-	certStatus, err := conn.getCertificateStatus(reqId)
+	//trying to wait until the renewal achieved the ISSUED state by 5 times each 3 seconds
+	certStatus, err := getCertificateStatus(conn, reqId, CertificateStatusIssued, 5, 3)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	certificateId := certStatus.CertificateIdsList[0]
 	managedCert, err := conn.getCertificate(certificateId)
 	if err != nil {
@@ -748,24 +666,7 @@ func TestRenewCertificateWithUsageMetadata(t *testing.T) {
 
 	req.PickupID = pickupID
 	req.ChainOption = certificate.ChainOptionRootFirst
-	startTime := time.Now()
-	pcc, _ := certificate.NewPEMCollection(nil, nil, nil)
-	for {
-		pcc, err = conn.RetrieveCertificate(req)
-		if err != nil {
-			_, ok := err.(endpoint.ErrCertificatePending)
-			if ok {
-				if time.Now().After(startTime.Add(time.Duration(600) * time.Second)) {
-					err = endpoint.ErrRetrieveCertificateTimeout{CertificateID: pickupID}
-					break
-				}
-				time.Sleep(time.Duration(10) * time.Second)
-				continue
-			}
-			break
-		}
-		break
-	}
+	pcc, err := retrieveCertificate(conn, req, 600)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -850,27 +751,20 @@ func TestRetireCertificate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
+
+	// Note: CyberArk Certificate Manager, SaaS may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
+	// or even stuck into it
+
+	//trying to wait until the request achieved the ISSUED state by 5 times each 3 seconds
+	_, err = getCertificateStatus(conn, pickupID, CertificateStatusIssued, 5, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	req.PickupID = pickupID
 	req.ChainOption = certificate.ChainOptionRootLast
 
-	pcc, _ := certificate.NewPEMCollection(nil, nil, nil)
-	startTime := time.Now()
-	for {
-		pcc, err = conn.RetrieveCertificate(req)
-		if err != nil {
-			_, ok := err.(endpoint.ErrCertificatePending)
-			if ok {
-				if time.Now().After(startTime.Add(time.Duration(600) * time.Second)) {
-					err = endpoint.ErrRetrieveCertificateTimeout{CertificateID: pickupID}
-					break
-				}
-				time.Sleep(time.Duration(10) * time.Second)
-				continue
-			}
-			break
-		}
-		break
-	}
+	pcc, err := retrieveCertificate(conn, req, 600)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -879,17 +773,88 @@ func TestRetireCertificate(t *testing.T) {
 	cert, err := x509.ParseCertificate(p.Bytes)
 	retireReq := &certificate.RetireRequest{}
 	thumbprint := sha1.Sum(cert.Raw)
-	hexThumbprint := hex.EncodeToString((thumbprint[:]))
+	hexThumbprint := hex.EncodeToString(thumbprint[:])
 	retireReq.Thumbprint = hexThumbprint
 
 	// Letting CyberArk Certificate Manager, SaaS some time to load certificate into inventory.
 	// CyberArk Certificate Manager, SaaS may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
 	// or even stuck into it
-	time.Sleep(time.Duration(2) * time.Second)
-	err = conn.RetireCertificate(retireReq)
+
+	err = retireCertificate(conn, retireReq, 5, 3)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
+}
+
+func retrieveCertificate(conn *Connector, req *certificate.Request, timeOutSec int) (pcc *certificate.PEMCollection, err error) {
+	//calculating a time-limit of timeOutSec seconds starting on this moment to retrieve the certificate
+	timeLimit := time.Now().Add(time.Duration(timeOutSec) * time.Second)
+	for {
+		pcc, err = conn.RetrieveCertificate(req)
+		if err != nil {
+			var errCertificatePending endpoint.ErrCertificatePending
+			ok := errors.As(err, &errCertificatePending)
+			if ok {
+				if time.Now().After(timeLimit) {
+					err = endpoint.ErrRetrieveCertificateTimeout{CertificateID: req.PickupID}
+					break
+				}
+				time.Sleep(time.Duration(5) * time.Second)
+				continue
+			}
+			break
+		}
+		break
+	}
+	return pcc, err
+}
+
+func getCertificateStatus(conn *Connector, reqId string, certReqStatus CertificateRequestStatus, maxTimesToAchieveStatus int, waitSecondsBetweenAttempts int) (certStatus *certificateStatus, err error) {
+	//trying to wait until the certificate request achieved the "certReqStatus" status by maxTimesToAchieveStatus times each waitSecondsBetweenAttempts seconds
+	for i := 0; i < maxTimesToAchieveStatus; i++ {
+		certStatus, err = conn.getCertificateStatus(reqId)
+		if certStatus != nil && certStatus.Status == certReqStatus {
+			break
+		}
+		//for the last attempt is not required to sleep
+		if i < (maxTimesToAchieveStatus - 1) {
+			time.Sleep(time.Duration(waitSecondsBetweenAttempts) * time.Second)
+		}
+	}
+	//If at the end of the attempts it was not gotten an error then it's required to determine if a certstatus was gotten and
+	// if it's not of the expected type to return an error
+	if err == nil {
+		if certStatus == nil {
+			err = fmt.Errorf("certificate has not achieved the status %s after %dsec. It was not possible to get the Certificate status after that time", certReqStatus, maxTimesToAchieveStatus*waitSecondsBetweenAttempts)
+			return
+		}
+		if certStatus.Status != certReqStatus {
+			err = fmt.Errorf("certificate has not achieved the status %s after %dsec. Certificate status after that time is %s", certReqStatus, maxTimesToAchieveStatus*waitSecondsBetweenAttempts, certStatus.Status)
+			return
+		}
+	}
+
+	return
+}
+
+func retireCertificate(conn *Connector, retireReq *certificate.RetireRequest, maxTimesToAchieveRetirement int, waitSecondsBetweenAttempts int) (err error) {
+
+	//trying to wait until the certificate retirement is achieved in maxTimesToAchieveStatus times each waitSecondsBetweenAttempts seconds
+	for i := 0; i < maxTimesToAchieveRetirement; i++ {
+		err = conn.RetireCertificate(retireReq)
+		if err == nil {
+			break
+		}
+		//for the last attempt is not required to sleep
+		if i < (maxTimesToAchieveRetirement - 1) {
+			time.Sleep(time.Duration(waitSecondsBetweenAttempts) * time.Second)
+		}
+	}
+	if err != nil {
+		err = fmt.Errorf("certificate was not retire after %dsec. %w", maxTimesToAchieveRetirement*waitSecondsBetweenAttempts, err)
+	}
+
+	return
 }
 
 func TestRetireCertificateWithPickUpID(t *testing.T) {

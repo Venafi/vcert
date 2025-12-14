@@ -936,7 +936,7 @@ func TestRetrieveCertificate(t *testing.T) {
 					mockRetrieve[index].body,
 				)
 			default:
-				t.Fatalf("mock http server: unimplemented path " + r.URL.Path)
+				t.Fatalf("mock http server: unimplemented path %s", r.URL.Path)
 			}
 		}))
 		t.Cleanup(server.Close)
