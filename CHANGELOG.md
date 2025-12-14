@@ -1,8 +1,20 @@
+## 5.12.3 (December 14th, 2025)
+- CyberArk Rebranding.
+- Upgrade to Go 1.24.
+- Improve password entropy.
+- Replace golang.org/x/crypto/pkcs12 by software.sslmate.com/src/go-pkcs12.
+
+## 5.12.2 (October 13th, 2025)
+- Add support to pass dns sans values as well when CSR is provided for TPP.
+
+## 5.12.1 (October 3rd, 2025)
+- Fixes panic caused by SanURI in Cloud Zone.
+
 ## 5.12.0 (September 5th, 2025)
 - Add support to provide VCP certificate tags for VCert CLI enroll command.
 - Add support to provide VCP certificate tags for VCert CLI renew command.
 - Upgrade dependencies.
-- Upgrade to Go 1.23.12 to avoid the vulneraibility ([CVE-2025-4674](https://nvd.nist.gov/vuln/detail/CVE-2025-4674))
+- Upgrade to Go 1.23.12 to avoid the vulnerability ([CVE-2025-4674](https://nvd.nist.gov/vuln/detail/CVE-2025-4674))
 
 ## 5.11.1 (August 5th, 2025)
 - Add support to revoke certificates in VCP using the CLI and the SDK.

@@ -2,7 +2,6 @@ Go/bin/*
 Go/pkg/*
 Go/src/*
 .idea
-vCert
 /bin/
 aruba/tmp/
 aruba/bin/
@@ -21,3 +20,4 @@ vendor
 google_auth.json
 .env
 *.out
+/vcert

@@ -27,11 +27,17 @@ import (
 	"github.com/Venafi/vcert/v5/pkg/policy"
 )
 
+// randRunes generates a cryptographically secure random string of length n using lowercase letters.
+// This is suitable for test fixture generation (domain names, identifiers, etc.).
 func randRunes(n int) string {
 	letterRunes := "abcdefghijklmnopqrstuvwxyz"
 
 	b := make([]byte, n)
-	_, _ = rand.Read(b)
+	_, err := rand.Read(b)
+	if err != nil {
+		// For test fixtures, panic is acceptable since this should never fail
+		panic(fmt.Sprintf("Failed to generate random test string: %s", err))
+	}
 
 	for i, v := range b {
 		b[i] = letterRunes[v%byte(len(letterRunes))]
