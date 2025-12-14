@@ -29,7 +29,7 @@ import (
 	"time"
 
 	"github.com/urfave/cli/v2"
-	"golang.org/x/crypto/pkcs12"
+	"software.sslmate.com/src/go-pkcs12"
 
 	"github.com/Venafi/vcert/v5"
 	"github.com/Venafi/vcert/v5/pkg/certificate"
