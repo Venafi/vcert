@@ -25,6 +25,12 @@ certificateTasks:
           - '{{ Hostname | ToLower -}}.{{- Env "USERDNSDOMAIN" | ToLower }}'
           - sqldb.example.com
       zone: "Open Source\\vcert"
+      location:
+        instance: server1.domain.test        # device object name
+        replace: true                        # Replace device object
+        tlsAddress: server1.domain.test:8443 # TLS validation endpoint
+        workload: AppName                    # application object name
+        zone: "Installations\\mydevices"     # Policy folder location for device object
     installations:
       - format: CAPI
         capiLocation: LocalMachine\MY
