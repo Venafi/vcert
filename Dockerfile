@@ -1,4 +1,4 @@
-FROM golang:latest
+FROM golang:1.26rc2
 
 ENV SONAR_SCANNER_VERSION="4.6.2.2472"
 
