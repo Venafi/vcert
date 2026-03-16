@@ -280,9 +280,11 @@ func (p *Policy) ValidateCertificateRequest(request *certificate.Request) error 
 		if err != nil {
 			return err
 		}
+
 		if !isComponentValid(parsedCSR.EmailAddresses, p.EmailSanRegExs, true) {
 			return fmt.Errorf(emailError, p.EmailSanRegExs, p.EmailSanRegExs)
 		}
+
 		ips := make([]string, len(parsedCSR.IPAddresses))
 		for i, ip := range parsedCSR.IPAddresses {
 			ips[i] = ip.String()
@@ -290,6 +292,7 @@ func (p *Policy) ValidateCertificateRequest(request *certificate.Request) error 
 		if !isComponentValid(ips, p.IpSanRegExs, true) {
 			return fmt.Errorf(ipError, p.IpSanRegExs, p.IpSanRegExs)
 		}
+
 		uris := make([]string, len(parsedCSR.URIs))
 		for i, uri := range parsedCSR.URIs {
 			uris[i] = uri.String()
@@ -297,6 +300,7 @@ func (p *Policy) ValidateCertificateRequest(request *certificate.Request) error 
 		if !isComponentValid(uris, p.UriSanRegExs, true) {
 			return fmt.Errorf(uriError, uris, p.UriSanRegExs)
 		}
+
 		if !isComponentValid(parsedCSR.Subject.Organization, p.SubjectORegexes, false) {
 			return fmt.Errorf(organizationError, p.SubjectORegexes, p.SubjectORegexes)
 		}
@@ -305,17 +309,18 @@ func (p *Policy) ValidateCertificateRequest(request *certificate.Request) error 
 			return fmt.Errorf(organizationUnitError, parsedCSR.Subject.OrganizationalUnit, p.SubjectOURegexes)
 		}
 
-		if !isComponentValid(parsedCSR.Subject.Country, p.SubjectCRegexes, false) {
-			return fmt.Errorf(countryError, parsedCSR.Subject.Country, p.SubjectCRegexes)
+		if !isComponentValid(parsedCSR.Subject.Province, p.SubjectSTRegexes, false) {
+			return fmt.Errorf(provinceError, parsedCSR.Subject.Province, p.SubjectSTRegexes)
 		}
 
 		if !isComponentValid(parsedCSR.Subject.Locality, p.SubjectLRegexes, false) {
 			return fmt.Errorf(locationError, parsedCSR.Subject.Locality, p.SubjectLRegexes)
 		}
 
-		if !isComponentValid(parsedCSR.Subject.Province, p.SubjectSTRegexes, false) {
-			return fmt.Errorf(provinceError, parsedCSR.Subject.Province, p.SubjectSTRegexes)
+		if !isComponentValid(parsedCSR.Subject.Country, p.SubjectCRegexes, false) {
+			return fmt.Errorf(countryError, parsedCSR.Subject.Country, p.SubjectCRegexes)
 		}
+
 		if len(p.AllowedKeyConfigurations) > 0 {
 			var keyValid bool
 			if parsedCSR.PublicKeyAlgorithm == x509.RSA {
@@ -346,7 +351,26 @@ func (p *Policy) ValidateCertificateRequest(request *certificate.Request) error 
 		}
 
 	} else {
-		//todo: add ip, email, uri cheking
+		if !isComponentValid(request.EmailAddresses, p.EmailSanRegExs, true) {
+			return fmt.Errorf(emailError, p.EmailSanRegExs, p.EmailSanRegExs)
+		}
+
+		ips := make([]string, len(request.IPAddresses))
+		for i, ip := range request.IPAddresses {
+			ips[i] = ip.String()
+		}
+		if !isComponentValid(ips, p.IpSanRegExs, true) {
+			return fmt.Errorf(ipError, p.IpSanRegExs, p.IpSanRegExs)
+		}
+
+		uris := make([]string, len(request.URIs))
+		for i, uri := range request.URIs {
+			uris[i] = uri.String()
+		}
+		if !isComponentValid(uris, p.UriSanRegExs, true) {
+			return fmt.Errorf(uriError, uris, p.UriSanRegExs)
+		}
+
 		if !isComponentValid(request.Subject.Organization, p.SubjectORegexes, false) {
 			return fmt.Errorf(organizationError, request.Subject.Organization, p.SubjectORegexes)
 		}
