@@ -18,8 +18,9 @@ package domain
 
 // Config contains all the values necessary to connect to a given CyberArk platform: CyberArk Certificate Manager, Self-Hosted or CyberArk Certificate Manager, SaaS
 type Config struct {
-	Connection Connection `yaml:"connection,omitempty"`
-	ForceRenew bool       `yaml:"-"`
+	Connection   Connection `yaml:"connection,omitempty"`
+	ForceRenew   bool       `yaml:"-"`
+	PreRunAction string     `yaml:"prerunaction,omitempty"`
 }
 
 // IsValid Ensures the provided connection configuration is valid and logical
