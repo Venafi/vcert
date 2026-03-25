@@ -1,0 +1,29 @@
+config:
+  connection:
+    platform: vaas #cloudplatform
+    credentials:
+      apiKey: '{{ Env "TLSPC_APIKEY" }}'
+certificateTasks:
+  - name: tomcat # Task Identifier, can be used with 
+    renewBefore: 30d
+    setEnvVars: ["thumbprint"]
+    request:
+      csr: local
+      keySize: 3072
+      subject:
+        commonName: '{{Env "DOMAINS"}}'
+        country: GB
+        locality: London
+        state: London
+        organization: Venafi
+        orgUnits:
+          - vcert
+      sanDNS: 
+        - '{{Env "DOMAINS"}}'
+      zone: 'Tomcat\public_le'
+    installations:
+      - format: PKCS12
+        file: '/etc/ssl/private/tomcat_8443.p12'
+        p12Password: '{{ Env "KEYSTOREPASS" }}'
+        afterInstallAction: "systemctl restart tomcat"
+
