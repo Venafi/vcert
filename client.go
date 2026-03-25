@@ -25,6 +25,7 @@ import (
 	"github.com/Venafi/vcert/v5/pkg/venafi/cloud"
 	"github.com/Venafi/vcert/v5/pkg/venafi/fake"
 	"github.com/Venafi/vcert/v5/pkg/venafi/firefly"
+	"github.com/Venafi/vcert/v5/pkg/venafi/scm"
 	"github.com/Venafi/vcert/v5/pkg/venafi/tpp"
 	"github.com/Venafi/vcert/v5/pkg/verror"
 )
@@ -71,6 +72,8 @@ func (cfg *Config) newClient(args []interface{}) (connector endpoint.Connector, 
 		connector, err = firefly.NewConnector(cfg.BaseUrl, cfg.Zone, cfg.LogVerbose, connectionTrustBundle)
 	case endpoint.ConnectorTypeFake:
 		connector = fake.NewConnector(cfg.LogVerbose, connectionTrustBundle)
+	case endpoint.ConnectorTypeSCM:
+		connector, err = scm.NewConnector(cfg.BaseUrl, cfg.Zone, cfg.LogVerbose, connectionTrustBundle)
 	default:
 		err = fmt.Errorf("%w: ConnectorType is not defined", verror.UserDataError)
 	}

@@ -52,6 +52,8 @@ const (
 	ConnectorTypeTPP
 	// ConnectorTypeFirefly represents the CyberArk Workload Identity Manager connector type
 	ConnectorTypeFirefly
+	// ConnectorTypeSCM represents the Strata Cloud Manager connector type
+	ConnectorTypeSCM
 )
 
 func init() {
@@ -70,6 +72,8 @@ func (t ConnectorType) String() string {
 		return "Trust Protection Platform"
 	case ConnectorTypeFirefly:
 		return "Firefly"
+	case ConnectorTypeSCM:
+		return "SCM"
 	default:
 		return fmt.Sprintf("unexpected connector type: %d", t)
 	}
