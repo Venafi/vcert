@@ -1429,9 +1429,13 @@ func validateScope(scope string) error {
 
 	// According to the official Palo Alto Networks documentation, the TSG IDs are 10-digit integers (e.g., 1000000001)
 	// Source: https://pan.dev/scm/docs/scope/
-	_, err := testRegex(scope, "tsg_id:[0-9]{10}")
+	valid, err := testRegex(scope, "tsg_id:[0-9]{10}")
 	if err != nil {
-		return fmt.Errorf("scope should be in the format \"tsg_id:<TSG_ID>\". An error occurred: %w", err)
+		return err
+	}
+
+	if !valid {
+		return fmt.Errorf("scope should be in the format \"tsg_id:<TSG_ID>\"")
 	}
 
 	return nil

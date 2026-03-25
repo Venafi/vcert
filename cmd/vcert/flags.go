@@ -27,7 +27,7 @@ var (
 	flagPlatform = &cli.StringFlag{
 		Name: "platform",
 		Usage: "Use to specify the platform VCert will use to execute the given command. Only accepted values are:\n" +
-			"\t\tFor getcred command: --platform [TPP | VCP | OIDC]\n" +
+			"\t\tFor getcred command: --platform [TPP | VCP | SCM | OIDC]\n" +
 			"\t\tFor enroll command: --platform [TPP | VCP | FIREFLY]\n" +
 			"\t\tFor provision command: --platform [ VCP ]",
 		Destination: &flags.platformString,
@@ -512,7 +512,6 @@ var (
 		Name:        "scope",
 		Usage:       "Use to request specific scopes and restrictions.",
 		Destination: &flags.scope,
-		Value:       "certificate:manage,revoke",
 	}
 
 	flagCredSsh = &cli.BoolFlag{

@@ -106,6 +106,8 @@ func buildConfigFromFlags(commandName string, flags *commandFlags) (*vcert.Confi
 		return buildConfigTPP(commandName, flags)
 	case venafi.TLSPCloud:
 		return buildConfigVaaS(flags)
+	case venafi.SCM:
+		return buildConfigSCM(flags)
 	case venafi.Firefly:
 		return buildConfigFirefly(flags)
 	}
@@ -167,6 +169,20 @@ func buildConfigVaaS(flags *commandFlags) (*vcert.Config, error) {
 			APIKey:      flags.apiKey,
 			ExternalJWT: flags.externalJWT,
 			TokenURL:    flags.tokenURL,
+		},
+	}, nil
+}
+
+func buildConfigSCM(flags *commandFlags) (*vcert.Config, error) {
+	return &vcert.Config{
+		ConnectorType: endpoint.ConnectorTypeSCM,
+		BaseUrl:       flags.url,
+		Credentials: &endpoint.Authentication{
+			AccessToken:  flags.token,
+			TokenURL:     flags.tokenURL,
+			ClientId:     flags.clientId,
+			ClientSecret: flags.clientSecret,
+			Scope:        flags.scope,
 		},
 	}, nil
 }

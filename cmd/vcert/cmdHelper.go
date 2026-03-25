@@ -28,6 +28,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Venafi/vcert/v5/pkg/venafi/scm"
 	"github.com/urfave/cli/v2"
 	"software.sslmate.com/src/go-pkcs12"
 
@@ -86,6 +87,12 @@ func runBeforeCommand(c *cli.Context) error {
 
 	if flags.platformString != "" {
 		flags.platform = venafi.GetPlatformType(flags.platformString)
+	}
+
+	// Default the scope flag to "certificate:manage,revoke"
+	// For every platform except SCM
+	if flags.platform != venafi.SCM && flags.scope == "" {
+		flags.scope = "certificate:manage,revoke"
 	}
 
 	if flags.platform == venafi.Firefly {
@@ -302,6 +309,34 @@ func getVaaSCredentials(vaasConnector *cloud.Connector, cfg *vcert.Config) error
 	}
 
 	return nil
+}
+
+func getSCMCredentials(scmConnector *scm.Connector, cfg *vcert.Config) error {
+	//TODO: quick workaround to suppress logs when output is in JSON.
+	if flags.credFormat != "json" {
+		logf("Getting credentials...")
+	}
+
+	// Request access token using a Palo Alto Networks Strata Cloud Manager (SCM) service account
+	if cfg.Credentials.TokenURL != "" && cfg.Credentials.ClientId != "" && cfg.Credentials.ClientSecret != "" && cfg.Credentials.Scope != "" {
+		tokenResponse, err := scmConnector.GetAccessToken(cfg.Credentials)
+		if err != nil {
+			return fmt.Errorf("failed to request access token from Palo Alto Networks Strata Cloud Manager (SCM): %w", err)
+		}
+
+		if flags.credFormat == "json" {
+			return outputJSON(tokenResponse)
+		}
+
+		validityPeriod := time.Duration(tokenResponse.ExpiresIn) * time.Second
+		expirationDate := time.Now().Add(validityPeriod)
+		t := expirationDate.UTC().Format(time.RFC3339)
+		fmt.Println("access_token: ", tokenResponse.AccessToken)
+		fmt.Println("expires_in: ", t)
+		return nil
+	}
+
+	return fmt.Errorf("failed to determine credentials set")
 }
 
 func getFireflyCredentials(fireflyConnector *firefly.Connector, cfg *vcert.Config) error {

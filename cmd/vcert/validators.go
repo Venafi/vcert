@@ -151,6 +151,8 @@ func validateConnectionFlags(commandName string) error {
 		return validateConnectionFlagsTPP(commandName)
 	case venafi.TLSPCloud:
 		return validateConnectionFlagsCloud(commandName)
+	case venafi.SCM:
+		return validateConnectionFlagsSCM(commandName)
 	case venafi.Firefly:
 		return validateConnectionFlagsFirefly(commandName)
 	}
@@ -185,6 +187,8 @@ func validateProvisionConnectionFlags(commandName string) error {
 		return fmt.Errorf("command %s not supported for %s", commandName, venafi.TPP.String())
 	case venafi.TLSPCloud:
 		return validateConnectionFlagsCloud(commandName)
+	case venafi.SCM:
+		return validateConnectionFlagsSCM(commandName)
 	case venafi.Firefly:
 		return fmt.Errorf("command %s not supported for %s", commandName, venafi.TPP.String())
 	}
