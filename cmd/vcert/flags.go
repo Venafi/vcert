@@ -28,8 +28,8 @@ var (
 		Name: "platform",
 		Usage: "Use to specify the platform VCert will use to execute the given command. Only accepted values are:\n" +
 			"\t\tFor getcred command: --platform [TPP | VCP | SCM | OIDC]\n" +
-			"\t\tFor enroll command: --platform [TPP | VCP | FIREFLY]\n" +
-			"\t\tFor provision command: --platform [ VCP ]",
+			"\t\tFor enroll command: --platform [TPP | VCP | SCM | FIREFLY]\n" +
+			"\t\tFor provision command: --platform [ VCP | SCM ]",
 		Destination: &flags.platformString,
 		Aliases:     []string{"p"},
 	}

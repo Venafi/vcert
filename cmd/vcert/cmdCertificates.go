@@ -46,6 +46,7 @@ var (
 		vcert enroll -k <CyberArk Certificate Manager, SaaS API key> -z "<app name>\<CIT alias>" --cn <common name>
 		vcert enroll -k <CyberArk Certificate Manager, SaaS API key> -z "<app name>\<CIT alias>" --cn <common name> --key-type rsa --key-size 4096 --san-dns <alt name> --san-dns <alt name2>
 		vcert enroll -p vcp -t <CyberArk Certificate Manager, SaaS access token> -z "<app name>\<CIT alias>" --cn <common name>
+		vcert enroll -p scm -t <Palo Alto Networks Strata Cloud Manager (SCM) access token> -z "<app name>\<CIT alias>" --cn <common name>
 
 		vcert enroll -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> -z "<policy folder DN>" --cn <common name>
 		vcert enroll -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> -z "<policy folder DN>" --cn <common name> --key-size 4096 --san-dns <alt name> --san-dns <alt name2>
