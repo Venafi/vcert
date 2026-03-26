@@ -50,7 +50,8 @@ var (
 		Usage:  "To retrieve the certificate policy of a zone",
 		UsageText: ` vcert getpolicy <Required CyberArk Certificate Manager, SaaS -OR- CyberArk Certificate Manager, Self-Hosted> <Options>
         vcert getpolicy -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> -z "<policy folder DN>"
-		vcert getpolicy -p vcp -t <CyberArk Certificate Manager, SaaS access token> -z "<app name>\<CIT alias>"`,
+		vcert getpolicy -p vcp -t <CyberArk Certificate Manager, SaaS access token> -z "<app name>\<CIT alias>"
+		vcert getpolicy -p scm -t <Palo Alto Networks Strata Cloud Manager (SCM) access token> -z "<app name>\<CIT alias>"`,
 	}
 )
 
