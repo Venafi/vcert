@@ -17,12 +17,16 @@ ENDPOINTS = {
 
     "Cloud" => "-u '#{ENV['CLOUD_URL']}' -k '#{ENV['CLOUD_APIKEY']}'",
 
+    "SCM" => "-u '#{ENV['SCM_URL']}' -t '#{ENV['SCM_ACCESS_TOKEN']}'",
+
     "Firefly" => "-u '#{ENV['FIREFLY_URL']}' -t '#{ENV['IDP_ACCESS_TOKEN']}'"
 }
 
 ENDPOINTS[PLATFORM_VAAS] = ENDPOINTS["Cloud"]
 
 ENDPOINTS[PLATFORM_VCP] = ENDPOINTS[PLATFORM_VAAS]
+
+ENDPOINTS[PLATFORM_SCM] = ENDPOINTS["SCM"]
 
 ZONE = {
     "test-mode" => "-z Default",
@@ -35,11 +39,15 @@ ZONE = {
 
     "Cloud" => "-z '#{ENV['CLOUD_ZONE']}'",
 
+    "SCM" => "-z '#{ENV['SCM_ZONE']}'",
+
     "Firefly" => "-z '#{ENV['FIREFLY_ZONE']}'"
 }
 ZONE[PLATFORM_VAAS] = ZONE["Cloud"]
 
 ZONE[PLATFORM_VCP] = ZONE[PLATFORM_VAAS]
+
+ZONE[PLATFORM_SCM] = ZONE["SCM"]
 
 ENDPOINT_CONFIGS = {
     "test-mode" => "
@@ -60,6 +68,11 @@ ENDPOINT_CONFIGS = {
         url = #{ENV['CLOUD_URL']}
         cloud_apikey = #{ENV['CLOUD_APIKEY']}
         cloud_zone = #{ENV['CLOUD_ZONE']}
+    ",
+    "SCM" => "
+        url = #{ENV['SCM_URL']}
+        access_token = #{ENV['SCM_ACCESS_TOKEN']}
+        scm_zone = #{ENV['SCM_ZONE']}
     "
 }
 

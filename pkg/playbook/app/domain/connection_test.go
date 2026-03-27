@@ -231,6 +231,127 @@ func (s *ConnectionSuite) SetupTest() {
 			expectedValid: false,
 			expectedErr:   ErrNoCredentials,
 		},
+		{
+			name: "SCM_valid_access_token",
+			c: Connection{
+				Platform: venafi.SCM,
+				Credentials: Authentication{
+					Authentication: endpoint.Authentication{
+						AccessToken: "123abc###",
+					},
+				},
+			},
+			expectedCType: endpoint.ConnectorTypeSCM,
+			expectedValid: true,
+		},
+		{
+			name: "SCM_valid_client_credentials",
+			c: Connection{
+				Platform: venafi.SCM,
+				Credentials: Authentication{
+					Authentication: endpoint.Authentication{
+						ClientId:     "123abc###",
+						ClientSecret: "123abc###",
+						TokenURL:     "123abc###",
+						Scope:        "tsg_id:0123456789",
+					},
+				},
+			},
+			expectedCType: endpoint.ConnectorTypeSCM,
+			expectedValid: true,
+		},
+		{
+			name: "SCM_invalid_missing_client_id",
+			c: Connection{
+				Platform: venafi.SCM,
+				Credentials: Authentication{
+					Authentication: endpoint.Authentication{
+						ClientSecret: "123abc###",
+						TokenURL:     "123abc###",
+						Scope:        "tsg_id:0123456789",
+					},
+				},
+			},
+			expectedCType: endpoint.ConnectorTypeSCM,
+			expectedValid: false,
+			expectedErr:   ErrNoSCMClientId,
+		},
+		{
+			name: "SCM_invalid_missing_client_secret",
+			c: Connection{
+				Platform: venafi.SCM,
+				Credentials: Authentication{
+					Authentication: endpoint.Authentication{
+						ClientId: "123abc###",
+						TokenURL: "123abc###",
+						Scope:    "tsg_id:0123456789",
+					},
+				},
+			},
+			expectedCType: endpoint.ConnectorTypeSCM,
+			expectedValid: false,
+			expectedErr:   ErrNoSCMClientSecret,
+		},
+		{
+			name: "SCM_invalid_missing_token_url",
+			c: Connection{
+				Platform: venafi.SCM,
+				Credentials: Authentication{
+					Authentication: endpoint.Authentication{
+						ClientId:     "123abc###",
+						ClientSecret: "123abc###",
+						Scope:        "tsg_id:0123456789",
+					},
+				},
+			},
+			expectedCType: endpoint.ConnectorTypeSCM,
+			expectedValid: false,
+			expectedErr:   ErrNoSCMTokenURL,
+		},
+		{
+			name: "SCM_invalid_missing_scope",
+			c: Connection{
+				Platform: venafi.SCM,
+				Credentials: Authentication{
+					Authentication: endpoint.Authentication{
+						ClientId:     "123abc###",
+						ClientSecret: "123abc###",
+						TokenURL:     "123abc###",
+					},
+				},
+			},
+			expectedCType: endpoint.ConnectorTypeSCM,
+			expectedValid: false,
+			expectedErr:   ErrNoSCMScope,
+		},
+		{
+			name: "SCM_invalid_too_much_credentials",
+			c: Connection{
+				Platform: venafi.SCM,
+				Credentials: Authentication{
+					Authentication: endpoint.Authentication{
+						ClientId:     "123abc###",
+						ClientSecret: "123abc###",
+						TokenURL:     "123abc###",
+						Scope:        "tsg_id:0123456789",
+						AccessToken:  "123abc###",
+					},
+				},
+			},
+			expectedCType: endpoint.ConnectorTypeSCM,
+			expectedValid: false,
+			expectedErr:   ErrAmbiguousSCMreds,
+		},
+		{
+			name: "SCM_invalid_empty_credentials",
+			c: Connection{
+				Platform:    venafi.SCM,
+				Credentials: Authentication{},
+			},
+			expectedCType: endpoint.ConnectorTypeSCM,
+			expectedValid: false,
+			expectedErr:   ErrNoCredentials,
+		},
 		// UNKNOWN USE CASES
 		{
 			name: "Unknown_invalid",

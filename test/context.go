@@ -21,29 +21,32 @@ import (
 )
 
 type Context struct {
-	TPPurl              string
-	TPPuser             string
-	TPPPassword         string
-	TPPaccessToken      string
-	TPPZone             string
-	TPPZoneRestricted   string
-	TPPZoneECDSA        string
-	TPPRefreshToken     string
-	ClientID            string
-	CloudUrl            string
-	CloudAPIkey         string
-	CloudZone           string
-	VAASzoneEC          string
-	CloudZoneRestricted string
-	SCMUrl              string
-	SCMClientID         string
-	SCMClientSecret     string
-	SCMTokenURL         string
-	SCMScope            string
-	SCMZone             string
-	SCMZoneRestricted   string
-	SCMCAName           string
-	SCMZoneOnlyEC       string
+	TPPurl                    string
+	TPPuser                   string
+	TPPPassword               string
+	TPPaccessToken            string
+	TPPZone                   string
+	TPPZoneRestricted         string
+	TPPZoneECDSA              string
+	TPPRefreshToken           string
+	ClientID                  string
+	CloudUrl                  string
+	CloudAPIkey               string
+	CloudZone                 string
+	VAASzoneEC                string
+	CloudZoneRestricted       string
+	SCMUrl                    string
+	SCMClientID               string
+	SCMClientSecret           string
+	SCMTokenURL               string
+	SCMScope                  string
+	SCMZone                   string
+	SCMZoneRestricted         string
+	SCMCAName                 string
+	SCMDigicertCAName         string
+	SCMEntrustCAName          string
+	SCMPolicyManagementSample string
+	SCMzoneEC                 string
 }
 
 func GetEnvContext() *Context {
@@ -72,7 +75,10 @@ func GetEnvContext() *Context {
 	c.SCMZone = os.Getenv("SCM_ZONE")
 	c.SCMZoneRestricted = os.Getenv("SCM_ZONE_RESTRICTED")
 	c.SCMCAName = os.Getenv("SCM_CA_NAME")
-	c.SCMZoneOnlyEC = os.Getenv("SCM_ZONE_ONLY_EC")
+	c.SCMDigicertCAName = os.Getenv("SCM_DIGICERT_CA_NAME")
+	c.SCMEntrustCAName = os.Getenv("SCM_ENTRUST_CA_NAME")
+	c.SCMPolicyManagementSample = os.Getenv("SCM_POLICY_MANAGEMENT_SAMPLE")
+	c.SCMzoneEC = os.Getenv("SCM_ZONE_EC")
 
 	return c
 }

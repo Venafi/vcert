@@ -173,7 +173,7 @@ func TestRequestCertificate(t *testing.T) {
 }
 
 func TestRequestCertificateED25519WithValidation(t *testing.T) {
-	conn := getTestConnector(ctx.VAASzoneEC)
+	conn := getTestConnector(ctx.SCMzoneEC)
 	conn.verbose = true
 	err := authenticateTestConnector(conn)
 	if err != nil {
@@ -213,7 +213,7 @@ func TestRequestCertificateED25519WithValidation(t *testing.T) {
 }
 
 func TestRequestCertificateED25519WithPolicyValidation(t *testing.T) {
-	conn := getTestConnector(ctx.VAASzoneEC)
+	conn := getTestConnector(ctx.SCMzoneEC)
 	conn.verbose = true
 	err := authenticateTestConnector(conn)
 	if err != nil {
@@ -1102,7 +1102,7 @@ func TestReadPolicyConfigurationOnlyEC(t *testing.T) {
 	// type of key. This is conflicting with how Palo Alto Networks Strata Cloud Manager (SCM) handles EC Keys, as it considers ED25519 as another curve, which is
 	// it shouldn't, this test may need to change in the future once this is solved
 	//todo: add more zones
-	conn := getTestConnector(ctx.VAASzoneEC)
+	conn := getTestConnector(ctx.SCMzoneEC)
 	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -1600,7 +1600,7 @@ func TestGetPolicy(t *testing.T) {
 
 	t.Skip() //this is just for development purpose
 
-	policyName := os.Getenv("CLOUD_POLICY_MANAGEMENT_SAMPLE")
+	policyName := os.Getenv("SCM_POLICY_MANAGEMENT_SAMPLE")
 	conn := getTestConnector(ctx.SCMZone)
 	conn.verbose = true
 
@@ -1826,8 +1826,8 @@ func TestGetPolicyOnlyEC(t *testing.T) {
 	// This test covers GetPolicy function from connector to test EC curves are return correctly for all the values,
 	// including RecommendSettings
 
-	policyName := os.Getenv("VAAS_ZONE_EC")
-	conn := getTestConnector(ctx.VAASzoneEC)
+	policyName := os.Getenv("SCM_ZONE_EC")
+	conn := getTestConnector(ctx.SCMzoneEC)
 	conn.verbose = true
 
 	err := authenticateTestConnector(conn)
@@ -2246,7 +2246,7 @@ func TestSetPolicyEntrust(t *testing.T) {
 
 	specification := test.GetCloudPolicySpecification()
 	//change default CA to Entrust
-	caName := os.Getenv("CLOUD_ENTRUST_CA_NAME")
+	caName := os.Getenv("SCM_ENTRUST_CA_NAME")
 	specification.Policy.CertificateAuthority = &caName
 
 	_, err = conn.SetPolicy(policyName, specification)
@@ -2284,8 +2284,8 @@ func TestSetPolicyDigicert(t *testing.T) {
 
 	specification := test.GetCloudPolicySpecification()
 
-	//change default CA to Digiert
-	caName := os.Getenv("CLOUD_DIGICERT_CA_NAME")
+	//change default CA to Digicert
+	caName := os.Getenv("SCM_DIGICERT_CA_NAME")
 	specification.Policy.CertificateAuthority = &caName
 	_, err = conn.SetPolicy(policyName, specification)
 
@@ -2492,7 +2492,7 @@ func TestVerifyCSRServiceGenerated(t *testing.T) {
 }
 
 func TestGenerateCertificateEC(t *testing.T) {
-	policyName := os.Getenv("SCM_ZONE_ONLY_EC")
+	policyName := os.Getenv("SCM_ZONE_EC")
 
 	conn := getTestConnector(policyName)
 	conn.verbose = true
@@ -2530,7 +2530,7 @@ func TestGenerateCertificateEC(t *testing.T) {
 }
 
 func TestGenerateCertificateECDefault(t *testing.T) {
-	policyName := os.Getenv("SCM_ZONE_ONLY_EC")
+	policyName := os.Getenv("SCM_ZONE_EC")
 
 	conn := getTestConnector(policyName)
 	conn.verbose = true
@@ -2571,7 +2571,7 @@ func TestGetType(t *testing.T) {
 
 	conn := getTestConnector(policyName)
 
-	if endpoint.ConnectorTypeCloud != conn.GetType() {
+	if endpoint.ConnectorTypeSCM != conn.GetType() {
 		t.Fatalf("expected: %s but get %s", endpoint.ConnectorTypeCloud.String(), conn.GetType().String())
 	}
 

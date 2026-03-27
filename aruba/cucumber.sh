@@ -27,6 +27,9 @@ RUN_COMMAND="docker run -t --rm \
           -e FIREFLY_ZONE \
           -e FIREFLY_URL \
           -e FIREFLY_CA_BUNDLE \
+          -e SCM_URL \
+          -e SCM_ACCESS_TOKEN \
+          -e SCM_ZONE \
           -e GCP_AUTH_PATH \
           -e GCP_PROJECT \
           -e GCP_REGION \
