@@ -68,6 +68,8 @@ var (
 		 vcert pickup -k <CyberArk Certificate Manager, SaaS API key> [--pickup-id <ID value> | --pickup-id-file <file containing ID value>]
 		 vcert pickup -p vcp -t <CyberArk Certificate Manager, SaaS access token> [--pickup-id <ID value> | --pickup-id-file <file containing ID value>]
 
+		 vcert pickup -p scm -t <Palo Alto Networks Strata Cloud Manager (SCM) access token> [--pickup-id <ID value> | --pickup-id-file <file containing ID value>]
+
 		 vcert pickup -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> --pickup-id <ID value>
 		 vcert pickup -p tpp -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> --pickup-id <ID value>`,
 	}
@@ -82,6 +84,8 @@ var (
 
 		 vcert revoke -k <CyberArk Certificate Manager, SaaS API key> --thumbprint <cert SHA1 thumbprint>
 		 vcert revoke -p vcp -t <CyberArk Certificate Manager, SaaS access token> --thumbprint <cert SHA1 thumbprint>
+
+		 vcert revoke -p scm -t <Palo Alto Networks Strata Cloud Manager (SCM) access token> --thumbprint <cert SHA1 thumbprint>
 
 		 vcert revoke -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> --thumbprint <cert SHA1 thumbprint>
 		 vcert revoke -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> --id <ID value>
@@ -99,6 +103,8 @@ var (
 		vcert renew -k <CyberArk Certificate Manager, SaaS API key> --thumbprint <cert SHA1 fingerprint>
 		vcert renew -p vcp -t <CyberArk Certificate Manager, SaaS access token> --thumbprint <cert SHA1 fingerprint>
 
+		vcert renew -p scm -t <Palo Alto Networks Strata Cloud Manager (SCM) access token> --thumbprint <cert SHA1 fingerprint>
+
         vcert renew -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> --id <ID value>`,
 	}
 
@@ -112,6 +118,8 @@ var (
 
 		 vcert retire -k <CyberArk Certificate Manager, SaaS API key> --thumbprint <cert SHA1 fingerprint>
 		 vcert retire -p vcp -t <CyberArk Certificate Manager, SaaS access token> --thumbprint <cert SHA1 fingerprint>
+
+		 vcert retire -p scm -t <Palo Alto Networks Strata Cloud Manager (SCM) access token> --thumbprint <cert SHA1 fingerprint>
 
 		 vcert retire -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> --id <ID value>`,
 	}

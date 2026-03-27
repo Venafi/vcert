@@ -82,7 +82,10 @@ func runBeforeCommand(c *cli.Context) error {
 	}
 	for _, stringExtKeyUsage := range c.StringSlice("eku") {
 		eku, _ := certificate.ParseExtKeyUsage(stringExtKeyUsage)
-		flags.extKeyUsage.Add(eku)
+		err := flags.extKeyUsage.Add(eku)
+		if err != nil {
+			return err
+		}
 	}
 
 	if flags.platformString != "" {

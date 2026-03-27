@@ -35,6 +35,15 @@ type Context struct {
 	CloudZone           string
 	VAASzoneEC          string
 	CloudZoneRestricted string
+	SCMUrl              string
+	SCMClientID         string
+	SCMClientSecret     string
+	SCMTokenURL         string
+	SCMScope            string
+	SCMZone             string
+	SCMZoneRestricted   string
+	SCMCAName           string
+	SCMZoneOnlyEC       string
 }
 
 func GetEnvContext() *Context {
@@ -54,6 +63,16 @@ func GetEnvContext() *Context {
 	c.CloudZone = os.Getenv("CLOUD_ZONE")
 	c.VAASzoneEC = os.Getenv("VAAS_ZONE_EC")
 	c.CloudZoneRestricted = os.Getenv("CLOUD_ZONE_RESTRICTED")
+
+	c.SCMUrl = os.Getenv("SCM_URL")
+	c.SCMClientID = os.Getenv("SCM_CLIENT_ID")
+	c.SCMClientSecret = os.Getenv("SCM_CLIENT_SECRET")
+	c.SCMTokenURL = os.Getenv("SCM_TOKEN_URL")
+	c.SCMScope = os.Getenv("SCM_SCOPE")
+	c.SCMZone = os.Getenv("SCM_ZONE")
+	c.SCMZoneRestricted = os.Getenv("SCM_ZONE_RESTRICTED")
+	c.SCMCAName = os.Getenv("SCM_CA_NAME")
+	c.SCMZoneOnlyEC = os.Getenv("SCM_ZONE_ONLY_EC")
 
 	return c
 }

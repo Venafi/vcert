@@ -39,7 +39,8 @@ var (
 		Usage:  "To apply a certificate policy specification to a zone",
 		UsageText: ` vcert setpolicy <Required CyberArk Certificate Manager, SaaS -OR- CyberArk Certificate Manager, Self-Hosted> <Options>
         vcert setpolicy -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> -z "<policy folder DN>" --file /path-to/policy.spec
-		vcert setpolicy -p vcp -t <CyberArk Certificate Manager, SaaS access token> -z "<app name>\<CIT alias>" --file /path-to/policy.spec`,
+		vcert setpolicy -p vcp -t <CyberArk Certificate Manager, SaaS access token> -z "<app name>\<CIT alias>" --file /path-to/policy.spec
+		vcert setpolicy -p scm -t <Palo Alto Networks Strata Cloud Manager (SCM) access token> -z "<app name>\<CIT alias>" --file /path-to/policy.spec`,
 	}
 
 	commandGetPolicy = &cli.Command{

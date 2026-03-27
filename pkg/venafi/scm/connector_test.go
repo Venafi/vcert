@@ -67,16 +67,25 @@ func init() {
 	ctx = test.GetEnvContext()
 	// http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
-	if ctx.CloudAPIkey == "" {
-		fmt.Println("API key cannot be empty. See Makefile")
+	if ctx.SCMClientID == "" || ctx.SCMClientSecret == "" || ctx.SCMTokenURL == "" || ctx.SCMScope == "" {
+		fmt.Println("SCM credentials cannot be empty. Required: SCM_CLIENT_ID, SCM_CLIENT_SECRET, SCM_TOKEN_URL, SCM_SCOPE")
 		os.Exit(1)
 	}
 }
 
 func getTestConnector(zone string) *Connector {
-	url, _ := normalizeURL(ctx.CloudUrl)
+	url, _ := normalizeURL(ctx.SCMUrl)
 	c, _ := NewConnector(url, zone, true, nil)
 	return c
+}
+
+func authenticateTestConnector(conn *Connector) error {
+	return conn.Authenticate(&endpoint.Authentication{
+		ClientId:     ctx.SCMClientID,
+		ClientSecret: ctx.SCMClientSecret,
+		TokenURL:     ctx.SCMTokenURL,
+		Scope:        ctx.SCMScope,
+	})
 }
 
 func TestPing(t *testing.T) {
@@ -88,16 +97,16 @@ func TestPing(t *testing.T) {
 }
 
 func TestAuthenticate(t *testing.T) {
-	conn := getTestConnector(ctx.CloudZone)
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	conn := getTestConnector(ctx.SCMZone)
+	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
 }
 
 func TestReadZoneConfiguration(t *testing.T) {
-	conn := getTestConnector(ctx.CloudZone)
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	conn := getTestConnector(ctx.SCMZone)
+	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -111,10 +120,10 @@ func TestReadZoneConfiguration(t *testing.T) {
 		zone       string
 		zoneConfig endpoint.ZoneConfiguration
 	}{
-		{ctx.CloudZone, endpoint.ZoneConfiguration{
+		{ctx.SCMZone, endpoint.ZoneConfiguration{
 			CustomAttributeValues: make(map[string]string),
 		}},
-		{ctx.CloudZoneRestricted, endpoint.ZoneConfiguration{
+		{ctx.SCMZoneRestricted, endpoint.ZoneConfiguration{
 			Organization:          "Venafi Inc.",
 			OrganizationalUnit:    []string{"Integrations"},
 			Country:               "US",
@@ -139,9 +148,9 @@ func TestReadZoneConfiguration(t *testing.T) {
 }
 
 func TestRequestCertificate(t *testing.T) {
-	conn := getTestConnector(ctx.CloudZone)
+	conn := getTestConnector(ctx.SCMZone)
 	conn.verbose = true
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -166,7 +175,7 @@ func TestRequestCertificate(t *testing.T) {
 func TestRequestCertificateED25519WithValidation(t *testing.T) {
 	conn := getTestConnector(ctx.VAASzoneEC)
 	conn.verbose = true
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -206,7 +215,7 @@ func TestRequestCertificateED25519WithValidation(t *testing.T) {
 func TestRequestCertificateED25519WithPolicyValidation(t *testing.T) {
 	conn := getTestConnector(ctx.VAASzoneEC)
 	conn.verbose = true
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -242,9 +251,9 @@ func TestRequestCertificateED25519WithPolicyValidation(t *testing.T) {
 }
 
 func TestRequestCertificateWithUsageMetadata(t *testing.T) {
-	conn := getTestConnector(ctx.CloudZone)
+	conn := getTestConnector(ctx.SCMZone)
 	conn.verbose = true
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -273,9 +282,9 @@ func TestRequestCertificateWithUsageMetadata(t *testing.T) {
 }
 
 func TestRequestCertificateWithValidityHours(t *testing.T) {
-	conn := getTestConnector(ctx.CloudZone)
+	conn := getTestConnector(ctx.SCMZone)
 	conn.verbose = true
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -329,9 +338,9 @@ func TestRequestCertificateWithValidityHours(t *testing.T) {
 }
 
 func TestRequestCertificateWithValidityDuration(t *testing.T) {
-	conn := getTestConnector(ctx.CloudZone)
+	conn := getTestConnector(ctx.SCMZone)
 	conn.verbose = true
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -385,8 +394,8 @@ func TestRequestCertificateWithValidityDuration(t *testing.T) {
 }
 
 func TestRetrieveCertificate(t *testing.T) {
-	conn := getTestConnector(ctx.CloudZone)
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	conn := getTestConnector(ctx.SCMZone)
+	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -433,8 +442,8 @@ func TestRetrieveCertificate(t *testing.T) {
 }
 
 func TestRetrieveCertificateRootFirst(t *testing.T) {
-	conn := getTestConnector(ctx.CloudZone)
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	conn := getTestConnector(ctx.SCMZone)
+	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -484,8 +493,8 @@ func TestRetrieveCertificateRootFirst(t *testing.T) {
 }
 
 func TestGetCertificateStatus(t *testing.T) {
-	conn := getTestConnector(ctx.CloudZone)
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	conn := getTestConnector(ctx.SCMZone)
+	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -520,8 +529,8 @@ func TestGetCertificateStatus(t *testing.T) {
 
 func TestRenewCertificate(t *testing.T) {
 	//t.Skip() //todo: remove if condor team fix bug. check after 2020.04
-	conn := getTestConnector(ctx.CloudZone)
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	conn := getTestConnector(ctx.SCMZone)
+	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -628,8 +637,8 @@ func renewCertificateRequest(t *testing.T, conn *Connector, renewalRequest *cert
 
 func TestRenewCertificateWithUsageMetadata(t *testing.T) {
 	t.Skip() //todo: remove if condor team fix bug. check after 2020.04
-	conn := getTestConnector(ctx.CloudZone)
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	conn := getTestConnector(ctx.SCMZone)
+	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -702,8 +711,8 @@ func TestRenewCertificateWithUsageMetadata(t *testing.T) {
 
 func TestReadPolicyConfiguration(t *testing.T) {
 	//todo: add more zones
-	conn := getTestConnector(ctx.CloudZone)
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	conn := getTestConnector(ctx.SCMZone)
+	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -725,13 +734,13 @@ func TestReadPolicyConfiguration(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(*policy, expectedPolice) {
-		t.Fatalf("policy for zone %s is not as expected \nget:    %+v \nexpect: %+v", ctx.CloudZone, *policy, expectedPolice)
+		t.Fatalf("policy for zone %s is not as expected \nget:    %+v \nexpect: %+v", ctx.SCMZone, *policy, expectedPolice)
 	}
 }
 
 func TestRetireCertificate(t *testing.T) {
-	conn := getTestConnector(ctx.CloudZone)
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	conn := getTestConnector(ctx.SCMZone)
+	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -858,8 +867,8 @@ func retireCertificate(conn *Connector, retireReq *certificate.RetireRequest, ma
 }
 
 func TestRetireCertificateWithPickUpID(t *testing.T) {
-	conn := getTestConnector(ctx.CloudZone)
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	conn := getTestConnector(ctx.SCMZone)
+	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -894,8 +903,8 @@ func TestRetireCertificateWithPickUpID(t *testing.T) {
 }
 
 func TestRetireCertificateTwice(t *testing.T) {
-	conn := getTestConnector(ctx.CloudZone)
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	conn := getTestConnector(ctx.SCMZone)
+	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -938,7 +947,7 @@ func TestRetireCertificateTwice(t *testing.T) {
 }
 
 func TestRevokeCertificate(t *testing.T) {
-	conn := getTestConnector(ctx.CloudZone)
+	conn := getTestConnector(ctx.SCMZone)
 
 	// The following block of code is to set the clients and accessToken
 	// given we omitted to call the conn.Authenticate() method to avoid the
@@ -1094,7 +1103,7 @@ func TestReadPolicyConfigurationOnlyEC(t *testing.T) {
 	// it shouldn't, this test may need to change in the future once this is solved
 	//todo: add more zones
 	conn := getTestConnector(ctx.VAASzoneEC)
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -1117,7 +1126,7 @@ func TestReadPolicyConfigurationOnlyEC(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(*policy, expectedPolice) {
-		t.Fatalf("policy for zone %s is not as expected \nget:    %+v \nexpect: %+v", ctx.CloudZone, *policy, expectedPolice)
+		t.Fatalf("policy for zone %s is not as expected \nget:    %+v \nexpect: %+v", ctx.SCMZone, *policy, expectedPolice)
 	}
 }
 
@@ -1149,8 +1158,8 @@ func newSelfSignedCert() (string, error) {
 
 func TestImportCertificate(t *testing.T) {
 
-	conn := getTestConnector(ctx.CloudZone)
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	conn := getTestConnector(ctx.SCMZone)
+	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -1251,8 +1260,8 @@ func TestGetURL(t *testing.T) {
 }
 
 func TestRetrieveCertificatesList(t *testing.T) {
-	conn := getTestConnector(ctx.CloudZone)
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	conn := getTestConnector(ctx.SCMZone)
+	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -1276,8 +1285,8 @@ func TestRetrieveCertificatesList(t *testing.T) {
 }
 
 func TestSearchCertificate(t *testing.T) {
-	conn := getTestConnector(ctx.CloudZone)
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	conn := getTestConnector(ctx.SCMZone)
+	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1313,10 +1322,10 @@ func TestSetPolicy(t *testing.T) {
 	appName := test.RandAppName()
 
 	policyName := appName + "\\" + test.RandCitName()
-	conn := getTestConnector(ctx.CloudZone)
+	conn := getTestConnector(ctx.SCMZone)
 	conn.verbose = true
 
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	err := authenticateTestConnector(conn)
 
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -1592,10 +1601,10 @@ func TestGetPolicy(t *testing.T) {
 	t.Skip() //this is just for development purpose
 
 	policyName := os.Getenv("CLOUD_POLICY_MANAGEMENT_SAMPLE")
-	conn := getTestConnector(ctx.CloudZone)
+	conn := getTestConnector(ctx.SCMZone)
 	conn.verbose = true
 
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	err := authenticateTestConnector(conn)
 
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -1821,13 +1830,13 @@ func TestGetPolicyOnlyEC(t *testing.T) {
 	conn := getTestConnector(ctx.VAASzoneEC)
 	conn.verbose = true
 
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	err := authenticateTestConnector(conn)
 
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
 
-	specifiedPS := test.GetVAASpolicySpecificationEC()
+	specifiedPS := test.GetSCMpolicySpecificationEC()
 
 	ps, err := conn.GetPolicy(policyName)
 
@@ -2044,10 +2053,10 @@ func TestGetPolicyOnlyEC(t *testing.T) {
 func TestSetEmptyPolicy(t *testing.T) {
 
 	policyName := test.RandAppName() + "\\" + test.RandCitName()
-	conn := getTestConnector(ctx.CloudZone)
+	conn := getTestConnector(ctx.SCMZone)
 	conn.verbose = true
 
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	err := authenticateTestConnector(conn)
 
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -2066,10 +2075,10 @@ func TestSetEmptyPolicy(t *testing.T) {
 func TestSetDefaultPolicyValuesAndValidate(t *testing.T) {
 
 	policyName := test.RandAppName() + "\\" + test.RandCitName()
-	conn := getTestConnector(ctx.CloudZone)
+	conn := getTestConnector(ctx.SCMZone)
 	conn.verbose = true
 
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	err := authenticateTestConnector(conn)
 
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -2082,7 +2091,7 @@ func TestSetDefaultPolicyValuesAndValidate(t *testing.T) {
 	serGenerated := true
 	specification.Default.KeyPair.EllipticCurve = &ec
 	specification.Default.KeyPair.ServiceGenerated = &serGenerated
-	ctx.CloudZone = policyName
+	ctx.SCMZone = policyName
 
 	_, err = conn.SetPolicy(policyName, specification)
 
@@ -2144,10 +2153,10 @@ func TestSetDefaultPolicyValuesAndValidate(t *testing.T) {
 func TestSetPolicyValuesAndValidate(t *testing.T) {
 
 	policyName := test.RandAppName() + "\\" + test.RandCitName()
-	conn := getTestConnector(ctx.CloudZone)
+	conn := getTestConnector(ctx.SCMZone)
 	conn.verbose = true
 
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	err := authenticateTestConnector(conn)
 
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -2156,7 +2165,7 @@ func TestSetPolicyValuesAndValidate(t *testing.T) {
 	specification := test.GetCloudPolicySpecification()
 
 	specification.Default = nil
-	ctx.CloudZone = policyName
+	ctx.SCMZone = policyName
 
 	_, err = conn.SetPolicy(policyName, specification)
 
@@ -2226,10 +2235,10 @@ func TestSetPolicyValuesAndValidate(t *testing.T) {
 func TestSetPolicyEntrust(t *testing.T) {
 
 	policyName := test.RandAppName() + "\\" + test.RandCitName()
-	conn := getTestConnector(ctx.CloudZone)
+	conn := getTestConnector(ctx.SCMZone)
 	conn.verbose = true
 
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	err := authenticateTestConnector(conn)
 
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -2264,10 +2273,10 @@ This test is just for verifying that a policy can be created using DIGICERT	 CA.
 func TestSetPolicyDigicert(t *testing.T) {
 
 	policyName := test.RandAppName() + "\\" + test.RandCitName()
-	conn := getTestConnector(ctx.CloudZone)
+	conn := getTestConnector(ctx.SCMZone)
 	conn.verbose = true
 
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	err := authenticateTestConnector(conn)
 
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -2295,13 +2304,10 @@ func TestSetPolicyDigicert(t *testing.T) {
 }
 
 func TestCreateCertServiceCSR(t *testing.T) {
-	policyName := os.Getenv("CLOUD_ZONE_RESTRICTED")
+	policyName := os.Getenv("SCM_ZONE_RESTRICTED")
 	conn := getTestConnector(policyName)
 	conn.verbose = true
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
-	if err != nil {
-		t.Fatalf("%s", err)
-	}
+	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -2336,7 +2342,7 @@ func TestCreateCertServiceCSRWithDefaults(t *testing.T) {
 	t.Skip("it will enabled on the future")
 	conn := getTestConnector("App Alfa\\Amoo")
 	conn.verbose = true
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -2372,13 +2378,13 @@ func TestCreateCertServiceCSRWithDefaults(t *testing.T) {
 
 func TestGetDefaultCsrAttributes(t *testing.T) {
 
-	policyName := os.Getenv("CLOUD_ZONE_RESTRICTED")
+	policyName := os.Getenv("SCM_ZONE_RESTRICTED")
 	conn := getTestConnector(policyName)
 	conn.verbose = true
 	request := &certificate.Request{}
 	request.Subject.CommonName = "test.vfidev.com"
 
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	err := authenticateTestConnector(conn)
 
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -2396,11 +2402,11 @@ func TestGetDefaultCsrAttributes(t *testing.T) {
 
 func TestGetCsrAttributes(t *testing.T) {
 
-	policyName := os.Getenv("CLOUD_ZONE_RESTRICTED")
+	policyName := os.Getenv("SCM_ZONE_RESTRICTED")
 	conn := getTestConnector(policyName)
 	conn.verbose = true
 	req := getBasicRequest()
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	err := authenticateTestConnector(conn)
 
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -2419,7 +2425,7 @@ func TestGetCsrAttributes(t *testing.T) {
 func TestCertificateSanTypes(t *testing.T) {
 
 	ip := net.ParseIP("127.0.0.1")
-	policyName := os.Getenv("CLOUD_ZONE_RESTRICTED")
+	policyName := os.Getenv("SCM_ZONE_RESTRICTED")
 	conn := getTestConnector(policyName)
 	conn.verbose = true
 	req := getBasicRequest()
@@ -2434,7 +2440,7 @@ func TestCertificateSanTypes(t *testing.T) {
 	uri, _ := url.Parse(fmt.Sprint("https://", req.Subject.CommonName))
 	req.URIs = []*url.URL{uri}
 
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	err := authenticateTestConnector(conn)
 
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -2451,11 +2457,11 @@ func TestCertificateSanTypes(t *testing.T) {
 }
 
 func TestVerifyCSRServiceGenerated(t *testing.T) {
-	policyName := os.Getenv("CLOUD_ZONE_RESTRICTED")
+	policyName := os.Getenv("SCM_ZONE_RESTRICTED")
 
 	conn := getTestConnector(policyName)
 	conn.verbose = true
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -2486,11 +2492,11 @@ func TestVerifyCSRServiceGenerated(t *testing.T) {
 }
 
 func TestGenerateCertificateEC(t *testing.T) {
-	policyName := os.Getenv("VAAS_ZONE_ONLY_EC")
+	policyName := os.Getenv("SCM_ZONE_ONLY_EC")
 
 	conn := getTestConnector(policyName)
 	conn.verbose = true
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -2524,11 +2530,11 @@ func TestGenerateCertificateEC(t *testing.T) {
 }
 
 func TestGenerateCertificateECDefault(t *testing.T) {
-	policyName := os.Getenv("VAAS_ZONE_ONLY_EC")
+	policyName := os.Getenv("SCM_ZONE_ONLY_EC")
 
 	conn := getTestConnector(policyName)
 	conn.verbose = true
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -2561,7 +2567,7 @@ func TestGenerateCertificateECDefault(t *testing.T) {
 }
 
 func TestGetType(t *testing.T) {
-	policyName := os.Getenv("CLOUD_ZONE_RESTRICTED")
+	policyName := os.Getenv("SCM_ZONE_RESTRICTED")
 
 	conn := getTestConnector(policyName)
 
@@ -2587,8 +2593,8 @@ func getBasicRequest() certificate.Request {
 
 // TODO: Expand unit tests to cover more cases
 func TestSearchValidCertificate(t *testing.T) {
-	conn := getTestConnector(ctx.CloudZone)
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	conn := getTestConnector(ctx.SCMZone)
+	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2623,9 +2629,9 @@ func TestSearchValidCertificate(t *testing.T) {
 
 func TestGetCloudRequest(t *testing.T) {
 
-	conn := getTestConnector(ctx.CloudZone)
+	conn := getTestConnector(ctx.SCMZone)
 	conn.verbose = true
-	err := conn.Authenticate(&endpoint.Authentication{APIKey: ctx.CloudAPIkey})
+	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}

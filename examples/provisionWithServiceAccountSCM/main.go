@@ -16,7 +16,7 @@ const (
 	scmZone         = "SCM_ZONE"
 	scmTokenURL     = "SCM_TOKEN_URL" // #nosec G101 // This is not a hardcoded credential
 	scmClientId     = "SCM_CLIENT_ID"
-	scmClientSecret = "SCM_CLIENT_SECRET"
+	scmClientSecret = "SCM_CLIENT_SECRET" // #nosec G101 // This is not a hardcoded credential
 	scmScope        = "SCM_SCOPE"
 	envVarNotSet    = "environment variable not set: %s"
 

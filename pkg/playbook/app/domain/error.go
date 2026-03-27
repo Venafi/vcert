@@ -88,6 +88,18 @@ var (
 	ErrNoExternalJWT = fmt.Errorf("no externalJWT defined in credentials. externalJWT and tokenURL are both required to request an access token from  CyberArk Certificate Manager, SaaS")
 	// ErrNoVCPTokenURL is thrown when platform is CyberArk Certificate Manager, SaaS, an externaJWT has been provided, but no config.credentials.TokenURL has been passed
 	ErrNoVCPTokenURL = fmt.Errorf("no tokenURL defined in credentials. tokenURL and externalJWT are both required to request an access token from  CyberArk Certificate Manager, SaaS when using an externalJWT")
+	// ErrNoSCMTokenURL is thrown when platform is CyberArk Certificate Manager, SaaS, an externaJWT has been provided, but no config.credentials.TokenURL has been passed
+	ErrNoSCMTokenURL = fmt.Errorf("no tokenURL defined in credentials. tokenURL is required to request an access token from Palo Alto Networks Strata Cloud Manager (SCM) when using client credentials grant type")
+	// ErrNoSCMClientId is thrown when platform is Palo Alto Networks Strata Cloud Manager (SCM) and no config.credentials.clientId is defined
+	ErrNoSCMClientId = fmt.Errorf("no clientId defined. Palo Alto Networks Strata Cloud Manager (SCM) platform requires a clientId to request OAuth2 token")
+	// ErrNoSCMClientSecret is thrown when platform is Palo Alto Networks Strata Cloud Manager (SCM) and no config.credentials.clientSecret is defined
+	ErrNoSCMClientSecret = fmt.Errorf("no clientSecret defined. Palo Alto Networks Strata Cloud Manager (SCM) platform requires a clientSecret to request OAuth2 token")
+	// ErrNoSCMScope is thrown when platform is Palo Alto Networks Strata Cloud Manager (SCM) and no config.credentials.scope is defined
+	ErrNoSCMScope = fmt.Errorf("no scope defined. Palo Alto Networks Strata Cloud Manager (SCM) platform requires a scope to request OAuth2 token")
+	// ErrNoSCMAccessToken is thrown when platform is Palo Alto Networks Strata Cloud Manager (SCM) and no config.credentials.accessToken is defined
+	ErrNoSCMAccessToken = fmt.Errorf("no accessToken defined. Palo Alto Networks Strata Cloud Manager (SCM) platform requires an OAuth2 access token for authentication")
 	// ErrAmbiguousVCPCreds is thrown when platform is CyberArk Certificate Manager, SaaS, and more than one type (apiKey, accessToken, or externalJWT) was provided
 	ErrAmbiguousVCPCreds = fmt.Errorf("unable to disambiguate multiple  CyberArk Certificate Manager, SaaS credentials. Only ONE of apiKey, accessToken, or tokenURL WITH externalJWT should be defined")
+	// ErrAmbiguousSCMCreds is thrown when platform is CyberArk Certificate Manager, SaaS, and more than one type (accessToken or client credentials) was provided
+	ErrAmbiguousSCMreds = fmt.Errorf("unable to disambiguate multiple  Palo Alto Networks Strata Cloud Manager (SCM) credentials. Only ONE of accessToken or client credentials should be defined")
 )

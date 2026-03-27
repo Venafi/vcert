@@ -113,25 +113,25 @@ AUTHOR:
 ACTIONS:
    Command       Platform                   Description
 
-   gencsr                                   To generate a certificate signing request (CSR)
-   enroll        tpp | vcp | firefly        To enroll a certificate
-   pickup        tpp | vcp                  To retrieve a certificate
-   renew         tpp | vcp                  To renew a certificate
-   retire        tpp | vcp                  To retire a certificate
-   revoke        tpp                        To revoke a certificate
-   run           tpp | vcp | firefly        To retrieve and install certificates using a vcert playbook file
-   provision           vcp                  To provision a certificate to cloud keystore
+   gencsr                                         To generate a certificate signing request (CSR)
+   enroll        tpp | vcp | scm | firefly        To enroll a certificate
+   pickup        tpp | vcp | scm                  To retrieve a certificate
+   renew         tpp | vcp | scm                  To renew a certificate
+   retire        tpp | vcp | scm                  To retire a certificate
+   revoke        tpp                              To revoke a certificate
+   run           tpp | vcp | scm | firefly        To retrieve and install certificates using a vcert playbook file
+   provision           vcp | scm                  To provision a certificate to cloud keystore
 
-   getpolicy     tpp | vcp                  To retrieve the certificate policy of a zone
-   setpolicy     tpp | vcp                  To apply a certificate policy specification to a zone
+   getpolicy     tpp | vcp | scm                  To retrieve the certificate policy of a zone
+   setpolicy     tpp | vcp | scm                  To apply a certificate policy specification to a zone
 
-   getcred       tpp | vcp | scm | oidc     To obtain a new authentication token from any CyberArk platform or to register for a new CyberArk Certificate Manager, SaaS user API key
-   checkcred     tpp                        To check the validity of a CyberArk Certificate Manager, Self-Hosted token and grant
-   voidcred      tpp                        To invalidate a CyberArk Certificate Manager, Self-Hosted authentication token
+   getcred       tpp | vcp | scm | oidc           To obtain a new authentication token from any CyberArk platform or to register for a new CyberArk Certificate Manager, SaaS user API key
+   checkcred     tpp                              To check the validity of a CyberArk Certificate Manager, Self-Hosted token and grant
+   voidcred      tpp                              To invalidate a CyberArk Certificate Manager, Self-Hosted authentication token
 
-   sshenroll     tpp                        To enroll an SSH certificate
-   sshpickup     tpp                        To retrieve an SSH certificate
-   sshgetconfig  tpp                        To get the SSH CA public key and default principals
+   sshenroll     tpp                              To enroll an SSH certificate
+   sshpickup     tpp                              To retrieve an SSH certificate
+   sshgetconfig  tpp                              To get the SSH CA public key and default principals
 
 OPTIONS:
    {{range .VisibleFlags}}{{.}}

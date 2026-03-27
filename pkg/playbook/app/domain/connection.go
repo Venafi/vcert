@@ -44,6 +44,8 @@ func (c Connection) GetConnectorType() endpoint.ConnectorType {
 		return endpoint.ConnectorTypeTPP
 	case venafi.TLSPCloud:
 		return endpoint.ConnectorTypeCloud
+	case venafi.SCM:
+		return endpoint.ConnectorTypeSCM
 	default:
 		return endpoint.ConnectorTypeFake
 	}
@@ -70,6 +72,8 @@ func (c Connection) IsValid() (bool, error) {
 		return isValidVaaS(c)
 	case venafi.Firefly:
 		return isValidFirefly(c)
+	case venafi.SCM:
+		return isValidSCM(c)
 	default:
 		return false, fmt.Errorf("invalid connection type %v", c.Platform)
 	}
@@ -152,6 +156,39 @@ func isValidVaaS(c Connection) (bool, error) {
 
 	// if we got here then only one credential option was provided (which is what we want)
 	return true, nil
+}
+
+func isValidSCM(c Connection) (bool, error) {
+	hasAccessToken := c.Credentials.AccessToken != ""
+	hasClientCredentials := c.Credentials.TokenURL != "" && c.Credentials.ClientId != "" && c.Credentials.ClientSecret != "" && c.Credentials.Scope != ""
+	if hasAccessToken && hasClientCredentials {
+		return false, ErrAmbiguousSCMreds
+	}
+
+	if hasAccessToken || hasClientCredentials {
+		return true, nil
+	}
+
+	partiallySuppliedClientCredentials := c.Credentials.TokenURL != "" || c.Credentials.ClientId != "" || c.Credentials.ClientSecret != "" || c.Credentials.Scope != ""
+	if partiallySuppliedClientCredentials {
+		if c.Credentials.TokenURL == "" {
+			return false, ErrNoSCMTokenURL
+		}
+
+		if c.Credentials.ClientId == "" {
+			return false, ErrNoSCMClientId
+		}
+
+		if c.Credentials.ClientSecret == "" {
+			return false, ErrNoSCMClientSecret
+		}
+
+		if c.Credentials.Scope == "" {
+			return false, ErrNoSCMScope
+		}
+	}
+
+	return false, ErrNoCredentials
 }
 
 func isValidFirefly(c Connection) (bool, error) {
