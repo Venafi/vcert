@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package scm
+package ngts
 
 type team struct {
 	ID        string `json:"id"`

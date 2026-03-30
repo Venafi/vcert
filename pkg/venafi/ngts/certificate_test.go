@@ -1,4 +1,4 @@
-package scm
+package ngts
 
 import (
 	"bytes"
@@ -13,9 +13,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRevocationRequestResponseSCM_ToLog(t *testing.T) {
+func TestRevocationRequestResponseNGTS_ToLog(t *testing.T) {
 	t.Run("SUBMITTED", func(t *testing.T) {
-		revocationResponse := &RevocationRequestResponseSCM{
+		revocationResponse := &RevocationRequestResponseNGTS{
 			Status:     "SUBMITTED",
 			ID:         "myId",
 			Thumbprint: "myThumbprint",
@@ -26,7 +26,7 @@ func TestRevocationRequestResponseSCM_ToLog(t *testing.T) {
 		assert.Contains(t, output, fmt.Sprintf(RevocationSubmittedFormattedMessage, revocationResponse.ID, revocationResponse.Thumbprint))
 	})
 	t.Run("FAILED", func(t *testing.T) {
-		revocationResponse := &RevocationRequestResponseSCM{
+		revocationResponse := &RevocationRequestResponseNGTS{
 			Status:     "FAILED",
 			ID:         "myId",
 			Thumbprint: "myThumbprint",
@@ -38,7 +38,7 @@ func TestRevocationRequestResponseSCM_ToLog(t *testing.T) {
 		assert.EqualError(t, err, fmt.Errorf(RevocationFailedFormattedMessage, revocationResponse.ID, revocationResponse.Thumbprint).Error())
 	})
 	t.Run("FAILED with error", func(t *testing.T) {
-		revocationResponse := &RevocationRequestResponseSCM{
+		revocationResponse := &RevocationRequestResponseNGTS{
 			Status:     "FAILED",
 			ID:         "myId",
 			Thumbprint: "myThumbprint",
@@ -51,7 +51,7 @@ func TestRevocationRequestResponseSCM_ToLog(t *testing.T) {
 		assert.EqualError(t, err, fmt.Errorf(RevocationFailedWithErrorFormattedMessage, revocationResponse.ID, revocationResponse.Thumbprint, revocationResponse.Error).Error())
 	})
 	t.Run("PENDING_APPROVAL", func(t *testing.T) {
-		revocationResponse := &RevocationRequestResponseSCM{
+		revocationResponse := &RevocationRequestResponseNGTS{
 			Status:     "PENDING_APPROVAL",
 			ID:         "myId",
 			Thumbprint: "myThumbprint",
@@ -62,7 +62,7 @@ func TestRevocationRequestResponseSCM_ToLog(t *testing.T) {
 		assert.Contains(t, output, fmt.Sprintf(RevocationApprovalPendingFormattedMessage, revocationResponse.ID, revocationResponse.Thumbprint))
 	})
 	t.Run("PENDING_FINAL_APPROVAL", func(t *testing.T) {
-		revocationResponse := &RevocationRequestResponseSCM{
+		revocationResponse := &RevocationRequestResponseNGTS{
 			Status:     "PENDING_FINAL_APPROVAL",
 			ID:         "myId",
 			Thumbprint: "myThumbprint",
@@ -73,7 +73,7 @@ func TestRevocationRequestResponseSCM_ToLog(t *testing.T) {
 		assert.Contains(t, output, fmt.Sprintf(RevocationApprovalPendingFormattedMessage, revocationResponse.ID, revocationResponse.Thumbprint))
 	})
 	t.Run("REJECTED_APPROVAL", func(t *testing.T) {
-		revocationResponse := &RevocationRequestResponseSCM{
+		revocationResponse := &RevocationRequestResponseNGTS{
 			Status:     "REJECTED_APPROVAL",
 			ID:         "myId",
 			Thumbprint: "myThumbprint",
@@ -84,7 +84,7 @@ func TestRevocationRequestResponseSCM_ToLog(t *testing.T) {
 		assert.Contains(t, output, fmt.Sprintf(RevocationRejectedFormattedMessage, revocationResponse.ID, revocationResponse.Thumbprint))
 	})
 	t.Run("REJECTED_APPROVAL with reason", func(t *testing.T) {
-		revocationResponse := &RevocationRequestResponseSCM{
+		revocationResponse := &RevocationRequestResponseNGTS{
 			Status:          "REJECTED_APPROVAL",
 			ID:              "myId",
 			Thumbprint:      "myThumbprint",
@@ -96,7 +96,7 @@ func TestRevocationRequestResponseSCM_ToLog(t *testing.T) {
 		assert.Contains(t, output, fmt.Sprintf(RevocationRejectedWithReasonFormattedMessage, revocationResponse.ID, revocationResponse.Thumbprint, revocationResponse.RejectionReason))
 	})
 	t.Run("no status", func(t *testing.T) {
-		revocationResponse := &RevocationRequestResponseSCM{
+		revocationResponse := &RevocationRequestResponseNGTS{
 			ID:         "myId",
 			Thumbprint: "myThumbprint",
 			Error:      errors.New("some error"),
@@ -109,7 +109,7 @@ func TestRevocationRequestResponseSCM_ToLog(t *testing.T) {
 	})
 }
 
-func getOutputFromToLog(rev *RevocationRequestResponseSCM) (string, error) {
+func getOutputFromToLog(rev *RevocationRequestResponseNGTS) (string, error) {
 	// 1. Redirect os.Stdout
 	origStderr := os.Stderr
 	reader, writer, _ := os.Pipe()

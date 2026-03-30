@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Venafi/vcert/v5/pkg/venafi/scm"
+	"github.com/Venafi/vcert/v5/pkg/venafi/ngts"
 	"github.com/urfave/cli/v2"
 
 	"github.com/Venafi/vcert/v5"
@@ -41,7 +41,7 @@ var (
 		UsageText: ` vcert getcred --email <email address for CyberArk Certificate Manager, SaaS headless registration> [--password <password>] [--format (text|json)]
 		vcert getcred -p vcp --token-url <CyberArk Certificate Manager, SaaS token url> --external-jwt <JWT from Identity Provider>
 
-		vcert getcred -p scm --token-url <Palo Alto Networks Strata Cloud Manager (SCM) token url> --client-id <service account client id> --client-secret <service account client secret> --scope tsg_id:<TSG_ID>
+		vcert getcred -p ngts --token-url <Palo Alto Networks Next-Generation Trust Security (NGTS) token url> --client-id <service account client id> --client-secret <service account client secret> --scope tsg_id:<TSG_ID>
 		
 		vcert getcred -u https://cmsh.example.com --username <CyberArk Certificate Manager, Self-Hosted user> --password <CyberArk Certificate Manager, Self-Hosted user password>
 		vcert getcred -u https://cmsh.example.com --p12-file <PKCS#12 client cert> --p12-password <PKCS#12 password> --trust-bundle /path-to/bundle.pem
@@ -100,12 +100,12 @@ func doCommandCredMgmt1(c *cli.Context) error {
 
 	//getting the concrete connector
 	vaasConnector, okCloud := connector.(*cloud.Connector)
-	scmConnector, okSCM := connector.(*scm.Connector)
+	ngtsConnector, okNGTS := connector.(*ngts.Connector)
 	tppConnector, okTPP := connector.(*tpp.Connector)
 	fireflyConnector, okFirefly := connector.(*firefly.Connector)
 	_, okFake := connector.(*fake.Connector) //trying to cast to fake.Connector
 
-	if !okCloud && !okSCM && !okTPP && !okFirefly && !okFake {
+	if !okCloud && !okNGTS && !okTPP && !okFirefly && !okFake {
 		panic("it was not possible to get a supported connector")
 	}
 
@@ -119,8 +119,8 @@ func doCommandCredMgmt1(c *cli.Context) error {
 		if vaasConnector != nil {
 			return getVaaSCredentials(vaasConnector, &cfg)
 		}
-		if scmConnector != nil {
-			return getSCMCredentials(scmConnector, &cfg)
+		if ngtsConnector != nil {
+			return getNGTSCredentials(ngtsConnector, &cfg)
 		}
 		if tppConnector != nil {
 			return getTppCredentials(tppConnector, &cfg, clientP12)

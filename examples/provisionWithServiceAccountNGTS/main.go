@@ -12,50 +12,50 @@ import (
 )
 
 const (
-	scmURL          = "SCM_URL"
-	scmZone         = "SCM_ZONE"
-	scmTokenURL     = "SCM_TOKEN_URL" // #nosec G101 // This is not a hardcoded credential
-	scmClientId     = "SCM_CLIENT_ID"
-	scmClientSecret = "SCM_CLIENT_SECRET" // #nosec G101 // This is not a hardcoded credential
-	scmScope        = "SCM_SCOPE"
-	envVarNotSet    = "environment variable not set: %s"
+	ngtsURL          = "NGTS_URL"
+	ngtsZone         = "NGTS_ZONE"
+	ngtsTokenURL     = "NGTS_TOKEN_URL" // #nosec G101 // This is not a hardcoded credential
+	ngtsClientId     = "NGTS_CLIENT_ID"
+	ngtsClientSecret = "NGTS_CLIENT_SECRET" // #nosec G101 // This is not a hardcoded credential
+	ngtsScope        = "NGTS_SCOPE"
+	envVarNotSet     = "environment variable not set: %s"
 
 	name = "example-provisioning"
 )
 
 func main() {
-	url, found := os.LookupEnv(scmURL)
+	url, found := os.LookupEnv(ngtsURL)
 	if !found {
-		log.Fatalf(envVarNotSet, scmURL)
+		log.Fatalf(envVarNotSet, ngtsURL)
 	}
 
-	zone, found := os.LookupEnv(scmZone)
+	zone, found := os.LookupEnv(ngtsZone)
 	if !found {
-		log.Fatalf(envVarNotSet, scmZone)
+		log.Fatalf(envVarNotSet, ngtsZone)
 	}
 
-	tokenURL, found := os.LookupEnv(scmTokenURL)
+	tokenURL, found := os.LookupEnv(ngtsTokenURL)
 	if !found {
-		log.Fatalf(envVarNotSet, scmTokenURL)
+		log.Fatalf(envVarNotSet, ngtsTokenURL)
 	}
 
-	clientId, found := os.LookupEnv(scmClientId)
+	clientId, found := os.LookupEnv(ngtsClientId)
 	if !found {
-		log.Fatalf(envVarNotSet, scmClientId)
+		log.Fatalf(envVarNotSet, ngtsClientId)
 	}
 
-	clientSecret, found := os.LookupEnv(scmClientSecret)
+	clientSecret, found := os.LookupEnv(ngtsClientSecret)
 	if !found {
-		log.Fatalf(envVarNotSet, scmClientSecret)
+		log.Fatalf(envVarNotSet, ngtsClientSecret)
 	}
 
-	scope, found := os.LookupEnv(scmScope)
+	scope, found := os.LookupEnv(ngtsScope)
 	if !found {
-		log.Fatalf(envVarNotSet, scmScope)
+		log.Fatalf(envVarNotSet, ngtsScope)
 	}
 
 	config := &vcert.Config{
-		ConnectorType: endpoint.ConnectorTypeSCM,
+		ConnectorType: endpoint.ConnectorTypeNGTS,
 		BaseUrl:       url,
 		Zone:          zone,
 		Credentials: &endpoint.Authentication{

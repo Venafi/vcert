@@ -200,8 +200,8 @@ func GetVAASpolicySpecificationEC() *policy.PolicySpecification {
 	return &specification
 }
 
-func GetSCMpolicySpecificationEC() *policy.PolicySpecification {
-	caName := os.Getenv("SCM_CA_NAME")
+func GetNGTSpolicySpecificationEC() *policy.PolicySpecification {
+	caName := os.Getenv("NGTS_CA_NAME")
 	maxValidityDays := 90
 	wildcardAllowed := false
 	serviceGenerated := false

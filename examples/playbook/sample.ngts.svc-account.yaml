@@ -1,12 +1,12 @@
 config:
   connection:
-    platform: SCM
-    url: '{{ Env "SCM_URL" }}' # SCM URL as environment variable
+    platform: NGTS
+    url: '{{ Env "NGTS_URL" }}' # NGTS URL as environment variable
     credentials:
-      clientId: '{{ Env "SCM_CLIENT_ID" }}' # SCM client ID as environment variable
-      clientSecret: '{{ Env "SCM_CLIENT_SECRET" }}' # SCM client secret as environment variable
-      scope: '{{ Env "SCM_SCOPE" }}' # SCM scope as environment variable
-      tokenURL: '{{ Env "SCM_TOKEN_URL" }}' # SCM token URL as environment variable
+      clientId: '{{ Env "NGTS_CLIENT_ID" }}' # NGTS client ID as environment variable
+      clientSecret: '{{ Env "NGTS_CLIENT_SECRET" }}' # NGTS client secret as environment variable
+      scope: '{{ Env "NGTS_SCOPE" }}' # NGTS scope as environment variable
+      tokenURL: '{{ Env "NGTS_TOKEN_URL" }}' # NGTS token URL as environment variable
 certificateTasks:
   - name: myCertificate # Task Identifier, no relevance in tool run
     renewBefore: 31d

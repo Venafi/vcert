@@ -44,8 +44,8 @@ func (c Connection) GetConnectorType() endpoint.ConnectorType {
 		return endpoint.ConnectorTypeTPP
 	case venafi.TLSPCloud:
 		return endpoint.ConnectorTypeCloud
-	case venafi.SCM:
-		return endpoint.ConnectorTypeSCM
+	case venafi.NGTS:
+		return endpoint.ConnectorTypeNGTS
 	default:
 		return endpoint.ConnectorTypeFake
 	}
@@ -72,8 +72,8 @@ func (c Connection) IsValid() (bool, error) {
 		return isValidVaaS(c)
 	case venafi.Firefly:
 		return isValidFirefly(c)
-	case venafi.SCM:
-		return isValidSCM(c)
+	case venafi.NGTS:
+		return isValidNGTS(c)
 	default:
 		return false, fmt.Errorf("invalid connection type %v", c.Platform)
 	}
@@ -158,11 +158,11 @@ func isValidVaaS(c Connection) (bool, error) {
 	return true, nil
 }
 
-func isValidSCM(c Connection) (bool, error) {
+func isValidNGTS(c Connection) (bool, error) {
 	hasAccessToken := c.Credentials.AccessToken != ""
 	hasClientCredentials := c.Credentials.TokenURL != "" && c.Credentials.ClientId != "" && c.Credentials.ClientSecret != "" && c.Credentials.Scope != ""
 	if hasAccessToken && hasClientCredentials {
-		return false, ErrAmbiguousSCMreds
+		return false, ErrAmbiguousNGTSCreds
 	}
 
 	if hasAccessToken || hasClientCredentials {
@@ -172,19 +172,19 @@ func isValidSCM(c Connection) (bool, error) {
 	partiallySuppliedClientCredentials := c.Credentials.TokenURL != "" || c.Credentials.ClientId != "" || c.Credentials.ClientSecret != "" || c.Credentials.Scope != ""
 	if partiallySuppliedClientCredentials {
 		if c.Credentials.TokenURL == "" {
-			return false, ErrNoSCMTokenURL
+			return false, ErrNoNGTSTokenURL
 		}
 
 		if c.Credentials.ClientId == "" {
-			return false, ErrNoSCMClientId
+			return false, ErrNoNGTSClientId
 		}
 
 		if c.Credentials.ClientSecret == "" {
-			return false, ErrNoSCMClientSecret
+			return false, ErrNoNGTSClientSecret
 		}
 
 		if c.Credentials.Scope == "" {
-			return false, ErrNoSCMScope
+			return false, ErrNoNGTSScope
 		}
 	}
 

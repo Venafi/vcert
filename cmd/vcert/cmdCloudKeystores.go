@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Venafi/vcert/v5/pkg/venafi/scm"
+	"github.com/Venafi/vcert/v5/pkg/venafi/ngts"
 	"github.com/urfave/cli/v2"
 
 	"github.com/Venafi/vcert/v5"
@@ -25,9 +25,9 @@ var (
    vcert provision cloudkeystore --platform vcp -k <CyberArk Certificate Manager, SaaS API key> --certificate-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --keystore-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --format json
    vcert provision cloudkeystore --platform vcp -k <CyberArk Certificate Manager, SaaS API key> --pickup-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --provider-name "My GCP Provider"--keystore-name "My GCP provider" --certificate-name "example-cyberark-com"
    vcert provision cloudkeystore -p vcp -t <CyberArk Certificate Manager, SaaS access token> --certificate-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --provider-name "My GCP Provider" --keystore-name "My GCP provider" --file "/path/to/file.txt
-   vcert provision cloudkeystore -p scm -t <Palo Alto Networks Strata Cloud Manager (SCM) access token> --certificate-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --keystore-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --format json
-   vcert provision cloudkeystore -p scm -t <Palo Alto Networks Strata Cloud Manager (SCM) access token> --pickup-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --provider-name "My GCP Provider"--keystore-name "My GCP provider" --certificate-name "example-cyberark-com"
-   vcert provision cloudkeystore -p scm -t <Palo Alto Networks Strata Cloud Manager (SCM) access token> --certificate-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --provider-name "My GCP Provider" --keystore-name "My GCP provider" --file "/path/to/file.txt"`,
+   vcert provision cloudkeystore -p ngts -t <Palo Alto Networks Next-Generation Trust Security (NGTS) access token> --certificate-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --keystore-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --format json
+   vcert provision cloudkeystore -p ngts -t <Palo Alto Networks Next-Generation Trust Security (NGTS) access token> --pickup-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --provider-name "My GCP Provider"--keystore-name "My GCP provider" --certificate-name "example-cyberark-com"
+   vcert provision cloudkeystore -p ngts -t <Palo Alto Networks Next-Generation Trust Security (NGTS) access token> --certificate-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --provider-name "My GCP Provider" --keystore-name "My GCP provider" --file "/path/to/file.txt"`,
 
 		Action: doCommandProvisionCloudKeystore,
 	}
@@ -73,13 +73,13 @@ func doCommandProvisionCloudKeystore(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-	case *scm.Connector:
+	case *ngts.Connector:
 		cloudKeystore, err = conn.GetCloudKeystore(getKeystoreReq)
 		if err != nil {
 			return err
 		}
 	default:
-		return fmt.Errorf("cloud keystore provisioning is only supported for CyberArk Certificate Manager, SaaS or Palo Alto Networks Strata Cloud Manager (SCM)")
+		return fmt.Errorf("cloud keystore provisioning is only supported for CyberArk Certificate Manager, SaaS or Palo Alto Networks Next-Generation Trust Security (NGTS)")
 	}
 
 	log.Printf("successfully fetched keystore")

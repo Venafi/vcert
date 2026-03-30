@@ -21,32 +21,32 @@ import (
 )
 
 type Context struct {
-	TPPurl                    string
-	TPPuser                   string
-	TPPPassword               string
-	TPPaccessToken            string
-	TPPZone                   string
-	TPPZoneRestricted         string
-	TPPZoneECDSA              string
-	TPPRefreshToken           string
-	ClientID                  string
-	CloudUrl                  string
-	CloudAPIkey               string
-	CloudZone                 string
-	VAASzoneEC                string
-	CloudZoneRestricted       string
-	SCMUrl                    string
-	SCMClientID               string
-	SCMClientSecret           string
-	SCMTokenURL               string
-	SCMScope                  string
-	SCMZone                   string
-	SCMZoneRestricted         string
-	SCMCAName                 string
-	SCMDigicertCAName         string
-	SCMEntrustCAName          string
-	SCMPolicyManagementSample string
-	SCMzoneEC                 string
+	TPPurl                     string
+	TPPuser                    string
+	TPPPassword                string
+	TPPaccessToken             string
+	TPPZone                    string
+	TPPZoneRestricted          string
+	TPPZoneECDSA               string
+	TPPRefreshToken            string
+	ClientID                   string
+	CloudUrl                   string
+	CloudAPIkey                string
+	CloudZone                  string
+	VAASzoneEC                 string
+	CloudZoneRestricted        string
+	NGTSUrl                    string
+	NGTSClientID               string
+	NGTSClientSecret           string
+	NGTSTokenURL               string
+	NGTSScope                  string
+	NGTSZone                   string
+	NGTSZoneRestricted         string
+	NGTSCAName                 string
+	NGTSDigicertCAName         string
+	NGTSEntrustCAName          string
+	NGTSPolicyManagementSample string
+	NGTSzoneEC                 string
 }
 
 func GetEnvContext() *Context {
@@ -67,18 +67,18 @@ func GetEnvContext() *Context {
 	c.VAASzoneEC = os.Getenv("VAAS_ZONE_EC")
 	c.CloudZoneRestricted = os.Getenv("CLOUD_ZONE_RESTRICTED")
 
-	c.SCMUrl = os.Getenv("SCM_URL")
-	c.SCMClientID = os.Getenv("SCM_CLIENT_ID")
-	c.SCMClientSecret = os.Getenv("SCM_CLIENT_SECRET")
-	c.SCMTokenURL = os.Getenv("SCM_TOKEN_URL")
-	c.SCMScope = os.Getenv("SCM_SCOPE")
-	c.SCMZone = os.Getenv("SCM_ZONE")
-	c.SCMZoneRestricted = os.Getenv("SCM_ZONE_RESTRICTED")
-	c.SCMCAName = os.Getenv("SCM_CA_NAME")
-	c.SCMDigicertCAName = os.Getenv("SCM_DIGICERT_CA_NAME")
-	c.SCMEntrustCAName = os.Getenv("SCM_ENTRUST_CA_NAME")
-	c.SCMPolicyManagementSample = os.Getenv("SCM_POLICY_MANAGEMENT_SAMPLE")
-	c.SCMzoneEC = os.Getenv("SCM_ZONE_EC")
+	c.NGTSUrl = os.Getenv("NGTS_URL")
+	c.NGTSClientID = os.Getenv("NGTS_CLIENT_ID")
+	c.NGTSClientSecret = os.Getenv("NGTS_CLIENT_SECRET")
+	c.NGTSTokenURL = os.Getenv("NGTS_TOKEN_URL")
+	c.NGTSScope = os.Getenv("NGTS_SCOPE")
+	c.NGTSZone = os.Getenv("NGTS_ZONE")
+	c.NGTSZoneRestricted = os.Getenv("NGTS_ZONE_RESTRICTED")
+	c.NGTSCAName = os.Getenv("NGTS_CA_NAME")
+	c.NGTSDigicertCAName = os.Getenv("NGTS_DIGICERT_CA_NAME")
+	c.NGTSEntrustCAName = os.Getenv("NGTS_ENTRUST_CA_NAME")
+	c.NGTSPolicyManagementSample = os.Getenv("NGTS_POLICY_MANAGEMENT_SAMPLE")
+	c.NGTSzoneEC = os.Getenv("NGTS_ZONE_EC")
 
 	return c
 }

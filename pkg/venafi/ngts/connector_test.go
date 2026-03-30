@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package scm
+package ngts
 
 import (
 	"context"
@@ -67,24 +67,24 @@ func init() {
 	ctx = test.GetEnvContext()
 	// http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
-	if ctx.SCMClientID == "" || ctx.SCMClientSecret == "" || ctx.SCMTokenURL == "" || ctx.SCMScope == "" {
-		fmt.Println("SCM credentials cannot be empty. Required: SCM_CLIENT_ID, SCM_CLIENT_SECRET, SCM_TOKEN_URL, SCM_SCOPE")
+	if ctx.NGTSClientID == "" || ctx.NGTSClientSecret == "" || ctx.NGTSTokenURL == "" || ctx.NGTSScope == "" {
+		fmt.Println("NGTS credentials cannot be empty. Required: NGTS_CLIENT_ID, NGTS_CLIENT_SECRET, NGTS_TOKEN_URL, NGTS_SCOPE")
 		os.Exit(1)
 	}
 }
 
 func getTestConnector(zone string) *Connector {
-	url, _ := normalizeURL(ctx.SCMUrl)
+	url, _ := normalizeURL(ctx.NGTSUrl)
 	c, _ := NewConnector(url, zone, true, nil)
 	return c
 }
 
 func authenticateTestConnector(conn *Connector) error {
 	return conn.Authenticate(&endpoint.Authentication{
-		ClientId:     ctx.SCMClientID,
-		ClientSecret: ctx.SCMClientSecret,
-		TokenURL:     ctx.SCMTokenURL,
-		Scope:        ctx.SCMScope,
+		ClientId:     ctx.NGTSClientID,
+		ClientSecret: ctx.NGTSClientSecret,
+		TokenURL:     ctx.NGTSTokenURL,
+		Scope:        ctx.NGTSScope,
 	})
 }
 
@@ -97,7 +97,7 @@ func TestPing(t *testing.T) {
 }
 
 func TestAuthenticate(t *testing.T) {
-	conn := getTestConnector(ctx.SCMZone)
+	conn := getTestConnector(ctx.NGTSZone)
 	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -105,7 +105,7 @@ func TestAuthenticate(t *testing.T) {
 }
 
 func TestReadZoneConfiguration(t *testing.T) {
-	conn := getTestConnector(ctx.SCMZone)
+	conn := getTestConnector(ctx.NGTSZone)
 	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -120,10 +120,10 @@ func TestReadZoneConfiguration(t *testing.T) {
 		zone       string
 		zoneConfig endpoint.ZoneConfiguration
 	}{
-		{ctx.SCMZone, endpoint.ZoneConfiguration{
+		{ctx.NGTSZone, endpoint.ZoneConfiguration{
 			CustomAttributeValues: make(map[string]string),
 		}},
-		{ctx.SCMZoneRestricted, endpoint.ZoneConfiguration{
+		{ctx.NGTSZoneRestricted, endpoint.ZoneConfiguration{
 			Organization:          "Venafi Inc.",
 			OrganizationalUnit:    []string{"Integrations"},
 			Country:               "US",
@@ -148,7 +148,7 @@ func TestReadZoneConfiguration(t *testing.T) {
 }
 
 func TestRequestCertificate(t *testing.T) {
-	conn := getTestConnector(ctx.SCMZone)
+	conn := getTestConnector(ctx.NGTSZone)
 	conn.verbose = true
 	err := authenticateTestConnector(conn)
 	if err != nil {
@@ -173,7 +173,7 @@ func TestRequestCertificate(t *testing.T) {
 }
 
 func TestRequestCertificateED25519WithValidation(t *testing.T) {
-	conn := getTestConnector(ctx.SCMzoneEC)
+	conn := getTestConnector(ctx.NGTSzoneEC)
 	conn.verbose = true
 	err := authenticateTestConnector(conn)
 	if err != nil {
@@ -213,7 +213,7 @@ func TestRequestCertificateED25519WithValidation(t *testing.T) {
 }
 
 func TestRequestCertificateED25519WithPolicyValidation(t *testing.T) {
-	conn := getTestConnector(ctx.SCMzoneEC)
+	conn := getTestConnector(ctx.NGTSzoneEC)
 	conn.verbose = true
 	err := authenticateTestConnector(conn)
 	if err != nil {
@@ -251,7 +251,7 @@ func TestRequestCertificateED25519WithPolicyValidation(t *testing.T) {
 }
 
 func TestRequestCertificateWithUsageMetadata(t *testing.T) {
-	conn := getTestConnector(ctx.SCMZone)
+	conn := getTestConnector(ctx.NGTSZone)
 	conn.verbose = true
 	err := authenticateTestConnector(conn)
 	if err != nil {
@@ -282,7 +282,7 @@ func TestRequestCertificateWithUsageMetadata(t *testing.T) {
 }
 
 func TestRequestCertificateWithValidityHours(t *testing.T) {
-	conn := getTestConnector(ctx.SCMZone)
+	conn := getTestConnector(ctx.NGTSZone)
 	conn.verbose = true
 	err := authenticateTestConnector(conn)
 	if err != nil {
@@ -338,7 +338,7 @@ func TestRequestCertificateWithValidityHours(t *testing.T) {
 }
 
 func TestRequestCertificateWithValidityDuration(t *testing.T) {
-	conn := getTestConnector(ctx.SCMZone)
+	conn := getTestConnector(ctx.NGTSZone)
 	conn.verbose = true
 	err := authenticateTestConnector(conn)
 	if err != nil {
@@ -394,7 +394,7 @@ func TestRequestCertificateWithValidityDuration(t *testing.T) {
 }
 
 func TestRetrieveCertificate(t *testing.T) {
-	conn := getTestConnector(ctx.SCMZone)
+	conn := getTestConnector(ctx.NGTSZone)
 	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -442,7 +442,7 @@ func TestRetrieveCertificate(t *testing.T) {
 }
 
 func TestRetrieveCertificateRootFirst(t *testing.T) {
-	conn := getTestConnector(ctx.SCMZone)
+	conn := getTestConnector(ctx.NGTSZone)
 	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -493,7 +493,7 @@ func TestRetrieveCertificateRootFirst(t *testing.T) {
 }
 
 func TestGetCertificateStatus(t *testing.T) {
-	conn := getTestConnector(ctx.SCMZone)
+	conn := getTestConnector(ctx.NGTSZone)
 	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -529,7 +529,7 @@ func TestGetCertificateStatus(t *testing.T) {
 
 func TestRenewCertificate(t *testing.T) {
 	//t.Skip() //todo: remove if condor team fix bug. check after 2020.04
-	conn := getTestConnector(ctx.SCMZone)
+	conn := getTestConnector(ctx.NGTSZone)
 	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -637,7 +637,7 @@ func renewCertificateRequest(t *testing.T, conn *Connector, renewalRequest *cert
 
 func TestRenewCertificateWithUsageMetadata(t *testing.T) {
 	t.Skip() //todo: remove if condor team fix bug. check after 2020.04
-	conn := getTestConnector(ctx.SCMZone)
+	conn := getTestConnector(ctx.NGTSZone)
 	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -711,7 +711,7 @@ func TestRenewCertificateWithUsageMetadata(t *testing.T) {
 
 func TestReadPolicyConfiguration(t *testing.T) {
 	//todo: add more zones
-	conn := getTestConnector(ctx.SCMZone)
+	conn := getTestConnector(ctx.NGTSZone)
 	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -734,12 +734,12 @@ func TestReadPolicyConfiguration(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(*policy, expectedPolice) {
-		t.Fatalf("policy for zone %s is not as expected \nget:    %+v \nexpect: %+v", ctx.SCMZone, *policy, expectedPolice)
+		t.Fatalf("policy for zone %s is not as expected \nget:    %+v \nexpect: %+v", ctx.NGTSZone, *policy, expectedPolice)
 	}
 }
 
 func TestRetireCertificate(t *testing.T) {
-	conn := getTestConnector(ctx.SCMZone)
+	conn := getTestConnector(ctx.NGTSZone)
 	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -761,7 +761,7 @@ func TestRetireCertificate(t *testing.T) {
 		t.Fatalf("%s", err)
 	}
 
-	// Note: Palo Alto Networks Strata Cloud Manager (SCM) may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
+	// Note: Palo Alto Networks Next-Generation Trust Security (NGTS) may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
 	// or even stuck into it
 
 	//trying to wait until the request achieved the ISSUED state by 5 times each 3 seconds
@@ -785,8 +785,8 @@ func TestRetireCertificate(t *testing.T) {
 	hexThumbprint := hex.EncodeToString(thumbprint[:])
 	retireReq.Thumbprint = hexThumbprint
 
-	// Letting Palo Alto Networks Strata Cloud Manager (SCM) some time to load certificate into inventory.
-	// Palo Alto Networks Strata Cloud Manager (SCM) may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
+	// Letting Palo Alto Networks Next-Generation Trust Security (NGTS) some time to load certificate into inventory.
+	// Palo Alto Networks Next-Generation Trust Security (NGTS) may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
 	// or even stuck into it
 
 	err = retireCertificate(conn, retireReq, 5, 3)
@@ -867,7 +867,7 @@ func retireCertificate(conn *Connector, retireReq *certificate.RetireRequest, ma
 }
 
 func TestRetireCertificateWithPickUpID(t *testing.T) {
-	conn := getTestConnector(ctx.SCMZone)
+	conn := getTestConnector(ctx.NGTSZone)
 	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -892,8 +892,8 @@ func TestRetireCertificateWithPickUpID(t *testing.T) {
 	retireReq := &certificate.RetireRequest{}
 	retireReq.CertificateDN = pickupID
 
-	// Letting Palo Alto Networks Strata Cloud Manager (SCM) some time to load certificate into inventory.
-	// Palo Alto Networks Strata Cloud Manager (SCM) may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
+	// Letting Palo Alto Networks Next-Generation Trust Security (NGTS) some time to load certificate into inventory.
+	// Palo Alto Networks Next-Generation Trust Security (NGTS) may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
 	// or even stuck into it
 	time.Sleep(time.Duration(2) * time.Second)
 	err = conn.RetireCertificate(retireReq)
@@ -903,7 +903,7 @@ func TestRetireCertificateWithPickUpID(t *testing.T) {
 }
 
 func TestRetireCertificateTwice(t *testing.T) {
-	conn := getTestConnector(ctx.SCMZone)
+	conn := getTestConnector(ctx.NGTSZone)
 	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -928,8 +928,8 @@ func TestRetireCertificateTwice(t *testing.T) {
 	retireReq := &certificate.RetireRequest{}
 	retireReq.CertificateDN = pickupID
 
-	// Letting Palo Alto Networks Strata Cloud Manager (SCM) some time to load certificate into inventory.
-	// Palo Alto Networks Strata Cloud Manager (SCM) may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
+	// Letting Palo Alto Networks Next-Generation Trust Security (NGTS) some time to load certificate into inventory.
+	// Palo Alto Networks Next-Generation Trust Security (NGTS) may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
 	// or even stuck into it
 	time.Sleep(time.Duration(2) * time.Second)
 	err = conn.RetireCertificate(retireReq)
@@ -947,11 +947,11 @@ func TestRetireCertificateTwice(t *testing.T) {
 }
 
 func TestRevokeCertificate(t *testing.T) {
-	conn := getTestConnector(ctx.SCMZone)
+	conn := getTestConnector(ctx.NGTSZone)
 
 	// The following block of code is to set the clients and accessToken
 	// given we omitted to call the conn.Authenticate() method to avoid the
-	// real connection to Palo Alto Networks Strata Cloud Manager (SCM)
+	// real connection to Palo Alto Networks Next-Generation Trust Security (NGTS)
 	conn.accessToken = "myaccesstoken"
 	// Initialize clients
 	conn.caAccountsClient = caaccounts.NewCAAccountsClient(conn.getURL(urlGraphql), conn.getGraphqlHTTPClient())
@@ -1015,7 +1015,7 @@ func TestRevokeCertificate(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, revokeCertificate)
 		// Type assertion
-		revocationResponseCloud, ok := revokeCertificate.(*RevocationRequestResponseSCM)
+		revocationResponseCloud, ok := revokeCertificate.(*RevocationRequestResponseNGTS)
 		require.True(t, ok)
 		require.Equal(t, revocationResponseCloud.Thumbprint, thumbprint)
 		require.Equal(t, revocationResponseCloud.Status, string(statusSubmitted))
@@ -1099,10 +1099,10 @@ func TestRevokeCertificate(t *testing.T) {
 
 func TestReadPolicyConfigurationOnlyEC(t *testing.T) {
 	// IMPORTANT NOTE: Now in VCert, we are treating ED25519 Keys, as per it's a different algorithm from ECDSA, as another
-	// type of key. This is conflicting with how Palo Alto Networks Strata Cloud Manager (SCM) handles EC Keys, as it considers ED25519 as another curve, which is
+	// type of key. This is conflicting with how Palo Alto Networks Next-Generation Trust Security (NGTS) handles EC Keys, as it considers ED25519 as another curve, which is
 	// it shouldn't, this test may need to change in the future once this is solved
 	//todo: add more zones
-	conn := getTestConnector(ctx.SCMzoneEC)
+	conn := getTestConnector(ctx.NGTSzoneEC)
 	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -1126,7 +1126,7 @@ func TestReadPolicyConfigurationOnlyEC(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(*policy, expectedPolice) {
-		t.Fatalf("policy for zone %s is not as expected \nget:    %+v \nexpect: %+v", ctx.SCMZone, *policy, expectedPolice)
+		t.Fatalf("policy for zone %s is not as expected \nget:    %+v \nexpect: %+v", ctx.NGTSZone, *policy, expectedPolice)
 	}
 }
 
@@ -1158,7 +1158,7 @@ func newSelfSignedCert() (string, error) {
 
 func TestImportCertificate(t *testing.T) {
 
-	conn := getTestConnector(ctx.SCMZone)
+	conn := getTestConnector(ctx.NGTSZone)
 	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -1260,7 +1260,7 @@ func TestGetURL(t *testing.T) {
 }
 
 func TestRetrieveCertificatesList(t *testing.T) {
-	conn := getTestConnector(ctx.SCMZone)
+	conn := getTestConnector(ctx.NGTSZone)
 	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -1285,7 +1285,7 @@ func TestRetrieveCertificatesList(t *testing.T) {
 }
 
 func TestSearchCertificate(t *testing.T) {
-	conn := getTestConnector(ctx.SCMZone)
+	conn := getTestConnector(ctx.NGTSZone)
 	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatal(err)
@@ -1322,7 +1322,7 @@ func TestSetPolicy(t *testing.T) {
 	appName := test.RandAppName()
 
 	policyName := appName + "\\" + test.RandCitName()
-	conn := getTestConnector(ctx.SCMZone)
+	conn := getTestConnector(ctx.NGTSZone)
 	conn.verbose = true
 
 	err := authenticateTestConnector(conn)
@@ -1600,8 +1600,8 @@ func TestGetPolicy(t *testing.T) {
 
 	t.Skip() //this is just for development purpose
 
-	policyName := os.Getenv("SCM_POLICY_MANAGEMENT_SAMPLE")
-	conn := getTestConnector(ctx.SCMZone)
+	policyName := os.Getenv("NGTS_POLICY_MANAGEMENT_SAMPLE")
+	conn := getTestConnector(ctx.NGTSZone)
 	conn.verbose = true
 
 	err := authenticateTestConnector(conn)
@@ -1826,8 +1826,8 @@ func TestGetPolicyOnlyEC(t *testing.T) {
 	// This test covers GetPolicy function from connector to test EC curves are return correctly for all the values,
 	// including RecommendSettings
 
-	policyName := os.Getenv("SCM_ZONE_EC")
-	conn := getTestConnector(ctx.SCMzoneEC)
+	policyName := os.Getenv("NGTS_ZONE_EC")
+	conn := getTestConnector(ctx.NGTSzoneEC)
 	conn.verbose = true
 
 	err := authenticateTestConnector(conn)
@@ -1836,7 +1836,7 @@ func TestGetPolicyOnlyEC(t *testing.T) {
 		t.Fatalf("%s", err)
 	}
 
-	specifiedPS := test.GetSCMpolicySpecificationEC()
+	specifiedPS := test.GetNGTSpolicySpecificationEC()
 
 	ps, err := conn.GetPolicy(policyName)
 
@@ -2053,7 +2053,7 @@ func TestGetPolicyOnlyEC(t *testing.T) {
 func TestSetEmptyPolicy(t *testing.T) {
 
 	policyName := test.RandAppName() + "\\" + test.RandCitName()
-	conn := getTestConnector(ctx.SCMZone)
+	conn := getTestConnector(ctx.NGTSZone)
 	conn.verbose = true
 
 	err := authenticateTestConnector(conn)
@@ -2075,7 +2075,7 @@ func TestSetEmptyPolicy(t *testing.T) {
 func TestSetDefaultPolicyValuesAndValidate(t *testing.T) {
 
 	policyName := test.RandAppName() + "\\" + test.RandCitName()
-	conn := getTestConnector(ctx.SCMZone)
+	conn := getTestConnector(ctx.NGTSZone)
 	conn.verbose = true
 
 	err := authenticateTestConnector(conn)
@@ -2091,7 +2091,7 @@ func TestSetDefaultPolicyValuesAndValidate(t *testing.T) {
 	serGenerated := true
 	specification.Default.KeyPair.EllipticCurve = &ec
 	specification.Default.KeyPair.ServiceGenerated = &serGenerated
-	ctx.SCMZone = policyName
+	ctx.NGTSZone = policyName
 
 	_, err = conn.SetPolicy(policyName, specification)
 
@@ -2153,7 +2153,7 @@ func TestSetDefaultPolicyValuesAndValidate(t *testing.T) {
 func TestSetPolicyValuesAndValidate(t *testing.T) {
 
 	policyName := test.RandAppName() + "\\" + test.RandCitName()
-	conn := getTestConnector(ctx.SCMZone)
+	conn := getTestConnector(ctx.NGTSZone)
 	conn.verbose = true
 
 	err := authenticateTestConnector(conn)
@@ -2165,7 +2165,7 @@ func TestSetPolicyValuesAndValidate(t *testing.T) {
 	specification := test.GetCloudPolicySpecification()
 
 	specification.Default = nil
-	ctx.SCMZone = policyName
+	ctx.NGTSZone = policyName
 
 	_, err = conn.SetPolicy(policyName, specification)
 
@@ -2235,7 +2235,7 @@ func TestSetPolicyValuesAndValidate(t *testing.T) {
 func TestSetPolicyEntrust(t *testing.T) {
 
 	policyName := test.RandAppName() + "\\" + test.RandCitName()
-	conn := getTestConnector(ctx.SCMZone)
+	conn := getTestConnector(ctx.NGTSZone)
 	conn.verbose = true
 
 	err := authenticateTestConnector(conn)
@@ -2246,7 +2246,7 @@ func TestSetPolicyEntrust(t *testing.T) {
 
 	specification := test.GetCloudPolicySpecification()
 	//change default CA to Entrust
-	caName := os.Getenv("SCM_ENTRUST_CA_NAME")
+	caName := os.Getenv("NGTS_ENTRUST_CA_NAME")
 	specification.Policy.CertificateAuthority = &caName
 
 	_, err = conn.SetPolicy(policyName, specification)
@@ -2273,7 +2273,7 @@ This test is just for verifying that a policy can be created using DIGICERT	 CA.
 func TestSetPolicyDigicert(t *testing.T) {
 
 	policyName := test.RandAppName() + "\\" + test.RandCitName()
-	conn := getTestConnector(ctx.SCMZone)
+	conn := getTestConnector(ctx.NGTSZone)
 	conn.verbose = true
 
 	err := authenticateTestConnector(conn)
@@ -2285,7 +2285,7 @@ func TestSetPolicyDigicert(t *testing.T) {
 	specification := test.GetCloudPolicySpecification()
 
 	//change default CA to Digicert
-	caName := os.Getenv("SCM_DIGICERT_CA_NAME")
+	caName := os.Getenv("NGTS_DIGICERT_CA_NAME")
 	specification.Policy.CertificateAuthority = &caName
 	_, err = conn.SetPolicy(policyName, specification)
 
@@ -2304,7 +2304,7 @@ func TestSetPolicyDigicert(t *testing.T) {
 }
 
 func TestCreateCertServiceCSR(t *testing.T) {
-	policyName := os.Getenv("SCM_ZONE_RESTRICTED")
+	policyName := os.Getenv("NGTS_ZONE_RESTRICTED")
 	conn := getTestConnector(policyName)
 	conn.verbose = true
 	err := authenticateTestConnector(conn)
@@ -2378,7 +2378,7 @@ func TestCreateCertServiceCSRWithDefaults(t *testing.T) {
 
 func TestGetDefaultCsrAttributes(t *testing.T) {
 
-	policyName := os.Getenv("SCM_ZONE_RESTRICTED")
+	policyName := os.Getenv("NGTS_ZONE_RESTRICTED")
 	conn := getTestConnector(policyName)
 	conn.verbose = true
 	request := &certificate.Request{}
@@ -2402,7 +2402,7 @@ func TestGetDefaultCsrAttributes(t *testing.T) {
 
 func TestGetCsrAttributes(t *testing.T) {
 
-	policyName := os.Getenv("SCM_ZONE_RESTRICTED")
+	policyName := os.Getenv("NGTS_ZONE_RESTRICTED")
 	conn := getTestConnector(policyName)
 	conn.verbose = true
 	req := getBasicRequest()
@@ -2425,7 +2425,7 @@ func TestGetCsrAttributes(t *testing.T) {
 func TestCertificateSanTypes(t *testing.T) {
 
 	ip := net.ParseIP("127.0.0.1")
-	policyName := os.Getenv("SCM_ZONE_RESTRICTED")
+	policyName := os.Getenv("NGTS_ZONE_RESTRICTED")
 	conn := getTestConnector(policyName)
 	conn.verbose = true
 	req := getBasicRequest()
@@ -2457,7 +2457,7 @@ func TestCertificateSanTypes(t *testing.T) {
 }
 
 func TestVerifyCSRServiceGenerated(t *testing.T) {
-	policyName := os.Getenv("SCM_ZONE_RESTRICTED")
+	policyName := os.Getenv("NGTS_ZONE_RESTRICTED")
 
 	conn := getTestConnector(policyName)
 	conn.verbose = true
@@ -2492,7 +2492,7 @@ func TestVerifyCSRServiceGenerated(t *testing.T) {
 }
 
 func TestGenerateCertificateEC(t *testing.T) {
-	policyName := os.Getenv("SCM_ZONE_EC")
+	policyName := os.Getenv("NGTS_ZONE_EC")
 
 	conn := getTestConnector(policyName)
 	conn.verbose = true
@@ -2530,7 +2530,7 @@ func TestGenerateCertificateEC(t *testing.T) {
 }
 
 func TestGenerateCertificateECDefault(t *testing.T) {
-	policyName := os.Getenv("SCM_ZONE_EC")
+	policyName := os.Getenv("NGTS_ZONE_EC")
 
 	conn := getTestConnector(policyName)
 	conn.verbose = true
@@ -2567,11 +2567,11 @@ func TestGenerateCertificateECDefault(t *testing.T) {
 }
 
 func TestGetType(t *testing.T) {
-	policyName := os.Getenv("SCM_ZONE_RESTRICTED")
+	policyName := os.Getenv("NGTS_ZONE_RESTRICTED")
 
 	conn := getTestConnector(policyName)
 
-	if endpoint.ConnectorTypeSCM != conn.GetType() {
+	if endpoint.ConnectorTypeNGTS != conn.GetType() {
 		t.Fatalf("expected: %s but get %s", endpoint.ConnectorTypeCloud.String(), conn.GetType().String())
 	}
 
@@ -2593,7 +2593,7 @@ func getBasicRequest() certificate.Request {
 
 // TODO: Expand unit tests to cover more cases
 func TestSearchValidCertificate(t *testing.T) {
-	conn := getTestConnector(ctx.SCMZone)
+	conn := getTestConnector(ctx.NGTSZone)
 	err := authenticateTestConnector(conn)
 	if err != nil {
 		t.Fatal(err)
@@ -2629,7 +2629,7 @@ func TestSearchValidCertificate(t *testing.T) {
 
 func TestGetCloudRequest(t *testing.T) {
 
-	conn := getTestConnector(ctx.SCMZone)
+	conn := getTestConnector(ctx.NGTSZone)
 	conn.verbose = true
 	err := authenticateTestConnector(conn)
 	if err != nil {

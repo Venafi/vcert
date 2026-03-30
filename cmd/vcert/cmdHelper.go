@@ -28,7 +28,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Venafi/vcert/v5/pkg/venafi/scm"
+	"github.com/Venafi/vcert/v5/pkg/venafi/ngts"
 	"github.com/urfave/cli/v2"
 	"software.sslmate.com/src/go-pkcs12"
 
@@ -93,8 +93,8 @@ func runBeforeCommand(c *cli.Context) error {
 	}
 
 	// Default the scope flag to "certificate:manage,revoke"
-	// For every platform except SCM
-	if flags.platform != venafi.SCM && flags.scope == "" {
+	// For every platform except NGTS
+	if flags.platform != venafi.NGTS && flags.scope == "" {
 		flags.scope = "certificate:manage,revoke"
 	}
 
@@ -314,17 +314,17 @@ func getVaaSCredentials(vaasConnector *cloud.Connector, cfg *vcert.Config) error
 	return nil
 }
 
-func getSCMCredentials(scmConnector *scm.Connector, cfg *vcert.Config) error {
+func getNGTSCredentials(ngtsConnector *ngts.Connector, cfg *vcert.Config) error {
 	//TODO: quick workaround to suppress logs when output is in JSON.
 	if flags.credFormat != "json" {
 		logf("Getting credentials...")
 	}
 
-	// Request access token using a Palo Alto Networks Strata Cloud Manager (SCM) service account
+	// Request access token using a Palo Alto Networks Next-Generation Trust Security (NGTS) service account
 	if cfg.Credentials.TokenURL != "" && cfg.Credentials.ClientId != "" && cfg.Credentials.ClientSecret != "" && cfg.Credentials.Scope != "" {
-		tokenResponse, err := scmConnector.GetAccessToken(cfg.Credentials)
+		tokenResponse, err := ngtsConnector.GetAccessToken(cfg.Credentials)
 		if err != nil {
-			return fmt.Errorf("failed to request access token from Palo Alto Networks Strata Cloud Manager (SCM): %w", err)
+			return fmt.Errorf("failed to request access token from Palo Alto Networks Next-Generation Trust Security (NGTS): %w", err)
 		}
 
 		if flags.credFormat == "json" {

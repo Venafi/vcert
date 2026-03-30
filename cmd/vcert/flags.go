@@ -27,9 +27,9 @@ var (
 	flagPlatform = &cli.StringFlag{
 		Name: "platform",
 		Usage: "Use to specify the platform VCert will use to execute the given command. Only accepted values are:\n" +
-			"\t\tFor getcred command: --platform [TPP | VCP | SCM | OIDC]\n" +
-			"\t\tFor enroll command: --platform [TPP | VCP | SCM | FIREFLY]\n" +
-			"\t\tFor provision command: --platform [ VCP | SCM ]",
+			"\t\tFor getcred command: --platform [TPP | VCP | NGTS | OIDC]\n" +
+			"\t\tFor enroll command: --platform [TPP | VCP | NGTS | FIREFLY]\n" +
+			"\t\tFor provision command: --platform [ VCP | NGTS ]",
 		Destination: &flags.platformString,
 		Aliases:     []string{"p"},
 	}

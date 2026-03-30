@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package scm
+package ngts
 
 import (
 	"encoding/json"
@@ -112,7 +112,7 @@ func (c Certificate) ToCertificateInfo() certificate.CertificateInfo {
 			Email: c.SubjectAlternativeNamesByType["rfc822Name"],
 			IP:    c.SubjectAlternativeNamesByType["iPAddress"],
 			URI:   c.SubjectAlternativeNamesByType["uniformResourceIdentifier"],
-			// currently not supported on Palo Alto Networks Strata Cloud Manager (SCM)
+			// currently not supported on Palo Alto Networks Next-Generation Trust Security (NGTS)
 			// UPN: cert.SubjectAlternativeNamesByType["x400Address"],
 		},
 		Serial:     c.SerialNumber,
@@ -135,14 +135,14 @@ func ParseCertificateSearchResponse(httpStatusCode int, body []byte) (searchResu
 		if body != nil {
 			respErrors, err := parseResponseErrors(body)
 			if err == nil {
-				respError := fmt.Sprintf("Unexpected status code on Palo Alto Networks Strata Cloud Manager (SCM) certificate search. Status: %d\n", httpStatusCode)
+				respError := fmt.Sprintf("Unexpected status code on Palo Alto Networks Next-Generation Trust Security (NGTS) certificate search. Status: %d\n", httpStatusCode)
 				for _, e := range respErrors {
 					respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
 				}
 				return nil, errors.New(respError)
 			}
 		}
-		return nil, fmt.Errorf("unexpected status code on Palo Alto Networks Strata Cloud Manager (SCM) certificate search. Status: %d", httpStatusCode)
+		return nil, fmt.Errorf("unexpected status code on Palo Alto Networks Next-Generation Trust Security (NGTS) certificate search. Status: %d", httpStatusCode)
 	}
 }
 

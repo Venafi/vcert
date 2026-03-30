@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package scm
+package ngts
 
 import (
 	"fmt"
@@ -41,7 +41,7 @@ type VenafiCertificate struct {
 	ValidityEnd          time.Time `json:"validityEnd"`
 }
 
-type RevocationRequestResponseSCM struct {
+type RevocationRequestResponseNGTS struct {
 	ID              string
 	Thumbprint      string
 	Status          string //The possible values are SUBMITTED, FAILED, PENDING_APPROVAL, PENDING_FINAL_APPROVAL, REJECTED_APPROVAL
@@ -49,7 +49,7 @@ type RevocationRequestResponseSCM struct {
 	Error           error
 }
 
-func (r *RevocationRequestResponseSCM) ToLog(logger *log.Logger) error {
+func (r *RevocationRequestResponseNGTS) ToLog(logger *log.Logger) error {
 
 	switch r.Status {
 	case "SUBMITTED":

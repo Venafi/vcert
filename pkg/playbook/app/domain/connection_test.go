@@ -232,22 +232,22 @@ func (s *ConnectionSuite) SetupTest() {
 			expectedErr:   ErrNoCredentials,
 		},
 		{
-			name: "SCM_valid_access_token",
+			name: "NGTS_valid_access_token",
 			c: Connection{
-				Platform: venafi.SCM,
+				Platform: venafi.NGTS,
 				Credentials: Authentication{
 					Authentication: endpoint.Authentication{
 						AccessToken: "123abc###",
 					},
 				},
 			},
-			expectedCType: endpoint.ConnectorTypeSCM,
+			expectedCType: endpoint.ConnectorTypeNGTS,
 			expectedValid: true,
 		},
 		{
-			name: "SCM_valid_client_credentials",
+			name: "NGTS_valid_client_credentials",
 			c: Connection{
-				Platform: venafi.SCM,
+				Platform: venafi.NGTS,
 				Credentials: Authentication{
 					Authentication: endpoint.Authentication{
 						ClientId:     "123abc###",
@@ -257,13 +257,13 @@ func (s *ConnectionSuite) SetupTest() {
 					},
 				},
 			},
-			expectedCType: endpoint.ConnectorTypeSCM,
+			expectedCType: endpoint.ConnectorTypeNGTS,
 			expectedValid: true,
 		},
 		{
-			name: "SCM_invalid_missing_client_id",
+			name: "NGTS_invalid_missing_client_id",
 			c: Connection{
-				Platform: venafi.SCM,
+				Platform: venafi.NGTS,
 				Credentials: Authentication{
 					Authentication: endpoint.Authentication{
 						ClientSecret: "123abc###",
@@ -272,14 +272,14 @@ func (s *ConnectionSuite) SetupTest() {
 					},
 				},
 			},
-			expectedCType: endpoint.ConnectorTypeSCM,
+			expectedCType: endpoint.ConnectorTypeNGTS,
 			expectedValid: false,
-			expectedErr:   ErrNoSCMClientId,
+			expectedErr:   ErrNoNGTSClientId,
 		},
 		{
-			name: "SCM_invalid_missing_client_secret",
+			name: "NGTS_invalid_missing_client_secret",
 			c: Connection{
-				Platform: venafi.SCM,
+				Platform: venafi.NGTS,
 				Credentials: Authentication{
 					Authentication: endpoint.Authentication{
 						ClientId: "123abc###",
@@ -288,14 +288,14 @@ func (s *ConnectionSuite) SetupTest() {
 					},
 				},
 			},
-			expectedCType: endpoint.ConnectorTypeSCM,
+			expectedCType: endpoint.ConnectorTypeNGTS,
 			expectedValid: false,
-			expectedErr:   ErrNoSCMClientSecret,
+			expectedErr:   ErrNoNGTSClientSecret,
 		},
 		{
-			name: "SCM_invalid_missing_token_url",
+			name: "NGTS_invalid_missing_token_url",
 			c: Connection{
-				Platform: venafi.SCM,
+				Platform: venafi.NGTS,
 				Credentials: Authentication{
 					Authentication: endpoint.Authentication{
 						ClientId:     "123abc###",
@@ -304,14 +304,14 @@ func (s *ConnectionSuite) SetupTest() {
 					},
 				},
 			},
-			expectedCType: endpoint.ConnectorTypeSCM,
+			expectedCType: endpoint.ConnectorTypeNGTS,
 			expectedValid: false,
-			expectedErr:   ErrNoSCMTokenURL,
+			expectedErr:   ErrNoNGTSTokenURL,
 		},
 		{
-			name: "SCM_invalid_missing_scope",
+			name: "NGTS_invalid_missing_scope",
 			c: Connection{
-				Platform: venafi.SCM,
+				Platform: venafi.NGTS,
 				Credentials: Authentication{
 					Authentication: endpoint.Authentication{
 						ClientId:     "123abc###",
@@ -320,14 +320,14 @@ func (s *ConnectionSuite) SetupTest() {
 					},
 				},
 			},
-			expectedCType: endpoint.ConnectorTypeSCM,
+			expectedCType: endpoint.ConnectorTypeNGTS,
 			expectedValid: false,
-			expectedErr:   ErrNoSCMScope,
+			expectedErr:   ErrNoNGTSScope,
 		},
 		{
-			name: "SCM_invalid_too_much_credentials",
+			name: "NGTS_invalid_too_much_credentials",
 			c: Connection{
-				Platform: venafi.SCM,
+				Platform: venafi.NGTS,
 				Credentials: Authentication{
 					Authentication: endpoint.Authentication{
 						ClientId:     "123abc###",
@@ -338,17 +338,17 @@ func (s *ConnectionSuite) SetupTest() {
 					},
 				},
 			},
-			expectedCType: endpoint.ConnectorTypeSCM,
+			expectedCType: endpoint.ConnectorTypeNGTS,
 			expectedValid: false,
-			expectedErr:   ErrAmbiguousSCMreds,
+			expectedErr:   ErrAmbiguousNGTSCreds,
 		},
 		{
-			name: "SCM_invalid_empty_credentials",
+			name: "NGTS_invalid_empty_credentials",
 			c: Connection{
-				Platform:    venafi.SCM,
+				Platform:    venafi.NGTS,
 				Credentials: Authentication{},
 			},
-			expectedCType: endpoint.ConnectorTypeSCM,
+			expectedCType: endpoint.ConnectorTypeNGTS,
 			expectedValid: false,
 			expectedErr:   ErrNoCredentials,
 		},

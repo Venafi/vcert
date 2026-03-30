@@ -1,4 +1,4 @@
-package scm
+package ngts
 
 import "github.com/Venafi/vcert/v5/pkg/certificate"
 
