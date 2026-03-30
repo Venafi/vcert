@@ -149,7 +149,7 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) error {
 	// If the consumer supplies an access token, then use that access token for authentication
 	if auth.AccessToken != "" {
 		c.accessToken = auth.AccessToken
-	} else if auth.ClientId != "" && auth.ClientSecret != "" && auth.Scope != "" {
+	} else {
 		// If the consumer hasn't supplied an access token, then obtain a new access token
 		tokenResponse, err := c.GetAccessToken(auth)
 		if err != nil {
@@ -973,13 +973,20 @@ func normalizeURL(url string) (normalizedURL string, err error) {
 }
 
 func (c *Connector) GetAccessToken(auth *endpoint.Authentication) (*TLSPCAccessTokenResponse, error) {
-	if auth == nil || auth.ClientId == "" || auth.ClientSecret == "" || auth.Scope == "" {
+	if auth == nil {
 		return nil, fmt.Errorf("failed to authenticate: missing credentials")
 	}
-
-	err := validateScope(auth.Scope)
-	if err != nil {
-		return nil, err
+	if err := validateClientId(auth.ClientId); err != nil {
+		return nil, fmt.Errorf("failed to authenticate: %s", err)
+	}
+	if err := validateClientSecret(auth.ClientSecret); err != nil {
+		return nil, fmt.Errorf("failed to authenticate: %s", err)
+	}
+	if err := validateTokenUrl(auth.TokenURL); err != nil {
+		return nil, fmt.Errorf("failed to authenticate: %s", err)
+	}
+	if err := validateScope(auth.Scope); err != nil {
+		return nil, fmt.Errorf("failed to authenticate: %s", err)
 	}
 
 	url, err := getServiceAccountTokenURL(auth.TokenURL)
@@ -1418,6 +1425,27 @@ func validateNotFoundTimeout(statusCode int, startTime time.Time, timeout time.D
 			return errors.New(respError)
 		}
 		return errors.New(respError)
+	}
+	return nil
+}
+
+func validateClientId(clientId string) error {
+	if clientId == "" {
+		return fmt.Errorf("client id is required")
+	}
+	return nil
+}
+
+func validateClientSecret(clientSecret string) error {
+	if clientSecret == "" {
+		return fmt.Errorf("client secret is required")
+	}
+	return nil
+}
+
+func validateTokenUrl(tokenUrl string) error {
+	if tokenUrl == "" {
+		return fmt.Errorf("token url is required")
 	}
 	return nil
 }

@@ -97,11 +97,103 @@ func TestPing(t *testing.T) {
 }
 
 func TestAuthenticate(t *testing.T) {
-	conn := getTestConnector(ctx.NGTSZone)
-	err := authenticateTestConnector(conn)
-	if err != nil {
-		t.Fatalf("%s", err)
-	}
+	t.Run("successful authentication with client credentials", func(t *testing.T) {
+		conn := getTestConnector(ctx.NGTSZone)
+		err := authenticateTestConnector(conn)
+		require.NoError(t, err)
+		assert.NotEmpty(t, conn.accessToken, "access token should be set after successful authentication")
+	})
+
+	t.Run("missing client id", func(t *testing.T) {
+		conn := getTestConnector(ctx.NGTSZone)
+		err := conn.Authenticate(&endpoint.Authentication{
+			ClientSecret: ctx.NGTSClientSecret,
+			TokenURL:     ctx.NGTSTokenURL,
+			Scope:        ctx.NGTSScope,
+			// ClientId intentionally missing
+		})
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "failed to authenticate: client id is required")
+		assert.Empty(t, conn.accessToken)
+	})
+
+	t.Run("missing client secret", func(t *testing.T) {
+		conn := getTestConnector(ctx.NGTSZone)
+		err := conn.Authenticate(&endpoint.Authentication{
+			ClientId: ctx.NGTSClientID,
+			TokenURL: ctx.NGTSTokenURL,
+			Scope:    ctx.NGTSScope,
+			// ClientSecret intentionally missing
+		})
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "failed to authenticate: client secret is required")
+		assert.Empty(t, conn.accessToken)
+	})
+
+	t.Run("missing token url", func(t *testing.T) {
+		conn := getTestConnector(ctx.NGTSZone)
+		err := conn.Authenticate(&endpoint.Authentication{
+			ClientId:     ctx.NGTSClientID,
+			ClientSecret: ctx.NGTSClientSecret,
+			Scope:        ctx.NGTSScope,
+			// TokenURL intentionally missing
+		})
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "failed to authenticate: token url is required")
+		assert.Empty(t, conn.accessToken)
+	})
+
+	t.Run("missing scope", func(t *testing.T) {
+		conn := getTestConnector(ctx.NGTSZone)
+		err := conn.Authenticate(&endpoint.Authentication{
+			ClientId:     ctx.NGTSClientID,
+			ClientSecret: ctx.NGTSClientSecret,
+			TokenURL:     ctx.NGTSTokenURL,
+			// Scope intentionally missing
+		})
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "failed to authenticate: scope is required")
+		assert.Empty(t, conn.accessToken)
+	})
+
+	t.Run("scope that does not follow the pattern - missing tsg_id prefix", func(t *testing.T) {
+		conn := getTestConnector(ctx.NGTSZone)
+		err := conn.Authenticate(&endpoint.Authentication{
+			ClientId:     ctx.NGTSClientID,
+			ClientSecret: ctx.NGTSClientSecret,
+			TokenURL:     ctx.NGTSTokenURL,
+			Scope:        "1234567890", // Invalid: missing tsg_id: prefix
+		})
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "scope should be in the format")
+		assert.Empty(t, conn.accessToken)
+	})
+
+	t.Run("scope that does not follow the pattern - wrong number of digits", func(t *testing.T) {
+		conn := getTestConnector(ctx.NGTSZone)
+		err := conn.Authenticate(&endpoint.Authentication{
+			ClientId:     ctx.NGTSClientID,
+			ClientSecret: ctx.NGTSClientSecret,
+			TokenURL:     ctx.NGTSTokenURL,
+			Scope:        "tsg_id:123", // Invalid: only 3 digits instead of 10
+		})
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "scope should be in the format")
+		assert.Empty(t, conn.accessToken)
+	})
+
+	t.Run("scope that does not follow the pattern - contains non-digits", func(t *testing.T) {
+		conn := getTestConnector(ctx.NGTSZone)
+		err := conn.Authenticate(&endpoint.Authentication{
+			ClientId:     ctx.NGTSClientID,
+			ClientSecret: ctx.NGTSClientSecret,
+			TokenURL:     ctx.NGTSTokenURL,
+			Scope:        "tsg_id:123abc7890", // Invalid: contains letters
+		})
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "scope should be in the format")
+		assert.Empty(t, conn.accessToken)
+	})
 }
 
 func TestReadZoneConfiguration(t *testing.T) {
@@ -2572,7 +2664,7 @@ func TestGetType(t *testing.T) {
 	conn := getTestConnector(policyName)
 
 	if endpoint.ConnectorTypeNGTS != conn.GetType() {
-		t.Fatalf("expected: %s but get %s", endpoint.ConnectorTypeCloud.String(), conn.GetType().String())
+		t.Fatalf("expected: %s but get %s", endpoint.ConnectorTypeNGTS.String(), conn.GetType().String())
 	}
 
 }
