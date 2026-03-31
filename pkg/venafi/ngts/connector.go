@@ -70,10 +70,6 @@ const (
 	urlCAAccountDetails                           = urlCAAccounts + "/%s"
 	urlResourceCertificateKS                      = urlResourceCertificates + "/%s/keystore"
 	urlDekPublicKey                   urlResource = apiVersion + "edgeencryptionkeys/%s"
-	urlUsers                          urlResource = apiVersion + "users"
-	urlUserById                                   = urlUsers + "/%s"
-	urlUsersByName                                = urlUsers + "/username/%s"
-	urlTeams                          urlResource = apiVersion + "teams"
 	urlCertificateDetails                         = basePath + "certificates/%s"
 	urlGraphql                                    = "graphql"
 
@@ -186,35 +182,9 @@ func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration,
 	if !c.isAuthenticated() {
 		return nil, fmt.Errorf("must be autheticated to request a certificate")
 	}
-
-	var template *certificateTemplate
-	var statusCode int
-
-	// to fully support the "headless registration" use case...
-	// if application does not exist and is for the default CIT, create the application
-	citAlias := c.zone.getTemplateAlias()
-	if citAlias == "Default" {
-		appName := c.zone.getApplicationName()
-		_, statusCode, err = c.getAppDetailsByName(appName)
-		if err != nil && statusCode == 404 {
-			log.Printf("creating application %s for issuing template %s", appName, citAlias)
-
-			ps := policy.PolicySpecification{}
-			template, err = getCit(c, citAlias)
-			if err != nil {
-				return
-			}
-			_, err = c.createApplication(appName, &ps, template)
-			if err != nil {
-				return
-			}
-		}
-	}
-	if template == nil {
-		template, err = c.getTemplateByID()
-		if err != nil {
-			return
-		}
+	template, err := c.getTemplateByID()
+	if err != nil {
+		return nil, err
 	}
 	config = getZoneConfiguration(template)
 	return config, nil
@@ -1571,68 +1541,6 @@ func (c *Connector) CreateAPIUserAccount() (int, *userDetails, error) {
 
 func (c *Connector) CreateUserAccount() (int, *userDetails, error) {
 	panic("operation is not supported yet")
-}
-
-func (c *Connector) getUserDetails() (*userDetails, error) {
-
-	url := c.getURL(urlResourceUserAccounts)
-	statusCode, status, body, err := c.request("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	ud, err := parseUserDetailsResult(http.StatusOK, statusCode, status, body)
-	if err != nil {
-		return nil, err
-	}
-	c.user = ud
-	return ud, nil
-}
-
-func (c *Connector) retrieveUser(id string) (*user, error) {
-
-	url := c.getURL(urlUserById)
-	url = fmt.Sprintf(url, id)
-
-	statusCode, status, body, err := c.request("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	user, err := parseUserByIdResult(http.StatusOK, statusCode, status, body)
-	if err != nil {
-		return nil, err
-	}
-	return user, nil
-}
-
-func (c *Connector) retrieveUsers(userName string) (*users, error) {
-
-	url := c.getURL(urlUsersByName)
-	url = fmt.Sprintf(url, userName)
-
-	statusCode, status, body, err := c.request("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	users, err := parseUsersByNameResult(http.StatusOK, statusCode, status, body)
-	if err != nil {
-		return nil, err
-	}
-	return users, nil
-}
-
-func (c *Connector) retrieveTeams() (*teams, error) {
-
-	url := c.getURL(urlTeams)
-
-	statusCode, status, body, err := c.request("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	teams, err := parseTeamsResult(http.StatusOK, statusCode, status, body)
-	if err != nil {
-		return nil, err
-	}
-	return teams, nil
 }
 
 func (c *Connector) getCertificates(certificateId string) (*VenafiCertificate, error) {

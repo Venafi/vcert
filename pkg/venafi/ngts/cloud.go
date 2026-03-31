@@ -520,6 +520,8 @@ func parseCertificateTemplateResult(httpStatusCode int, httpStatus string, body 
 		return nil, verror.ZoneNotFoundError
 	case http.StatusUnauthorized:
 		return nil, verror.UnauthorizedError
+	case http.StatusNotFound:
+		return nil, verror.ZoneNotFoundError
 	default:
 		respErrors, err := parseResponseErrors(body)
 		if err != nil {

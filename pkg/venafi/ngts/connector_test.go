@@ -203,11 +203,12 @@ func TestReadZoneConfiguration(t *testing.T) {
 		t.Fatalf("%s", err)
 	}
 
-	conn.SetZone("d686146b-799b-4836-8ac3-f4a2d3a38934")
+	conn.SetZone("unknown_app\\unknown_cit")
 	_, err = conn.ReadZoneConfiguration()
 	if !errors.Is(err, verror.ZoneNotFoundError) {
 		t.Fatalf("Unknown zone should have resulted in an error")
 	}
+
 	testCases := []struct {
 		zone       string
 		zoneConfig endpoint.ZoneConfiguration
@@ -1411,7 +1412,10 @@ func TestSearchCertificate(t *testing.T) {
 }
 
 func TestSetPolicy(t *testing.T) {
-	appName := test.RandAppName()
+	appName := os.Getenv("NGTS_APP_NAME")
+	if appName == "" {
+		t.Fatalf("env variable NGTS_APP_NAME is not set")
+	}
 
 	policyName := appName + "\\" + test.RandCitName()
 	conn := getTestConnector(ctx.NGTSZone)
@@ -1436,52 +1440,16 @@ func TestSetPolicy(t *testing.T) {
 	localPolicy.Policy.Subject.OrgUnits = []string{"DevOps", "QA"}
 	//policyName = appName + "\\" + test.RandCitName()
 	_, err = conn.SetPolicy(policyName, localPolicy)
-
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
 
 	ps, err := conn.GetPolicy(policyName)
-
 	if err != nil {
 		t.Fatalf("%s", err)
-	}
-
-	//validate each attribute
-	userDetails, err := conn.getUserDetails()
-	//validating the default users attribute was created
-	users := []string{
-		//"jenkins@opensource.qa.venafi.io",
-		userDetails.User.Username,
-	}
-	valid := test.IsArrayStringEqual(users, ps.Users)
-	if !valid {
-		t.Fatalf("It was expected that the current user %s be set as user of the PolicySpecification created but got %+q", users[0], ps.Users)
-	}
-
-	//Validating the addition of a user
-	users = append(users, "resource-owner@opensource.qa.venafi.io")
-	ps.Users = users
-
-	_, err = conn.SetPolicy(policyName, ps)
-
-	if err != nil {
-		t.Fatalf("%s", err)
-	}
-
-	ps, err = conn.GetPolicy(policyName)
-
-	if err != nil {
-		t.Fatalf("%s", err)
-	}
-
-	valid = test.IsArrayStringEqual(users, ps.Users)
-	if !valid {
-		t.Fatalf("The users are different, expected %+q but got %+q", users, ps.Users)
 	}
 
 	//validate subject attributes
-
 	if ps == nil {
 		t.Fatalf("specified Policy wasn't found")
 	}
@@ -1914,7 +1882,6 @@ func TestGetPolicy(t *testing.T) {
 }
 
 func TestGetPolicyOnlyEC(t *testing.T) {
-
 	// This test covers GetPolicy function from connector to test EC curves are return correctly for all the values,
 	// including RecommendSettings
 
@@ -2143,8 +2110,11 @@ func TestGetPolicyOnlyEC(t *testing.T) {
 }
 
 func TestSetEmptyPolicy(t *testing.T) {
-
-	policyName := test.RandAppName() + "\\" + test.RandCitName()
+	appName := os.Getenv("NGTS_APP_NAME")
+	if appName == "" {
+		t.Fatalf("env variable NGTS_APP_NAME is not set")
+	}
+	policyName := appName + "\\" + test.RandCitName()
 	conn := getTestConnector(ctx.NGTSZone)
 	conn.verbose = true
 
@@ -2165,8 +2135,11 @@ func TestSetEmptyPolicy(t *testing.T) {
 }
 
 func TestSetDefaultPolicyValuesAndValidate(t *testing.T) {
-
-	policyName := test.RandAppName() + "\\" + test.RandCitName()
+	appName := os.Getenv("NGTS_APP_NAME")
+	if appName == "" {
+		t.Fatalf("env variable NGTS_APP_NAME is not set")
+	}
+	policyName := appName + "\\" + test.RandCitName()
 	conn := getTestConnector(ctx.NGTSZone)
 	conn.verbose = true
 
@@ -2243,8 +2216,11 @@ func TestSetDefaultPolicyValuesAndValidate(t *testing.T) {
 }
 
 func TestSetPolicyValuesAndValidate(t *testing.T) {
-
-	policyName := test.RandAppName() + "\\" + test.RandCitName()
+	appName := os.Getenv("NGTS_APP_NAME")
+	if appName == "" {
+		t.Fatalf("env variable NGTS_APP_NAME is not set")
+	}
+	policyName := appName + "\\" + test.RandCitName()
 	conn := getTestConnector(ctx.NGTSZone)
 	conn.verbose = true
 
@@ -2325,8 +2301,11 @@ func TestSetPolicyValuesAndValidate(t *testing.T) {
 
 // This test is just for verifying that a policy can be created using ENTRUST CA.
 func TestSetPolicyEntrust(t *testing.T) {
-
-	policyName := test.RandAppName() + "\\" + test.RandCitName()
+	appName := os.Getenv("NGTS_APP_NAME")
+	if appName == "" {
+		t.Fatalf("env variable NGTS_APP_NAME is not set")
+	}
+	policyName := appName + "\\" + test.RandCitName()
 	conn := getTestConnector(ctx.NGTSZone)
 	conn.verbose = true
 
@@ -2363,8 +2342,11 @@ func TestSetPolicyEntrust(t *testing.T) {
 This test is just for verifying that a policy can be created using DIGICERT	 CA.
 */
 func TestSetPolicyDigicert(t *testing.T) {
-
-	policyName := test.RandAppName() + "\\" + test.RandCitName()
+	appName := os.Getenv("NGTS_APP_NAME")
+	if appName == "" {
+		t.Fatalf("env variable NGTS_APP_NAME is not set")
+	}
+	policyName := appName + "\\" + test.RandCitName()
 	conn := getTestConnector(ctx.NGTSZone)
 	conn.verbose = true
 
@@ -2435,9 +2417,6 @@ func TestCreateCertServiceCSRWithDefaults(t *testing.T) {
 	conn := getTestConnector("App Alfa\\Amoo")
 	conn.verbose = true
 	err := authenticateTestConnector(conn)
-	if err != nil {
-		t.Fatalf("%s", err)
-	}
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -2720,7 +2699,6 @@ func TestSearchValidCertificate(t *testing.T) {
 }
 
 func TestGetCloudRequest(t *testing.T) {
-
 	conn := getTestConnector(ctx.NGTSZone)
 	conn.verbose = true
 	err := authenticateTestConnector(conn)

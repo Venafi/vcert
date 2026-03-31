@@ -10,7 +10,7 @@ import (
 
 func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) {
 	if !c.isAuthenticated() {
-		return nil, fmt.Errorf("must be autheticated to request a certificate")
+		return nil, fmt.Errorf("must be authenticated to request a certificate")
 	}
 
 	cit, err := retrievePolicySpecification(c, name)
@@ -26,13 +26,6 @@ func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) 
 
 	log.Println("Building policy")
 	ps := buildPolicySpecification(cit, info, true)
-
-	// getting the users to set to the PolicySpecification
-	policyUsers, err := c.getUsers()
-	if err != nil {
-		return nil, err
-	}
-	ps.Users = policyUsers
 
 	return ps, nil
 }
@@ -137,30 +130,22 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 
 	}
 
-	//validate if appName is set and if app already exist on Palo Alto Networks Next-Generation Trust Security (NGTS) if not create it
-	//and as final steps link the app with the cit.
+	// validate if appName is set and if app already exist on Palo Alto Networks Next-Generation Trust Security (NGTS)
+	// link the app with the cit.
 	appName := policy.GetApplicationName(name)
-
 	if appName == "" {
 		return "", fmt.Errorf("application name is empty, please provide zone in the format: app_name\\cit_name")
 	}
 
 	appDetails, statusCode, err := c.getAppDetailsByName(appName)
+	if err != nil {
+		return "", fmt.Errorf("unable to get application details by app name. Status code: %d, %w", statusCode, err)
+	}
 
-	if err != nil && statusCode == 404 { //means application was not found.
-		log.Printf("creating application: %s", appName)
-
-		_, err = c.createApplication(appName, ps, cit)
-		if err != nil {
-			return "", err
-		}
-
-	} else { //determine if the application needs to be updated
-		log.Printf("updating application: %s", appName)
-		err = c.updateApplication(name, ps, cit, appDetails)
-		if err != nil {
-			return "", err
-		}
+	log.Printf("updating application: %s", appName)
+	err = c.updateApplication(name, ps, cit, appDetails)
+	if err != nil {
+		return "", err
 	}
 
 	log.Printf("policy successfully applied to %s", name)
@@ -213,41 +198,6 @@ func retrievePolicySpecification(c *Connector, name string) (*certificateTemplat
 
 }
 
-func (c *Connector) getUsers() ([]string, error) {
-	var usersList []string
-	appDetails, _, err := c.getAppDetailsByName(c.zone.getApplicationName())
-	if err != nil {
-		return nil, err
-	}
-	var teamsList *teams
-	for _, owner := range appDetails.OwnerIdType {
-		if owner.OwnerType == UserType.String() {
-			retrievedUser, userErr := c.retrieveUser(owner.OwnerId)
-			if userErr != nil {
-				return nil, userErr
-			}
-			usersList = append(usersList, retrievedUser.Username)
-		} else if owner.OwnerType == TeamType.String() {
-			if teamsList == nil {
-				teamsList, err = c.retrieveTeams()
-				if err != nil {
-					return nil, err
-				}
-			}
-			if teamsList != nil {
-				for _, t := range teamsList.Teams {
-					if t.ID == owner.OwnerId {
-						usersList = append(usersList, t.Name)
-						break
-					}
-				}
-			}
-		}
-
-	}
-	return usersList, nil
-}
-
 func PolicyExist(policyName string, c *Connector) (bool, error) {
 	c.zone.appName = policy.GetApplicationName(policyName)
 	citName := policy.GetCitName(policyName)
@@ -259,50 +209,6 @@ func PolicyExist(policyName string, c *Connector) (bool, error) {
 
 	_, err := c.getTemplateByID()
 	return err == nil, nil
-}
-
-func (c *Connector) createApplication(appName string, ps *policy.PolicySpecification, cit *certificateTemplate) (*policy.Application, error) {
-	appIssuingTemplate := make(map[string]string)
-	appIssuingTemplate[cit.Name] = cit.ID
-
-	var owners []policy.OwnerIdType
-	var err error
-	var statusCode int
-	var status string
-
-	//if users are passed to the PS, resolve the related Owners to set them
-	if len(ps.Users) > 0 {
-		owners, err = c.resolveOwners(ps.Users)
-	} else { //if users are not specified in PS, then the current User should be used as owner
-		var owner *policy.OwnerIdType
-		owner, err = c.getOwnerFromUserDetails()
-		if owner != nil {
-			owners = []policy.OwnerIdType{*owner}
-		}
-	}
-
-	if err != nil {
-		return nil, fmt.Errorf("an error happened trying to resolve the owners: %w", err)
-	}
-
-	//create application
-	appReq := policy.Application{
-		OwnerIdsAndTypes:                     owners,
-		Name:                                 appName,
-		CertificateIssuingTemplateAliasIdMap: appIssuingTemplate,
-	}
-
-	url := c.getURL(urlAppRoot)
-
-	statusCode, status, _, err = c.request("POST", url, appReq)
-	if err != nil {
-		return nil, err
-	}
-	if statusCode != 201 {
-		return nil, fmt.Errorf("unexpected result %s attempting to create application %s", status, appName)
-	}
-
-	return &appReq, nil
 }
 
 func (c *Connector) updateApplication(name string, ps *policy.PolicySpecification, cit *certificateTemplate, appDetails *ApplicationDetails) error {
@@ -321,23 +227,9 @@ func (c *Connector) updateApplication(name string, ps *policy.PolicySpecificatio
 		citAddedToApp = true
 	}
 
-	//determining if the owners where provided and should be updated
-	ownersUpdated := false
-	//given that the application exists, the only way to update the owners at the application
-	//is that users in the policy specification were provided
-	if len(ps.Users) > 0 {
-		//resolving and setting owners
-		owners, err := c.resolveOwners(ps.Users)
-		if err != nil {
-			return fmt.Errorf("an error happened trying to resolve the owners: %w", err)
-		}
-		appReq.OwnerIdsAndTypes = owners
-		ownersUpdated = true
-	}
-
 	//if the cit was added to the app or the owners were updated, then is required
 	//to update the application
-	if citAddedToApp || ownersUpdated {
+	if citAddedToApp {
 		url := c.getURL(urlAppRoot)
 		url = fmt.Sprint(url, "/", appDetails.ApplicationId)
 		_, _, _, err = c.request("PUT", url, appReq)
@@ -355,65 +247,4 @@ func (c *Connector) addCitToApp(app *policy.Application, cit *certificateTemplat
 	if !ok || value != cit.ID {
 		app.CertificateIssuingTemplateAliasIdMap[cit.Name] = cit.ID
 	}
-}
-
-func (c *Connector) resolveOwners(usersList []string) ([]policy.OwnerIdType, error) {
-
-	var owners []policy.OwnerIdType
-	var teams *teams
-	var err error
-
-	for _, userName := range usersList {
-		//The error should be ignored in order to confirm if the userName is not a TeamName
-		users, _ := c.retrieveUsers(userName)
-
-		if users != nil {
-			owners = appendOwner(owners, users.Users[0].ID, UserType)
-		} else {
-			if teams == nil {
-				teams, err = c.retrieveTeams()
-			}
-			if err != nil {
-				return nil, err
-			}
-			if teams != nil {
-				var found = false
-				for _, team := range teams.Teams {
-					if team.Name == userName {
-						owners = appendOwner(owners, team.ID, TeamType)
-						found = true
-						break
-					}
-				}
-				if !found {
-					return nil, fmt.Errorf("it was not possible to find the user %s", userName)
-				}
-			}
-		}
-	}
-
-	return owners, err
-}
-
-func appendOwner(owners []policy.OwnerIdType, ownerId string, ownerType OwnerType) []policy.OwnerIdType {
-	owner := createOwner(ownerId, ownerType)
-	return append(owners, *owner)
-}
-
-func (c *Connector) getOwnerFromUserDetails() (*policy.OwnerIdType, error) {
-	userDetails, err := c.getUserDetails()
-	if err != nil {
-		return nil, err
-	}
-	owner := createOwner(userDetails.User.ID, UserType)
-	return owner, nil
-}
-
-func createOwner(ownerId string, ownerType OwnerType) *policy.OwnerIdType {
-	ownerIdType := policy.OwnerIdType{
-		OwnerId:   ownerId,
-		OwnerType: ownerType.String(),
-	}
-
-	return &ownerIdType
 }
