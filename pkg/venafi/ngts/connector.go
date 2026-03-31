@@ -84,7 +84,7 @@ const (
 	condorChainOptionRootLast  condorChainOption = "EE_FIRST"
 )
 
-// Connector contains the base data needed to communicate with the Palo Alto Networks Next-Generation Trust Security (NGTS) servers
+// Connector contains the base data needed to communicate with the Palo Alto Networks Next-Gen Trust Security (NGTS) servers
 type Connector struct {
 	baseURL               string
 	apiKey                string
@@ -101,7 +101,7 @@ type Connector struct {
 	notificationSvcClient *notificationservice.NotificationServiceClient
 }
 
-// NewConnector creates a new Connector object used to communicate with Palo Alto Networks Next-Generation Trust Security (NGTS)
+// NewConnector creates a new Connector object used to communicate with Palo Alto Networks Next-Gen Trust Security (NGTS)
 func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (*Connector, error) {
 	cZone := cloudZone{zone: zone}
 	c := Connector{verbose: verbose, trust: trust, zone: cZone, userAgent: util.DefaultUserAgent}
@@ -131,12 +131,12 @@ func (c *Connector) SetHTTPClient(client *http.Client) {
 	c.client = client
 }
 
-// Ping attempts to connect to the Palo Alto Networks Next-Generation Trust Security (NGTS) API and returns an error if it cannot
+// Ping attempts to connect to the Palo Alto Networks Next-Gen Trust Security (NGTS) API and returns an error if it cannot
 func (c *Connector) Ping() (err error) {
 	return nil
 }
 
-// Authenticate authenticates the user with Palo Alto Networks Next-Generation Trust Security (NGTS) using the provided credentials
+// Authenticate authenticates the user with Palo Alto Networks Next-Gen Trust Security (NGTS) using the provided credentials
 func (c *Connector) Authenticate(auth *endpoint.Authentication) error {
 	if auth == nil {
 		return fmt.Errorf("failed to authenticate: missing credentials")
@@ -177,7 +177,7 @@ func (c *Connector) ReadPolicyConfiguration() (policy *endpoint.Policy, err erro
 	return
 }
 
-// ReadZoneConfiguration reads the Zone information needed for generating and requesting a certificate from Palo Alto Networks Next-Generation Trust Security (NGTS)
+// ReadZoneConfiguration reads the Zone information needed for generating and requesting a certificate from Palo Alto Networks Next-Gen Trust Security (NGTS)
 func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration, err error) {
 	if !c.isAuthenticated() {
 		return nil, fmt.Errorf("must be autheticated to request a certificate")
@@ -190,7 +190,7 @@ func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration,
 	return config, nil
 }
 
-// GetZonesByParent returns a list of valid zones for a Palo Alto Networks Next-Generation Trust Security (NGTS) application specified by parent
+// GetZonesByParent returns a list of valid zones for a Palo Alto Networks Next-Gen Trust Security (NGTS) application specified by parent
 func (c *Connector) GetZonesByParent(parent string) ([]string, error) {
 	if !c.isAuthenticated() {
 		return nil, fmt.Errorf("must be autheticated to request a certificate")
@@ -214,7 +214,7 @@ func (c *Connector) ResetCertificate(_ *certificate.Request, _ bool) (err error)
 	return fmt.Errorf("not supported by endpoint")
 }
 
-// RequestCertificate submits the CSR to the Palo Alto Networks Next-Generation Trust Security (NGTS) API for processing
+// RequestCertificate submits the CSR to the Palo Alto Networks Next-Gen Trust Security (NGTS) API for processing
 func (c *Connector) RequestCertificate(req *certificate.Request) (requestID string, err error) {
 	if !c.isAuthenticated() {
 		return "", fmt.Errorf("must be autheticated to request a certificate")
@@ -888,7 +888,7 @@ func (c *Connector) RetrieveCertificateMetaData(_ string) (*certificate.Certific
 	panic("operation is not supported yet")
 }
 
-// SynchronousRequestCertificate It's not supported yet in Palo Alto Networks Next-Generation Trust Security (NGTS)
+// SynchronousRequestCertificate It's not supported yet in Palo Alto Networks Next-Gen Trust Security (NGTS)
 func (c *Connector) SynchronousRequestCertificate(_ *certificate.Request) (certificates *certificate.PEMCollection, err error) {
 	panic("operation is not supported yet")
 }
@@ -933,7 +933,7 @@ func getCertificateId(c *Connector, req *certificate.Request) (string, error) {
 	return "", endpoint.ErrRetrieveCertificateTimeout{CertificateID: req.PickupID}
 }
 
-// normalizeURL allows overriding the default URL used to communicate with Palo Alto Networks Next-Generation Trust Security (NGTS)
+// normalizeURL allows overriding the default URL used to communicate with Palo Alto Networks Next-Gen Trust Security (NGTS)
 func normalizeURL(url string) (normalizedURL string, err error) {
 	if url == "" {
 		url = apiURL
@@ -1110,14 +1110,14 @@ func (c *Connector) getCertificateStatus(requestID string) (certStatus *certific
 	}
 	respErrors, err := parseResponseErrors(body)
 	if err == nil {
-		respError := fmt.Sprintf("unexpected status code on Palo Alto Networks Next-Generation Trust Security (NGTS) certificate search. Status: %d\n", statusCode)
+		respError := fmt.Sprintf("unexpected status code on Palo Alto Networks Next-Gen Trust Security (NGTS) certificate search. Status: %d\n", statusCode)
 		for _, e := range respErrors {
 			respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
 		}
 		return nil, errors.New(respError)
 	}
 
-	return nil, fmt.Errorf("unexpected status code on Palo Alto Networks Next-Generation Trust Security (NGTS) certificate search. Status: %d", statusCode)
+	return nil, fmt.Errorf("unexpected status code on Palo Alto Networks Next-Gen Trust Security (NGTS) certificate search. Status: %d", statusCode)
 
 }
 
@@ -1158,7 +1158,7 @@ func retrieveServiceGeneratedCertData(c *Connector, req *certificate.Request, de
 	}
 
 	if statusCode != http.StatusOK && statusCode != http.StatusCreated {
-		return nil, fmt.Errorf("failed to retrieve KeyStore on Palo Alto Networks Next-Generation Trust Security (NGTS), status: %s", status)
+		return nil, fmt.Errorf("failed to retrieve KeyStore on Palo Alto Networks Next-Gen Trust Security (NGTS), status: %s", status)
 	}
 
 	rootFirst := false
@@ -1382,7 +1382,7 @@ func (c *Connector) getCertificate(certificateId string) (*managedCertificate, e
 // validateNotFoundTimeout function that returns nil for not found error if waiting time for timeout is not
 // completed. This is while status code is NotFound
 func validateNotFoundTimeout(statusCode int, startTime time.Time, timeout time.Duration, certificateId string, respErrors []responseError) error {
-	respError := fmt.Sprintf("unexpected status code on Palo Alto Networks Next-Generation Trust Security (NGTS) certificate search. Status: %d\n", statusCode)
+	respError := fmt.Sprintf("unexpected status code on Palo Alto Networks Next-Gen Trust Security (NGTS) certificate search. Status: %d\n", statusCode)
 	if statusCode == http.StatusNotFound {
 		if time.Now().After(startTime.Add(timeout)) {
 			return endpoint.ErrRetrieveCertificateTimeout{CertificateID: certificateId}

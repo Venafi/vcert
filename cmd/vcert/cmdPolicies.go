@@ -40,7 +40,7 @@ var (
 		UsageText: ` vcert setpolicy <Required CyberArk Certificate Manager, SaaS -OR- CyberArk Certificate Manager, Self-Hosted> <Options>
         vcert setpolicy -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> -z "<policy folder DN>" --file /path-to/policy.spec
 		vcert setpolicy -p vcp -t <CyberArk Certificate Manager, SaaS access token> -z "<app name>\<CIT alias>" --file /path-to/policy.spec
-		vcert setpolicy -p ngts -t <Palo Alto Networks Next-Generation Trust Security (NGTS) access token> -z "<app name>\<CIT alias>" --file /path-to/policy.spec`,
+		vcert setpolicy -p ngts -t <Palo Alto Networks Next-Gen Trust Security (NGTS) access token> -z "<app name>\<CIT alias>" --file /path-to/policy.spec`,
 	}
 
 	commandGetPolicy = &cli.Command{
@@ -52,7 +52,7 @@ var (
 		UsageText: ` vcert getpolicy <Required CyberArk Certificate Manager, SaaS -OR- CyberArk Certificate Manager, Self-Hosted> <Options>
         vcert getpolicy -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> -z "<policy folder DN>"
 		vcert getpolicy -p vcp -t <CyberArk Certificate Manager, SaaS access token> -z "<app name>\<CIT alias>"
-		vcert getpolicy -p ngts -t <Palo Alto Networks Next-Generation Trust Security (NGTS) access token> -z "<app name>\<CIT alias>"`,
+		vcert getpolicy -p ngts -t <Palo Alto Networks Next-Gen Trust Security (NGTS) access token> -z "<app name>\<CIT alias>"`,
 	}
 )
 

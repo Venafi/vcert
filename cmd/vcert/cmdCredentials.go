@@ -41,7 +41,7 @@ var (
 		UsageText: ` vcert getcred --email <email address for CyberArk Certificate Manager, SaaS headless registration> [--password <password>] [--format (text|json)]
 		vcert getcred -p vcp --token-url <CyberArk Certificate Manager, SaaS token url> --external-jwt <JWT from Identity Provider>
 
-		vcert getcred -p ngts --token-url <Palo Alto Networks Next-Generation Trust Security (NGTS) token url> --client-id <service account client id> --client-secret <service account client secret> --scope tsg_id:<TSG_ID>
+		vcert getcred -p ngts --token-url <Palo Alto Networks Next-Gen Trust Security (NGTS) token url> --client-id <service account client id> --client-secret <service account client secret> --scope tsg_id:<TSG_ID>
 		
 		vcert getcred -u https://cmsh.example.com --username <CyberArk Certificate Manager, Self-Hosted user> --password <CyberArk Certificate Manager, Self-Hosted user password>
 		vcert getcred -u https://cmsh.example.com --p12-file <PKCS#12 client cert> --p12-password <PKCS#12 password> --trust-bundle /path-to/bundle.pem

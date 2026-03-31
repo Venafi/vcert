@@ -37,7 +37,7 @@ const (
 	TPP
 	// Firefly represents the CyberArk Workload Identity Manager platform type
 	Firefly
-	// NGTS represents the Next-Generation Trust Security platform type
+	// NGTS represents the Next-Gen Trust Security platform type
 	NGTS
 
 	// String representations of the Platform types

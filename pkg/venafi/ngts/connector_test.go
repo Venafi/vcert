@@ -854,7 +854,7 @@ func TestRetireCertificate(t *testing.T) {
 		t.Fatalf("%s", err)
 	}
 
-	// Note: Palo Alto Networks Next-Generation Trust Security (NGTS) may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
+	// Note: Palo Alto Networks Next-Gen Trust Security (NGTS) may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
 	// or even stuck into it
 
 	//trying to wait until the request achieved the ISSUED state by 5 times each 3 seconds
@@ -878,8 +878,8 @@ func TestRetireCertificate(t *testing.T) {
 	hexThumbprint := hex.EncodeToString(thumbprint[:])
 	retireReq.Thumbprint = hexThumbprint
 
-	// Letting Palo Alto Networks Next-Generation Trust Security (NGTS) some time to load certificate into inventory.
-	// Palo Alto Networks Next-Generation Trust Security (NGTS) may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
+	// Letting Palo Alto Networks Next-Gen Trust Security (NGTS) some time to load certificate into inventory.
+	// Palo Alto Networks Next-Gen Trust Security (NGTS) may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
 	// or even stuck into it
 
 	err = retireCertificate(conn, retireReq, 5, 3)
@@ -985,8 +985,8 @@ func TestRetireCertificateWithPickUpID(t *testing.T) {
 	retireReq := &certificate.RetireRequest{}
 	retireReq.CertificateDN = pickupID
 
-	// Letting Palo Alto Networks Next-Generation Trust Security (NGTS) some time to load certificate into inventory.
-	// Palo Alto Networks Next-Generation Trust Security (NGTS) may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
+	// Letting Palo Alto Networks Next-Gen Trust Security (NGTS) some time to load certificate into inventory.
+	// Palo Alto Networks Next-Gen Trust Security (NGTS) may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
 	// or even stuck into it
 	time.Sleep(time.Duration(2) * time.Second)
 	err = conn.RetireCertificate(retireReq)
@@ -1021,8 +1021,8 @@ func TestRetireCertificateTwice(t *testing.T) {
 	retireReq := &certificate.RetireRequest{}
 	retireReq.CertificateDN = pickupID
 
-	// Letting Palo Alto Networks Next-Generation Trust Security (NGTS) some time to load certificate into inventory.
-	// Palo Alto Networks Next-Generation Trust Security (NGTS) may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
+	// Letting Palo Alto Networks Next-Gen Trust Security (NGTS) some time to load certificate into inventory.
+	// Palo Alto Networks Next-Gen Trust Security (NGTS) may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
 	// or even stuck into it
 	time.Sleep(time.Duration(2) * time.Second)
 	err = conn.RetireCertificate(retireReq)
@@ -1044,7 +1044,7 @@ func TestRevokeCertificate(t *testing.T) {
 
 	// The following block of code is to set the clients and accessToken
 	// given we omitted to call the conn.Authenticate() method to avoid the
-	// real connection to Palo Alto Networks Next-Generation Trust Security (NGTS)
+	// real connection to Palo Alto Networks Next-Gen Trust Security (NGTS)
 	conn.accessToken = "myaccesstoken"
 	// Initialize clients
 	conn.caAccountsClient = caaccounts.NewCAAccountsClient(conn.getURL(urlGraphql), conn.getGraphqlHTTPClient())
@@ -1192,7 +1192,7 @@ func TestRevokeCertificate(t *testing.T) {
 
 func TestReadPolicyConfigurationOnlyEC(t *testing.T) {
 	// IMPORTANT NOTE: Now in VCert, we are treating ED25519 Keys, as per it's a different algorithm from ECDSA, as another
-	// type of key. This is conflicting with how Palo Alto Networks Next-Generation Trust Security (NGTS) handles EC Keys, as it considers ED25519 as another curve, which is
+	// type of key. This is conflicting with how Palo Alto Networks Next-Gen Trust Security (NGTS) handles EC Keys, as it considers ED25519 as another curve, which is
 	// it shouldn't, this test may need to change in the future once this is solved
 	//todo: add more zones
 	conn := getTestConnector(ctx.NGTSzoneEC)

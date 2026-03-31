@@ -329,7 +329,7 @@ func (c *Connector) getHTTPClient() *http.Client {
 func (c *Connector) request(method string, url string, data interface{}, authNotRequired ...bool) (statusCode int, statusText string, body []byte, err error) {
 	if (c.accessToken == "" && c.user == nil) || (c.user != nil && c.user.Company == nil) {
 		if !(len(authNotRequired) == 1 && authNotRequired[0]) {
-			err = fmt.Errorf("%w: must be autheticated to make requests to Palo Alto Networks Next-Generation Trust Security (NGTS) API", verror.VcertError)
+			err = fmt.Errorf("%w: must be autheticated to make requests to Palo Alto Networks Next-Gen Trust Security (NGTS) API", verror.VcertError)
 			return
 		}
 	}
@@ -398,7 +398,7 @@ func parseUserDetailsResult(expectedStatusCode int, httpStatusCode int, httpStat
 
 		return nil, fmt.Errorf("%w: %s, %s", verror.ServerError, httpStatus, bodyText)
 	}
-	respError := fmt.Sprintf("unexpected status code on Palo Alto Networks Next-Generation Trust Security (NGTS) registration. Status: %s\n", httpStatus)
+	respError := fmt.Sprintf("unexpected status code on Palo Alto Networks Next-Gen Trust Security (NGTS) registration. Status: %s\n", httpStatus)
 	for _, e := range respErrors {
 		respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
 	}
@@ -413,7 +413,7 @@ func parseUserDetailsResultFromPOST(httpStatusCode int, httpStatus string, body 
 	if err != nil {
 		return nil, err // parseResponseErrors always return verror.ServerError
 	}
-	respError := fmt.Sprintf("unexpected status code on Palo Alto Networks Next-Generation Trust Security (NGTS) registration. Status: %s\n", httpStatus)
+	respError := fmt.Sprintf("unexpected status code on Palo Alto Networks Next-Gen Trust Security (NGTS) registration. Status: %s\n", httpStatus)
 	for _, e := range respErrors {
 		respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
 	}
@@ -501,7 +501,7 @@ func parseZoneConfigurationResult(httpStatusCode int, httpStatus string, body []
 			return nil, err
 		}
 
-		respError := fmt.Sprintf("Unexpected status code on Palo Alto Networks Next-Generation Trust Security (NGTS) zone read. Status: %s\n", httpStatus)
+		respError := fmt.Sprintf("Unexpected status code on Palo Alto Networks Next-Gen Trust Security (NGTS) zone read. Status: %s\n", httpStatus)
 		for _, e := range respErrors {
 			if e.Code == 10051 {
 				return nil, verror.ZoneNotFoundError
@@ -528,7 +528,7 @@ func parseCertificateTemplateResult(httpStatusCode int, httpStatus string, body 
 			return nil, err
 		}
 
-		respError := fmt.Sprintf("Unexpected status code on Palo Alto Networks Next-Generation Trust Security (NGTS) zone read. Status: %s\n", httpStatus)
+		respError := fmt.Sprintf("Unexpected status code on Palo Alto Networks Next-Gen Trust Security (NGTS) zone read. Status: %s\n", httpStatus)
 		for _, e := range respErrors {
 			if e.Code == 10051 {
 				return nil, verror.ZoneNotFoundError
@@ -549,7 +549,7 @@ func parseCertificateRequestResult(httpStatusCode int, httpStatus string, body [
 			return nil, err
 		}
 
-		respError := fmt.Sprintf("Unexpected status code on Palo Alto Networks Next-Generation Trust Security (NGTS) zone read. Status: %s\n", httpStatus)
+		respError := fmt.Sprintf("Unexpected status code on Palo Alto Networks Next-Gen Trust Security (NGTS) zone read. Status: %s\n", httpStatus)
 		for _, e := range respErrors {
 			respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
 		}
@@ -574,7 +574,7 @@ func checkCertificateRetireResults(httpStatusCode int, httpStatus string, body [
 			return err
 		}
 
-		respError := fmt.Sprintf("Unexpected status code on Palo Alto Networks Next-Generation Trust Security (NGTS) zone read. Status: %s\n", httpStatus)
+		respError := fmt.Sprintf("Unexpected status code on Palo Alto Networks Next-Gen Trust Security (NGTS) zone read. Status: %s\n", httpStatus)
 		for _, e := range respErrors {
 			respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
 		}
@@ -606,7 +606,7 @@ func parseApplicationDetailsResult(httpStatusCode int, httpStatus string, body [
 			return nil, err
 		}
 
-		respError := fmt.Sprintf("unexpected status code on Palo Alto Networks Next-Generation Trust Security (NGTS) application read. Status: %s\n", httpStatus)
+		respError := fmt.Sprintf("unexpected status code on Palo Alto Networks Next-Gen Trust Security (NGTS) application read. Status: %s\n", httpStatus)
 		for _, e := range respErrors {
 			if e.Code == 10051 {
 				return nil, verror.ApplicationNotFoundError
@@ -947,7 +947,7 @@ func parseCitResult(expectedStatusCode int, httpStatusCode int, httpStatus strin
 	if err != nil {
 		return nil, err // parseResponseErrors always return verror.ServerError
 	}
-	respError := fmt.Sprintf("unexpected status code on Palo Alto Networks Next-Generation Trust Security (NGTS) registration. Status: %s\n", httpStatus)
+	respError := fmt.Sprintf("unexpected status code on Palo Alto Networks Next-Gen Trust Security (NGTS) registration. Status: %s\n", httpStatus)
 	for _, e := range respErrors {
 		respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
 	}

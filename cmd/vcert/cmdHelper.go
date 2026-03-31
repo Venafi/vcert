@@ -320,11 +320,11 @@ func getNGTSCredentials(ngtsConnector *ngts.Connector, cfg *vcert.Config) error 
 		logf("Getting credentials...")
 	}
 
-	// Request access token using a Palo Alto Networks Next-Generation Trust Security (NGTS) service account
+	// Request access token using a Palo Alto Networks Next-Gen Trust Security (NGTS) service account
 	if cfg.Credentials.TokenURL != "" && cfg.Credentials.ClientId != "" && cfg.Credentials.ClientSecret != "" && cfg.Credentials.Scope != "" {
 		tokenResponse, err := ngtsConnector.GetAccessToken(cfg.Credentials)
 		if err != nil {
-			return fmt.Errorf("failed to request access token from Palo Alto Networks Next-Generation Trust Security (NGTS): %w", err)
+			return fmt.Errorf("failed to request access token from Palo Alto Networks Next-Gen Trust Security (NGTS): %w", err)
 		}
 
 		if flags.credFormat == "json" {

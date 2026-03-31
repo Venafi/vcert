@@ -44,7 +44,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 
 	var status string
 
-	//validate if zone name is set and if zone already exist on Palo Alto Networks Next-Generation Trust Security (NGTS) if not create it.
+	//validate if zone name is set and if zone already exist on Palo Alto Networks Next-Gen Trust Security (NGTS) if not create it.
 	citName := policy.GetCitName(name)
 
 	if citName == "" {
@@ -130,7 +130,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 
 	}
 
-	// validate if appName is set and if app already exist on Palo Alto Networks Next-Generation Trust Security (NGTS)
+	// validate if appName is set and if app already exist on Palo Alto Networks Next-Gen Trust Security (NGTS)
 	// link the app with the cit.
 	appName := policy.GetApplicationName(name)
 	if appName == "" {

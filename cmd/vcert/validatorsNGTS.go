@@ -4,7 +4,7 @@ import "fmt"
 
 func validateConnectionFlagsNGTS(commandName string) error {
 	//sshgetconfig command
-	//For now this is not supported by Palo Alto Networks Next-Generation Trust Security (NGTS), but when (if) it does, it is going to be an unauthenticated endpoint, just like CyberArk Certificate Manager, Self-Hosted
+	//For now this is not supported by Palo Alto Networks Next-Gen Trust Security (NGTS), but when (if) it does, it is going to be an unauthenticated endpoint, just like CyberArk Certificate Manager, Self-Hosted
 	if commandName == commandSshGetConfigName {
 		return nil
 	}
@@ -39,7 +39,7 @@ func validateConnectionFlagsNGTS(commandName string) error {
 	tokenPresent := flags.token != "" || getPropertyFromEnvironment(vCertToken) != ""
 	advice := "Use --token (-t)"
 	if !tokenPresent {
-		return fmt.Errorf("missing flags for Palo Alto Networks Next-Generation Trust Security (NGTS) authentication. %s", advice)
+		return fmt.Errorf("missing flags for Palo Alto Networks Next-Gen Trust Security (NGTS) authentication. %s", advice)
 	}
 
 	return nil
