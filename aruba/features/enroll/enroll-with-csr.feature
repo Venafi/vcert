@@ -27,6 +27,11 @@ Feature: enrolling certificates with -csr option (VEN-40652)
       | endpoint  |
       | Cloud     |
 
+    @NGTS
+    Examples:
+       | endpoint |
+       | NGTS     |
+
   Scenario Outline: where it enrolls certificates with -csr file:csr.pem option
     Given I generate random CSR with -no-prompt -csr-file csr.pem -key-file k.pem
       And it should write CSR to the file named "csr.pem"
@@ -53,6 +58,11 @@ Feature: enrolling certificates with -csr option (VEN-40652)
       | endpoint  |
       | Cloud     |
 
+    @NGTS
+    Examples:
+      | endpoint |
+      | NGTS     |
+
   Scenario Outline: where it enrolls certificates with -csr local -no-prompt
     Given I enroll random certificate using <endpoint> with -csr local -no-prompt
     And it should post certificate request
@@ -73,6 +83,11 @@ Feature: enrolling certificates with -csr option (VEN-40652)
     Examples:
       | endpoint  |
       | Cloud     |
+
+    @NGTS
+    Examples:
+      | endpoint |
+      | NGTS     |
 
   Scenario Outline: where it enrolls certificates with -csr local -no-prompt -key-password ...
     Given I enroll random certificate with dummy password using <endpoint> with -csr local -no-prompt
@@ -95,7 +110,10 @@ Feature: enrolling certificates with -csr option (VEN-40652)
       | endpoint  |
       | Cloud     |
 
-
+    @NGTS
+    Examples:
+      | endpoint |
+      | NGTS     |
 
   Scenario Outline: where it should however enroll a certificate with -csr service, empty -key-password and -no-pickup
     When I enroll random certificate with dummy password using <endpoint> with -csr service -no-prompt -no-pickup
@@ -115,6 +133,11 @@ Feature: enrolling certificates with -csr option (VEN-40652)
     Examples:
       | endpoint  |
       | Cloud     |
+
+    @NGTS
+    Examples:
+      | endpoint |
+      | NGTS     |
 
   Scenario Outline: where it should enroll a certificate with -csr service -no-prompt -key-password ...
     When I enroll random certificate with dummy password using <endpoint> with -csr service -no-prompt

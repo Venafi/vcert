@@ -32,6 +32,17 @@ Given(/^I have playbook with (\S+) connection details$/) do |platform|
     }
     connection_vaas['credentials'] = credentials
     @playbook_data[:config][:connection] = connection_vaas
+  elsif platform == PLATFORM_NGTS
+    validate_ngts_envs
+    connection_ngts = {
+      platform: "ngts",
+      url: ENV['NGTS_URL']
+    }
+    credentials = {
+      accessToken: ENV['NGTS_ACCESS_TOKEN']
+    }
+    connection_ngts['credentials'] = credentials
+    @playbook_data[:config][:connection] = connection_ngts
   end
 end
 
@@ -96,6 +107,8 @@ And(/^task named "(.*)" has request with default "(.*)" zone$/) do |task_name, p
     current_certificate_task.request.zone=ENV['TPP_ZONE']
   elsif platform == "VaaS"
     current_certificate_task.request.zone=ENV['CLOUD_ZONE']
+  elsif platform == "NGTS"
+    current_certificate_task.request.zone=ENV['NGTS_ZONE']
   else
       fail(ArgumentError.new("Unknown platform: #{platform}"))
   end
@@ -107,6 +120,8 @@ And(/^task named "(.*)" has request with default Elliptic Curve "(.*)" zone$/) d
     current_certificate_task.request.zone=ENV['TPP_ZONE_ECDSA']
   elsif platform == "VaaS"
     current_certificate_task.request.zone=ENV['VAAS_ZONE_EC']
+  elsif platform == "NGTS"
+    current_certificate_task.request.zone=ENV['NGTS_ZONE_EC']
   else
     fail(ArgumentError.new("Unknown platform: #{platform}"))
   end

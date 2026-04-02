@@ -107,6 +107,11 @@ Feature: playbook
       | platform | config-file       |
       | VaaS     | playbook-vaas.yml |
 
+    @NGTS
+    Examples:
+      | platform | config-file       |
+      | NGTS     | playbook-ngts.yml |
+
   Scenario Outline: Run playbook with default configuration, perform simple PEM installation and validates encrypted private key
     Given I have playbook with <platform> connection details
     And I have playbook with certificateTasks block
@@ -144,6 +149,11 @@ Feature: playbook
       | platform | config-file       |
       | VaaS     | playbook-vaas.yml |
 
+    @NGTS
+    Examples:
+      | platform | config-file       |
+      | NGTS     | playbook-ngts.yml |
+
   Scenario Outline: Run playbook with default configuration with local generated, perform simple PEM installation and validates encrypted private key
     Given I have playbook with <platform> connection details
     And I have playbook with certificateTasks block
@@ -180,6 +190,11 @@ Feature: playbook
     Examples:
       | platform | config-file       |
       | VaaS     | playbook-vaas.yml |
+
+    @NGTS
+    Examples:
+      | platform | config-file       |
+      | NGTS     | playbook-ngts.yml |
 
   # This scenario takes into account you are running a Zone that creates a cert with validity more than 31d
   Scenario Outline: Run playbook twice with default configuration, perform simple PEM installation. Should prevent second issue
@@ -221,6 +236,11 @@ Feature: playbook
     Examples:
       | platform | config-file       |
       | VaaS     | playbook-vaas.yml |
+
+    @NGTS
+    Examples:
+      | platform | config-file       |
+      | NGTS     | playbook-ngts.yml |
 
   Scenario Outline: Run playbook twice with default configuration, perform simple PEM installation. Should issue twice
     Given I have playbook with <platform> connection details
@@ -264,6 +284,11 @@ Feature: playbook
       | platform | config-file       |
       | VaaS     | playbook-vaas.yml |
 
+    @NGTS
+    Examples:
+      | platform | config-file       |
+      | NGTS     | playbook-ngts.yml |
+
   # This scenario takes into account you are running a Zone that creates a cert with validity more than 31d
   Scenario Outline: Run playbook twice with default configuration and --force-renew flag, perform simple PEM installation. Should issue twice
     Given I have playbook with <platform> connection details
@@ -304,6 +329,11 @@ Feature: playbook
     Examples:
       | platform | config-file       |
       | VaaS     | playbook-vaas.yml |
+
+    @NGTS
+    Examples:
+      | platform | config-file       |
+      | NGTS     | playbook-ngts.yml |
 
   Scenario Outline: Run playbook with default configuration, perform two tasks, each one doing PEM and PKCS12 installations respectively
     Given I have playbook with <platform> connection details
@@ -355,6 +385,11 @@ Feature: playbook
       | platform | config-file       |
       | VaaS     | playbook-vaas.yml |
 
+    @NGTS
+    Examples:
+      | platform | config-file       |
+      | NGTS     | playbook-ngts.yml |
+
   Scenario Outline: Run playbook with default configuration and performs PEM installation using service generated ECDSA private keys
     Given I have playbook with <platform> connection details
     And I have playbook with certificateTasks block
@@ -391,6 +426,11 @@ Feature: playbook
     Examples:
       | platform | config-file       |
       | VaaS     | playbook-vaas.yml |
+
+    @NGTS
+    Examples:
+      | platform | config-file       |
+      | NGTS     | playbook-ngts.yml |
 
   Scenario Outline: Run playbook with default configuration and performs PEM installation using service generated encrypted ECDSA private keys
     Given I have playbook with <platform> connection details
@@ -429,6 +469,11 @@ Feature: playbook
       | platform | config-file       |
       | VaaS     | playbook-vaas.yml |
 
+    @NGTS
+    Examples:
+      | platform | config-file       |
+      | NGTS     | playbook-ngts.yml |
+
 Scenario Outline: Run playbook with default configuration and performs pkcs12 installation using legacy flag
     Given I have playbook with <platform> connection details
     And I have playbook with certificateTasks block
@@ -459,3 +504,8 @@ Scenario Outline: Run playbook with default configuration and performs pkcs12 in
     Examples:
       | platform | config-file       |
       | VaaS     | playbook-vaas.yml |
+
+    @NGTS
+    Examples:
+      | platform | config-file       |
+      | NGTS     | playbook-ngts.yml |

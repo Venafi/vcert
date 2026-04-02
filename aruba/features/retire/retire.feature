@@ -20,6 +20,11 @@ Feature: certificate retirement
     | endpoint  |
     | Cloud     |
 
+    @NGTS
+    Examples:
+      | endpoint  |
+      | NGTS      |
+
 
   @TPP
   Scenario: retire certificate that does not exist in TPP
@@ -29,6 +34,11 @@ Feature: certificate retirement
   @VAAS
   Scenario: retire certificate that does not exist in VaaS
     When I retire the certificate from Cloud with -id 'e9a98610-22aa-11ee-81be-3d121e6033c4'
+    Then it should fail with "invalid thumbprint or certificate ID. No certificates were retired"
+
+  @NGTS
+  Scenario: retire certificate that does not exist in NGTS
+    When I retire the certificate from NGTS with -id 'e9a98610-22aa-11ee-81be-3d121e6033c4'
     Then it should fail with "invalid thumbprint or certificate ID. No certificates were retired"
 
   Scenario Outline: retire certificate using -id flag
@@ -47,6 +57,11 @@ Feature: certificate retirement
       | endpoint  |
       | Cloud     |
 
+    @NGTS
+    Examples:
+      | endpoint  |
+      | NGTS      |
+
   Scenario Outline: retire certificate using -id file:*.txt flag
     Given I enroll random certificate from <endpoint> with -no-prompt -pickup-id-file p.txt
     And it should retrieve certificate
@@ -61,3 +76,8 @@ Feature: certificate retirement
     Examples:
       | endpoint  |
       | Cloud     |
+
+    @NGTS
+    Examples:
+      | endpoint  |
+      | NGTS      |

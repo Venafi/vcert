@@ -37,6 +37,11 @@ Feature: renew by -id
       | endpoint  |
       | Cloud     |
 
+    @NGTS
+    Examples:
+      | endpoint  |
+      | NGTS      |
+
 
   Scenario Outline: TPP - renew by CertificateDN using -id file:pickup_id.txt
     Given I enroll random certificate using <endpoint> with -no-prompt -pickup-id-file p.txt -cert-file c.pem -key-file k.pem
@@ -61,6 +66,11 @@ Feature: renew by -id
     Examples:
       | endpoint  |
       | Cloud     |
+
+    @NGTS
+    Examples:
+      | endpoint  |
+      | NGTS      |
 
   Scenario Outline: TPP renew by CertificateDN with -omit-sans
     Given I enroll a random certificate using <endpoint> with -no-prompt -key-file k.pem -cert-file c.pem -san-dns www1.example.com -san-dns www2.example.com

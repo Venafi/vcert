@@ -19,7 +19,7 @@ And(/^I use previous Pickup ID to provision (?:from|using) (\S+) a certificate t
   steps %{Then I try to run `#{cmd}`}
 end
 
-And(/^I use previous Pickup ID and cloud ID to provision again$/) do
+And(/^I use previous Pickup ID and cloud ID to provision again for (\S+)$/) do |platform|
   keystore_provider_names = true
   flags = ""
   case @cloudkeystore_type
@@ -33,7 +33,7 @@ And(/^I use previous Pickup ID and cloud ID to provision again$/) do
     fail(ArgumentError.new("Unknown cloud type: #{@cloudkeystore_type}"))
   end
   flags += @global_set_provision_flags
-  cmd = build_provision_cmd(PLATFORM_VCP, @cloudkeystore_type, keystore_provider_names, flags, true)
+  cmd = build_provision_cmd(platform, @cloudkeystore_type, keystore_provider_names, flags, true)
   steps %{Then I try to run `#{cmd}`}
 end
 
@@ -41,9 +41,10 @@ def build_provision_cmd(platform, cloudkeystore_type, keystore_provider_names, f
 
   @global_set_provision_flags = flags
 
-  cmd = "vcert provision cloudkeystore #{ENDPOINTS[PLATFORM_VCP]} -pickup-id #{@pickup_id}"
+  cmd = "vcert provision cloudkeystore #{ENDPOINTS[platform]} -pickup-id #{@pickup_id}"
 
-  if set_platform_flag
+  # Only add platform flag if set_platform_flag is true AND the endpoint doesn't already include it
+  if set_platform_flag && !ENDPOINTS[platform].include?("-p ")
     platform_flag = " -platform " + platform
     cmd = cmd + platform_flag
   end

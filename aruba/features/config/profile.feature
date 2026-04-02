@@ -24,3 +24,8 @@ Feature: -profile option
     Examples:
       | profile         |
       | cloud-profile   |
+
+    @NGTS
+    Examples:
+      | profile         |
+      | ngts-profile   |

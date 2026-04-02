@@ -66,6 +66,11 @@ Feature: PKCS#12 format output
       | endpoint  |
       | Cloud     |
 
+    @NGTS
+    Examples:
+      | endpoint  |
+      | NGTS      |
+
   Scenario Outline: where all objects are written to one PKCS#12 legacy archive with key password
     When I enroll random certificate with dummy password in <endpoint> with -format legacy-pkcs12 -file all.p12
     Then the exit status should be 0
@@ -85,6 +90,11 @@ Feature: PKCS#12 format output
     Examples:
       | endpoint  |
       | Cloud     |
+
+    @NGTS
+    Examples:
+      | endpoint  |
+      | NGTS      |
 
   Scenario Outline: where it outputs error when trying to pickup local-generated certificate and output it in PKCS#12 format
     When I enroll random certificate using <endpoint> with -no-prompt -no-pickup
@@ -106,6 +116,11 @@ Feature: PKCS#12 format output
       | endpoint  |
       | Cloud     |
 
+    @NGTS
+    Examples:
+      | endpoint  |
+      | NGTS      |
+
   Scenario Outline: where it outputs error when trying to enroll certificate in -csr file: mode and output it in PKCS#12 format
     Given I generate random CSR with -no-prompt -csr-file csr.pem -key-file k.pem
     When I enroll certificate using <endpoint> with -no-prompt -csr file:csr.pem -file all.p12 -format pkcs12
@@ -126,6 +141,11 @@ Feature: PKCS#12 format output
       | endpoint  |
       | Cloud     |
 
+    @NGTS
+    Examples:
+      | endpoint  |
+      | NGTS      |
+
   Scenario Outline: where it outputs error when trying to enroll certificate in -csr local (by default), -no-pickup and output it in PKCS#12 format
     When I enroll random certificate using <endpoint> with -no-prompt -file all.p12 -format pkcs12 -no-pickup
     And it should fail with "The --csr \"local\" option may not be used with the enroll or renew actions when --format is \"pkcs12\" and --no-pickup is specified"
@@ -145,6 +165,11 @@ Feature: PKCS#12 format output
       | endpoint  |
       | Cloud     |
 
+    @NGTS
+    Examples:
+      | endpoint  |
+      | NGTS      |
+
   Scenario Outline: where it outputs error when trying to enroll certificate in -csr local (specified), -no-pickup and output it in PKCS#12 format
     When I enroll random certificate using <endpoint> with -no-prompt -file all.p12 -format pkcs12 -no-pickup -csr local
     And it should fail with "The --csr \"local\" option may not be used with the enroll or renew actions when --format is \"pkcs12\" and --no-pickup is specified"
@@ -163,6 +188,11 @@ Feature: PKCS#12 format output
     Examples:
       | endpoint  |
       | Cloud     |
+
+    @NGTS
+    Examples:
+      | endpoint  |
+      | NGTS      |
 
   Scenario Outline: where it pickups up service-generated certificate and outputs it in PKCS#12 format
     When I enroll random certificate using <endpoint> with -no-prompt -no-pickup -csr service

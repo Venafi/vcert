@@ -17,7 +17,7 @@ ENDPOINTS = {
 
     "Cloud" => "-u '#{ENV['CLOUD_URL']}' -k '#{ENV['CLOUD_APIKEY']}'",
 
-    "NGTS" => "-u '#{ENV['NGTS_URL']}' -t '#{ENV['NGTS_ACCESS_TOKEN']}'",
+    "NGTS" => "-u '#{ENV['NGTS_URL']}' -t '#{ENV['NGTS_ACCESS_TOKEN']}' -p NGTS",
 
     "Firefly" => "-u '#{ENV['FIREFLY_URL']}' -t '#{ENV['IDP_ACCESS_TOKEN']}'"
 }
@@ -25,8 +25,6 @@ ENDPOINTS = {
 ENDPOINTS[PLATFORM_VAAS] = ENDPOINTS["Cloud"]
 
 ENDPOINTS[PLATFORM_VCP] = ENDPOINTS[PLATFORM_VAAS]
-
-ENDPOINTS[PLATFORM_NGTS] = ENDPOINTS["NGTS"]
 
 ZONE = {
     "test-mode" => "-z Default",
@@ -46,8 +44,6 @@ ZONE = {
 ZONE[PLATFORM_VAAS] = ZONE["Cloud"]
 
 ZONE[PLATFORM_VCP] = ZONE[PLATFORM_VAAS]
-
-ZONE[PLATFORM_NGTS] = ZONE["NGTS"]
 
 ENDPOINT_CONFIGS = {
     "test-mode" => "
@@ -71,7 +67,7 @@ ENDPOINT_CONFIGS = {
     ",
     "NGTS" => "
         url = #{ENV['NGTS_URL']}
-        access_token = #{ENV['NGTS_ACCESS_TOKEN']}
+        ngts_access_token = #{ENV['NGTS_ACCESS_TOKEN']}
         ngts_zone = #{ENV['NGTS_ZONE']}
     "
 }
@@ -94,6 +90,11 @@ ALL_ENDPOINTS_CONFIG = "
     url = #{ENV['CLOUD_URL']}
     cloud_apikey = #{ENV['CLOUD_APIKEY']}
     cloud_zone = #{ENV['CLOUD_ZONE']}
+
+    [ngts-profile]
+    url = #{ENV['NGTS_URL']}
+    ngts_access_token = #{ENV['NGTS_ACCESS_TOKEN']}
+    ngts_zone = #{ENV['NGTS_ZONE']}
 
     [mock-profile]
     test_mode = true
