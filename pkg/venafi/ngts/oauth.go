@@ -8,14 +8,14 @@ import (
 	"github.com/Venafi/vcert/v5/pkg/verror"
 )
 
-type TLSPCAccessTokenResponse struct {
+type AccessTokenResponse struct {
 	AccessToken string `json:"access_token"`
 	TokenType   string `json:"token_type"`
 	ExpiresIn   int64  `json:"expires_in"`
 	Scope       string `json:"scope,omitempty"`
 }
 
-func parseAccessTokenResponse(expectedStatusCode int, statusCode int, httpStatus string, body []byte) (*TLSPCAccessTokenResponse, error) {
+func parseAccessTokenResponse(expectedStatusCode int, statusCode int, httpStatus string, body []byte) (*AccessTokenResponse, error) {
 	if expectedStatusCode == statusCode {
 		return parseAccessTokenData(body)
 	}
@@ -36,8 +36,8 @@ func parseAccessTokenResponse(expectedStatusCode int, statusCode int, httpStatus
 	return nil, fmt.Errorf("%w: %v", verror.ServerError, respError)
 }
 
-func parseAccessTokenData(data []byte) (*TLSPCAccessTokenResponse, error) {
-	var response TLSPCAccessTokenResponse
+func parseAccessTokenData(data []byte) (*AccessTokenResponse, error) {
+	var response AccessTokenResponse
 	err := json.Unmarshal(data, &response)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", verror.ServerError, err)

@@ -166,7 +166,7 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) error {
 
 func (c *Connector) ReadPolicyConfiguration() (policy *endpoint.Policy, err error) {
 	if !c.isAuthenticated() {
-		return nil, fmt.Errorf("must be autheticated to request a certificate")
+		return nil, fmt.Errorf("must be authenticated to request a certificate")
 
 	}
 	config, err := c.ReadZoneConfiguration()
@@ -180,7 +180,7 @@ func (c *Connector) ReadPolicyConfiguration() (policy *endpoint.Policy, err erro
 // ReadZoneConfiguration reads the Zone information needed for generating and requesting a certificate from Palo Alto Networks Next-Gen Trust Security (NGTS)
 func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration, err error) {
 	if !c.isAuthenticated() {
-		return nil, fmt.Errorf("must be autheticated to request a certificate")
+		return nil, fmt.Errorf("must be authenticated to request a certificate")
 	}
 	template, err := c.getTemplateByID()
 	if err != nil {
@@ -193,7 +193,7 @@ func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration,
 // GetZonesByParent returns a list of valid zones for a Palo Alto Networks Next-Gen Trust Security (NGTS) application specified by parent
 func (c *Connector) GetZonesByParent(parent string) ([]string, error) {
 	if !c.isAuthenticated() {
-		return nil, fmt.Errorf("must be autheticated to request a certificate")
+		return nil, fmt.Errorf("must be authenticated to request a certificate")
 	}
 
 	zones := make([]string, 0)
@@ -217,7 +217,7 @@ func (c *Connector) ResetCertificate(_ *certificate.Request, _ bool) (err error)
 // RequestCertificate submits the CSR to the Palo Alto Networks Next-Gen Trust Security (NGTS) API for processing
 func (c *Connector) RequestCertificate(req *certificate.Request) (requestID string, err error) {
 	if !c.isAuthenticated() {
-		return "", fmt.Errorf("must be autheticated to request a certificate")
+		return "", fmt.Errorf("must be authenticated to request a certificate")
 	}
 
 	url := c.getURL(urlResourceCertificateRequests)
@@ -243,7 +243,7 @@ func (c *Connector) RequestCertificate(req *certificate.Request) (requestID stri
 // RetrieveCertificate retrieves the certificate for the specified ID
 func (c *Connector) RetrieveCertificate(req *certificate.Request) (*certificate.PEMCollection, error) {
 	if !c.isAuthenticated() {
-		return nil, fmt.Errorf("must be autheticated to retrieve a certificate")
+		return nil, fmt.Errorf("must be authenticated to retrieve a certificate")
 	}
 
 	if req.PickupID == "" && req.CertID == "" && req.Thumbprint != "" {
@@ -353,7 +353,7 @@ func (c *Connector) RetrieveCertificate(req *certificate.Request) (*certificate.
 // RenewCertificate attempts to renew the certificate
 func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requestID string, err error) {
 	if !c.isAuthenticated() {
-		return "", fmt.Errorf("must be autheticated to renew a certificate")
+		return "", fmt.Errorf("must be authenticated to renew a certificate")
 	}
 
 	// step 0.1 : confirming that the CertificateRequest was provided
@@ -484,7 +484,7 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 // RetireCertificate attempts to retire the certificate
 func (c *Connector) RetireCertificate(retireReq *certificate.RetireRequest) error {
 	if !c.isAuthenticated() {
-		return fmt.Errorf("must be autheticated to retire a certificate")
+		return fmt.Errorf("must be authenticated to retire a certificate")
 	}
 
 	url := c.getURL(urlResourceCertificatesRetirement)
@@ -630,7 +630,7 @@ func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (en
 
 func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certificate.ImportResponse, error) {
 	if !c.isAuthenticated() {
-		return nil, fmt.Errorf("must be autheticated to import a certificate")
+		return nil, fmt.Errorf("must be authenticated to import a certificate")
 	}
 
 	pBlock, _ := pem.Decode([]byte(req.CertificateData))
@@ -703,7 +703,7 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 
 func (c *Connector) ListCertificates(filter endpoint.Filter) ([]certificate.CertificateInfo, error) {
 	if !c.isAuthenticated() {
-		return nil, fmt.Errorf("must be autheticated to list certificates")
+		return nil, fmt.Errorf("must be authenticated to list certificates")
 	}
 
 	if c.zone.String() == "" {
@@ -749,7 +749,7 @@ func (c *Connector) SearchCertificates(_ *certificate.SearchRequest) (*certifica
 
 func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.Sans, certMinTimeLeft time.Duration) (certificateInfo *certificate.CertificateInfo, err error) {
 	if !c.isAuthenticated() {
-		return nil, fmt.Errorf("must be autheticated to search a certificate")
+		return nil, fmt.Errorf("must be authenticated to search a certificate")
 	}
 
 	// retrieve application name from zone
@@ -834,7 +834,7 @@ func (c *Connector) getCertIDFromPickupID(pickupId string, timeout time.Duration
 
 func (c *Connector) IsCSRServiceGenerated(req *certificate.Request) (bool, error) {
 	if !c.isAuthenticated() {
-		return false, fmt.Errorf("must be autheticated to determine if the CSR was generate by the service")
+		return false, fmt.Errorf("must be authenticated to determine if the CSR was generate by the service")
 	}
 
 	if req.PickupID == "" && req.CertID == "" && req.Thumbprint != "" {
@@ -942,7 +942,7 @@ func normalizeURL(url string) (normalizedURL string, err error) {
 	return normalizedURL, nil
 }
 
-func (c *Connector) GetAccessToken(auth *endpoint.Authentication) (*TLSPCAccessTokenResponse, error) {
+func (c *Connector) GetAccessToken(auth *endpoint.Authentication) (*AccessTokenResponse, error) {
 	if auth == nil {
 		return nil, fmt.Errorf("failed to authenticate: missing credentials")
 	}
@@ -1216,27 +1216,24 @@ func ConvertZipBytesToPem(dataByte []byte, rootFirst bool) (*certificate.PEMColl
 				log.Println(err)
 				continue
 			}
-			defer f.Close()
 			fileBytes, err := io.ReadAll(f)
 			if err != nil {
 				return nil, err
 			}
+			f.Close()
 
 			privateKey = strings.TrimSpace(string(fileBytes)) + "\n"
-
 		} else if strings.HasSuffix(zipFile.Name, "_root-first.pem") {
-
 			f, err := zipFile.Open()
-
 			if err != nil {
 				return nil, err
 			}
 
-			defer f.Close()
 			fileBytes, err := io.ReadAll(f)
 			if err != nil {
 				return nil, err
 			}
+			f.Close()
 
 			certs := strings.Split(strings.TrimSpace(string(fileBytes)), "\n\n")
 

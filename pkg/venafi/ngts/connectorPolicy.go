@@ -32,7 +32,7 @@ func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) 
 
 func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (string, error) {
 	if !c.isAuthenticated() {
-		return "", fmt.Errorf("must be autheticated to request a certificate")
+		return "", fmt.Errorf("must be authenticated to request a certificate")
 	}
 
 	err := policy.ValidateCloudPolicySpecification(ps)

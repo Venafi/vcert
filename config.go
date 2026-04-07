@@ -336,7 +336,7 @@ func validateSection(s *ini.Section) error {
 				return fmt.Errorf("configuration issue in section %s: The OAuth Resource Owner Password Flow and Device Flow grants are set but only one flow grant is accepted", s.Name())
 			}
 		}
-	} else if m.has(ngtsAccessToken) || m.has(ngtsScope) {
+	} else if m.has(ngtsAccessToken) || m.has(ngtsClientId) {
 		// looks like NGTS config section
 		for k := range m {
 			if !NGTSValidKeys.has(k) {

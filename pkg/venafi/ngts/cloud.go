@@ -329,7 +329,7 @@ func (c *Connector) getHTTPClient() *http.Client {
 func (c *Connector) request(method string, url string, data interface{}, authNotRequired ...bool) (statusCode int, statusText string, body []byte, err error) {
 	if (c.accessToken == "" && c.user == nil) || (c.user != nil && c.user.Company == nil) {
 		if !(len(authNotRequired) == 1 && authNotRequired[0]) {
-			err = fmt.Errorf("%w: must be autheticated to make requests to Palo Alto Networks Next-Gen Trust Security (NGTS) API", verror.VcertError)
+			err = fmt.Errorf("%w: must be authenticated to make requests to Palo Alto Networks Next-Gen Trust Security (NGTS) API", verror.VcertError)
 			return
 		}
 	}
