@@ -1004,6 +1004,8 @@ func (c *Connector) GetAccessToken(auth *endpoint.Authentication) (*AccessTokenR
 			oauthTokenType, oauthTokenType, accessTokenResponse.TokenType)
 	}
 
+	log.Println("Access token successfully issued.")
+
 	return accessTokenResponse, nil
 }
 
