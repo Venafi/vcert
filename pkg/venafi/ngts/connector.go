@@ -149,6 +149,7 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) error {
 		// If the consumer hasn't supplied an access token, then obtain a new access token
 		tokenResponse, err := c.GetAccessToken(auth)
 		if err != nil {
+			log.Println("Failed to authenticate:", err)
 			return err
 		}
 
@@ -944,24 +945,24 @@ func normalizeURL(url string) (normalizedURL string, err error) {
 
 func (c *Connector) GetAccessToken(auth *endpoint.Authentication) (*AccessTokenResponse, error) {
 	if auth == nil {
-		return nil, fmt.Errorf("failed to authenticate: missing credentials")
+		return nil, fmt.Errorf("failed to get access token: missing credentials")
 	}
 	if err := validateClientId(auth.ClientId); err != nil {
-		return nil, fmt.Errorf("failed to authenticate: %s", err)
+		return nil, fmt.Errorf("failed to get access token: %s", err)
 	}
 	if err := validateClientSecret(auth.ClientSecret); err != nil {
-		return nil, fmt.Errorf("failed to authenticate: %s", err)
+		return nil, fmt.Errorf("failed to get access token: %s", err)
 	}
 	if err := validateTokenUrl(auth.TokenURL); err != nil {
-		return nil, fmt.Errorf("failed to authenticate: %s", err)
+		return nil, fmt.Errorf("failed to get access token: %s", err)
 	}
 	if err := validateScope(auth.Scope); err != nil {
-		return nil, fmt.Errorf("failed to authenticate: %s", err)
+		return nil, fmt.Errorf("failed to get access token: %s", err)
 	}
 
 	url, err := getServiceAccountTokenURL(auth.TokenURL)
 	if err != nil {
-		return nil, fmt.Errorf("failed to authenticate: %w", err)
+		return nil, fmt.Errorf("failed to get access token: %w", err)
 	}
 
 	body := netUrl.Values{}
