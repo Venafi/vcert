@@ -63,6 +63,11 @@ func (cfg *Config) newClient(args []interface{}) (connector endpoint.Connector, 
 		}
 	}
 
+	// Warning if custom BaseUrl was provided
+	if cfg.BaseUrl != "" {
+		log.Printf("Warning: Custom URL was provided (%s). Please ensure you are communicating with a trusted instance and accessing resources of your own tenant.", cfg.BaseUrl)
+	}
+
 	switch cfg.ConnectorType {
 	case endpoint.ConnectorTypeCloud:
 		connector, err = cloud.NewConnector(cfg.BaseUrl, cfg.Zone, cfg.LogVerbose, connectionTrustBundle)
