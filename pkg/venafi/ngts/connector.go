@@ -29,13 +29,12 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
+	mathRand "math/rand"
 	"net/http"
 	netUrl "net/url"
 	"strings"
 	"time"
-
-	"github.com/go-http-utils/headers"
-	"golang.org/x/crypto/nacl/box"
 
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
@@ -46,6 +45,8 @@ import (
 	"github.com/Venafi/vcert/v5/pkg/webclient/caoperations"
 	"github.com/Venafi/vcert/v5/pkg/webclient/cloudproviders"
 	"github.com/Venafi/vcert/v5/pkg/webclient/notificationservice"
+	"github.com/go-http-utils/headers"
+	"golang.org/x/crypto/nacl/box"
 )
 
 type urlResource string
@@ -75,6 +76,11 @@ const (
 
 	defaultAppName = "Default"
 	oauthTokenType = "Bearer"
+
+	tokenBufferToExpiryWindow = time.Duration(2 * time.Minute)
+	maxRetries                = 3
+	initialBackoff            = 500 * time.Millisecond
+	maxBackoff                = 10 * time.Second
 )
 
 type condorChainOption string
@@ -99,6 +105,11 @@ type Connector struct {
 	caOperationsClient    *caoperations.CAOperationsClient
 	cloudProvidersClient  *cloudproviders.CloudProvidersClient
 	notificationSvcClient *notificationservice.NotificationServiceClient
+
+	// Token renewal fields
+	auth               *endpoint.Authentication // Store credentials for token renewal
+	cancelTokenRenewal context.CancelFunc       // Function to cancel the renewal goroutine
+	tokenRenewalCtx    context.Context          // Context for the renewal goroutine
 }
 
 // NewConnector creates a new Connector object used to communicate with Palo Alto Networks Next-Gen Trust Security (NGTS)
@@ -111,6 +122,7 @@ func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (
 	if err != nil {
 		return nil, err
 	}
+
 	return &c, nil
 }
 
@@ -142,6 +154,11 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) error {
 		return fmt.Errorf("failed to authenticate: missing credentials")
 	}
 
+	// Cancel any existing renewal goroutine
+	if c.cancelTokenRenewal != nil {
+		c.cancelTokenRenewal()
+	}
+
 	// If the consumer supplies an access token, then use that access token for authentication
 	if auth.AccessToken != "" {
 		c.accessToken = auth.AccessToken
@@ -156,6 +173,13 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) error {
 		c.accessToken = tokenResponse.AccessToken
 	}
 
+	// store the authentication details for automatic token renewal
+	c.auth = auth
+	ctx, cancel := context.WithCancel(context.Background())
+	c.tokenRenewalCtx = ctx
+	c.cancelTokenRenewal = cancel
+	go c.renewAccessTokenOnExpiration()
+
 	// Initialize clients
 	c.caAccountsClient = caaccounts.NewCAAccountsClient(c.getURL(urlGraphql), c.getGraphqlHTTPClient())
 	c.caOperationsClient = caoperations.NewCAOperationsClient(c.getURL(urlGraphql), c.getGraphqlHTTPClient())
@@ -163,6 +187,127 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) error {
 	c.notificationSvcClient = notificationservice.NewNotificationServiceClient(c.baseURL, c.accessToken, c.apiKey)
 
 	return nil
+}
+
+// calculateBackoffWithJitter computes exponential backoff with jitter
+// Formula: min(maxBackoff, initialBackoff * 2^attempt) with full jitter
+func calculateBackoffWithJitter(attempt int, initialBackoff, maxBackoff time.Duration) time.Duration {
+	// Calculate exponential backoff: initialBackoff * 2^attempt
+	multiplier := math.Pow(2, float64(attempt))
+	backoff := time.Duration(float64(initialBackoff) * multiplier)
+
+	// Cap at maxBackoff
+	if backoff > maxBackoff {
+		backoff = maxBackoff
+	}
+
+	// Apply full jitter: random value between 0 and backoff
+	// This prevents synchronized retries across multiple clients
+	jitteredBackoff := time.Duration(mathRand.Int63n(int64(backoff)))
+
+	return jitteredBackoff
+}
+
+// isRetriableStatusCode determines if an HTTP status code should trigger a retry
+// Retriable: 429 (Too Many Requests), 500, 502, 503, 504 (Server Errors)
+// Non-retriable: 400, 401, 403 (Client Errors - permanent failures)
+func isRetriableStatusCode(statusCode int) bool {
+	switch statusCode {
+	case 429, 500, 502, 503, 504:
+		return true
+	case 400, 401, 403:
+		return false
+	default:
+		// For unknown status codes, default to non-retriable to be safe
+		return false
+	}
+}
+
+// renewAccessTokenOnExpiration renews the access token when it enters the buffer-to-expiry window
+func (c *Connector) renewAccessTokenOnExpiration() {
+	for {
+		// Decode token to get expiration
+		tokenClaims, err := c.getTokenClaims()
+		if err != nil {
+			log.Printf("Failed to renew access token. Unable to decode token claims: %v", err)
+			return
+		}
+		// How much time until the token expires
+		tokenExpiryDuration := time.Unix(tokenClaims.Exp, 0).Sub(time.Now())
+		if tokenExpiryDuration <= tokenBufferToExpiryWindow {
+			log.Printf("Token expiration duration %v is less than the buffer-to-expiry window %v. Stopping renewal attempts.", tokenExpiryDuration, tokenBufferToExpiryWindow)
+			return
+		}
+
+		// How much time should we wait to attempt renewal
+		waitDuration := tokenExpiryDuration - tokenBufferToExpiryWindow
+
+		log.Printf("Token expires at %v, renewal scheduled at %v (in %v)",
+			// RFC3339 is YYYY-MM-DDTHH:MM:SS
+			time.Unix(tokenClaims.Exp, 0).Format(time.RFC3339),
+			time.Now().Add(waitDuration).Format(time.RFC3339),
+			waitDuration.Round(time.Second))
+
+		// Wait until renewal time or context cancellation
+		select {
+		case <-time.After(waitDuration):
+			log.Println("Renewing access token...")
+
+			// Attempt token renewal with exponential backoff and jitter
+			for attempt := 0; attempt <= maxRetries; attempt++ {
+				tokenResponse, err := c.GetAccessToken(c.auth)
+				if err == nil {
+					// Success - update token and break retry loop
+					c.accessToken = tokenResponse.AccessToken
+					log.Println("Access token renewed successfully")
+
+					// Update clients with new token
+					c.notificationSvcClient = notificationservice.NewNotificationServiceClient(c.baseURL, c.accessToken, c.apiKey)
+
+					break
+				}
+
+				// Check if the error is an OAuth error with a non-retriable status code
+				if oauthErr, ok := err.(*AccessTokenErrorResponse); ok {
+					if !isRetriableStatusCode(oauthErr.StatusCode) {
+						// Non-retriable error (e.g., 401, 403, 400) - stop immediately
+						log.Printf("Failed to renew access token with non-retriable error (status %d): %v. Stopping renewal attempts.",
+							oauthErr.StatusCode, err)
+						return
+					}
+				}
+
+				// Failed - check if we should retry
+				if attempt < maxRetries {
+					// Calculate exponential backoff with jitter
+					backoff := calculateBackoffWithJitter(attempt, initialBackoff, maxBackoff)
+					log.Printf("Failed to renew access token (attempt %d/%d): %v. Retrying in %v...",
+						attempt+1, maxRetries+1, err, backoff.Round(time.Millisecond))
+
+					// Wait for backoff period or context cancellation
+					select {
+					case <-time.After(backoff):
+						// Continue to next retry attempt
+						continue
+					case <-c.tokenRenewalCtx.Done():
+						if c.verbose {
+							log.Println("Context canceled during retry backoff. Stopping renewal attempts.")
+						}
+						return
+					}
+				} else {
+					// All retries exhausted
+					log.Printf("Failed to renew access token after %d attempts: %v. Stopping renewal attempts.", maxRetries+1, err)
+					return
+				}
+			}
+		case <-c.tokenRenewalCtx.Done():
+			if c.verbose {
+				log.Println("Context canceled while renewing access token. Stopping renewal attempts.")
+			}
+			return
+		}
+	}
 }
 
 func (c *Connector) ReadPolicyConfiguration() (policy *endpoint.Policy, err error) {
@@ -1020,6 +1165,33 @@ func (c *Connector) isAuthenticated() bool {
 	}
 
 	return false
+}
+
+// getTokenClaims decodes the base64URL encoded JWT access token and returns the payload as a map
+func (c *Connector) getTokenClaims() (*AccessTokenClaims, error) {
+	if c.accessToken == "" {
+		return nil, fmt.Errorf("access token is empty")
+	}
+
+	// JWT tokens have three parts: header.payload.signature
+	parts := strings.Split(c.accessToken, ".")
+	if len(parts) != 3 {
+		return nil, fmt.Errorf("invalid JWT token format: expected 3 parts, got %d", len(parts))
+	}
+
+	// Decode the payload (second part) using base64URL decoding
+	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode token payload: %w", err)
+	}
+
+	// Parse the JSON payload
+	var claims AccessTokenClaims
+	if err := json.Unmarshal(payload, &claims); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal token payload: %w", err)
+	}
+
+	return &claims, nil
 }
 
 func (c *Connector) getCloudRequest(req *certificate.Request) (*certificateRequest, error) {
