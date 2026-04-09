@@ -34,6 +34,14 @@ const (
 	platformUrlKey = "url"
 	trustBundleKey = "trust_bundle"
 
+	//NGTS keys
+	ngtsZoneKey      = "ngts_zone"
+	ngtsTokenUrl     = "ngts_token_url"
+	ngtsClientId     = "ngts_client_id"
+	ngtsClientSecret = "ngts_client_secret"
+	ngtsScope        = "ngts_scope"
+	ngtsAccessToken  = "ngts_access_token"
+
 	//Firefly keys
 	fireflyUrlKey          = "firefly_url"
 	fireflyTokenUrlKey     = "oauth_token_url"    // #nosec G101 // False positive
@@ -161,6 +169,17 @@ func LoadConfigFromFile(path, section string) (cfg Config, err error) {
 		idp.DeviceURL = m[fireflyDeviceUrlKey]
 
 		cfg.Zone = m[fireflyZoneKey]
+	} else if m.has(ngtsAccessToken) || m.has(ngtsClientId) {
+		connectorType = endpoint.ConnectorTypeNGTS
+		if m[platformUrlKey] != "" {
+			baseUrl = m[platformUrlKey]
+		}
+		auth.AccessToken = m[ngtsAccessToken]
+		auth.ClientId = m[ngtsClientId]
+		auth.ClientSecret = m[ngtsClientSecret]
+		auth.Scope = m[ngtsScope]
+		auth.TokenURL = m[ngtsTokenUrl]
+		cfg.Zone = m[ngtsZoneKey]
 	} else if m.has("test_mode") && m["test_mode"] == "true" {
 		connectorType = endpoint.ConnectorTypeFake
 	} else {
@@ -247,6 +266,16 @@ func validateSection(s *ini.Section) error {
 		trustBundleKey:         true,
 		fireflyZoneKey:         true,
 	}
+	var NGTSValidKeys set = map[string]bool{
+		platformUrlKey:   true,
+		ngtsClientId:     true,
+		ngtsClientSecret: true,
+		ngtsScope:        true,
+		ngtsTokenUrl:     true,
+		ngtsZoneKey:      true,
+		ngtsAccessToken:  true,
+		trustBundleKey:   true,
+	}
 
 	log.Printf("Validating configuration section %s", s.Name())
 	var m dict = s.KeysHash()
@@ -306,6 +335,18 @@ func validateSection(s *ini.Section) error {
 			if m.has(fireflyUserKey) && m.has(fireflyDeviceUrlKey) {
 				return fmt.Errorf("configuration issue in section %s: The OAuth Resource Owner Password Flow and Device Flow grants are set but only one flow grant is accepted", s.Name())
 			}
+		}
+	} else if m.has(ngtsAccessToken) || m.has(ngtsClientId) {
+		// looks like NGTS config section
+		for k := range m {
+			if !NGTSValidKeys.has(k) {
+				return fmt.Errorf("illegal key '%s' in NGTS section %s", k, s.Name())
+			}
+		}
+
+		hasNGTSCredentials := m.has(ngtsAccessToken) || (m.has(ngtsClientSecret) && m.has(ngtsScope) && m.has(ngtsTokenUrl))
+		if !hasNGTSCredentials {
+			return fmt.Errorf("configuration issue in section %s: missing NGTS credentials. Either access token or client credentials must be provided", s.Name())
 		}
 	} else if m.has("test_mode") {
 		// it's ok

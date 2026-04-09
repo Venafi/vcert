@@ -40,6 +40,11 @@ Feature: renew action with -csr local (default) option
       | endpoint  |
       | Cloud     |
 
+    @NGTS
+    Examples:
+      | endpoint  |
+      | NGTS      |
+
   Scenario Outline: renew certificate using -id using `-csr local`
     Given I enroll random certificate using <endpoint> with -no-prompt -key-file k.pem -cert-file c.pem -csr local
       And it should write private key to the file "k.pem"
@@ -64,6 +69,11 @@ Feature: renew action with -csr local (default) option
       | endpoint  |
       | Cloud     |
 
+    @NGTS
+    Examples:
+      | endpoint  |
+      | NGTS      |
+
   Scenario Outline: renew certificate using -id using `-csr local` with PKCS12 flag
     Given I enroll random certificate with dummy password using <endpoint> with -key-file k.pem -cert-file c.pem -csr local
       And it should write private key to the file "k.pem"
@@ -84,6 +94,11 @@ Feature: renew action with -csr local (default) option
       | endpoint  |
       | Cloud     |
 
+    @NGTS
+    Examples:
+      | endpoint  |
+      | NGTS      |
+
   Scenario Outline: renew certificate using -id using `-csr local` with PKCS12 legacy flag
     Given I enroll random certificate with dummy password using <endpoint> with -key-file k.pem -cert-file c.pem -csr local
       And it should write private key to the file "k.pem"
@@ -103,6 +118,11 @@ Feature: renew action with -csr local (default) option
     Examples:
       | endpoint  |
       | Cloud     |
+
+    @NGTS
+    Examples:
+      | endpoint  |
+      | NGTS      |
 
     Scenario: where renewed certificate may have new  -key-size, -san-dns
       Given I implement that later

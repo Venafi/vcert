@@ -27,9 +27,9 @@ var (
 	flagPlatform = &cli.StringFlag{
 		Name: "platform",
 		Usage: "Use to specify the platform VCert will use to execute the given command. Only accepted values are:\n" +
-			"\t\tFor getcred command: --platform [TPP | VCP | OIDC]\n" +
-			"\t\tFor enroll command: --platform [TPP | VCP | FIREFLY]\n" +
-			"\t\tFor provision command: --platform [ VCP ]",
+			"\t\tFor getcred command: --platform [TPP | VCP | NGTS | OIDC]\n" +
+			"\t\tFor enroll command: --platform [TPP | VCP | NGTS | FIREFLY]\n" +
+			"\t\tFor provision command: --platform [ VCP | NGTS ]",
 		Destination: &flags.platformString,
 		Aliases:     []string{"p"},
 	}
@@ -404,6 +404,7 @@ var (
 		Usage: "Use to specify INI configuration file containing connection details instead\n" +
 			"\t\tFor CyberArk Certificate Manager, Self-Hosted: url, access_token, tpp_zone\n" +
 			"\t\tFor CyberArk Certificate Manager, SaaS: cloud_apikey, cloud_zone\n" +
+			"\t\tFor Palo Alto Networks Next-Gen Trust Security (NGTS): ngts_access_token, ngts_zone\n" +
 			"\t\tCyberArk Certificate Manager, Self-Hosted & CyberArk Certificate Manager, SaaS: trust_bundle, test_mode",
 		Destination: &flags.config,
 		TakesFile:   true,
@@ -512,7 +513,6 @@ var (
 		Name:        "scope",
 		Usage:       "Use to request specific scopes and restrictions.",
 		Destination: &flags.scope,
-		Value:       "certificate:manage,revoke",
 	}
 
 	flagCredSsh = &cli.BoolFlag{

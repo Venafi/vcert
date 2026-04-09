@@ -221,6 +221,9 @@ func TestNewClient_UserAgent(t *testing.T) {
 			ConnectorType: endpoint.ConnectorTypeCloud,
 		},
 		{
+			ConnectorType: endpoint.ConnectorTypeNGTS,
+		},
+		{
 			ConnectorType: endpoint.ConnectorTypeTPP,
 			BaseUrl:       "https://tpp.example.local",
 		},
@@ -318,6 +321,18 @@ func TestNewClient_UserAgent(t *testing.T) {
 			},
 		},
 		{
+			test: endpoint.ConnectorTypeNGTS.String() + ":Authenticate",
+			name: "with-service-account",
+			args: []any{
+				&endpoint.Authentication{
+					Scope:        "tsg_id:0123456789",
+					ClientId:     "fake-client-id",
+					ClientSecret: "fake-client-secret",
+					TokenURL:     "https://fake.token.url.com/token",
+				},
+			},
+		},
+		{
 			test: endpoint.ConnectorTypeTPP.String() + ":Authenticate",
 			args: []any{
 				&endpoint.Authentication{
@@ -382,6 +397,9 @@ func TestNewClient_UserAgent(t *testing.T) {
 		endpoint.ConnectorTypeCloud.String() + ":Ping",
 		endpoint.ConnectorTypeCloud.String() + ":SynchronousRequestCertificate",
 
+		endpoint.ConnectorTypeNGTS.String() + ":Ping",
+		endpoint.ConnectorTypeNGTS.String() + ":SynchronousRequestCertificate",
+
 		endpoint.ConnectorTypeTPP.String() + ":SynchronousRequestCertificate",
 
 		endpoint.ConnectorTypeFirefly.String() + ":Ping",
@@ -430,18 +448,18 @@ func TestNewClient_UserAgent(t *testing.T) {
 								"NewClient with auth argument set to false should have no side effects "+
 									"and should always succeed.")
 
-							// The VaaS connector requires this because before even
+							// The VaaS and NGTS connectors require this because before even
 							// attempting to send requests to resource endpoints it
 							// checks the connector.accessToken attribute, and the
 							// only way to set that is to call Authenticate with an
 							// AccessToken credential.
-							if c.GetType() == endpoint.ConnectorTypeCloud {
+							if c.GetType() == endpoint.ConnectorTypeCloud || c.GetType() == endpoint.ConnectorTypeNGTS {
 								credentials := &endpoint.Authentication{
 									AccessToken: "fake-access-token",
 								}
 								err = c.Authenticate(credentials)
 								require.NoError(t, err,
-									"For the VaaS connector Authenticate with AccessToken simply sets an attribute; "+
+									"For the VaaS and NGTS connectors Authenticate with AccessToken simply sets an attribute; "+
 										"it does not trigger any HTTP requests, so there should never be an error.")
 							}
 

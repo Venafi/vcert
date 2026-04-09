@@ -37,12 +37,15 @@ const (
 	TPP
 	// Firefly represents the CyberArk Workload Identity Manager platform type
 	Firefly
+	// NGTS represents the Next-Gen Trust Security platform type
+	NGTS
 
 	// String representations of the Platform types
 	strPlatformFake    = "FAKE"
 	strPlatformFirefly = "FIREFLY"
 	strPlatformTPP     = "TPP"
 	strPlatformVCP     = "VCP"
+	strPlatformNGTS    = "NGTS"
 	strPlatformUnknown = "Unknown"
 
 	// alias for CyberArk Certificate Manager, Self-Hosted
@@ -70,6 +73,8 @@ func (p Platform) String() string {
 		return strPlatformTPP
 	case TLSPCloud:
 		return strPlatformVaaS
+	case NGTS:
+		return strPlatformNGTS
 	default:
 		return strPlatformUnknown
 	}
@@ -107,6 +112,8 @@ func GetPlatformType(platformString string) Platform {
 		return TPP
 	case strPlatformVCP, strPlatformVaaS, strPlatformTLSPC:
 		return TLSPCloud
+	case strPlatformNGTS:
+		return NGTS
 	default:
 		return Undefined
 	}

@@ -25,6 +25,7 @@ import (
 	"github.com/Venafi/vcert/v5/pkg/venafi/cloud"
 	"github.com/Venafi/vcert/v5/pkg/venafi/fake"
 	"github.com/Venafi/vcert/v5/pkg/venafi/firefly"
+	"github.com/Venafi/vcert/v5/pkg/venafi/ngts"
 	"github.com/Venafi/vcert/v5/pkg/venafi/tpp"
 	"github.com/Venafi/vcert/v5/pkg/verror"
 )
@@ -62,6 +63,11 @@ func (cfg *Config) newClient(args []interface{}) (connector endpoint.Connector, 
 		}
 	}
 
+	// Warning if custom BaseUrl was provided
+	if cfg.BaseUrl != "" {
+		log.Printf("Warning: Custom URL was provided (%s). Please ensure you are communicating with a trusted instance and accessing resources of your own tenant.", cfg.BaseUrl)
+	}
+
 	switch cfg.ConnectorType {
 	case endpoint.ConnectorTypeCloud:
 		connector, err = cloud.NewConnector(cfg.BaseUrl, cfg.Zone, cfg.LogVerbose, connectionTrustBundle)
@@ -71,6 +77,8 @@ func (cfg *Config) newClient(args []interface{}) (connector endpoint.Connector, 
 		connector, err = firefly.NewConnector(cfg.BaseUrl, cfg.Zone, cfg.LogVerbose, connectionTrustBundle)
 	case endpoint.ConnectorTypeFake:
 		connector = fake.NewConnector(cfg.LogVerbose, connectionTrustBundle)
+	case endpoint.ConnectorTypeNGTS:
+		connector, err = ngts.NewConnector(cfg.BaseUrl, cfg.Zone, cfg.LogVerbose, connectionTrustBundle)
 	default:
 		err = fmt.Errorf("%w: ConnectorType is not defined", verror.UserDataError)
 	}

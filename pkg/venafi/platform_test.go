@@ -41,6 +41,7 @@ func (s *PlatformSuite) SetupTest() {
 		{ct: Undefined, strValue: strPlatformUnknown},
 		{ct: TPP, strValue: strPlatformTPP},
 		{ct: TLSPCloud, strValue: strPlatformVaaS},
+		{ct: NGTS, strValue: strPlatformNGTS},
 		{ct: Firefly, strValue: strPlatformFirefly},
 	}
 

@@ -35,6 +35,11 @@ Feature: renew action with -csr file:csr.pem option
       | endpoint  |
       | Cloud     |
 
+    @NGTS
+    Examples:
+      | endpoint  |
+      | NGTS      |
+
   Scenario Outline: where different CSR is sent for renew
     Given I enroll random certificate using <endpoint> with -no-prompt -key-file k.pem -cert-file c.pem
     And it should retrieve certificate
@@ -60,3 +65,8 @@ Feature: renew action with -csr file:csr.pem option
     Examples:
       | endpoint  |
       | Cloud     |
+
+    @NGTS
+    Examples:
+      | endpoint  |
+      | NGTS      |

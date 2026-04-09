@@ -27,6 +27,10 @@ RUN_COMMAND="docker run -t --rm \
           -e FIREFLY_ZONE \
           -e FIREFLY_URL \
           -e FIREFLY_CA_BUNDLE \
+          -e NGTS_URL \
+          -e NGTS_ACCESS_TOKEN \
+          -e NGTS_ZONE \
+          -e NGTS_ZONE_EC \
           -e GCP_AUTH_PATH \
           -e GCP_PROJECT \
           -e GCP_REGION \

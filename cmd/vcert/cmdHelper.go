@@ -28,6 +28,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Venafi/vcert/v5/pkg/venafi/ngts"
 	"github.com/urfave/cli/v2"
 	"software.sslmate.com/src/go-pkcs12"
 
@@ -81,11 +82,20 @@ func runBeforeCommand(c *cli.Context) error {
 	}
 	for _, stringExtKeyUsage := range c.StringSlice("eku") {
 		eku, _ := certificate.ParseExtKeyUsage(stringExtKeyUsage)
-		flags.extKeyUsage.Add(eku)
+		err := flags.extKeyUsage.Add(eku)
+		if err != nil {
+			return err
+		}
 	}
 
 	if flags.platformString != "" {
 		flags.platform = venafi.GetPlatformType(flags.platformString)
+	}
+
+	// Default the scope flag to "certificate:manage,revoke"
+	// For every platform except NGTS
+	if flags.platform != venafi.NGTS && flags.scope == "" {
+		flags.scope = "certificate:manage,revoke"
 	}
 
 	if flags.platform == venafi.Firefly {
@@ -302,6 +312,34 @@ func getVaaSCredentials(vaasConnector *cloud.Connector, cfg *vcert.Config) error
 	}
 
 	return nil
+}
+
+func getNGTSCredentials(ngtsConnector *ngts.Connector, cfg *vcert.Config) error {
+	//TODO: quick workaround to suppress logs when output is in JSON.
+	if flags.credFormat != "json" {
+		logf("Getting credentials...")
+	}
+
+	// Request access token using a Palo Alto Networks Next-Gen Trust Security (NGTS) service account
+	if cfg.Credentials.TokenURL != "" && cfg.Credentials.ClientId != "" && cfg.Credentials.ClientSecret != "" && cfg.Credentials.Scope != "" {
+		tokenResponse, err := ngtsConnector.GetAccessToken(cfg.Credentials)
+		if err != nil {
+			return fmt.Errorf("failed to request access token from Palo Alto Networks Next-Gen Trust Security (NGTS): %w", err)
+		}
+
+		if flags.credFormat == "json" {
+			return outputJSON(tokenResponse)
+		}
+
+		validityPeriod := time.Duration(tokenResponse.ExpiresIn) * time.Second
+		expirationDate := time.Now().Add(validityPeriod)
+		t := expirationDate.UTC().Format(time.RFC3339)
+		fmt.Println("access_token: ", tokenResponse.AccessToken)
+		fmt.Println("expires_in: ", t)
+		return nil
+	}
+
+	return fmt.Errorf("failed to determine credentials set")
 }
 
 func getFireflyCredentials(fireflyConnector *firefly.Connector, cfg *vcert.Config) error {

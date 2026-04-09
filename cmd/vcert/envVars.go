@@ -16,6 +16,7 @@ const (
 	vcertClientID     = "VCERT_CLIENT_ID"
 	vcertClientSecret = "VCERT_CLIENT_SECRET" // #nosec G101
 	vcertDeviceURL    = "VCERT_DEVICE_URL"
+	vcertScope        = "VCERT_SCOPE"
 )
 
 type envVar struct {

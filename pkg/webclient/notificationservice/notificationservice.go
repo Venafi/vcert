@@ -7,7 +7,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"strings"
+	"path"
 	"time"
 
 	"github.com/go-http-utils/headers"
@@ -32,17 +32,12 @@ func NewNotificationServiceClient(baseURL string, accessToken string, apiKey str
 }
 
 func (ns *NotificationServiceClient) Subscribe(wsClientId string) (*websocket.Conn, error) {
-
-	_, host, found := strings.Cut(ns.baseURL, "https://")
-	if !found {
-		return nil, fmt.Errorf("failed to parse baseURL")
+	baseUrl, err := url.Parse(ns.baseURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse baseURL: %s", err.Error())
 	}
 
-	if strings.HasSuffix(host, "/") && len(host) > 0 {
-		host = host[:len(host)-1]
-	}
-
-	notificationsUrl := url.URL{Scheme: "wss", Host: host, Path: fmt.Sprintf("ws/notificationclients/%s", wsClientId)}
+	notificationsUrl := url.URL{Scheme: "wss", Host: baseUrl.Host, Path: path.Join(baseUrl.Path, "ws/notificationclients", wsClientId)}
 	httpHeader := http.Header{}
 	if ns.accessToken != "" {
 		httpHeader = http.Header{headers.Authorization: {fmt.Sprintf("%s %s", util.OauthTokenType, ns.accessToken)}}

@@ -46,6 +46,7 @@ var (
 		vcert enroll -k <CyberArk Certificate Manager, SaaS API key> -z "<app name>\<CIT alias>" --cn <common name>
 		vcert enroll -k <CyberArk Certificate Manager, SaaS API key> -z "<app name>\<CIT alias>" --cn <common name> --key-type rsa --key-size 4096 --san-dns <alt name> --san-dns <alt name2>
 		vcert enroll -p vcp -t <CyberArk Certificate Manager, SaaS access token> -z "<app name>\<CIT alias>" --cn <common name>
+		vcert enroll -p ngts -t <Palo Alto Networks Next-Gen Trust Security (NGTS) access token> -z "<app name>\<CIT alias>" --cn <common name>
 
 		vcert enroll -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> -z "<policy folder DN>" --cn <common name>
 		vcert enroll -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> -z "<policy folder DN>" --cn <common name> --key-size 4096 --san-dns <alt name> --san-dns <alt name2>
@@ -67,6 +68,8 @@ var (
 		 vcert pickup -k <CyberArk Certificate Manager, SaaS API key> [--pickup-id <ID value> | --pickup-id-file <file containing ID value>]
 		 vcert pickup -p vcp -t <CyberArk Certificate Manager, SaaS access token> [--pickup-id <ID value> | --pickup-id-file <file containing ID value>]
 
+		 vcert pickup -p ngts -t <Palo Alto Networks Next-Gen Trust Security (NGTS) access token> [--pickup-id <ID value> | --pickup-id-file <file containing ID value>]
+
 		 vcert pickup -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> --pickup-id <ID value>
 		 vcert pickup -p tpp -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> --pickup-id <ID value>`,
 	}
@@ -81,6 +84,8 @@ var (
 
 		 vcert revoke -k <CyberArk Certificate Manager, SaaS API key> --thumbprint <cert SHA1 thumbprint>
 		 vcert revoke -p vcp -t <CyberArk Certificate Manager, SaaS access token> --thumbprint <cert SHA1 thumbprint>
+
+		 vcert revoke -p ngts -t <Palo Alto Networks Next-Gen Trust Security (NGTS) access token> --thumbprint <cert SHA1 thumbprint>
 
 		 vcert revoke -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> --thumbprint <cert SHA1 thumbprint>
 		 vcert revoke -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> --id <ID value>
@@ -98,6 +103,8 @@ var (
 		vcert renew -k <CyberArk Certificate Manager, SaaS API key> --thumbprint <cert SHA1 fingerprint>
 		vcert renew -p vcp -t <CyberArk Certificate Manager, SaaS access token> --thumbprint <cert SHA1 fingerprint>
 
+		vcert renew -p ngts -t <Palo Alto Networks Next-Gen Trust Security (NGTS) access token> --thumbprint <cert SHA1 fingerprint>
+
         vcert renew -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> --id <ID value>`,
 	}
 
@@ -111,6 +118,8 @@ var (
 
 		 vcert retire -k <CyberArk Certificate Manager, SaaS API key> --thumbprint <cert SHA1 fingerprint>
 		 vcert retire -p vcp -t <CyberArk Certificate Manager, SaaS access token> --thumbprint <cert SHA1 fingerprint>
+
+		 vcert retire -p ngts -t <Palo Alto Networks Next-Gen Trust Security (NGTS) access token> --thumbprint <cert SHA1 fingerprint>
 
 		 vcert retire -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> --id <ID value>`,
 	}

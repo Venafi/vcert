@@ -200,6 +200,74 @@ func GetVAASpolicySpecificationEC() *policy.PolicySpecification {
 	return &specification
 }
 
+func GetNGTSpolicySpecificationEC() *policy.PolicySpecification {
+	caName := os.Getenv("NGTS_CA_NAME")
+	maxValidityDays := 90
+	wildcardAllowed := false
+	serviceGenerated := false
+	reuseAllowed := false
+	subjectAltNamesAllowed := true
+	upnAllowed := true
+
+	domain := ""
+	org := "Venafi Inc."
+	locality := "Salt Lake"
+	state := "Utah"
+	country := "US"
+
+	defaultKeyType := "ECDSA"
+	defaultKeyCurve := "P256"
+	keyTypeEC := certificate.KeyTypeECDSA
+	keyTypeECstring := keyTypeEC.String()
+
+	specification := policy.PolicySpecification{
+		Policy: &policy.Policy{
+			CertificateAuthority: &caName,
+			Domains:              []string{"vfidev.com"},
+			WildcardAllowed:      &wildcardAllowed,
+			MaxValidDays:         &maxValidityDays,
+			Subject: &policy.Subject{
+				Orgs:       []string{"Venafi Inc."},
+				OrgUnits:   []string{"Integrations", "Integration"},
+				Localities: []string{"Salt Lake"},
+				States:     []string{"Utah"},
+				Countries:  []string{"US"},
+			},
+			KeyPair: &policy.KeyPair{
+				KeyTypes:         []string{keyTypeECstring},
+				ServiceGenerated: &serviceGenerated,
+				ReuseAllowed:     &reuseAllowed,
+				EllipticCurves:   []string{"P256", "P384", "P521", "ED25519"},
+			},
+			SubjectAltNames: &policy.SubjectAltNames{
+				DnsAllowed:   &subjectAltNamesAllowed,
+				IpAllowed:    &subjectAltNamesAllowed,
+				EmailAllowed: &subjectAltNamesAllowed,
+				UriAllowed:   &subjectAltNamesAllowed,
+				UpnAllowed:   &upnAllowed,
+				UriProtocols: []string{"https", "ldaps", "spiffe"},
+			},
+		},
+		Default: &policy.Default{
+			Domain: &domain,
+			Subject: &policy.DefaultSubject{
+				Org:      &org,
+				OrgUnits: []string{"Integrations"},
+				Locality: &locality,
+				State:    &state,
+				Country:  &country,
+			},
+			KeyPair: &policy.DefaultKeyPair{
+				KeyType:          &defaultKeyType,
+				RsaKeySize:       nil,
+				EllipticCurve:    &defaultKeyCurve,
+				ServiceGenerated: nil,
+			},
+		},
+	}
+	return &specification
+}
+
 func GetTppPolicySpecification() *policy.PolicySpecification {
 
 	caName := os.Getenv("TPP_CA_NAME")

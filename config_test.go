@@ -73,6 +73,46 @@ cloud_apikey = xxxxxxxx-b256-4c43-a4d4-15372ce2d548
 tpp_user = admin
 cloud_zone = Default`
 
+const validNgtsConfig1 = `
+url = https://xyz.api.sase.paloaltonetworks.com/ngts
+ngts_token_url = https://xyz.test.appsvc.paloaltonetworks.com/auth/v1/test2/access_token
+ngts_scope = tsg_id:0123456789
+ngts_client_id = test_client_id
+ngts_client_secret = 1234d146-0ccc-11b2-001b-a111aa11a11a
+ngts_zone = test\vcert
+`
+
+const validNgtsConfig2 = `
+url = https://xyz.api.sase.paloaltonetworks.com/ngts
+ngts_access_token = test_access_token
+ngts_zone = test\vcert
+`
+
+// no token url
+const invalidNgtsConfig = `
+url = https://xyz.api.sase.paloaltonetworks.com/ngts
+ngts_scope = tsg_id:0123456789
+ngts_client_id = test_client_id
+ngts_client_secret = 1234d146-0ccc-11b2-001b-a111aa11a11a
+ngts_zone = test\vcert
+`
+
+// no access token and client id
+const invalidNgtsConfig2 = `
+url = https://xyz.api.sase.paloaltonetworks.com/ngts
+ngts_scope = tsg_id:0123456789
+ngts_client_secret = 1234d146-0ccc-11b2-001b-a111aa11a11a
+ngts_zone = test\vcert
+`
+
+// no access token and client secret
+const invalidNgtsConfig3 = `
+url = https://xyz.api.sase.paloaltonetworks.com/ngts
+ngts_scope = tsg_id:0123456789
+ngts_client_id = test_client_id
+ngts_zone = test\vcert
+`
+
 func TestLoadFromFile(t *testing.T) {
 	var cases = []struct {
 		valid   bool
@@ -90,6 +130,11 @@ func TestLoadFromFile(t *testing.T) {
 		{false, invalidTPPConfig2},
 		{false, invalidTPPConfig3},
 		{false, invalidCloudConfig},
+		{true, validNgtsConfig1},
+		{true, validNgtsConfig2},
+		{false, invalidNgtsConfig},
+		{false, invalidNgtsConfig2},
+		{false, invalidNgtsConfig3},
 	}
 	for _, test_case := range cases {
 		tmpfile, err := ioutil.TempFile("", "")

@@ -78,6 +78,8 @@ class PlaybookTask
 end
 
 def object_to_hash(obj)
+  return nil if obj.nil?
+
   if obj.is_a?(Array)
     obj.map { |item| object_to_hash(item) }
   elsif obj.is_a?(Hash)
@@ -190,6 +192,16 @@ def validate_vaas_envs
   vaas_envs.each do |vaas_env|
     unless env_variable_exists_and_set(vaas_env)
       fail(ArgumentError.new("ENV variable #{vaas_env} is not set"))
+    end
+  end
+end
+
+def validate_ngts_envs
+  ngts_envs = %w[NGTS_URL NGTS_ACCESS_TOKEN NGTS_ZONE]
+
+  ngts_envs.each do |ngts_env|
+    unless env_variable_exists_and_set(ngts_env)
+      fail(ArgumentError.new("ENV variable #{ngts_env} is not set"))
     end
   end
 end

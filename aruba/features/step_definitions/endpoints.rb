@@ -17,6 +17,8 @@ ENDPOINTS = {
 
     "Cloud" => "-u '#{ENV['CLOUD_URL']}' -k '#{ENV['CLOUD_APIKEY']}'",
 
+    "NGTS" => "-u '#{ENV['NGTS_URL']}' -t '#{ENV['NGTS_ACCESS_TOKEN']}' -p NGTS",
+
     "Firefly" => "-u '#{ENV['FIREFLY_URL']}' -t '#{ENV['IDP_ACCESS_TOKEN']}'"
 }
 
@@ -34,6 +36,8 @@ ZONE = {
     "TPPecdsa" => "-z '#{ENV['TPP_ZONE_ECDSA']}'", 
 
     "Cloud" => "-z '#{ENV['CLOUD_ZONE']}'",
+
+    "NGTS" => "-z '#{ENV['NGTS_ZONE']}'",
 
     "Firefly" => "-z '#{ENV['FIREFLY_ZONE']}'"
 }
@@ -60,6 +64,11 @@ ENDPOINT_CONFIGS = {
         url = #{ENV['CLOUD_URL']}
         cloud_apikey = #{ENV['CLOUD_APIKEY']}
         cloud_zone = #{ENV['CLOUD_ZONE']}
+    ",
+    "NGTS" => "
+        url = #{ENV['NGTS_URL']}
+        ngts_access_token = #{ENV['NGTS_ACCESS_TOKEN']}
+        ngts_zone = #{ENV['NGTS_ZONE']}
     "
 }
 
@@ -81,6 +90,11 @@ ALL_ENDPOINTS_CONFIG = "
     url = #{ENV['CLOUD_URL']}
     cloud_apikey = #{ENV['CLOUD_APIKEY']}
     cloud_zone = #{ENV['CLOUD_ZONE']}
+
+    [ngts-profile]
+    url = #{ENV['NGTS_URL']}
+    ngts_access_token = #{ENV['NGTS_ACCESS_TOKEN']}
+    ngts_zone = #{ENV['NGTS_ZONE']}
 
     [mock-profile]
     test_mode = true

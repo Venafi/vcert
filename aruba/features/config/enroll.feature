@@ -8,6 +8,7 @@ Feature: Enrolling certificates with -config option
     And I have file named "tpp-deprecated.ini" with TPPdeprecated connection details
     And I have file named "test.ini" with test-mode connection details
     And I have file named "cloud.ini" with Cloud connection details
+    And I have file named "ngts.ini" with NGTS connection details
 
   Scenario Outline: Where it enrolls a certificate using different endpoints
     When I try to run `vcert enroll -config <config-file> -cn cfg.venafi.example.com -no-prompt -insecure`
@@ -28,3 +29,8 @@ Feature: Enrolling certificates with -config option
     Examples:
       | config-file |
       | cloud.ini   |
+
+    @NGTS
+    Examples:
+      | config-file |
+      | ngts.ini   |

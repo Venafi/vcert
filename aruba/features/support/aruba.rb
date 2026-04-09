@@ -11,6 +11,7 @@ PLATFORM_TPP = "TPP"
 PLATFORM_VAAS = "VaaS" # places already use it as is
 PLATFORM_VCP = "VCP"
 PLATFORM_FIREFLY = "Firefly"
+PLATFORM_NGTS = "NGTS"
 
 PATH_SEPARATOR = "/"
 TEMP_PATH = "tmp/aruba"

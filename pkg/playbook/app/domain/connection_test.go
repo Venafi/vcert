@@ -231,6 +231,127 @@ func (s *ConnectionSuite) SetupTest() {
 			expectedValid: false,
 			expectedErr:   ErrNoCredentials,
 		},
+		{
+			name: "NGTS_valid_access_token",
+			c: Connection{
+				Platform: venafi.NGTS,
+				Credentials: Authentication{
+					Authentication: endpoint.Authentication{
+						AccessToken: "123abc###",
+					},
+				},
+			},
+			expectedCType: endpoint.ConnectorTypeNGTS,
+			expectedValid: true,
+		},
+		{
+			name: "NGTS_valid_client_credentials",
+			c: Connection{
+				Platform: venafi.NGTS,
+				Credentials: Authentication{
+					Authentication: endpoint.Authentication{
+						ClientId:     "123abc###",
+						ClientSecret: "123abc###",
+						TokenURL:     "123abc###",
+						Scope:        "tsg_id:0123456789",
+					},
+				},
+			},
+			expectedCType: endpoint.ConnectorTypeNGTS,
+			expectedValid: true,
+		},
+		{
+			name: "NGTS_invalid_missing_client_id",
+			c: Connection{
+				Platform: venafi.NGTS,
+				Credentials: Authentication{
+					Authentication: endpoint.Authentication{
+						ClientSecret: "123abc###",
+						TokenURL:     "123abc###",
+						Scope:        "tsg_id:0123456789",
+					},
+				},
+			},
+			expectedCType: endpoint.ConnectorTypeNGTS,
+			expectedValid: false,
+			expectedErr:   ErrNoNGTSClientId,
+		},
+		{
+			name: "NGTS_invalid_missing_client_secret",
+			c: Connection{
+				Platform: venafi.NGTS,
+				Credentials: Authentication{
+					Authentication: endpoint.Authentication{
+						ClientId: "123abc###",
+						TokenURL: "123abc###",
+						Scope:    "tsg_id:0123456789",
+					},
+				},
+			},
+			expectedCType: endpoint.ConnectorTypeNGTS,
+			expectedValid: false,
+			expectedErr:   ErrNoNGTSClientSecret,
+		},
+		{
+			name: "NGTS_invalid_missing_token_url",
+			c: Connection{
+				Platform: venafi.NGTS,
+				Credentials: Authentication{
+					Authentication: endpoint.Authentication{
+						ClientId:     "123abc###",
+						ClientSecret: "123abc###",
+						Scope:        "tsg_id:0123456789",
+					},
+				},
+			},
+			expectedCType: endpoint.ConnectorTypeNGTS,
+			expectedValid: false,
+			expectedErr:   ErrNoNGTSTokenURL,
+		},
+		{
+			name: "NGTS_invalid_missing_scope",
+			c: Connection{
+				Platform: venafi.NGTS,
+				Credentials: Authentication{
+					Authentication: endpoint.Authentication{
+						ClientId:     "123abc###",
+						ClientSecret: "123abc###",
+						TokenURL:     "123abc###",
+					},
+				},
+			},
+			expectedCType: endpoint.ConnectorTypeNGTS,
+			expectedValid: false,
+			expectedErr:   ErrNoNGTSScope,
+		},
+		{
+			name: "NGTS_invalid_too_much_credentials",
+			c: Connection{
+				Platform: venafi.NGTS,
+				Credentials: Authentication{
+					Authentication: endpoint.Authentication{
+						ClientId:     "123abc###",
+						ClientSecret: "123abc###",
+						TokenURL:     "123abc###",
+						Scope:        "tsg_id:0123456789",
+						AccessToken:  "123abc###",
+					},
+				},
+			},
+			expectedCType: endpoint.ConnectorTypeNGTS,
+			expectedValid: false,
+			expectedErr:   ErrAmbiguousNGTSCreds,
+		},
+		{
+			name: "NGTS_invalid_empty_credentials",
+			c: Connection{
+				Platform:    venafi.NGTS,
+				Credentials: Authentication{},
+			},
+			expectedCType: endpoint.ConnectorTypeNGTS,
+			expectedValid: false,
+			expectedErr:   ErrNoCredentials,
+		},
 		// UNKNOWN USE CASES
 		{
 			name: "Unknown_invalid",

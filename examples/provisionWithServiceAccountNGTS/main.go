@@ -1,0 +1,136 @@
+package main
+
+import (
+	"crypto/x509/pkix"
+	"log"
+	"os"
+
+	"github.com/Venafi/vcert/v5"
+	"github.com/Venafi/vcert/v5/pkg/certificate"
+	"github.com/Venafi/vcert/v5/pkg/domain"
+	"github.com/Venafi/vcert/v5/pkg/endpoint"
+)
+
+const (
+	ngtsURL          = "NGTS_URL"
+	ngtsZone         = "NGTS_ZONE"
+	ngtsTokenURL     = "NGTS_TOKEN_URL" // #nosec G101 // This is not a hardcoded credential
+	ngtsClientId     = "NGTS_CLIENT_ID"
+	ngtsClientSecret = "NGTS_CLIENT_SECRET" // #nosec G101 // This is not a hardcoded credential
+	ngtsScope        = "NGTS_SCOPE"
+	envVarNotSet     = "environment variable not set: %s"
+
+	name = "example-provisioning"
+)
+
+func main() {
+	url, found := os.LookupEnv(ngtsURL)
+	if !found {
+		log.Fatalf(envVarNotSet, ngtsURL)
+	}
+
+	zone, found := os.LookupEnv(ngtsZone)
+	if !found {
+		log.Fatalf(envVarNotSet, ngtsZone)
+	}
+
+	tokenURL, found := os.LookupEnv(ngtsTokenURL)
+	if !found {
+		log.Fatalf(envVarNotSet, ngtsTokenURL)
+	}
+
+	clientId, found := os.LookupEnv(ngtsClientId)
+	if !found {
+		log.Fatalf(envVarNotSet, ngtsClientId)
+	}
+
+	clientSecret, found := os.LookupEnv(ngtsClientSecret)
+	if !found {
+		log.Fatalf(envVarNotSet, ngtsClientSecret)
+	}
+
+	scope, found := os.LookupEnv(ngtsScope)
+	if !found {
+		log.Fatalf(envVarNotSet, ngtsScope)
+	}
+
+	config := &vcert.Config{
+		ConnectorType: endpoint.ConnectorTypeNGTS,
+		BaseUrl:       url,
+		Zone:          zone,
+		Credentials: &endpoint.Authentication{
+			ClientId:     clientId,
+			ClientSecret: clientSecret,
+			TokenURL:     tokenURL,
+			Scope:        scope,
+		},
+	}
+
+	connector, err := vcert.NewClient(config)
+	if err != nil {
+		log.Fatalf("error creating client: %s", err.Error())
+	}
+
+	request := &certificate.Request{
+		Subject: pkix.Name{
+			CommonName:         "common.name.venafi.example.com",
+			Organization:       []string{"Venafi.com"},
+			OrganizationalUnit: []string{"Integration Team"},
+			Locality:           []string{"Salt Lake"},
+			Province:           []string{"Salt Lake"},
+			Country:            []string{"US"},
+		},
+		DNSNames:  []string{"www.client.venafi.example.com", "ww1.client.venafi.example.com"},
+		CsrOrigin: certificate.ServiceGeneratedCSR,
+		KeyType:   certificate.KeyTypeRSA,
+		KeyLength: certificate.DefaultRSAlength,
+	}
+
+	err = connector.GenerateRequest(nil, request)
+	if err != nil {
+		log.Fatalf("could not generate certificate request: %s", err)
+	}
+
+	requestID, err := connector.RequestCertificate(request)
+	if err != nil {
+		log.Fatalf("could not submit certificate request: %s", err)
+	}
+	log.Printf("Successfully submitted certificate request. Will pickup certificate by ID %s", requestID)
+
+	keystoreName := "<insert Keystore Name here>"
+	keystoreId := "<insert Keystore ID here>"
+	providerName := "<insert Provider Name here>"
+	certName := "<insert cert name>" // e.g. test2-venafi-com
+	ARN := "<insert ARN here>"
+
+	optionsInput := domain.ProvisioningOptions{
+		ARN:                  ARN,
+		CloudCertificateName: certName,
+	}
+
+	req := &domain.ProvisioningRequest{
+		KeystoreName: &keystoreName,
+		ProviderName: &providerName,
+		KeystoreID:   &keystoreId,
+		PickupID:     &requestID,
+	}
+
+	certMetaData, err := connector.ProvisionCertificate(req, &optionsInput)
+	if err != nil {
+		log.Fatalf("error provisioning: %s", err.Error())
+	}
+
+	// Example to get values from other keystores machine identities metadata
+	if certMetaData.CloudKeystoreType == domain.CloudKeystoreTypeACM {
+		log.Printf("Certificate AWS Metadata ARN:\n%v", certMetaData.CertificateID)
+	}
+	if certMetaData.CloudKeystoreType == domain.CloudKeystoreTypeAKV {
+		log.Printf("Certificate Azure Metadata ID:\n%v", certMetaData.CertificateID)
+		log.Printf("Certificate Azure Metadata Name:\n%v", certMetaData.CertificateName)
+		log.Printf("Certificate Azure Metadata Version:\n%v", certMetaData.CertificateVersion)
+	}
+	if certMetaData.CloudKeystoreType == domain.CloudKeystoreTypeGCM {
+		log.Printf("Certificate GCP Metadata ID:\n%v", certMetaData.CertificateID)
+		log.Printf("Certificate GCP Metadata Name:\n%v", certMetaData.CertificateName)
+	}
+}

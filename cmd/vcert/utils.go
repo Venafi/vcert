@@ -587,7 +587,7 @@ func IsCSRServiceVaaSGenerated(commandName string) bool {
 		cfg, err := buildConfig(context, &flags)
 		if err == nil {
 			connector, err := vcert.NewClient(&cfg)
-			if err == nil && endpoint.ConnectorTypeCloud == connector.GetType() {
+			if err == nil && (endpoint.ConnectorTypeCloud == connector.GetType() || endpoint.ConnectorTypeNGTS == connector.GetType()) {
 				var req = &certificate.Request{
 					PickupID: flags.pickupID,
 				}

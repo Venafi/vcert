@@ -36,6 +36,11 @@ Feature: renew action by -thumbprint
       | endpoint  |
       | Cloud     |
 
+    @NGTS
+    Examples:
+      | endpoint  |
+      | NGTS      |
+
   Scenario Outline: TPP - renew by CertificateDN using -thumbprint file:cert.pem
     Given I enroll random certificate using <endpoint> with -no-prompt -key-file k.pem -cert-file c.pem
     And it should write private key to the file "k.pem"
@@ -58,3 +63,7 @@ Feature: renew action by -thumbprint
       | endpoint  |
       | Cloud     |
 
+    @NGTS
+    Examples:
+      | endpoint  |
+      | NGTS      |

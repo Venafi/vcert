@@ -2,7 +2,7 @@ Feature: -config option
 
   As a user I want to use -config option which allows storing endpoint connection details in INI file
 
-  (1) Config file may contain either TPP or Cloud or test-mode connection configuration
+  (1) Config file may contain either TPP, Cloud, NGTS or test-mode connection configuration
 
       TPP configuration example:
 
@@ -16,6 +16,12 @@ Feature: -config option
         cloud_url = https://api.venafi.example.com/v1
         cloud_apikey = xxxxxxxx-b256-4c43-a4d4-15372ce2d548
         cloud_zone = Default
+
+      NGTS configuration example:
+
+        ngts_url = https://dev.api.sase.paloaltonetworks.com/ngts
+        ngts_access_token = ns1dofUPmsdxTLQSyhM1gQ==
+        ngts_zone = TestApp\Default
 
       Test-mode configuration example:
 
