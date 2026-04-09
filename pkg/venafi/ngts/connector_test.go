@@ -23,12 +23,16 @@ import (
 	"crypto/sha1"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"fmt"
 	"math/big"
 	"net"
+	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"os"
 	"reflect"
@@ -94,6 +98,116 @@ func TestPing(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
+}
+
+// mockTokenServer creates a test HTTP server that returns JWT tokens with controlled expiry
+// and can simulate failures
+type mockTokenServer struct {
+	server         *httptest.Server
+	callCount      int
+	tokenExpiry    time.Duration // How long from "now" should token expire
+	currentToken   string
+	shouldFail     bool   // When true, returns HTTP errors
+	failCount      int    // Tracks how many times it has failed
+	failStatusCode int    // HTTP status code to return when failing (default: 500)
+	failErrorCode  string // OAuth error code to return when failing (default: "server_error")
+}
+
+func newMockTokenServer(tokenExpiry time.Duration) *mockTokenServer {
+	mts := &mockTokenServer{
+		tokenExpiry:    tokenExpiry,
+		shouldFail:     false,
+		failStatusCode: http.StatusInternalServerError,
+		failErrorCode:  "server_error",
+	}
+
+	// Create HTTP server
+	mts.server = httptest.NewServer(http.HandlerFunc(mts.handleTokenRequest))
+	return mts
+}
+
+// createMockJWT creates a JWT token with controlled expiry using only built-in functions
+func createMockJWT(expiryTime time.Time) (string, error) {
+	// JWT Header (algorithm and type)
+	header := map[string]any{
+		"alg": "RS256",
+		"typ": "JWT",
+	}
+	headerJSON, err := json.Marshal(header)
+	if err != nil {
+		return "", err
+	}
+	headerEncoded := base64.RawURLEncoding.EncodeToString(headerJSON)
+
+	// JWT Payload (claims)
+	now := time.Now()
+	payload := map[string]any{
+		"exp":   expiryTime.Unix(),
+		"iat":   now.Unix(),
+		"sub":   "test-subject",
+		"scope": "test-scope",
+	}
+	payloadJSON, err := json.Marshal(payload)
+	if err != nil {
+		return "", err
+	}
+	payloadEncoded := base64.RawURLEncoding.EncodeToString(payloadJSON)
+
+	// For testing, we don't need a real signature, just a dummy one
+	signature := "dummy-signature-for-testing"
+	signatureEncoded := base64.RawURLEncoding.EncodeToString([]byte(signature))
+
+	// Combine: header.payload.signature
+	token := fmt.Sprintf("%s.%s.%s", headerEncoded, payloadEncoded, signatureEncoded)
+	return token, nil
+}
+
+func (mts *mockTokenServer) handleTokenRequest(w http.ResponseWriter, _ *http.Request) {
+	mts.callCount++
+	var response any
+
+	// If configured to fail, return an error response
+	if mts.shouldFail {
+		w.WriteHeader(mts.failStatusCode)
+
+		// Generate appropriate error description based on status code
+		errorDesc := fmt.Sprintf("Error with status code %d during token generation", mts.failStatusCode)
+		if mts.failStatusCode == http.StatusUnauthorized {
+			errorDesc = "Client authentication failed"
+		} else if mts.failStatusCode == http.StatusForbidden {
+			errorDesc = "Client is not authorized to request tokens"
+		} else if mts.failStatusCode == http.StatusBadRequest {
+			errorDesc = "Invalid token request"
+		}
+
+		response = map[string]any{
+			"error":             mts.failErrorCode,
+			"error_description": errorDesc,
+		}
+
+		mts.failCount++
+	} else {
+		w.WriteHeader(http.StatusOK)
+		// Generate a JWT token with controlled expiry
+		now := time.Now()
+		expiryTime := now.Add(mts.tokenExpiry)
+		tokenString, err := createMockJWT(expiryTime)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("failed to create token: %v", err), http.StatusInternalServerError)
+			return
+		}
+		mts.currentToken = tokenString
+
+		response = AccessTokenResponse{
+			AccessToken: tokenString,
+			TokenType:   "Bearer",
+			ExpiresIn:   int64(mts.tokenExpiry.Seconds()),
+			Scope:       "tsc.certificate.read tsc.certificate.write",
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(response)
 }
 
 func TestAuthenticate(t *testing.T) {
@@ -193,6 +307,240 @@ func TestAuthenticate(t *testing.T) {
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "scope should be in the format")
 		assert.Empty(t, conn.accessToken)
+	})
+
+	t.Run("automatic token renewal", func(t *testing.T) {
+		// Create mock server that returns tokens expiring in 15 seconds + buffer window, so we can test renewal logic
+		// In 15 seconds, the token will enter the buffer window and trigger renewal
+		tokenLifetime := 15*time.Second + tokenBufferToExpiryWindow
+		mockServer := newMockTokenServer(tokenLifetime)
+		defer mockServer.server.Close()
+
+		// Create connector
+		conn, err := NewConnector("", "test-zone", true, nil)
+		require.NoError(t, err)
+
+		// Configure authentication to use mock server
+		auth := &endpoint.Authentication{
+			ClientId:     os.Getenv("NGTS_CLIENT_ID"),
+			ClientSecret: os.Getenv("NGTS_CLIENT_SECRET"),
+			TokenURL:     mockServer.server.URL,
+			Scope:        os.Getenv("NGTS_SCOPE"),
+		}
+		// Authenticate (this will start the renewal goroutine)
+		err = conn.Authenticate(auth)
+		require.NoError(t, err)
+		require.NotEmpty(t, conn.accessToken)
+		require.Equal(t, 1, mockServer.callCount, "should have called token endpoint once during authentication")
+
+		initialToken := conn.accessToken
+		initialTokenClaims, err := conn.getTokenClaims()
+		require.NoError(t, err)
+		require.Greater(t, initialTokenClaims.Exp, int64(0))
+		initialTokenExpiryTime := time.Unix(initialTokenClaims.Exp, 0)
+		timeUntilInitialTokenExpires := time.Until(initialTokenExpiryTime)
+		t.Logf("Token expires at: %v (in %v)", initialTokenExpiryTime.Format(time.RFC3339), timeUntilInitialTokenExpires.Round(time.Second))
+		t.Logf("Buffer window: %v", tokenBufferToExpiryWindow)
+
+		// Calculate when renewal should happen
+		renewalTime := timeUntilInitialTokenExpires - tokenBufferToExpiryWindow
+		t.Logf("Expected renewal in: %v", renewalTime.Round(time.Second))
+
+		// Wait for renewal to occur (add a small buffer to ensure the goroutine has time to execute)
+		waitTime := renewalTime + (5 * time.Second)
+		time.Sleep(waitTime)
+
+		// Verify token was renewed
+		currentToken := conn.accessToken
+		assert.NotEqual(t, initialToken, currentToken, "token should have been automatically renewed")
+		assert.Equal(t, 2, mockServer.callCount, "should have called token endpoint twice (initial + renewal)")
+		t.Logf("Token was successfully renewed")
+
+		// Verify new token has valid expiration
+		newTokenClaims, err := conn.getTokenClaims()
+		require.NoError(t, err)
+		newTokenExpiryTime := time.Unix(newTokenClaims.Exp, 0)
+		assert.True(t, newTokenExpiryTime.After(initialTokenExpiryTime),
+			"new token should have later expiration than original token")
+		t.Logf("New token expires at: %v (in %v)",
+			newTokenExpiryTime.Format(time.RFC3339), time.Until(newTokenExpiryTime).Round(time.Second))
+	})
+
+	t.Run("automatic token renewal with retriable errors", func(t *testing.T) {
+		testCases := []struct {
+			name       string
+			statusCode int
+			errorCode  string
+		}{
+			{
+				name:       "429 Too Many Requests",
+				statusCode: http.StatusTooManyRequests,
+				errorCode:  "rate_limit_exceeded",
+			},
+			{
+				name:       "500 Internal Server Error",
+				statusCode: http.StatusInternalServerError,
+				errorCode:  "server_error",
+			},
+			{
+				name:       "502 Bad Gateway",
+				statusCode: http.StatusBadGateway,
+				errorCode:  "bad_gateway",
+			},
+			{
+				name:       "503 Service Unavailable",
+				statusCode: http.StatusServiceUnavailable,
+				errorCode:  "service_unavailable",
+			},
+			{
+				name:       "504 Gateway Timeout",
+				statusCode: http.StatusGatewayTimeout,
+				errorCode:  "gateway_timeout",
+			},
+		}
+
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				// Create mock server that returns tokens expiring in 15 seconds + buffer window
+				tokenLifetime := 15*time.Second + tokenBufferToExpiryWindow
+				mockServer := newMockTokenServer(tokenLifetime)
+				defer mockServer.server.Close()
+
+				conn, err := NewConnector("", "test-zone", true, nil)
+				require.NoError(t, err)
+
+				// Configure authentication to use mock server
+				auth := &endpoint.Authentication{
+					ClientId:     os.Getenv("NGTS_CLIENT_ID"),
+					ClientSecret: os.Getenv("NGTS_CLIENT_SECRET"),
+					TokenURL:     mockServer.server.URL,
+					Scope:        os.Getenv("NGTS_SCOPE"),
+				}
+
+				// Authenticate (this will start the renewal goroutine)
+				err = conn.Authenticate(auth)
+				require.NoError(t, err)
+				require.NotEmpty(t, conn.accessToken)
+				require.Equal(t, 1, mockServer.callCount, "should have called token endpoint once during authentication")
+
+				initialToken := conn.accessToken
+				initialTokenClaims, err := conn.getTokenClaims()
+				require.NoError(t, err)
+				initialTokenExpiryTime := time.Unix(initialTokenClaims.Exp, 0)
+				timeUntilInitialTokenExpires := time.Until(initialTokenExpiryTime)
+				t.Logf("Token expires at: %v (in %v)", initialTokenExpiryTime.Format(time.RFC3339), timeUntilInitialTokenExpires.Round(time.Second))
+
+				// Calculate when renewal should happen
+				renewalTime := timeUntilInitialTokenExpires - tokenBufferToExpiryWindow
+				t.Logf("Expected renewal in: %v", renewalTime.Round(time.Second))
+
+				// Configure server to fail with retriable error
+				t.Logf("Configuring mock server to return %d %s...", tc.statusCode, tc.errorCode)
+				mockServer.shouldFail = true
+				mockServer.failStatusCode = tc.statusCode
+				mockServer.failErrorCode = tc.errorCode
+
+				// Wait for renewal attempts (should retry multiple times)
+				waitTime := renewalTime + (maxRetries * maxBackoff) + (5 * time.Second)
+				time.Sleep(waitTime)
+
+				// Verify that renewal was retried multiple times
+				// Mock server calls should be: 1 (initial auth) + 1 (initial attempt) + maxRetries (retry attempts)
+				expectedGetTokenCalls := 2 + maxRetries
+				assert.Equal(t, expectedGetTokenCalls, mockServer.callCount,
+					"should retry on retriable error %d, expected %d calls but got %d",
+					tc.statusCode, expectedGetTokenCalls, mockServer.callCount)
+
+				// Verify that the token was NOT renewed (should still be the original token)
+				currentToken := conn.accessToken
+				assert.Equal(t, initialToken, currentToken,
+					"token should remain unchanged when all renewal attempts fail")
+			})
+		}
+	})
+
+	t.Run("automatic token renewal with non-retriable errors", func(t *testing.T) {
+		testCases := []struct {
+			name       string
+			statusCode int
+			errorCode  string
+		}{
+			{
+				name:       "401 Unauthorized",
+				statusCode: http.StatusUnauthorized,
+				errorCode:  "invalid_client",
+			},
+			{
+				name:       "403 Forbidden",
+				statusCode: http.StatusForbidden,
+				errorCode:  "access_denied",
+			},
+			{
+				name:       "400 Bad Request",
+				statusCode: http.StatusBadRequest,
+				errorCode:  "invalid_request",
+			},
+		}
+
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				// Create mock server that returns tokens expiring in 15 seconds + buffer window
+				tokenLifetime := 15*time.Second + tokenBufferToExpiryWindow
+				mockServer := newMockTokenServer(tokenLifetime)
+				defer mockServer.server.Close()
+
+				conn, err := NewConnector("", "test-zone", true, nil)
+				require.NoError(t, err)
+
+				// Configure authentication to use mock server
+				auth := &endpoint.Authentication{
+					ClientId:     os.Getenv("NGTS_CLIENT_ID"),
+					ClientSecret: os.Getenv("NGTS_CLIENT_SECRET"),
+					TokenURL:     mockServer.server.URL,
+					Scope:        os.Getenv("NGTS_SCOPE"),
+				}
+
+				// Authenticate (this will start the renewal goroutine)
+				err = conn.Authenticate(auth)
+				require.NoError(t, err)
+				require.NotEmpty(t, conn.accessToken)
+				require.Equal(t, 1, mockServer.callCount, "should have called token endpoint once during authentication")
+
+				initialToken := conn.accessToken
+				initialTokenClaims, err := conn.getTokenClaims()
+				require.NoError(t, err)
+				initialTokenExpiryTime := time.Unix(initialTokenClaims.Exp, 0)
+				timeUntilInitialTokenExpires := time.Until(initialTokenExpiryTime)
+				t.Logf("Token expires at: %v (in %v)", initialTokenExpiryTime.Format(time.RFC3339), timeUntilInitialTokenExpires.Round(time.Second))
+
+				// Calculate when renewal should happen
+				renewalTime := timeUntilInitialTokenExpires - tokenBufferToExpiryWindow
+				t.Logf("Expected renewal in: %v", renewalTime.Round(time.Second))
+
+				// Configure server to fail with non-retriable error
+				t.Logf("Configuring mock server to return %d %s...", tc.statusCode, tc.errorCode)
+				mockServer.shouldFail = true
+				mockServer.failStatusCode = tc.statusCode
+				mockServer.failErrorCode = tc.errorCode
+
+				// Wait for renewal attempt (should fail immediately without retries)
+				// Just wait for the renewal time + a small buffer
+				waitTime := renewalTime + (2 * time.Second)
+				time.Sleep(waitTime)
+
+				// Verify that renewal was attempted ONLY ONCE (no retries on non-retriable errors)
+				// Mock server calls should be: 1 (initial auth) + 1 (failed renewal attempt)
+				expectedGetTokenCalls := 2
+				assert.Equal(t, expectedGetTokenCalls, mockServer.callCount,
+					"should NOT retry on non-retriable error %d, expected %d calls but got %d",
+					tc.statusCode, expectedGetTokenCalls, mockServer.callCount)
+
+				// Verify that the token was NOT renewed (should still be the original token)
+				currentToken := conn.accessToken
+				assert.Equal(t, initialToken, currentToken,
+					"token should remain unchanged when renewal fails with non-retriable error")
+			})
+		}
 	})
 }
 
@@ -2743,4 +3091,70 @@ func TestGetCloudRequest(t *testing.T) {
 		assert.NotNil(t, cloudReq)
 		assert.Equal(t, tags, cloudReq.Tags)
 	})
+}
+
+func TestCalculateBackoffWithJitter(t *testing.T) {
+	tests := []struct {
+		name           string
+		attempt        int
+		initialBackoff time.Duration
+		maxBackoff     time.Duration
+		wantMin        time.Duration
+		wantMax        time.Duration
+	}{
+		{
+			name:           "First attempt (2^0 = 1)",
+			attempt:        0,
+			initialBackoff: 500 * time.Millisecond,
+			maxBackoff:     10 * time.Second,
+			wantMin:        0,
+			wantMax:        500 * time.Millisecond, // 500ms * 1
+		},
+		{
+			name:           "Second attempt (2^1 = 2)",
+			attempt:        1,
+			initialBackoff: 500 * time.Millisecond,
+			maxBackoff:     10 * time.Second,
+			wantMin:        0,
+			wantMax:        1 * time.Second, // 500ms * 2
+		},
+		{
+			name:           "Third attempt (2^2 = 4)",
+			attempt:        2,
+			initialBackoff: 500 * time.Millisecond,
+			maxBackoff:     10 * time.Second,
+			wantMin:        0,
+			wantMax:        2 * time.Second, // 500ms * 4
+		},
+		{
+			name:           "Fourth attempt - capped at max (2^3 = 8, would be 4s)",
+			attempt:        3,
+			initialBackoff: 500 * time.Millisecond,
+			maxBackoff:     10 * time.Second,
+			wantMin:        0,
+			wantMax:        4 * time.Second, // 500ms * 8
+		},
+		{
+			name:           "Large attempt - should cap at maxBackoff",
+			attempt:        10,
+			initialBackoff: 500 * time.Millisecond,
+			maxBackoff:     10 * time.Second,
+			wantMin:        0,
+			wantMax:        10 * time.Second, // capped at 10s
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Run multiple times to verify jitter randomization
+			for i := 0; i < 100; i++ {
+				got := calculateBackoffWithJitter(tt.attempt, tt.initialBackoff, tt.maxBackoff)
+
+				if got < tt.wantMin || got > tt.wantMax {
+					t.Errorf("calculateBackoffWithJitter() = %v, want between %v and %v",
+						got, tt.wantMin, tt.wantMax)
+				}
+			}
+		})
+	}
 }
