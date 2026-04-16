@@ -1,4 +1,4 @@
-FROM golang:latest
+FROM golang:1.25.6
 
 ENV SONAR_SCANNER_VERSION="4.6.2.2472"
 
@@ -12,8 +12,8 @@ RUN rm sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux.zip
 RUN mv ./sonar-scanner-${SONAR_SCANNER_VERSION}-linux ./sonar-scanner
 ENV PATH="/root/sonar-scanner/bin:${PATH}"
 
-COPY . /go/src/github.com/Venafi/vcert/v4
+COPY . /go/src/github.com/Venafi/vcert/v5
 
-WORKDIR /go/src/github.com/Venafi/vcert/v4
+WORKDIR /go/src/github.com/Venafi/vcert/v5
 
 CMD ["/bin/bash" ]
