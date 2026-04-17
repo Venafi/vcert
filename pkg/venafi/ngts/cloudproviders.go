@@ -101,18 +101,20 @@ func (c *Connector) ProvisionCertificate(req *domain.ProvisioningRequest, option
 	}
 
 	wsClientID := uuid.New().String()
-	wsConn, err := c.notificationSvcClient.Subscribe(wsClientID)
+	notificationSvcClient := c.getNotificationSvcClient()
+	wsConn, err := notificationSvcClient.Subscribe(wsClientID)
 	if err != nil {
 		return nil, err
 	}
 
 	log.Printf("Provisioning Certificate ID %s for Keystore %s", certificateIDString, cloudKeystore.ID)
-	_, err = c.cloudProvidersClient.ProvisionCertificate(context.Background(), certificateIDString, cloudKeystore.ID, wsClientID, provisioningOptions)
+	cloudProvidersClient := c.getCloudProvidersClient()
+	_, err = cloudProvidersClient.ProvisionCertificate(context.Background(), certificateIDString, cloudKeystore.ID, wsClientID, provisioningOptions)
 	if err != nil {
 		return nil, err
 	}
 
-	workflowResponse, err := c.notificationSvcClient.ReadResponse(wsConn)
+	workflowResponse, err := notificationSvcClient.ReadResponse(wsConn)
 	if err != nil {
 		return nil, err
 	}
@@ -171,18 +173,20 @@ func (c *Connector) ProvisionCertificateToMachineIdentity(req domain.Provisionin
 	ctx := context.Background()
 	wsClientID := uuid.New().String()
 
-	wsConn, err := c.notificationSvcClient.Subscribe(wsClientID)
+	notificationSvcClient := c.getNotificationSvcClient()
+	wsConn, err := notificationSvcClient.Subscribe(wsClientID)
 	if err != nil {
 		return nil, err
 	}
 
 	log.Printf("Provisioning Certificate with ID %s to Machine Identity with ID %s", certificateID, machineIdentityID)
-	_, err = c.cloudProvidersClient.ProvisionCertificateToMachineIdentity(ctx, &certificateID, machineIdentityID, wsClientID)
+	cloudProvidersClient := c.getCloudProvidersClient()
+	_, err = cloudProvidersClient.ProvisionCertificateToMachineIdentity(ctx, &certificateID, machineIdentityID, wsClientID)
 	if err != nil {
 		return nil, err
 	}
 
-	ar, err := c.notificationSvcClient.ReadResponse(wsConn)
+	ar, err := notificationSvcClient.ReadResponse(wsConn)
 	if err != nil {
 		return nil, err
 	}
@@ -190,7 +194,7 @@ func (c *Connector) ProvisionCertificateToMachineIdentity(req domain.Provisionin
 	var keystoreType domain.CloudKeystoreType
 	if req.Keystore == nil {
 		log.Printf("fetching machine identity to get type")
-		machineIdentity, err := c.cloudProvidersClient.GetMachineIdentity(ctx, domain.GetCloudMachineIdentityRequest{
+		machineIdentity, err := cloudProvidersClient.GetMachineIdentity(ctx, domain.GetCloudMachineIdentityRequest{
 			MachineIdentityID: req.MachineIdentityID,
 		})
 		if err != nil {
@@ -215,7 +219,8 @@ func (c *Connector) ProvisionCertificateToMachineIdentity(req domain.Provisionin
 }
 
 func (c *Connector) GetCloudProvider(request domain.GetCloudProviderRequest) (*domain.CloudProvider, error) {
-	cloudProvider, err := c.cloudProvidersClient.GetCloudProvider(context.Background(), request)
+	cloudProvidersClient := c.getCloudProvidersClient()
+	cloudProvider, err := cloudProvidersClient.GetCloudProvider(context.Background(), request)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve Cloud Provider with name %s: %w", request.Name, err)
 	}
@@ -226,7 +231,8 @@ func (c *Connector) GetCloudProvider(request domain.GetCloudProviderRequest) (*d
 }
 
 func (c *Connector) GetCloudKeystore(request domain.GetCloudKeystoreRequest) (*domain.CloudKeystore, error) {
-	cloudKeystore, err := c.cloudProvidersClient.GetCloudKeystore(context.Background(), request)
+	cloudProvidersClient := c.getCloudProvidersClient()
+	cloudKeystore, err := cloudProvidersClient.GetCloudKeystore(context.Background(), request)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve Cloud Keystore: %w", err)
 	}
@@ -242,7 +248,8 @@ func (c *Connector) GetMachineIdentity(request domain.GetCloudMachineIdentityReq
 		return nil, fmt.Errorf("machine identity ID cannot be empty")
 	}
 
-	machineIdentity, err := c.cloudProvidersClient.GetMachineIdentity(context.Background(), request)
+	cloudProvidersClient := c.getCloudProvidersClient()
+	machineIdentity, err := cloudProvidersClient.GetMachineIdentity(context.Background(), request)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve Cloud Machine Identity with ID %s: %w", *request.MachineIdentityID, err)
 	}
@@ -256,7 +263,8 @@ func (c *Connector) DeleteMachineIdentity(machineIdentityID string) (bool, error
 	if machineIdentityID == "" {
 		return false, fmt.Errorf("machine identity ID cannot be nil")
 	}
-	deleted, err := c.cloudProvidersClient.DeleteMachineIdentity(context.Background(), machineIdentityID)
+	cloudProvidersClient := c.getCloudProvidersClient()
+	deleted, err := cloudProvidersClient.DeleteMachineIdentity(context.Background(), machineIdentityID)
 	if err != nil {
 		return false, fmt.Errorf("failed to delete machine identity with ID %s: %w", machineIdentityID, err)
 	}
@@ -344,12 +352,23 @@ func (c *Connector) getGraphqlClient() graphql.Client {
 }
 
 func (c *Connector) getGraphqlHTTPClient() *http.Client {
+	// Read accessToken under lock to avoid data race with renewal goroutine
+	c.mu.RLock()
+	accessToken := c.accessToken
+	c.mu.RUnlock()
+
+	return c.createGraphqlHTTPClient(accessToken)
+}
+
+// createGraphqlHTTPClient creates an HTTP client with the given access token.
+// This is a helper that doesn't acquire the lock, used when caller already has the token.
+func (c *Connector) createGraphqlHTTPClient(accessToken string) *http.Client {
 	// We provide every type of auth here.
 	// The logic to decide which auth to use is inside struct's function: RoundTrip
 	httpclient := &http.Client{
 		Transport: &httputils.AuthedTransportApi{
 			ApiKey:      c.apiKey,
-			AccessToken: c.accessToken,
+			AccessToken: accessToken,
 			Wrapped:     http.DefaultTransport,
 			UserAgent:   util.DefaultUserAgent,
 		},

@@ -327,7 +327,12 @@ func (c *Connector) getHTTPClient() *http.Client {
 }
 
 func (c *Connector) request(method string, url string, data interface{}, authNotRequired ...bool) (statusCode int, statusText string, body []byte, err error) {
-	if (c.accessToken == "" && c.user == nil) || (c.user != nil && c.user.Company == nil) {
+	// Read accessToken under lock to avoid data race with renewal goroutine
+	c.mu.RLock()
+	accessToken := c.accessToken
+	c.mu.RUnlock()
+
+	if (accessToken == "" && c.user == nil) || (c.user != nil && c.user.Company == nil) {
 		if !(len(authNotRequired) == 1 && authNotRequired[0]) {
 			err = fmt.Errorf("%w: must be authenticated to make requests to Palo Alto Networks Next-Gen Trust Security (NGTS) API", verror.VcertError)
 			return
@@ -348,8 +353,8 @@ func (c *Connector) request(method string, url string, data interface{}, authNot
 	}
 
 	r.Header.Set(headers.UserAgent, c.userAgent)
-	if c.accessToken != "" {
-		r.Header.Add(headers.Authorization, fmt.Sprintf("%s %s", util.OauthTokenType, c.accessToken))
+	if accessToken != "" {
+		r.Header.Add(headers.Authorization, fmt.Sprintf("%s %s", util.OauthTokenType, accessToken))
 	} else if c.apiKey != "" {
 		r.Header.Add(util.HeaderTpplApikey, c.apiKey)
 	}
