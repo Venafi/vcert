@@ -34,6 +34,7 @@ import (
 	"net/http"
 	netUrl "net/url"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Venafi/vcert/v5/pkg/certificate"
@@ -92,24 +93,26 @@ const (
 
 // Connector contains the base data needed to communicate with the Palo Alto Networks Next-Gen Trust Security (NGTS) servers
 type Connector struct {
-	baseURL               string
-	apiKey                string
+	baseURL   string
+	apiKey    string
+	verbose   bool
+	user      *userDetails
+	trust     *x509.CertPool
+	zone      cloudZone
+	client    *http.Client
+	userAgent string
+
+	// mu protects all fields below - they are accessed from multiple goroutines
+	// (background renewal goroutine and API method calls from consumer goroutines)
+	mu                    sync.RWMutex
 	accessToken           string
-	verbose               bool
-	user                  *userDetails
-	trust                 *x509.CertPool
-	zone                  cloudZone
-	client                *http.Client
-	userAgent             string
 	caAccountsClient      *caaccounts.CAAccountsClient
 	caOperationsClient    *caoperations.CAOperationsClient
 	cloudProvidersClient  *cloudproviders.CloudProvidersClient
 	notificationSvcClient *notificationservice.NotificationServiceClient
-
-	// Token renewal fields
-	auth               *endpoint.Authentication // Store credentials for token renewal
-	cancelTokenRenewal context.CancelFunc       // Function to cancel the renewal goroutine
-	tokenRenewalCtx    context.Context          // Context for the renewal goroutine
+	auth                  *endpoint.Authentication // Store credentials for token renewal
+	cancelTokenRenewal    context.CancelFunc       // Function to cancel the renewal goroutine
+	tokenRenewalCtx       context.Context          // Context for the renewal goroutine
 }
 
 // NewConnector creates a new Connector object used to communicate with Palo Alto Networks Next-Gen Trust Security (NGTS)
@@ -154,14 +157,10 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) error {
 		return fmt.Errorf("failed to authenticate: missing credentials")
 	}
 
-	// Cancel any existing renewal goroutine
-	if c.cancelTokenRenewal != nil {
-		c.cancelTokenRenewal()
-	}
-
-	// If the consumer supplies an access token, then use that access token for authentication
+	// Get token without holding lock
+	var accessToken string
 	if auth.AccessToken != "" {
-		c.accessToken = auth.AccessToken
+		accessToken = auth.AccessToken
 	} else {
 		// If the consumer hasn't supplied an access token, then obtain a new access token
 		tokenResponse, err := c.GetAccessToken(auth)
@@ -169,22 +168,40 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) error {
 			log.Println("Failed to authenticate:", err)
 			return err
 		}
-
-		c.accessToken = tokenResponse.AccessToken
+		accessToken = tokenResponse.AccessToken
 	}
 
-	// store the authentication details for automatic token renewal
+	// Create new clients before acquiring lock
+	graphqlURL := c.getURL(urlGraphql)
+	newCAAccountsClient := caaccounts.NewCAAccountsClient(graphqlURL, c.createGraphqlHTTPClient(accessToken))
+	newCAOperationsClient := caoperations.NewCAOperationsClient(graphqlURL, c.createGraphqlHTTPClient(accessToken))
+	newCloudProvidersClient := cloudproviders.NewCloudProvidersClient(graphqlURL, c.createGraphqlHTTPClient(accessToken))
+	newNotificationSvcClient := notificationservice.NewNotificationServiceClient(c.baseURL, accessToken, c.apiKey)
+
+	// Now update all state atomically under the lock
+	c.mu.Lock()
+
+	// Cancel any existing renewal goroutine
+	if c.cancelTokenRenewal != nil {
+		c.cancelTokenRenewal()
+		c.cancelTokenRenewal = nil
+	}
+
+	c.accessToken = accessToken
 	c.auth = auth
+	c.caAccountsClient = newCAAccountsClient
+	c.caOperationsClient = newCAOperationsClient
+	c.cloudProvidersClient = newCloudProvidersClient
+	c.notificationSvcClient = newNotificationSvcClient
+
 	ctx, cancel := context.WithCancel(context.Background())
 	c.tokenRenewalCtx = ctx
 	c.cancelTokenRenewal = cancel
-	go c.renewAccessTokenOnExpiration()
 
-	// Initialize clients
-	c.caAccountsClient = caaccounts.NewCAAccountsClient(c.getURL(urlGraphql), c.getGraphqlHTTPClient())
-	c.caOperationsClient = caoperations.NewCAOperationsClient(c.getURL(urlGraphql), c.getGraphqlHTTPClient())
-	c.cloudProvidersClient = cloudproviders.NewCloudProvidersClient(c.getURL(urlGraphql), c.getGraphqlHTTPClient())
-	c.notificationSvcClient = notificationservice.NewNotificationServiceClient(c.baseURL, c.accessToken, c.apiKey)
+	c.mu.Unlock()
+
+	// Spawn renewal goroutine
+	go c.renewAccessTokenOnExpiration()
 
 	return nil
 }
@@ -225,6 +242,12 @@ func isRetriableStatusCode(statusCode int) bool {
 
 // renewAccessTokenOnExpiration renews the access token when it enters the buffer-to-expiry window
 func (c *Connector) renewAccessTokenOnExpiration() {
+	// Copy context once at the start - it's set per goroutine and won't change
+	// Reading c.tokenRenewalCtx in the select below without this would be a race
+	c.mu.RLock()
+	ctx := c.tokenRenewalCtx
+	c.mu.RUnlock()
+
 	for {
 		// Decode token to get expiration
 		tokenClaims, err := c.getTokenClaims()
@@ -253,20 +276,33 @@ func (c *Connector) renewAccessTokenOnExpiration() {
 		case <-time.After(waitDuration):
 			log.Println("Renewing access token...")
 
+			// Get auth credentials under lock
+			c.mu.RLock()
+			auth := c.auth
+			c.mu.RUnlock()
+
 			// Attempt token renewal with exponential backoff and jitter
 			for attempt := 0; attempt <= maxRetries; attempt++ {
-				tokenResponse, err := c.GetAccessToken(c.auth)
+				tokenResponse, err := c.GetAccessToken(auth)
 				if err == nil {
-					// Success - update token and break retry loop
+					// Create new clients before acquiring lock
+					graphqlURL := c.getURL(urlGraphql)
+					graphqlHttpClient := c.createGraphqlHTTPClient(tokenResponse.AccessToken)
+					newCAAccountsClient := caaccounts.NewCAAccountsClient(graphqlURL, graphqlHttpClient)
+					newCAOperationsClient := caoperations.NewCAOperationsClient(graphqlURL, graphqlHttpClient)
+					newCloudProvidersClient := cloudproviders.NewCloudProvidersClient(graphqlURL, graphqlHttpClient)
+					newNotificationSvcClient := notificationservice.NewNotificationServiceClient(c.baseURL, tokenResponse.AccessToken, c.apiKey)
+
+					// Success - update token and clients atomically under lock
+					c.mu.Lock()
 					c.accessToken = tokenResponse.AccessToken
+					c.caAccountsClient = newCAAccountsClient
+					c.caOperationsClient = newCAOperationsClient
+					c.cloudProvidersClient = newCloudProvidersClient
+					c.notificationSvcClient = newNotificationSvcClient
+					c.mu.Unlock()
+
 					log.Println("Access token renewed successfully")
-
-					// Update clients with new token
-					c.caAccountsClient = caaccounts.NewCAAccountsClient(c.getURL(urlGraphql), c.getGraphqlHTTPClient())
-					c.caOperationsClient = caoperations.NewCAOperationsClient(c.getURL(urlGraphql), c.getGraphqlHTTPClient())
-					c.cloudProvidersClient = cloudproviders.NewCloudProvidersClient(c.getURL(urlGraphql), c.getGraphqlHTTPClient())
-					c.notificationSvcClient = notificationservice.NewNotificationServiceClient(c.baseURL, c.accessToken, c.apiKey)
-
 					break
 				}
 
@@ -292,7 +328,7 @@ func (c *Connector) renewAccessTokenOnExpiration() {
 					case <-time.After(backoff):
 						// Continue to next retry attempt
 						continue
-					case <-c.tokenRenewalCtx.Done():
+					case <-ctx.Done():
 						if c.verbose {
 							log.Println("Context canceled during retry backoff. Stopping renewal attempts.")
 						}
@@ -304,7 +340,7 @@ func (c *Connector) renewAccessTokenOnExpiration() {
 					return
 				}
 			}
-		case <-c.tokenRenewalCtx.Done():
+		case <-ctx.Done():
 			if c.verbose {
 				log.Println("Context canceled while renewing access token. Stopping renewal attempts.")
 			}
@@ -715,7 +751,8 @@ func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (en
 	//getting the CAAccountId from the CAAccountName
 	var certificateAuthorityAccountId *string
 	if revReq.CertificateAuthorityAccountName != "" {
-		caAccountsMap, err := c.caAccountsClient.ListCAAccounts(context.Background())
+		caAccountsClient := c.getCAAccountsClient()
+		caAccountsMap, err := caAccountsClient.ListCAAccounts(context.Background())
 		if err != nil {
 			return nil, fmt.Errorf("failed to list CA accounts: %w", err)
 		}
@@ -732,7 +769,8 @@ func (c *Connector) RevokeCertificate(revReq *certificate.RevocationRequest) (en
 		revComments = &revReq.Comments
 	}
 
-	revokeCertificateRequestResponse, err := c.caOperationsClient.RevokeCertificate(context.Background(), revReq.Thumbprint, certificateAuthorityAccountId, revocationReason, revComments)
+	caOperationsClient := c.getCAOperationsClient()
+	revokeCertificateRequestResponse, err := caOperationsClient.RevokeCertificate(context.Background(), revReq.Thumbprint, certificateAuthorityAccountId, revocationReason, revComments)
 	if err != nil {
 		return nil, err
 	}
@@ -1159,6 +1197,9 @@ func (c *Connector) GetAccessToken(auth *endpoint.Authentication) (*AccessTokenR
 }
 
 func (c *Connector) isAuthenticated() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
 	if c.accessToken != "" {
 		return true
 	}
@@ -1172,12 +1213,16 @@ func (c *Connector) isAuthenticated() bool {
 
 // getTokenClaims decodes the base64URL encoded JWT access token and returns the payload as a map
 func (c *Connector) getTokenClaims() (*AccessTokenClaims, error) {
-	if c.accessToken == "" {
+	c.mu.RLock()
+	token := c.accessToken
+	c.mu.RUnlock()
+
+	if token == "" {
 		return nil, fmt.Errorf("access token is empty")
 	}
 
 	// JWT tokens have three parts: header.payload.signature
-	parts := strings.Split(c.accessToken, ".")
+	parts := strings.Split(token, ".")
 	if len(parts) != 3 {
 		return nil, fmt.Errorf("invalid JWT token format: expected 3 parts, got %d", len(parts))
 	}
@@ -1195,6 +1240,32 @@ func (c *Connector) getTokenClaims() (*AccessTokenClaims, error) {
 	}
 
 	return &claims, nil
+}
+
+// Helper methods to safely access client pointers under lock
+// These prevent data races when the renewal goroutine updates clients
+func (c *Connector) getCAAccountsClient() *caaccounts.CAAccountsClient {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.caAccountsClient
+}
+
+func (c *Connector) getCAOperationsClient() *caoperations.CAOperationsClient {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.caOperationsClient
+}
+
+func (c *Connector) getCloudProvidersClient() *cloudproviders.CloudProvidersClient {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.cloudProvidersClient
+}
+
+func (c *Connector) getNotificationSvcClient() *notificationservice.NotificationServiceClient {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.notificationSvcClient
 }
 
 func (c *Connector) getCloudRequest(req *certificate.Request) (*certificateRequest, error) {
