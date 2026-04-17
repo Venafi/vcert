@@ -227,7 +227,7 @@ func TestAuthenticate(t *testing.T) {
 			// ClientId intentionally missing
 		})
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), "failed to authenticate: client id is required")
+		assert.Contains(t, err.Error(), "failed to get access token: client id is required")
 		assert.Empty(t, conn.accessToken)
 	})
 
@@ -240,7 +240,7 @@ func TestAuthenticate(t *testing.T) {
 			// ClientSecret intentionally missing
 		})
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), "failed to authenticate: client secret is required")
+		assert.Contains(t, err.Error(), "failed to get access token: client secret is required")
 		assert.Empty(t, conn.accessToken)
 	})
 
@@ -253,7 +253,7 @@ func TestAuthenticate(t *testing.T) {
 			// TokenURL intentionally missing
 		})
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), "failed to authenticate: token url is required")
+		assert.Contains(t, err.Error(), "failed to get access token: token url is required")
 		assert.Empty(t, conn.accessToken)
 	})
 
@@ -266,7 +266,7 @@ func TestAuthenticate(t *testing.T) {
 			// Scope intentionally missing
 		})
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), "failed to authenticate: scope is required")
+		assert.Contains(t, err.Error(), "failed to get access token: scope is required")
 		assert.Empty(t, conn.accessToken)
 	})
 
