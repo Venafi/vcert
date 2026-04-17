@@ -262,6 +262,9 @@ func (c *Connector) renewAccessTokenOnExpiration() {
 					log.Println("Access token renewed successfully")
 
 					// Update clients with new token
+					c.caAccountsClient = caaccounts.NewCAAccountsClient(c.getURL(urlGraphql), c.getGraphqlHTTPClient())
+					c.caOperationsClient = caoperations.NewCAOperationsClient(c.getURL(urlGraphql), c.getGraphqlHTTPClient())
+					c.cloudProvidersClient = cloudproviders.NewCloudProvidersClient(c.getURL(urlGraphql), c.getGraphqlHTTPClient())
 					c.notificationSvcClient = notificationservice.NewNotificationServiceClient(c.baseURL, c.accessToken, c.apiKey)
 
 					break
