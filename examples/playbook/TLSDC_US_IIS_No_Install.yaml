@@ -1,0 +1,30 @@
+config:
+  connection:
+    platform: tpp
+    url: https://dc.tlsp.demo # URL to TPP instance
+    #trustBundle: /path/to/my/trustbundle.pem # Optional TrustBundle for TPP connection
+    credentials:
+      accessToken: '{{ Env "TPP_ACCESS_TOKEN" }}'
+      refreshToken: '{{ Env "TPP_REFRESH_TOKEN" }}'
+certificateTasks:
+  - name: IIS # Task Identifier, no relevance in tool run
+    renewBefore: 30%
+    setEnvVars: ["thumbprint"]
+    request:
+      csr: local
+      subject:
+        commonName: '{{ Env "TLSPC_Hostname" }}.mimdemo.com'
+        country: GB
+        locality: London
+        state: London
+        organization: Venafi
+        orgUnits: [vcert]
+      sanDNS: 
+        - '{{ Hostname | ToLower -}}.venafidemo.com'
+      zone: 'Certificates\vcert\IIS'
+    installations:
+      - format: CAPI
+        capiLocation: 'LocalMachine\MY'
+        capiFriendlyName: 'vCert Playbook - TLSDC_US_IIS_No_Install'
+        capiIsNonExportable: True
+        #afterInstallAction: Import-Module Webadministration; Get-WebBinding vcert_website | where {($_.protocol -eq "https")} | % {$_.addsslcertificate($Env:VCERT_IIS_THUMBPRINT, "My")}

@@ -1,0 +1,30 @@
+config:
+  connection:
+    platform: vAaS #cloudplatform
+    credentials:
+      apiKey: '{{ Env "TLSPC_APIKEY" }}'
+certificateTasks:
+  - name: IIS # Task Identifier, no relevance in tool run
+    renewBefore: 20%
+    setEnvVars: ["thumbprint"]
+    request:
+      csr: local
+      subject:
+        commonName: '{{ Env "TLSPC_Hostname" }}.mimdemo.com'
+        country: GB
+        locality: London
+        state: London
+        organization: Venafi
+        orgUnits:
+          - vcert
+      sanDNS: 
+        - '{{ Hostname | ToLower -}}.venafidemo.com'
+      zone: 'IIS pull\ztAllowAll'
+    installations:
+      - format: CAPI
+        capiLocation: 'LocalMachine\MY'
+        useLegacyP12: '{{ Env "useLegacyP12" "false"}}'
+        capiFriendlyName: 'vCert Playbook - TLSPC_US_IIS_No_Install'
+        capiIsNonExportable: True
+        afterInstallAction: 'echo success!'
+
