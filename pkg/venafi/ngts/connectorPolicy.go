@@ -45,10 +45,10 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 	var status string
 
 	//validate if zone name is set and if zone already exist on Palo Alto Networks Next-Gen Trust Security (NGTS) if not create it.
-	citName := policy.GetCitName(name)
+	citName := name
 
 	if citName == "" {
-		return "", fmt.Errorf("cit name is empty, please provide zone in the format: app_name\\cit_name")
+		return "", fmt.Errorf("zone name is empty, please provide a valid zone/template name")
 	}
 
 	//get certificate authority product option io
@@ -130,24 +130,6 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 
 	}
 
-	// validate if appName is set and if app already exist on Palo Alto Networks Next-Gen Trust Security (NGTS)
-	// link the app with the cit.
-	appName := policy.GetApplicationName(name)
-	if appName == "" {
-		return "", fmt.Errorf("application name is empty, please provide zone in the format: app_name\\cit_name")
-	}
-
-	appDetails, statusCode, err := c.getAppDetailsByName(appName)
-	if err != nil {
-		return "", fmt.Errorf("unable to get application details by app name. Status code: %d, %w", statusCode, err)
-	}
-
-	log.Printf("updating application: %s", appName)
-	err = c.updateApplication(name, ps, cit, appDetails)
-	if err != nil {
-		return "", err
-	}
-
 	log.Printf("policy successfully applied to %s", name)
 
 	return status, nil
@@ -174,18 +156,11 @@ func (c *Connector) GetPolicyWithRegex(name string) (*policy.PolicySpecification
 }
 
 func retrievePolicySpecification(c *Connector, name string) (*certificateTemplate, error) {
-	appName := policy.GetApplicationName(name)
-	if appName != "" {
-		c.zone.appName = appName
-	} else {
-		return nil, fmt.Errorf("application name is not valid, please provide a valid zone name in the format: appName\\CitName")
+	citName := name
+	if citName == "" {
+		return nil, fmt.Errorf("zone name is not valid, please provide a valid zone/template name")
 	}
-	citName := policy.GetCitName(name)
-	if citName != "" {
-		c.zone.templateAlias = citName
-	} else {
-		return nil, fmt.Errorf("cit name is not valid, please provide a valid zone name in the format: appName\\CitName")
-	}
+	c.zone.templateAlias = citName
 
 	log.Println("Getting CIT")
 	cit, err := c.getTemplateByID()
@@ -199,13 +174,11 @@ func retrievePolicySpecification(c *Connector, name string) (*certificateTemplat
 }
 
 func PolicyExist(policyName string, c *Connector) (bool, error) {
-	c.zone.appName = policy.GetApplicationName(policyName)
-	citName := policy.GetCitName(policyName)
-	if citName != "" {
-		c.zone.templateAlias = citName
-	} else {
-		return false, fmt.Errorf("cit name is not valid, please provide a valid zone name in the format: appName\\CitName")
+	citName := policyName
+	if citName == "" {
+		return false, fmt.Errorf("zone name is not valid, please provide a valid zone/template name")
 	}
+	c.zone.templateAlias = citName
 
 	_, err := c.getTemplateByID()
 	return err == nil, nil
