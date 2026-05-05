@@ -1326,20 +1326,26 @@ func RemoveRegex(values []string) []string {
 	return nil
 }
 
+// GetApplicationName extracts the application name from a Cloud zone string.
+// For Cloud format "app\template", returns "app".
+// For NGTS simple format (no backslash), returns empty string.
 func GetApplicationName(zone string) string {
 	data := strings.Split(zone, "\\")
-	if data != nil && data[0] != "" {
+	if len(data) == 2 && data[0] != "" {
 		return data[0]
 	}
 	return ""
 }
 
+// GetCitName extracts the certificate issuing template name from a zone string.
+// For Cloud format "app\template", returns "template".
+// For NGTS simple format (no backslash), returns the zone string itself.
 func GetCitName(zone string) string {
 	data := strings.Split(zone, "\\")
 	if len(data) == 2 {
-		return data[1]
+		return data[1] // Cloud format: return template name
 	}
-	return ""
+	return zone // NGTS format: return zone directly
 }
 
 func GetCertAuthorityInfo(certificateAuthority string) (CertificateAuthorityInfo, error) {

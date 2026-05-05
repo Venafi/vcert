@@ -55,13 +55,13 @@ permissions to manage certificates. See the [Palo Alto Networks service account 
 
 | Command | Required NGTS Permissions |
 |---------|---------------------------|
-| enroll | `ngts.application_issuing_template.get`, `ngts.application.get`, `ngts.certificate_request.create`, `ngts.certificate_request.get`, `ngts.certificate_content.get` |
+| enroll | `ngts.certificate_issuing_template.get`, `ngts.certificate_request.create`, `ngts.certificate_request.get`, `ngts.certificate_content.get` |
 | pickup | `ngts.certificate_request.get`, `ngts.certificate.get`, `ngts.edge_encryption_key.get`, `ngts.certificate_content.get` |
 | renew | `ngts.certificate.search`, `ngts.certificate_content.get`, `ngts.certificate_request.get`, `ngts.certificate.get`, `ngts.certificate_request.create` |
 | retire | `ngts.certificate.search`, `ngts.certificate_request.get`, `ngts.certificate.retire` |
 | provision | `ngts.certificate.get`, `ngts.cloud_keystore.list`, `ngts.cloud_keystore.provision` |
-| getpolicy | `ngts.application_issuing_template.get`, `ngts.certificate_authority_account.get` |
-| setpolicy | `ngts.certificate_authority_account.get`, `ngts.certificate_issuing_template.get`, `ngts.certificate_issuing_template.update`, `ngts.application.get`, `ngts.application_issuing_template.get` |
+| getpolicy | `ngts.certificate_issuing_template.get`, `ngts.certificate_authority_account.get` |
+| setpolicy | `ngts.certificate_authority_account.get`, `ngts.certificate_issuing_template.get`, `ngts.certificate_issuing_template.update` |
 
 3. You have either:
     - An OAuth access token for authentication, OR
@@ -77,8 +77,7 @@ permissions to manage certificates. See the [Palo Alto Networks service account 
       1. (Recommended) Limits Common Name and Subject Alternative Names that are allowed by your organization
       2. (Recommended) Restricts the Key Length to 2048 or higher
       3. (Recommended) Does not allow Private Key Reuse
-5. An Application exists and you know the Application Name.
-6. An Issuing Template is assigned to the Application, and you know its API Alias.
+5. An Issuing Template exists, and you know its API alias.
 
 > 📌 **NOTE**: NGTS uses OAuth-based authentication. You can either provide an access token directly or use service 
 > account credentials to obtain one using the `getcred` action.
@@ -119,35 +118,35 @@ VCert supports supplying flag values using environment variables:
 ## Certificate Request Parameters
 Access token:
 ```
-vcert enroll -p ngts -t <access token> --cn <common name> -z <application name\issuing template alias>
+vcert enroll -p ngts -t <access token> --cn <common name> -z <issuing template name>
 ```
 Options:
 
-| Command            | Description                                                                                                                                                                                                                                                                                                                                                                                   |
-|--------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `--app-info`       | Use to identify the application requesting the certificate with details like vendor name and vendor product.<br/>Example: `--app-info "Venafi VCert CLI"`                                                                                                                                                                                                                                     |
-| `--cert-file`      | Use to specify the name and location of an output file that will contain only the end-entity certificate.<br/>Example: `--cert-file /path-to/example.crt`                                                                                                                                                                                                                                     |
-| `--chain`          | Use to include the certificate chain in the output, and to specify where to place it in the file.<br/>Options: `root-last` (default), `root-first`, `ignore`                                                                                                                                                                                                                                  |
-| `--chain-file`     | Use to specify the name and location of an output file that will contain only the root and intermediate certificates applicable to the end-entity certificate.                                                                                                                                                                                                                                |
-| `--cn`             | Use to specify the common name (CN). This is required for Enrollment.                                                                                                                                                                                                                                                                                                                         |
-| `--csr`            | Use to specify the CSR and private key location. Options: `local` (default), `file`<br/>- local: private key and CSR will be generated locally<br/>- file: CSR will be read from a file by name<br/>Example: `--csr file:/path-to/example.req`                                                                                                                                                |
-| `--file`           | Use to specify a name and location of an output file that will contain the private key and certificates when they are not written to their own files using `--key-file`, `--cert-file`, and/or `--chain-file`.<br/>Example: `--file /path-to/keycert.pem`                                                                                                                                     |
-| `--format`         | Use to specify the output format.  The `--file` option must be used with the PKCS#12 and JKS formats to specify the keystore file. JKS format also requires `--jks-alias` and at least one password (see `--key-password` and `--jks-password`) <br/>Options: `pem` (default), `legacy-pem`, `json`, `pkcs12`, `legacy-pkcs12` (analogous to OpenSSL 3.x -legacy flag), `jks`                 |
-| `--jks-alias`      | Use to specify the alias of the entry in the JKS file when `--format jks` is used                                                                                                                                                                                                                                                                                                             |
-| `--jks-password`   | Use to specify the keystore password of the JKS file when `--format jks` is used.  If not specified, the `--key-password` value is used for both the key and store passwords                                                                                                                                                                                                                  |
-| `--key-curve`      | Use to specify the elliptic curve for key generation when `--key-type` is ECDSA.<br/>Options: `p256` (default), `p384`, `p521`                                                                                                                                                                                                                                                                |
-| `--key-file`       | Use to specify the name and location of an output file that will contain only the private key.<br/>Example: `--key-file /path-to/example.key`                                                                                                                                                                                                                                                 |
-| `--key-password`   | Use to specify a password for encrypting the private key. For a non-encrypted private key, specify `--no-prompt` without specifying this option. You can specify the password using one of three methods: at the command line, when prompted, or by using a password file.<br/>Example: `--key-password file:/path-to/passwd.txt`                                                             |
-| `--key-size`       | Use to specify a key size for RSA keys.  Default is 2048.                                                                                                                                                                                                                                                                                                                                     |
-| `--key-type`       | Use to specify the key algorithm.<br/>Options: `rsa` (default), `ecdsa`                                                                                                                                                                                                                                                                                                                       |
-| `--no-pickup`      | Use to disable the feature of VCert that repeatedly tries to retrieve the issued certificate.  When this is used you must run VCert again in pickup mode to retrieve the certificate that was requested.                                                                                                                                                                                      |
-| `--pickup-id-file` | Use to specify a file name where the unique identifier for the certificate will be stored for subsequent use by pickup, renew, and revoke actions.  Default is to write the Pickup ID to STDOUT.                                                                                                                                                                                              |
-| `--san-dns`        | Use to specify a DNS Subject Alternative Name. To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-dns one.example.com` `--san-dns two.example.com`                                                                                                                                                                                                    |
-| `--san-email`      | Use to specify an Email Subject Alternative Name.  To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-email me@example.com` `--san-email you@example.com`                                                                                                                                                                                             |
-| `--san-ip`         | Use to specify an IP Address Subject Alternative Name.  To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-ip 10.20.30.40` `--san-ip 192.168.192.168`                                                                                                                                                                                                 |
-| `--san-uri`        | Use to specify a Uniform Resource Indicator Subject Alternative Name.  To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-uri spiffe://workload1.example.com` `--san-uri spiffe://workload2.example.com`                                                                                                                                              |
-| `--valid-days`     | Use to specify the number of days a certificate needs to be valid.<br/>Example: `--valid-days 30`                                                                                                                                                                                                                                                                                             |
-| `-z`               | Use to specify the name of the Application to which the certificate will be assigned and the API Alias of the Issuing Template that will handle the certificate request.<br/>Example: `-z "Business App\\Enterprise CIT"`                                                                                                                                                     |
+| Command            | Description                                                                                                                                                                                                                                                                                                                                                                            |
+|--------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `--app-info`       | Use to identify the application requesting the certificate with details like vendor name and vendor product.<br/>Example: `--app-info "Venafi VCert CLI"`                                                                                                                                                                                                                              |
+| `--cert-file`      | Use to specify the name and location of an output file that will contain only the end-entity certificate.<br/>Example: `--cert-file /path-to/example.crt`                                                                                                                                                                                                                              |
+| `--chain`          | Use to include the certificate chain in the output, and to specify where to place it in the file.<br/>Options: `root-last` (default), `root-first`, `ignore`                                                                                                                                                                                                                           |
+| `--chain-file`     | Use to specify the name and location of an output file that will contain only the root and intermediate certificates applicable to the end-entity certificate.                                                                                                                                                                                                                         |
+| `--cn`             | Use to specify the common name (CN). This is required for Enrollment.                                                                                                                                                                                                                                                                                                                  |
+| `--csr`            | Use to specify the CSR and private key location. Options: `local` (default), `file`<br/>- local: private key and CSR will be generated locally<br/>- file: CSR will be read from a file by name<br/>Example: `--csr file:/path-to/example.req`                                                                                                                                         |
+| `--file`           | Use to specify a name and location of an output file that will contain the private key and certificates when they are not written to their own files using `--key-file`, `--cert-file`, and/or `--chain-file`.<br/>Example: `--file /path-to/keycert.pem`                                                                                                                              |
+| `--format`         | Use to specify the output format.  The `--file` option must be used with the PKCS#12 and JKS formats to specify the keystore file. JKS format also requires `--jks-alias` and at least one password (see `--key-password` and `--jks-password`) <br/>Options: `pem` (default), `legacy-pem`, `json`, `pkcs12`, `legacy-pkcs12` (analogous to OpenSSL 3.x -legacy flag), `jks`          |
+| `--jks-alias`      | Use to specify the alias of the entry in the JKS file when `--format jks` is used                                                                                                                                                                                                                                                                                                      |
+| `--jks-password`   | Use to specify the keystore password of the JKS file when `--format jks` is used.  If not specified, the `--key-password` value is used for both the key and store passwords                                                                                                                                                                                                           |
+| `--key-curve`      | Use to specify the elliptic curve for key generation when `--key-type` is ECDSA.<br/>Options: `p256` (default), `p384`, `p521`                                                                                                                                                                                                                                                         |
+| `--key-file`       | Use to specify the name and location of an output file that will contain only the private key.<br/>Example: `--key-file /path-to/example.key`                                                                                                                                                                                                                                          |
+| `--key-password`   | Use to specify a password for encrypting the private key. For a non-encrypted private key, specify `--no-prompt` without specifying this option. You can specify the password using one of three methods: at the command line, when prompted, or by using a password file.<br/>Example: `--key-password file:/path-to/passwd.txt`                                                      |
+| `--key-size`       | Use to specify a key size for RSA keys.  Default is 2048.                                                                                                                                                                                                                                                                                                                              |
+| `--key-type`       | Use to specify the key algorithm.<br/>Options: `rsa` (default), `ecdsa`                                                                                                                                                                                                                                                                                                                |
+| `--no-pickup`      | Use to disable the feature of VCert that repeatedly tries to retrieve the issued certificate.  When this is used you must run VCert again in pickup mode to retrieve the certificate that was requested.                                                                                                                                                                               |
+| `--pickup-id-file` | Use to specify a file name where the unique identifier for the certificate will be stored for subsequent use by pickup, renew, and revoke actions.  Default is to write the Pickup ID to STDOUT.                                                                                                                                                                                       |
+| `--san-dns`        | Use to specify a DNS Subject Alternative Name. To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-dns one.example.com` `--san-dns two.example.com`                                                                                                                                                                                             |
+| `--san-email`      | Use to specify an Email Subject Alternative Name.  To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-email me@example.com` `--san-email you@example.com`                                                                                                                                                                                      |
+| `--san-ip`         | Use to specify an IP Address Subject Alternative Name.  To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-ip 10.20.30.40` `--san-ip 192.168.192.168`                                                                                                                                                                                          |
+| `--san-uri`        | Use to specify a Uniform Resource Indicator Subject Alternative Name.  To specify more than one, simply repeat this parameter for each value.<br/>Example: `--san-uri spiffe://workload1.example.com` `--san-uri spiffe://workload2.example.com`                                                                                                                                       |
+| `--valid-days`     | Use to specify the number of days a certificate needs to be valid.<br/>Example: `--valid-days 30`                                                                                                                                                                                                                                                                                      |
+| `-z`               | Use to specify the name of the template that will handle the certificate request.<br/>Example: `-z "Enterprise-CIT"`                                                                                                                                                     |
 
 ## Certificate Retrieval Parameters
 Access token:
@@ -248,7 +247,7 @@ Options:
 ## Parameters for Applying Certificate Policy
 Access token:
 ```
-vcert setpolicy -p ngts -t <access token> -z <application name\issuing template alias> --file <policy specification file>
+vcert setpolicy -p ngts -t <access token> -z <issuing template name> --file <policy specification file>
 ```
 Options:
 
@@ -262,10 +261,8 @@ Notes:
 - Appropriate permissions are required to apply certificate policy.
 - Policy (Issuing Template rules) and defaults (Issuing Template recommended settings) revert to their default state if 
 they are not present in a policy specification applied by this action.
-- If the issuing template specified by the `-z` zone parameter do not exist, this action will attempt to 
+- If the issuing template specified by the `-z` zone parameter does not exist, this action will attempt to 
 create it.
-- If the issuing template specified by the `-z` zone parameter is not already assigned to the application, this action 
-will attempt to make that assignment.
 - The syntax for the `certificateAuthority` policy value is _CA Account Type\\CA Account Name\\CA Product Name_
   (e.g. `DIGICERT\\DigiCert SSL Plus\\ssl_plus`).
   When not present in the policy specification, `certificateAuthority` defaults to `BUILTIN\\Built-In CA\\Default Product`.
@@ -281,7 +278,7 @@ This would include keys that are misspelled.
 ## Parameters for Viewing Certificate Policy
 Access token:
 ```
-vcert getpolicy -p ngts -t <access token> -z <application name\issuing template alias> [--file <policy specification file>]
+vcert getpolicy -p ngts -t <access token> -z <issuing template name> [--file <policy specification file>]
 ```
 Options:
 
@@ -298,8 +295,7 @@ For the purposes of the following examples, assume the following:
 - A service account has been registered and granted the needed permissions and you have obtained an OAuth access token. 
 - A CA Account and Issuing Template have been created and configured appropriately (organization, city, state, country, 
 key length, allowed domains, etc.). 
-- An Application has been created with a name of `Storefront` to which the service account has been given access, and the Issuing 
-Template has been assigned to the Application with an API Alias of `Public Trust`.
+- The issuing template has an API Alias of `Public Trust`.
 
 Use the help to view the command line syntax for enroll:
 ```
@@ -309,47 +305,47 @@ vcert enroll -h
 Submit a request to Palo Alto NGTS for enrolling a certificate with a common name of `first-time.venafi.example` 
 using an access token and have VCert prompt for the password to encrypt the private key:
 ```
-vcert enroll -p ngts -t eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9... -z "Storefront\\Public Trust" --cn first-time.venafi.example
+vcert enroll -p ngts -t eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9... -z "PublicTrust" --cn first-time.venafi.example
 ```
 
 Submit a request to Palo Alto NGTS for enrolling a certificate where the password for encrypting the private key 
 to be generated is specified in a text file called passwd.txt:
 ```
-vcert enroll -p ngts -t eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9... -z "Storefront\\Public Trust" --key-password file:passwd.txt --cn passwd-from-file.venafi.example
+vcert enroll -p ngts -t eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9... -z "PublicTrust" --key-password file:passwd.txt --cn passwd-from-file.venafi.example
 ```
 
 Submit a request to Palo Alto NGTS for enrolling a certificate where the private key to be generated is not 
 password encrypted:
 ```
-vcert enroll -p ngts -t eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9... -z "Storefront\\Public Trust" --cn non-encrypted-key.venafi.example --no-prompt
+vcert enroll -p ngts -t eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9... -z "PublicTrust" --cn non-encrypted-key.venafi.example --no-prompt
 ```
 
 Submit a request to Palo Alto NGTS for enrolling a certificate using an externally generated CSR:
 ```
-vcert enroll -p ngts -t eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9... -z "Storefront\\Public Trust" --csr file:/opt/pki/cert.req
+vcert enroll -p ngts -t eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9... -z "PublicTrust" --csr file:/opt/pki/cert.req
 ```
 
 Submit a request to Palo Alto NGTS for enrolling a certificate where the certificate and private key are output 
 using JSON syntax to a file called keycert.json:
 ```
-vcert enroll -p ngts -t eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9... -z "Storefront\\Public Trust" --key-password Passw0rd --cn json-to-file.venafi.example --format json --file keycert.json
+vcert enroll -p ngts -t eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9... -z "PublicTrust" --key-password Passw0rd --cn json-to-file.venafi.example --format json --file keycert.json
 ```
 
 Submit a request to Palo Alto NGTS for enrolling a certificate where only the certificate and private key are 
 output, no chain certificates:
 ```
-vcert enroll -p ngts -t eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9... -z "Storefront\\Public Trust" --key-password Passw0rd --cn no-chain.venafi.example --chain ignore
+vcert enroll -p ngts -t eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9... -z "PublicTrust" --key-password Passw0rd --cn no-chain.venafi.example --chain ignore
 ```
 
 Submit a request to Palo Alto NGTS for enrolling a certificate with three DNS subject alternative names:
 ```
-vcert enroll -p ngts -t eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9... -z "Storefront\\Public Trust" --no-prompt --cn three-sans.venafi.example --san-dns first-san.venafi.example --san-dns second-san.venafi.example --san-dns third-san.venafi.example
+vcert enroll -p ngts -t eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9... -z "PublicTrust" --no-prompt --cn three-sans.venafi.example --san-dns first-san.venafi.example --san-dns second-san.venafi.example --san-dns third-san.venafi.example
 ```
 
 Submit request to Palo Alto NGTS for enrolling a certificate where the certificate is not issued after two 
 minutes and then subsequently retrieve that certificate after it has been issued:
 ```
-vcert enroll -p ngts -t eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9... -z "Storefront\\Public Trust" --no-prompt --cn demo-pickup.venafi.example
+vcert enroll -p ngts -t eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9... -z "PublicTrust" --no-prompt --cn demo-pickup.venafi.example
 
 vcert pickup -p ngts -t eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9... --pickup-id "{7428fac3-d0e8-4679-9f48-d9e867a326ca}"
 ```
@@ -357,7 +353,7 @@ vcert pickup -p ngts -t eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9... --pickup-id "{74
 Submit request to Palo Alto NGTS for enrolling a certificate that will be retrieved later using a Pickup ID from 
 a text file:
 ```
-vcert enroll -p ngts -t eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9... -z "Storefront\\Public Trust" --no-prompt --cn demo-pickup.venafi.example --no-pickup -pickup-id-file pickup_id.txt
+vcert enroll -p ngts -t eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9... -z "PublicTrust" --no-prompt --cn demo-pickup.venafi.example --no-pickup -pickup-id-file pickup_id.txt
 
 vcert pickup -p ngts -t eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9... --pickup-id-file pickup_id.txt
 ```

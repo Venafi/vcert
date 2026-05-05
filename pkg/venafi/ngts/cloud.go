@@ -624,22 +624,11 @@ func parseApplicationDetailsResult(httpStatusCode int, httpStatus string, body [
 
 type cloudZone struct {
 	zone          string
-	appName       string
 	templateAlias string
 }
 
 func (z *cloudZone) String() string {
 	return z.zone
-}
-
-func (z *cloudZone) getApplicationName() string {
-	if z.appName == "" {
-		err := z.parseZone()
-		if err != nil {
-			return ""
-		}
-	}
-	return z.appName
 }
 
 func (z *cloudZone) getTemplateAlias() string {
@@ -657,13 +646,7 @@ func (z *cloudZone) parseZone() error {
 		return fmt.Errorf("zone not specified")
 	}
 
-	segments := strings.Split(z.zone, "\\")
-	if len(segments) != 2 {
-		return fmt.Errorf("invalid zone format")
-	}
-
-	z.appName = segments[0]
-	z.templateAlias = segments[1]
+	z.templateAlias = z.zone
 
 	return nil
 }

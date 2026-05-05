@@ -551,7 +551,7 @@ func TestReadZoneConfiguration(t *testing.T) {
 		t.Fatalf("%s", err)
 	}
 
-	conn.SetZone("unknown_app\\unknown_cit")
+	conn.SetZone("unknown_cit")
 	_, err = conn.ReadZoneConfiguration()
 	if !errors.Is(err, verror.ZoneNotFoundError) {
 		t.Fatalf("Unknown zone should have resulted in an error")
@@ -1760,12 +1760,7 @@ func TestSearchCertificate(t *testing.T) {
 }
 
 func TestSetPolicy(t *testing.T) {
-	appName := os.Getenv("NGTS_APP_NAME")
-	if appName == "" {
-		t.Fatalf("env variable NGTS_APP_NAME is not set")
-	}
-
-	policyName := appName + "\\" + test.RandCitName()
+	policyName := test.RandCitName()
 	conn := getTestConnector(ctx.NGTSZone)
 	conn.verbose = true
 
@@ -2458,11 +2453,7 @@ func TestGetPolicyOnlyEC(t *testing.T) {
 }
 
 func TestSetEmptyPolicy(t *testing.T) {
-	appName := os.Getenv("NGTS_APP_NAME")
-	if appName == "" {
-		t.Fatalf("env variable NGTS_APP_NAME is not set")
-	}
-	policyName := appName + "\\" + test.RandCitName()
+	policyName := test.RandCitName()
 	conn := getTestConnector(ctx.NGTSZone)
 	conn.verbose = true
 
@@ -2483,11 +2474,7 @@ func TestSetEmptyPolicy(t *testing.T) {
 }
 
 func TestSetDefaultPolicyValuesAndValidate(t *testing.T) {
-	appName := os.Getenv("NGTS_APP_NAME")
-	if appName == "" {
-		t.Fatalf("env variable NGTS_APP_NAME is not set")
-	}
-	policyName := appName + "\\" + test.RandCitName()
+	policyName := test.RandCitName()
 	conn := getTestConnector(ctx.NGTSZone)
 	conn.verbose = true
 
@@ -2564,11 +2551,7 @@ func TestSetDefaultPolicyValuesAndValidate(t *testing.T) {
 }
 
 func TestSetPolicyValuesAndValidate(t *testing.T) {
-	appName := os.Getenv("NGTS_APP_NAME")
-	if appName == "" {
-		t.Fatalf("env variable NGTS_APP_NAME is not set")
-	}
-	policyName := appName + "\\" + test.RandCitName()
+	policyName := test.RandCitName()
 	conn := getTestConnector(ctx.NGTSZone)
 	conn.verbose = true
 
@@ -2649,11 +2632,7 @@ func TestSetPolicyValuesAndValidate(t *testing.T) {
 
 // This test is just for verifying that a policy can be created using ENTRUST CA.
 func TestSetPolicyEntrust(t *testing.T) {
-	appName := os.Getenv("NGTS_APP_NAME")
-	if appName == "" {
-		t.Fatalf("env variable NGTS_APP_NAME is not set")
-	}
-	policyName := appName + "\\" + test.RandCitName()
+	policyName := test.RandCitName()
 	conn := getTestConnector(ctx.NGTSZone)
 	conn.verbose = true
 
@@ -2690,11 +2669,7 @@ func TestSetPolicyEntrust(t *testing.T) {
 This test is just for verifying that a policy can be created using DIGICERT	 CA.
 */
 func TestSetPolicyDigicert(t *testing.T) {
-	appName := os.Getenv("NGTS_APP_NAME")
-	if appName == "" {
-		t.Fatalf("env variable NGTS_APP_NAME is not set")
-	}
-	policyName := appName + "\\" + test.RandCitName()
+	policyName := test.RandCitName()
 	conn := getTestConnector(ctx.NGTSZone)
 	conn.verbose = true
 
@@ -3026,9 +3001,7 @@ func TestSearchValidCertificate(t *testing.T) {
 
 	// TODO: Filter zone
 	// with this zone you should be able to find those certificates
-	zone := "Open Source Integrations\\Unrestricted"
-	// but not with this (or any non valid zone)
-	// zone := "Invalid zone\\The CIT"
+	zone := "Unrestricted"
 
 	// use time.Duration instead of integer
 	day := 24 * time.Hour

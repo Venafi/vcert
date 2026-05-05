@@ -371,6 +371,10 @@ func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration,
 	if err != nil {
 		return nil, err
 	}
+	if template == nil {
+		return nil, verror.ZoneNotFoundError
+	}
+
 	config = getZoneConfiguration(template)
 	return config, nil
 }
@@ -824,14 +828,6 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 	if pBlock == nil {
 		return nil, fmt.Errorf("%w can`t parse certificate", verror.UserDataError)
 	}
-	zone := req.PolicyDN
-	if zone == "" {
-		appDetails, _, err := c.getAppDetailsByName(c.zone.getApplicationName())
-		if err != nil {
-			return nil, err
-		}
-		zone = appDetails.ApplicationId
-	}
 	ipAddr := endpoint.LocalIP
 	origin := endpoint.SDKName
 	for _, f := range req.CustomFields {
@@ -845,7 +841,7 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 		Certificates: []importRequestCertInfo{
 			{
 				Certificate:    base64.StdEncoding.EncodeToString(pBlock.Bytes),
-				ApplicationIds: []string{zone},
+				ApplicationIds: []string{}, // Application not required for NGTS
 				ApiClientInformation: apiClientInformation{
 					Type:       origin,
 					Identifier: ipAddr,
@@ -939,14 +935,6 @@ func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.
 		return nil, fmt.Errorf("must be authenticated to search a certificate")
 	}
 
-	// retrieve application name from zone
-	appName := getAppNameFromZone(zone)
-	// get application id from name
-	app, _, err := c.getAppDetailsByName(appName)
-	if err != nil {
-		return nil, err
-	}
-
 	// format arguments for request
 	req := formatSearchCertificateArguments(cn, sans, certMinTimeLeft)
 
@@ -963,22 +951,12 @@ func (c *Connector) SearchCertificate(zone string, cn string, sans *certificate.
 
 	// map (convert) response to an array of CertificateInfo
 	certificates := make([]*certificate.CertificateInfo, 0)
-	n := 0
 	for _, cert := range searchResult.Certificates {
-		if util.ArrayContainsString(cert.ApplicationIds, app.ApplicationId) {
-			match := cert.ToCertificateInfo()
-			certificates = append(certificates, &match)
-			n = n + 1
-		}
+		match := cert.ToCertificateInfo()
+		certificates = append(certificates, &match)
 	}
 
-	// fail if no certificates found with matching zone
-	if n == 0 {
-		return nil, verror.NoCertificateWithMatchingZoneFoundError
-	}
-
-	// at this point all certificates belong to our zone, the next step is
-	// finding the newest valid certificate matching the provided sans
+	// find the newest valid certificate matching the provided sans
 	return certificate.FindNewestCertificateWithSans(certificates, sans)
 }
 
@@ -1277,15 +1255,17 @@ func (c *Connector) getCloudRequest(req *certificate.Request) (*certificateReque
 		}
 	}
 
-	appDetails, _, err := c.getAppDetailsByName(c.zone.getApplicationName())
+	// Get template by name using global endpoint
+	template, err := getCit(c, c.zone.getTemplateAlias())
 	if err != nil {
 		return nil, err
 	}
-	templateId := appDetails.CitAliasToIdMap[c.zone.getTemplateAlias()]
+	if template == nil {
+		return nil, fmt.Errorf("certificate issuing template '%s' not found", c.zone.getTemplateAlias())
+	}
 
 	cloudReq := certificateRequest{
-		ApplicationId: appDetails.ApplicationId,
-		TemplateId:    templateId,
+		TemplateId: template.ID,
 		ApiClientInformation: certificateRequestClientInfo{
 			Type:       origin,
 			Identifier: ipAddr,
@@ -1687,20 +1667,9 @@ func validateScope(scope string) error {
 
 func (c *Connector) getCertsBatch(page, pageSize int, withExpired bool) ([]certificate.CertificateInfo, error) {
 
-	appDetails, _, err := c.getAppDetailsByName(c.zone.getApplicationName())
-	if err != nil {
-		return nil, err
-	}
-
 	req := &SearchRequest{
 		Expression: &Expression{
-			Operands: []Operand{
-				{
-					Field:    "appstackIds",
-					Operator: MATCH,
-					Value:    appDetails.ApplicationId,
-				},
-			},
+			Operands: []Operand{},
 			Operator: AND,
 		},
 		Paging: &Paging{PageSize: pageSize, PageNumber: page},
@@ -1739,16 +1708,8 @@ func (c *Connector) getAppDetailsByName(appName string) (*ApplicationDetails, in
 }
 
 func (c *Connector) getTemplateByID() (*certificateTemplate, error) {
-	url := c.getURL(urlResourceTemplate)
-	appNameEncoded := netUrl.PathEscape(c.zone.getApplicationName())
-	citAliasEncoded := netUrl.PathEscape(c.zone.getTemplateAlias())
-	url = fmt.Sprintf(url, appNameEncoded, citAliasEncoded)
-	statusCode, status, body, err := c.request("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	t, err := parseCertificateTemplateResult(statusCode, status, body)
-	return t, err
+	// Use global certificate issuing templates endpoint
+	return getCit(c, c.zone.getTemplateAlias())
 }
 
 func getCit(c *Connector, citName string) (*certificateTemplate, error) {
@@ -1777,8 +1738,8 @@ func getCit(c *Connector, citName string) (*certificateTemplate, error) {
 
 	}
 
-	//no error but cit was not found.
-	return nil, nil
+	// Template not found - return zone not found error
+	return nil, verror.ZoneNotFoundError
 }
 
 func (c *Connector) CreateAPIUserAccount() (int, *userDetails, error) {
