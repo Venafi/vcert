@@ -55,13 +55,13 @@ permissions to manage certificates. See the [Palo Alto Networks service account 
 
 | Command | Required NGTS Permissions |
 |---------|---------------------------|
-| enroll | `ngts.application_issuing_template.get`, `ngts.application.get`, `ngts.certificate_request.create`, `ngts.certificate_request.get`, `ngts.certificate_content.get` |
+| enroll | `ngts.certificate_issuing_template.get`, `ngts.certificate_request.create`, `ngts.certificate_request.get`, `ngts.certificate_content.get` |
 | pickup | `ngts.certificate_request.get`, `ngts.certificate.get`, `ngts.edge_encryption_key.get`, `ngts.certificate_content.get` |
 | renew | `ngts.certificate.search`, `ngts.certificate_content.get`, `ngts.certificate_request.get`, `ngts.certificate.get`, `ngts.certificate_request.create` |
 | retire | `ngts.certificate.search`, `ngts.certificate_request.get`, `ngts.certificate.retire` |
 | provision | `ngts.certificate.get`, `ngts.cloud_keystore.list`, `ngts.cloud_keystore.provision` |
-| getpolicy | `ngts.application_issuing_template.get`, `ngts.certificate_authority_account.get` |
-| setpolicy | `ngts.certificate_authority_account.get`, `ngts.certificate_issuing_template.get`, `ngts.certificate_issuing_template.update`, `ngts.application.get`, `ngts.application_issuing_template.get` |
+| getpolicy | `ngts.certificate_issuing_template.get`, `ngts.certificate_authority_account.get` |
+| setpolicy | `ngts.certificate_authority_account.get`, `ngts.certificate_issuing_template.get`, `ngts.certificate_issuing_template.update` |
 
 3. You have either:
     - An OAuth access token for authentication, OR
