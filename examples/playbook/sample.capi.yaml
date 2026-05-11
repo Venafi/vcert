@@ -25,6 +25,7 @@ certificateTasks:
           - '{{ Hostname | ToLower -}}.{{- Env "USERDNSDOMAIN" | ToLower }}'
           - sqldb.example.com
       zone: "Open Source\\vcert"
+      timeout: 120
     installations:
       - format: CAPI
         capiLocation: LocalMachine\MY
