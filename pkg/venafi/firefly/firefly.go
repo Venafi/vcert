@@ -30,10 +30,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-http-utils/headers"
-
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
+	headers "github.com/Venafi/vcert/v5/pkg/httputils"
 	"github.com/Venafi/vcert/v5/pkg/verror"
 )
 

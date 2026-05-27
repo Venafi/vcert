@@ -39,6 +39,7 @@ import (
 
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
+	headers "github.com/Venafi/vcert/v5/pkg/httputils"
 	"github.com/Venafi/vcert/v5/pkg/policy"
 	"github.com/Venafi/vcert/v5/pkg/util"
 	"github.com/Venafi/vcert/v5/pkg/verror"
@@ -46,7 +47,6 @@ import (
 	"github.com/Venafi/vcert/v5/pkg/webclient/caoperations"
 	"github.com/Venafi/vcert/v5/pkg/webclient/cloudproviders"
 	"github.com/Venafi/vcert/v5/pkg/webclient/notificationservice"
-	"github.com/go-http-utils/headers"
 	"golang.org/x/crypto/nacl/box"
 )
 

@@ -31,10 +31,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-http-utils/headers"
-
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
+	headers "github.com/Venafi/vcert/v5/pkg/httputils"
 )
 
 const defaultKeySize = 2048
