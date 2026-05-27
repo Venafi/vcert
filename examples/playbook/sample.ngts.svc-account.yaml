@@ -22,7 +22,7 @@ certificateTasks:
         orgUnits:
           - engineering
           - marketing
-      zone: "Open Source\\vcert"
+      zone: "vcert"
     installations:
       - format: PEM
         file: "/path/to/my/certificate/cert.cer"
