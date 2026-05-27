@@ -7,7 +7,6 @@ require (
 	github.com/go-http-utils/headers v0.0.0-20181008091004-fed159eddc2a
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
-	github.com/howeyc/gopass v0.0.0-20210920133722-c8aef6fb66ef
 	github.com/pavel-v-chernykh/keystore-go/v4 v4.3.0
 	github.com/pkg/errors v0.9.1
 	github.com/sosodev/duration v1.3.1
@@ -19,6 +18,7 @@ require (
 	go.uber.org/zap v1.27.1
 	golang.org/x/crypto v0.45.0
 	golang.org/x/oauth2 v0.33.0
+	golang.org/x/term v0.37.0
 	gopkg.in/ini.v1 v1.67.1
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -45,6 +45,5 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/sys v0.38.0 // indirect
-	golang.org/x/term v0.37.0 // indirect
 	golang.org/x/text v0.31.0 // indirect
 )
