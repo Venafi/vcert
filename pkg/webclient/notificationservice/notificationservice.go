@@ -10,10 +10,10 @@ import (
 	"path"
 	"time"
 
-	"github.com/go-http-utils/headers"
 	"github.com/gorilla/websocket"
 
 	"github.com/Venafi/vcert/v5/pkg/domain"
+	headers "github.com/Venafi/vcert/v5/pkg/httputils"
 	"github.com/Venafi/vcert/v5/pkg/util"
 )
 

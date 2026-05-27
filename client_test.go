@@ -31,13 +31,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-http-utils/headers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"k8s.io/utils/ptr"
 
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
+	headers "github.com/Venafi/vcert/v5/pkg/httputils"
 	"github.com/Venafi/vcert/v5/pkg/util"
 )
 

@@ -4,7 +4,6 @@ go 1.24.6
 
 require (
 	github.com/Khan/genqlient v0.8.1
-	github.com/go-http-utils/headers v0.0.0-20181008091004-fed159eddc2a
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/howeyc/gopass v0.0.0-20210920133722-c8aef6fb66ef
