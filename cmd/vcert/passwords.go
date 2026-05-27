@@ -23,7 +23,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/howeyc/gopass"
+	"golang.org/x/term"
 )
 
 func readPasswordsFromInputFlags(commandName string, cf *commandFlags) error {
@@ -34,14 +34,14 @@ func readPasswordsFromInputFlags(commandName string, cf *commandFlags) error {
 		(commandName == commandGetCredName && cf.url != "") {
 		if cf.clientP12 != "" && cf.clientP12PW == "" {
 			fmt.Printf("Enter password for %s:", cf.clientP12)
-			input, err := gopass.GetPasswdMasked()
+			input, err := term.ReadPassword(int(os.Stdin.Fd()))
 			if err != nil {
 				return err
 			}
 			cf.clientP12PW = string(input)
 		} else if cf.password == "" && !cf.noPrompt && cf.token == "" && cf.userName != "" {
 			fmt.Printf("Enter password for %s:", cf.userName)
-			input, err := gopass.GetPasswdMasked()
+			input, err := term.ReadPassword(int(os.Stdin.Fd()))
 			if err != nil {
 				return err
 			}
@@ -82,12 +82,12 @@ func readPasswordsFromInputFlags(commandName string, cf *commandFlags) error {
 		if !keyPasswordNotNeeded {
 			if cf.keyPassword == "" && !cf.noPrompt {
 				fmt.Printf("Enter key passphrase:")
-				input, err := gopass.GetPasswdMasked()
+				input, err := term.ReadPassword(int(os.Stdin.Fd()))
 				if err != nil {
 					return err
 				}
 				fmt.Printf("Verifying - Enter key passphrase:")
-				verify, err := gopass.GetPasswdMasked()
+				verify, err := term.ReadPassword(int(os.Stdin.Fd()))
 				if err != nil {
 					return err
 				}
