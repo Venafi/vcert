@@ -31,6 +31,8 @@ import (
 
 var errorTemplate = "%w: %s"
 
+const MaxFileSizeBytes = 1024 * 1024 // 1MiB
+
 // ReadPlaybook reads the file in location, parses the content and returns a Playbook object
 func ReadPlaybook(location string) (domain.Playbook, error) {
 	playbook := domain.NewPlaybook()
@@ -83,13 +85,23 @@ func readFile(location string) ([]byte, error) {
 	var data []byte
 
 	if location == "" {
+		// The location is an invalid URL
 		return data, ErrNoLocation
 	}
 
-	// The location is an invalid URL
-	zap.L().Debug("reading from local file system")
-	data, err := os.ReadFile(location)
+	zap.L().Info("checking if the file is too big", zap.String("location", location))
+	fileInfo, err := os.Stat(location)
+	if err != nil {
+		return nil, err
+	}
 
+	if MaxFileSizeBytes < fileInfo.Size() {
+		zap.L().Error("file is too big", zap.String("location", location))
+		return nil, ErrFileTooBig
+	}
+
+	zap.L().Debug("reading from local file system")
+	data, err = os.ReadFile(location)
 	if err != nil {
 		return data, fmt.Errorf(errorTemplate, ErrReadFile, err.Error())
 	}

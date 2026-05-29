@@ -23,6 +23,8 @@ var (
 	ErrNoLocation = fmt.Errorf("playbook location was not provided")
 	// ErrReadFile is thrown when the Playbook file cannot be read/accessed
 	ErrReadFile = fmt.Errorf("could not read playbook file")
+	// ErrFileTooBig is thrown when the Playbook file exceeds the max file size
+	ErrFileTooBig = fmt.Errorf("could not read playbook file")
 	// ErrTextTplParsing is thrown when the templates in the Playbook file cannot be parsed.
 	//
 	// E.g. {{ Env "Hostname" }}
