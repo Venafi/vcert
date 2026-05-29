@@ -70,6 +70,11 @@ func (s *ReaderSuite) SetupTest() {
 			location: filepath.Join(s.playbookFolder, "bad_sample.yaml"),
 			err:      ErrFileUnmarshall,
 		},
+		{
+			name:     "FileTooBig",
+			location: filepath.Join(s.playbookFolder, "too_big.yaml"),
+			err:      ErrFileTooBig,
+		},
 	}
 
 	err := os.Setenv("TPP_ACCESS_TOKEN", s.accessToken)
