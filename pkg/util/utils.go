@@ -87,6 +87,28 @@ func EncryptPkcs1PrivateKey(privateKey, password string) (string, error) {
 	return string(pem.EncodeToMemory(encrypted)), nil
 }
 
+func EncryptPkcs8PrivateKey(privateKey, password string) (string, error) {
+
+	block, _ := pem.Decode([]byte(privateKey))
+	if block == nil {
+		return "", fmt.Errorf("failed to decode PEM block")
+	}
+
+	key, _, err := pkcs8.ParsePrivateKey(block.Bytes, nil)
+	if err != nil {
+		return "", err
+	}
+
+	encryptedBytes, err := pkcs8.MarshalPrivateKey(key, []byte(password), nil)
+	if err != nil {
+		return "", err
+	}
+
+	pemBytes := pem.EncodeToMemory(&pem.Block{Type: "ENCRYPTED PRIVATE KEY", Bytes: encryptedBytes})
+
+	return string(pemBytes), nil
+}
+
 func GetBooleanRef(val bool) *bool {
 	return &val
 }
