@@ -109,6 +109,12 @@ func readFile(location string) ([]byte, error) {
 	return data, nil
 }
 
+func yamlSafeScalar(v string) string {
+	v = strings.ReplaceAll(v, "\r", "")
+	v = strings.ReplaceAll(v, "\n", "")
+	return v
+}
+
 func parseConfigTemplate(b []byte) ([]byte, error) {
 	// Valid functions for the config file template
 	fm := template.FuncMap{
@@ -117,7 +123,7 @@ func parseConfigTemplate(b []byte) ([]byte, error) {
 				e := es[0]
 				value, found := os.LookupEnv(e)
 				if found {
-					return value, nil
+					return yamlSafeScalar(value), nil
 				}
 				return "", fmt.Errorf("environment variable not defined: %s", e)
 			} else if len(es) == 2 {
@@ -125,9 +131,9 @@ func parseConfigTemplate(b []byte) ([]byte, error) {
 				d := es[1]
 				value, found := os.LookupEnv(e)
 				if found {
-					return value, nil
+					return yamlSafeScalar(value), nil
 				} else {
-					return d, nil
+					return yamlSafeScalar(d), nil
 				}
 			} else {
 				return "", fmt.Errorf("unsupported number of inputs provided: %d", len(es))
