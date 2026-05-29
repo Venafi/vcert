@@ -128,6 +128,14 @@ func (c *Connector) Authorize(auth *endpoint.Authentication) (token *oauth2.Toke
 	successMsg := "successfully authorized to OAuth2 server"
 	failureMsg := "authorization flow failed"
 
+	// Create a dedicated TLS-verified HTTP client for IdP token calls
+	idpClient := &http.Client{
+		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+		},
+	}
+	idpCtx := context.WithValue(context.Background(), oauth2.HTTPClient, idpClient)
+
 	// if it's a client credentials flow grant
 	if auth.ClientSecret != "" && auth.IdentityProvider.DeviceURL == "" {
 		zap.L().Info("authorizing using credentials flow", fieldPlatform)
@@ -145,7 +153,7 @@ func (c *Connector) Authorize(auth *endpoint.Authentication) (token *oauth2.Toke
 			}
 		}
 
-		token, err = config.Token(context.Background())
+		token, err = config.Token(idpCtx)
 		if err != nil {
 			zap.L().Error(failureMsg, fieldPlatform, zap.Error(err))
 			return token, err
@@ -173,7 +181,7 @@ func (c *Connector) Authorize(auth *endpoint.Authentication) (token *oauth2.Toke
 			},
 		}
 
-		token, err = config.PasswordCredentialsToken(context.Background(), auth.User, auth.Password)
+		token, err = config.PasswordCredentialsToken(idpCtx, auth.User, auth.Password)
 		if err != nil {
 			zap.L().Error(failureMsg, fieldPlatform, zap.Error(err))
 			return token, err
