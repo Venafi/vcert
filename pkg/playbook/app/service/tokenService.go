@@ -18,6 +18,7 @@ package service
 
 import (
 	"fmt"
+	"strings"
 
 	"go.uber.org/zap"
 
@@ -104,6 +105,14 @@ func replaceTokensInFile(playbook map[string]interface{}, accessToken string, re
 	}
 
 	credsMap := creds.(map[string]interface{})
+
+	// Reject tokens containing template delimiters to prevent template injection
+	for _, tok := range []string{accessToken, refreshToken} {
+		if strings.Contains(tok, "{{") || strings.Contains(tok, "}}") {
+			return fmt.Errorf("refusing to persist token containing template delimiters")
+		}
+	}
+
 	credsMap["accessToken"] = accessToken
 	credsMap["refreshToken"] = refreshToken
 
