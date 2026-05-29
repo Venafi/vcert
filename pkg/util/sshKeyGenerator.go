@@ -41,7 +41,7 @@ func encodePrivKeyToPEM(privateKey *rsa.PrivateKey, keyPassword string, format .
 	if keyPassword != "" {
 		if format[0] == LegacyPem {
 			privDER := x509.MarshalPKCS1PrivateKey(privateKey)
-			privBlock, err = X509EncryptPEMBlock(rand.Reader, RsaPrivKeyType, privDER, []byte(keyPassword), PEMCipherDES)
+			privBlock, err = X509EncryptPEMBlock(rand.Reader, RsaPrivKeyType, privDER, []byte(keyPassword), PEMCipherAES256)
 			if err != nil {
 				return nil, err
 			}
