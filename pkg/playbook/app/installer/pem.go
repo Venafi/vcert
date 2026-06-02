@@ -118,9 +118,9 @@ func (r PEMInstaller) Install(pcc certificate.PEMCollection) error {
 
 	preppedPK := pcc.PrivateKey
 	var err error
-	// Needs to be encrypted again using legacy PEM
+	// Needs to be encrypted again using PKCS8
 	if r.KeyPassword != "" {
-		preppedPK, err = vcertutil.EncryptPrivateKeyPKCS1(pcc.PrivateKey, r.KeyPassword)
+		preppedPK, err = vcertutil.EncryptPrivateKeyPKCS8(pcc.PrivateKey, r.KeyPassword)
 		if err != nil {
 			zap.L().Error("failed to encrypt PrivateKey", zap.Error(err))
 			return err
