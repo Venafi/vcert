@@ -24,7 +24,7 @@ import (
 	"strings"
 
 	"github.com/urfave/cli/v2"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 
 	"github.com/Venafi/vcert/v5"
 	"github.com/Venafi/vcert/v5/pkg/policy"
