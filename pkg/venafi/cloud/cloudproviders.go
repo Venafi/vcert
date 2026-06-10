@@ -24,6 +24,8 @@ type CloudKeystoreProvisioningResult struct {
 	MachineIdentityActionType  string `json:"machineIdentityActionType"`
 	MachineIdentityId          string `json:"machineIdentityId"`
 	Error                      error  `json:"error"`
+	ErrorMessage               string `json:"message"`
+	StatusCode                 int    `json:"statusCode"`
 }
 
 func (c *Connector) ProvisionCertificate(req *domain.ProvisioningRequest, options *domain.ProvisioningOptions) (*domain.ProvisioningMetadata, error) {
@@ -197,7 +199,10 @@ func (c *Connector) ProvisionCertificateToMachineIdentity(req domain.Provisionin
 			return nil, fmt.Errorf("failed to get machine identity: %w", err)
 		}
 		log.Printf("successfully fetched machine identity")
-		keystoreType = machineIdentity.Metadata.GetKeystoreType()
+
+		if machineIdentity.Metadata != nil {
+			keystoreType = machineIdentity.Metadata.GetKeystoreType()
+		}
 	} else {
 		keystoreType = req.Keystore.Type
 	}
@@ -371,6 +376,9 @@ func getCloudMetadataFromWebsocketResponse(resultMap interface{}, keystoreType d
 	}
 	if result.Error != nil {
 		return nil, fmt.Errorf("unable to provision certificate: %w", result.Error)
+	}
+	if result.StatusCode == 500 && result.ErrorMessage != "" {
+		return nil, fmt.Errorf("unable to provision certificate: %s", result.ErrorMessage)
 	}
 	if result.CloudProviderCertificateID == "" {
 		return nil, fmt.Errorf("provisioning failed, certificate ID from response is empty")

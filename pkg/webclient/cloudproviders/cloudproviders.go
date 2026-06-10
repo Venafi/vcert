@@ -9,6 +9,7 @@ import (
 	"github.com/Khan/genqlient/graphql"
 	"github.com/Venafi/vcert/v5/pkg/domain"
 	"github.com/Venafi/vcert/v5/pkg/util"
+	"github.com/Venafi/vcert/v5/pkg/verror"
 )
 
 //go:generate go run -mod=mod github.com/Khan/genqlient genqlient.yaml
@@ -97,7 +98,7 @@ func (c *CloudProvidersClient) GetMachineIdentity(ctx context.Context, request d
 		return nil, fmt.Errorf("failed to retrieve cloud machine identity with id %s: %w", *request.MachineIdentityID, err)
 	}
 	if len(resp.GetCloudMachineIdentities().GetNodes()) != 1 {
-		return nil, fmt.Errorf("could not find cloud machine identity with with ID %s", *request.MachineIdentityID)
+		return nil, fmt.Errorf("%w with ID %s", verror.CloudMachineIdentityNotFoundError, *request.MachineIdentityID)
 	}
 
 	mi := resp.GetCloudMachineIdentities().GetNodes()[0]
