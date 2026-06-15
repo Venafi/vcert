@@ -24,7 +24,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/pavel-v-chernykh/keystore-go/v4"
+	"github.com/pavlo-v-chernykh/keystore-go/v4"
 	"go.uber.org/zap"
 
 	"github.com/Venafi/vcert/v5/pkg/certificate"

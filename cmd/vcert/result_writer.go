@@ -27,7 +27,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pavel-v-chernykh/keystore-go/v4"
+	"github.com/pavlo-v-chernykh/keystore-go/v4"
 	"software.sslmate.com/src/go-pkcs12"
 
 	"github.com/Venafi/vcert/v5/pkg/certificate"

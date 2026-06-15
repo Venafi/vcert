@@ -20,12 +20,12 @@ package capistore
 
 import (
 	_ "embed"
+	"errors"
 	"fmt"
 	"os"
 	"regexp"
 	"strings"
 
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 

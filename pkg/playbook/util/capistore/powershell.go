@@ -27,7 +27,6 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 
@@ -63,7 +62,7 @@ func (ps PowerShell) InstallCertificateToCAPI(config InstallationConfig) error {
 	if err != nil {
 		m := "failed to install certificate because of invalid characters in friendlyName"
 		zap.L().Error(m)
-		return errors.WithMessagef(err, m)
+		return fmt.Errorf("%s: %w", m, err)
 	}
 
 	err = os.WriteFile(pfxPath, config.PFX, 0600)
@@ -92,7 +91,7 @@ func (ps PowerShell) InstallCertificateToCAPI(config InstallationConfig) error {
 	if err != nil {
 		m := "failed to install certificate into CAPI"
 		zap.L().Error(m, zap.String("stdout", stdout), zap.Error(err))
-		return errors.WithMessagef(err, "%s, stdout: '%s'", m, stdout)
+		return fmt.Errorf("%s, stdout: '%s': %w", m, stdout, err)
 	}
 
 	return err
@@ -108,7 +107,7 @@ func (ps PowerShell) RetrieveCertificateFromCAPI(config InstallationConfig) (str
 	if err != nil {
 		m := "failed to retrieve certificate because of invalid characters in friendlyName"
 		zap.L().Error(m)
-		return "", errors.WithMessagef(err, m)
+		return "", fmt.Errorf("%s: %w", m, err)
 	}
 
 	params := map[string]string{
@@ -121,7 +120,7 @@ func (ps PowerShell) RetrieveCertificateFromCAPI(config InstallationConfig) (str
 	if err != nil {
 		m := "failed to install certificate into CAPI"
 		zap.L().Error(m, zap.String("stdout", stdout), zap.Error(err))
-		return "", errors.WithMessagef(err, "%s, stdout: '%s'", m, stdout)
+		return "", fmt.Errorf("%s, stdout: '%s': %w", m, stdout, err)
 	}
 
 	//Certificate not found, return empty string
@@ -145,7 +144,7 @@ func (ps PowerShell) executeScript(script, functionName string, parameters map[s
 	if err != nil {
 		m := "failed to copy script"
 		zap.L().Error(m)
-		return "", errors.WithMessagef(err, m)
+		return "", fmt.Errorf("%s: %w", m, err)
 	}
 	defer func() {
 		if removeErr := os.RemoveAll(scriptPath); removeErr != nil {
@@ -157,7 +156,7 @@ func (ps PowerShell) executeScript(script, functionName string, parameters map[s
 	if err != nil {
 		m := "failed to run script function"
 		zap.L().Error(m, zap.String("functionName", functionName), zap.String("stdout", stdout), zap.Error(err))
-		return "", errors.WithMessagef(err, "%s %q", m, functionName)
+		return "", fmt.Errorf("%s %q: %w", m, functionName, err)
 	}
 
 	return stdout, nil
