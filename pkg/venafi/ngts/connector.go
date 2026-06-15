@@ -53,7 +53,7 @@ import (
 type urlResource string
 
 const (
-	apiURL                                        = "api.sase.paloaltonetworks.com/ngts"
+	apiURL                                        = "api.strata.paloaltonetworks.com/ngts"
 	apiVersion                                    = "v1/"
 	basePath                                      = "outagedetection/" + apiVersion
 	urlResourceUserAccounts           urlResource = apiVersion + "useraccounts"
