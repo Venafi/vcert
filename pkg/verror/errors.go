@@ -18,6 +18,9 @@ var (
 	// certificate search errors
 	NoCertificateFoundError                 = fmt.Errorf("no certificate with matching criteria found")
 	NoCertificateWithMatchingZoneFoundError = fmt.Errorf("no certificate with matching zone found")
+	CertificateRequestNotFoundError         = fmt.Errorf("no certificate request found")
 	// cloud machine identity errors
 	CloudMachineIdentityNotFoundError = fmt.Errorf("could not find cloud machine identity")
+	CloudProviderNotFoundError        = fmt.Errorf("could not find cloud provider")
+	CloudKeystoreNotFoundError        = fmt.Errorf("could not find cloud keystore")
 )
