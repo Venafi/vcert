@@ -48,7 +48,7 @@ Use these links to quickly jump to a relevant section lower on this page:
 Review these prerequisites to get started. You'll need the following:
 
 1. Verify that the Palo Alto Networks NGTS API is accessible from the system where VCert will be run:
-    - `https://api.sase.paloaltonetworks.com/ngts`
+    - `https://api.strata.paloaltonetworks.com/ngts`
 2. You have successfully registered a Palo Alto Networks NGTS service account and the service account has been granted appropriate 
 permissions to manage certificates. See the [Palo Alto Networks service account documentation](https://pan.dev/scm/docs/service-accounts/) for more information about service accounts. The table below     
    shows the minimum required NGTS permissions for each command:
@@ -96,7 +96,7 @@ The following options apply to the `enroll`, `pickup`, and `renew` actions:
 | `--test-mode-delay`  | Use to specify the maximum number of seconds for the random test-mode connection delay.  Default is 15 (seconds).                                                                                                                                                                                                                                                                                                                                |
 | `--timeout`          | Use to specify the maximum amount of time to wait in seconds for a certificate to be processed by Palo Alto Networks NGTS. Default is 120 (seconds).                                                                                                                                                                                                                                                                                             |
 | `--trust-bundle`     | Use to specify a file with PEM formatted certificates to be used as trust anchors when communicating with Palo Alto Networks NGTS. Generally not needed because NGTS is secured by a publicly trusted certificate, but it may be needed if your organization requires VCert to traverse a proxy server. VCert uses the trust store of your operating system for this purpose if not specified.<br/>Example: `--trust-bundle /path-to/bundle.pem` |
-| `-u` or `--url`      | Use to specify the URL of the Palo Alto Networks NGTS API server.<br/>Default: `https://api.sase.paloaltonetworks.com/ngts`<br/>Example: `-u https://api.sase.paloaltonetworks/ngts.com`                                                                                                                                                                                                                                                                   |
+| `-u` or `--url`      | Use to specify the URL of the Palo Alto Networks NGTS API server.<br/>Default: `https://api.strata.paloaltonetworks.com/ngts`<br/>Example: `-u https://api.strata.paloaltonetworks/ngts.com`                                                                                                                                                                                                                                                                   |
 | `--verbose`          | Use to increase the level of logging detail, which is helpful when troubleshooting issues.                                                                                                                                                                                                                                                                                                                                                       |
 
 ### Environment Variables
@@ -291,7 +291,7 @@ Options:
 
 For the purposes of the following examples, assume the following:
 
-- The Palo Alto Networks NGTS API is accessible at `https://api.sase.paloaltonetworks.com/ngts`
+- The Palo Alto Networks NGTS API is accessible at `https://api.strata.paloaltonetworks.com/ngts`
 - A service account has been registered and granted the needed permissions and you have obtained an OAuth access token. 
 - A CA Account and Issuing Template have been created and configured appropriately (organization, city, state, country, 
 key length, allowed domains, etc.). 
