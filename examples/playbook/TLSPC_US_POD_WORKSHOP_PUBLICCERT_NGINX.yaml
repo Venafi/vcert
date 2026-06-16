@@ -1,0 +1,27 @@
+config:
+  connection:
+    platform: vaas #cloudplatform
+    credentials:
+      apiKey: '{{ Env "TLSPC_APIKEY" }}'
+certificateTasks:
+  - name: haproxy # Task Identifier, can be used with 
+    renewBefore: 30d
+    setEnvVars: ["thumbprint"]
+    request:
+      csr: local
+      keySize: 3072
+      subject:
+        commonName: '{{Env "PUBLICDOMAIN"}}'
+        country: US
+        locality: Salt Lake City
+        state: Utah
+        organization: Venafi, Inc.
+      sanDNS: 
+        - '{{Env "PUBLICDOMAIN"}}'
+      zone: 'Workshop Labs\Workshop Public' #public or internal controled in the control plane 
+    installations:
+      - format: PEM
+        file: "/etc/ssl/certs/web.crt"
+        chainFile: "/etc/ssl/certs/web.crt.chain"
+        keyFile: "/etc/ssl/private/web.key"
+        afterInstallAction: "cat /etc/ssl/certs/web.crt.chain >> /etc/ssl/certs/web.crt"
