@@ -74,7 +74,7 @@ tpp_user = admin
 cloud_zone = Default`
 
 const validNgtsConfig1 = `
-url = https://xyz.api.sase.paloaltonetworks.com/ngts/ngts
+url = https://xyz.api.sase.paloaltonetworks.com/ngts
 ngts_token_url = https://xyz.test.appsvc.paloaltonetworks.com/auth/v1/test2/access_token
 ngts_scope = tsg_id:0123456789
 ngts_client_id = test_client_id
@@ -83,14 +83,14 @@ ngts_zone = vcert
 `
 
 const validNgtsConfig2 = `
-url = https://xyz.api.sase.paloaltonetworks.com/ngts/ngts
+url = https://xyz.api.sase.paloaltonetworks.com/ngts
 ngts_access_token = test_access_token
 ngts_zone = vcert
 `
 
 // no token url
 const invalidNgtsConfig = `
-url = https://xyz.api.sase.paloaltonetworks.com/ngts/ngts
+url = https://xyz.api.sase.paloaltonetworks.com/ngts
 ngts_scope = tsg_id:0123456789
 ngts_client_id = test_client_id
 ngts_client_secret = 1234d146-0ccc-11b2-001b-a111aa11a11a
@@ -99,7 +99,7 @@ ngts_zone = vcert
 
 // no access token and client id
 const invalidNgtsConfig2 = `
-url = https://xyz.api.sase.paloaltonetworks.com/ngts/ngts
+url = https://xyz.api.sase.paloaltonetworks.com/ngts
 ngts_scope = tsg_id:0123456789
 ngts_client_secret = 1234d146-0ccc-11b2-001b-a111aa11a11a
 ngts_zone = vcert
@@ -107,7 +107,7 @@ ngts_zone = vcert
 
 // no access token and client secret
 const invalidNgtsConfig3 = `
-url = https://xyz.api.sase.paloaltonetworks.com/ngts/ngts
+url = https://xyz.api.sase.paloaltonetworks.com/ngts
 ngts_scope = tsg_id:0123456789
 ngts_client_id = test_client_id
 ngts_zone = vcert
