@@ -283,6 +283,147 @@ func buildRequest(request domain.PlaybookRequest) certificate.Request {
 	return vcertRequest
 }
 
+// GetCertMetadata returns the platform-side thumbprint (SHA-1, uppercase
+// hex matching TPP's CertificateDetails.Thumbprint format) and ValidTo for
+// the cert object identified by pickupID. It performs a cheap metadata-only
+// fetch and does NOT retrieve the PEM payload or touch the key vault.
+// Returns an error if the connector does not support metadata lookup (e.g.
+// some non-TPP backends) or if the cert object does not exist.
+
+// LocateResult describes the cert object the platform currently considers
+// "the" cert matching a given CN/zone. Returned by LocateLatestCN.
+type LocateResult struct {
+	Thumbprint string // SHA-1 hex, uppercase
+	ValidTo    time.Time
+	Found      bool
+	ID         string // platform-specific identifier (DN for TPP, UUID for VCP)
+	UseCertID  bool   // true: use as certificate.Request.CertID (VCP). false: PickupID (TPP).
+}
+
+// ErrLocateNotSupported is returned by LocateLatestCN when the configured
+// platform does not implement a cheap "what's the current cert for this CN"
+// lookup. Callers should treat it as a signal to bypass pickup-first
+// mode and fall through to the normal enroll flow.
+var ErrLocateNotSupported = fmt.Errorf("certificate locate not supported on this platform")
+
+// LocateLatestCN returns the platform-side identity + metadata of the cert
+// the platform currently considers "current" for the playbook task's CN.
+//
+//   - TPP:  reads metadata for the cert object DN (zone + "" + CN) via
+//     Connector.RetrieveCertificateMetaData. One cheap GET.
+//   - VCP:  enumerates the tenant via Connector.ListCertificates and picks
+//     the cert with the matching CN that has the latest ValidTo.
+//     Note: today this fetches up to a fixed page size; for very
+//     large tenants a future revision should add pagination or a
+//     server-side CN filter.
+//   - others: returns ErrLocateNotSupported.
+func LocateLatestCN(config domain.Config, request domain.PlaybookRequest) (*LocateResult, error) {
+	switch config.Connection.GetConnectorType() {
+	case endpoint.ConnectorTypeTPP:
+		return locateTPP(config, request)
+	default:
+		// VCP and other backends: not supported in v1. See README for the
+		// design notes on why VCP needs a different locator strategy.
+		return nil, ErrLocateNotSupported
+	}
+}
+
+func locateTPP(config domain.Config, request domain.PlaybookRequest) (*LocateResult, error) {
+	connector, err := buildClient(config, request.Zone, request.Timeout)
+	if err != nil {
+		return nil, fmt.Errorf("could not build connector: %w", err)
+	}
+	dn := request.PickupID
+	if dn == "" {
+		dn = request.Zone + "\\" + request.Subject.CommonName
+	}
+	md, err := connector.RetrieveCertificateMetaData(dn)
+	if err != nil {
+		return &LocateResult{Found: false}, err
+	}
+	if md == nil || md.CertificateDetails.Thumbprint == "" {
+		return &LocateResult{Found: false}, nil
+	}
+	return &LocateResult{
+		Thumbprint: md.CertificateDetails.Thumbprint,
+		ValidTo:    md.CertificateDetails.ValidTo,
+		Found:      true,
+		ID:         dn,
+		UseCertID:  false,
+	}, nil
+}
+
+// PickupCertificateByLocator fetches the full cert (+ key if requested)
+// using the platform-appropriate identifier from a prior LocateLatestCN
+// call. On TPP loc.ID is used as PickupID; on VCP it's used as CertID.
+func PickupCertificateByLocator(config domain.Config, request domain.PlaybookRequest, loc *LocateResult, keyPassword string, fetchKey bool) (*certificate.PEMCollection, *certificate.Request, error) {
+	if loc == nil {
+		return nil, nil, fmt.Errorf("nil LocateResult")
+	}
+	connector, err := buildClient(config, request.Zone, request.Timeout)
+	if err != nil {
+		return nil, nil, fmt.Errorf("could not build connector for pickup: %w", err)
+	}
+	vReq := buildRequest(request)
+	if loc.UseCertID {
+		vReq.CertID = loc.ID
+	} else {
+		vReq.PickupID = loc.ID
+	}
+	vReq.KeyPassword = keyPassword
+	vReq.FetchPrivateKey = fetchKey
+	pcc, err := connector.RetrieveCertificate(&vReq)
+	if err != nil {
+		return nil, &vReq, err
+	}
+	return pcc, &vReq, nil
+}
+
+// ErrMetadataNotSupported is returned by GetCertMetadata when the configured
+// platform does not implement the cheap thumbprint+validity lookup.
+// Currently only TPP (CyberArk Certificate Manager, Self-Hosted) supports
+// it; on VCP, Firefly, NGTS, etc. callers should fall back to a full pickup.
+var ErrMetadataNotSupported = fmt.Errorf("certificate metadata lookup not supported on this platform")
+
+func GetCertMetadata(config domain.Config, request domain.PlaybookRequest, pickupID string) (thumbprint string, validTo time.Time, err error) {
+	if config.Connection.GetConnectorType() != endpoint.ConnectorTypeTPP {
+		return "", time.Time{}, ErrMetadataNotSupported
+	}
+	connector, err := buildClient(config, request.Zone, request.Timeout)
+	if err != nil {
+		return "", time.Time{}, fmt.Errorf("could not build connector for metadata: %w", err)
+	}
+	md, err := connector.RetrieveCertificateMetaData(pickupID)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+	if md == nil {
+		return "", time.Time{}, fmt.Errorf("empty metadata response")
+	}
+	return md.CertificateDetails.Thumbprint, md.CertificateDetails.ValidTo, nil
+}
+
+// PickupCertificate retrieves a previously-issued certificate (and optionally
+// its private key) from the connected platform without enrolling a new one.
+// pickupID is the platform-specific certificate identifier (for TPP this is
+// the cert object DN; for VCP it is the request id). keyPassword, if non-empty,
+// is sent so the platform encrypts the returned private key with it.
+func PickupCertificate(config domain.Config, request domain.PlaybookRequest, pickupID, keyPassword string, fetchKey bool) (*certificate.PEMCollection, *certificate.Request, error) {
+	connector, err := buildClient(config, request.Zone, request.Timeout)
+	if err != nil {
+		return nil, nil, fmt.Errorf("could not build connector for pickup: %w", err)
+	}
+	vReq := buildRequest(request)
+	vReq.PickupID = pickupID
+	vReq.KeyPassword = keyPassword
+	vReq.FetchPrivateKey = fetchKey
+	pcc, err := connector.RetrieveCertificate(&vReq)
+	if err != nil {
+		return nil, &vReq, err
+	}
+	return pcc, &vReq, nil
+}
+
 // DecryptPrivateKey takes an encrypted private key and decrypts it using the given password.
 //
 // The private key must be in PKCS8 format.
