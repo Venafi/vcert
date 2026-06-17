@@ -972,7 +972,7 @@ func (c *Connector) getCertIDFromPickupID(pickupId string, timeout time.Duration
 	for {
 		certStatus, err := c.getCertificateStatus(pickupId)
 		if err != nil {
-			return nil, fmt.Errorf("unable to retrieve: %s", err)
+			return nil, fmt.Errorf("unable to retrieve: %w", err)
 		}
 		if certStatus.Status == "ISSUED" {
 			certificateId = certStatus.CertificateIdsList[0]
@@ -1329,25 +1329,37 @@ func (c *Connector) getCertificateStatus(requestID string) (certStatus *certific
 	if err != nil {
 		return nil, err
 	}
-	if statusCode == http.StatusOK {
+
+	switch statusCode {
+	case http.StatusOK:
 		certStatus = &certificateStatus{}
 		err = json.Unmarshal(body, certStatus)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse certificate request status response: %s", err)
 		}
-		return
-	}
-	respErrors, err := parseResponseErrors(body)
-	if err == nil {
-		respError := fmt.Sprintf("unexpected status code on Palo Alto Networks Next-Gen Trust Security (NGTS) certificate search. Status: %d\n", statusCode)
-		for _, e := range respErrors {
-			respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
+		return certStatus, nil
+	case http.StatusNotFound:
+		respErrors, err := parseResponseErrors(body)
+		if err == nil {
+			respError := fmt.Sprintf("Palo Alto Networks Next-Gen Trust Security (NGTS) certificate request search status code: %d\n", statusCode)
+			for _, e := range respErrors {
+				respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
+			}
+			return nil, fmt.Errorf("%s: %w", respError, verror.CertificateRequestNotFoundError)
 		}
-		return nil, errors.New(respError)
+		return nil, verror.CertificateRequestNotFoundError
+	default:
+		respErrors, err := parseResponseErrors(body)
+		if err == nil {
+			respError := fmt.Sprintf("unexpected status code on Palo Alto Networks Next-Gen Trust Security (NGTS) certificate search. Status: %d\n", statusCode)
+			for _, e := range respErrors {
+				respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
+			}
+			return nil, errors.New(respError)
+		}
+
+		return nil, fmt.Errorf("unexpected status code on Palo Alto Networks Next-Gen Trust Security (NGTS) certificate search. Status: %d", statusCode)
 	}
-
-	return nil, fmt.Errorf("unexpected status code on Palo Alto Networks Next-Gen Trust Security (NGTS) certificate search. Status: %d", statusCode)
-
 }
 
 func retrieveServiceGeneratedCertData(c *Connector, req *certificate.Request, dekInfo *EdgeEncryptionKey) (*certificate.PEMCollection, error) {

@@ -1,11 +1,13 @@
 package ngts
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/Venafi/vcert/v5/pkg/policy"
+	"github.com/Venafi/vcert/v5/pkg/verror"
 )
 
 func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) {
@@ -93,7 +95,7 @@ func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (stri
 
 	cit, err := getCit(c, citName)
 
-	if err != nil {
+	if err != nil && !errors.Is(err, verror.ZoneNotFoundError) {
 		return "", err
 	}
 

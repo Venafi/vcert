@@ -36,8 +36,12 @@ func (c *CloudProvidersClient) GetCloudProvider(ctx context.Context, request dom
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve Cloud Provider with name %s: %w", request.Name, err)
 	}
-	if resp == nil || resp.GetCloudProviders() == nil || len(resp.GetCloudProviders().GetNodes()) != 1 {
+	if resp == nil || resp.GetCloudProviders() == nil {
 		return nil, fmt.Errorf("could not find Cloud Provider with name %s", request.Name)
+	}
+
+	if len(resp.GetCloudProviders().GetNodes()) != 1 {
+		return nil, fmt.Errorf("%w with name %s", verror.CloudProviderNotFoundError, request.Name)
 	}
 
 	cp := resp.GetCloudProviders().GetNodes()[0]
@@ -75,7 +79,7 @@ func (c *CloudProvidersClient) GetCloudKeystore(ctx context.Context, request dom
 	}
 
 	if len(resp.GetCloudKeystores().GetNodes()) != 1 {
-		return nil, fmt.Errorf("could not find keystore with with %s", msg)
+		return nil, fmt.Errorf("%w with %s", verror.CloudKeystoreNotFoundError, msg)
 	}
 
 	ck := resp.GetCloudKeystores().GetNodes()[0]
