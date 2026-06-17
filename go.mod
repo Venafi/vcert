@@ -6,8 +6,7 @@ require (
 	github.com/Khan/genqlient v0.8.1
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
-	github.com/pavel-v-chernykh/keystore-go/v4 v4.3.0
-	github.com/pkg/errors v0.9.1
+	github.com/pavlo-v-chernykh/keystore-go/v4 v4.5.0
 	github.com/sosodev/duration v1.3.1
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
@@ -19,7 +18,6 @@ require (
 	golang.org/x/oauth2 v0.33.0
 	golang.org/x/term v0.43.0
 	gopkg.in/ini.v1 v1.67.1
-	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/utils v0.0.0-20251002143259-bc988d571ff4
 	software.sslmate.com/src/go-pkcs12 v0.6.0

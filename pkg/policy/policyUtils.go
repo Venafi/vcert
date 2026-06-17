@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 // TppKeyType represents the Private Key types supported by CyberArk Certificate Manager, Self-Hosted
