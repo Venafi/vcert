@@ -13,7 +13,7 @@ require (
 	github.com/urfave/cli/v2 v2.27.7
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78
 	go.uber.org/mock v0.6.0
-	go.uber.org/zap v1.27.1
+	go.uber.org/zap v1.28.0
 	golang.org/x/crypto v0.52.0
 	golang.org/x/oauth2 v0.33.0
 	golang.org/x/term v0.43.0
