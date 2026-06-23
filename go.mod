@@ -17,7 +17,7 @@ require (
 	golang.org/x/crypto v0.52.0
 	golang.org/x/oauth2 v0.33.0
 	golang.org/x/term v0.43.0
-	gopkg.in/ini.v1 v1.67.1
+	gopkg.in/ini.v1 v1.67.3
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/utils v0.0.0-20251002143259-bc988d571ff4
 	software.sslmate.com/src/go-pkcs12 v0.6.0
