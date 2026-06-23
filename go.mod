@@ -7,7 +7,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/pavlo-v-chernykh/keystore-go/v4 v4.5.0
-	github.com/sosodev/duration v1.3.1
+	github.com/sosodev/duration v1.4.0
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
 	github.com/urfave/cli/v2 v2.27.7
