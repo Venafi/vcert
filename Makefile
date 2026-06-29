@@ -1,4 +1,5 @@
 GOFLAGS ?= $(GOFLAGS:)
+LINTER_VERSION ?= v2.12.2
 
 VERSION=`git describe --abbrev=0 --tags`
 
@@ -135,5 +136,5 @@ release:
 	export "PATH=$(PATH):$(shell go env GOPATH)/bin" && ghr -prerelease -n $$RELEASE_VERSION -body="$$(cat ./release.txt)" $$RELEASE_VERSION artifacts/
 
 linter:
-	@golangci-lint --version || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b /go/bin
+	@golangci-lint --version || curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b /go/bin $(LINTER_VERSION)
 	golangci-lint run --timeout 5m
