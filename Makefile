@@ -136,6 +136,9 @@ release:
 	export "PATH=$(PATH):$(shell go env GOPATH)/bin" && ghr -prerelease -n $$RELEASE_VERSION -body="$$(cat ./release.txt)" $$RELEASE_VERSION artifacts/
 
 linter:
+	# Need to resolve HTTP 403 in Jenkins
+	# @golangci-lint --version 2>/dev/null | grep -q $(LINTER_VERSION) || \
+	# 	curl -sSfLv https://golangci-lint.run/install.sh | sh -s -- -b $(shell go env GOPATH)/bin $(LINTER_VERSION)
 	@golangci-lint --version 2>/dev/null | grep -q $(LINTER_VERSION) || \
-		curl -sSfLv https://golangci-lint.run/install.sh | sh -s -- -b $(shell go env GOPATH)/bin $(LINTER_VERSION)
+		go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(LINTER_VERSION)
 	golangci-lint run --timeout 5m
