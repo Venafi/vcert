@@ -1290,7 +1290,11 @@ func TestRequestCertificateServiceGenerated(t *testing.T) {
 
 	var isPending = true
 	var pcc *certificate.PEMCollection
+	deadline := time.Now().Add(60 * time.Second)
 	for isPending {
+		if time.Now().After(deadline) {
+			t.Fatalf("timed out waiting for certificate %s to be issued after 60s", pickupId)
+		}
 		t.Logf("%s is pending...", pickupId)
 		time.Sleep(time.Second * 1)
 		pcc, err = tpp.RetrieveCertificate(req)
