@@ -1312,7 +1312,9 @@ func (c *Connector) getCloudRequest(req *certificate.Request) (*certificateReque
 	}
 
 	if validityDuration != nil {
-		cloudReq.ValidityPeriod = "PT" + strings.ToUpper((*validityDuration).Truncate(time.Second).String())
+		// Day form ("P<days>D") — third-party CAs such as ZTPKI ignore an hours-only period
+		// ("PT<hours>H") and fall back to the template default (VC-55689).
+		cloudReq.ValidityPeriod = util.FormatValidityPeriodISO8601(*validityDuration)
 	}
 
 	if req.Tags != nil && len(req.Tags) > 0 {

@@ -28,6 +28,35 @@ func ConvertSecondsToTime(t int64) time.Time {
 	return time.Unix(0, t*int64(time.Second))
 }
 
+// FormatValidityPeriodISO8601 renders a certificate validity duration as an ISO-8601 period
+// string for CyberArk Certificate Manager, SaaS (VaaS) and NGTS certificate requests.
+//
+// Whole days are emitted in day form ("P<days>D"); a sub-day remainder is appended as a time
+// component ("P<days>DT<h>H<m>M<s>S"); a purely sub-day duration keeps the time-only form
+// ("PT<h>H<m>M<s>S"). The duration is truncated to whole seconds. A non-positive duration
+// yields an empty string so the caller omits the field and the server applies its default.
+//
+// The day component is required for third-party CA connectors such as ZTPKI, which honor the
+// requested validity only when the period carries days — an hours-only period like
+// "PT2160H0M0S" is silently ignored and the CA falls back to the issuing-template default
+// (VC-55689). The built-in CA honors either form, so day form is safe for all backends.
+func FormatValidityPeriodISO8601(d time.Duration) string {
+	d = d.Truncate(time.Second)
+	if d <= 0 {
+		return ""
+	}
+	days := int64(d / (24 * time.Hour))
+	remainder := d % (24 * time.Hour)
+	switch {
+	case days == 0:
+		return "PT" + strings.ToUpper(remainder.String())
+	case remainder == 0:
+		return fmt.Sprintf("P%dD", days)
+	default:
+		return fmt.Sprintf("P%dDT%s", days, strings.ToUpper(remainder.String()))
+	}
+}
+
 func GetJsonAsString(i interface{}) (s string) {
 	byte, _ := json.MarshalIndent(i, "", "  ")
 	s = string(byte)

@@ -3064,6 +3064,14 @@ func TestGetCloudRequest(t *testing.T) {
 		assert.NotNil(t, cloudReq)
 		assert.Equal(t, tags, cloudReq.Tags)
 	})
+	t.Run("validity hours rendered as ISO-8601 day form (VC-55689)", func(t *testing.T) {
+		req.ValidityHours = 720 //nolint:staticcheck // deprecated field; the terraform provider sets valid_days*24
+		cloudReq, _ := conn.getCloudRequest(&req)
+		req.ValidityHours = 0 //nolint:staticcheck
+		assert.NotNil(t, cloudReq)
+		// ZTPKI honors day form ("P30D"), not hours form ("PT720H0M0S") — see VC-55689.
+		assert.Equal(t, "P30D", cloudReq.ValidityPeriod)
+	})
 }
 
 func TestCalculateBackoffWithJitter(t *testing.T) {
