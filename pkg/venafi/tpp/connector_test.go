@@ -1485,7 +1485,10 @@ func TestRevokeAndDisableCertificate(t *testing.T) {
 
 func TestRetireCertificate(t *testing.T) {
 
-	cn := "www-retire1.venqa.venafi.com"
+	// Unique CN per run: a fixed CN reuses the same TPP object DN across runs, so
+	// RetrieveCertificate can return a previously-issued cert (bound to an older key)
+	// and fail CheckCertificate with "unmatched key modulus". See VC-55460.
+	cn := test.RandSpecificCN("www-retire1.venqa.venafi.com")
 
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
@@ -1539,7 +1542,8 @@ func TestRetireCertificate(t *testing.T) {
 
 func TestRetireWithThumbprintCertificate(t *testing.T) {
 
-	cn := "www-retireThumprint.venqa.venafi.com"
+	// Unique CN per run to avoid stale-object "unmatched key modulus" (see VC-55460).
+	cn := test.RandSpecificCN("www-retireThumprint.venqa.venafi.com")
 
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
@@ -1623,7 +1627,8 @@ func TestRetireNonIssuedCertificate(t *testing.T) {
 
 func TestRetireCertificateTwice(t *testing.T) {
 
-	cn := "www-retire2.venqa.venafi.com"
+	// Unique CN per run to avoid stale-object "unmatched key modulus" (see VC-55460).
+	cn := test.RandSpecificCN("www-retire2.venqa.venafi.com")
 
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
