@@ -57,10 +57,13 @@ When(/^that (CSR|certificate)?( Subject)? should( not)? contain "([^"]*)"$/) do 
          else ""
          end
   if subject
+    # Normalize whitespace around "=" so assertions work with both OpenSSL 1.1 ("C = C") and 3.x ("C=C") output formats.
+    normalized_text = text.gsub(/\s*=\s*/, '=')
+    normalized_expected = expected.gsub(/\s*=\s*/, '=')
     if negated
-      expect(text).not_to match(/Subject.+#{expected}/)
+      expect(normalized_text).not_to match(/Subject.+#{normalized_expected}/)
     else
-      expect(text).to match(/Subject.+#{expected}/)
+      expect(normalized_text).to match(/Subject.+#{normalized_expected}/)
     end
   else
     if negated

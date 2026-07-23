@@ -161,8 +161,12 @@ When(/^I( interactively)? get credentials from TPP(?: with)?(.+)?$/) do |interac
 
   if interactively
     Kernel.puts cmd
+    # Wrap in `script -qec "..." /dev/null` to run vcert inside a fake terminal (pty).
+    # vcert reads passwords in no-echo terminal mode, which requires a real TTY; without
+    # this, the interactive password prompt cannot be read and the command exits 1.
+    # Same approach as the interactive enroll/gencsr scenarios (see commit f445928).
     steps %{
-      Then I run `#{cmd}` interactively
+      Then I run `script -qec "#{cmd}" /dev/null` interactively
       And I type "#{ENV['TPP_PASSWORD']}"
       Then the exit status should be 0
     }

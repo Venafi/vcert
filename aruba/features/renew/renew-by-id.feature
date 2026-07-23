@@ -85,7 +85,9 @@ Feature: renew by -id
     And certificate in "c.pem" and certificate in "c1.pem" should not have the same serial
     And certificate in "c1.pem" should have 1 DNS SANs
 
-    @TPP
+    # VC-55786: legacy /vedsdk/Authorize/ endpoint (username+password auth) was removed in TPP 26.1;
+    # this outline's only endpoint is TPPdeprecated (username/password), so it can no longer authenticate. Skipped.
+    @TPP @TODO
     Examples:
     | endpoint          |
     | TPPdeprecated     |
