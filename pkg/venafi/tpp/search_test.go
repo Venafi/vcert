@@ -203,7 +203,7 @@ func TestRequestAndSearchCertificate(t *testing.T) {
 		TLSAddress: "wwww.example.com:443",
 	}
 
-	req.KeyLength = 1024
+	req.KeyLength = 2048
 
 	err = tpp.GenerateRequest(config, req)
 	if err != nil {
@@ -383,7 +383,7 @@ func TestRequestAndSearchCertificateWithFriendlyName(t *testing.T) {
 		TLSAddress: "wwww.example.com:443",
 	}
 
-	req.KeyLength = 1024
+	req.KeyLength = 2048
 
 	err = tpp.GenerateRequest(config, req)
 	if err != nil {

@@ -330,28 +330,35 @@ end
 
 And(/^"(.*)" should( not)? be encrypted "(.*)" private key$/) do |filename, negated, key_type|
 
-  if key_type == "RSA"
-    header = "-----BEGIN RSA PRIVATE KEY-----"
-  elsif key_type == "ECDSA"
-    header = "-----BEGIN EC PRIVATE KEY-----"
+  case key_type
+  when "RSA"
+    legacy_header = "-----BEGIN RSA PRIVATE KEY-----"
+  when "ECDSA"
+    legacy_header = "-----BEGIN EC PRIVATE KEY-----"
   else
     fail(ArgumentError.new("Unexpected Key Type. Unknown Key Type: #{key_type}"))
   end
+  pkcs8_encrypted_header = "-----BEGIN ENCRYPTED PRIVATE KEY-----"
 
   file_path = Dir.pwd + PATH_SEPARATOR + TEMP_PATH + PATH_SEPARATOR + filename
   lines = File.open(file_path).first(2).map(&:strip)
 
-  if lines[0] == header then
-    if lines[1].include?("ENCRYPTED")
-      if negated
-        fail(ArgumentError.new("Expected #{key_type} key to not be encrypted but fail to found on first line: #{lines[1]}"))
-      end
+  encrypted =
+    if lines[0] == pkcs8_encrypted_header
+      true
+    elsif lines[0] == legacy_header
+      lines[1].include?("ENCRYPTED")
     else
-      unless negated
-        fail(ArgumentError.new("Expected #{key_type} key to be encrypted but fail to found on first line: #{lines[1]}"))
-      end
+      false
+    end
+
+  if negated
+    if encrypted
+      fail(ArgumentError.new("Expected #{key_type} key to NOT be encrypted, but it is. First line: #{lines[0]}"))
     end
   else
-    fail(ArgumentError.new("Expected #{key_type} key headers: #{header} but got in first line: #{lines[0]}"))
+    unless encrypted
+      fail(ArgumentError.new("Expected #{key_type} key to be encrypted, but it is not. First line: #{lines[0]}"))
+    end
   end
 end

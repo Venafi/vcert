@@ -23,7 +23,9 @@ Feature: Enrolling certificates with -config option
     Examples:
       | config-file |
       | tpp.ini     |
-      |tpp-deprecated.ini|
+      # VC-55786: legacy /vedsdk/Authorize/ endpoint (username+password auth) was removed in TPP 26.1;
+      # tpp-deprecated.ini exercises only that endpoint, so it can no longer enroll. Row disabled.
+      # |tpp-deprecated.ini|
 
     @VAAS
     Examples:

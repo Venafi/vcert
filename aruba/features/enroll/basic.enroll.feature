@@ -14,7 +14,7 @@ Feature: Enroll certificate
 
   @FAKE
   Scenario: Enroll with interactive mode
-    When I run `vcert enroll -test-mode -test-mode-delay 0 -cn vfidev.example.com` interactively
+    When I run `script -qec "vcert enroll -test-mode -test-mode-delay 0 -cn vfidev.example.com" /dev/null` interactively
     And I type ""
     And I type ""
     Then it should post certificate request
@@ -22,7 +22,7 @@ Feature: Enroll certificate
 
   @FAKE
   Scenario: Passphrases don't match
-    When I run `vcert enroll -test-mode -test-mode-delay 0 -cn vfidev.example.com` interactively
+    When I run `script -qec "vcert enroll -test-mode -test-mode-delay 0 -cn vfidev.example.com" /dev/null` interactively
       And I type dummy password
       And I type "different password"
     Then it should fail with "Passphrases don't match"
@@ -111,7 +111,9 @@ Feature: Enroll certificate
     Given I enroll random certificate and_random_instance using TPP with -no-prompt -tls-address api-gw-myapp.example:8443  -app-info vcert:1.9.1
     Then the exit status should be 0
 
-  @TPP
+  # VC-55786: legacy /vedsdk/Authorize/ endpoint (username+password auth) was removed in TPP 26.1;
+  # TPPdeprecated enrolls only via that endpoint, so this scenario can no longer authenticate. Skipped.
+  @TPP @TODO
   Scenario: enroll with random instance and app-info and deprecated TPP
     Given I enroll random certificate and_random_instance using TPPdeprecated with -no-prompt -tls-address api-gw-myapp.example:8443  -app-info vcert:1.9.1
     Then the exit status should be 0

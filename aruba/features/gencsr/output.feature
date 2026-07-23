@@ -7,7 +7,7 @@ Feature: Generating simple certificate request
     And the default aruba exit timeout is 180 seconds
 
   Scenario: where CSR is generated interactively with empty key-password
-    When I run `vcert gencsr -cn vfidev.example.com` interactively
+    When I run `script -qec "vcert gencsr -cn vfidev.example.com" /dev/null` interactively
     And I type ""
     And I type ""
     Then the exit status should be 0
@@ -15,7 +15,7 @@ Feature: Generating simple certificate request
     And it should output CSR
 
   Scenario: where CSR is generated interactively with non-empty key-password
-    When I run `vcert gencsr -cn vfidev.example.com` interactively
+    When I run `script -qec "vcert gencsr -cn vfidev.example.com" /dev/null` interactively
     And I type dummy password
     And I type dummy password
     Then the exit status should be 0
