@@ -640,8 +640,18 @@ func (c *Connector) prepareRequest(req *certificate.Request, zone string) (tppRe
 	}
 	switch req.KeyType {
 	case certificate.KeyTypeRSA:
+		zoneConfig, err := c.ReadZoneConfiguration()
+		if err != nil {
+			log.Printf("Warning: could not read zone configuration: %v", err)
+		}
+
+		if zoneConfig != nil && zoneConfig.KeyConfiguration != nil && len(zoneConfig.KeyConfiguration.KeySizes) > 0 && req.KeyLength < zoneConfig.KeyConfiguration.KeySizes[0] {
+			tppReq.KeyBitSize = zoneConfig.KeyConfiguration.KeySizes[0]
+		} else {
+			tppReq.KeyBitSize = req.KeyLength
+		}
+
 		tppReq.KeyAlgorithm = "RSA"
-		tppReq.KeyBitSize = req.KeyLength
 	case certificate.KeyTypeECDSA:
 		tppReq.KeyAlgorithm = "ECC"
 		tppReq.EllipticCurve = req.KeyCurve.String()

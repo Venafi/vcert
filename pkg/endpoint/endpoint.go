@@ -525,8 +525,15 @@ func (z *ZoneConfiguration) UpdateCertificateRequest(request *certificate.Reques
 			request.KeyType = z.KeyConfiguration.KeyType
 		}
 		if request.KeyType == certificate.KeyTypeRSA {
-			if len(z.KeyConfiguration.KeySizes) != 0 && request.KeyLength == 0 {
-				request.KeyLength = z.KeyConfiguration.KeySizes[0]
+			recommendedKeySizes := z.KeyConfiguration.KeySizes
+			if len(recommendedKeySizes) != 0 && request.KeyLength == 0 {
+				request.KeyLength = recommendedKeySizes[0]
+				log.Println("Key length not specified. Using the recommended minimum from the issuing template", request.KeyLength, recommendedKeySizes[0])
+			}
+
+			if len(recommendedKeySizes) != 0 && request.KeyLength < recommendedKeySizes[0] {
+				log.Printf("Adjusting key length from %d to %d based the issuing template recommended settings", request.KeyLength, recommendedKeySizes[0])
+				request.KeyLength = recommendedKeySizes[0]
 			}
 		}
 		if request.KeyType == certificate.KeyTypeECDSA {
