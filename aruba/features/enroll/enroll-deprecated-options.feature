@@ -1,4 +1,6 @@
-@TPP
+# VC-55786: legacy /vedsdk/Authorize/ endpoint (username+password auth) was removed in TPP 26.1;
+# every scenario here authenticates via TPPdeprecated (username/password), so none can enroll. Skipped.
+@TPP @TODO
 Feature: Tests with deprecated TPP options
 
   As a user

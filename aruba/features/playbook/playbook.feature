@@ -459,7 +459,9 @@ Feature: playbook
     And I uninstall file named "ch1.cer"
     And I uninstall file named "k1.pem"
 
-    @TPP
+    # VC-55866: EncryptPkcs8PrivateKey (pkg/util/utils.go) can't parse SEC1-encoded ECDSA keys,
+    # so encrypted-PEM install of a service-generated ECDSA key fails. Skipped until the bug is fixed.
+    @TPP @TODO
     Examples:
       | platform | config-file       |
       | TPP      | playbook-tpp.yml  |

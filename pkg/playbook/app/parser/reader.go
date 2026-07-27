@@ -92,7 +92,7 @@ func readFile(location string) ([]byte, error) {
 	zap.L().Info("checking if the file is too big", zap.String("location", location))
 	fileInfo, err := os.Stat(location)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf(errorTemplate, ErrReadFile, err.Error())
 	}
 
 	if MaxFileSizeBytes < fileInfo.Size() {
