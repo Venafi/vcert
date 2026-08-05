@@ -138,6 +138,10 @@ func convertToSshCertReq(req *certificate.SshCertRequest) certificate.TPPSshCert
 		tppSshCertReq.ForceCommand = req.ForceCommand
 	}
 
+	if req.PrivateKeyPassphrase != "" {
+		tppSshCertReq.PrivateKeyPassphrase = req.PrivateKeyPassphrase
+	}
+
 	tppSshCertReq.IncludePrivateKeyData = true
 	tppSshCertReq.IncludeCertificateDetails = true
 
