@@ -1,0 +1,33 @@
+certificateTasks:
+  - name: RDP # Task Identifier, no relevance in tool run
+    renewBefore: 30d  # or percentage like 30%
+    setEnvVars: ["thumbprint"]
+    request:
+      csr: local
+      keySize: 3072
+      subject:
+        commonName: '{{ Env "TLSPC_Hostname" }}.tlsp.demo'
+        country: GB
+        locality: London
+        state: London
+        organization: Venafi
+        orgUnits: [RDP]
+      zone: 'Certificates\Demo Operational\Pull\RDP'
+      location:
+        instance: '{{ Env "TLSPC_Hostname" }}.tlsp.demo'
+        tlsAddress:  '{{ Env "TLSPC_Hostname" }}.tlsp.demo:3389'
+        zone: 'Installations\Agentless\SLC\Demo Operational\Pull\RDP'
+        replace: true      
+    installations:
+      - format: CAPI
+        capiLocation: 'LocalMachine\MY'
+        capiFriendlyName: 'vCert Playbook - TLSDC_RDP_Demo' #when changing this also change the removal command below
+        capiIsNonExportable: True      
+        afterInstallAction: $path = (Get-WmiObject -class "Win32_TSGeneralSetting" -Namespace root\cimv2\terminalservices -Filter "TerminalName='RDP-tcp'").__path; $result = Set-WmiInstance -Path $path -argument @{SSLCertificateSHA1Hash="$Env:VCERT_RDP_THUMBPRINT"}; Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.FriendlyName -eq "vCert Playbook - TLSDC_RDP_Demo" -and $_.Thumbprint -ne $Env:VCERT_RDP_THUMBPRINT } | ForEach-Object { Remove-Item -Path "Cert:\LocalMachine\My\$($_.Thumbprint)" -Force }
+config:
+  connection:
+    platform: tpp
+    url: https://dc.tlsp.demo # URL to TPP instance
+    credentials:
+      accessToken: '{{ Env "TPP_ACCESS_TOKEN" }}'
+      refreshToken: '{{ Env "TPP_REFRESH_TOKEN" }}'

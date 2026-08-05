@@ -1,0 +1,30 @@
+config:
+  connection:
+    platform: vaas #cloudplatform
+    credentials:
+      apiKey: '{{ Env "TLSPC_APIKEY" }}'
+certificateTasks:
+  - name: nginx # Task Identifier, can be used with 
+    renewBefore: 30d
+    setEnvVars: ["thumbprint"]
+    request:
+      csr: local
+      keySize: 3072
+      subject:
+        commonName: '{{Env "DOMAINS"}}'
+        country: GB
+        locality: London
+        state: London
+        organization: Venafi
+        orgUnits:
+          - vcert
+      sanDNS: 
+        - '{{Env "DOMAINS"}}'
+      zone: 'Nginx\public_le'
+    installations:
+      - format: PEM
+        file: "/etc/ssl/certs/nginx_443.crt"
+        chainFile: "/etc/ssl/certs/nginx_443.chain.crt"
+        keyFile: "/etc/ssl/private/nginx_443.key"
+        afterInstallAction: "cat /etc/ssl/certs/nginx_443.chain.crt >> /etc/ssl/certs/nginx_443.crt && systemctl reload nginx"
+        

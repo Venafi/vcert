@@ -1,0 +1,30 @@
+config:
+  connection:
+    platform: vaas #cloudplatform
+    credentials:
+      apiKey: '{{ Env "TLSPC_APIKEY" }}'
+certificateTasks:
+  - name: haproxy # Task Identifier, can be used with 
+    renewBefore: 30d
+    setEnvVars: ["thumbprint"]
+    request:
+      csr: local
+      keySize: 3072
+      subject:
+        commonName: '{{Env "DOMAINS"}}'
+        country: GB
+        locality: London
+        state: London
+        organization: Venafi
+        orgUnits:
+          - vcert
+      sanDNS: 
+        - '{{Env "DOMAINS"}}'
+      zone: 'HAProxy\public_le'
+    installations:
+      - format: PEM
+        file: "/etc/ssl/private/haproxy_443.pem"
+        chainFile: "/etc/ssl/private/haproxy_443.chain"
+        keyFile: "/etc/ssl/private/haproxy_443.key"
+        afterInstallAction: "cat /etc/ssl/private/haproxy_443.chain >> /etc/ssl/private/haproxy_443.pem && cat /etc/ssl/private/haproxy_443.key >> /etc/ssl/private/haproxy_443.pem && systemctl restart haproxy"
+
