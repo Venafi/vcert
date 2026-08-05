@@ -2,14 +2,9 @@ config:
   connection:
     platform: tpp
     url: https://my.tpp.instance.company.com
+    trustBundle: 'path/to/TrustBundle.pem' # requierd for cert based authentication
     credentials:
-      accessToken:
-      # if the access_token is invalid, the refresh token / certificate will be used to refresh it (in that order)
-      # A valid accessToken (or refreshToken) can be provided when the pkcs12 certificate does not exist yet (think one time token?) to fetch a certificate
-      #  to be used in the future
-      refreshToken:
-      # If the refresh token is invalid or missing, the cert will be used to get a new accessToken
-      clientId: vcert-playbook  # API application with "Domain Computers" added as valid user
+      clientId: vcert-cli
       p12Task: apiP12
       scope: certificate:manage
 certificateTasks:
@@ -24,10 +19,12 @@ certificateTasks:
         #   by default, so either add it to the computer account, or use the sAMAccountName.
         # - Computer accounts can't be granted access to API applications by default. However, 
         #   a group can be setup (or leverage "Domain Computers" for all computer accounts)
-        commonName: '{{ Hostname | ToLower -}}$' # Example of using the sAMAccountName
+        commonName: 'certAuthUser' # Example of using the sAMAccountName
       sanUpn:
         - '{{ Hostname | ToLower -}}@lab.securafi.net'
       zone: Certificates\ClientAuth # Grant permissions in this folder to "Domain Computers"
     installations:
       - format: PKCS12
         file: '{{ Env "HOME" }}/.vcert/vcertAuth.p12'
+         p12Password: <MySuperSecurePassw0rd1!-ncu39rhw9suf>  
+
