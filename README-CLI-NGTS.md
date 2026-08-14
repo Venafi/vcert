@@ -387,7 +387,7 @@ Options:
 | `--token-url`      | The URL used to obtain the access token, provided by Palo Alto NGTS's service account configuration           |
 | `--client-id`      | The Client ID of the service account that will be used to obtain the access token                             |
 | `--client-secret`  | The Client Secret of the service account that will be used to obtain the access token                         |
-| `--scope`          | The scope(s) requested for the access token                                                                    |
+| `--scope`          | The scope requested for the access token, in the format `tsg_id:<TSG_ID>` where TSG_ID is a 10-digit integer.<br/>This can be any TSG the service account is authorized for, including a sub-TSG — not just the TSG it was originally created under. |
 
 ### Generating a new key pair and CSR
 ```
