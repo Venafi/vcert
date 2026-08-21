@@ -24,6 +24,7 @@ import (
 
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
+	"github.com/Venafi/vcert/v5/pkg/policy"
 )
 
 const (
@@ -282,6 +283,7 @@ func TestConvertServerPolicyToInternalPolicy(t *testing.T) {
 				Locked bool
 				Value  string
 			}
+			PkixParameterSet policy.LockedArrayAttribute
 		}{
 			KeyAlgorithm: _strValue{
 				Locked: true,
@@ -303,7 +305,10 @@ func TestConvertServerPolicyToInternalPolicy(t *testing.T) {
 			},
 		},
 	}
-	p := sp.toPolicy()
+	p, err := sp.toPolicy()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if len(p.AllowedKeyConfigurations) != 1 {
 		t.Fatal("invalid configurations values")
 	}
@@ -326,6 +331,7 @@ func TestConvertServerPolicyToInternalPolicy(t *testing.T) {
 				Locked bool
 				Value  string
 			}
+			PkixParameterSet policy.LockedArrayAttribute
 		}{
 			KeyAlgorithm: _strValue{
 				Locked: true,
@@ -347,7 +353,10 @@ func TestConvertServerPolicyToInternalPolicy(t *testing.T) {
 			},
 		},
 	}
-	p = sp.toPolicy()
+	p, err = sp.toPolicy()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if len(p.AllowedKeyConfigurations) != 1 {
 		t.Fatal("invalid configurations values")
 	}
@@ -370,6 +379,7 @@ func TestConvertServerPolicyToInternalPolicy(t *testing.T) {
 				Locked bool
 				Value  string
 			}
+			PkixParameterSet policy.LockedArrayAttribute
 		}{
 			KeyAlgorithm: _strValue{
 				Locked: false,
@@ -391,7 +401,10 @@ func TestConvertServerPolicyToInternalPolicy(t *testing.T) {
 			},
 		},
 	}
-	p = sp.toPolicy()
+	p, err = sp.toPolicy()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if len(p.AllowedKeyConfigurations) != 2 {
 		t.Fatal("invalid configurations values")
 	}
@@ -417,7 +430,10 @@ func TestConvertServerPolicyToInternalPolicy(t *testing.T) {
 			".test3.com",
 		},
 	}
-	p = sp.toPolicy()
+	p, err = sp.toPolicy()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if len(p.SubjectCNRegexes) != 3 {
 		t.Fatalf("invalid SubjectCNRegexes length, expected 3, got %d", len(p.SubjectCNRegexes))
 	}
@@ -430,4 +446,217 @@ func TestConvertServerPolicyToInternalPolicy(t *testing.T) {
 	if p.SubjectCNRegexes[2] != "^([\\p{L}\\p{N}-]+\\.)+test3\\.com$" {
 		t.Fatalf("invalid SubjectCNRegexes[2], expected ^([\\p{L}\\p{N}-*]+\\.)+test3\\.com$, got %s", p.SubjectCNRegexes[2])
 	}
+}
+
+// TestConvertServerPolicyToInternalPolicy_PkixParameterSet covers TPP 25.1+ policy folders, which lock
+// allowed key algorithms via KeyPair.PkixParameterSet.Values instead of the deprecated
+// KeyAlgorithm/KeySize/EllipticCurve Locked flags.
+func TestConvertServerPolicyToInternalPolicy_PkixParameterSet(t *testing.T) {
+	newServerPolicy := func(pkixLocked bool, pkixValues []string) serverPolicy {
+		var sp serverPolicy
+		sp.KeyPair.PkixParameterSet.Locked = pkixLocked
+		sp.KeyPair.PkixParameterSet.Value = pkixValues
+		return sp
+	}
+
+	t.Run("single RSA size allowed", func(t *testing.T) {
+		sp := newServerPolicy(true, []string{"1.3.6.1.4.1.28783.10.1.1.4096"})
+		p, err := sp.toPolicy()
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(p.AllowedKeyConfigurations) != 1 {
+			t.Fatalf("expected 1 configuration, got %d", len(p.AllowedKeyConfigurations))
+		}
+		k := p.AllowedKeyConfigurations[0]
+		if k.KeyType != certificate.KeyTypeRSA {
+			t.Fatalf("expected RSA, got %v", k.KeyType)
+		}
+		if len(k.KeySizes) != 1 || k.KeySizes[0] != 4096 {
+			t.Fatalf("expected [4096], got %v", k.KeySizes)
+		}
+	})
+
+	t.Run("multiple RSA sizes allowed", func(t *testing.T) {
+		sp := newServerPolicy(true, []string{
+			"1.3.6.1.4.1.28783.10.1.1.4096",
+			"1.3.6.1.4.1.28783.10.1.1.8192",
+		})
+		p, err := sp.toPolicy()
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(p.AllowedKeyConfigurations) != 1 {
+			t.Fatalf("expected 1 configuration, got %d", len(p.AllowedKeyConfigurations))
+		}
+		k := p.AllowedKeyConfigurations[0]
+		if k.KeyType != certificate.KeyTypeRSA {
+			t.Fatalf("expected RSA, got %v", k.KeyType)
+		}
+		if len(k.KeySizes) != 2 || k.KeySizes[0] != 4096 || k.KeySizes[1] != 8192 {
+			t.Fatalf("expected [4096 8192], got %v", k.KeySizes)
+		}
+	})
+
+	t.Run("single ECDSA curve allowed", func(t *testing.T) {
+		sp := newServerPolicy(true, []string{"1.3.6.1.4.1.28783.10.2.1.256"})
+		p, err := sp.toPolicy()
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(p.AllowedKeyConfigurations) != 1 {
+			t.Fatalf("expected 1 configuration, got %d", len(p.AllowedKeyConfigurations))
+		}
+		k := p.AllowedKeyConfigurations[0]
+		if k.KeyType != certificate.KeyTypeECDSA {
+			t.Fatalf("expected ECDSA, got %v", k.KeyType)
+		}
+		if len(k.KeyCurves) != 1 || k.KeyCurves[0] != certificate.EllipticCurveP256 {
+			t.Fatalf("expected [P256], got %v", k.KeyCurves)
+		}
+	})
+
+	t.Run("mixed RSA and ECDSA allowed", func(t *testing.T) {
+		sp := newServerPolicy(true, []string{
+			"1.3.6.1.4.1.28783.10.1.1.2048",
+			"1.3.6.1.4.1.28783.10.2.1.384",
+		})
+		p, err := sp.toPolicy()
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(p.AllowedKeyConfigurations) != 2 {
+			t.Fatalf("expected 2 configurations, got %d", len(p.AllowedKeyConfigurations))
+		}
+		if p.AllowedKeyConfigurations[0].KeyType != certificate.KeyTypeRSA || len(p.AllowedKeyConfigurations[0].KeySizes) != 1 || p.AllowedKeyConfigurations[0].KeySizes[0] != 2048 {
+			t.Fatalf("unexpected RSA configuration: %+v", p.AllowedKeyConfigurations[0])
+		}
+		if p.AllowedKeyConfigurations[1].KeyType != certificate.KeyTypeECDSA || len(p.AllowedKeyConfigurations[1].KeyCurves) != 1 || p.AllowedKeyConfigurations[1].KeyCurves[0] != certificate.EllipticCurveP384 {
+			t.Fatalf("unexpected ECDSA configuration: %+v", p.AllowedKeyConfigurations[1])
+		}
+	})
+
+	t.Run("not locked falls back to legacy fields", func(t *testing.T) {
+		sp := newServerPolicy(false, []string{"1.3.6.1.4.1.28783.10.1.1.4096"})
+		sp.KeyPair.KeyAlgorithm = _strValue{Locked: true, Value: "rsa"}
+		sp.KeyPair.KeySize.Locked = true
+		sp.KeyPair.KeySize.Value = 2048
+		p, err := sp.toPolicy()
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(p.AllowedKeyConfigurations) != 1 {
+			t.Fatalf("expected 1 configuration, got %d", len(p.AllowedKeyConfigurations))
+		}
+		k := p.AllowedKeyConfigurations[0]
+		if len(k.KeySizes) != 4 || k.KeySizes[0] != 2048 {
+			t.Fatalf("expected fallback to legacy KeySize field, got %v", k.KeySizes)
+		}
+	})
+
+	t.Run("an unrecognized OID alongside a recognized one is ignored", func(t *testing.T) {
+		sp := newServerPolicy(true, []string{"1.2.3.4.5", "1.3.6.1.4.1.28783.10.1.1.4096"})
+		p, err := sp.toPolicy()
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(p.AllowedKeyConfigurations) != 1 {
+			t.Fatalf("expected 1 configuration, got %d", len(p.AllowedKeyConfigurations))
+		}
+		k := p.AllowedKeyConfigurations[0]
+		if k.KeyType != certificate.KeyTypeRSA || len(k.KeySizes) != 1 || k.KeySizes[0] != 4096 {
+			t.Fatalf("expected only the recognized OID to be honoured, got %+v", k)
+		}
+	})
+
+	t.Run("wholly unrecognized OIDs return an actionable error", func(t *testing.T) {
+		sp := newServerPolicy(true, []string{"1.2.3.4.5"})
+		_, err := sp.toPolicy()
+		if err == nil {
+			t.Fatal("expected an error for an unrecognized OID")
+		}
+		if !strings.Contains(err.Error(), "no key algorithm that this version of vcert recognizes") {
+			t.Fatalf("unexpected error message: %v", err)
+		}
+	})
+
+	t.Run("locked with an empty list is an error, not an unrestricted policy", func(t *testing.T) {
+		sp := newServerPolicy(true, nil)
+		_, err := sp.toPolicy()
+		if err == nil {
+			t.Fatal("expected an error when the policy locks an empty PKIX parameter set")
+		}
+		if !strings.Contains(err.Error(), "allows no key algorithms") {
+			t.Fatalf("unexpected error message: %v", err)
+		}
+	})
+}
+
+// TestToZoneConfigPkixParameterSet covers the zone default a TPP 25.1+ folder offers. The
+// deprecated KeyAlgorithm/KeySize/EllipticCurve fields are empty on such folders, so without
+// reading the PKIX parameter set the zone default is left unset and UpdateCertificateRequest falls
+// back to RSA-2048 — which the same folder's AllowedKeyConfigurations then rejects.
+func TestToZoneConfigPkixParameterSet(t *testing.T) {
+	t.Run("RSA", func(t *testing.T) {
+		var sp serverPolicy
+		sp.KeyPair.PkixParameterSet.Locked = true
+		sp.KeyPair.PkixParameterSet.Value = []string{"1.3.6.1.4.1.28783.10.1.1.4096", "1.3.6.1.4.1.28783.10.1.1.8192"}
+
+		zc := endpoint.NewZoneConfiguration()
+		if err := sp.toZoneConfig(zc); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if zc.KeyConfiguration == nil {
+			t.Fatal("expected a zone key configuration")
+		}
+		if zc.KeyConfiguration.KeyType != certificate.KeyTypeRSA {
+			t.Fatalf("expected RSA, got %v", zc.KeyConfiguration.KeyType)
+		}
+		if len(zc.KeyConfiguration.KeySizes) != 1 || zc.KeyConfiguration.KeySizes[0] != 4096 {
+			t.Fatalf("expected the first allowed size [4096], got %v", zc.KeyConfiguration.KeySizes)
+		}
+	})
+
+	t.Run("ECDSA", func(t *testing.T) {
+		var sp serverPolicy
+		sp.KeyPair.PkixParameterSet.Locked = true
+		sp.KeyPair.PkixParameterSet.Value = []string{"1.3.6.1.4.1.28783.10.2.1.384"}
+
+		zc := endpoint.NewZoneConfiguration()
+		if err := sp.toZoneConfig(zc); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if zc.KeyConfiguration == nil {
+			t.Fatal("expected a zone key configuration")
+		}
+		if zc.KeyConfiguration.KeyType != certificate.KeyTypeECDSA {
+			t.Fatalf("expected ECDSA, got %v", zc.KeyConfiguration.KeyType)
+		}
+		if len(zc.KeyConfiguration.KeyCurves) != 1 || zc.KeyConfiguration.KeyCurves[0] != certificate.EllipticCurveP384 {
+			t.Fatalf("expected [P384], got %v", zc.KeyConfiguration.KeyCurves)
+		}
+	})
+
+	t.Run("the zone default satisfies the zone policy", func(t *testing.T) {
+		var sp serverPolicy
+		sp.KeyPair.PkixParameterSet.Locked = true
+		sp.KeyPair.PkixParameterSet.Value = []string{"1.3.6.1.4.1.28783.10.1.1.4096"}
+
+		zc := endpoint.NewZoneConfiguration()
+		p, err := sp.toPolicy()
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if err := sp.toZoneConfig(zc); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		zc.Policy = p
+
+		req := certificate.Request{}
+		req.Subject.CommonName = "vcert.test.vfidev.com"
+		zc.UpdateCertificateRequest(&req)
+		if err := zc.ValidateCertificateRequest(&req); err != nil {
+			t.Fatalf("the request built from the zone default is rejected by the zone policy: %v", err)
+		}
+	})
 }

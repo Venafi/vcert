@@ -34,6 +34,7 @@ import (
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
 	headers "github.com/Venafi/vcert/v5/pkg/httputils"
+	"github.com/Venafi/vcert/v5/pkg/policy"
 )
 
 const defaultKeySize = 2048
@@ -828,6 +829,11 @@ type serverPolicy struct {
 			Locked bool
 			Value  string
 		}
+		// PkixParameterSet lists the PKIX OIDs of the key algorithms allowed by policy. Available
+		// from TPP 25.1 onwards, it supersedes KeyAlgorithm/KeySize/EllipticCurve above, which TPP
+		// no longer locks once a policy folder's allowed algorithms are configured via the newer
+		// AlgorithmSelector API.
+		PkixParameterSet policy.LockedArrayAttribute
 	}
 	ManagementType _strValue
 
@@ -853,16 +859,72 @@ type serverPolicy struct {
 	WildcardsAllowed      bool
 }
 
-func (sp serverPolicy) toZoneConfig(zc *endpoint.ZoneConfiguration) {
+// allowedKeyConfigurationsFromPkixParameterSet decodes a list of PKIX parameter set OIDs, as returned by
+// TPP 25.1+'s Certificates/CheckPolicy KeyPair.PkixParameterSet.Values, into AllowedKeyConfigurations.
+// The decoding is shared with pkg/policy's getpolicy/setpolicy CLI path, which reads the same OIDs
+// from the same TPP API family.
+func allowedKeyConfigurationsFromPkixParameterSet(oids []string) ([]endpoint.AllowedKeyConfiguration, error) {
+	decoded, err := policy.DecodePkixParameterSet(oids)
+	if err != nil {
+		return nil, fmt.Errorf("tpp: %w", err)
+	}
+
+	var configs []endpoint.AllowedKeyConfiguration
+	if len(decoded.RsaKeySizes) > 0 {
+		configs = append(configs, endpoint.AllowedKeyConfiguration{KeyType: certificate.KeyTypeRSA, KeySizes: decoded.RsaKeySizes})
+	}
+	if len(decoded.EllipticCurves) > 0 {
+		curves := make([]certificate.EllipticCurve, 0, len(decoded.EllipticCurves))
+		for _, name := range decoded.EllipticCurves {
+			var curve certificate.EllipticCurve
+			if err := curve.Set(name); err != nil {
+				return nil, fmt.Errorf("tpp: policy allows the elliptic curve %q, which vcert does not support: %w", name, err)
+			}
+			curves = append(curves, curve)
+		}
+		configs = append(configs, endpoint.AllowedKeyConfiguration{KeyType: certificate.KeyTypeECDSA, KeyCurves: curves})
+	}
+	return configs, nil
+}
+
+func (sp serverPolicy) toZoneConfig(zc *endpoint.ZoneConfiguration) error {
 	zc.Country = sp.Subject.Country.Value
 	zc.Organization = sp.Subject.Organization.Value
 	zc.OrganizationalUnit = sp.Subject.OrganizationalUnit.Values
 	zc.Province = sp.Subject.State.Value
 	zc.Locality = sp.Subject.City.Value
 	key := endpoint.AllowedKeyConfiguration{}
+
+	if len(sp.KeyPair.PkixParameterSet.Value) > 0 {
+		// On a folder configured through TPP 25.1+'s AlgorithmSelector API the deprecated
+		// KeyAlgorithm/KeySize/EllipticCurve fields are empty, so deriving the zone default from
+		// them leaves zc.KeyConfiguration nil. UpdateCertificateRequest would then fall back to
+		// RSA-2048, which the same folder's AllowedKeyConfigurations rejects. Take the first
+		// algorithm the policy offers instead; TPP lists them in its own preference order.
+		decoded, err := policy.DecodePkixParameterSet(sp.KeyPair.PkixParameterSet.Value)
+		if err != nil {
+			return fmt.Errorf("tpp: %w", err)
+		}
+		algorithm := policy.PkixToKeyAlgorithms[decoded.Oids[0]]
+		if algorithm.KeyType == "RSA" {
+			key.KeyType = certificate.KeyTypeRSA
+			key.KeySizes = []int{algorithm.KeySize}
+		} else {
+			curve := certificate.EllipticCurveNotSet
+			if err := curve.Set(algorithm.Curve); err != nil {
+				return fmt.Errorf("tpp: policy allows the elliptic curve %q, which vcert does not support: %w", algorithm.Curve, err)
+			}
+			key.KeyType = certificate.KeyTypeECDSA
+			key.KeyCurves = []certificate.EllipticCurve{curve}
+		}
+		zc.KeyConfiguration = &key
+		return nil
+	}
+
 	err := key.KeyType.Set(sp.KeyPair.KeyAlgorithm.Value, sp.KeyPair.EllipticCurve.Value)
 	if err != nil {
-		return
+		// The folder does not name a key algorithm at all, so it has no default to offer.
+		return nil
 	}
 	if sp.KeyPair.KeySize.Value != 0 {
 		key.KeySizes = []int{sp.KeyPair.KeySize.Value}
@@ -875,9 +937,14 @@ func (sp serverPolicy) toZoneConfig(zc *endpoint.ZoneConfiguration) {
 		}
 	}
 	zc.KeyConfiguration = &key
+	return nil
 }
 
-func (sp serverPolicy) toPolicy() (p endpoint.Policy) {
+// toPolicy converts a policy folder as reported by Certificates/CheckPolicy into the endpoint
+// policy vcert enforces. It returns an error rather than panicking, because the allowed key
+// algorithms are server-controlled: a folder may name an algorithm this build of vcert has never
+// heard of, and that must not take down a calling application.
+func (sp serverPolicy) toPolicy() (p endpoint.Policy, err error) {
 	const allAllowedRegex = ".*"
 
 	addStartEnd := func(s string) string {
@@ -981,10 +1048,19 @@ func (sp serverPolicy) toPolicy() (p endpoint.Policy) {
 	} else {
 		p.UpnSanRegExs = []string{}
 	}
-	if sp.KeyPair.KeyAlgorithm.Locked {
+	if sp.KeyPair.PkixParameterSet.Locked {
+		// An empty list is deliberately an error and not a fall-through to the deprecated fields
+		// below: those are unlocked on TPP 25.1+, so falling through would report the folder as
+		// allowing every key size and curve, which is the fail-open behaviour being fixed here.
+		configs, err := allowedKeyConfigurationsFromPkixParameterSet(sp.KeyPair.PkixParameterSet.Value)
+		if err != nil {
+			return p, err
+		}
+		p.AllowedKeyConfigurations = append(p.AllowedKeyConfigurations, configs...)
+	} else if sp.KeyPair.KeyAlgorithm.Locked {
 		var keyType certificate.KeyType
 		if err := keyType.Set(sp.KeyPair.KeyAlgorithm.Value, sp.KeyPair.EllipticCurve.Value); err != nil {
-			panic(err)
+			return p, err
 		}
 		key := endpoint.AllowedKeyConfiguration{KeyType: keyType}
 		if keyType == certificate.KeyTypeRSA {
@@ -1001,7 +1077,7 @@ func (sp serverPolicy) toPolicy() (p endpoint.Policy) {
 			var curve certificate.EllipticCurve
 			if sp.KeyPair.EllipticCurve.Locked {
 				if err := curve.Set(sp.KeyPair.EllipticCurve.Value); err != nil {
-					panic(err)
+					return p, err
 				}
 				key.KeyCurves = append(key.KeyCurves, curve)
 			} else {
@@ -1023,7 +1099,7 @@ func (sp serverPolicy) toPolicy() (p endpoint.Policy) {
 		if sp.KeyPair.EllipticCurve.Locked {
 			var curve certificate.EllipticCurve
 			if err := curve.Set(sp.KeyPair.EllipticCurve.Value); err != nil {
-				panic(err)
+				return p, err
 			}
 			p.AllowedKeyConfigurations = append(p.AllowedKeyConfigurations, endpoint.AllowedKeyConfiguration{
 				KeyType: certificate.KeyTypeECDSA, KeyCurves: []certificate.EllipticCurve{curve},
@@ -1036,5 +1112,5 @@ func (sp serverPolicy) toPolicy() (p endpoint.Policy) {
 	}
 	p.AllowWildcards = sp.WildcardsAllowed
 	p.AllowKeyReuse = sp.PrivateKeyReuseAllowed
-	return
+	return p, nil
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -16,7 +17,7 @@ import (
 var TppKeyType = []string{"RSA", "ECDSA", "ECC"}
 
 // TppRsaKeySize represents the Key sizes supported by CyberArk Certificate Manager, Self-Hosted for RSA Private Keys
-var TppRsaKeySize = []int{1024, 2048, 3072, 4096}
+var TppRsaKeySize = []int{1024, 2048, 3072, 4096, 8192}
 
 // CloudRsaKeySize represents the Key sizes supported by CyberArk Certificate Manager, SaaS for RSA Private Keys
 var CloudRsaKeySize = []int{1024, 2048, 3072, 4096}
@@ -31,12 +32,105 @@ var KeyAlgorithmsToPKIX = map[string]map[string]string{
 		"2048": "1.3.6.1.4.1.28783.10.1.1.2048",
 		"3072": "1.3.6.1.4.1.28783.10.1.1.3072",
 		"4096": "1.3.6.1.4.1.28783.10.1.1.4096",
+		"8192": "1.3.6.1.4.1.28783.10.1.1.8192",
 	},
 	"ECC": {
 		"P256": "1.3.6.1.4.1.28783.10.2.1.256",
 		"P384": "1.3.6.1.4.1.28783.10.2.1.384",
 		"P521": "1.3.6.1.4.1.28783.10.2.1.521",
 	},
+}
+
+// PkixOidKeyAlgorithm describes the key type/size/curve represented by a PKIX parameter set OID.
+type PkixOidKeyAlgorithm struct {
+	// KeyType is the key algorithm name spelled as KeyAlgorithmsToPKIX and a policy
+	// specification's keyTypes field spell it, i.e. "RSA" or "ECC".
+	KeyType string
+	KeySize int    // populated for RSA
+	Curve   string // populated for ECC, e.g. "P256"
+}
+
+// PkixToKeyAlgorithms is the inverse of KeyAlgorithmsToPKIX: it maps a PKIX parameter set OID, as
+// returned by TPP 25.1+'s AlgorithmSelector API (and surfaced via Certificates/CheckPolicy's
+// KeyPair.PkixParameterSet.Values), back to the key type/size/curve it represents. It is derived
+// from KeyAlgorithmsToPKIX so that teaching vcert a new algorithm is a single-site change and the
+// two directions cannot drift apart.
+var PkixToKeyAlgorithms = invertKeyAlgorithmsToPKIX(KeyAlgorithmsToPKIX)
+
+func invertKeyAlgorithmsToPKIX(forward map[string]map[string]string) map[string]PkixOidKeyAlgorithm {
+	inverse := make(map[string]PkixOidKeyAlgorithm)
+	for keyType, parameters := range forward {
+		for parameter, oid := range parameters {
+			entry := PkixOidKeyAlgorithm{KeyType: keyType}
+			if keyType == "RSA" {
+				size, err := strconv.Atoi(parameter)
+				if err != nil {
+					// KeyAlgorithmsToPKIX keys RSA by bit size; anything else is a typo in the
+					// table rather than something a server can trigger.
+					panic(fmt.Sprintf("policy: KeyAlgorithmsToPKIX has a non-numeric RSA key size %q", parameter))
+				}
+				entry.KeySize = size
+			} else {
+				entry.Curve = parameter
+			}
+			inverse[oid] = entry
+		}
+	}
+	return inverse
+}
+
+// DecodedPkixParameterSet is the decoded form of a TPP PKIX parameter set OID list.
+type DecodedPkixParameterSet struct {
+	// Oids are the OIDs the server returned that this version of vcert recognized, in the order
+	// the server returned them.
+	Oids []string
+	// KeyTypes holds the distinct key algorithm names ("RSA", "ECC") covered by Oids.
+	KeyTypes []string
+	// RsaKeySizes and EllipticCurves hold the RSA bit sizes and curve names covered by Oids.
+	RsaKeySizes    []int
+	EllipticCurves []string
+}
+
+// DecodePkixParameterSet decodes the PKIX parameter set OIDs returned by TPP 25.1+ in
+// Certificates/CheckPolicy's KeyPair.PkixParameterSet.Values.
+//
+// Individual OIDs that this version of vcert does not recognize are skipped with a warning rather
+// than failing the whole read: a newer TPP may offer algorithms this build predates, and refusing
+// the policy outright would make the zone unusable even for clients requesting an algorithm vcert
+// does understand. Skipping narrows the set of algorithms vcert will permit, so it stays
+// fail-closed. An empty list, or one in which nothing is recognized, is an error — reporting "no
+// restriction" for a folder that does restrict key algorithms would be fail-open.
+func DecodePkixParameterSet(oids []string) (*DecodedPkixParameterSet, error) {
+	if len(oids) == 0 {
+		return nil, fmt.Errorf("policy locks the PKIX parameter set but allows no key algorithms")
+	}
+
+	decoded := &DecodedPkixParameterSet{}
+	var unrecognized []string
+	for _, oid := range oids {
+		algorithm, ok := PkixToKeyAlgorithms[oid]
+		if !ok {
+			unrecognized = append(unrecognized, oid)
+			continue
+		}
+		decoded.Oids = append(decoded.Oids, oid)
+		if !existValueInArray(decoded.KeyTypes, algorithm.KeyType) {
+			decoded.KeyTypes = append(decoded.KeyTypes, algorithm.KeyType)
+		}
+		if algorithm.KeyType == "RSA" {
+			decoded.RsaKeySizes = append(decoded.RsaKeySizes, algorithm.KeySize)
+		} else {
+			decoded.EllipticCurves = append(decoded.EllipticCurves, algorithm.Curve)
+		}
+	}
+
+	if len(unrecognized) > 0 {
+		log.Printf("vCert: warning: ignoring PKIX parameter set OIDs that this version of vcert does not recognize: %s", strings.Join(unrecognized, ", "))
+	}
+	if len(decoded.Oids) == 0 {
+		return nil, fmt.Errorf("policy allows no key algorithm that this version of vcert recognizes (PKIX parameter set OIDs: %s)", strings.Join(oids, ", "))
+	}
+	return decoded, nil
 }
 
 func GetFileType(f string) string {
@@ -129,6 +223,18 @@ func validateKeyPair(ps *PolicySpecification) error {
 		return nil
 	}
 	keyPair := ps.Policy.KeyPair
+
+	if len(keyPair.PkixParameterSet) > 0 {
+		//For TPP 25.1+ the PKIX parameter set is what BuildTppPolicy writes back, and it can name
+		//several algorithms at once. keyTypes/rsaKeySizes/ellipticCurves are then only the decoded
+		//view of it, so the single-value checks below would reject vcert's own getpolicy output.
+		for _, oid := range keyPair.PkixParameterSet {
+			if _, ok := PkixToKeyAlgorithms[oid]; !ok {
+				return fmt.Errorf("specified pkixParameterSet contains an OID that is not supported: %s", oid)
+			}
+		}
+		return nil
+	}
 
 	//validate algorithm
 	if len(keyPair.KeyTypes) > 1 {
@@ -284,6 +390,13 @@ func validateDefaultKeyPair(ps *PolicySpecification) error {
 	}
 
 	keyPair := ps.Default.KeyPair
+
+	//validate the PKIX parameter set default used by TPP 25.1+
+	if keyPair.PkixParameterSetDefault != nil && *(keyPair.PkixParameterSetDefault) != "" {
+		if _, ok := PkixToKeyAlgorithms[*(keyPair.PkixParameterSetDefault)]; !ok {
+			return fmt.Errorf("specified default pkixParameterSetDefault is not a supported OID: %s", *(keyPair.PkixParameterSetDefault))
+		}
+	}
 
 	if keyPair.KeyType != nil && *(keyPair.KeyType) != "" && !existStringInArray([]string{*(keyPair.KeyType)}, TppKeyType) {
 		return fmt.Errorf("specified default keyType doesn't match with the supported ones")
@@ -596,34 +709,69 @@ func BuildPolicySpecificationForTPP(checkPolicyResp CheckPolicyResponse) (*Polic
 
 	//resolve key pair's attributes
 
-	//resolve keyTypes
-	if policy.KeyPairResponse.KeyAlgorithm.Value != "" {
-		if policy.KeyPairResponse.KeyAlgorithm.Locked {
-			keyPair.KeyTypes = []string{policy.KeyPairResponse.KeyAlgorithm.Value}
-		} else {
-			shouldCreateDefKeyPair = true
-			defaultKeyPair.KeyType = &policy.KeyPairResponse.KeyAlgorithm.Value
+	pkixParameterSet := policy.KeyPairResponse.PkixParameterSet
+	if pkixParameterSet.Locked || len(pkixParameterSet.Value) > 0 {
+		//TPP 25.1+: the allowed key algorithms are expressed as a list of PKIX parameter set OIDs
+		//rather than through the deprecated KeyAlgorithm/KeySize/EllipticCurve fields below, which
+		//TPP no longer locks once the newer AlgorithmSelector API is in use.
+		decoded, err := DecodePkixParameterSet(pkixParameterSet.Value)
+		if err != nil {
+			return nil, err
 		}
-	}
-
-	if strings.ToUpper(policy.KeyPairResponse.KeyAlgorithm.Value) == "RSA" {
-		//resolve rsaKeySizes
-		if policy.KeyPairResponse.KeySize.Value > 0 {
-			if policy.KeyPairResponse.KeySize.Locked {
-				keyPair.RsaKeySizes = []int{policy.KeyPairResponse.KeySize.Value}
-			} else {
-				shouldCreateDefKeyPair = true
-				defaultKeyPair.RsaKeySize = &policy.KeyPairResponse.KeySize.Value
+		if pkixParameterSet.Locked {
+			//The OIDs are carried through verbatim as well as decoded, so that a getpolicy ->
+			//setpolicy round trip is lossless: BuildTppPolicy writes pkixParameterSet straight back,
+			//whereas keyTypes/rsaKeySizes/ellipticCurves are the human-readable view of the same
+			//restriction and may each hold more than one value.
+			keyPair.PkixParameterSet = decoded.Oids
+			keyPair.KeyTypes = decoded.KeyTypes
+			keyPair.RsaKeySizes = decoded.RsaKeySizes
+			keyPair.EllipticCurves = decoded.EllipticCurves
+		} else {
+			//Unlocked means the folder recommends an algorithm rather than restricting the choice,
+			//so it belongs under defaults. TPP offers a single default, so take the first entry.
+			shouldCreateDefKeyPair = true
+			defaultOid := decoded.Oids[0]
+			defaultAlgorithm := PkixToKeyAlgorithms[defaultOid]
+			defaultKeyPair.PkixParameterSetDefault = &defaultOid
+			defaultKeyPair.KeyType = &defaultAlgorithm.KeyType
+			if defaultAlgorithm.KeySize > 0 {
+				defaultKeyPair.RsaKeySize = &defaultAlgorithm.KeySize
+			}
+			if defaultAlgorithm.Curve != "" {
+				defaultKeyPair.EllipticCurve = &defaultAlgorithm.Curve
 			}
 		}
 	} else {
-		//resolve ellipticCurve
-		if policy.KeyPairResponse.EllipticCurve.Value != "" {
-			if policy.KeyPairResponse.EllipticCurve.Locked {
-				keyPair.EllipticCurves = []string{policy.KeyPairResponse.EllipticCurve.Value}
+		//resolve keyTypes
+		if policy.KeyPairResponse.KeyAlgorithm.Value != "" {
+			if policy.KeyPairResponse.KeyAlgorithm.Locked {
+				keyPair.KeyTypes = []string{policy.KeyPairResponse.KeyAlgorithm.Value}
 			} else {
 				shouldCreateDefKeyPair = true
-				defaultKeyPair.EllipticCurve = &policy.KeyPairResponse.EllipticCurve.Value
+				defaultKeyPair.KeyType = &policy.KeyPairResponse.KeyAlgorithm.Value
+			}
+		}
+
+		if strings.ToUpper(policy.KeyPairResponse.KeyAlgorithm.Value) == "RSA" {
+			//resolve rsaKeySizes
+			if policy.KeyPairResponse.KeySize.Value > 0 {
+				if policy.KeyPairResponse.KeySize.Locked {
+					keyPair.RsaKeySizes = []int{policy.KeyPairResponse.KeySize.Value}
+				} else {
+					shouldCreateDefKeyPair = true
+					defaultKeyPair.RsaKeySize = &policy.KeyPairResponse.KeySize.Value
+				}
+			}
+		} else {
+			//resolve ellipticCurve
+			if policy.KeyPairResponse.EllipticCurve.Value != "" {
+				if policy.KeyPairResponse.EllipticCurve.Locked {
+					keyPair.EllipticCurves = []string{policy.KeyPairResponse.EllipticCurve.Value}
+				} else {
+					shouldCreateDefKeyPair = true
+					defaultKeyPair.EllipticCurve = &policy.KeyPairResponse.EllipticCurve.Value
+				}
 			}
 		}
 	}

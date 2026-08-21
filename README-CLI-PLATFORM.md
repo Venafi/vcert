@@ -227,6 +227,7 @@ Notes:
 - The `maxValidDays` policy does not apply as validity in CyberArk Certificate Manager, Self-Hosted is governed by the CA template.
 - Although the `orgs`, `localities`, `states`, and `countries` policy (`subject`) are arrays, only a single value is allowed by CyberArk Certificate Manager, Self-Hosted.
 - Although the `keyTypes`, `rsaKeySizes`, and `ellipticCurves` policy (`keyPair`) are arrays, only a single value is allowed by CyberArk Certificate Manager, Self-Hosted.
+- From version 25.1 onwards, CyberArk Certificate Manager, Self-Hosted expresses the allowed key algorithms as a list of PKIX parameter set OIDs. When a policy folder uses that mechanism, `getpolicy` reports the OIDs under the `pkixParameterSet` policy (`keyPair`) and also decodes them into `keyTypes`, `rsaKeySizes`, and `ellipticCurves` for readability. In that case the OID list is authoritative, several algorithms may be allowed at once, and the decoded arrays may therefore hold more than one value each.
 - The `autoInstalled` policy/default sets the _Management Type_ (i.e. `true`&#8594;Provisioning; `false`&#8594;Enrollment)
 - The `serviceGenerated` policy/default sets the _CSR Generation_ (i.e. `true`&#8594; CyberArk Certificate Manager, Self-Hosted generated; `false`&#8594;user provided)
 - If undefined key/value pairs are included in the policy specification, they will be silently ignored by this action.  This would include keys that are misspelled.
