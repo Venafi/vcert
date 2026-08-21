@@ -244,6 +244,11 @@ type KeyPairResponse struct {
 	KeyAlgorithm  LockedAttribute    `json:"KeyAlgorithm"`
 	KeySize       LockedIntAttribute `json:"KeySize"`
 	EllipticCurve LockedAttribute    `json:"EllipticCurve"`
+	// PkixParameterSet lists the PKIX OIDs of the key algorithms allowed by policy. Available
+	// from TPP 25.1 onwards, it supersedes KeyAlgorithm/KeySize/EllipticCurve above, which TPP
+	// no longer locks once a policy folder's allowed algorithms are configured via the newer
+	// AlgorithmSelector API.
+	PkixParameterSet LockedArrayAttribute `json:"PkixParameterSet"`
 }
 
 type SubjectResponse struct {

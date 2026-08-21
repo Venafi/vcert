@@ -1646,7 +1646,10 @@ func (c *Connector) ReadPolicyConfiguration() (policy *endpoint.Policy, err erro
 		if err != nil {
 			return nil, err
 		}
-		p := r.Policy.toPolicy()
+		p, err := r.Policy.toPolicy()
+		if err != nil {
+			return nil, err
+		}
 		policy = &p
 	} else if statusCode == http.StatusBadRequest {
 		err = json.Unmarshal(body, &r)
@@ -1683,8 +1686,13 @@ func (c *Connector) ReadZoneConfiguration() (config *endpoint.ZoneConfiguration,
 		if err != nil {
 			return nil, err
 		}
-		p := r.Policy.toPolicy()
-		r.Policy.toZoneConfig(zoneConfig)
+		p, err := r.Policy.toPolicy()
+		if err != nil {
+			return nil, err
+		}
+		if err := r.Policy.toZoneConfig(zoneConfig); err != nil {
+			return nil, err
+		}
 		zoneConfig.Policy = p
 		return zoneConfig, nil
 	} else if statusCode == http.StatusBadRequest {

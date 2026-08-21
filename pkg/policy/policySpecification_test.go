@@ -5,6 +5,7 @@ import (
 	"fmt"
 	t "log"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -256,6 +257,187 @@ func TestBuildPolicySpecificationForTPPLocked(t *testing.T) {
 	_, err := BuildPolicySpecificationForTPP(policyResp)
 	if err != nil {
 		t.Fatalf("Error building policy specification \nError: %s", err)
+	}
+}
+
+// TestBuildPolicySpecificationForTPPPkixParameterSet covers TPP 25.1+ policy folders, which lock
+// allowed key algorithms via KeyPair.PkixParameterSet.Values instead of the deprecated
+// KeyAlgorithm/KeySize/EllipticCurve Locked flags.
+func TestBuildPolicySpecificationForTPPPkixParameterSet(t *testing.T) {
+	tppPolicy := getPolicyResponse(true)
+	tppPolicy.KeyPairResponse.PkixParameterSet = LockedArrayAttribute{
+		Locked: true,
+		Value: []string{
+			"1.3.6.1.4.1.28783.10.1.1.4096",
+			"1.3.6.1.4.1.28783.10.1.1.8192",
+		},
+	}
+
+	ps, err := BuildPolicySpecificationForTPP(CheckPolicyResponse{Policy: &tppPolicy})
+	if err != nil {
+		t.Fatalf("Error building policy specification \nError: %s", err)
+	}
+
+	if ps.Policy == nil || ps.Policy.KeyPair == nil {
+		t.Fatal("expected a key pair policy to be set")
+	}
+	keyPair := ps.Policy.KeyPair
+	if len(keyPair.KeyTypes) != 1 || keyPair.KeyTypes[0] != "RSA" {
+		t.Fatalf("expected KeyTypes [RSA], got %v", keyPair.KeyTypes)
+	}
+	if len(keyPair.RsaKeySizes) != 2 || keyPair.RsaKeySizes[0] != 4096 || keyPair.RsaKeySizes[1] != 8192 {
+		t.Fatalf("expected RsaKeySizes [4096 8192], got %v", keyPair.RsaKeySizes)
+	}
+	if len(keyPair.EllipticCurves) != 0 {
+		t.Fatalf("expected no EllipticCurves, got %v", keyPair.EllipticCurves)
+	}
+	if len(keyPair.PkixParameterSet) != 2 || keyPair.PkixParameterSet[0] != "1.3.6.1.4.1.28783.10.1.1.4096" || keyPair.PkixParameterSet[1] != "1.3.6.1.4.1.28783.10.1.1.8192" {
+		t.Fatalf("expected the OIDs to be carried through verbatim, got %v", keyPair.PkixParameterSet)
+	}
+
+	// The whole point of carrying the OIDs through is that getpolicy output is valid setpolicy
+	// input; the decoded multi-valued rsaKeySizes must not trip setpolicy's validation.
+	if err := validateKeyPair(ps); err != nil {
+		t.Fatalf("getpolicy output is rejected as setpolicy input: %v", err)
+	}
+}
+
+// TestBuildPolicySpecificationForTPPPkixParameterSetEcc checks the key type name matches the
+// KeyAlgorithmsToPKIX key that setpolicy writes back with, rather than the "ECDSA" spelling.
+func TestBuildPolicySpecificationForTPPPkixParameterSetEcc(t *testing.T) {
+	tppPolicy := getPolicyResponse(true)
+	tppPolicy.KeyPairResponse.PkixParameterSet = LockedArrayAttribute{
+		Locked: true,
+		Value:  []string{"1.3.6.1.4.1.28783.10.2.1.384"},
+	}
+
+	ps, err := BuildPolicySpecificationForTPP(CheckPolicyResponse{Policy: &tppPolicy})
+	if err != nil {
+		t.Fatalf("Error building policy specification \nError: %s", err)
+	}
+	keyPair := ps.Policy.KeyPair
+	if len(keyPair.KeyTypes) != 1 || keyPair.KeyTypes[0] != "ECC" {
+		t.Fatalf("expected KeyTypes [ECC], got %v", keyPair.KeyTypes)
+	}
+	if len(keyPair.EllipticCurves) != 1 || keyPair.EllipticCurves[0] != "P384" {
+		t.Fatalf("expected EllipticCurves [P384], got %v", keyPair.EllipticCurves)
+	}
+	if _, ok := KeyAlgorithmsToPKIX[keyPair.KeyTypes[0]]; !ok {
+		t.Fatalf("keyType %q has no entry in KeyAlgorithmsToPKIX, so setpolicy would write no key algorithm restriction", keyPair.KeyTypes[0])
+	}
+	if err := validateKeyPair(ps); err != nil {
+		t.Fatalf("getpolicy output is rejected as setpolicy input: %v", err)
+	}
+}
+
+// TestBuildPolicySpecificationForTPPPkixParameterSetNotLocked checks that a folder which only
+// recommends an algorithm keeps its defaults, rather than losing them on a getpolicy round trip.
+func TestBuildPolicySpecificationForTPPPkixParameterSetNotLocked(t *testing.T) {
+	tppPolicy := getPolicyResponse(true)
+	tppPolicy.KeyPairResponse.PkixParameterSet = LockedArrayAttribute{
+		Locked: false,
+		Value:  []string{"1.3.6.1.4.1.28783.10.1.1.4096"},
+	}
+
+	ps, err := BuildPolicySpecificationForTPP(CheckPolicyResponse{Policy: &tppPolicy})
+	if err != nil {
+		t.Fatalf("Error building policy specification \nError: %s", err)
+	}
+	if ps.Policy != nil && ps.Policy.KeyPair != nil && len(ps.Policy.KeyPair.PkixParameterSet) > 0 {
+		t.Fatalf("an unlocked PKIX parameter set must not become a policy restriction, got %v", ps.Policy.KeyPair.PkixParameterSet)
+	}
+	if ps.Default == nil || ps.Default.KeyPair == nil {
+		t.Fatal("expected a default key pair to be set")
+	}
+	defaultKeyPair := ps.Default.KeyPair
+	if defaultKeyPair.PkixParameterSetDefault == nil || *(defaultKeyPair.PkixParameterSetDefault) != "1.3.6.1.4.1.28783.10.1.1.4096" {
+		t.Fatalf("expected pkixParameterSetDefault to be set, got %v", defaultKeyPair.PkixParameterSetDefault)
+	}
+	if defaultKeyPair.RsaKeySize == nil || *(defaultKeyPair.RsaKeySize) != 4096 {
+		t.Fatalf("expected a default rsaKeySize of 4096, got %v", defaultKeyPair.RsaKeySize)
+	}
+	if err := validateDefaultKeyPair(ps); err != nil {
+		t.Fatalf("getpolicy output is rejected as setpolicy input: %v", err)
+	}
+}
+
+// TestBuildPolicySpecificationForTPPPkixParameterSetPartiallyUnrecognized checks that one OID this
+// build has never heard of does not make the whole zone unreadable.
+func TestBuildPolicySpecificationForTPPPkixParameterSetPartiallyUnrecognized(t *testing.T) {
+	tppPolicy := getPolicyResponse(true)
+	tppPolicy.KeyPairResponse.PkixParameterSet = LockedArrayAttribute{
+		Locked: true,
+		Value:  []string{"1.2.3.4.5", "1.3.6.1.4.1.28783.10.1.1.4096"},
+	}
+
+	ps, err := BuildPolicySpecificationForTPP(CheckPolicyResponse{Policy: &tppPolicy})
+	if err != nil {
+		t.Fatalf("Error building policy specification \nError: %s", err)
+	}
+	keyPair := ps.Policy.KeyPair
+	if len(keyPair.RsaKeySizes) != 1 || keyPair.RsaKeySizes[0] != 4096 {
+		t.Fatalf("expected only the recognized OID to be honoured, got %v", keyPair.RsaKeySizes)
+	}
+	if len(keyPair.PkixParameterSet) != 1 || keyPair.PkixParameterSet[0] != "1.3.6.1.4.1.28783.10.1.1.4096" {
+		t.Fatalf("expected the unrecognized OID to be dropped, got %v", keyPair.PkixParameterSet)
+	}
+}
+
+func TestBuildPolicySpecificationForTPPPkixParameterSetUnrecognizedOID(t *testing.T) {
+	tppPolicy := getPolicyResponse(true)
+	tppPolicy.KeyPairResponse.PkixParameterSet = LockedArrayAttribute{
+		Locked: true,
+		Value:  []string{"1.2.3.4.5"},
+	}
+
+	_, err := BuildPolicySpecificationForTPP(CheckPolicyResponse{Policy: &tppPolicy})
+	if err == nil {
+		t.Fatal("expected an error when no PKIX parameter set OID is recognized")
+	}
+	if !strings.Contains(err.Error(), "no key algorithm that this version of vcert recognizes") {
+		t.Fatalf("unexpected error message: %v", err)
+	}
+}
+
+// TestBuildPolicySpecificationForTPPPkixParameterSetLockedEmpty checks the fail-closed behaviour:
+// TPP 25.1+ leaves the deprecated fields unlocked, so falling back to them would report the folder
+// as allowing every key size and curve.
+func TestBuildPolicySpecificationForTPPPkixParameterSetLockedEmpty(t *testing.T) {
+	tppPolicy := getPolicyResponse(true)
+	tppPolicy.KeyPairResponse.PkixParameterSet = LockedArrayAttribute{Locked: true}
+
+	_, err := BuildPolicySpecificationForTPP(CheckPolicyResponse{Policy: &tppPolicy})
+	if err == nil {
+		t.Fatal("expected an error when the policy locks an empty PKIX parameter set")
+	}
+	if !strings.Contains(err.Error(), "allows no key algorithms") {
+		t.Fatalf("unexpected error message: %v", err)
+	}
+}
+
+// TestPkixToKeyAlgorithmsIsInverseOfKeyAlgorithmsToPKIX guards against the two directions drifting
+// apart, which is what let the getpolicy/setpolicy ECC round trip break.
+func TestPkixToKeyAlgorithmsIsInverseOfKeyAlgorithmsToPKIX(t *testing.T) {
+	for keyType, parameters := range KeyAlgorithmsToPKIX {
+		for parameter, oid := range parameters {
+			algorithm, ok := PkixToKeyAlgorithms[oid]
+			if !ok {
+				t.Fatalf("OID %s (%s %s) has no reverse mapping", oid, keyType, parameter)
+			}
+			if algorithm.KeyType != keyType {
+				t.Fatalf("OID %s maps back to key type %q, expected %q", oid, algorithm.KeyType, keyType)
+			}
+			if keyType == "RSA" {
+				if strconv.Itoa(algorithm.KeySize) != parameter {
+					t.Fatalf("OID %s maps back to RSA size %d, expected %s", oid, algorithm.KeySize, parameter)
+				}
+				if !existIntInArray([]int{algorithm.KeySize}, TppRsaKeySize) {
+					t.Fatalf("RSA size %d has a PKIX OID but is missing from TppRsaKeySize, so setpolicy would reject it", algorithm.KeySize)
+				}
+			} else if algorithm.Curve != parameter {
+				t.Fatalf("OID %s maps back to curve %q, expected %q", oid, algorithm.Curve, parameter)
+			}
+		}
 	}
 }
 
