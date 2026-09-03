@@ -24,7 +24,6 @@ import (
 
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
-	"github.com/Venafi/vcert/v5/pkg/policy"
 )
 
 const (
@@ -273,18 +272,7 @@ func TestGetHttpClient(t *testing.T) {
 
 func TestConvertServerPolicyToInternalPolicy(t *testing.T) {
 	sp := serverPolicy{
-		KeyPair: struct {
-			KeyAlgorithm _strValue
-			KeySize      struct {
-				Locked bool
-				Value  int
-			}
-			EllipticCurve struct {
-				Locked bool
-				Value  string
-			}
-			PkixParameterSet policy.LockedArrayAttribute
-		}{
+		KeyPair: serverPolicyKeyPair{
 			KeyAlgorithm: _strValue{
 				Locked: true,
 				Value:  "rsa",
@@ -321,18 +309,7 @@ func TestConvertServerPolicyToInternalPolicy(t *testing.T) {
 	}
 
 	sp = serverPolicy{
-		KeyPair: struct {
-			KeyAlgorithm _strValue
-			KeySize      struct {
-				Locked bool
-				Value  int
-			}
-			EllipticCurve struct {
-				Locked bool
-				Value  string
-			}
-			PkixParameterSet policy.LockedArrayAttribute
-		}{
+		KeyPair: serverPolicyKeyPair{
 			KeyAlgorithm: _strValue{
 				Locked: true,
 				Value:  "ec",
@@ -369,18 +346,7 @@ func TestConvertServerPolicyToInternalPolicy(t *testing.T) {
 	}
 
 	sp = serverPolicy{
-		KeyPair: struct {
-			KeyAlgorithm _strValue
-			KeySize      struct {
-				Locked bool
-				Value  int
-			}
-			EllipticCurve struct {
-				Locked bool
-				Value  string
-			}
-			PkixParameterSet policy.LockedArrayAttribute
-		}{
+		KeyPair: serverPolicyKeyPair{
 			KeyAlgorithm: _strValue{
 				Locked: false,
 				Value:  "ec",
@@ -654,6 +620,40 @@ func TestToZoneConfigPkixParameterSet(t *testing.T) {
 		}
 		if len(zc.KeyConfiguration.KeyCurves) != 1 || zc.KeyConfiguration.KeyCurves[0] != certificate.EllipticCurveP384 {
 			t.Fatalf("expected [P384], got %v", zc.KeyConfiguration.KeyCurves)
+		}
+	})
+
+	// A folder's nominated default need not be the first algorithm it allows, so the two attributes
+	// have to be read separately.
+	t.Run("the folder's own default wins over the first allowed algorithm", func(t *testing.T) {
+		var sp serverPolicy
+		sp.KeyPair.PkixParameterSet.Locked = true
+		sp.KeyPair.PkixParameterSet.Value = []string{"1.3.6.1.4.1.28783.10.1.1.4096", "1.3.6.1.4.1.28783.10.1.1.2048"}
+		sp.KeyPair.DefaultPkixParameterSet.Value = "1.3.6.1.4.1.28783.10.1.1.2048"
+
+		zc := endpoint.NewZoneConfiguration()
+		if err := sp.toZoneConfig(zc); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(zc.KeyConfiguration.KeySizes) != 1 || zc.KeyConfiguration.KeySizes[0] != 2048 {
+			t.Fatalf("expected the folder's default [2048], got %v", zc.KeyConfiguration.KeySizes)
+		}
+	})
+
+	// Newer TPP releases keep adding OIDs, so a default this build cannot decode must not lose the
+	// zone default altogether.
+	t.Run("an unrecognized default falls back to the first allowed algorithm", func(t *testing.T) {
+		var sp serverPolicy
+		sp.KeyPair.PkixParameterSet.Locked = true
+		sp.KeyPair.PkixParameterSet.Value = []string{"1.3.6.1.4.1.28783.10.1.1.4096"}
+		sp.KeyPair.DefaultPkixParameterSet.Value = "1.3.6.1.4.1.28783.10.4.65"
+
+		zc := endpoint.NewZoneConfiguration()
+		if err := sp.toZoneConfig(zc); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(zc.KeyConfiguration.KeySizes) != 1 || zc.KeyConfiguration.KeySizes[0] != 4096 {
+			t.Fatalf("expected the first allowed size [4096], got %v", zc.KeyConfiguration.KeySizes)
 		}
 	})
 

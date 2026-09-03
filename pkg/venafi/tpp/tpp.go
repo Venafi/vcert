@@ -815,27 +815,33 @@ type _strValue struct {
 	Value  string
 }
 
+type serverPolicyKeyPair struct {
+	KeyAlgorithm _strValue
+	KeySize      struct {
+		Locked bool
+		Value  int
+	}
+	EllipticCurve struct {
+		Locked bool
+		Value  string
+	}
+	// PkixParameterSet lists the PKIX OIDs of the key algorithms allowed by policy. Available
+	// from TPP 25.1 onwards, it supersedes KeyAlgorithm/KeySize/EllipticCurve above, which TPP
+	// no longer locks once a policy folder's allowed algorithms are configured via the newer
+	// AlgorithmSelector API.
+	PkixParameterSet policy.LockedArrayAttribute
+	// DefaultPkixParameterSet is the single OID the folder recommends. It is a separate
+	// attribute from PkixParameterSet: a folder that allows several algorithms still names one
+	// of them as its default, and that need not be the first one it allows.
+	DefaultPkixParameterSet policy.LockedAttribute
+}
+
 type serverPolicy struct {
 	CertificateAuthority _strValue
 	CsrGeneration        _strValue
 	KeyGeneration        _strValue
-	KeyPair              struct {
-		KeyAlgorithm _strValue
-		KeySize      struct {
-			Locked bool
-			Value  int
-		}
-		EllipticCurve struct {
-			Locked bool
-			Value  string
-		}
-		// PkixParameterSet lists the PKIX OIDs of the key algorithms allowed by policy. Available
-		// from TPP 25.1 onwards, it supersedes KeyAlgorithm/KeySize/EllipticCurve above, which TPP
-		// no longer locks once a policy folder's allowed algorithms are configured via the newer
-		// AlgorithmSelector API.
-		PkixParameterSet policy.LockedArrayAttribute
-	}
-	ManagementType _strValue
+	KeyPair              serverPolicyKeyPair
+	ManagementType       _strValue
 
 	PrivateKeyReuseAllowed  bool
 	SubjAltNameDnsAllowed   bool
@@ -899,13 +905,18 @@ func (sp serverPolicy) toZoneConfig(zc *endpoint.ZoneConfiguration) error {
 		// On a folder configured through TPP 25.1+'s AlgorithmSelector API the deprecated
 		// KeyAlgorithm/KeySize/EllipticCurve fields are empty, so deriving the zone default from
 		// them leaves zc.KeyConfiguration nil. UpdateCertificateRequest would then fall back to
-		// RSA-2048, which the same folder's AllowedKeyConfigurations rejects. Take the first
-		// algorithm the policy offers instead; TPP lists them in its own preference order.
+		// RSA-2048, which the same folder's AllowedKeyConfigurations rejects.
 		decoded, err := policy.DecodePkixParameterSet(sp.KeyPair.PkixParameterSet.Value)
 		if err != nil {
 			return fmt.Errorf("tpp: %w", err)
 		}
-		algorithm := policy.PkixToKeyAlgorithms[decoded.Oids[0]]
+		// Prefer the algorithm the folder actually nominates as its default. Fall back to the
+		// first one it allows, in TPP's own preference order, when the folder names no default or
+		// names one this build does not recognize.
+		algorithm, ok := policy.PkixToKeyAlgorithms[sp.KeyPair.DefaultPkixParameterSet.Value]
+		if !ok {
+			algorithm = policy.PkixToKeyAlgorithms[decoded.Oids[0]]
+		}
 		if algorithm.KeyType == "RSA" {
 			key.KeyType = certificate.KeyTypeRSA
 			key.KeySizes = []int{algorithm.KeySize}

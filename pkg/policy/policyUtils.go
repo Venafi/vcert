@@ -716,7 +716,12 @@ func BuildPolicySpecificationForTPP(checkPolicyResp CheckPolicyResponse) (*Polic
 
 	//resolve key pair's attributes
 
+	//The allowed algorithms and the recommended one are two independent TPP attributes, so they are
+	//resolved independently: PkixParameterSet (or, on pre-25.1 TPP, the deprecated locked flags)
+	//gives the policy restriction, and DefaultPkixParameterSet (or the deprecated unlocked values)
+	//gives the default.
 	pkixParameterSet := policy.KeyPairResponse.PkixParameterSet
+	var decodedPkixParameterSet *DecodedPkixParameterSet
 	if pkixParameterSet.Locked || len(pkixParameterSet.Value) > 0 {
 		//TPP 25.1+: the allowed key algorithms are expressed as a list of PKIX parameter set OIDs
 		//rather than through the deprecated KeyAlgorithm/KeySize/EllipticCurve fields below, which
@@ -725,6 +730,7 @@ func BuildPolicySpecificationForTPP(checkPolicyResp CheckPolicyResponse) (*Polic
 		if err != nil {
 			return nil, err
 		}
+		decodedPkixParameterSet = decoded
 		if pkixParameterSet.Locked {
 			//The OIDs are carried through verbatim as well as decoded, so that a getpolicy ->
 			//setpolicy round trip is lossless: BuildTppPolicy writes pkixParameterSet straight back,
@@ -734,51 +740,65 @@ func BuildPolicySpecificationForTPP(checkPolicyResp CheckPolicyResponse) (*Polic
 			keyPair.KeyTypes = decoded.KeyTypes
 			keyPair.RsaKeySizes = decoded.RsaKeySizes
 			keyPair.EllipticCurves = decoded.EllipticCurves
-		} else {
-			//Unlocked means the folder recommends an algorithm rather than restricting the choice,
-			//so it belongs under defaults. TPP offers a single default, so take the first entry.
-			shouldCreateDefKeyPair = true
-			defaultOid := decoded.Oids[0]
-			defaultAlgorithm := PkixToKeyAlgorithms[defaultOid]
-			defaultKeyPair.PkixParameterSetDefault = &defaultOid
-			defaultKeyPair.KeyType = &defaultAlgorithm.KeyType
-			if defaultAlgorithm.KeySize > 0 {
-				defaultKeyPair.RsaKeySize = &defaultAlgorithm.KeySize
-			}
-			if defaultAlgorithm.Curve != "" {
-				defaultKeyPair.EllipticCurve = &defaultAlgorithm.Curve
-			}
 		}
 	} else {
 		//resolve keyTypes
-		if policy.KeyPairResponse.KeyAlgorithm.Value != "" {
-			if policy.KeyPairResponse.KeyAlgorithm.Locked {
-				keyPair.KeyTypes = []string{policy.KeyPairResponse.KeyAlgorithm.Value}
-			} else {
-				shouldCreateDefKeyPair = true
-				defaultKeyPair.KeyType = &policy.KeyPairResponse.KeyAlgorithm.Value
-			}
+		if policy.KeyPairResponse.KeyAlgorithm.Value != "" && policy.KeyPairResponse.KeyAlgorithm.Locked {
+			keyPair.KeyTypes = []string{policy.KeyPairResponse.KeyAlgorithm.Value}
 		}
 
 		if strings.ToUpper(policy.KeyPairResponse.KeyAlgorithm.Value) == "RSA" {
 			//resolve rsaKeySizes
-			if policy.KeyPairResponse.KeySize.Value > 0 {
-				if policy.KeyPairResponse.KeySize.Locked {
-					keyPair.RsaKeySizes = []int{policy.KeyPairResponse.KeySize.Value}
-				} else {
-					shouldCreateDefKeyPair = true
-					defaultKeyPair.RsaKeySize = &policy.KeyPairResponse.KeySize.Value
-				}
+			if policy.KeyPairResponse.KeySize.Value > 0 && policy.KeyPairResponse.KeySize.Locked {
+				keyPair.RsaKeySizes = []int{policy.KeyPairResponse.KeySize.Value}
 			}
 		} else {
 			//resolve ellipticCurve
-			if policy.KeyPairResponse.EllipticCurve.Value != "" {
-				if policy.KeyPairResponse.EllipticCurve.Locked {
-					keyPair.EllipticCurves = []string{policy.KeyPairResponse.EllipticCurve.Value}
-				} else {
-					shouldCreateDefKeyPair = true
-					defaultKeyPair.EllipticCurve = &policy.KeyPairResponse.EllipticCurve.Value
-				}
+			if policy.KeyPairResponse.EllipticCurve.Value != "" && policy.KeyPairResponse.EllipticCurve.Locked {
+				keyPair.EllipticCurves = []string{policy.KeyPairResponse.EllipticCurve.Value}
+			}
+		}
+	}
+
+	//resolve the default key algorithm
+	defaultOid := policy.KeyPairResponse.DefaultPkixParameterSet.Value
+	defaultAlgorithm, defaultOidRecognized := PkixToKeyAlgorithms[defaultOid]
+	if defaultOid != "" && !defaultOidRecognized {
+		log.Printf("vCert: warning: ignoring default PKIX parameter set OID that this version of vcert does not recognize: %s", defaultOid)
+	}
+	if !defaultOidRecognized && decodedPkixParameterSet != nil && !pkixParameterSet.Locked {
+		//No explicit default, but the folder recommends a set without restricting it. TPP offers a
+		//single default, so take the first entry.
+		defaultOid = decodedPkixParameterSet.Oids[0]
+		defaultAlgorithm, defaultOidRecognized = PkixToKeyAlgorithms[defaultOid]
+	}
+	if defaultOidRecognized {
+		shouldCreateDefKeyPair = true
+		defaultKeyPair.PkixParameterSetDefault = &defaultOid
+		defaultKeyPair.KeyType = &defaultAlgorithm.KeyType
+		if defaultAlgorithm.KeySize > 0 {
+			defaultKeyPair.RsaKeySize = &defaultAlgorithm.KeySize
+		}
+		if defaultAlgorithm.Curve != "" {
+			defaultKeyPair.EllipticCurve = &defaultAlgorithm.Curve
+		}
+	} else {
+		//Either the folder predates the AlgorithmSelector API or it recommends an algorithm this
+		//build does not know. Either way the deprecated attributes still carry a usable default:
+		//an unlocked value is a recommendation rather than a restriction.
+		if policy.KeyPairResponse.KeyAlgorithm.Value != "" && !policy.KeyPairResponse.KeyAlgorithm.Locked {
+			shouldCreateDefKeyPair = true
+			defaultKeyPair.KeyType = &policy.KeyPairResponse.KeyAlgorithm.Value
+		}
+		if strings.ToUpper(policy.KeyPairResponse.KeyAlgorithm.Value) == "RSA" {
+			if policy.KeyPairResponse.KeySize.Value > 0 && !policy.KeyPairResponse.KeySize.Locked {
+				shouldCreateDefKeyPair = true
+				defaultKeyPair.RsaKeySize = &policy.KeyPairResponse.KeySize.Value
+			}
+		} else {
+			if policy.KeyPairResponse.EllipticCurve.Value != "" && !policy.KeyPairResponse.EllipticCurve.Locked {
+				shouldCreateDefKeyPair = true
+				defaultKeyPair.EllipticCurve = &policy.KeyPairResponse.EllipticCurve.Value
 			}
 		}
 	}
