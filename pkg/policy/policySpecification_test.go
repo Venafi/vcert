@@ -306,7 +306,8 @@ func TestBuildPolicySpecificationForTPPPkixParameterSet(t *testing.T) {
 // which reports PkixParameterSet locked whether or not an administrator restricted the allowed
 // algorithms, and carries the folder's recommended algorithm in the separate
 // DefaultPkixParameterSet attribute. Reading only the former leaves default.keyPair.keyType nil,
-// which panics anything that dereferences it.
+// which panics anything that dereferences it. The nominated default need not be the first allowed
+// algorithm, and setpolicy must still accept what getpolicy wrote.
 func TestBuildPolicySpecificationForTPPPkixParameterSetDefault(t *testing.T) {
 	tppPolicy := getPolicyResponse(false)
 	tppPolicy.KeyPairResponse.PkixParameterSet = LockedArrayAttribute{
@@ -317,7 +318,7 @@ func TestBuildPolicySpecificationForTPPPkixParameterSetDefault(t *testing.T) {
 		},
 	}
 	tppPolicy.KeyPairResponse.DefaultPkixParameterSet = LockedAttribute{
-		Value: "1.3.6.1.4.1.28783.10.1.1.4096",
+		Value: "1.3.6.1.4.1.28783.10.1.1.8192",
 	}
 
 	ps, err := BuildPolicySpecificationForTPP(CheckPolicyResponse{Policy: &tppPolicy})
@@ -332,23 +333,57 @@ func TestBuildPolicySpecificationForTPPPkixParameterSetDefault(t *testing.T) {
 	if defaultKeyPair.KeyType == nil || *defaultKeyPair.KeyType != "RSA" {
 		t.Fatalf("expected default keyType RSA, got %v", defaultKeyPair.KeyType)
 	}
-	if defaultKeyPair.RsaKeySize == nil || *defaultKeyPair.RsaKeySize != 4096 {
-		t.Fatalf("expected default rsaKeySize 4096, got %v", defaultKeyPair.RsaKeySize)
+	if defaultKeyPair.RsaKeySize == nil || *defaultKeyPair.RsaKeySize != 8192 {
+		t.Fatalf("expected default rsaKeySize 8192, got %v", defaultKeyPair.RsaKeySize)
 	}
-	if defaultKeyPair.PkixParameterSetDefault == nil || *defaultKeyPair.PkixParameterSetDefault != "1.3.6.1.4.1.28783.10.1.1.4096" {
+	if defaultKeyPair.PkixParameterSetDefault == nil || *defaultKeyPair.PkixParameterSetDefault != "1.3.6.1.4.1.28783.10.1.1.8192" {
 		t.Fatalf("expected the default OID to be carried through verbatim, got %v", defaultKeyPair.PkixParameterSetDefault)
 	}
 	if len(ps.Policy.KeyPair.RsaKeySizes) != 2 {
 		t.Fatalf("expected the locked allowed set to still be reported as a policy restriction, got %v", ps.Policy.KeyPair.RsaKeySizes)
 	}
+	if err := ValidateTppPolicySpecification(ps); err != nil {
+		t.Fatalf("getpolicy output is rejected as setpolicy input: %v", err)
+	}
+}
+
+// TestBuildPolicySpecificationForTPPPkixParameterSetDefaultNotAllowed covers a folder whose
+// nominated default is not in its own allowed set, for example a default inherited from a parent
+// folder before an administrator narrowed the allowed set. The default must satisfy the policy, so
+// it falls back to the first allowed algorithm.
+func TestBuildPolicySpecificationForTPPPkixParameterSetDefaultNotAllowed(t *testing.T) {
+	tppPolicy := getPolicyResponse(false)
+	tppPolicy.KeyPairResponse.PkixParameterSet = LockedArrayAttribute{
+		Locked: true,
+		Value:  []string{"1.3.6.1.4.1.28783.10.1.1.4096"},
+	}
+	tppPolicy.KeyPairResponse.DefaultPkixParameterSet = LockedAttribute{
+		Value: "1.3.6.1.4.1.28783.10.1.1.2048",
+	}
+
+	ps, err := BuildPolicySpecificationForTPP(CheckPolicyResponse{Policy: &tppPolicy})
+	if err != nil {
+		t.Fatalf("Error building policy specification \nError: %s", err)
+	}
+	if ps.Default == nil || ps.Default.KeyPair == nil || ps.Default.KeyPair.RsaKeySize == nil {
+		t.Fatal("expected a default rsaKeySize to be set")
+	}
+	if *ps.Default.KeyPair.RsaKeySize != 4096 {
+		t.Fatalf("expected the default to fall back to the first allowed size 4096, got %d", *ps.Default.KeyPair.RsaKeySize)
+	}
+	if err := ValidateTppPolicySpecification(ps); err != nil {
+		t.Fatalf("getpolicy output is rejected as setpolicy input: %v", err)
+	}
 }
 
 // TestBuildPolicySpecificationForTPPPkixParameterSetUnknownDefault covers a folder whose
 // recommended algorithm this build does not know, e.g. one of the post-quantum parameter sets a
-// newer TPP offers. The deprecated attributes still describe a usable default, so fall back to
-// them rather than reporting no default at all.
+// newer TPP offers. Fall back to the first allowed algorithm, as toZoneConfig does, rather than
+// reporting no default at all. The deprecated fields are deliberately not consulted: on a 25.1+
+// folder they are stale and unlocked, and need not agree with the locked PKIX set.
 func TestBuildPolicySpecificationForTPPPkixParameterSetUnknownDefault(t *testing.T) {
 	tppPolicy := getPolicyResponse(false)
+	tppPolicy.KeyPairResponse.KeySize.Value = 3072
 	tppPolicy.KeyPairResponse.PkixParameterSet = LockedArrayAttribute{
 		Locked: true,
 		Value:  []string{"1.3.6.1.4.1.28783.10.1.1.2048", "1.3.6.1.4.1.28783.10.4.65"},
@@ -361,14 +396,40 @@ func TestBuildPolicySpecificationForTPPPkixParameterSetUnknownDefault(t *testing
 	if err != nil {
 		t.Fatalf("Error building policy specification \nError: %s", err)
 	}
-	if ps.Default == nil || ps.Default.KeyPair == nil || ps.Default.KeyPair.KeyType == nil {
-		t.Fatal("expected the deprecated KeyAlgorithm to supply a default keyType")
+	if ps.Default == nil || ps.Default.KeyPair == nil || ps.Default.KeyPair.KeyType == nil || ps.Default.KeyPair.RsaKeySize == nil {
+		t.Fatal("expected the first allowed algorithm to supply the default")
 	}
-	if *ps.Default.KeyPair.KeyType != "RSA" {
-		t.Fatalf("expected default keyType RSA, got %q", *ps.Default.KeyPair.KeyType)
+	if *ps.Default.KeyPair.KeyType != "RSA" || *ps.Default.KeyPair.RsaKeySize != 2048 {
+		t.Fatalf("expected default RSA 2048, got %s %d", *ps.Default.KeyPair.KeyType, *ps.Default.KeyPair.RsaKeySize)
 	}
-	if ps.Default.KeyPair.PkixParameterSetDefault != nil {
-		t.Fatalf("expected no default OID to be carried through, got %q", *ps.Default.KeyPair.PkixParameterSetDefault)
+	if ps.Default.KeyPair.PkixParameterSetDefault == nil || *ps.Default.KeyPair.PkixParameterSetDefault != "1.3.6.1.4.1.28783.10.1.1.2048" {
+		t.Fatalf("expected the first allowed OID as the default, got %v", ps.Default.KeyPair.PkixParameterSetDefault)
+	}
+	if err := ValidateTppPolicySpecification(ps); err != nil {
+		t.Fatalf("getpolicy output is rejected as setpolicy input: %v", err)
+	}
+}
+
+// TestValidateDefaultKeyPairWithPolicySubjectMembership checks that a default is accepted when it
+// is anywhere in the allowed list, not only first. A locked PKIX parameter set lists several
+// algorithms and the folder's default can be any of them.
+func TestValidateDefaultKeyPairWithPolicySubjectMembership(t *testing.T) {
+	ecc, p384, rsaSize := "ECC", "P384", 4096
+	ps := &PolicySpecification{
+		Policy: &Policy{KeyPair: &KeyPair{
+			KeyTypes:       []string{"RSA", "ECC"},
+			RsaKeySizes:    []int{2048, 4096},
+			EllipticCurves: []string{"P256", "P384"},
+		}},
+		Default: &Default{KeyPair: &DefaultKeyPair{KeyType: &ecc, RsaKeySize: &rsaSize, EllipticCurve: &p384}},
+	}
+	if err := validateDefaultKeyPairWithPolicySubject(ps); err != nil {
+		t.Fatalf("a default that is in the allowed list was rejected: %v", err)
+	}
+	outside := 3072
+	ps.Default.KeyPair.RsaKeySize = &outside
+	if err := validateDefaultKeyPairWithPolicySubject(ps); err == nil {
+		t.Fatal("a default outside the allowed list was accepted")
 	}
 }
 

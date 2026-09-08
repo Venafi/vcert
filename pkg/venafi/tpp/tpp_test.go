@@ -24,6 +24,7 @@ import (
 
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
+	"github.com/Venafi/vcert/v5/pkg/policy"
 )
 
 const (
@@ -272,22 +273,16 @@ func TestGetHttpClient(t *testing.T) {
 
 func TestConvertServerPolicyToInternalPolicy(t *testing.T) {
 	sp := serverPolicy{
-		KeyPair: serverPolicyKeyPair{
-			KeyAlgorithm: _strValue{
+		KeyPair: policy.KeyPairResponse{
+			KeyAlgorithm: policy.LockedAttribute{
 				Locked: true,
 				Value:  "rsa",
 			},
-			KeySize: struct {
-				Locked bool
-				Value  int
-			}{
+			KeySize: policy.LockedIntAttribute{
 				Locked: true,
 				Value:  2048,
 			},
-			EllipticCurve: struct {
-				Locked bool
-				Value  string
-			}{
+			EllipticCurve: policy.LockedAttribute{
 				Locked: false,
 				Value:  "",
 			},
@@ -309,22 +304,16 @@ func TestConvertServerPolicyToInternalPolicy(t *testing.T) {
 	}
 
 	sp = serverPolicy{
-		KeyPair: serverPolicyKeyPair{
-			KeyAlgorithm: _strValue{
+		KeyPair: policy.KeyPairResponse{
+			KeyAlgorithm: policy.LockedAttribute{
 				Locked: true,
 				Value:  "ec",
 			},
-			KeySize: struct {
-				Locked bool
-				Value  int
-			}{
+			KeySize: policy.LockedIntAttribute{
 				Locked: true,
 				Value:  2048,
 			},
-			EllipticCurve: struct {
-				Locked bool
-				Value  string
-			}{
+			EllipticCurve: policy.LockedAttribute{
 				Locked: true,
 				Value:  "p521",
 			},
@@ -346,22 +335,16 @@ func TestConvertServerPolicyToInternalPolicy(t *testing.T) {
 	}
 
 	sp = serverPolicy{
-		KeyPair: serverPolicyKeyPair{
-			KeyAlgorithm: _strValue{
+		KeyPair: policy.KeyPairResponse{
+			KeyAlgorithm: policy.LockedAttribute{
 				Locked: false,
 				Value:  "ec",
 			},
-			KeySize: struct {
-				Locked bool
-				Value  int
-			}{
+			KeySize: policy.LockedIntAttribute{
 				Locked: true,
 				Value:  2048,
 			},
-			EllipticCurve: struct {
-				Locked bool
-				Value  string
-			}{
+			EllipticCurve: policy.LockedAttribute{
 				Locked: true,
 				Value:  "p384",
 			},
@@ -524,7 +507,7 @@ func TestConvertServerPolicyToInternalPolicy_PkixParameterSet(t *testing.T) {
 
 	t.Run("not locked falls back to legacy fields", func(t *testing.T) {
 		sp := newServerPolicy(false, []string{"1.3.6.1.4.1.28783.10.1.1.4096"})
-		sp.KeyPair.KeyAlgorithm = _strValue{Locked: true, Value: "rsa"}
+		sp.KeyPair.KeyAlgorithm = policy.LockedAttribute{Locked: true, Value: "rsa"}
 		sp.KeyPair.KeySize.Locked = true
 		sp.KeyPair.KeySize.Value = 2048
 		p, err := sp.toPolicy()
@@ -657,10 +640,14 @@ func TestToZoneConfigPkixParameterSet(t *testing.T) {
 		}
 	})
 
+	// A folder can nominate a default that its own allowed set no longer contains, for example one
+	// inherited from a parent folder before an administrator narrowed the allowed set. The zone
+	// default must still be one the zone policy accepts.
 	t.Run("the zone default satisfies the zone policy", func(t *testing.T) {
 		var sp serverPolicy
 		sp.KeyPair.PkixParameterSet.Locked = true
 		sp.KeyPair.PkixParameterSet.Value = []string{"1.3.6.1.4.1.28783.10.1.1.4096"}
+		sp.KeyPair.DefaultPkixParameterSet.Value = "1.3.6.1.4.1.28783.10.1.1.2048"
 
 		zc := endpoint.NewZoneConfiguration()
 		p, err := sp.toPolicy()

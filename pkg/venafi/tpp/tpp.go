@@ -815,32 +815,11 @@ type _strValue struct {
 	Value  string
 }
 
-type serverPolicyKeyPair struct {
-	KeyAlgorithm _strValue
-	KeySize      struct {
-		Locked bool
-		Value  int
-	}
-	EllipticCurve struct {
-		Locked bool
-		Value  string
-	}
-	// PkixParameterSet lists the PKIX OIDs of the key algorithms allowed by policy. Available
-	// from TPP 25.1 onwards, it supersedes KeyAlgorithm/KeySize/EllipticCurve above, which TPP
-	// no longer locks once a policy folder's allowed algorithms are configured via the newer
-	// AlgorithmSelector API.
-	PkixParameterSet policy.LockedArrayAttribute
-	// DefaultPkixParameterSet is the single OID the folder recommends. It is a separate
-	// attribute from PkixParameterSet: a folder that allows several algorithms still names one
-	// of them as its default, and that need not be the first one it allows.
-	DefaultPkixParameterSet policy.LockedAttribute
-}
-
 type serverPolicy struct {
 	CertificateAuthority _strValue
 	CsrGeneration        _strValue
 	KeyGeneration        _strValue
-	KeyPair              serverPolicyKeyPair
+	KeyPair              policy.KeyPairResponse
 	ManagementType       _strValue
 
 	PrivateKeyReuseAllowed  bool
@@ -910,13 +889,7 @@ func (sp serverPolicy) toZoneConfig(zc *endpoint.ZoneConfiguration) error {
 		if err != nil {
 			return fmt.Errorf("tpp: %w", err)
 		}
-		// Prefer the algorithm the folder actually nominates as its default. Fall back to the
-		// first one it allows, in TPP's own preference order, when the folder names no default or
-		// names one this build does not recognize.
-		algorithm, ok := policy.PkixToKeyAlgorithms[sp.KeyPair.DefaultPkixParameterSet.Value]
-		if !ok {
-			algorithm = policy.PkixToKeyAlgorithms[decoded.Oids[0]]
-		}
+		_, algorithm := decoded.Default(sp.KeyPair.DefaultPkixParameterSet.Value)
 		if algorithm.KeyType == "RSA" {
 			key.KeyType = certificate.KeyTypeRSA
 			key.KeySizes = []int{algorithm.KeySize}
