@@ -248,7 +248,15 @@ type KeyPairResponse struct {
 	// from TPP 25.1 onwards, it supersedes KeyAlgorithm/KeySize/EllipticCurve above, which TPP
 	// no longer locks once a policy folder's allowed algorithms are configured via the newer
 	// AlgorithmSelector API.
+	//
+	// Locked is true whenever the folder has an effective allowed set, which on TPP 25.1+ is
+	// always. It does not distinguish a folder an administrator restricted from one that merely
+	// permits everything the server supports.
 	PkixParameterSet LockedArrayAttribute `json:"PkixParameterSet"`
+	// DefaultPkixParameterSet is the single PKIX OID the folder recommends, i.e. the "PKIX
+	// Parameter Set Policy Default" attribute. It is a separate attribute from PkixParameterSet
+	// and must be read separately: a folder that locks its allowed set still has a default.
+	DefaultPkixParameterSet LockedAttribute `json:"DefaultPkixParameterSet"`
 }
 
 type SubjectResponse struct {
