@@ -600,6 +600,20 @@ var (
 		Aliases:     []string{"z"},
 	}
 
+	flagRecursive = &cli.BoolFlag{
+		Name: "recursive",
+		Usage: "Use to delete the policy folder and all of its subordinate objects. " +
+			"WARNING: this also removes any certificates the folder contains from the Secret Store.",
+		Destination: &flags.recursive,
+	}
+
+	flagPolicyNewName = &cli.StringFlag{
+		Name: "n",
+		Usage: "REQUIRED. Use to specify the new target zone when renaming a certificate policy. " +
+			"In CyberArk Certificate Manager, Self-Hosted this is the new path (DN) of the policy folder.",
+		Destination: &flags.policyNewName,
+	}
+
 	flagPolicyConfigFile = &cli.StringFlag{
 		Name:        "file",
 		Usage:       "Use to specify the location of a certificate policy specification. REQUIRED for the setpolicy action",
@@ -1038,6 +1052,28 @@ var (
 		flagPolicyName,
 		flagPolicyConfigFile,
 		flagPolicyStarterConfigFile,
+		flagTrustBundle,
+		flagInsecure,
+	))
+
+	deletePolicyFlags = sortedFlags(flagsApppend(
+		flagKey,
+		flagUrl,
+		flagToken,
+		flagVerbose,
+		flagPolicyName,
+		flagRecursive,
+		flagTrustBundle,
+		flagInsecure,
+	))
+
+	renamePolicyFlags = sortedFlags(flagsApppend(
+		flagKey,
+		flagUrl,
+		flagToken,
+		flagVerbose,
+		flagPolicyName,
+		flagPolicyNewName,
 		flagTrustBundle,
 		flagInsecure,
 	))

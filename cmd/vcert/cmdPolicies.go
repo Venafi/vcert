@@ -54,6 +54,27 @@ var (
 		vcert getpolicy -p vcp -t <CyberArk Certificate Manager, SaaS access token> -z "<app name>\<CIT alias>"
 		vcert getpolicy -p ngts -t <Palo Alto Networks Next-Gen Trust Security (NGTS) access token> -z "<app name>\<CIT alias>"`,
 	}
+
+	commandDeletePolicy = &cli.Command{
+		Before: runBeforeCommand,
+		Name:   commandDeletePolicyName,
+		Flags:  deletePolicyFlags,
+		Action: doCommandDeletePolicy,
+		Usage:  "To delete a certificate policy folder (zone)",
+		UsageText: ` vcert deletepolicy <Required CyberArk Certificate Manager, Self-Hosted> <Options>
+        vcert deletepolicy -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> -z "<policy folder DN>"
+        vcert deletepolicy -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> -z "<policy folder DN>" --recursive`,
+	}
+
+	commandRenamePolicy = &cli.Command{
+		Before: runBeforeCommand,
+		Name:   commandRenamePolicyName,
+		Flags:  renamePolicyFlags,
+		Action: doCommandRenamePolicy,
+		Usage:  "To rename or move a certificate policy folder (zone)",
+		UsageText: ` vcert renamepolicy <Required CyberArk Certificate Manager, Self-Hosted> <Options>
+        vcert renamepolicy -u https://cmsh.example.com -t <CyberArk Certificate Manager, Self-Hosted access token> -z "<policy folder DN>" -n "<new policy folder DN>"`,
+	}
 )
 
 func doCommandCreatePolicy(c *cli.Context) error {
@@ -131,6 +152,75 @@ func doCommandCreatePolicy(c *cli.Context) error {
 	defer file.Close()
 
 	return err
+}
+
+func doCommandDeletePolicy(c *cli.Context) error {
+
+	err := validateDeletePolicyFlags(c.Command.Name)
+	if err != nil {
+		return err
+	}
+
+	err = setTLSConfig()
+	if err != nil {
+		return err
+	}
+
+	policyName := flags.policyName
+
+	cfg, err := buildConfig(c, &flags)
+	if err != nil {
+		return fmt.Errorf("failed to build vcert config: %s", err)
+	}
+
+	connector, err := vcert.NewClient(&cfg)
+	if err != nil {
+		return err
+	}
+
+	err = connector.DeletePolicy(policyName, flags.recursive)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("policy folder %s was successfully deleted", policyName)
+
+	return nil
+}
+
+func doCommandRenamePolicy(c *cli.Context) error {
+
+	err := validateRenamePolicyFlags(c.Command.Name)
+	if err != nil {
+		return err
+	}
+
+	err = setTLSConfig()
+	if err != nil {
+		return err
+	}
+
+	policyName := flags.policyName
+	policyNewName := flags.policyNewName
+
+	cfg, err := buildConfig(c, &flags)
+	if err != nil {
+		return fmt.Errorf("failed to build vcert config: %s", err)
+	}
+
+	connector, err := vcert.NewClient(&cfg)
+	if err != nil {
+		return err
+	}
+
+	err = connector.RenamePolicy(policyName, policyNewName)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("policy folder %s was successfully renamed to %s", policyName, policyNewName)
+
+	return nil
 }
 
 func doCommandGetPolicy(c *cli.Context) error {

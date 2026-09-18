@@ -752,6 +752,34 @@ func validateSetPolicyFlags(commandName string) error {
 	return nil
 }
 
+func validateDeletePolicyFlags(commandName string) error {
+	if flags.userName == "" && flags.password == "" && flags.token == "" && flags.apiKey == "" {
+		return fmt.Errorf("credentials are required")
+	}
+
+	if flags.policyName == "" {
+		return fmt.Errorf("zone is required")
+	}
+
+	return nil
+}
+
+func validateRenamePolicyFlags(commandName string) error {
+	if flags.userName == "" && flags.password == "" && flags.token == "" && flags.apiKey == "" {
+		return fmt.Errorf("credentials are required")
+	}
+
+	if flags.policyName == "" {
+		return fmt.Errorf("zone is required")
+	}
+
+	if flags.policyNewName == "" {
+		return fmt.Errorf("a new zone name is required")
+	}
+
+	return nil
+}
+
 func validateSshEnrollFlags(commandName string) error {
 	err := validateConnectionFlags(commandName)
 	if err != nil {

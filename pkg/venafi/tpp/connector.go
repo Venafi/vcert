@@ -923,6 +923,80 @@ func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) 
 	return ps, nil
 }
 
+// normalizePolicyDN ensures a policy folder name is expressed as a fully qualified
+// TPP object DN, i.e. prefixed with the root policy path (\VED\Policy). It mirrors
+// the normalization done by GetPolicy/SetPolicy.
+func normalizePolicyDN(name string) string {
+	if !strings.HasPrefix(name, util.PathSeparator) {
+		name = util.PathSeparator + name
+	}
+	if !strings.HasPrefix(name, policy.RootPath) {
+		name = policy.RootPath + name
+	}
+	return name
+}
+
+// DeletePolicy removes a TPP policy folder via the Config/Delete API. When recursive
+// is true, subordinate objects (including certificates in the Secret Store) are removed.
+func (c *Connector) DeletePolicy(name string, recursive bool) error {
+	name = normalizePolicyDN(name)
+
+	recursiveValue := 0
+	if recursive {
+		recursiveValue = 1
+	}
+
+	req := policy.PolicyDeleteRequest{
+		ObjectDN:  name,
+		Recursive: recursiveValue,
+	}
+
+	_, _, body, err := c.request("POST", urlResourceConfigDelete, req)
+	if err != nil {
+		return err
+	}
+
+	var response policy.PolicySetAttributeResponse
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		return err
+	}
+
+	if response.Error != "" {
+		return errors.New(response.Error)
+	}
+
+	return nil
+}
+
+// RenamePolicy moves/renames a TPP policy folder via the Config/RenameObject API.
+func (c *Connector) RenamePolicy(name, newName string) error {
+	name = normalizePolicyDN(name)
+	newName = normalizePolicyDN(newName)
+
+	req := policy.PolicyRenameRequest{
+		ObjectDN:    name,
+		NewObjectDN: newName,
+	}
+
+	_, _, body, err := c.request("POST", urlResourceConfigRename, req)
+	if err != nil {
+		return err
+	}
+
+	var response policy.PolicySetAttributeResponse
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		return err
+	}
+
+	if response.Error != "" {
+		return errors.New(response.Error)
+	}
+
+	return nil
+}
+
 func (c *Connector) retrieveUserNamesForPolicySpecification(policyName string) ([]string, error) {
 	values, _, error := getPolicyAttribute(c, policy.TppContact, policyName)
 	if error != nil {

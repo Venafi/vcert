@@ -37,6 +37,16 @@ import (
 
 type Connector struct {
 	verbose bool
+	// deletedPolicies records the (name, recursive) pairs passed to DeletePolicy so tests
+	// can assert the CLI/connector round-trip.
+	deletedPolicies []deletedPolicy
+	// renamedPolicies maps an original policy name to the new name passed to RenamePolicy.
+	renamedPolicies map[string]string
+}
+
+type deletedPolicy struct {
+	name      string
+	recursive bool
 }
 
 func (c *Connector) ProvisionCertificate(_ *domain.ProvisioningRequest, _ *domain.ProvisioningOptions) (*domain.ProvisioningMetadata, error) {
@@ -151,6 +161,19 @@ func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) 
 
 func (c *Connector) SetPolicy(name string, ps *policy.PolicySpecification) (string, error) {
 	return "OK", nil
+}
+
+func (c *Connector) DeletePolicy(name string, recursive bool) error {
+	c.deletedPolicies = append(c.deletedPolicies, deletedPolicy{name: name, recursive: recursive})
+	return nil
+}
+
+func (c *Connector) RenamePolicy(name, newName string) error {
+	if c.renamedPolicies == nil {
+		c.renamedPolicies = make(map[string]string)
+	}
+	c.renamedPolicies[name] = newName
+	return nil
 }
 
 func NewConnector(verbose bool, trust *x509.CertPool) *Connector {

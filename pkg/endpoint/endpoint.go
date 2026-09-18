@@ -132,6 +132,12 @@ type Connector interface {
 
 	SetPolicy(name string, ps *policy.PolicySpecification) (string, error)
 	GetPolicy(name string) (*policy.PolicySpecification, error)
+	// DeletePolicy removes a policy folder (zone). When recursive is true, subordinate
+	// objects are removed as well. Not all platforms support this operation.
+	DeletePolicy(name string, recursive bool) error
+	// RenamePolicy moves/renames a policy folder (zone) from name to newName.
+	// Not all platforms support this operation.
+	RenamePolicy(name, newName string) error
 
 	RequestSSHCertificate(req *certificate.SshCertRequest) (response *certificate.SshCertificateObject, err error)
 	RetrieveSSHCertificate(req *certificate.SshCertRequest) (response *certificate.SshCertificateObject, err error)
