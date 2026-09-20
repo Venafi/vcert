@@ -33,6 +33,7 @@ type Connection struct {
 	Platform        venafi.Platform `yaml:"platform,omitempty"`
 	TrustBundlePath string          `yaml:"trustBundle,omitempty"`
 	URL             string          `yaml:"url,omitempty"`
+	Workspace string `yaml:"workspace,omitempty"` // NGTS only
 }
 
 // GetConnectorType returns the type of vcert Connector this config will create
@@ -65,6 +66,11 @@ func (c Connection) validateTrustBundle() error {
 // IsValid returns true if the Connection is supported by vcert
 // and has the necessary values to connect to the given platform
 func (c Connection) IsValid() (bool, error) {
+	// Workspaces only exist on NGTS
+	if c.Workspace != "" && c.Platform != venafi.NGTS {
+		return false, ErrWorkspaceNotSupported
+	}
+
 	switch c.Platform {
 	case venafi.TPP:
 		return isValidTpp(c)

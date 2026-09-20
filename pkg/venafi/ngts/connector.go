@@ -101,6 +101,11 @@ type Connector struct {
 	zone      cloudZone
 	client    *http.Client
 	userAgent string
+	// workspaceID scopes every request this connector makes to a single NGTS
+	// workspace. Empty means no workspace is sent, which is the pre-workspace
+	// behaviour. Set once before Authenticate and not mutated afterwards, so
+	// unlike the fields below it needs no mutex.
+	workspaceID string
 
 	// mu protects all fields below - they are accessed from multiple goroutines
 	// (background renewal goroutine and API method calls from consumer goroutines)
@@ -142,6 +147,16 @@ func (c *Connector) SetUserAgent(userAgent string) {
 	c.userAgent = userAgent
 }
 
+// SetWorkspace scopes this connector to a single NGTS workspace. The workspace
+// is sent as the "workspace_id" query parameter on every request the connector
+// makes, and is added to the service account token URL when the connector mints
+// its own access token. An empty workspace disables the behaviour.
+//
+// It implements endpoint.WorkspaceSetter and must be called before Authenticate.
+func (c *Connector) SetWorkspace(workspace string) {
+	c.workspaceID = workspace
+}
+
 func (c *Connector) SetHTTPClient(client *http.Client) {
 	c.client = client
 }
@@ -172,7 +187,10 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) error {
 	}
 
 	// Create new clients before acquiring lock
-	graphqlURL := c.getURL(urlGraphql)
+	graphqlURL, err := c.getGraphqlURL()
+	if err != nil {
+		return err
+	}
 	newCAAccountsClient := caaccounts.NewCAAccountsClient(graphqlURL, c.createGraphqlHTTPClient(accessToken))
 	newCAOperationsClient := caoperations.NewCAOperationsClient(graphqlURL, c.createGraphqlHTTPClient(accessToken))
 	newCloudProvidersClient := cloudproviders.NewCloudProvidersClient(graphqlURL, c.createGraphqlHTTPClient(accessToken))
@@ -286,7 +304,11 @@ func (c *Connector) renewAccessTokenOnExpiration() {
 				tokenResponse, err := c.GetAccessToken(auth)
 				if err == nil {
 					// Create new clients before acquiring lock
-					graphqlURL := c.getURL(urlGraphql)
+					graphqlURL, urlErr := c.getGraphqlURL()
+					if urlErr != nil {
+						log.Printf("Failed to build GraphQL URL while renewing access token: %v. Stopping renewal attempts.", urlErr)
+						return
+					}
 					graphqlHttpClient := c.createGraphqlHTTPClient(tokenResponse.AccessToken)
 					newCAAccountsClient := caaccounts.NewCAAccountsClient(graphqlURL, graphqlHttpClient)
 					newCAOperationsClient := caoperations.NewCAOperationsClient(graphqlURL, graphqlHttpClient)
@@ -1125,6 +1147,13 @@ func (c *Connector) GetAccessToken(auth *endpoint.Authentication) (*AccessTokenR
 	}
 
 	url, err := getServiceAccountTokenURL(auth.TokenURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get access token: %w", err)
+	}
+
+	// Mint the token against the workspace, so the workspace is carried by the
+	// token itself and not only by the query parameter on later requests.
+	url, err = withWorkspaceID(url, c.workspaceID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get access token: %w", err)
 	}

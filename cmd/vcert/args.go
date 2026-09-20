@@ -120,6 +120,7 @@ type commandFlags struct {
 	url                  string
 	deviceURL            string
 	verbose              bool
+	workspace            string
 	zone                 string
 	omitSans             bool
 	csrFormat            string

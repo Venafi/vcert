@@ -2,6 +2,7 @@ config:
   connection:
     platform: NGTS
     url: '{{ Env "NGTS_URL" }}' # NGTS URL as environment variable
+    # workspace: '{{ Env "NGTS_WORKSPACE" }}' # Optional. Numeric ID of the NGTS workspace to operate in
     credentials:
       clientId: '{{ Env "NGTS_CLIENT_ID" }}' # NGTS client ID as environment variable
       clientSecret: '{{ Env "NGTS_CLIENT_SECRET" }}' # NGTS client secret as environment variable
