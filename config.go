@@ -33,6 +33,11 @@ const (
 	//common keys
 	platformUrlKey = "url"
 	trustBundleKey = "trust_bundle"
+	// workspaceKey is deliberately unprefixed. Only NGTS honours it today, but a
+	// workspace is not an NGTS-specific idea, so the key is named for the concept
+	// rather than the platform. Adding it to another platform's valid-key set is
+	// all that is needed when that platform gains workspaces.
+	workspaceKey = "workspace"
 
 	//NGTS keys
 	ngtsZoneKey      = "ngts_zone"
@@ -64,6 +69,10 @@ type Config struct {
 	BaseUrl string
 	// Zone is name of a policy zone in Venafi Platform or Cloud. For TPP, if necessary, escape backslash symbols.   For example,  "test\\zone" or `test\zone`.
 	Zone string
+	// Workspace scopes requests to a single Palo Alto Networks Next-Gen Trust
+	// Security (NGTS) workspace. It is only used by the NGTS connector and is
+	// ignored by all others. When empty, no workspace is sent.
+	Workspace string
 	// Credentials should contain either User and Password for TPP connections or an APIKey for Cloud.
 	Credentials *endpoint.Authentication
 	// ConnectionTrust  may contain a trusted CA or certificate of server if you use self-signed certificate.
@@ -180,6 +189,7 @@ func LoadConfigFromFile(path, section string) (cfg Config, err error) {
 		auth.Scope = m[ngtsScope]
 		auth.TokenURL = m[ngtsTokenUrl]
 		cfg.Zone = m[ngtsZoneKey]
+		cfg.Workspace = m[workspaceKey]
 	} else if m.has("test_mode") && m["test_mode"] == "true" {
 		connectorType = endpoint.ConnectorTypeFake
 	} else {
@@ -274,6 +284,7 @@ func validateSection(s *ini.Section) error {
 		ngtsTokenUrl:     true,
 		ngtsZoneKey:      true,
 		ngtsAccessToken:  true,
+		workspaceKey:     true,
 		trustBundleKey:   true,
 	}
 

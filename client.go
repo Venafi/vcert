@@ -92,6 +92,16 @@ func (cfg *Config) newClient(args []interface{}) (connector endpoint.Connector, 
 	connector.SetZone(cfg.Zone)
 	connector.SetHTTPClient(cfg.Client)
 
+	// Workspaces are currently an NGTS-only concept, so this is set through an
+	// optional interface rather than widening endpoint.Connector.
+	if cfg.Workspace != "" {
+		ws, ok := connector.(endpoint.WorkspaceSetter)
+		if !ok {
+			return nil, fmt.Errorf("%w: a workspace was specified but %s does not support workspaces", verror.UserDataError, cfg.ConnectorType)
+		}
+		ws.SetWorkspace(cfg.Workspace)
+	}
+
 	if clientArgs.authenticate {
 		err = connector.Authenticate(cfg.Credentials)
 	}

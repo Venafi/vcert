@@ -146,6 +146,13 @@ func validateConnectionFlags(commandName string) error {
 		return nil
 	}
 
+	// Workspaces only exist on NGTS, so require the platform to be explicit
+	// rather than letting the workspace be silently dropped when the platform is
+	// guessed from the remaining connection flags.
+	if err := validateWorkspaceFlag(); err != nil {
+		return err
+	}
+
 	switch flags.platform {
 	case venafi.TPP:
 		return validateConnectionFlagsTPP(commandName)
@@ -179,6 +186,10 @@ func validateConnectionFlags(commandName string) error {
 func validateProvisionConnectionFlags(commandName string) error {
 	err := commonConnectionFlagsValidations(commandName)
 	if err != nil {
+		return err
+	}
+
+	if err := validateWorkspaceFlag(); err != nil {
 		return err
 	}
 
