@@ -716,6 +716,12 @@ func validateRetireFlags(commandName string) error {
 }
 
 func validateGetPolicyFlags(commandName string) error {
+	// The policy commands expose --workspace but do not go through
+	// validateConnectionFlags, so the gate has to be applied here too.
+	if err := validateWorkspaceFlag(); err != nil {
+		return err
+	}
+
 	isPolicyConfigStarter := flags.policyConfigStarter
 	if isPolicyConfigStarter {
 		if flags.userName != "" || flags.password != "" || flags.token != "" || flags.apiKey != "" {
@@ -735,6 +741,11 @@ func validateGetPolicyFlags(commandName string) error {
 }
 
 func validateSetPolicyFlags(commandName string) error {
+	// The policy commands expose --workspace but do not go through
+	// validateConnectionFlags, so the gate has to be applied here too.
+	if err := validateWorkspaceFlag(); err != nil {
+		return err
+	}
 
 	isVerifyPolicy := flags.verifyPolicyConfig
 

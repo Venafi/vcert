@@ -154,3 +154,62 @@ func TestValidateWorkspaceFlag(t *testing.T) {
 		})
 	}
 }
+
+// TestPolicyCommandsValidateWorkspace covers a gap that is easy to reintroduce:
+// --workspace is exposed on nine command flag sets, but only the commands that
+// route through validateConnectionFlags (or validateProvisionConnectionFlags)
+// reach validateWorkspaceFlag. The policy validators do neither, so they call
+// the gate directly. Without that call, `getpolicy -p ngts --workspace foo`
+// would send a malformed workspace_id straight to the API.
+func TestPolicyCommandsValidateWorkspace(t *testing.T) {
+	validators := map[string]func(string) error{
+		"getpolicy": validateGetPolicyFlags,
+		"setpolicy": validateSetPolicyFlags,
+	}
+
+	testCases := []struct {
+		name      string
+		workspace string
+		platform  venafi.Platform
+		expectErr bool
+	}{
+		{
+			name:      "workspace rejected on TPP",
+			workspace: workspaceTestValue,
+			platform:  venafi.TPP,
+			expectErr: true,
+		},
+		{
+			name:      "workspace name rejected in place of an id",
+			workspace: "my-workspace",
+			platform:  venafi.NGTS,
+			expectErr: true,
+		},
+	}
+
+	for cmdName, validate := range validators {
+		for _, tc := range testCases {
+			t.Run(cmdName+"/"+tc.name, func(t *testing.T) {
+				flags = commandFlags{
+					workspace: tc.workspace,
+					platform:  tc.platform,
+					// Satisfy the validators' own required-field checks so that
+					// any error we observe can only have come from the
+					// workspace gate.
+					policyName:         "some-zone",
+					policySpecLocation: "/tmp/policy.json",
+					token:              "a-token",
+				}
+				defer func() { flags = commandFlags{} }()
+
+				err := validate(cmdName)
+				if tc.expectErr && err == nil {
+					t.Fatalf("%s: expected an error for workspace %q on platform %s", cmdName, tc.workspace, tc.platform)
+				}
+				if !tc.expectErr && err != nil {
+					t.Fatalf("%s: unexpected error for workspace %q on platform %s: %s", cmdName, tc.workspace, tc.platform, err)
+				}
+			})
+		}
+	}
+}

@@ -1,3 +1,5 @@
+//go:build integration
+
 /*
  * Copyright Venafi, Inc. and CyberArk Software Ltd. ("CyberArk")
  *
@@ -14,6 +16,12 @@
  * limitations under the License.
  */
 
+// The tests in this file talk to a live NGTS tenant and need NGTS_CLIENT_ID,
+// NGTS_CLIENT_SECRET, NGTS_TOKEN_URL and NGTS_SCOPE. They are behind the
+// `integration` build tag so that the credential-free unit tests in this
+// package still run under a plain `go test ./...`. Run them with
+// `make ngts_test`, which supplies the tag.
+
 package ngts
 
 import (
@@ -23,7 +31,6 @@ import (
 	"crypto/sha1"
 	"crypto/x509"
 	"crypto/x509/pkix"
-	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
@@ -72,7 +79,8 @@ func init() {
 	// http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	if ctx.NGTSClientID == "" || ctx.NGTSClientSecret == "" || ctx.NGTSTokenURL == "" || ctx.NGTSScope == "" {
-		fmt.Println("NGTS credentials cannot be empty. Required: NGTS_CLIENT_ID, NGTS_CLIENT_SECRET, NGTS_TOKEN_URL, NGTS_SCOPE")
+		fmt.Println("NGTS integration tests need a live tenant. Required: NGTS_CLIENT_ID, NGTS_CLIENT_SECRET, NGTS_TOKEN_URL, NGTS_SCOPE")
+		fmt.Println("For the credential-free unit tests in this package, run: go test ./pkg/venafi/ngts (without -tags integration)")
 		os.Exit(1)
 	}
 }
@@ -124,42 +132,6 @@ func newMockTokenServer(tokenExpiry time.Duration) *mockTokenServer {
 	// Create HTTP server
 	mts.server = httptest.NewServer(http.HandlerFunc(mts.handleTokenRequest))
 	return mts
-}
-
-// createMockJWT creates a JWT token with controlled expiry using only built-in functions
-func createMockJWT(expiryTime time.Time) (string, error) {
-	// JWT Header (algorithm and type)
-	header := map[string]any{
-		"alg": "RS256",
-		"typ": "JWT",
-	}
-	headerJSON, err := json.Marshal(header)
-	if err != nil {
-		return "", err
-	}
-	headerEncoded := base64.RawURLEncoding.EncodeToString(headerJSON)
-
-	// JWT Payload (claims)
-	now := time.Now()
-	payload := map[string]any{
-		"exp":   expiryTime.Unix(),
-		"iat":   now.Unix(),
-		"sub":   "test-subject",
-		"scope": "test-scope",
-	}
-	payloadJSON, err := json.Marshal(payload)
-	if err != nil {
-		return "", err
-	}
-	payloadEncoded := base64.RawURLEncoding.EncodeToString(payloadJSON)
-
-	// For testing, we don't need a real signature, just a dummy one
-	signature := "dummy-signature-for-testing"
-	signatureEncoded := base64.RawURLEncoding.EncodeToString([]byte(signature))
-
-	// Combine: header.payload.signature
-	token := fmt.Sprintf("%s.%s.%s", headerEncoded, payloadEncoded, signatureEncoded)
-	return token, nil
 }
 
 func (mts *mockTokenServer) handleTokenRequest(w http.ResponseWriter, _ *http.Request) {
