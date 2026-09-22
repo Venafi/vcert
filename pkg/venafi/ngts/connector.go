@@ -613,11 +613,13 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 	templateId := previousRequest.TemplateId
 	certificateId := previousRequest.CertificateIdsList[0]
 
+	// applicationId is deliberately not required here. NGTS has no application
+	// concept, so enrollment never sets one and the API always reports it
+	// empty; requiring it would reject every renewal. It is still forwarded
+	// below for the benefit of any response that does carry one.
 	emptyField := ""
 	if certificateId == "" {
 		emptyField = "certificateId"
-	} else if applicationId == "" {
-		emptyField = "applicationId"
 	} else if templateId == "" {
 		emptyField = "templateId"
 	}
@@ -1757,10 +1759,17 @@ func (c *Connector) getTemplateByID() (*certificateTemplate, error) {
 
 func getCit(c *Connector, citName string) (*certificateTemplate, error) {
 	url := c.getURL(urlIssuingTemplate)
-	_, _, body, err := c.request("GET", url, nil)
+	statusCode, status, body, err := c.request("GET", url, nil)
 
 	if err != nil {
 		return nil, err
+	}
+
+	// The body of an error response is not necessarily JSON, so surface the
+	// status before attempting to decode it. Otherwise a 403 (for example, an
+	// inaccessible workspace) is reported as an opaque JSON parsing error.
+	if statusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to retrieve issuing templates. StatusCode: %d -- Status: %s -- Server Data: %s", statusCode, status, body)
 	}
 
 	var cits CertificateTemplates

@@ -33,7 +33,7 @@ type Connection struct {
 	Platform        venafi.Platform `yaml:"platform,omitempty"`
 	TrustBundlePath string          `yaml:"trustBundle,omitempty"`
 	URL             string          `yaml:"url,omitempty"`
-	Workspace string `yaml:"workspace,omitempty"` // NGTS only
+	Workspace       string          `yaml:"workspace,omitempty"` // NGTS only
 }
 
 // GetConnectorType returns the type of vcert Connector this config will create
