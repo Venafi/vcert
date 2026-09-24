@@ -260,6 +260,7 @@ Options:
 
 Notes:
 - The certificate policy specification is documented in detail [here](README-POLICY-SPEC.md).
+- `setpolicy` does not accept `--workspace`, and refuses to run while `VCERT_WORKSPACE` is set (except with `--verify`). Request policies belong to the tenant and can only be changed with the tenant selected.
 - Appropriate permissions are required to apply certificate policy.
 - Policy (Issuing Template rules) and defaults (Issuing Template recommended settings) revert to their default state if 
 they are not present in a policy specification applied by this action.
@@ -390,7 +391,7 @@ Options:
 | `--client-id`      | The Client ID of the service account that will be used to obtain the access token                             |
 | `--client-secret`  | The Client Secret of the service account that will be used to obtain the access token                         |
 | `--scope`          | The scope requested for the access token, in the format `tsg_id:<TSG_ID>` where TSG_ID is a 10-digit integer.<br/>This can be any TSG the service account is authorized for, including a sub-TSG — not just the TSG it was originally created under. |
-| `--workspace`      | Optional. The ID of the workspace to mint the token against. When set, VCert appends `?workspace_id=<id>` to the token URL, so the resulting access token is already scoped to that workspace. |
+| `--workspace`      | Has no effect on `getcred`. Access tokens are not workspace-scoped: the token endpoint ignores a workspace, and the tenant is selected by `--scope`. Pass `--workspace` to the command that uses the token instead. |
 
 ### Generating a new key pair and CSR
 ```

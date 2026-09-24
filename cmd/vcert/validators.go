@@ -741,13 +741,22 @@ func validateGetPolicyFlags(commandName string) error {
 }
 
 func validateSetPolicyFlags(commandName string) error {
-	// The policy commands expose --workspace but do not go through
-	// validateConnectionFlags, so the gate has to be applied here too.
-	if err := validateWorkspaceFlag(); err != nil {
-		return err
-	}
-
 	isVerifyPolicy := flags.verifyPolicyConfig
+
+	// setpolicy does not accept --workspace, but VCERT_WORKSPACE is applied to
+	// every command, so it has to be refused here. NGTS request policies belong
+	// to the tenant and can only be changed with the tenant selected; a
+	// workspace-scoped write is rejected by the server with a 403. --verify is
+	// offline, so it is left alone.
+	if !isVerifyPolicy {
+		workspace := flags.workspace
+		if workspace == "" {
+			workspace = getPropertyFromEnvironment(vcertWorkspace)
+		}
+		if workspace != "" {
+			return fmt.Errorf("setpolicy cannot run in a workspace: request policies belong to the tenant and can only be changed with the tenant selected. Unset %s to apply the policy", vcertWorkspace)
+		}
+	}
 
 	if isVerifyPolicy {
 

@@ -1043,7 +1043,9 @@ var (
 		flagPolicyVerifyConfigFile,
 		flagTrustBundle,
 		flagInsecure,
-		flagWorkspace,
+		// No flagWorkspace: NGTS request policies belong to the tenant and can
+		// only be changed with the tenant selected, so a workspace-scoped
+		// setpolicy can never succeed. See validateSetPolicyFlags.
 	))
 
 	getPolicyFlags = sortedFlags(flagsApppend(

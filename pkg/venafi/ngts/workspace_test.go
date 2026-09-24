@@ -18,6 +18,7 @@ package ngts
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -176,39 +177,27 @@ func TestRequestSendsWorkspace(t *testing.T) {
 	}
 }
 
-// TestGetAccessTokenSendsWorkspace covers minting a token against a workspace,
-// so the workspace is carried by the token and not only by later requests.
-func TestGetAccessTokenSendsWorkspace(t *testing.T) {
+// TestGetAccessTokenDoesNotSendWorkspace guards against re-adding the workspace
+// to the token request. The token endpoint ignores workspace_id (tokens minted
+// with and without it carry identical claims), so sending it only implies a
+// scoping that does not happen. The workspace is applied per API request.
+func TestGetAccessTokenDoesNotSendWorkspace(t *testing.T) {
 	testCases := []struct {
-		name              string
-		workspaceID       string
-		tokenURLSuffix    string
-		expectedWorkspace string
+		name           string
+		workspaceID    string
+		tokenURLSuffix string
 	}{
-		{
-			name:              "workspace is appended to the token url",
-			workspaceID:       testWorkspaceID,
-			expectedWorkspace: testWorkspaceID,
-		},
-		{
-			name:              "token url is untouched when no workspace is set",
-			workspaceID:       "",
-			expectedWorkspace: "",
-		},
-		{
-			name:              "workspace is merged into a token url that already has a query string",
-			workspaceID:       testWorkspaceID,
-			tokenURLSuffix:    "?foo=bar",
-			expectedWorkspace: testWorkspaceID,
-		},
+		{name: "no workspace_id even when a workspace is set", workspaceID: testWorkspaceID},
+		{name: "no workspace_id when no workspace is set", workspaceID: ""},
+		{name: "existing token url query parameters are preserved", workspaceID: testWorkspaceID, tokenURLSuffix: "?foo=bar"},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			var gotWorkspace string
+			var hasWorkspace bool
 			var gotFoo string
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				gotWorkspace = r.URL.Query().Get("workspace_id")
+				hasWorkspace = r.URL.Query().Has("workspace_id")
 				gotFoo = r.URL.Query().Get("foo")
 
 				token, err := createMockJWT(time.Now().Add(time.Hour))
@@ -239,10 +228,92 @@ func TestGetAccessTokenSendsWorkspace(t *testing.T) {
 			require.NoError(t, err)
 			require.NotEmpty(t, resp.AccessToken)
 
-			assert.Equal(t, tc.expectedWorkspace, gotWorkspace)
+			assert.False(t, hasWorkspace, "the token request must not carry workspace_id")
 			if tc.tokenURLSuffix != "" {
 				assert.Equal(t, "bar", gotFoo, "existing token url query parameters must be preserved")
 			}
+		})
+	}
+}
+
+// TestCertificateAuthorityLookupSendsWorkspace follows a real caller through
+// Connector.request: setpolicy resolves the CA ("BUILTIN\Built-In CA\Default
+// Product") via GET /v1/certificateauthorities/{type}/accounts before it writes
+// the policy. That lookup must carry the workspace like every other call.
+func TestCertificateAuthorityLookupSendsWorkspace(t *testing.T) {
+	const accountsResponse = `{"accounts":[{
+		"account":{"id":"211cbcb0-b390-11f1-a4fc-c116a3907611","Key":"Built-In CA","certificateAuthority":"BUILTIN"},
+		"productOptions":[{"productName":"Default Product","id":"21298df0-b390-11f1-a4fc-c116a3907611"}]}]}`
+
+	testCases := []struct {
+		name              string
+		workspaceID       string
+		expectedWorkspace string
+	}{
+		{name: "workspace is sent when set", workspaceID: testWorkspaceID, expectedWorkspace: testWorkspaceID},
+		{name: "no workspace parameter when unset", workspaceID: "", expectedWorkspace: ""},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var gotPath, gotWorkspace string
+			server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				gotPath = r.URL.Path
+				gotWorkspace = r.URL.Query().Get("workspace_id")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write([]byte(accountsResponse))
+			}))
+			defer server.Close()
+
+			conn, err := NewConnector(server.URL, "zone", false, nil)
+			require.NoError(t, err)
+			// getURL always builds https URLs, so use a TLS server and trust it.
+			conn.SetHTTPClient(server.Client())
+			conn.SetWorkspace(tc.workspaceID)
+			conn.accessToken = "dummy-token"
+
+			details, err := getCertificateAuthorityDetails(`BUILTIN\Built-In CA\Default Product`, conn)
+			require.NoError(t, err)
+			require.NotNil(t, details.CertificateAuthorityProductOptionId)
+
+			assert.Equal(t, "/v1/certificateauthorities/BUILTIN/accounts", gotPath)
+			assert.Equal(t, tc.expectedWorkspace, gotWorkspace)
+			assert.Equal(t, "21298df0-b390-11f1-a4fc-c116a3907611", *details.CertificateAuthorityProductOptionId)
+		})
+	}
+}
+
+// TestCertificateAuthorityLookupReportsHTTPStatus: a non-200 from the CA
+// accounts endpoint must surface the status. Before the check, a JSON error
+// body unmarshalled into an empty account list and was reported as
+// "specified CA doesn't exist", sending users after a CA name that was fine.
+func TestCertificateAuthorityLookupReportsHTTPStatus(t *testing.T) {
+	testCases := []struct {
+		name       string
+		statusCode int
+		body       string
+	}{
+		{name: "403 with a JSON error body", statusCode: http.StatusForbidden, body: `{"errors":[{"code":1002,"message":"Unauthorized request"}]}`},
+		{name: "502 with an HTML body", statusCode: http.StatusBadGateway, body: `<html><body>502 Bad Gateway</body></html>`},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(tc.statusCode)
+				_, _ = w.Write([]byte(tc.body))
+			}))
+			defer server.Close()
+
+			conn, err := NewConnector(server.URL, "zone", false, nil)
+			require.NoError(t, err)
+			conn.SetHTTPClient(server.Client())
+			conn.accessToken = "dummy-token"
+
+			_, err = getCertificateAuthorityDetails(`BUILTIN\Built-In CA\Default Product`, conn)
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), fmt.Sprintf("StatusCode: %d", tc.statusCode))
+			assert.NotContains(t, err.Error(), "specified CA doesn't exist")
 		})
 	}
 }

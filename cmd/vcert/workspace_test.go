@@ -18,6 +18,7 @@ package main
 
 import (
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/Venafi/vcert/v5/pkg/venafi"
@@ -155,61 +156,93 @@ func TestValidateWorkspaceFlag(t *testing.T) {
 	}
 }
 
-// TestPolicyCommandsValidateWorkspace covers a gap that is easy to reintroduce:
-// --workspace is exposed on nine command flag sets, but only the commands that
-// route through validateConnectionFlags (or validateProvisionConnectionFlags)
-// reach validateWorkspaceFlag. The policy validators do neither, so they call
-// the gate directly. Without that call, `getpolicy -p ngts --workspace foo`
-// would send a malformed workspace_id straight to the API.
-func TestPolicyCommandsValidateWorkspace(t *testing.T) {
-	validators := map[string]func(string) error{
-		"getpolicy": validateGetPolicyFlags,
-		"setpolicy": validateSetPolicyFlags,
-	}
-
+// TestGetPolicyValidatesWorkspace covers a gap that is easy to reintroduce:
+// getpolicy exposes --workspace but does not route through
+// validateConnectionFlags, so it calls the workspace gate directly.
+func TestGetPolicyValidatesWorkspace(t *testing.T) {
 	testCases := []struct {
 		name      string
 		workspace string
 		platform  venafi.Platform
 		expectErr bool
 	}{
-		{
-			name:      "workspace rejected on TPP",
-			workspace: workspaceTestValue,
-			platform:  venafi.TPP,
-			expectErr: true,
-		},
-		{
-			name:      "workspace name rejected in place of an id",
-			workspace: "my-workspace",
-			platform:  venafi.NGTS,
-			expectErr: true,
-		},
+		{name: "numeric workspace on NGTS", workspace: workspaceTestValue, platform: venafi.NGTS},
+		{name: "workspace rejected on TPP", workspace: workspaceTestValue, platform: venafi.TPP, expectErr: true},
+		{name: "workspace name rejected in place of an id", workspace: "my-workspace", platform: venafi.NGTS, expectErr: true},
 	}
 
-	for cmdName, validate := range validators {
-		for _, tc := range testCases {
-			t.Run(cmdName+"/"+tc.name, func(t *testing.T) {
-				flags = commandFlags{
-					workspace: tc.workspace,
-					platform:  tc.platform,
-					// Satisfy the validators' own required-field checks so that
-					// any error we observe can only have come from the
-					// workspace gate.
-					policyName:         "some-zone",
-					policySpecLocation: "/tmp/policy.json",
-					token:              "a-token",
-				}
-				defer func() { flags = commandFlags{} }()
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			flags = commandFlags{workspace: tc.workspace, platform: tc.platform, policyName: "some-zone", token: "a-token"}
+			defer func() { flags = commandFlags{} }()
 
-				err := validate(cmdName)
-				if tc.expectErr && err == nil {
-					t.Fatalf("%s: expected an error for workspace %q on platform %s", cmdName, tc.workspace, tc.platform)
+			err := validateGetPolicyFlags(commandGetePolicyName)
+			if tc.expectErr && err == nil {
+				t.Fatalf("expected an error for workspace %q on platform %s", tc.workspace, tc.platform)
+			}
+			if !tc.expectErr && err != nil {
+				t.Fatalf("unexpected error for workspace %q on platform %s: %s", tc.workspace, tc.platform, err)
+			}
+		})
+	}
+}
+
+// TestSetPolicyRefusesWorkspace: NGTS request policies belong to the tenant and
+// can only be changed with the tenant selected, so a workspace-scoped setpolicy
+// is refused outright, even a valid NGTS workspace. setpolicy has no --workspace
+// flag, but VCERT_WORKSPACE applies to every command, so both paths are covered.
+func TestSetPolicyRefusesWorkspace(t *testing.T) {
+	testCases := []struct {
+		name      string
+		flagValue string
+		envValue  string
+		verify    bool
+		expectErr bool
+	}{
+		{name: "no workspace is fine"},
+		{name: "valid NGTS workspace from the environment is refused", envValue: workspaceTestValue, expectErr: true},
+		{name: "workspace set on the flags struct is refused", flagValue: workspaceTestValue, expectErr: true},
+		{name: "--verify is offline and ignores the workspace", envValue: workspaceTestValue, verify: true},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Setenv(vcertWorkspace, tc.envValue)
+			flags = commandFlags{
+				workspace:          tc.flagValue,
+				platform:           venafi.NGTS,
+				verifyPolicyConfig: tc.verify,
+				// Satisfy the validator's own required-field checks so that any
+				// error can only have come from the workspace refusal.
+				policyName:         "some-zone",
+				policySpecLocation: "/tmp/policy.json",
+			}
+			if !tc.verify {
+				flags.token = "a-token"
+			}
+			defer func() { flags = commandFlags{} }()
+
+			err := validateSetPolicyFlags(commandCreatePolicyName)
+			if tc.expectErr {
+				if err == nil || !strings.Contains(err.Error(), "cannot run in a workspace") {
+					t.Fatalf("expected the workspace refusal, got: %v", err)
 				}
-				if !tc.expectErr && err != nil {
-					t.Fatalf("%s: unexpected error for workspace %q on platform %s: %s", cmdName, tc.workspace, tc.platform, err)
-				}
-			})
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+		})
+	}
+}
+
+// TestSetPolicyHasNoWorkspaceFlag keeps --workspace off setpolicy.
+func TestSetPolicyHasNoWorkspaceFlag(t *testing.T) {
+	for _, f := range createPolicyFlags {
+		for _, name := range f.Names() {
+			if name == "workspace" {
+				t.Fatal("setpolicy must not expose --workspace: request policies are tenant-scoped")
+			}
 		}
 	}
 }

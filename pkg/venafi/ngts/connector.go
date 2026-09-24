@@ -148,9 +148,9 @@ func (c *Connector) SetUserAgent(userAgent string) {
 }
 
 // SetWorkspace scopes this connector to a single NGTS workspace. The workspace
-// is sent as the "workspace_id" query parameter on every request the connector
-// makes, and is added to the service account token URL when the connector mints
-// its own access token. An empty workspace disables the behaviour.
+// is sent as the "workspace_id" query parameter on every API request the
+// connector makes. It is not sent to the token endpoint, which ignores it. An
+// empty workspace disables the behaviour.
 //
 // It implements endpoint.WorkspaceSetter and must be called before Authenticate.
 func (c *Connector) SetWorkspace(workspace string) {
@@ -1153,12 +1153,10 @@ func (c *Connector) GetAccessToken(auth *endpoint.Authentication) (*AccessTokenR
 		return nil, fmt.Errorf("failed to get access token: %w", err)
 	}
 
-	// Mint the token against the workspace, so the workspace is carried by the
-	// token itself and not only by the query parameter on later requests.
-	url, err = withWorkspaceID(url, c.workspaceID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get access token: %w", err)
-	}
+	// The workspace is deliberately not added to the token URL. The token
+	// endpoint ignores a workspace_id query parameter: tokens minted with and
+	// without one carry identical claims. The tenant is selected by the scope
+	// (tsg_id:<id>), and the workspace is applied per request instead.
 
 	body := netUrl.Values{}
 	body.Set("grant_type", "client_credentials")
@@ -1826,10 +1824,17 @@ func getAccounts(caName string, c *Connector) (*policy.Accounts, *policy.Certifi
 	caType := netUrl.PathEscape(info.CAType)
 	url := c.getURL(urlCAAccounts)
 	url = fmt.Sprintf(url, caType)
-	_, _, body, err := c.request("GET", url, nil)
+	statusCode, status, body, err := c.request("GET", url, nil)
 
 	if err != nil {
 		return nil, nil, err
+	}
+
+	// An error body is not necessarily JSON, and a JSON error body unmarshals
+	// into an empty account list, which would surface as the misleading
+	// "specified CA doesn't exist". Report the real status instead.
+	if statusCode != http.StatusOK {
+		return nil, nil, fmt.Errorf("failed to retrieve certificate authority accounts. StatusCode: %d -- Status: %s -- Server Data: %s", statusCode, status, body)
 	}
 
 	var accounts policy.Accounts
