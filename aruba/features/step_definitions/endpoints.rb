@@ -19,6 +19,8 @@ ENDPOINTS = {
 
     "NGTS" => "-u '#{ENV['NGTS_URL']}' -t '#{ENV['NGTS_ACCESS_TOKEN']}' -p NGTS",
 
+    "NGTSworkspace" => "-u '#{ENV['NGTS_URL']}' -t '#{ENV['NGTS_ACCESS_TOKEN']}' -p NGTS --workspace '#{ENV['NGTS_WORKSPACE']}'",
+
     "Firefly" => "-u '#{ENV['FIREFLY_URL']}' -t '#{ENV['IDP_ACCESS_TOKEN']}'"
 }
 
@@ -38,6 +40,8 @@ ZONE = {
     "Cloud" => "-z '#{ENV['CLOUD_ZONE']}'",
 
     "NGTS" => "-z '#{ENV['NGTS_ZONE']}'",
+
+    "NGTSworkspace" => "-z '#{ENV['NGTS_ZONE']}'",
 
     "Firefly" => "-z '#{ENV['FIREFLY_ZONE']}'"
 }

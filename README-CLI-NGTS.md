@@ -88,7 +88,7 @@ The following options apply to the `enroll`, `pickup`, and `renew` actions:
 
 | Flag                 | Description                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 |----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `--config`           | Use to specify INI configuration file containing connection details. Available parameters: `url`, `ngts_access_token`, `ngts_client_id`, `ngts_client_secret`, `ngts_scope`, `ngts_token_url`, `trust_bundle`, `test_mode`.                                                                                                                                                                                                                      |
+| `--config`           | Use to specify INI configuration file containing connection details. Available parameters: `url`, `ngts_access_token`, `ngts_client_id`, `ngts_client_secret`, `ngts_scope`, `ngts_token_url`, `workspace`, `trust_bundle`, `test_mode`.                                                                                                                                                                                                                      |
 | `--no-prompt`        | Use to exclude password prompts. If you enable the prompt and you enter incorrect information, an error is displayed. This option is useful with scripting.                                                                                                                                                                                                                                                                                      |
 | `-p` or `--platform` | Use to specify Palo Alto Networks NGTS as the platform of choice to connect. Accepted value is `ngts`, case-insensitive.                                                                                                                                                                                                                                                                                                                         |
 | `-t` or `--token`    | Use to specify an access token for Palo Alto Networks NGTS. You need to set `--platform ngts` or `-p ngts` in order to use access tokens for NGTS.                                                                                                                                                                                                                                                                                               |
@@ -98,6 +98,7 @@ The following options apply to the `enroll`, `pickup`, and `renew` actions:
 | `--trust-bundle`     | Use to specify a file with PEM formatted certificates to be used as trust anchors when communicating with Palo Alto Networks NGTS. Generally not needed because NGTS is secured by a publicly trusted certificate, but it may be needed if your organization requires VCert to traverse a proxy server. VCert uses the trust store of your operating system for this purpose if not specified.<br/>Example: `--trust-bundle /path-to/bundle.pem` |
 | `-u` or `--url`      | Use to specify the URL of the Palo Alto Networks NGTS API server.<br/>Default: `https://api.strata.paloaltonetworks.com/ngts`<br/>Example: `-u https://api.strata.paloaltonetworks/ngts.com`                                                                                                                                                                                                                                                                   |
 | `--verbose`          | Use to increase the level of logging detail, which is helpful when troubleshooting issues.                                                                                                                                                                                                                                                                                                                                                       |
+| `--workspace`        | Use to specify the ID of the Palo Alto Networks NGTS workspace that the command should operate in. A workspace is identified by its numeric ID, not its name. Requires `--platform ngts`. When omitted, no workspace is sent and NGTS applies its own default.<br/>Example: `--workspace 1234567890`                                                                                                                                              |
 
 ### Environment Variables
 
@@ -113,6 +114,7 @@ VCert supports supplying flag values using environment variables:
 | Service Account Client ID           | `--client-id`     | `VCERT_CLIENT_ID`        |
 | Service Account Client Secret       | `--client-secret` | `VCERT_CLIENT_SECRET`    |
 | Service Account Scope               | `--scope`         | `VCERT_SCOPE`            |
+| Workspace ID                        | `--workspace`     | `VCERT_WORKSPACE`        |
 
 
 ## Certificate Request Parameters
@@ -258,6 +260,7 @@ Options:
 
 Notes:
 - The certificate policy specification is documented in detail [here](README-POLICY-SPEC.md).
+- `setpolicy` does not accept `--workspace`, and refuses to run while `VCERT_WORKSPACE` is set (except with `--verify`). Request policies belong to the tenant and can only be changed with the tenant selected.
 - Appropriate permissions are required to apply certificate policy.
 - Policy (Issuing Template rules) and defaults (Issuing Template recommended settings) revert to their default state if 
 they are not present in a policy specification applied by this action.
@@ -388,6 +391,7 @@ Options:
 | `--client-id`      | The Client ID of the service account that will be used to obtain the access token                             |
 | `--client-secret`  | The Client Secret of the service account that will be used to obtain the access token                         |
 | `--scope`          | The scope requested for the access token, in the format `tsg_id:<TSG_ID>` where TSG_ID is a 10-digit integer.<br/>This can be any TSG the service account is authorized for, including a sub-TSG — not just the TSG it was originally created under. |
+| `--workspace`      | Has no effect on `getcred`. Access tokens are not workspace-scoped: the token endpoint ignores a workspace, and the tenant is selected by `--scope`. Pass `--workspace` to the command that uses the token instead. |
 
 ### Generating a new key pair and CSR
 ```

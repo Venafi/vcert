@@ -146,6 +146,13 @@ func validateConnectionFlags(commandName string) error {
 		return nil
 	}
 
+	// Workspaces only exist on NGTS, so require the platform to be explicit
+	// rather than letting the workspace be silently dropped when the platform is
+	// guessed from the remaining connection flags.
+	if err := validateWorkspaceFlag(); err != nil {
+		return err
+	}
+
 	switch flags.platform {
 	case venafi.TPP:
 		return validateConnectionFlagsTPP(commandName)
@@ -179,6 +186,10 @@ func validateConnectionFlags(commandName string) error {
 func validateProvisionConnectionFlags(commandName string) error {
 	err := commonConnectionFlagsValidations(commandName)
 	if err != nil {
+		return err
+	}
+
+	if err := validateWorkspaceFlag(); err != nil {
 		return err
 	}
 
@@ -705,6 +716,12 @@ func validateRetireFlags(commandName string) error {
 }
 
 func validateGetPolicyFlags(commandName string) error {
+	// The policy commands expose --workspace but do not go through
+	// validateConnectionFlags, so the gate has to be applied here too.
+	if err := validateWorkspaceFlag(); err != nil {
+		return err
+	}
+
 	isPolicyConfigStarter := flags.policyConfigStarter
 	if isPolicyConfigStarter {
 		if flags.userName != "" || flags.password != "" || flags.token != "" || flags.apiKey != "" {
@@ -724,8 +741,22 @@ func validateGetPolicyFlags(commandName string) error {
 }
 
 func validateSetPolicyFlags(commandName string) error {
-
 	isVerifyPolicy := flags.verifyPolicyConfig
+
+	// setpolicy does not accept --workspace, but VCERT_WORKSPACE is applied to
+	// every command, so it has to be refused here. NGTS request policies belong
+	// to the tenant and can only be changed with the tenant selected; a
+	// workspace-scoped write is rejected by the server with a 403. --verify is
+	// offline, so it is left alone.
+	if !isVerifyPolicy {
+		workspace := flags.workspace
+		if workspace == "" {
+			workspace = getPropertyFromEnvironment(vcertWorkspace)
+		}
+		if workspace != "" {
+			return fmt.Errorf("setpolicy cannot run in a workspace: request policies belong to the tenant and can only be changed with the tenant selected. Unset %s to apply the policy", vcertWorkspace)
+		}
+	}
 
 	if isVerifyPolicy {
 

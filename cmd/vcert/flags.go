@@ -123,6 +123,15 @@ var (
 		Usage:       "Use to specify a PEM file name to be used as trust anchors when communicating with the remote server.",
 		Destination: &flags.trustBundle,
 	}
+	flagWorkspace = &cli.StringFlag{
+		Name: "workspace",
+		Usage: "NGTS only. Use to specify the ID of the Palo Alto Networks Next-Gen Trust Security (NGTS) " +
+			"workspace that the command should operate in. When omitted, no workspace is sent and NGTS applies " +
+			"its own default." +
+			"\n\t\tExample: --workspace 1234567890",
+		Destination: &flags.workspace,
+	}
+
 	flagZone = &cli.StringFlag{
 		Name:        "zone",
 		Destination: &flags.zone,
@@ -886,6 +895,7 @@ var (
 			flagValidPeriod,
 			flagExtKeyUsage,
 			flagTags,
+			flagWorkspace,
 		)),
 	)
 
@@ -906,6 +916,7 @@ var (
 			flagPickupID,
 			flagPickupIDFile,
 			flagTimeout,
+			flagWorkspace,
 			commonFlags,
 		)),
 	)
@@ -920,6 +931,7 @@ var (
 			flagRevocationComments,
 			flagCAAccountName,
 			flagThumbprint,
+			flagWorkspace,
 			commonFlags,
 			sortableCredentialsFlags,
 		)),
@@ -951,6 +963,7 @@ var (
 			flagExtKeyUsage,
 			flagTags,
 			flagNotags,
+			flagWorkspace,
 		)),
 	)
 
@@ -960,6 +973,7 @@ var (
 		flagThumbprint,
 		flagDistinguishedName,
 		sortedFlags(flagsApppend(
+			flagWorkspace,
 			commonFlags,
 			sortableCredentialsFlags,
 		)),
@@ -980,6 +994,7 @@ var (
 		flagProvisionPickupID,
 		flagPickupIDFile,
 		flagProviderName,
+		flagWorkspace,
 	)
 
 	commonCredFlags = []cli.Flag{flagConfig, flagProfile, flagUrl, flagToken, flagTrustBundle}
@@ -1003,6 +1018,7 @@ var (
 		commonFlags,
 		flagTokenUrl,
 		flagExternalJWT,
+		flagWorkspace,
 	))
 
 	checkCredFlags = sortedFlags(flagsApppend(
@@ -1027,6 +1043,9 @@ var (
 		flagPolicyVerifyConfigFile,
 		flagTrustBundle,
 		flagInsecure,
+		// No flagWorkspace: NGTS request policies belong to the tenant and can
+		// only be changed with the tenant selected, so a workspace-scoped
+		// setpolicy can never succeed. See validateSetPolicyFlags.
 	))
 
 	getPolicyFlags = sortedFlags(flagsApppend(
@@ -1040,6 +1059,7 @@ var (
 		flagPolicyStarterConfigFile,
 		flagTrustBundle,
 		flagInsecure,
+		flagWorkspace,
 	))
 
 	sshPickupFlags = sortedFlags(flagsApppend(

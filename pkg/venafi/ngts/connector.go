@@ -101,6 +101,11 @@ type Connector struct {
 	zone      cloudZone
 	client    *http.Client
 	userAgent string
+	// workspaceID scopes every request this connector makes to a single NGTS
+	// workspace. Empty means no workspace is sent, which is the pre-workspace
+	// behaviour. Set once before Authenticate and not mutated afterwards, so
+	// unlike the fields below it needs no mutex.
+	workspaceID string
 
 	// mu protects all fields below - they are accessed from multiple goroutines
 	// (background renewal goroutine and API method calls from consumer goroutines)
@@ -142,6 +147,16 @@ func (c *Connector) SetUserAgent(userAgent string) {
 	c.userAgent = userAgent
 }
 
+// SetWorkspace scopes this connector to a single NGTS workspace. The workspace
+// is sent as the "workspace_id" query parameter on every API request the
+// connector makes. It is not sent to the token endpoint, which ignores it. An
+// empty workspace disables the behaviour.
+//
+// It implements endpoint.WorkspaceSetter and must be called before Authenticate.
+func (c *Connector) SetWorkspace(workspace string) {
+	c.workspaceID = workspace
+}
+
 func (c *Connector) SetHTTPClient(client *http.Client) {
 	c.client = client
 }
@@ -172,7 +187,10 @@ func (c *Connector) Authenticate(auth *endpoint.Authentication) error {
 	}
 
 	// Create new clients before acquiring lock
-	graphqlURL := c.getURL(urlGraphql)
+	graphqlURL, err := c.getGraphqlURL()
+	if err != nil {
+		return err
+	}
 	newCAAccountsClient := caaccounts.NewCAAccountsClient(graphqlURL, c.createGraphqlHTTPClient(accessToken))
 	newCAOperationsClient := caoperations.NewCAOperationsClient(graphqlURL, c.createGraphqlHTTPClient(accessToken))
 	newCloudProvidersClient := cloudproviders.NewCloudProvidersClient(graphqlURL, c.createGraphqlHTTPClient(accessToken))
@@ -286,7 +304,11 @@ func (c *Connector) renewAccessTokenOnExpiration() {
 				tokenResponse, err := c.GetAccessToken(auth)
 				if err == nil {
 					// Create new clients before acquiring lock
-					graphqlURL := c.getURL(urlGraphql)
+					graphqlURL, urlErr := c.getGraphqlURL()
+					if urlErr != nil {
+						log.Printf("Failed to build GraphQL URL while renewing access token: %v. Stopping renewal attempts.", urlErr)
+						return
+					}
 					graphqlHttpClient := c.createGraphqlHTTPClient(tokenResponse.AccessToken)
 					newCAAccountsClient := caaccounts.NewCAAccountsClient(graphqlURL, graphqlHttpClient)
 					newCAOperationsClient := caoperations.NewCAOperationsClient(graphqlURL, graphqlHttpClient)
@@ -591,11 +613,13 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 	templateId := previousRequest.TemplateId
 	certificateId := previousRequest.CertificateIdsList[0]
 
+	// applicationId is deliberately not required here. NGTS has no application
+	// concept, so enrollment never sets one and the API always reports it
+	// empty; requiring it would reject every renewal. It is still forwarded
+	// below for the benefit of any response that does carry one.
 	emptyField := ""
 	if certificateId == "" {
 		emptyField = "certificateId"
-	} else if applicationId == "" {
-		emptyField = "applicationId"
 	} else if templateId == "" {
 		emptyField = "templateId"
 	}
@@ -1128,6 +1152,11 @@ func (c *Connector) GetAccessToken(auth *endpoint.Authentication) (*AccessTokenR
 	if err != nil {
 		return nil, fmt.Errorf("failed to get access token: %w", err)
 	}
+
+	// The workspace is deliberately not added to the token URL. The token
+	// endpoint ignores a workspace_id query parameter: tokens minted with and
+	// without one carry identical claims. The tenant is selected by the scope
+	// (tsg_id:<id>), and the workspace is applied per request instead.
 
 	body := netUrl.Values{}
 	body.Set("grant_type", "client_credentials")
@@ -1728,10 +1757,17 @@ func (c *Connector) getTemplateByID() (*certificateTemplate, error) {
 
 func getCit(c *Connector, citName string) (*certificateTemplate, error) {
 	url := c.getURL(urlIssuingTemplate)
-	_, _, body, err := c.request("GET", url, nil)
+	statusCode, status, body, err := c.request("GET", url, nil)
 
 	if err != nil {
 		return nil, err
+	}
+
+	// The body of an error response is not necessarily JSON, so surface the
+	// status before attempting to decode it. Otherwise a 403 (for example, an
+	// inaccessible workspace) is reported as an opaque JSON parsing error.
+	if statusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to retrieve issuing templates. StatusCode: %d -- Status: %s -- Server Data: %s", statusCode, status, body)
 	}
 
 	var cits CertificateTemplates
@@ -1788,10 +1824,17 @@ func getAccounts(caName string, c *Connector) (*policy.Accounts, *policy.Certifi
 	caType := netUrl.PathEscape(info.CAType)
 	url := c.getURL(urlCAAccounts)
 	url = fmt.Sprintf(url, caType)
-	_, _, body, err := c.request("GET", url, nil)
+	statusCode, status, body, err := c.request("GET", url, nil)
 
 	if err != nil {
 		return nil, nil, err
+	}
+
+	// An error body is not necessarily JSON, and a JSON error body unmarshals
+	// into an empty account list, which would surface as the misleading
+	// "specified CA doesn't exist". Report the real status instead.
+	if statusCode != http.StatusOK {
+		return nil, nil, fmt.Errorf("failed to retrieve certificate authority accounts. StatusCode: %d -- Status: %s -- Server Data: %s", statusCode, status, body)
 	}
 
 	var accounts policy.Accounts

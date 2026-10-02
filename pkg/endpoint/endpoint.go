@@ -152,6 +152,15 @@ type Connector interface {
 	SetUserAgent(userAgent string)
 }
 
+// WorkspaceSetter is implemented by connectors that support scoping requests to
+// a workspace. It is kept separate from Connector so that connectors for
+// platforms without a workspace concept do not have to implement it.
+type WorkspaceSetter interface {
+	// SetWorkspace scopes subsequent requests to the given workspace. An empty
+	// workspace disables workspace scoping. It must be called before Authenticate.
+	SetWorkspace(workspace string)
+}
+
 type Filter struct {
 	Limit       *int
 	WithExpired bool

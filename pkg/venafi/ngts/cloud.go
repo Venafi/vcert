@@ -289,6 +289,40 @@ func (c *Connector) getURL(resource urlResource) string {
 	return fmt.Sprintf("%s%s", c.baseURL, resource)
 }
 
+// getGraphqlURL returns the GraphQL endpoint URL, scoped to this connector's
+// workspace when one is set.
+func (c *Connector) getGraphqlURL() (string, error) {
+	return withWorkspaceID(c.getURL(urlGraphql), c.workspaceID)
+}
+
+// withWorkspaceID returns rawURL with the "workspace_id" query parameter set to
+// workspaceID. Any query parameters already present are preserved, and calling
+// it more than once on the same URL is a no-op after the first.
+//
+// When workspaceID is empty the URL is returned untouched, so callers that
+// never set a workspace keep the exact behaviour they had before.
+//
+// This must only be applied to a URL that is complete. Several urlResource
+// constants carry fmt verbs (for example urlResourceCertificateStatus) that are
+// filled in after getURL returns, and re-encoding a URL that still holds a "%s"
+// would turn it into "%25s".
+func withWorkspaceID(rawURL string, workspaceID string) (string, error) {
+	if workspaceID == "" {
+		return rawURL, nil
+	}
+
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return "", fmt.Errorf("%w: failed to add workspace to url: %v", verror.VcertError, err)
+	}
+
+	q := u.Query()
+	q.Set("workspace_id", workspaceID)
+	u.RawQuery = q.Encode()
+
+	return u.String(), nil
+}
+
 func (c *Connector) getHTTPClient() *http.Client {
 	if c.client != nil {
 		return c.client
@@ -343,6 +377,14 @@ func (c *Connector) request(method string, url string, data interface{}, authNot
 	if method == http.MethodPost || method == http.MethodPut {
 		b, _ = json.Marshal(data)
 		payload = bytes.NewReader(b)
+	}
+
+	// The workspace is applied here, on the fully-formed URL, because this is the
+	// single choke point every NGTS REST call passes through and the only place
+	// where all fmt verbs have already been substituted.
+	url, err = withWorkspaceID(url, c.workspaceID)
+	if err != nil {
+		return
 	}
 
 	r, err := http.NewRequest(method, url, payload)

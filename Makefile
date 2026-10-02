@@ -100,8 +100,8 @@ cloud_test: get
 	go tool cover -func=cov_vaas.out
 
 ngts_test: get
-	go test -v $(GOFLAGS) -coverprofile=cov_ngts.out ./pkg/venafi/ngts
-	go tool cover -func=cov_vaas.out
+	go test -v -tags integration $(GOFLAGS) -coverprofile=cov_ngts.out ./pkg/venafi/ngts
+	go tool cover -func=cov_ngts.out
 
 firefly_test: get
 	go test -v $(GOFLAGS) -coverprofile=cov_firefly.out ./pkg/venafi/firefly
