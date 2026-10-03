@@ -84,8 +84,23 @@ type Certificate struct {
 	Fingerprint                   string              `json:"fingerprint"`
 	ValidityStart                 string              `json:"validityStart"`
 	ValidityEnd                   string              `json:"validityEnd"`
+	CertificateStatus             string              `json:"certificateStatus,omitempty"`
+	CertificateStatuses           []string            `json:"certificateStatuses,omitempty"`
 	ApplicationIds                []string            `json:"applicationIds"`
 	/* ... and many more fields ... */
+}
+
+// IsRetiredOrRevoked returns true if the certificate has been retired or revoked
+func (c *Certificate) IsRetiredOrRevoked() bool {
+	if strings.EqualFold(c.CertificateStatus, "RETIRED") || strings.EqualFold(c.CertificateStatus, "REVOKED") {
+		return true
+	}
+	for _, s := range c.CertificateStatuses {
+		if strings.EqualFold(s, "RETIRED") || strings.EqualFold(s, "REVOKED") {
+			return true
+		}
+	}
+	return false
 }
 
 func (c Certificate) ToCertificateInfo() certificate.CertificateInfo {
