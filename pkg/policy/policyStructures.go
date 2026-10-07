@@ -18,6 +18,16 @@ type PolicySetAttributeResponse struct {
 	Result int    `json:"Result"`
 }
 
+type PolicyDeleteRequest struct {
+	ObjectDN  string `json:"ObjectDN"`
+	Recursive int    `json:"Recursive"`
+}
+
+type PolicyRenameRequest struct {
+	ObjectDN    string `json:"ObjectDN"`
+	NewObjectDN string `json:"NewObjectDN"`
+}
+
 type PolicyGetAttributePayloadRequest struct {
 	ObjectDN      string   `json:"ObjectDN"`
 	Class         string   `json:"Class"`

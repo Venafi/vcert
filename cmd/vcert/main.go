@@ -86,6 +86,8 @@ func main() {
 			commandRetire,
 			commandCreatePolicy,
 			commandGetPolicy,
+			commandDeletePolicy,
+			commandRenamePolicy,
 			commandSshPickup,
 			commandSshEnroll,
 			commandSshGetConfig,
@@ -124,6 +126,8 @@ ACTIONS:
 
    getpolicy     tpp | vcp | ngts                  To retrieve the certificate policy of a zone
    setpolicy     tpp | vcp | ngts                  To apply a certificate policy specification to a zone
+   deletepolicy  tpp                               To delete a certificate policy folder (zone)
+   renamepolicy  tpp                               To rename or move a certificate policy folder (zone)
 
    getcred       tpp | vcp | ngts | oidc           To obtain a new authentication token from any CyberArk platform or to register for a new CyberArk Certificate Manager, SaaS user API key
    checkcred     tpp                               To check the validity of a CyberArk Certificate Manager, Self-Hosted token and grant

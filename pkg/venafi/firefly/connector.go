@@ -404,6 +404,21 @@ func (c *Connector) GetPolicy(_ string) (*policy.PolicySpecification, error) {
 	panic("operation is not supported yet")
 }
 
+// DeletePolicy is not supported by CyberArk Workload Identity Manager (Firefly).
+// Firefly is an ephemeral/stateless issuer: it signs certificates on demand against a
+// policy it is configured with and does not maintain server-side policy folders/zones
+// that a client can delete. There is nothing to delete, so we return a not-supported
+// error rather than a no-op that would falsely report success.
+func (c *Connector) DeletePolicy(_ string, _ bool) error {
+	return fmt.Errorf("not supported by endpoint")
+}
+
+// RenamePolicy is not supported by CyberArk Workload Identity Manager (Firefly) for the
+// same reason as DeletePolicy: there is no persistent policy folder/zone object to rename.
+func (c *Connector) RenamePolicy(_, _ string) error {
+	return fmt.Errorf("not supported by endpoint")
+}
+
 func (c *Connector) SetPolicy(_ string, _ *policy.PolicySpecification) (string, error) {
 	panic("operation is not supported yet")
 }

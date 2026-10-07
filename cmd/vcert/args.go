@@ -34,6 +34,8 @@ const (
 	commandVoidCredName         = "voidcred"
 	commandCreatePolicyName     = "setpolicy"
 	commandGetePolicyName       = "getpolicy"
+	commandDeletePolicyName     = "deletepolicy"
+	commandRenamePolicyName     = "renamepolicy"
 	commandSshPickupName        = "sshpickup"
 	commandSshEnrollName        = "sshenroll"
 	commandSshGetConfigName     = "sshgetconfig"
@@ -130,7 +132,9 @@ type commandFlags struct {
 	platformString       string
 	platform             venafi.Platform
 	policyName           string
+	policyNewName        string
 	policySpecLocation   string
+	recursive            bool
 	policyConfigStarter  bool
 	verifyPolicyConfig   bool
 	sshCertKeyId         string

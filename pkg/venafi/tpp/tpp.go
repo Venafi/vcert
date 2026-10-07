@@ -409,6 +409,8 @@ const (
 	urlResourceCertificateSearch                  = urlResourceCertificate
 	urlResourceCertificatesList                   = urlResourceCertificate
 	urlResourceConfigDnToGuid         urlResource = "vedsdk/config/dntoguid"
+	urlResourceConfigDelete           urlResource = "vedsdk/config/delete"
+	urlResourceConfigRename           urlResource = "vedsdk/config/renameobject"
 	urlResourceConfigReadDn           urlResource = "vedsdk/config/readdn"
 	urlResourceFindPolicy             urlResource = "vedsdk/config/findpolicy"
 	urlResourceMetadataSet            urlResource = "vedsdk/metadata/set"

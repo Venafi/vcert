@@ -93,3 +93,44 @@ func TestRequestCertificate(t *testing.T) {
 		t.Fatalf("should return non-empty pickupId")
 	}
 }
+
+func TestDeletePolicy(t *testing.T) {
+	connector := getTestConnector()
+
+	err := connector.DeletePolicy("\\VED\\Policy\\devops\\vcert", false)
+	if err != nil {
+		t.Fatalf("error: %s", err)
+	}
+
+	err = connector.DeletePolicy("\\VED\\Policy\\devops\\vcert-recursive", true)
+	if err != nil {
+		t.Fatalf("error: %s", err)
+	}
+
+	if len(connector.deletedPolicies) != 2 {
+		t.Fatalf("expected 2 deleted policies to be tracked but got %d", len(connector.deletedPolicies))
+	}
+	if connector.deletedPolicies[0].name != "\\VED\\Policy\\devops\\vcert" || connector.deletedPolicies[0].recursive {
+		t.Fatalf("unexpected first delete record: %+v", connector.deletedPolicies[0])
+	}
+	if connector.deletedPolicies[1].name != "\\VED\\Policy\\devops\\vcert-recursive" || !connector.deletedPolicies[1].recursive {
+		t.Fatalf("unexpected second delete record: %+v", connector.deletedPolicies[1])
+	}
+}
+
+func TestRenamePolicy(t *testing.T) {
+	connector := getTestConnector()
+
+	err := connector.RenamePolicy("\\VED\\Policy\\devops\\vcert", "\\VED\\Policy\\devops\\vcert-renamed")
+	if err != nil {
+		t.Fatalf("error: %s", err)
+	}
+
+	newName, ok := connector.renamedPolicies["\\VED\\Policy\\devops\\vcert"]
+	if !ok {
+		t.Fatalf("expected rename to be tracked for original policy name")
+	}
+	if newName != "\\VED\\Policy\\devops\\vcert-renamed" {
+		t.Fatalf("expected new name %q but got %q", "\\VED\\Policy\\devops\\vcert-renamed", newName)
+	}
+}

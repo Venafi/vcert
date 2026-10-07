@@ -10,6 +10,20 @@ import (
 	"github.com/Venafi/vcert/v5/pkg/verror"
 )
 
+// DeletePolicy is not supported by Palo Alto Networks Next-Gen Trust Security (NGTS).
+// Policy on this platform is modeled as Certificate Issuing Templates (CITs) attached
+// to Applications; the API exposes no equivalent of TPP's config/delete for a policy
+// folder/zone, so we return a not-supported error rather than pretending to succeed.
+func (c *Connector) DeletePolicy(_ string, _ bool) error {
+	return fmt.Errorf("not supported by endpoint")
+}
+
+// RenamePolicy is not supported by Palo Alto Networks Next-Gen Trust Security (NGTS).
+// There is no API equivalent of TPP's config/renameobject for a policy folder/zone.
+func (c *Connector) RenamePolicy(_, _ string) error {
+	return fmt.Errorf("not supported by endpoint")
+}
+
 func (c *Connector) GetPolicy(name string) (*policy.PolicySpecification, error) {
 	if !c.isAuthenticated() {
 		return nil, fmt.Errorf("must be authenticated to request a certificate")

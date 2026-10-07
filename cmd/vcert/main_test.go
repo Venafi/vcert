@@ -1072,3 +1072,62 @@ func TestValidateEmptyCredentials(t *testing.T) {
 
 	unsetFlags()
 }
+
+func TestValidateDeletePolicyFlags(t *testing.T) {
+	// missing credentials
+	flags = commandFlags{}
+	flags.policyName = "\\VED\\Policy\\devops\\vcert"
+	if err := validateDeletePolicyFlags(commandDeletePolicyName); err == nil {
+		t.Fatalf("Error was expected. Credentials are required for deletepolicy")
+	}
+
+	// missing zone
+	flags = commandFlags{}
+	flags.token = "abc123"
+	if err := validateDeletePolicyFlags(commandDeletePolicyName); err == nil {
+		t.Fatalf("Error was expected. Zone is required for deletepolicy")
+	}
+
+	// valid
+	flags = commandFlags{}
+	flags.token = "abc123"
+	flags.policyName = "\\VED\\Policy\\devops\\vcert"
+	if err := validateDeletePolicyFlags(commandDeletePolicyName); err != nil {
+		t.Fatalf("%s", err)
+	}
+}
+
+func TestValidateRenamePolicyFlags(t *testing.T) {
+	// missing credentials
+	flags = commandFlags{}
+	flags.policyName = "\\VED\\Policy\\devops\\vcert"
+	flags.policyNewName = "\\VED\\Policy\\devops\\vcert-renamed"
+	if err := validateRenamePolicyFlags(commandRenamePolicyName); err == nil {
+		t.Fatalf("Error was expected. Credentials are required for renamepolicy")
+	}
+
+	// missing zone
+	flags = commandFlags{}
+	flags.token = "abc123"
+	flags.policyNewName = "\\VED\\Policy\\devops\\vcert-renamed"
+	if err := validateRenamePolicyFlags(commandRenamePolicyName); err == nil {
+		t.Fatalf("Error was expected. Zone is required for renamepolicy")
+	}
+
+	// missing new zone name
+	flags = commandFlags{}
+	flags.token = "abc123"
+	flags.policyName = "\\VED\\Policy\\devops\\vcert"
+	if err := validateRenamePolicyFlags(commandRenamePolicyName); err == nil {
+		t.Fatalf("Error was expected. New zone name is required for renamepolicy")
+	}
+
+	// valid
+	flags = commandFlags{}
+	flags.token = "abc123"
+	flags.policyName = "\\VED\\Policy\\devops\\vcert"
+	flags.policyNewName = "\\VED\\Policy\\devops\\vcert-renamed"
+	if err := validateRenamePolicyFlags(commandRenamePolicyName); err != nil {
+		t.Fatalf("%s", err)
+	}
+}
