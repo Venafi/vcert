@@ -1,0 +1,32 @@
+config:
+  connection:
+    platform: tpp
+    url: https://dc.tlsp.demo # URL to TPP instance
+    #trustBundle: /path/to/my/trustbundle.pem # Optional TrustBundle for TPP connection
+    credentials:
+      accessToken: '{{ Env "TPP_ACCESS_TOKEN" }}'
+      refreshToken: '{{ Env "TPP_REFRESH_TOKEN" }}'
+certificateTasks:
+  - name: nginx # Task Identifier, no relevance in tool run
+    renewBefore: 20%
+    setEnvVars: ["thumbprint"]
+    request:
+      csr: local
+      subject:
+        # Templating needs to go between single quotes to avoid issues when refreshing tokens
+        commonName: '{{ Env "TLSPC_Hostname" }}.mimlab.io'
+        country: GB
+        locality: London
+        state: London
+        organization: Venafi
+        orgUnits:
+          - vcert
+      sanDNS: 
+        - '{{ Hostname | ToLower -}}.mimlab.io'
+      zone: 'Certificates\vcert\nginx'
+    installations:
+      - format: PEM
+        file: "/etc/nginx/ssl/nginx_443.crt"
+        chainFile: "/etc/nginx/ssl/nginx_443.chain"
+        keyFile: "/etc/nginx/ssl/nginx_443.key"
+        afterInstallAction: "cat /etc/nginx/ssl/nginx_443.chain >> /etc/nginx/ssl/nginx_443.crt && sudo nginx -s reload"
