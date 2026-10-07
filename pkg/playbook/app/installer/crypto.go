@@ -127,6 +127,11 @@ func prepareCertificateForBundle(request certificate.Request, pcc certificate.PE
 	return &pcc, nil
 }
 
+// LoadInstalledPEM is a public accessor for loadPEMCertificate.
+func LoadInstalledPEM(certFile string) (*x509.Certificate, error) {
+	return loadPEMCertificate(certFile)
+}
+
 func loadPEMCertificate(certFile string) (*x509.Certificate, error) {
 	certData, err := os.ReadFile(certFile)
 	if err != nil {
