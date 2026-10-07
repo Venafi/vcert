@@ -877,7 +877,7 @@ func (c *Connector) ImportCertificate(req *certificate.ImportRequest) (*certific
 	url := c.getURL(urlResourceCertificates)
 	statusCode, status, body, err := c.request("POST", url, request)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", verror.ServerTemporaryUnavailableError, err)
+		return nil, fmt.Errorf("%w: %w", verror.ServerTemporaryUnavailableError, err)
 	}
 	var r importResponse
 	switch statusCode {
@@ -1164,7 +1164,7 @@ func (c *Connector) GetAccessToken(auth *endpoint.Authentication) (*AccessTokenR
 
 	r, err := http.NewRequest(http.MethodPost, url, strings.NewReader(body.Encode()))
 	if err != nil {
-		err = fmt.Errorf("%w: %v", verror.VcertError, err)
+		err = fmt.Errorf("%w: %w", verror.VcertError, err)
 		return nil, err
 	}
 	r.Header.Set(headers.UserAgent, c.userAgent)
@@ -1174,7 +1174,7 @@ func (c *Connector) GetAccessToken(auth *endpoint.Authentication) (*AccessTokenR
 	httpClient := c.getHTTPClient()
 	resp, err := httpClient.Do(r)
 	if err != nil {
-		err = fmt.Errorf("%w: %v", verror.ServerUnavailableError, err)
+		err = fmt.Errorf("%w: %w", verror.ServerUnavailableError, err)
 		return nil, err
 	}
 
@@ -1184,7 +1184,7 @@ func (c *Connector) GetAccessToken(auth *endpoint.Authentication) (*AccessTokenR
 	defer resp.Body.Close()
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		err = fmt.Errorf("%w: %v", verror.ServerError, err)
+		err = fmt.Errorf("%w: %w", verror.ServerError, err)
 		return nil, err
 	}
 
