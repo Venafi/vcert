@@ -62,6 +62,21 @@ var RevocationReasonOptionsVCP = []string{
 // JKSMinPasswordLen taken from keystore.minPasswordLen constant
 const JKSMinPasswordLen = 6
 
+// parseMLDSAKeyType maps the post-quantum ML-DSA --key-type flag values to their
+// certificate.KeyType, case-insensitively. The second return value is false when
+// value is not an ML-DSA key type.
+func parseMLDSAKeyType(value string) (certificate.KeyType, bool) {
+	switch strings.ToUpper(value) {
+	case "ML-DSA-44":
+		return certificate.KeyTypeMLDSA44, true
+	case "ML-DSA-65":
+		return certificate.KeyTypeMLDSA65, true
+	case "ML-DSA-87":
+		return certificate.KeyTypeMLDSA87, true
+	}
+	return 0, false
+}
+
 func validateCommonFlags(commandName string) error {
 
 	if flags.format != "" && flags.format != "pem" && flags.format != "json" && flags.format != P12Format && flags.format != LegacyP12Format && flags.format != JKSFormat && flags.format != util.LegacyPem {
@@ -99,7 +114,16 @@ func validateCommonFlags(commandName string) error {
 		flags.keyType = &kt
 	case "":
 	default:
-		return fmt.Errorf("unknown key type: %s", flags.keyTypeString)
+		// For now ML-DSA (FIPS 204) post-quantum key types are only supported
+		// by the gencsr action; every other action still rejects them.
+		kt, ok := parseMLDSAKeyType(flags.keyTypeString)
+		if !ok {
+			return fmt.Errorf("unknown key type: %s", flags.keyTypeString)
+		}
+		if commandName != commandGenCSRName {
+			return fmt.Errorf("key type %s is only supported by the %s action", strings.ToLower(kt.String()), commandGenCSRName)
+		}
+		flags.keyType = &kt
 	}
 
 	switch strings.ToLower(flags.keyCurveString) {

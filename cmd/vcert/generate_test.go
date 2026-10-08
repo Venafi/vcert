@@ -17,7 +17,9 @@
 package main
 
 import (
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"io/ioutil"
 	t "log"
@@ -65,6 +67,77 @@ func TestWriteOutKeyAndCsr(t *testing.T) {
 	err = writeOutKeyAndCsr(commandGenCSRName, cf, key, csr)
 	if err != nil {
 		t.Fatalf("%s", err)
+	}
+}
+
+func TestGenerateCsrForCommandGenCsrMLDSA(t *testing.T) {
+	cases := []struct {
+		keyType  certificate.KeyType
+		sigAlgo  x509.SignatureAlgorithm
+		password string
+	}{
+		{certificate.KeyTypeMLDSA44, x509.MLDSA44, ""},
+		{certificate.KeyTypeMLDSA44, x509.MLDSA44, "pass"},
+		{certificate.KeyTypeMLDSA65, x509.MLDSA65, ""},
+		{certificate.KeyTypeMLDSA65, x509.MLDSA65, "pass"},
+		{certificate.KeyTypeMLDSA87, x509.MLDSA87, ""},
+		{certificate.KeyTypeMLDSA87, x509.MLDSA87, "pass"},
+	}
+
+	for _, tc := range cases {
+		name := tc.keyType.String()
+		if tc.password != "" {
+			name += "-encrypted"
+		}
+		t.Run(name, func(t *testing.T) {
+			cf := getCommandFlags()
+			keyType := tc.keyType
+			cf.keyType = &keyType
+			cf.keyCurve = certificate.EllipticCurveNotSet
+
+			key, csr, err := generateCsrForCommandGenCsr(cf, []byte(tc.password))
+			if err != nil {
+				t.Fatalf("%s", err)
+			}
+			if key == nil {
+				t.Fatalf("Key should not be nil")
+			}
+			if csr == nil {
+				t.Fatalf("CSR should not be nil")
+			}
+
+			// The CSR must be a valid ML-DSA request with the matching parameter set.
+			block, _ := pem.Decode(csr)
+			if block == nil {
+				t.Fatalf("failed to PEM-decode CSR")
+			}
+			parsed, err := x509.ParseCertificateRequest(block.Bytes)
+			if err != nil {
+				t.Fatalf("failed to parse CSR: %s", err)
+			}
+			if parsed.PublicKeyAlgorithm != x509.MLDSA {
+				t.Fatalf("expected public key algorithm %s, got %s", x509.MLDSA, parsed.PublicKeyAlgorithm)
+			}
+			if parsed.SignatureAlgorithm != tc.sigAlgo {
+				t.Fatalf("expected signature algorithm %s, got %s", tc.sigAlgo, parsed.SignatureAlgorithm)
+			}
+			if err := parsed.CheckSignature(); err != nil {
+				t.Fatalf("CSR signature verification failed: %s", err)
+			}
+
+			// The private key must be a (possibly encrypted) PKCS#8 PEM block.
+			keyBlock, _ := pem.Decode(key)
+			if keyBlock == nil {
+				t.Fatalf("failed to PEM-decode private key")
+			}
+			wantType := "PRIVATE KEY"
+			if tc.password != "" {
+				wantType = "ENCRYPTED PRIVATE KEY"
+			}
+			if keyBlock.Type != wantType {
+				t.Fatalf("expected key PEM type %q, got %q", wantType, keyBlock.Type)
+			}
+		})
 	}
 }
 

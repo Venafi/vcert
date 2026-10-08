@@ -20,11 +20,20 @@ const (
 	KeyTypeECDSA
 	// KeyTypeED25519 represents a key type of ED25519
 	KeyTypeED25519
+	// KeyTypeMLDSA44 represents the post-quantum ML-DSA-44 signature scheme (FIPS 204)
+	KeyTypeMLDSA44
+	// KeyTypeMLDSA65 represents the post-quantum ML-DSA-65 signature scheme (FIPS 204)
+	KeyTypeMLDSA65
+	// KeyTypeMLDSA87 represents the post-quantum ML-DSA-87 signature scheme (FIPS 204)
+	KeyTypeMLDSA87
 
 	// String representations of the KeyType types
 	strKeyTypeECDSA   = "ECDSA"
 	strKeyTypeRSA     = "RSA"
 	strKeyTypeED25519 = "ED25519"
+	strKeyTypeMLDSA44 = "ML-DSA-44"
+	strKeyTypeMLDSA65 = "ML-DSA-65"
+	strKeyTypeMLDSA87 = "ML-DSA-87"
 )
 
 // String returns a string representation of this object
@@ -36,6 +45,12 @@ func (kt *KeyType) String() string {
 		return strKeyTypeECDSA
 	case KeyTypeED25519:
 		return strKeyTypeED25519
+	case KeyTypeMLDSA44:
+		return strKeyTypeMLDSA44
+	case KeyTypeMLDSA65:
+		return strKeyTypeMLDSA65
+	case KeyTypeMLDSA87:
+		return strKeyTypeMLDSA87
 	default:
 		return ""
 	}
@@ -49,6 +64,8 @@ func (kt *KeyType) X509Type() x509.PublicKeyAlgorithm {
 		return x509.ECDSA
 	case KeyTypeED25519:
 		return x509.Ed25519
+	case KeyTypeMLDSA44, KeyTypeMLDSA65, KeyTypeMLDSA87:
+		return x509.MLDSA
 	}
 	return x509.UnknownPublicKeyAlgorithm
 }
@@ -83,6 +100,12 @@ func parseKeyType(value string) (KeyType, error) {
 		return KeyTypeRSA, nil
 	case strKeyTypeED25519:
 		return KeyTypeED25519, nil
+	case strKeyTypeMLDSA44:
+		return KeyTypeMLDSA44, nil
+	case strKeyTypeMLDSA65:
+		return KeyTypeMLDSA65, nil
+	case strKeyTypeMLDSA87:
+		return KeyTypeMLDSA87, nil
 	default:
 		return -1, fmt.Errorf("%w: unknown key type: %s", verror.VcertError, value)
 	}

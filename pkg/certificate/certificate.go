@@ -21,6 +21,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/elliptic"
+	"crypto/mldsa"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -344,7 +345,7 @@ func GetPrivateKeyPEMBock(key crypto.Signer, format ...string) (*pem.Block, erro
 		}
 	case ed25519.PrivateKey:
 		if currentFormat == "legacy-pem" {
-			return nil, fmt.Errorf("%w: unable to format Key. Legacy format for ed25519 is not supported", verror.VcertError)
+			return nil, fmt.Errorf("%w: unable to format private key. Legacy format for ed25519 is not supported", verror.VcertError)
 		} else {
 			dataBytes, err := pkcs8.MarshalPrivateKey(key.(ed25519.PrivateKey), nil, nil)
 			if err != nil {
@@ -352,6 +353,15 @@ func GetPrivateKeyPEMBock(key crypto.Signer, format ...string) (*pem.Block, erro
 			}
 			return &pem.Block{Type: "PRIVATE KEY", Bytes: dataBytes}, err
 		}
+	case *mldsa.PrivateKey:
+		if currentFormat == "legacy-pem" {
+			return nil, fmt.Errorf("%w: unable to format private key. Legacy format for ML-DSA is not supported", verror.VcertError)
+		}
+		dataBytes, err := pkcs8.MarshalPrivateKey(k, nil, nil)
+		if err != nil {
+			return nil, err
+		}
+		return &pem.Block{Type: "PRIVATE KEY", Bytes: dataBytes}, nil
 	default:
 		return nil, fmt.Errorf("%w: unable to format Key", verror.VcertError)
 	}
@@ -390,7 +400,7 @@ func GetEncryptedPrivateKeyPEMBock(key crypto.Signer, password []byte, format ..
 		}
 	case ed25519.PrivateKey:
 		if currentFormat == "legacy-pem" {
-			return nil, fmt.Errorf("%w: unable to format Key. Legacy format for ed25519 is not supported", verror.VcertError)
+			return nil, fmt.Errorf("%w: unable to format private key. Legacy format for ed25519 is not supported", verror.VcertError)
 		} else {
 			dataBytes, err := pkcs8.MarshalPrivateKey(key.(ed25519.PrivateKey), password, nil)
 			if err != nil {
@@ -398,6 +408,15 @@ func GetEncryptedPrivateKeyPEMBock(key crypto.Signer, password []byte, format ..
 			}
 			return &pem.Block{Type: "ENCRYPTED PRIVATE KEY", Bytes: dataBytes}, err
 		}
+	case *mldsa.PrivateKey:
+		if currentFormat == "legacy-pem" {
+			return nil, fmt.Errorf("%w: unable to format private key. Legacy format for ML-DSA is not supported", verror.VcertError)
+		}
+		dataBytes, err := pkcs8.MarshalPrivateKey(k, password, nil)
+		if err != nil {
+			return nil, err
+		}
+		return &pem.Block{Type: "ENCRYPTED PRIVATE KEY", Bytes: dataBytes}, nil
 	default:
 		return nil, fmt.Errorf("%w: unable to format Key", verror.VcertError)
 	}
@@ -443,6 +462,16 @@ func GenerateECDSAPrivateKey(curve EllipticCurve) (crypto.Signer, error) {
 
 func GenerateED25519PrivateKey() (crypto.Signer, error) {
 	_, priv, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		return nil, err
+	}
+	return priv, nil
+}
+
+// GenerateMLDSAPrivateKey generates a new post-quantum ML-DSA (FIPS 204) private
+// key for the given parameter set (ML-DSA-44, ML-DSA-65 or ML-DSA-87).
+func GenerateMLDSAPrivateKey(params mldsa.Parameters) (crypto.Signer, error) {
+	priv, err := mldsa.GenerateKey(params)
 	if err != nil {
 		return nil, err
 	}

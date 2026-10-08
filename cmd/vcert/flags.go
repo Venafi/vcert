@@ -158,7 +158,7 @@ var (
 
 	flagKeyType = &cli.StringFlag{
 		Name:        "key-type",
-		Usage:       "Use to specify a key type. Options include: rsa | ecdsa",
+		Usage:       "Use to specify a key type. Options include: rsa | ecdsa. The gencsr action additionally supports: ml-dsa-44 | ml-dsa-65 | ml-dsa-87",
 		Destination: &flags.keyTypeString,
 		DefaultText: "rsa",
 	}

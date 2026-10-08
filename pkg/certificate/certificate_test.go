@@ -319,7 +319,12 @@ func TestKeyTypeString(t *testing.T) {
 	if s != "RSA" {
 		t.Fatalf("Unexpected string value was returned.  Expected: RSA Actual: %s", s)
 	}
-	keyType = 5
+	keyType = KeyTypeMLDSA44
+	s = keyType.String()
+	if s != "ML-DSA-44" {
+		t.Fatalf("Unexpected string value was returned.  Expected: ML-DSA-44 Actual: %s", s)
+	}
+	keyType = 99
 	s = keyType.String()
 	if s != "" {
 		t.Fatalf("Unexpected string value was returned.  Expected: \"\" Actual: %s", s)

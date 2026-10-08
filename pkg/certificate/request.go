@@ -4,6 +4,7 @@ import (
 	"crypto"
 	"crypto/ecdsa"
 	"crypto/ed25519"
+	"crypto/mldsa"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -177,6 +178,12 @@ func (request *Request) GeneratePrivateKey() error {
 		request.PrivateKey, err = GenerateECDSAPrivateKey(request.KeyCurve)
 	case KeyTypeED25519:
 		request.PrivateKey, err = GenerateED25519PrivateKey()
+	case KeyTypeMLDSA44:
+		request.PrivateKey, err = GenerateMLDSAPrivateKey(mldsa.MLDSA44())
+	case KeyTypeMLDSA65:
+		request.PrivateKey, err = GenerateMLDSAPrivateKey(mldsa.MLDSA65())
+	case KeyTypeMLDSA87:
+		request.PrivateKey, err = GenerateMLDSAPrivateKey(mldsa.MLDSA87())
 	case KeyTypeRSA:
 		if request.KeyLength == 0 {
 			request.KeyLength = DefaultRSAlength
