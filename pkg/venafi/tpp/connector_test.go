@@ -2146,6 +2146,72 @@ func TestNormalizeURL(t *testing.T) {
 	if strings.EqualFold(modifiedURL, expectedURL) {
 		t.Fatalf("Base URL should not match expected value. Expected: %s Actual: %s", expectedURL, modifiedURL)
 	}
+
+	// URLs routed through an API gateway or reverse proxy (e.g. Gravitee) add
+	// one or more path segments in front of the mandatory trailing "vedsdk/".
+	expectedGatewayURL := "https://gateway.company.com/some/prefix/"
+
+	url = "https://gateway.company.com/some/prefix/vedsdk/"
+	modifiedURL = ""
+	modifiedURL, err = normalizeURL(url)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, url)
+	}
+	if !strings.EqualFold(modifiedURL, expectedGatewayURL) {
+		t.Fatalf("Base URL did not match expected value. Expected: %s Actual: %s", expectedGatewayURL, modifiedURL)
+	}
+
+	url = "https://gateway.company.com/some/prefix/vedsdk"
+	modifiedURL = ""
+	modifiedURL, err = normalizeURL(url)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, url)
+	}
+	if !strings.EqualFold(modifiedURL, expectedGatewayURL) {
+		t.Fatalf("Base URL did not match expected value. Expected: %s Actual: %s", expectedGatewayURL, modifiedURL)
+	}
+
+	url = "https://Gateway.Company.com/Some/Prefix/VedSDK/"
+	modifiedURL = ""
+	modifiedURL, err = normalizeURL(url)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, url)
+	}
+	if !strings.EqualFold(modifiedURL, expectedGatewayURL) {
+		t.Fatalf("Base URL did not match expected value. Expected: %s Actual: %s", expectedGatewayURL, modifiedURL)
+	}
+
+	expectedGatewayURLWithPort := "https://gateway.company.com:8443/some/prefix/"
+
+	url = "https://gateway.company.com:8443/some/prefix/vedsdk/"
+	modifiedURL = ""
+	modifiedURL, err = normalizeURL(url)
+	if err != nil {
+		t.Fatalf("err is not nil, err: %s url: %s", err, url)
+	}
+	if !strings.EqualFold(modifiedURL, expectedGatewayURLWithPort) {
+		t.Fatalf("Base URL did not match expected value. Expected: %s Actual: %s", expectedGatewayURLWithPort, modifiedURL)
+	}
+
+	// Regression check: an earlier version of the gateway-path regex allowed
+	// a colon anywhere in the path, which let a malformed scheme such as
+	// "ftp://" be swallowed as part of a fake host+path and incorrectly
+	// accepted (this used to normalize to
+	// "https://ftp://wrongurlformat.com/vedsdk/" and pass validation).
+	url = "ftp://wrongurlformat.com/vedsdk/"
+	modifiedURL = ""
+	modifiedURL, err = normalizeURL(url)
+	if err == nil {
+		t.Fatalf("err was not expected to be nil. url: %s", url)
+	}
+
+	// An empty path segment (a double slash) must also still be rejected.
+	url = "https://gateway.company.com//vedsdk/"
+	modifiedURL = ""
+	modifiedURL, err = normalizeURL(url)
+	if err == nil {
+		t.Fatalf("err was not expected to be nil. url: %s", url)
+	}
 }
 
 func Test_GetCertificateList(t *testing.T) {
