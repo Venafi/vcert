@@ -106,6 +106,7 @@ func buildClient(config domain.Config, zone string, timeout int) (endpoint.Conne
 		Workspace:       config.Connection.Workspace,
 		ConnectionTrust: loadTrustBundle(config.Connection.TrustBundlePath),
 		LogVerbose:      false,
+		CustomHeaders:   config.Connection.CustomHeaders,
 	}
 
 	vcertConfig.Client = &http.Client{
@@ -314,6 +315,7 @@ func IsValidAccessToken(config domain.Config) (bool, error) {
 	vConfig := &vcert.Config{
 		ConnectorType: config.Connection.GetConnectorType(),
 		BaseUrl:       config.Connection.URL,
+		CustomHeaders: config.Connection.CustomHeaders,
 		Credentials: &endpoint.Authentication{
 			Scope:       config.Connection.Credentials.Scope,
 			ClientId:    config.Connection.Credentials.ClientId,
@@ -338,6 +340,7 @@ func RefreshTPPTokens(config domain.Config) (string, string, error) {
 	vConfig := &vcert.Config{
 		ConnectorType: config.Connection.GetConnectorType(),
 		BaseUrl:       config.Connection.URL,
+		CustomHeaders: config.Connection.CustomHeaders,
 		Credentials: &endpoint.Authentication{
 			Scope:    config.Connection.Credentials.Scope,
 			ClientId: config.Connection.Credentials.ClientId,

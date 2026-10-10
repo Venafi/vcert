@@ -85,6 +85,12 @@ type Config struct {
 	// If nil, the default is `vcert/v5`.
 	// Further reading: https://www.rfc-editor.org/rfc/rfc9110#field.user-agent
 	UserAgent *string
+	// CustomHeaders, when set, are added to every HTTP request made to the
+	// platform API. This is intended for API gateways/proxies (e.g. Gravitee)
+	// that require a static header such as an API key to route the request,
+	// on top of whatever the platform's own authentication uses.
+	// Only supported by the TPP connector today.
+	CustomHeaders map[string]string
 }
 
 // LoadConfigFromFile is deprecated. In the future will be rewritten.
