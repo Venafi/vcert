@@ -1072,3 +1072,38 @@ func TestValidateEmptyCredentials(t *testing.T) {
 
 	unsetFlags()
 }
+
+func TestMLDSAKeyTypeFlags(t *testing.T) {
+	for _, strength := range []int{44, 65, 87} {
+		flags = commandFlags{}
+		flags.keyTypeString = "mldsa"
+		flags.keySize = strength
+
+		err := validateCommonFlags(commandEnrollName)
+		if err != nil {
+			t.Fatalf("Error was expected to be nil for mldsa with key-size %d; got %s", strength, err)
+		}
+		if flags.keyType == nil || *flags.keyType != certificate.KeyTypeMLDSA {
+			t.Fatalf("keyType was expected to be MLDSA")
+		}
+	}
+
+	for _, strength := range []int{0, 2048, 64} {
+		flags = commandFlags{}
+		flags.keyTypeString = "mldsa"
+		flags.keySize = strength
+
+		if err := validateCommonFlags(commandEnrollName); err == nil {
+			t.Fatalf("Error was expected for mldsa with key-size %d", strength)
+		}
+	}
+
+	flags = commandFlags{}
+	flags.keyTypeString = "mldsa"
+	flags.keySize = 65
+	flags.keyCurveString = "p256"
+	if err := validateCommonFlags(commandEnrollName); err == nil {
+		t.Fatalf("Error was expected for mldsa with key-curve")
+	}
+	unsetFlags()
+}

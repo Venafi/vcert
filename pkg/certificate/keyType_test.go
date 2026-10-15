@@ -25,6 +25,7 @@ func (s *KeyTypeSuite) SetupTest() {
 		{keyType: KeyTypeECDSA, strValue: strKeyTypeECDSA},
 		{keyType: KeyTypeRSA, strValue: strKeyTypeRSA},
 		{keyType: KeyTypeED25519, strValue: strKeyTypeED25519},
+		{keyType: KeyTypeMLDSA, strValue: strKeyTypeMLDSA},
 	}
 
 	s.testYaml = `---

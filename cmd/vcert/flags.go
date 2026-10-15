@@ -158,14 +158,14 @@ var (
 
 	flagKeyType = &cli.StringFlag{
 		Name:        "key-type",
-		Usage:       "Use to specify a key type. Options include: rsa | ecdsa",
+		Usage:       "Use to specify a key type. Options include: rsa | ecdsa | mldsa",
 		Destination: &flags.keyTypeString,
 		DefaultText: "rsa",
 	}
 
 	flagKeySize = &cli.IntFlag{
 		Name:        "key-size",
-		Usage:       "Use to specify a key size.",
+		Usage:       "Use to specify a key size. For mldsa, use to specify the strength. Options include: 44 | 65 | 87",
 		Destination: &flags.keySize,
 		DefaultText: "2048",
 	}

@@ -571,6 +571,9 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 	if req.KeyType == certificate.KeyTypeED25519 {
 		return fmt.Errorf("unable to request certificate from CyberArk Certificate Manager, Self-Hosted, ed25519 key type is not for CyberArk Certificate Manager, Self-Hosted")
 	}
+	if req.KeyType == certificate.KeyTypeMLDSA {
+		return fmt.Errorf("unable to request certificate from CyberArk Certificate Manager, Self-Hosted, ML-DSA key type is not yet supported by vcert for CyberArk Certificate Manager, Self-Hosted")
+	}
 
 	if config == nil {
 		config, err = c.ReadZoneConfiguration()
