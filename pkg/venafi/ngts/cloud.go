@@ -254,6 +254,9 @@ type ApplicationDetails struct {
 
 // GenerateRequest generates a CertificateRequest based on the zone configuration, and returns the request along with the private key.
 func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *certificate.Request) (err error) {
+	if req.KeyType == certificate.KeyTypeMLDSA {
+		return fmt.Errorf("%w: ML-DSA keys are not yet supported by vcert for Palo Alto Networks Next-Gen Trust Security (NGTS)", verror.UserDataError)
+	}
 	switch req.CsrOrigin {
 	case certificate.LocalGeneratedCSR:
 		if config == nil {

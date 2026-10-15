@@ -20,11 +20,14 @@ const (
 	KeyTypeECDSA
 	// KeyTypeED25519 represents a key type of ED25519
 	KeyTypeED25519
+	// KeyTypeMLDSA represents a key type of ML-DSA (FIPS 204). The parameter set is carried in KeyLength (44, 65 or 87)
+	KeyTypeMLDSA
 
 	// String representations of the KeyType types
 	strKeyTypeECDSA   = "ECDSA"
 	strKeyTypeRSA     = "RSA"
 	strKeyTypeED25519 = "ED25519"
+	strKeyTypeMLDSA   = "MLDSA"
 )
 
 // String returns a string representation of this object
@@ -36,6 +39,8 @@ func (kt *KeyType) String() string {
 		return strKeyTypeECDSA
 	case KeyTypeED25519:
 		return strKeyTypeED25519
+	case KeyTypeMLDSA:
+		return strKeyTypeMLDSA
 	default:
 		return ""
 	}
@@ -49,6 +54,8 @@ func (kt *KeyType) X509Type() x509.PublicKeyAlgorithm {
 		return x509.ECDSA
 	case KeyTypeED25519:
 		return x509.Ed25519
+	case KeyTypeMLDSA:
+		return x509.MLDSA
 	}
 	return x509.UnknownPublicKeyAlgorithm
 }
@@ -71,6 +78,9 @@ func (kt *KeyType) Set(value, curveValue string) error {
 
 		*kt = KeyTypeECDSA
 		return nil
+	case strKeyTypeMLDSA, "ML-DSA":
+		*kt = KeyTypeMLDSA
+		return nil
 	}
 	return fmt.Errorf("%w: unknown key type: %s", verror.VcertError, value) //todo: check all calls
 }
@@ -83,6 +93,8 @@ func parseKeyType(value string) (KeyType, error) {
 		return KeyTypeRSA, nil
 	case strKeyTypeED25519:
 		return KeyTypeED25519, nil
+	case strKeyTypeMLDSA, "ML-DSA":
+		return KeyTypeMLDSA, nil
 	default:
 		return -1, fmt.Errorf("%w: unknown key type: %s", verror.VcertError, value)
 	}

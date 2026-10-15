@@ -2893,7 +2893,7 @@ func TestSetPolicyValuesAndValidate(t *testing.T) {
 
 	valid = test.IsArrayIntEqual(remotePolicy.KeyPair.RsaKeySizes, localPolicy.KeyPair.RsaKeySizes)
 	if !valid {
-		t.Fatalf("policy's RsaKeySizes are different expected:  %+q but get  %+q", localPolicy.KeyPair.RsaKeySizes, remotePolicy.KeyPair.RsaKeySizes)
+		t.Fatalf("policy's RsaKeySizes are different expected:  %v but get  %v", localPolicy.KeyPair.RsaKeySizes, remotePolicy.KeyPair.RsaKeySizes)
 	}
 
 }

@@ -83,6 +83,9 @@ type certificateRequestResponse struct {
 // set to LocalGeneratedCSR but given that is not supported by CyberArk Workload Identity Manager yet, then it's only validating if the CSR
 // was provided when the csrOrigin was set to UserProvidedCSR
 func (c *Connector) GenerateRequest(_ *endpoint.ZoneConfiguration, req *certificate.Request) (err error) {
+	if req.KeyType == certificate.KeyTypeMLDSA {
+		return fmt.Errorf("%w: ML-DSA keys are not yet supported by vcert for CyberArk Workload Identity Manager", verror.UserDataError)
+	}
 	switch req.CsrOrigin {
 	case certificate.LocalGeneratedCSR:
 		return fmt.Errorf("local generated CSR it's not supported by CyberArk Workload Identity Manager yet")

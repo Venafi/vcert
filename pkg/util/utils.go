@@ -3,6 +3,7 @@ package util
 import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
+	"crypto/mldsa"
 	"crypto/rand"
 	"crypto/rsa"
 	"encoding/json"
@@ -79,7 +80,7 @@ func DecryptPkcs8PrivateKey(privateKey, password string) (string, error) {
 		pemType = "RSA PRIVATE KEY"
 	case *ecdsa.PrivateKey:
 		pemType = "EC PRIVATE KEY"
-	case ed25519.PrivateKey:
+	case ed25519.PrivateKey, *mldsa.PrivateKey:
 		pemType = "PRIVATE KEY"
 	default:
 		return "", fmt.Errorf("failed to determine private key type")

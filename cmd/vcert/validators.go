@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -97,6 +98,15 @@ func validateCommonFlags(commandName string) error {
 	case "ecdsa":
 		kt := certificate.KeyTypeECDSA
 		flags.keyType = &kt
+	case "mldsa":
+		kt := certificate.KeyTypeMLDSA
+		flags.keyType = &kt
+		if flags.keyCurveString != "" {
+			return fmt.Errorf("the '--key-curve' option cannot be used with '--key-type mldsa'; use '--key-size' to specify the ML-DSA strength")
+		}
+		if !slices.Contains(certificate.AllSupportedMLDSAStrengths(), flags.keySize) {
+			return fmt.Errorf("'--key-type mldsa' requires '--key-size' to be one of %v", certificate.AllSupportedMLDSAStrengths())
+		}
 	case "":
 	default:
 		return fmt.Errorf("unknown key type: %s", flags.keyTypeString)
