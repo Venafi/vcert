@@ -34,6 +34,11 @@ type Connection struct {
 	TrustBundlePath string          `yaml:"trustBundle,omitempty"`
 	URL             string          `yaml:"url,omitempty"`
 	Workspace       string          `yaml:"workspace,omitempty"` // NGTS only
+	// CustomHeaders are extra HTTP headers (e.g. an API gateway key such as
+	// Gravitee's) sent with every request to URL. Example:
+	//   customHeaders:
+	//     X-API-Key-Constoso: abcdefghi
+	CustomHeaders map[string]string `yaml:"customHeaders,omitempty"`
 }
 
 // GetConnectorType returns the type of vcert Connector this config will create

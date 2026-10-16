@@ -38,7 +38,8 @@ var (
 		Name: "url",
 		Usage: "REQUIRED/CyberArk Certificate Manager, Self-Hosted/CyberArk Workload Identity Manager/OIDC. The URL of the service. \n\t\tCyberArk Certificate Manager, Self-Hosted example: -u https://cmsh.example.com" +
 			"\n\t\tCyberArk Workload Identity Manager example: -u https://wim.example.com" +
-			"\n\t\tOIDC example: -u https://my.okta.domain//oauth2/v1/token",
+			"\n\t\tOIDC example: -u https://my.okta.domain//oauth2/v1/token" +
+			"\n\t\tA URL routed through an API gateway (e.g. Gravitee) with a path prefix in front of /vedsdk/ is also accepted for CyberArk Certificate Manager, Self-Hosted; combine with --header to pass along any header the gateway requires. Example: -u https://gateway.example.com/some/prefix/vedsdk/",
 		Destination: &flags.url,
 		Aliases:     []string{"u"},
 	}
@@ -815,6 +816,15 @@ var (
 		Destination: &flags.tags,
 	}
 
+	flagCustomHeader = &cli.StringSliceFlag{
+		Name: "header",
+		Usage: "CyberArk Certificate Manager, Self-Hosted only. Use to add a static HTTP header to every request sent to --url, " +
+			"such as an API key required by a gateway or proxy (e.g. Gravitee) sitting in front of the CyberArk Certificate Manager, Self-Hosted instance. " +
+			"Format is \"Header-Name: value\". May be repeated to send more than one header. " +
+			"Example: --header \"X-API-Key-Constoso: abcdefghi\"",
+		Destination: &flags.customHeaders,
+	}
+
 	flagNotags = &cli.BoolFlag{
 		Name: "no-tags",
 		Usage: "Use to indicate that the certificate tags of a certificate to renew will be empty. " +
@@ -841,6 +851,7 @@ var (
 		flagClientP12Deprecated,
 		flagClientP12PWDeprecated,
 		flagTrustBundle,
+		flagCustomHeader,
 	}
 
 	credentialsFlags = []cli.Flag{
@@ -997,7 +1008,7 @@ var (
 		flagWorkspace,
 	)
 
-	commonCredFlags = []cli.Flag{flagConfig, flagProfile, flagUrl, flagToken, flagTrustBundle}
+	commonCredFlags = []cli.Flag{flagConfig, flagProfile, flagUrl, flagToken, flagTrustBundle, flagCustomHeader}
 
 	getCredFlags = sortedFlags(flagsApppend(
 		flagPlatform,
@@ -1042,6 +1053,7 @@ var (
 		flagPolicyConfigFile,
 		flagPolicyVerifyConfigFile,
 		flagTrustBundle,
+		flagCustomHeader,
 		flagInsecure,
 		// No flagWorkspace: NGTS request policies belong to the tenant and can
 		// only be changed with the tenant selected, so a workspace-scoped
@@ -1058,6 +1070,7 @@ var (
 		flagPolicyConfigFile,
 		flagPolicyStarterConfigFile,
 		flagTrustBundle,
+		flagCustomHeader,
 		flagInsecure,
 		flagWorkspace,
 	))
@@ -1066,6 +1079,7 @@ var (
 		flagUrl,
 		flagToken,
 		flagTrustBundle,
+		flagCustomHeader,
 		flagSshCertPickupId,
 		flagSshCertGuid,
 		flagSshPassPhrase,
@@ -1077,6 +1091,7 @@ var (
 		flagUrl,
 		flagToken,
 		flagTrustBundle,
+		flagCustomHeader,
 		flagKeyId,
 		flagObjectName,
 		flagDestinationAddress,
@@ -1099,6 +1114,7 @@ var (
 	sshGetConfigFlags = sortedFlags(flagsApppend(
 		flagUrl,
 		flagTrustBundle,
+		flagCustomHeader,
 		flagToken,
 		flagSshCertCa,
 		flagSshCertGuid,

@@ -103,6 +103,7 @@ func main() {
 	cli.AppHelpTemplate = fmt.Sprintf(`CyberArk Certificate Utility
    Version: %s
    Build Timestamp: %s
+   Custom Build: adds API gateway support (e.g. Gravitee) for CyberArk Certificate Manager, Self-Hosted - gateway-routed --url values and static request headers via --header.
 
 USAGE:
    {{.HelpName}} {{if .VisibleFlags}}[global options]{{end}}{{if .Commands}} command [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}[arguments...]{{end}}
