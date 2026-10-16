@@ -1,4 +1,4 @@
-FROM ruby:3.2
+FROM ruby:3.4.9
 MAINTAINER Venafi DevOps Integrations <opensource@venafi.com>
 
 RUN gem install aruba json_spec
