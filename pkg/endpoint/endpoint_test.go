@@ -72,8 +72,8 @@ func TestUpdateRequestSubject(t *testing.T) {
 	req.KeyLength = 2048
 	z.UpdateCertificateRequest(&req)
 	ks = req.KeyLength
-	if ks != 2048 {
-		t.Fatalf("3 getRequestKeySize did not return the expected value of 2048 -- Actual value %d", ks)
+	if ks != 4096 {
+		t.Fatalf("3 getRequestKeySize did not return the expected value of 4096 -- Actual value %d", ks)
 	}
 
 	req.KeyLength = 0

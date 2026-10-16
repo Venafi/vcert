@@ -198,7 +198,7 @@ func packageAsJKS(pcc certificate.PEMCollection, keyPassword string, jksAlias st
 	}
 
 	//Adding the certificates to the slice of Certificates
-	certificateChain := make([]keystore.Certificate, 0)
+	certificateChain := make([]keystore.Certificate, 0, 1+len(pcc.Chain))
 	certificateChain = append(certificateChain, keystore.Certificate{
 		Type:    "X509",
 		Content: certBlock.Bytes,
@@ -252,7 +252,7 @@ func packageAsJKS(pcc certificate.PEMCollection, keyPassword string, jksAlias st
 }
 
 func getJKSCertChain(chain []string) []keystore.Certificate {
-	certificateChain := make([]keystore.Certificate, 0)
+	certificateChain := make([]keystore.Certificate, 0, len(chain))
 	//Getting each certificate in the chain and adding their bytes to the JKS chain
 	for _, chainCert := range chain {
 		chainBlock, _ := pem.Decode([]byte(chainCert))

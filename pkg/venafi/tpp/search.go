@@ -56,8 +56,7 @@ func (c *Connector) searchCertificatesByFingerprint(fp string) (*certificate.Cer
 	fp = strings.Replace(fp, ".", "", -1)
 	fp = strings.ToUpper(fp)
 
-	var req certificate.SearchRequest
-	req = append(req, fmt.Sprintf("Thumbprint=%s", fp))
+	req := certificate.SearchRequest{fmt.Sprintf("Thumbprint=%s", fp)}
 
 	return c.SearchCertificates(&req)
 }

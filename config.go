@@ -41,11 +41,11 @@ const (
 
 	//NGTS keys
 	ngtsZoneKey      = "ngts_zone"
-	ngtsTokenUrl     = "ngts_token_url"
+	ngtsTokenUrl     = "ngts_token_url" // #nosec G101 // False positive
 	ngtsClientId     = "ngts_client_id"
-	ngtsClientSecret = "ngts_client_secret"
+	ngtsClientSecret = "ngts_client_secret" // #nosec G101 // False positive
 	ngtsScope        = "ngts_scope"
-	ngtsAccessToken  = "ngts_access_token"
+	ngtsAccessToken  = "ngts_access_token" // #nosec G101 // False positive
 
 	//Firefly keys
 	fireflyUrlKey          = "firefly_url"

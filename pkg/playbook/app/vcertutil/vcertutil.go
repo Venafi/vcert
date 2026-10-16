@@ -391,7 +391,7 @@ func GeneratePassword() string {
 	_, _ = rand.Read(b)
 
 	for i, v := range b {
-		b[i] = letterRunes[v%byte(len(letterRunes))]
+		b[i] = letterRunes[v%byte(len(letterRunes))] // nolint:gosec // len(letterRunes) is a small constant (G115)
 	}
 
 	randString := string(b)

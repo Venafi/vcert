@@ -1397,7 +1397,7 @@ func BuildCloudCitRequest(ps *PolicySpecification, ca *CADetails) (*CloudPolicyR
 }
 
 func ConvertToRegex(values []string, wildcardAllowed bool) []string {
-	regexVals := make([]string, 0)
+	regexVals := make([]string, 0, len(values))
 	for _, current := range values {
 		currentRegex := strings.ReplaceAll(current, ".", "\\.")
 		if wildcardAllowed {
@@ -1441,7 +1441,7 @@ func getIpRegexes(supportedIps []string) (ipRegexes []string) {
 }
 
 func ConvertToRfc822Regex(values []string) []string {
-	regexVals := make([]string, 0)
+	regexVals := make([]string, 0, len(values))
 	for _, current := range values {
 
 		currentRegex := strings.ReplaceAll(current, ".", "\\.")
@@ -1459,7 +1459,7 @@ func ConvertToRfc822Regex(values []string) []string {
 
 func convertToUriRegex(protocols, domains []string) []string {
 
-	regexVals := make([]string, 0)
+	regexVals := make([]string, 0, len(domains))
 
 	protocolsS := strings.Join(protocols, "|")
 	protocolsS = fmt.Sprint("(", protocolsS, ")://.*\\.")
@@ -1480,7 +1480,7 @@ func convertToUriRegex(protocols, domains []string) []string {
 }
 
 func RemoveRegex(values []string) []string {
-	regexVals := make([]string, 0)
+	regexVals := make([]string, 0, len(values))
 	for _, current := range values {
 
 		current = strings.TrimPrefix(current, "[*a-z]{1}[a-z0-9.-]*\\.")

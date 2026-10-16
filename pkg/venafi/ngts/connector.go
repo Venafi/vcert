@@ -78,7 +78,7 @@ const (
 	defaultAppName = "Default"
 	oauthTokenType = "Bearer"
 
-	tokenBufferToExpiryWindow = time.Duration(2 * time.Minute)
+	tokenBufferToExpiryWindow = 2 * time.Minute
 	maxRetries                = 3
 	initialBackoff            = 500 * time.Millisecond
 	maxBackoff                = 10 * time.Second
@@ -238,7 +238,7 @@ func calculateBackoffWithJitter(attempt int, initialBackoff, maxBackoff time.Dur
 
 	// Apply full jitter: random value between 0 and backoff
 	// This prevents synchronized retries across multiple clients
-	jitteredBackoff := time.Duration(mathRand.Int63n(int64(backoff)))
+	jitteredBackoff := time.Duration(mathRand.Int63n(int64(backoff))) // nolint:gosec // retry jitter, not security-sensitive (G404)
 
 	return jitteredBackoff
 }
@@ -274,7 +274,7 @@ func (c *Connector) renewAccessTokenOnExpiration() {
 			return
 		}
 		// How much time until the token expires
-		tokenExpiryDuration := time.Unix(tokenClaims.Exp, 0).Sub(time.Now())
+		tokenExpiryDuration := time.Until(time.Unix(tokenClaims.Exp, 0))
 		if tokenExpiryDuration <= tokenBufferToExpiryWindow {
 			log.Printf("Token expiration duration %v is less than the buffer-to-expiry window %v. Stopping renewal attempts.", tokenExpiryDuration, tokenBufferToExpiryWindow)
 			return
@@ -1346,7 +1346,7 @@ func (c *Connector) getCloudRequest(req *certificate.Request) (*certificateReque
 		cloudReq.ValidityPeriod = util.FormatValidityPeriodISO8601(*validityDuration)
 	}
 
-	if req.Tags != nil && len(req.Tags) > 0 {
+	if len(req.Tags) > 0 {
 		cloudReq.Tags = req.Tags
 	}
 

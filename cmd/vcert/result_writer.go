@@ -260,7 +260,7 @@ func (o *Output) AsJKS(c *Config) ([]byte, error) {
 func (o *Output) Format(c *Config) ([]byte, error) {
 	switch strings.ToLower(c.Format) {
 	case "json":
-		b, err := json.Marshal(o)
+		b, err := json.Marshal(o) // nolint:gosec // outputting the private key is the purpose of this command (G117)
 		if err != nil {
 			return nil, fmt.Errorf("failed to construct JSON: %s", err)
 		}
