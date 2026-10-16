@@ -13,7 +13,7 @@ func GetRSASize(rsaSize int) (int, error) {
 	}
 
 	if !rsaSizes[rsaSizeResult] {
-		var sizes []int
+		sizes := make([]int, 0, len(rsaSizes))
 		for size := range rsaSizes {
 			sizes = append(sizes, size)
 		}

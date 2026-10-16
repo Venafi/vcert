@@ -187,7 +187,7 @@ func X509EncryptPEMBlock(rand io.Reader, blockType string, data, password []byte
 	copy(encrypted, data)
 	// See RFC 1423, Section 1.1.
 	for i := 0; i < pad; i++ {
-		encrypted = append(encrypted, byte(pad))
+		encrypted = append(encrypted, byte(pad)) // nolint:gosec // pad is at most the cipher block size (G115)
 	}
 	enc.CryptBlocks(encrypted, encrypted)
 

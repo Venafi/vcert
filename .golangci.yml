@@ -103,6 +103,12 @@ linters:
           - gosec
           - rowserrcheck
           - makezero
+      - path: '^examples/'
+        linters:
+          - gosec
+      - path: '^test/'
+        linters:
+          - gosec
 formatters:
   settings:
     goimports:
