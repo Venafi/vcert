@@ -198,11 +198,11 @@ func packageAsJKS(pcc certificate.PEMCollection, keyPassword string, jksAlias st
 	}
 
 	//Adding the certificates to the slice of Certificates
-	certificateChain := make([]keystore.Certificate, 0, 1+len(pcc.Chain))
-	certificateChain = append(certificateChain, keystore.Certificate{
+	// nolint:prealloc // a 1+len(pcc.Chain) capacity trips CodeQL's go/allocation-size-overflow
+	certificateChain := []keystore.Certificate{{
 		Type:    "X509",
 		Content: certBlock.Bytes,
-	})
+	}}
 
 	//Getting chain as keystore.Certificate objects
 	certificateChain = append(certificateChain, getJKSCertChain(pcc.Chain)...)
