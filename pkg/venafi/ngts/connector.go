@@ -1073,8 +1073,62 @@ func (c *Connector) IsCSRServiceGenerated(req *certificate.Request) (bool, error
 	return false, nil
 }
 
-func (c *Connector) RetrieveCertificateMetaData(_ string) (*certificate.CertificateMetaData, error) {
-	panic("operation is not supported yet")
+func (c *Connector) RetrieveCertificateMetaData(idOrPickupID string) (*certificate.CertificateMetaData, error) {
+	if !c.isAuthenticated() {
+		return nil, fmt.Errorf("must be authenticated to retrieve certificate metadata")
+	}
+	if idOrPickupID == "" {
+		return nil, fmt.Errorf("certificate identifier cannot be empty")
+	}
+
+	// 1. Try retrieving directly as a Certificate ID (UUID)
+	certDetails, err := c.getCertificates(idOrPickupID)
+	if err == nil && certDetails != nil && certDetails.Fingerprint != "" {
+		md := &certificate.CertificateMetaData{}
+		md.CertificateDetails.Thumbprint = certDetails.Fingerprint
+		md.CertificateDetails.ValidTo = certDetails.ValidityEnd
+		return md, nil
+	}
+
+	// 2. Try searching by Fingerprint
+	fpRes, err := c.searchCertificatesByFingerprint(idOrPickupID)
+	if err == nil && fpRes != nil && len(fpRes.Certificates) > 0 {
+		cert := fpRes.Certificates[0]
+		end, _ := time.Parse(time.RFC3339, cert.ValidityEnd)
+		md := &certificate.CertificateMetaData{}
+		md.CertificateDetails.Thumbprint = cert.Fingerprint
+		md.CertificateDetails.ValidTo = end
+		if len(cert.SubjectCN) > 0 {
+			md.CertificateDetails.CN = cert.SubjectCN[0]
+		}
+		return md, nil
+	}
+
+	// 3. Try searching by Common Name
+	cnRes, err := c.SearchCertificatesByCN(idOrPickupID)
+	if err == nil && cnRes != nil && len(cnRes.Certificates) > 0 {
+		var newest *Certificate
+		var newestEnd time.Time
+		for i := range cnRes.Certificates {
+			cur := &cnRes.Certificates[i]
+			t, _ := time.Parse(time.RFC3339, cur.ValidityEnd)
+			if newest == nil || t.After(newestEnd) {
+				newest = cur
+				newestEnd = t
+			}
+		}
+		if newest != nil {
+			md := &certificate.CertificateMetaData{}
+			md.CertificateDetails.Thumbprint = newest.Fingerprint
+			md.CertificateDetails.ValidTo = newestEnd
+			if len(newest.SubjectCN) > 0 {
+				md.CertificateDetails.CN = newest.SubjectCN[0]
+			}
+			return md, nil
+		}
+	}
+
+	return nil, fmt.Errorf("no certificate metadata found for %s", idOrPickupID)
 }
 
 // SynchronousRequestCertificate It's not supported yet in Palo Alto Networks Next-Gen Trust Security (NGTS)
@@ -1594,6 +1648,41 @@ func (c *Connector) searchCertificatesByFingerprint(fp string) (*CertificateSear
 		},
 	}
 	return c.searchCertificates(req)
+}
+
+// SearchCertificatesByCN queries NGTS certificatesearch API for certificates with the specified Common Name.
+func (c *Connector) SearchCertificatesByCN(cn string) (*CertificateSearchResponse, error) {
+	if !c.isAuthenticated() {
+		return nil, fmt.Errorf("must be authenticated to search a certificate")
+	}
+	req := &SearchRequest{
+		Expression: &Expression{
+			Operands: []Operand{
+				{
+					Field:    "subjectCN",
+					Operator: EQ,
+					Value:    cn,
+				},
+			},
+		},
+	}
+	return c.searchCertificates(req)
+}
+
+// SearchCertificatesByFingerprint queries NGTS certificatesearch API by certificate SHA-1 fingerprint.
+func (c *Connector) SearchCertificatesByFingerprint(fp string) (*CertificateSearchResponse, error) {
+	if !c.isAuthenticated() {
+		return nil, fmt.Errorf("must be authenticated to search a certificate")
+	}
+	return c.searchCertificatesByFingerprint(fp)
+}
+
+// GetCertificateDetails returns details for a certificate ID.
+func (c *Connector) GetCertificateDetails(certificateId string) (*VenafiCertificate, error) {
+	if !c.isAuthenticated() {
+		return nil, fmt.Errorf("must be authenticated to get certificate details")
+	}
+	return c.getCertificates(certificateId)
 }
 
 type managedCertificate struct {

@@ -184,6 +184,8 @@ The top-level structure of the file is described as follows:
 | keyType    | string                                       | *Optional*     | - Specify the key type of the requested certificate. Valid options are `RSA`, `ECDSA`, `EC`, `ECC` and `ED25519`. Default is `RSA`.                                                                                                                                                                                                                                                                                                                                                                                             |
 | location   | [Location](#location) object                 | *Optional*     | - Use to provide the name/address of the compute instance and an identifier for the workload using the certificate. This results in a device (node) and application (workload) being associated with the certificate in the CyberArk Platform.<br/>Example: `node:workload`.                                                                                                                                                                                                                                                    |
 | nickname   | string                                       | *Optional*     | - Specify the certificate object name to be created in CyberArk Certificate Manager, Self-Hosted for the requested certificate. If not specified, CyberArk Certificate Manager, Self-Hosted will use the [Subject.commonName](#subject). Only valid when [Connection.platform](#connection) is `tpp`.                                                                                                                                                                                                                           |
+| pickupFirst| boolean                                      | *Optional*     | - When `true`, enables shared-certificate distribution ("pickup-first" mode). VCert queries the platform for an existing certificate matching the Common Name (or `pickupId`) before attempting a new enrollment. If the platform has a newer certificate than what is installed locally, it downloads and installs the certificate (and private key if service-generated/vaulted, or attaches existing local key) without enrolling a new certificate. If the platform certificate is older, it safely refuses a downgrade and exits cleanly. If the thumbprint matches installed, it defers to the `renewBefore` window check. If no certificate exists on the platform, it falls back to initial enrollment. Supported on `tpp`, `ngts`, and `vcp` (CyberArk Certificate Manager SaaS). Defaults to `false`. |
+| pickupId   | string                                       | *Optional*     | - Platform-specific identifier override for `pickupFirst`. On `tpp`, specifies the certificate object DN (defaults to `<zone>\<commonName>`). On `ngts` or `vcp`, specifies a Certificate ID (UUID), Certificate Request ID, or SHA-1 fingerprint.                                                                                                                                                                                                                                                                                   |
 | sanDNS     | array of string                              | *Optional*     | - Specify one or more DNS SAN entries for the requested certificate.                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | sanEmail   | array of string                              | *Optional*     | - Specify one or more Email SAN entries for the requested certificate.                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | sanIP      | array of string                              | *Optional*     | - Specify one or more IP SAN entries for the requested certificate.                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
@@ -222,3 +224,84 @@ The top-level structure of the file is described as follows:
 | organization | string          | *Optional*     | Specifies the O= (Organization) attribute of the requested certificate.               |
 | orgUnits     | array of string | *Optional*     | Specifies one or more OU= (Organization Unit) attribute of the requested certificate. |
 | state        | string          | *Optional*     | Specifies the S= (State) attribute of the requested certificate.                      |
+
+## Shared-Certificate Distribution (`pickupFirst` Mode)
+
+In clustered or load-balanced environments (e.g. Node 1 and Node 2 serving the same hostname), having every node run standard enrollment results in duplicate certificate requests, extra CA costs, and out-of-sync private keys.
+
+Configuring `pickupFirst: true` enables automatic multi-node convergence using the exact same command on all nodes:
+
+```bash
+vcert run -f playbook.yaml
+```
+
+### Why It Works with the Same Command
+
+That is the entire purpose of `pickupFirst: true`. You do not need special flags, separate configurations, or custom wrapper scripts for different nodes.
+
+The playbook file is identical on every machine:
+
+```yaml
+certificateTasks:
+  - name: shared-service-cert
+    renewBefore: 1d
+    request:
+      csr: service
+      pickupFirst: true            # <-- Enables automatic convergence
+      zone: 'Private 5 days'
+      subject:
+        commonName: 'shared.example.com'
+    installations:
+      - format: PEM
+        file: /etc/ssl/certs/app.crt
+        keyFile: /etc/ssl/private/app.key
+        chainFile: /etc/ssl/certs/chain.crt
+        afterInstallAction: "systemctl reload nginx"
+```
+
+### How the Nodes Coordinate Automatically
+
+```
+                   vcert run -f playbook.yaml
+                              │
+                 Does cert exist on Platform?
+                             ╱ ╲
+                       YES ╱     ╲ NO
+                         ╱         ╲
+      Is Platform newer             Node 1 (First to run):
+     than installed cert?           - Falls through & Enrolls cert
+            ╱ ╲                     - Key generated on Platform (csr: service)
+      YES ╱     ╲ NO (Match)        - Installs cert + key locally
+        ╱         ╲
+ Node 2 (Follower):  Both Nodes (Cron / Next run):
+ - Downloads cert    - Thumbprints match
+   + key from DEK    - Checks renewBefore window
+ - Installs locally  - If healthy: Exits in < 1s with NO action
+ - ZERO enrollment
+```
+
+1. **Whichever node runs first (e.g. Node 1)**:
+   - Queries the platform for `shared.example.com`.
+   - Finds nothing &rarr; automatically falls through to enroll it.
+   - The platform generates the private key (`csr: service`) and issues the certificate.
+   - Node 1 installs the certificate and private key.
+
+2. **The other node (Node 2)**:
+   - Runs the identical command: `vcert run -f playbook.yaml`.
+   - Queries the platform for `shared.example.com`.
+   - Finds the certificate Node 1 enrolled.
+   - Since Node 2 has no certificate installed yet, it downloads the certificate and the server-side private key (via DEK decryption) and installs them.
+   - Zero enrollment requests are created.
+
+3. **Subsequent runs on both nodes (e.g. daily cron)**:
+   - Both nodes run `vcert run -f playbook.yaml`.
+   - Both inspect their local certificate: the thumbprint matches the platform.
+   - Both check `renewBefore`: if still valid, both exit in <1 second with *"certificate in good health. No actions needed"*.
+   - When the renewal window eventually hits, whichever node runs first renews it; the other node picks up the renewed certificate on its next run.
+
+### Decision Flow Summary
+1. **Match**: If the locally installed certificate's SHA-1 thumbprint matches the platform certificate, VCert defers to the standard `renewBefore` window check.
+2. **Platform is Newer**: If the platform has a newer certificate than what is installed locally (or no certificate is installed), VCert downloads the certificate + private key + chain, installs them locally, runs `afterInstallAction`, and skips enrollment.
+3. **Platform is Older**: If the platform certificate has an older expiration date than what is installed locally, VCert logs a warning, refuses to downgrade, and exits cleanly.
+4. **Not Found**: If no certificate is found on the platform, VCert falls through to standard enrollment.
+
