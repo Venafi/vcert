@@ -116,23 +116,9 @@ func (o *Output) AsPKCS12(c *Config) ([]byte, error) {
 	} else {
 		privDER = p.Bytes
 	}
-	var privKey interface{}
-	switch p.Type {
-	case "EC PRIVATE KEY":
-		privKey, err = x509.ParseECPrivateKey(privDER)
-		if err != nil {
-			privKey, err = x509.ParsePKCS8PrivateKey(privDER)
-		}
-	case "RSA PRIVATE KEY":
-		privKey, err = x509.ParsePKCS1PrivateKey(privDER)
-		if err != nil {
-			privKey, err = x509.ParsePKCS8PrivateKey(privDER)
-		}
-	default:
-		return nil, fmt.Errorf("unexpected private key PEM type: %s", p.Type)
-	}
+	privKey, err := parsePrivateKeyDER(p.Type, privDER)
 	if err != nil {
-		return nil, fmt.Errorf("private key error(3): %s", err)
+		return nil, err
 	}
 
 	encoder := pkcs12.Modern2023
@@ -149,7 +135,7 @@ func (o *Output) AsPKCS12(c *Config) ([]byte, error) {
 
 func (o *Output) AsJKS(c *Config) ([]byte, error) {
 
-	var err interface{}
+	var err error
 
 	if len(o.Certificate) == 0 || len(o.PrivateKey) == 0 {
 		return nil, fmt.Errorf("at least certificate and private key are required")
@@ -199,28 +185,16 @@ func (o *Output) AsJKS(c *Config) ([]byte, error) {
 	}
 
 	//Unmarshalling the PK
-	var privKey interface{}
-
-	switch p.Type {
-	case "EC PRIVATE KEY":
-		privKey, err = x509.ParseECPrivateKey(privDER)
-		if err != nil {
-			privKey, err = x509.ParsePKCS8PrivateKey(privDER)
-		}
-	case "RSA PRIVATE KEY":
-		privKey, err = x509.ParsePKCS1PrivateKey(privDER)
-		if err != nil {
-			privKey, err = x509.ParsePKCS8PrivateKey(privDER)
-		}
-	default:
-		return nil, fmt.Errorf("unexpected private key PEM type: %s", p.Type)
-	}
+	privKey, err := parsePrivateKeyDER(p.Type, privDER)
 	if err != nil {
-		return nil, fmt.Errorf("private key error(3): %s", err)
+		return nil, err
 	}
 
 	//Marshalling the PK to PKCS8, which is mandatory for JKS format
-	pkcs8DER, _ := x509.MarshalPKCS8PrivateKey(privKey)
+	pkcs8DER, err := x509.MarshalPKCS8PrivateKey(privKey)
+	if err != nil {
+		return nil, fmt.Errorf("private key error(4): %s", err)
+	}
 
 	//creating a JKS
 	keyStore := keystore.New()
@@ -502,4 +476,29 @@ func (r *ProvisioningResult) Format(format string, keystoreType domain.CloudKeys
 		}
 	}
 	return result, nil
+}
+
+// parsePrivateKeyDER parses a decrypted private key. "PRIVATE KEY" blocks are PKCS#8, which is the only encoding
+// available for Ed25519 and ML-DSA keys
+func parsePrivateKeyDER(pemType string, privDER []byte) (privKey interface{}, err error) {
+	switch pemType {
+	case "EC PRIVATE KEY":
+		privKey, err = x509.ParseECPrivateKey(privDER)
+		if err != nil {
+			privKey, err = x509.ParsePKCS8PrivateKey(privDER)
+		}
+	case "RSA PRIVATE KEY":
+		privKey, err = x509.ParsePKCS1PrivateKey(privDER)
+		if err != nil {
+			privKey, err = x509.ParsePKCS8PrivateKey(privDER)
+		}
+	case "PRIVATE KEY":
+		privKey, err = x509.ParsePKCS8PrivateKey(privDER)
+	default:
+		return nil, fmt.Errorf("unexpected private key PEM type: %s", pemType)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("private key error(3): %s", err)
+	}
+	return privKey, nil
 }

@@ -147,12 +147,21 @@ type CsrAttributes struct {
 	Country                       *string                        `json:"country,omitempty"`
 	SubjectAlternativeNamesByType *SubjectAlternativeNamesByType `json:"subjectAlternativeNamesByType,omitempty"`
 	KeyTypeParameters             *KeyTypeParameters             `json:"keyTypeParameters,omitempty"`
+	KeyAlgorithm                  *KeyAlgorithm                  `json:"keyAlgorithm,omitempty"`
 }
 
+// KeyTypeParameters is the RSA or EC key the service generates. Key types added later, such as ML-DSA, are only
+// accepted in KeyAlgorithm; the two are mutually exclusive
 type KeyTypeParameters struct {
 	KeyType   string  `json:"keyType,omitempty"`
 	KeyLength *int    `json:"keyLength,omitempty"`
 	KeyCurve  *string `json:"keyCurve,omitempty"`
+}
+
+// KeyAlgorithm is the key the service generates, of any key type; keyType selects the other fields
+type KeyAlgorithm struct {
+	KeyType     string `json:"keyType"`
+	KeyStrength *int   `json:"keyStrength,omitempty"`
 }
 
 type SubjectAlternativeNamesByType struct {
@@ -254,9 +263,6 @@ type ApplicationDetails struct {
 
 // GenerateRequest generates a CertificateRequest based on the zone configuration, and returns the request along with the private key.
 func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *certificate.Request) (err error) {
-	if req.KeyType == certificate.KeyTypeMLDSA {
-		return fmt.Errorf("%w: ML-DSA keys are not yet supported by vcert for Palo Alto Networks Next-Gen Trust Security (NGTS)", verror.UserDataError)
-	}
 	switch req.CsrOrigin {
 	case certificate.LocalGeneratedCSR:
 		if config == nil {
@@ -280,6 +286,19 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 	case certificate.ServiceGeneratedCSR:
 		if req.KeyType == certificate.KeyTypeED25519 {
 			return fmt.Errorf("%w: ED25519 keys are not yet supported for Service Generated CSR", verror.UserDataError)
+		}
+		if req.KeyType == certificate.KeyTypeMLDSA {
+			// the service needs the strength; without one, use the issuing template's default ML-DSA strength
+			if req.KeyLength == 0 {
+				if config == nil {
+					config, err = c.ReadZoneConfiguration()
+					if err != nil {
+						return fmt.Errorf("could not read zone configuration: %w", err)
+					}
+				}
+				req.KeyLength = config.DefaultMLDSAStrength()
+			}
+			return validateMLDSAStrength(req.KeyLength)
 		}
 		return nil
 
@@ -598,7 +617,7 @@ func parseCertificateRequestResult(httpStatusCode int, httpStatus string, body [
 			return nil, err
 		}
 
-		respError := fmt.Sprintf("Unexpected status code on Palo Alto Networks Next-Gen Trust Security (NGTS) zone read. Status: %s\n", httpStatus)
+		respError := fmt.Sprintf("Unexpected status code on Palo Alto Networks Next-Gen Trust Security (NGTS) certificate request. Status: %s\n", httpStatus)
 		for _, e := range respErrors {
 			respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
 		}
@@ -623,7 +642,7 @@ func checkCertificateRetireResults(httpStatusCode int, httpStatus string, body [
 			return err
 		}
 
-		respError := fmt.Sprintf("Unexpected status code on Palo Alto Networks Next-Gen Trust Security (NGTS) zone read. Status: %s\n", httpStatus)
+		respError := fmt.Sprintf("Unexpected status code on Palo Alto Networks Next-Gen Trust Security (NGTS) certificate retire. Status: %s\n", httpStatus)
 		for _, e := range respErrors {
 			respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
 		}
@@ -834,12 +853,17 @@ func buildPolicySpecification(cit *certificateTemplate, info *policy.Certificate
 	//key pair
 	var keyPair policy.KeyPair
 	shouldCreateKeyPair := false
-	if len(cit.KeyTypes) > 0 {
+	if allowedKeyTypes := cit.allowedKeyTypes(); len(allowedKeyTypes) > 0 {
 		var keyTypes []string
 		var keySizes []int
 		var ellipticCurves []string
 
-		for _, allowedKT := range cit.KeyTypes {
+		for _, allowedKT := range allowedKeyTypes {
+			if string(allowedKT.KeyType) == policy.CloudKeyTypeMLDSA {
+				keyTypes = append(keyTypes, policy.KeyTypeMLDSA)
+				keyPair.MLDSAKeyStrengths = allowedKT.KeyStrengths
+				continue
+			}
 			keyType := string(allowedKT.KeyType)
 			keyLengths := allowedKT.KeyLengths
 			ecKeys := allowedKT.KeyCurves
@@ -923,19 +947,37 @@ func buildPolicySpecification(cit *certificateTemplate, info *policy.Certificate
 	var defaultKP policy.DefaultKeyPair
 	shouldCreateDefaultKeyPAir := false
 
-	if cit.RecommendedSettings.Key.Type != "" {
-		defaultKP.KeyType = &cit.RecommendedSettings.Key.Type
+	if rk := &cit.RecommendedSettings.RecommendedKeyType; rk.KeyType != "" {
+		// recommendedKeyType supports every key type, so it takes precedence over the RSA and EC only key
 		shouldCreateDefaultKeyPAir = true
-	}
+		if rk.KeyType == policy.CloudKeyTypeMLDSA {
+			keyType := policy.KeyTypeMLDSA
+			defaultKP.KeyType = &keyType
+			defaultKP.MLDSAKeyStrength = &rk.KeyStrength
+		} else {
+			defaultKP.KeyType = &rk.KeyType
+			if rk.KeyLength > 0 {
+				defaultKP.RsaKeySize = &rk.KeyLength
+			}
+			if rk.KeyCurve != "" {
+				defaultKP.EllipticCurve = &rk.KeyCurve
+			}
+		}
+	} else {
+		if cit.RecommendedSettings.Key.Type != "" {
+			defaultKP.KeyType = &cit.RecommendedSettings.Key.Type
+			shouldCreateDefaultKeyPAir = true
+		}
 
-	if cit.RecommendedSettings.Key.Length > 0 {
-		defaultKP.RsaKeySize = &cit.RecommendedSettings.Key.Length
-		shouldCreateDefaultKeyPAir = true
-	}
+		if cit.RecommendedSettings.Key.Length > 0 {
+			defaultKP.RsaKeySize = &cit.RecommendedSettings.Key.Length
+			shouldCreateDefaultKeyPAir = true
+		}
 
-	if cit.RecommendedSettings.Key.Curve != "" {
-		defaultKP.EllipticCurve = &cit.RecommendedSettings.Key.Curve
-		shouldCreateDefaultKeyPAir = true
+		if cit.RecommendedSettings.Key.Curve != "" {
+			defaultKP.EllipticCurve = &cit.RecommendedSettings.Key.Curve
+			shouldCreateDefaultKeyPAir = true
+		}
 	}
 
 	if shouldCreateDefaultKeyPAir {

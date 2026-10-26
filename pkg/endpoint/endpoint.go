@@ -19,6 +19,7 @@ package endpoint
 import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
+	"crypto/mldsa"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
@@ -28,6 +29,7 @@ import (
 	"net"
 	"net/http"
 	"regexp"
+	"slices"
 	"time"
 
 	"github.com/Venafi/vcert/v5/pkg/certificate"
@@ -242,6 +244,20 @@ type ZoneConfiguration struct {
 	KeyConfiguration      *AllowedKeyConfiguration
 }
 
+// DefaultMLDSAStrength is the ML-DSA strength for a request that names none: the zone's recommended ML-DSA strength,
+// else the lowest ML-DSA strength the zone allows. It is 0 when the zone allows no ML-DSA key.
+func (z *ZoneConfiguration) DefaultMLDSAStrength() int {
+	if kc := z.KeyConfiguration; kc != nil && kc.KeyType == certificate.KeyTypeMLDSA && len(kc.KeySizes) != 0 {
+		return kc.KeySizes[0]
+	}
+	for _, akc := range z.AllowedKeyConfigurations {
+		if akc.KeyType == certificate.KeyTypeMLDSA && len(akc.KeySizes) != 0 {
+			return slices.Min(akc.KeySizes)
+		}
+	}
+	return 0
+}
+
 type LogRequest struct {
 	LogID     string `json:"ID,omitempty"`
 	Component string `json:",omitempty"`
@@ -346,12 +362,18 @@ func (p *Policy) ValidateCertificateRequest(request *certificate.Request) error 
 					return fmt.Errorf("invalid key in csr")
 				}
 			} else if parsedCSR.PublicKeyAlgorithm == x509.Ed25519 {
-				_, ok := parsedCSR.PublicKey.(*ed25519.PublicKey)
+				_, ok := parsedCSR.PublicKey.(ed25519.PublicKey)
 				if ok {
 					keyValid = checkKey(certificate.KeyTypeECDSA, 0, "ed25519", p.AllowedKeyConfigurations)
 				} else {
 					return fmt.Errorf("invalid key in csr")
 				}
+			} else if parsedCSR.PublicKeyAlgorithm == x509.MLDSA {
+				pubkey, ok := parsedCSR.PublicKey.(*mldsa.PublicKey)
+				if !ok {
+					return fmt.Errorf("invalid key in csr")
+				}
+				keyValid = checkKey(certificate.KeyTypeMLDSA, certificate.MLDSAStrength(pubkey), "", p.AllowedKeyConfigurations)
 			}
 			if !keyValid {
 				return errors.New(keyError)
@@ -440,6 +462,9 @@ func checkKey(kt certificate.KeyType, bitsize int, curveStr string, allowed []Al
 				if curveStr == "" || curveStr == auxCurve.String() {
 					return true
 				}
+			case certificate.KeyTypeMLDSA:
+				// the ML-DSA strength (44, 65 or 87) is carried as the key size
+				return intInSlice(bitsize, allowedKey.KeySizes)
 			default:
 				return
 			}
@@ -549,6 +574,9 @@ func (z *ZoneConfiguration) UpdateCertificateRequest(request *certificate.Reques
 			if len(z.KeyConfiguration.KeyCurves) != 0 && request.KeyCurve == certificate.EllipticCurveNotSet {
 				request.KeyCurve = z.KeyConfiguration.KeyCurves[0]
 			}
+		}
+		if request.KeyType == certificate.KeyTypeMLDSA && request.KeyLength == 0 {
+			request.KeyLength = z.DefaultMLDSAStrength()
 		}
 	} else {
 		// Zone config has no key length parameters, so we just pass user's -key-size or fall to default 2048

@@ -19,6 +19,7 @@
 package installer
 
 import (
+	"crypto/x509"
 	"fmt"
 	"strings"
 
@@ -108,6 +109,14 @@ func (r CAPIInstaller) Backup() error {
 // Install takes the certificate bundle and moves it to the location specified in the installer
 func (r CAPIInstaller) Install(pcc certificate.PEMCollection) error {
 	zap.L().Debug("installing certificate", zap.String("location", r.CAPILocation))
+
+	cert, err := parsePEMCertificate([]byte(pcc.Certificate))
+	if err != nil {
+		return err
+	}
+	if cert.PublicKeyAlgorithm == x509.MLDSA {
+		return fmt.Errorf("ML-DSA certificates are not supported by the CAPI installer; use a PEM, PKCS12 or JKS installer instead")
+	}
 
 	// Generate random password for temporary P12 bundle
 	bundlePassword := vcertutil.GeneratePassword()

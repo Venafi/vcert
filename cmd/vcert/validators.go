@@ -107,6 +107,9 @@ func validateCommonFlags(commandName string) error {
 		if !slices.Contains(certificate.AllSupportedMLDSAStrengths(), flags.keySize) {
 			return fmt.Errorf("'--key-type mldsa' requires '--key-size' to be one of %v", certificate.AllSupportedMLDSAStrengths())
 		}
+		if flags.format == util.LegacyPem {
+			return fmt.Errorf("the '%s' format cannot be used with '--key-type mldsa'; ML-DSA private keys are only available in PKCS#8 format", util.LegacyPem)
+		}
 	case "":
 	default:
 		return fmt.Errorf("unknown key type: %s", flags.keyTypeString)
@@ -508,6 +511,7 @@ func validateRenewFlags1(commandName string) error {
 			flags.country != "" ||
 			flags.org != "" ||
 			flags.state != "" ||
+			flags.keyTypeString != "" ||
 			flags.keySize != 0 ||
 			len(flags.orgUnits) > 0 ||
 			len(flags.dnsSans) > 0 ||
@@ -523,6 +527,7 @@ func validateRenewFlags1(commandName string) error {
 			flags.country != "" ||
 			flags.org != "" ||
 			flags.state != "" ||
+			flags.keyTypeString != "" ||
 			flags.keySize != 0 ||
 			len(flags.orgUnits) > 0 ||
 			len(flags.dnsSans) > 0 ||

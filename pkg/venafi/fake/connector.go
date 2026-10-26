@@ -387,6 +387,7 @@ func (c *Connector) ReadPolicyConfiguration() (policy *endpoint.Policy, err erro
 		AllowedKeyConfigurations: []endpoint.AllowedKeyConfiguration{
 			{KeyType: certificate.KeyTypeRSA, KeySizes: certificate.AllSupportedKeySizes(), KeyCurves: nil},
 			{KeyType: certificate.KeyTypeECDSA, KeySizes: nil, KeyCurves: certificate.AllSupportedCurves()},
+			{KeyType: certificate.KeyTypeMLDSA, KeySizes: certificate.AllSupportedMLDSAStrengths()},
 		},
 		DnsSanRegExs:   []string{".*"},
 		IpSanRegExs:    []string{".*"},
