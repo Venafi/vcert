@@ -782,13 +782,14 @@ func buildPolicySpecification(cit *certificateTemplate, info *policy.Certificate
 	}
 
 	// ps.Policy.WildcardAllowed is pending.
-	if cit.ValidityPeriod != "" {
-		//they have the format P#D
-		days := cit.ValidityPeriod[1 : len(cit.ValidityPeriod)-1]
-		intDays, _ := strconv.ParseInt(days, 10, 32)
-		//ok we have a 32 bits int but we need to convert it just into a "int"
-		intVal := int(intDays)
-		pol.MaxValidDays = &intVal
+	// The issuing template API returns the validity period under "product"; fall back to the top-level field
+	// that older responses used.
+	validityPeriod := cit.Product.ValidityPeriod
+	if validityPeriod == "" {
+		validityPeriod = cit.ValidityPeriod
+	}
+	if days, ok := parseValidityPeriodDays(validityPeriod); ok {
+		pol.MaxValidDays = &days
 	}
 	if info != nil {
 		ca := fmt.Sprint(info.CAType, "\\", info.CAAccountKey, "\\", info.VendorProductName)
@@ -1009,6 +1010,19 @@ func parseCitDetailsData(b []byte, status int) (*certificateTemplate, error) {
 	}
 
 	return &cit, nil
+}
+
+// parseValidityPeriodDays parses a validity period in the ISO 8601 form P#D used by issuing templates.
+// It reports false for any other form rather than guessing a value.
+func parseValidityPeriodDays(period string) (int, bool) {
+	if len(period) < 3 || !strings.HasPrefix(period, "P") || !strings.HasSuffix(period, "D") {
+		return 0, false
+	}
+	days, err := strconv.Atoi(period[1 : len(period)-1])
+	if err != nil {
+		return 0, false
+	}
+	return days, true
 }
 
 func isWildCard(cnRegex []string) bool {

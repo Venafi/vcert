@@ -17,6 +17,7 @@
 package ngts
 
 import (
+	"encoding/json"
 	"net/http"
 	"regexp"
 	"testing"
@@ -302,4 +303,53 @@ func TestParseCertificateRetrieveResponse(t *testing.T) {
 	if err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
+}
+
+func TestBuildPolicySpecificationValidityPeriod(t *testing.T) {
+	// Issuing template as returned by the API: the validity period is only present under "product".
+	const templateJSON = `{
+		"id": "2ab5c04e-cf0b-11f1-8ad2-93c9df20223b",
+		"certificateAuthority": "BUILTIN_GEN2",
+		"name": "vcert-e2e-ec-only",
+		"product": {
+			"certificateAuthority": "BUILTIN_GEN2",
+			"productName": "Default Product",
+			"productTypes": ["SSL", "CODESIGN"],
+			"validityPeriod": "P90D"
+		},
+		"subjectCNRegexes": [".*"],
+		"keyTypes": [{"keyType": "EC", "keyCurves": ["P256", "P384", "ED25519"]}],
+		"keyReuse": false
+	}`
+
+	var cit certificateTemplate
+	require.NoError(t, json.Unmarshal([]byte(templateJSON), &cit))
+
+	ps := buildPolicySpecification(&cit, nil, true)
+	require.NotNil(t, ps.Policy.MaxValidDays)
+	require.Equal(t, 90, *ps.Policy.MaxValidDays)
+
+	for _, tc := range []struct {
+		name            string
+		productValidity string
+		topLevel        string
+		expected        *int
+	}{
+		{name: "product value wins over top-level", productValidity: "P90D", topLevel: "P30D", expected: intPtr(90)},
+		{name: "falls back to top-level", topLevel: "P30D", expected: intPtr(30)},
+		{name: "missing", expected: nil},
+		{name: "unsupported unit", productValidity: "P1Y", expected: nil},
+		{name: "not a number", productValidity: "PXD", expected: nil},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			cit := certificateTemplate{ValidityPeriod: tc.topLevel}
+			cit.Product.ValidityPeriod = tc.productValidity
+			ps := buildPolicySpecification(&cit, nil, true)
+			require.Equal(t, tc.expected, ps.Policy.MaxValidDays)
+		})
+	}
+}
+
+func intPtr(i int) *int {
+	return &i
 }
