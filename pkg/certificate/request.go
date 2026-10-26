@@ -42,6 +42,7 @@ type Request struct {
 	FriendlyName       string
 	KeyType            KeyType
 	KeyLength          int
+	KeyStrength        int // ML-DSA parameter set (44, 65 or 87); kept apart from KeyLength, the RSA key size
 	KeyCurve           EllipticCurve
 	csr                []byte // should be a PEM-encoded CSR
 	PrivateKey         crypto.Signer
@@ -165,7 +166,7 @@ func (request *Request) GenerateCSR() error {
 	return request.SetCSR(csr)
 }
 
-// GeneratePrivateKey creates private key (if it doesn`t already exist) based on request.KeyType, request.KeyLength and request.KeyCurve fileds
+// GeneratePrivateKey creates private key (if it doesn`t already exist) based on request.KeyType, request.KeyLength (RSA), request.KeyStrength (ML-DSA) and request.KeyCurve fields
 func (request *Request) GeneratePrivateKey() error {
 	if request.PrivateKey != nil {
 		return nil
@@ -185,7 +186,7 @@ func (request *Request) GeneratePrivateKey() error {
 		}
 		request.PrivateKey, err = GenerateRSAPrivateKey(request.KeyLength)
 	case KeyTypeMLDSA:
-		request.PrivateKey, err = GenerateMLDSAPrivateKey(request.KeyLength)
+		request.PrivateKey, err = GenerateMLDSAPrivateKey(request.KeyStrength)
 	default:
 		return fmt.Errorf("%w: unable to generate certificate request, key type %s is not supported", verror.VcertError, request.KeyType.String())
 	}

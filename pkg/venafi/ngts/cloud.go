@@ -289,16 +289,16 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 		}
 		if req.KeyType == certificate.KeyTypeMLDSA {
 			// the service needs the strength; without one, use the issuing template's default ML-DSA strength
-			if req.KeyLength == 0 {
+			if req.KeyStrength == 0 {
 				if config == nil {
 					config, err = c.ReadZoneConfiguration()
 					if err != nil {
 						return fmt.Errorf("could not read zone configuration: %w", err)
 					}
 				}
-				req.KeyLength = config.DefaultMLDSAStrength()
+				req.KeyStrength = config.DefaultMLDSAStrength()
 			}
-			return validateMLDSAStrength(req.KeyLength)
+			return validateMLDSAStrength(req.KeyStrength)
 		}
 		return nil
 

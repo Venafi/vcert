@@ -81,3 +81,20 @@ func TestMLDSAAsJKS(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, priv.Equal(key))
 }
+
+func TestSetKeySize(t *testing.T) {
+	// --key-size is the strength of an ML-DSA key and never becomes an RSA key size
+	req := &certificate.Request{KeyType: certificate.KeyTypeMLDSA}
+	setKeySize(req, 65)
+	require.Equal(t, 65, req.KeyStrength)
+	require.Zero(t, req.KeyLength)
+
+	req = &certificate.Request{KeyType: certificate.KeyTypeRSA}
+	setKeySize(req, 3072)
+	require.Equal(t, 3072, req.KeyLength)
+	require.Zero(t, req.KeyStrength)
+
+	req = &certificate.Request{KeyType: certificate.KeyTypeRSA}
+	setKeySize(req, 0)
+	require.Equal(t, 2048, req.KeyLength)
+}

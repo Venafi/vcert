@@ -236,7 +236,7 @@ func Test_mldsaIssuingTemplate(t *testing.T) {
 	require.Equal(t, &endpoint.AllowedKeyConfiguration{KeyType: certificate.KeyTypeMLDSA, KeySizes: []int{65}}, zc.KeyConfiguration)
 
 	// an ML-DSA request is accepted by the template, which isn't the case when only keyTypes is read
-	req := &certificate.Request{KeyType: certificate.KeyTypeMLDSA, KeyLength: 65}
+	req := &certificate.Request{KeyType: certificate.KeyTypeMLDSA, KeyStrength: 65}
 	req.Subject.CommonName = "mldsa.vcert.test"
 	require.NoError(t, p.ValidateCertificateRequest(req))
 	legacy := ct
@@ -245,13 +245,13 @@ func Test_mldsaIssuingTemplate(t *testing.T) {
 	require.Error(t, legacyPolicy.ValidateCertificateRequest(req))
 
 	// a strength the template doesn't allow is rejected
-	req.KeyLength = 87
+	req.KeyStrength = 87
 	require.Error(t, p.ValidateCertificateRequest(req))
 
 	// a request without a strength gets the recommended one
-	req.KeyLength = 0
+	req.KeyStrength = 0
 	zc.UpdateCertificateRequest(req)
-	require.Equal(t, 65, req.KeyLength)
+	require.Equal(t, 65, req.KeyStrength)
 
 	ps := buildPolicySpecification(&ct, &policy.CertificateAuthorityInfo{}, true)
 	require.Equal(t, []string{"RSA", "MLDSA"}, ps.Policy.KeyPair.KeyTypes)
@@ -342,14 +342,14 @@ func TestGenerateRequest(t *testing.T) {
 			"GenerateRequest-MLDSA",
 			&keyTypeMLDSA,
 			nil,
-			&certificate.Request{KeyLength: 65},
+			&certificate.Request{KeyStrength: 65},
 			"",
 		},
 		{
 			"GenerateRequest-MLDSA-ServiceGenerated",
 			&keyTypeMLDSA,
 			&csrOriginServiceGenerated,
-			&certificate.Request{KeyLength: 65},
+			&certificate.Request{KeyStrength: 65},
 			"",
 		},
 		{
@@ -363,7 +363,7 @@ func TestGenerateRequest(t *testing.T) {
 			"GenerateRequest-MLDSA-ServiceGenerated-UnsupportedStrength",
 			&keyTypeMLDSA,
 			&csrOriginServiceGenerated,
-			&certificate.Request{KeyLength: 50},
+			&certificate.Request{KeyStrength: 50},
 			"ML-DSA keys for Service Generated CSR require a strength of \\[44 65 87\\], got 50",
 		},
 	}
@@ -498,8 +498,8 @@ func TestGenerateRequestMLDSAServiceGeneratedUsesRecommendedStrength(t *testing.
 	if err := conn.GenerateRequest(zoneConfig, req); err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
-	if req.KeyLength != 87 {
-		t.Fatalf("expected the issuing template's recommended ML-DSA strength 87, got %d", req.KeyLength)
+	if req.KeyStrength != 87 {
+		t.Fatalf("expected the issuing template's recommended ML-DSA strength 87, got %d", req.KeyStrength)
 	}
 }
 
@@ -527,22 +527,22 @@ func TestSetKeyAttributes(t *testing.T) {
 		},
 		{
 			name:         "MLDSA-44",
-			request:      certificate.Request{KeyType: certificate.KeyTypeMLDSA, KeyLength: 44},
+			request:      certificate.Request{KeyType: certificate.KeyTypeMLDSA, KeyStrength: 44},
 			expectedJSON: `{"keyAlgorithm":{"keyType":"ML_DSA","keyStrength":44}}`,
 		},
 		{
 			name:         "MLDSA-65",
-			request:      certificate.Request{KeyType: certificate.KeyTypeMLDSA, KeyLength: 65},
+			request:      certificate.Request{KeyType: certificate.KeyTypeMLDSA, KeyStrength: 65},
 			expectedJSON: `{"keyAlgorithm":{"keyType":"ML_DSA","keyStrength":65}}`,
 		},
 		{
 			name:         "MLDSA-87",
-			request:      certificate.Request{KeyType: certificate.KeyTypeMLDSA, KeyLength: 87},
+			request:      certificate.Request{KeyType: certificate.KeyTypeMLDSA, KeyStrength: 87},
 			expectedJSON: `{"keyAlgorithm":{"keyType":"ML_DSA","keyStrength":87}}`,
 		},
 		{
 			name:          "MLDSA-UnsupportedStrength",
-			request:       certificate.Request{KeyType: certificate.KeyTypeMLDSA, KeyLength: 2048},
+			request:       certificate.Request{KeyType: certificate.KeyTypeMLDSA, KeyStrength: 2048},
 			expectedError: "ML-DSA keys for Service Generated CSR require a strength of [44 65 87], got 2048",
 		},
 	}
@@ -590,7 +590,7 @@ func TestGenerateRequestMLDSAServiceGeneratedUsesAllowedStrength(t *testing.T) {
 	if err := conn.GenerateRequest(zoneConfig, req); err != nil {
 		t.Fatalf("err is not nil, err: %s", err)
 	}
-	if req.KeyLength != 65 {
-		t.Fatalf("expected the lowest allowed ML-DSA strength 65, got %d", req.KeyLength)
+	if req.KeyStrength != 65 {
+		t.Fatalf("expected the lowest allowed ML-DSA strength 65, got %d", req.KeyStrength)
 	}
 }

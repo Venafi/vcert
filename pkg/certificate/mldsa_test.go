@@ -35,7 +35,7 @@ func TestGenerateCertificateRequestWithMLDSAKey(t *testing.T) {
 	for _, strength := range AllSupportedMLDSAStrengths() {
 		req := getCertificateRequestForTest()
 		req.KeyType = KeyTypeMLDSA
-		req.KeyLength = strength
+		req.KeyStrength = strength
 
 		err := req.GeneratePrivateKey()
 		if err != nil {
@@ -71,7 +71,7 @@ func TestGenerateMLDSAPrivateKeyInvalidStrength(t *testing.T) {
 	for _, strength := range []int{0, 2048, 64} {
 		req := getCertificateRequestForTest()
 		req.KeyType = KeyTypeMLDSA
-		req.KeyLength = strength
+		req.KeyStrength = strength
 		if err := req.GeneratePrivateKey(); err == nil {
 			t.Fatalf("Expected an error for ML-DSA strength %d", strength)
 		}
@@ -127,7 +127,7 @@ func TestMLDSAPrivateKeyPEMBlock(t *testing.T) {
 func TestMLDSACheckCertificateAndNewRequest(t *testing.T) {
 	req := getCertificateRequestForTest()
 	req.KeyType = KeyTypeMLDSA
-	req.KeyLength = 87
+	req.KeyStrength = 87
 	if err := req.GeneratePrivateKey(); err != nil {
 		t.Fatalf("Error generating ML-DSA Private Key\nError: %s", err)
 	}
@@ -150,7 +150,7 @@ func TestMLDSACheckCertificateAndNewRequest(t *testing.T) {
 
 	other := getCertificateRequestForTest()
 	other.KeyType = KeyTypeMLDSA
-	other.KeyLength = 87
+	other.KeyStrength = 87
 	if err = other.GeneratePrivateKey(); err != nil {
 		t.Fatalf("Error generating ML-DSA Private Key\nError: %s", err)
 	}
@@ -163,8 +163,12 @@ func TestMLDSACheckCertificateAndNewRequest(t *testing.T) {
 		t.Fatalf("Error parsing ML-DSA certificate\nError: %s", err)
 	}
 	renew := NewRequest(cert)
-	if renew.KeyType != KeyTypeMLDSA || renew.KeyLength != 87 {
-		t.Fatalf("NewRequest returned key type %s and length %d, expected MLDSA and 87", renew.KeyType.String(), renew.KeyLength)
+	if renew.KeyType != KeyTypeMLDSA || renew.KeyStrength != 87 {
+		t.Fatalf("NewRequest returned key type %s and strength %d, expected MLDSA and 87", renew.KeyType.String(), renew.KeyStrength)
+	}
+	// the strength must not be carried as an RSA key size
+	if renew.KeyLength != 0 {
+		t.Fatalf("NewRequest set KeyLength to %d for an ML-DSA key, expected 0", renew.KeyLength)
 	}
 }
 

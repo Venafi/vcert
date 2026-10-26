@@ -162,7 +162,7 @@ func (ct certificateTemplate) toPolicy() (p endpoint.Policy) {
 
 	for _, kt := range ct.allowedKeyTypes() {
 		if string(kt.KeyType) == policy.CloudKeyTypeMLDSA {
-			// the ML-DSA strengths (44, 65, 87) are carried as key sizes, as in certificate.Request.KeyLength
+			// the ML-DSA strengths (44, 65, 87) are carried as key sizes; requests carry them in certificate.Request.KeyStrength
 			p.AllowedKeyConfigurations = append(p.AllowedKeyConfigurations, endpoint.AllowedKeyConfiguration{
 				KeyType:  certificate.KeyTypeMLDSA,
 				KeySizes: kt.KeyStrengths[:],

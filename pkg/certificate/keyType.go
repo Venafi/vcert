@@ -20,7 +20,7 @@ const (
 	KeyTypeECDSA
 	// KeyTypeED25519 represents a key type of ED25519
 	KeyTypeED25519
-	// KeyTypeMLDSA represents a key type of ML-DSA (FIPS 204). The parameter set is carried in KeyLength (44, 65 or 87)
+	// KeyTypeMLDSA represents a key type of ML-DSA (FIPS 204). The parameter set is carried in Request.KeyStrength (44, 65 or 87)
 	KeyTypeMLDSA
 
 	// String representations of the KeyType types

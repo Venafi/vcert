@@ -399,7 +399,11 @@ func (p *Policy) ValidateCertificateRequest(request *certificate.Request) error 
 		}
 
 		if len(p.AllowedKeyConfigurations) > 0 {
-			if !checkKey(request.KeyType, request.KeyLength, request.KeyCurve.String(), p.AllowedKeyConfigurations) {
+			keySize := request.KeyLength
+			if request.KeyType == certificate.KeyTypeMLDSA {
+				keySize = request.KeyStrength
+			}
+			if !checkKey(request.KeyType, keySize, request.KeyCurve.String(), p.AllowedKeyConfigurations) {
 				return errors.New(keyError)
 			}
 		}
@@ -558,7 +562,9 @@ func (z *ZoneConfiguration) UpdateCertificateRequest(request *certificate.Reques
 		if request.KeyType.String() == "" {
 			request.KeyType = z.KeyConfiguration.KeyType
 		}
-		if request.KeyType == certificate.KeyTypeRSA {
+		// the recommended key sizes only apply to a request of the recommended key type: an ML-DSA recommendation holds
+		// ML-DSA strengths, which are not RSA key sizes
+		if request.KeyType == certificate.KeyTypeRSA && z.KeyConfiguration.KeyType == certificate.KeyTypeRSA {
 			recommendedKeySizes := z.KeyConfiguration.KeySizes
 			if len(recommendedKeySizes) != 0 && request.KeyLength == 0 {
 				request.KeyLength = recommendedKeySizes[0]
@@ -575,8 +581,8 @@ func (z *ZoneConfiguration) UpdateCertificateRequest(request *certificate.Reques
 				request.KeyCurve = z.KeyConfiguration.KeyCurves[0]
 			}
 		}
-		if request.KeyType == certificate.KeyTypeMLDSA && request.KeyLength == 0 {
-			request.KeyLength = z.DefaultMLDSAStrength()
+		if request.KeyType == certificate.KeyTypeMLDSA && request.KeyStrength == 0 {
+			request.KeyStrength = z.DefaultMLDSAStrength()
 		}
 	} else {
 		// Zone config has no key length parameters, so we just pass user's -key-size or fall to default 2048
