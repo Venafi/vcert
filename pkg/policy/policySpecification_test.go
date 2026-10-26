@@ -5,12 +5,15 @@ import (
 	"fmt"
 	t "log"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v3"
+
+	"github.com/Venafi/vcert/v5/pkg/certificate"
 )
 
 func getPolicySpecificationFromFile(f string) *PolicySpecification {
@@ -377,7 +380,7 @@ func TestBuildPolicySpecificationForTPPPkixParameterSetDefaultNotAllowed(t *test
 }
 
 // TestBuildPolicySpecificationForTPPPkixParameterSetUnknownDefault covers a folder whose
-// recommended algorithm this build does not know, e.g. one of the post-quantum parameter sets a
+// recommended algorithm this build does not know, e.g. a post-quantum parameter set (here FN-DSA) that a
 // newer TPP offers. Fall back to the first allowed algorithm, as toZoneConfig does, rather than
 // reporting no default at all. The deprecated fields are deliberately not consulted: on a 25.1+
 // folder they are stale and unlocked, and need not agree with the locked PKIX set.
@@ -386,10 +389,10 @@ func TestBuildPolicySpecificationForTPPPkixParameterSetUnknownDefault(t *testing
 	tppPolicy.KeyPairResponse.KeySize.Value = 3072
 	tppPolicy.KeyPairResponse.PkixParameterSet = LockedArrayAttribute{
 		Locked: true,
-		Value:  []string{"1.3.6.1.4.1.28783.10.1.1.2048", "1.3.6.1.4.1.28783.10.4.65"},
+		Value:  []string{"1.3.6.1.4.1.28783.10.1.1.2048", "1.3.6.1.4.1.28783.10.6.512"},
 	}
 	tppPolicy.KeyPairResponse.DefaultPkixParameterSet = LockedAttribute{
-		Value: "1.3.6.1.4.1.28783.10.4.65",
+		Value: "1.3.6.1.4.1.28783.10.6.512",
 	}
 
 	ps, err := BuildPolicySpecificationForTPP(CheckPolicyResponse{Policy: &tppPolicy})
@@ -590,6 +593,13 @@ func TestPkixToKeyAlgorithmsIsInverseOfKeyAlgorithmsToPKIX(t *testing.T) {
 				}
 				if !existIntInArray([]int{algorithm.KeySize}, TppRsaKeySize) {
 					t.Fatalf("RSA size %d has a PKIX OID but is missing from TppRsaKeySize, so setpolicy would reject it", algorithm.KeySize)
+				}
+			} else if keyType == KeyTypeMLDSA {
+				if strconv.Itoa(algorithm.KeySize) != parameter {
+					t.Fatalf("OID %s maps back to ML-DSA strength %d, expected %s", oid, algorithm.KeySize, parameter)
+				}
+				if !slices.Contains(certificate.AllSupportedMLDSAStrengths(), algorithm.KeySize) {
+					t.Fatalf("ML-DSA strength %d has a PKIX OID but isn't supported by vcert", algorithm.KeySize)
 				}
 			} else {
 				if algorithm.Curve != parameter {

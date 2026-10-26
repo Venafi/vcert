@@ -160,11 +160,9 @@ func (request *Request) GenerateCSR() error {
 
 	csr, err := x509.CreateCertificateRequest(rand.Reader, &certificateRequest, request.PrivateKey)
 	if err != nil {
-		csr = nil
+		return fmt.Errorf("%w: failed to create certificate request: %w", verror.VcertError, err)
 	}
-	err = request.SetCSR(csr)
-	//request.CSR = pem.EncodeToMemory(GetCertificateRequestPEMBlock(csr))
-	return err
+	return request.SetCSR(csr)
 }
 
 // GeneratePrivateKey creates private key (if it doesn`t already exist) based on request.KeyType, request.KeyLength and request.KeyCurve fileds

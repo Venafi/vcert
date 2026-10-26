@@ -20,8 +20,10 @@ import (
 	"crypto/mldsa"
 	"crypto/rand"
 	"crypto/x509"
+	"crypto/x509/pkix"
 	"encoding/pem"
 	"math/big"
+	"strings"
 	"testing"
 	"time"
 
@@ -163,5 +165,12 @@ func TestMLDSACheckCertificateAndNewRequest(t *testing.T) {
 	renew := NewRequest(cert)
 	if renew.KeyType != KeyTypeMLDSA || renew.KeyLength != 87 {
 		t.Fatalf("NewRequest returned key type %s and length %d, expected MLDSA and 87", renew.KeyType.String(), renew.KeyLength)
+	}
+}
+
+func TestGenerateCSRReturnsCreateError(t *testing.T) {
+	req := &Request{Subject: pkix.Name{CommonName: "no.key"}}
+	if err := req.GenerateCSR(); err == nil || !strings.Contains(err.Error(), "failed to create certificate request") {
+		t.Fatalf("expected the CSR creation error, got %v", err)
 	}
 }

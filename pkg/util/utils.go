@@ -67,7 +67,10 @@ func GetJsonAsString(i interface{}) (s string) {
 func DecryptPkcs8PrivateKey(privateKey, password string) (string, error) {
 
 	block, _ := pem.Decode([]byte(privateKey))
-	key, _, err := pkcs8.ParsePrivateKey(block.Bytes, []byte(password))
+	if block == nil {
+		return "", fmt.Errorf("failed to decode the private key PEM block")
+	}
+	key, err := ParsePKCS8PrivateKey(block.Bytes, []byte(password))
 
 	if err != nil {
 		return "", err
@@ -114,6 +117,9 @@ func EncryptPkcs1PrivateKey(privateKey, password string) (string, error) {
 			return "", nil
 		}
 	}
+	if encrypted == nil {
+		return "", fmt.Errorf("legacy PEM encryption is only supported for RSA and EC private keys")
+	}
 	return string(pem.EncodeToMemory(encrypted)), nil
 }
 
@@ -124,7 +130,7 @@ func EncryptPkcs8PrivateKey(privateKey, password string) (string, error) {
 		return "", fmt.Errorf("failed to decode PEM block")
 	}
 
-	key, _, err := pkcs8.ParsePrivateKey(block.Bytes, nil)
+	key, err := ParsePKCS8PrivateKey(block.Bytes, nil)
 	if err != nil {
 		return "", err
 	}

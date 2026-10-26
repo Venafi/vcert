@@ -20,12 +20,14 @@ import (
 	"encoding/json"
 	"net/http"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
+	"github.com/Venafi/vcert/v5/pkg/policy"
 	"github.com/Venafi/vcert/v5/pkg/verror"
 )
 
@@ -163,10 +165,113 @@ func Test_toPolicy(t *testing.T) {
 				},
 			},
 		},
+		{
+			// a key type this version of VCert doesn't know must be skipped rather than causing a panic
+			certTempl: &certificateTemplate{
+				KeyTypes: []allowedKeyType{
+					{KeyType: "RSA", KeyLengths: []int{2048}},
+					{KeyType: "SLH_DSA"},
+				},
+			},
+			expPolicy: endpoint.Policy{
+				AllowedKeyConfigurations: []endpoint.AllowedKeyConfiguration{
+					{KeyType: certificate.KeyTypeRSA, KeySizes: []int{2048}},
+				},
+			},
+		},
+		{
+			// ML-DSA is only available in keyAlgorithmTypes, which takes precedence over the RSA and EC only keyTypes
+			certTempl: &certificateTemplate{
+				KeyTypes: []allowedKeyType{
+					{KeyType: "RSA", KeyLengths: []int{2048}},
+				},
+				KeyAlgorithmTypes: []allowedKeyType{
+					{KeyType: "ML_DSA", KeyStrengths: []int{44, 65}},
+					{KeyType: "RSA", KeyLengths: []int{2048}},
+				},
+			},
+			expPolicy: endpoint.Policy{
+				AllowedKeyConfigurations: []endpoint.AllowedKeyConfiguration{
+					{KeyType: certificate.KeyTypeMLDSA, KeySizes: []int{44, 65}},
+					{KeyType: certificate.KeyTypeRSA, KeySizes: []int{2048}},
+				},
+			},
+		},
 	} {
 		policy := test.certTempl.toPolicy()
 		require.Equal(t, test.expPolicy, policy)
 	}
+}
+
+// mldsaIssuingTemplate is an issuing template, as returned by the server, that allows ML-DSA-44 and ML-DSA-65
+const mldsaIssuingTemplate = `{
+	"id": "d9d1b7c0-0000-0000-0000-000000000000",
+	"name": "test pqc 65",
+	"certificateAuthority": "BUILTIN_GEN2",
+	"subjectCNRegexes": [".*"],
+	"subjectORegexes": [".*"],
+	"subjectOURegexes": [".*"],
+	"subjectSTRegexes": [".*"],
+	"subjectLRegexes": [".*"],
+	"subjectCValues": [".*"],
+	"keyTypes": [{"keyType": "RSA", "keyLengths": [2048]}],
+	"keyAlgorithmTypes": [{"keyType": "RSA", "keyLengths": [2048]}, {"keyType": "ML_DSA", "keyStrengths": [44, 65]}],
+	"recommendedSettings": {"key": null, "recommendedKeyType": {"keyType": "ML_DSA", "keyStrength": 65}},
+	"csrUploadAllowed": true,
+	"keyGeneratedByVenafiAllowed": false
+}`
+
+func Test_mldsaIssuingTemplate(t *testing.T) {
+	var ct certificateTemplate
+	require.NoError(t, json.Unmarshal([]byte(mldsaIssuingTemplate), &ct))
+
+	p := ct.toPolicy()
+	require.Equal(t, []endpoint.AllowedKeyConfiguration{
+		{KeyType: certificate.KeyTypeRSA, KeySizes: []int{2048}},
+		{KeyType: certificate.KeyTypeMLDSA, KeySizes: []int{44, 65}},
+	}, p.AllowedKeyConfigurations)
+
+	zc := endpoint.NewZoneConfiguration()
+	ct.toZoneConfig(zc)
+	require.Equal(t, &endpoint.AllowedKeyConfiguration{KeyType: certificate.KeyTypeMLDSA, KeySizes: []int{65}}, zc.KeyConfiguration)
+
+	// an ML-DSA request is accepted by the template, which isn't the case when only keyTypes is read
+	req := &certificate.Request{KeyType: certificate.KeyTypeMLDSA, KeyLength: 65}
+	req.Subject.CommonName = "mldsa.vcert.test"
+	require.NoError(t, p.ValidateCertificateRequest(req))
+	legacy := ct
+	legacy.KeyAlgorithmTypes = nil
+	legacyPolicy := legacy.toPolicy()
+	require.Error(t, legacyPolicy.ValidateCertificateRequest(req))
+
+	// a strength the template doesn't allow is rejected
+	req.KeyLength = 87
+	require.Error(t, p.ValidateCertificateRequest(req))
+
+	// a request without a strength gets the recommended one
+	req.KeyLength = 0
+	zc.UpdateCertificateRequest(req)
+	require.Equal(t, 65, req.KeyLength)
+
+	ps := buildPolicySpecification(&ct, &policy.CertificateAuthorityInfo{}, true)
+	require.Equal(t, []string{"RSA", "MLDSA"}, ps.Policy.KeyPair.KeyTypes)
+	require.Equal(t, []int{2048}, ps.Policy.KeyPair.RsaKeySizes)
+	require.Equal(t, []int{44, 65}, ps.Policy.KeyPair.MLDSAKeyStrengths)
+	require.Equal(t, "MLDSA", *ps.Default.KeyPair.KeyType)
+	require.Equal(t, 65, *ps.Default.KeyPair.MLDSAKeyStrength)
+	require.Nil(t, ps.Default.KeyPair.RsaKeySize)
+}
+
+func Test_toZoneConfigRecommendedKeyType(t *testing.T) {
+	ct := certificateTemplate{}
+	ct.RecommendedSettings.RecommendedKeyType = recommendedKeyType{KeyType: "EC", KeyCurve: "P384"}
+	zc := endpoint.NewZoneConfiguration()
+	ct.toZoneConfig(zc)
+	require.Equal(t, &endpoint.AllowedKeyConfiguration{KeyType: certificate.KeyTypeECDSA, KeyCurves: []certificate.EllipticCurve{certificate.EllipticCurveP384}}, zc.KeyConfiguration)
+
+	ct.RecommendedSettings.RecommendedKeyType = recommendedKeyType{KeyType: "RSA", KeyLength: 3072}
+	ct.toZoneConfig(zc)
+	require.Equal(t, &endpoint.AllowedKeyConfiguration{KeyType: certificate.KeyTypeRSA, KeySizes: []int{3072}}, zc.KeyConfiguration)
 }
 
 func TestUpdateRequest(t *testing.T) {
@@ -188,6 +293,7 @@ func TestGenerateRequest(t *testing.T) {
 	keyTypeRSA := certificate.KeyTypeRSA
 	keyTypeEC := certificate.KeyTypeECDSA
 	keyTypeED25519 := certificate.KeyTypeED25519
+	keyTypeMLDSA := certificate.KeyTypeMLDSA
 	csrOriginServiceGenerated := certificate.ServiceGeneratedCSR
 
 	cases := []struct {
@@ -231,6 +337,34 @@ func TestGenerateRequest(t *testing.T) {
 			&csrOriginServiceGenerated,
 			&certificate.Request{},
 			"ED25519 keys are not yet supported for Service Generated CSR",
+		},
+		{
+			"GenerateRequest-MLDSA",
+			&keyTypeMLDSA,
+			nil,
+			&certificate.Request{KeyLength: 65},
+			"",
+		},
+		{
+			"GenerateRequest-MLDSA-ServiceGenerated",
+			&keyTypeMLDSA,
+			&csrOriginServiceGenerated,
+			&certificate.Request{KeyLength: 65},
+			"",
+		},
+		{
+			"GenerateRequest-MLDSA-ServiceGenerated-NoStrength",
+			&keyTypeMLDSA,
+			&csrOriginServiceGenerated,
+			&certificate.Request{},
+			"ML-DSA keys for Service Generated CSR need a strength \\(key size\\) of \\[44 65 87\\]; the issuing template doesn't allow or recommend one",
+		},
+		{
+			"GenerateRequest-MLDSA-ServiceGenerated-UnsupportedStrength",
+			&keyTypeMLDSA,
+			&csrOriginServiceGenerated,
+			&certificate.Request{KeyLength: 50},
+			"ML-DSA keys for Service Generated CSR require a strength of \\[44 65 87\\], got 50",
 		},
 	}
 
@@ -352,4 +486,111 @@ func TestBuildPolicySpecificationValidityPeriod(t *testing.T) {
 
 func intPtr(i int) *int {
 	return &i
+}
+
+func TestGenerateRequestMLDSAServiceGeneratedUsesRecommendedStrength(t *testing.T) {
+	zoneConfig := &endpoint.ZoneConfiguration{
+		KeyConfiguration: &endpoint.AllowedKeyConfiguration{KeyType: certificate.KeyTypeMLDSA, KeySizes: []int{87}},
+	}
+	req := &certificate.Request{KeyType: certificate.KeyTypeMLDSA, CsrOrigin: certificate.ServiceGeneratedCSR}
+
+	conn := Connector{}
+	if err := conn.GenerateRequest(zoneConfig, req); err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+	if req.KeyLength != 87 {
+		t.Fatalf("expected the issuing template's recommended ML-DSA strength 87, got %d", req.KeyLength)
+	}
+}
+
+func TestSetKeyAttributes(t *testing.T) {
+	cases := []struct {
+		name          string
+		request       certificate.Request
+		expectedJSON  string
+		expectedError string
+	}{
+		{
+			name:         "RSA",
+			request:      certificate.Request{KeyType: certificate.KeyTypeRSA, KeyLength: 3072},
+			expectedJSON: `{"keyTypeParameters":{"keyType":"RSA","keyLength":3072}}`,
+		},
+		{
+			name:         "RSA-DefaultLength",
+			request:      certificate.Request{KeyType: certificate.KeyTypeRSA},
+			expectedJSON: `{"keyTypeParameters":{"keyType":"RSA","keyLength":2048}}`,
+		},
+		{
+			name:         "EC",
+			request:      certificate.Request{KeyType: certificate.KeyTypeECDSA, KeyCurve: certificate.EllipticCurveP384},
+			expectedJSON: `{"keyTypeParameters":{"keyType":"EC","keyCurve":"P384"}}`,
+		},
+		{
+			name:         "MLDSA-44",
+			request:      certificate.Request{KeyType: certificate.KeyTypeMLDSA, KeyLength: 44},
+			expectedJSON: `{"keyAlgorithm":{"keyType":"ML_DSA","keyStrength":44}}`,
+		},
+		{
+			name:         "MLDSA-65",
+			request:      certificate.Request{KeyType: certificate.KeyTypeMLDSA, KeyLength: 65},
+			expectedJSON: `{"keyAlgorithm":{"keyType":"ML_DSA","keyStrength":65}}`,
+		},
+		{
+			name:         "MLDSA-87",
+			request:      certificate.Request{KeyType: certificate.KeyTypeMLDSA, KeyLength: 87},
+			expectedJSON: `{"keyAlgorithm":{"keyType":"ML_DSA","keyStrength":87}}`,
+		},
+		{
+			name:          "MLDSA-UnsupportedStrength",
+			request:       certificate.Request{KeyType: certificate.KeyTypeMLDSA, KeyLength: 2048},
+			expectedError: "ML-DSA keys for Service Generated CSR require a strength of [44 65 87], got 2048",
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			csrAttr := CsrAttributes{}
+			err := setKeyAttributes(&csrAttr, &c.request)
+			if c.expectedError != "" {
+				if err == nil || !strings.Contains(err.Error(), c.expectedError) {
+					t.Fatalf("expected error %q, got %v", c.expectedError, err)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("err is not nil, err: %s", err)
+			}
+			// keyTypeParameters and keyAlgorithm are mutually exclusive in the certificaterequests API
+			if csrAttr.KeyTypeParameters != nil && csrAttr.KeyAlgorithm != nil {
+				t.Fatal("both keyTypeParameters and keyAlgorithm are set")
+			}
+			got, err := json.Marshal(csrAttr)
+			if err != nil {
+				t.Fatalf("err is not nil, err: %s", err)
+			}
+			if string(got) != c.expectedJSON {
+				t.Fatalf("expected %s, got %s", c.expectedJSON, got)
+			}
+		})
+	}
+}
+
+func TestGenerateRequestMLDSAServiceGeneratedUsesAllowedStrength(t *testing.T) {
+	// the template recommends RSA, so the lowest ML-DSA strength it allows is used
+	zoneConfig := &endpoint.ZoneConfiguration{
+		Policy: endpoint.Policy{AllowedKeyConfigurations: []endpoint.AllowedKeyConfiguration{
+			{KeyType: certificate.KeyTypeRSA, KeySizes: []int{2048}},
+			{KeyType: certificate.KeyTypeMLDSA, KeySizes: []int{87, 65}},
+		}},
+		KeyConfiguration: &endpoint.AllowedKeyConfiguration{KeyType: certificate.KeyTypeRSA, KeySizes: []int{2048}},
+	}
+	req := &certificate.Request{KeyType: certificate.KeyTypeMLDSA, CsrOrigin: certificate.ServiceGeneratedCSR}
+
+	conn := Connector{}
+	if err := conn.GenerateRequest(zoneConfig, req); err != nil {
+		t.Fatalf("err is not nil, err: %s", err)
+	}
+	if req.KeyLength != 65 {
+		t.Fatalf("expected the lowest allowed ML-DSA strength 65, got %d", req.KeyLength)
+	}
 }

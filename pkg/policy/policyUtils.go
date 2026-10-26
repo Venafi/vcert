@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -28,7 +29,7 @@ var CloudRsaKeySize = []int{1024, 2048, 3072, 4096}
 // an ED25519 key against an ECDSA AllowedKeyConfiguration.
 var TppEllipticCurves = []string{"P256", "P384", "P521", "ED25519"}
 
-// KeyAlgorithmsToPKIX represents the mapping of RSA and ECDSA/ECC Key Algorithms to the PKIX OIDs
+// KeyAlgorithmsToPKIX represents the mapping of RSA, ECDSA/ECC and ML-DSA Key Algorithms to the PKIX OIDs
 var KeyAlgorithmsToPKIX = map[string]map[string]string{
 	"RSA": {
 		"1024": "1.3.6.1.4.1.28783.10.1.1.1024",
@@ -46,14 +47,21 @@ var KeyAlgorithmsToPKIX = map[string]map[string]string{
 		// certificate.EllipticCurve.Set understands.
 		"ED25519": "1.3.6.1.4.1.28783.10.3.25519",
 	},
+	// ML-DSA (FIPS 204) is keyed by its strength, in the same way as RSA by its bit size. TPP 25.1+ identifies
+	// the parameter sets with these OIDs in its AlgorithmSelector, while certificates use the NIST OIDs.
+	KeyTypeMLDSA: {
+		"44": "1.3.6.1.4.1.28783.10.4.44",
+		"65": "1.3.6.1.4.1.28783.10.4.65",
+		"87": "1.3.6.1.4.1.28783.10.4.87",
+	},
 }
 
 // PkixOidKeyAlgorithm describes the key type/size/curve represented by a PKIX parameter set OID.
 type PkixOidKeyAlgorithm struct {
 	// KeyType is the key algorithm name spelled as KeyAlgorithmsToPKIX and a policy
-	// specification's keyTypes field spell it, i.e. "RSA" or "ECC".
+	// specification's keyTypes field spell it, i.e. "RSA", "ECC" or "MLDSA".
 	KeyType string
-	KeySize int    // populated for RSA
+	KeySize int    // populated for RSA (bit size) and MLDSA (strength: 44, 65 or 87)
 	Curve   string // populated for ECC, e.g. "P256"
 }
 
@@ -69,12 +77,12 @@ func invertKeyAlgorithmsToPKIX(forward map[string]map[string]string) map[string]
 	for keyType, parameters := range forward {
 		for parameter, oid := range parameters {
 			entry := PkixOidKeyAlgorithm{KeyType: keyType}
-			if keyType == "RSA" {
+			if keyType == "RSA" || keyType == KeyTypeMLDSA {
 				size, err := strconv.Atoi(parameter)
 				if err != nil {
-					// KeyAlgorithmsToPKIX keys RSA by bit size; anything else is a typo in the
-					// table rather than something a server can trigger.
-					panic(fmt.Sprintf("policy: KeyAlgorithmsToPKIX has a non-numeric RSA key size %q", parameter))
+					// KeyAlgorithmsToPKIX keys RSA by bit size and ML-DSA by strength; anything else is a
+					// typo in the table rather than something a server can trigger.
+					panic(fmt.Sprintf("policy: KeyAlgorithmsToPKIX has a non-numeric %s key size %q", keyType, parameter))
 				}
 				entry.KeySize = size
 			} else {
@@ -91,11 +99,13 @@ type DecodedPkixParameterSet struct {
 	// Oids are the OIDs the server returned that this version of vcert recognized, in the order
 	// the server returned them.
 	Oids []string
-	// KeyTypes holds the distinct key algorithm names ("RSA", "ECC") covered by Oids.
+	// KeyTypes holds the distinct key algorithm names ("RSA", "ECC", "MLDSA") covered by Oids.
 	KeyTypes []string
-	// RsaKeySizes and EllipticCurves hold the RSA bit sizes and curve names covered by Oids.
-	RsaKeySizes    []int
-	EllipticCurves []string
+	// RsaKeySizes, EllipticCurves and MLDSAKeyStrengths hold the RSA bit sizes, curve names and ML-DSA strengths
+	// covered by Oids.
+	RsaKeySizes       []int
+	EllipticCurves    []string
+	MLDSAKeyStrengths []int
 }
 
 // DecodePkixParameterSet decodes the PKIX parameter set OIDs returned by TPP 25.1+ in
@@ -124,9 +134,12 @@ func DecodePkixParameterSet(oids []string) (*DecodedPkixParameterSet, error) {
 		if !existValueInArray(decoded.KeyTypes, algorithm.KeyType) {
 			decoded.KeyTypes = append(decoded.KeyTypes, algorithm.KeyType)
 		}
-		if algorithm.KeyType == "RSA" {
+		switch algorithm.KeyType {
+		case "RSA":
 			decoded.RsaKeySizes = append(decoded.RsaKeySizes, algorithm.KeySize)
-		} else {
+		case KeyTypeMLDSA:
+			decoded.MLDSAKeyStrengths = append(decoded.MLDSAKeyStrengths, algorithm.KeySize)
+		default:
 			decoded.EllipticCurves = append(decoded.EllipticCurves, algorithm.Curve)
 		}
 	}
@@ -257,6 +270,22 @@ func validateKeyPair(ps *PolicySpecification) error {
 			}
 		}
 		return nil
+	}
+
+	if slices.ContainsFunc(keyPair.KeyTypes, IsMLDSAKeyType) {
+		// ML-DSA can only be written as a PKIX parameter set (TPP 25.1+), which allows several key types and sizes
+		for _, keyType := range keyPair.KeyTypes {
+			if !IsMLDSAKeyType(keyType) && !existStringInArray([]string{keyType}, TppKeyType) {
+				return fmt.Errorf("specified keyTypes doesn't match with the supported ones")
+			}
+		}
+		if len(keyPair.RsaKeySizes) > 0 && !existIntInArray(keyPair.RsaKeySizes, TppRsaKeySize) {
+			return fmt.Errorf("specified rsaKeySizes doesn't match with the supported ones")
+		}
+		if len(keyPair.EllipticCurves) > 0 && !existStringInArray(keyPair.EllipticCurves, TppEllipticCurves) {
+			return fmt.Errorf("specified ellipticCurves doesn't match with the supported ones")
+		}
+		return validateMLDSAKeyStrengths(ps)
 	}
 
 	//validate algorithm
@@ -421,8 +450,11 @@ func validateDefaultKeyPair(ps *PolicySpecification) error {
 		}
 	}
 
-	if keyPair.KeyType != nil && *(keyPair.KeyType) != "" && !existStringInArray([]string{*(keyPair.KeyType)}, TppKeyType) {
+	if keyPair.KeyType != nil && *(keyPair.KeyType) != "" && !existStringInArray([]string{*(keyPair.KeyType)}, TppKeyType) && !IsMLDSAKeyType(*(keyPair.KeyType)) {
 		return fmt.Errorf("specified default keyType doesn't match with the supported ones")
+	}
+	if err := validateMLDSAKeyStrengths(ps); err != nil {
+		return err
 	}
 
 	//validate key bit strength
@@ -521,23 +553,34 @@ func BuildTppPolicy(ps *PolicySpecification) TppPolicy {
 		tppPolicy.PkixParameterSetDefault = createLockedAttribute(*(ps.Default.KeyPair.PkixParameterSetDefault), false)
 	}
 
-	if ps.Policy != nil && ps.Policy.KeyPair != nil && len(ps.Policy.KeyPair.KeyTypes) > 0 && ps.Policy.KeyPair.KeyTypes[0] != "" {
-		tppPolicy.KeyAlgorithm = createLockedAttribute(ps.Policy.KeyPair.KeyTypes[0], true)
-	} else if ps.Default != nil && ps.Default.KeyPair != nil && (ps.Default.KeyPair.KeyType != nil) && (*(ps.Default.KeyPair.KeyType) != "") {
-		tppPolicy.KeyAlgorithm = createLockedAttribute(*(ps.Default.KeyPair.KeyType), false)
-	}
+	if mldsaAllowed, mldsaDefault := tppPkixParameterSetForMLDSA(ps); len(mldsaAllowed) > 0 || mldsaDefault != "" {
+		// ML-DSA can't be expressed with the deprecated Key Algorithm, Key Bit Strength and Elliptic Curve
+		// attributes, so the policy is written as a PKIX parameter set instead
+		if len(mldsaAllowed) > 0 {
+			tppPolicy.PkixParameterSet = createLockedArrayAttribute(mldsaAllowed, true)
+		}
+		if mldsaDefault != "" {
+			tppPolicy.PkixParameterSetDefault = createLockedAttribute(mldsaDefault, false)
+		}
+	} else {
+		if ps.Policy != nil && ps.Policy.KeyPair != nil && len(ps.Policy.KeyPair.KeyTypes) > 0 && ps.Policy.KeyPair.KeyTypes[0] != "" {
+			tppPolicy.KeyAlgorithm = createLockedAttribute(ps.Policy.KeyPair.KeyTypes[0], true)
+		} else if ps.Default != nil && ps.Default.KeyPair != nil && (ps.Default.KeyPair.KeyType != nil) && (*(ps.Default.KeyPair.KeyType) != "") {
+			tppPolicy.KeyAlgorithm = createLockedAttribute(*(ps.Default.KeyPair.KeyType), false)
+		}
 
-	if ps.Policy != nil && ps.Policy.KeyPair != nil && len(ps.Policy.KeyPair.RsaKeySizes) > 0 && ps.Policy.KeyPair.RsaKeySizes[0] != 0 {
-		rsaKey := ps.Policy.KeyPair.RsaKeySizes[0]
-		tppPolicy.KeyBitStrength = createLockedAttribute(strconv.Itoa(rsaKey), true)
-	} else if ps.Default != nil && ps.Default.KeyPair != nil && (ps.Default.KeyPair.RsaKeySize != nil) && *(ps.Default.KeyPair.RsaKeySize) != 0 {
-		tppPolicy.KeyBitStrength = createLockedAttribute(strconv.Itoa(*(ps.Default.KeyPair.RsaKeySize)), false)
-	}
+		if ps.Policy != nil && ps.Policy.KeyPair != nil && len(ps.Policy.KeyPair.RsaKeySizes) > 0 && ps.Policy.KeyPair.RsaKeySizes[0] != 0 {
+			rsaKey := ps.Policy.KeyPair.RsaKeySizes[0]
+			tppPolicy.KeyBitStrength = createLockedAttribute(strconv.Itoa(rsaKey), true)
+		} else if ps.Default != nil && ps.Default.KeyPair != nil && (ps.Default.KeyPair.RsaKeySize != nil) && *(ps.Default.KeyPair.RsaKeySize) != 0 {
+			tppPolicy.KeyBitStrength = createLockedAttribute(strconv.Itoa(*(ps.Default.KeyPair.RsaKeySize)), false)
+		}
 
-	if ps.Policy != nil && ps.Policy.KeyPair != nil && len(ps.Policy.KeyPair.EllipticCurves) > 0 && ps.Policy.KeyPair.EllipticCurves[0] != "" {
-		tppPolicy.EllipticCurve = createLockedAttribute(ps.Policy.KeyPair.EllipticCurves[0], true)
-	} else if ps.Default != nil && ps.Default.KeyPair != nil && (ps.Default.KeyPair.EllipticCurve != nil) && (*(ps.Default.KeyPair.EllipticCurve) != "") {
-		tppPolicy.EllipticCurve = createLockedAttribute(*(ps.Default.KeyPair.EllipticCurve), false)
+		if ps.Policy != nil && ps.Policy.KeyPair != nil && len(ps.Policy.KeyPair.EllipticCurves) > 0 && ps.Policy.KeyPair.EllipticCurves[0] != "" {
+			tppPolicy.EllipticCurve = createLockedAttribute(ps.Policy.KeyPair.EllipticCurves[0], true)
+		} else if ps.Default != nil && ps.Default.KeyPair != nil && (ps.Default.KeyPair.EllipticCurve != nil) && (*(ps.Default.KeyPair.EllipticCurve) != "") {
+			tppPolicy.EllipticCurve = createLockedAttribute(*(ps.Default.KeyPair.EllipticCurve), false)
+		}
 	}
 
 	if ps.Policy != nil && ps.Policy.KeyPair != nil && ps.Policy.KeyPair.ServiceGenerated != nil {
@@ -755,12 +798,15 @@ func BuildPolicySpecificationForTPP(checkPolicyResp CheckPolicyResponse) (*Polic
 			keyPair.KeyTypes = decoded.KeyTypes
 			keyPair.RsaKeySizes = decoded.RsaKeySizes
 			keyPair.EllipticCurves = decoded.EllipticCurves
+			keyPair.MLDSAKeyStrengths = decoded.MLDSAKeyStrengths
 		}
 		shouldCreateDefKeyPair = true
 		defaultOid, defaultAlgorithm := decoded.Default(policy.KeyPairResponse.DefaultPkixParameterSet.Value)
 		defaultKeyPair.PkixParameterSetDefault = &defaultOid
 		defaultKeyPair.KeyType = &defaultAlgorithm.KeyType
-		if defaultAlgorithm.KeySize > 0 {
+		if defaultAlgorithm.KeyType == KeyTypeMLDSA {
+			defaultKeyPair.MLDSAKeyStrength = &defaultAlgorithm.KeySize
+		} else if defaultAlgorithm.KeySize > 0 {
 			defaultKeyPair.RsaKeySize = &defaultAlgorithm.KeySize
 		}
 		if defaultAlgorithm.Curve != "" {
@@ -1010,11 +1056,15 @@ func ValidateCloudPolicySpecification(ps *PolicySpecification) error {
 		}
 	}
 
+	if err := validateMLDSAKeyStrengths(ps); err != nil {
+		return err
+	}
+
 	//now in case that policy is empty but defaults key types and rsa sizes not, we need to validate them
 	if ps.Default != nil && ps.Default.KeyPair != nil {
 
 		if ps.Default.KeyPair.KeyType != nil && *(ps.Default.KeyPair.KeyType) != "" {
-			if *(ps.Default.KeyPair.KeyType) != "RSA" && *(ps.Default.KeyPair.KeyType) != "EC" {
+			if *(ps.Default.KeyPair.KeyType) != "RSA" && *(ps.Default.KeyPair.KeyType) != "EC" && !IsMLDSAKeyType(*(ps.Default.KeyPair.KeyType)) {
 				return fmt.Errorf("specified default attribute keyType value is not supported on CyberArk Certificate Manager, SaaS")
 			}
 		}
@@ -1307,7 +1357,10 @@ func BuildCloudCitRequest(ps *PolicySpecification, ca *CADetails) (*CloudPolicyR
 		keyTypesArr = append(keyTypesArr, *(ecKeyType))
 	}
 
-	if len(keyTypesArr) > 0 {
+	if mldsaKeyStrengths := mldsaKeyStrengths(ps); len(mldsaKeyStrengths) > 0 {
+		// ML-DSA is only available in keyAlgorithmTypes, which can't be combined with keyTypes
+		cloudPolicyRequest.KeyAlgorithmTypes = append(keyTypesArr, KeyType{KeyType: CloudKeyTypeMLDSA, KeyStrengths: mldsaKeyStrengths})
+	} else if len(keyTypesArr) > 0 {
 		cloudPolicyRequest.KeyTypes = keyTypesArr
 	}
 
@@ -1378,7 +1431,19 @@ func BuildCloudCitRequest(ps *PolicySpecification, ca *CADetails) (*CloudPolicyR
 	//SanRegexes is ignored now.
 
 	if shouldCreateKPRS {
-		recommendedSettings.Key = &key
+		if len(cloudPolicyRequest.KeyAlgorithmTypes) > 0 {
+			// the recommended key must use the same field family as the allowed key types
+			keyAlgorithm := KeyAlgorithm{KeyType: key.Type, KeyLength: key.Length, KeyCurve: key.Curve}
+			if IsMLDSAKeyType(key.Type) {
+				keyAlgorithm = KeyAlgorithm{KeyType: CloudKeyTypeMLDSA, KeyStrength: mldsaKeyStrengths(ps)[0]}
+				if ps.Default.KeyPair.MLDSAKeyStrength != nil {
+					keyAlgorithm.KeyStrength = *(ps.Default.KeyPair.MLDSAKeyStrength)
+				}
+			}
+			recommendedSettings.KeyAlgorithm = &keyAlgorithm
+		} else {
+			recommendedSettings.Key = &key
+		}
 	}
 
 	if shouldCreateKPRS || shouldCreateSubjectRS {
@@ -1635,6 +1700,9 @@ func IsPolicyEmpty(ps *PolicySpecification) bool {
 		if len(keyPair.EllipticCurves) > 0 {
 			return false
 		}
+		if len(keyPair.MLDSAKeyStrengths) > 0 {
+			return false
+		}
 		if keyPair.ServiceGenerated != nil {
 			return false
 		}
@@ -1667,6 +1735,9 @@ func IsDefaultEmpty(ps *PolicySpecification) bool {
 		}
 
 		if keyPair.RsaKeySize != nil {
+			return false
+		}
+		if keyPair.MLDSAKeyStrength != nil {
 			return false
 		}
 		if keyPair.KeyType != nil && *(keyPair.KeyType) != "" {
