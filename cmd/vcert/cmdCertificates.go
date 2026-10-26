@@ -541,6 +541,11 @@ func doCommandRenew1(c *cli.Context) error {
 		return fmt.Errorf("unexpected -csr option: %s", flags.csrOption)
 	}
 
+	// the key type of a local renewal comes from the old certificate, so it can't be checked with the other flags
+	if req.KeyType == certificate.KeyTypeMLDSA && flags.format == util.LegacyPem {
+		return fmt.Errorf("the '%s' format cannot be used to renew an ML-DSA certificate; ML-DSA private keys are only available in PKCS#8 format", util.LegacyPem)
+	}
+
 	// here we ignore zone for Renew action, however, API still needs it
 	zoneConfig := &endpoint.ZoneConfiguration{}
 

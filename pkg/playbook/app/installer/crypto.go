@@ -74,6 +74,8 @@ func getPrivateKey(privateKeyStr string, keyPassword string) (interface{}, error
 		if err != nil {
 			privateKey, err = x509.ParsePKCS8PrivateKey(pkDER)
 		}
+	case "PRIVATE KEY":
+		privateKey, err = x509.ParsePKCS8PrivateKey(pkDER)
 	default:
 		return nil, fmt.Errorf("unexpected Private Key type: %s", pkBlock.Type)
 	}

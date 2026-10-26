@@ -489,8 +489,8 @@ func GenerateMLDSAPrivateKey(strength int) (crypto.Signer, error) {
 	return mldsa.GenerateKey(params)
 }
 
-// mldsaStrength returns the parameter set (44, 65 or 87) of an ML-DSA public key, or 0 if unknown
-func mldsaStrength(pub *mldsa.PublicKey) int {
+// MLDSAStrength returns the parameter set (44, 65 or 87) of an ML-DSA public key, or 0 if unknown
+func MLDSAStrength(pub *mldsa.PublicKey) int {
 	switch pub.Parameters() {
 	case mldsa.MLDSA44():
 		return 44
@@ -537,7 +537,7 @@ func NewRequest(cert *x509.Certificate) *Request {
 		_ = req.KeyCurve.Set("ed25519")
 	case *mldsa.PublicKey:
 		req.KeyType = KeyTypeMLDSA
-		req.KeyLength = mldsaStrength(pub)
+		req.KeyLength = MLDSAStrength(pub)
 	default:
 		// vcert only works with RSA, ECDSA, Ed25519 & ML-DSA keys
 	}

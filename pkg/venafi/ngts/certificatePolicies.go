@@ -17,11 +17,13 @@
 package ngts
 
 import (
+	"log"
 	"strings"
 	"time"
 
 	"github.com/Venafi/vcert/v5/pkg/certificate"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
+	"github.com/Venafi/vcert/v5/pkg/policy"
 )
 
 type certificateTemplate struct {
@@ -55,17 +57,23 @@ type certificateTemplate struct {
 	SanIpAddressRegexes                 []string         `json:"sanIpAddressRegexes,omitempty"`
 	SanUniformResourceIdentifierRegexes []string         `json:"sanUniformResourceIdentifierRegexes,omitempty"`
 	KeyTypes                            []allowedKeyType `json:"keyTypes,omitempty"`
-	KeyReuse                            bool             `json:"keyReuse,omitempty"`
-	RecommendedSettings                 struct {
+	// KeyAlgorithmTypes holds every allowed key type, including the ones that are not available in KeyTypes, such as
+	// ML-DSA. KeyTypes only holds RSA and EC.
+	KeyAlgorithmTypes   []allowedKeyType `json:"keyAlgorithmTypes,omitempty"`
+	KeyReuse            bool             `json:"keyReuse,omitempty"`
+	RecommendedSettings struct {
 		SubjectOValue, SubjectOUValue,
 		SubjectSTValue, SubjectLValue,
 		SubjectCValue string
+		// Key is the recommended RSA or EC key. It is empty when the recommended key is another key type, see
+		// RecommendedKeyType
 		Key struct {
 			Type   string
 			Length int
 			Curve  string
 		}
-		keyReuse bool
+		RecommendedKeyType recommendedKeyType `json:"recommendedKeyType"`
+		keyReuse           bool
 	}
 	ValidityPeriod              string `json:"validityPeriod,omitempty"`
 	CsrUploadAllowed            bool   `json:"csrUploadAllowed"`
@@ -77,9 +85,27 @@ type CertificateTemplates struct {
 }
 
 type allowedKeyType struct {
-	KeyType    keyType
-	KeyLengths []int
-	KeyCurves  []string `json:"keyCurves,omitempty"`
+	KeyType      keyType
+	KeyLengths   []int
+	KeyCurves    []string `json:"keyCurves,omitempty"`
+	KeyStrengths []int    `json:"keyStrengths,omitempty"`
+}
+
+// recommendedKeyType is the recommended key of an issuing template, which supports every key type
+type recommendedKeyType struct {
+	KeyType     string `json:"keyType"`
+	KeyLength   int    `json:"keyLength,omitempty"`
+	KeyCurve    string `json:"keyCurve,omitempty"`
+	KeyStrength int    `json:"keyStrength,omitempty"`
+}
+
+// allowedKeyTypes returns the key types allowed by the issuing template, preferring keyAlgorithmTypes, which holds
+// every key type, over the legacy keyTypes, which only holds RSA and EC
+func (ct certificateTemplate) allowedKeyTypes() []allowedKeyType {
+	if len(ct.KeyAlgorithmTypes) > 0 {
+		return ct.KeyAlgorithmTypes
+	}
+	return ct.KeyTypes
 }
 
 type keyType string
@@ -134,18 +160,27 @@ func (ct certificateTemplate) toPolicy() (p endpoint.Policy) {
 	}
 	p.AllowWildcards = allowWildCards
 
-	for _, kt := range ct.KeyTypes {
+	for _, kt := range ct.allowedKeyTypes() {
+		if string(kt.KeyType) == policy.CloudKeyTypeMLDSA {
+			// the ML-DSA strengths (44, 65, 87) are carried as key sizes, as in certificate.Request.KeyLength
+			p.AllowedKeyConfigurations = append(p.AllowedKeyConfigurations, endpoint.AllowedKeyConfiguration{
+				KeyType:  certificate.KeyTypeMLDSA,
+				KeySizes: kt.KeyStrengths[:],
+			})
+			continue
+		}
 		keyConfiguration := endpoint.AllowedKeyConfiguration{}
 		if err := keyConfiguration.KeyType.Set(string(kt.KeyType), ""); err != nil {
-			panic(err)
+			// The issuing template may allow key types that this version of VCert doesn't know about. Skip them
+			// rather than failing, so that the remaining key types can still be used.
+			log.Printf("ignoring key type %q allowed by issuing template %q: not supported by this version of VCert", kt.KeyType, ct.Name)
+			continue
 		}
 
 		keyConfiguration.KeySizes = kt.KeyLengths[:]
 		for _, keyCurve := range kt.KeyCurves {
 			v := certificate.EllipticCurveNotSet
-			if err := (&v).Set(keyCurve); err != nil {
-				panic(err)
-			}
+			_ = (&v).Set(keyCurve)
 
 			keyConfiguration.KeyCurves = append(keyConfiguration.KeyCurves, v)
 		}
@@ -163,6 +198,10 @@ func (ct certificateTemplate) toZoneConfig(zc *endpoint.ZoneConfiguration) {
 	if r.SubjectOUValue != "" {
 		zc.OrganizationalUnit = []string{r.SubjectOUValue}
 	}
+	if rk := r.RecommendedKeyType; rk.KeyType != "" {
+		zc.KeyConfiguration = rk.toKeyConfiguration()
+		return
+	}
 	key := endpoint.AllowedKeyConfiguration{}
 	err := key.KeyType.Set(r.Key.Type, r.Key.Curve)
 	if err != nil {
@@ -173,6 +212,27 @@ func (ct certificateTemplate) toZoneConfig(zc *endpoint.ZoneConfiguration) {
 	}
 	key.KeySizes = []int{r.Key.Length}
 	zc.KeyConfiguration = &key
+}
+
+// toKeyConfiguration converts the recommended key to a key configuration. It returns nil when VCert doesn't support
+// the recommended key type
+func (rk recommendedKeyType) toKeyConfiguration() *endpoint.AllowedKeyConfiguration {
+	if rk.KeyType == policy.CloudKeyTypeMLDSA {
+		return &endpoint.AllowedKeyConfiguration{KeyType: certificate.KeyTypeMLDSA, KeySizes: []int{rk.KeyStrength}}
+	}
+	key := endpoint.AllowedKeyConfiguration{}
+	if err := key.KeyType.Set(rk.KeyType, rk.KeyCurve); err != nil {
+		return nil
+	}
+	if rk.KeyLength > 0 {
+		key.KeySizes = []int{rk.KeyLength}
+	}
+	if rk.KeyCurve != "" && key.KeyType == certificate.KeyTypeECDSA {
+		curve := certificate.EllipticCurveNotSet
+		_ = curve.Set(rk.KeyCurve)
+		key.KeyCurves = []certificate.EllipticCurve{curve}
+	}
+	return &key
 }
 
 /*
