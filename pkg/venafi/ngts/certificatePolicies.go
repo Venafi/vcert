@@ -34,6 +34,7 @@ type certificateTemplate struct {
 	Product                             struct {
 		CertificateAuthority string `json:"certificateAuthority"`
 		ProductName          string `json:"productName"`
+		ValidityPeriod       string `json:"validityPeriod,omitempty"`
 	} `json:"product"`
 	Priority                            int              `json:"priority"`
 	SystemGenerated                     bool             `json:"systemGenerated,omitempty"`
