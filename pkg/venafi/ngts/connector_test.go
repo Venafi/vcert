@@ -1532,7 +1532,7 @@ func TestReadPolicyConfigurationOnlyEC(t *testing.T) {
 		SubjectSTRegexes:         []string{"^Utah$"},
 		SubjectLRegexes:          []string{"^Salt Lake$"},
 		SubjectCRegexes:          []string{"^US$"},
-		AllowedKeyConfigurations: []endpoint.AllowedKeyConfiguration{{certificate.KeyTypeECDSA, nil, []certificate.EllipticCurve{certificate.EllipticCurveP256, certificate.EllipticCurveP384, certificate.EllipticCurveP521, certificate.EllipticCurveED25519}}},
+		AllowedKeyConfigurations: []endpoint.AllowedKeyConfiguration{{certificate.KeyTypeECDSA, nil, []certificate.EllipticCurve{certificate.EllipticCurveP256, certificate.EllipticCurveP384, certificate.EllipticCurveED25519}}},
 		DnsSanRegExs:             []string{"^.*\\.vfidev\\.com$"},
 		AllowWildcards:           true,
 		AllowKeyReuse:            false,
