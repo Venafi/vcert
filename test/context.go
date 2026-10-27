@@ -44,7 +44,6 @@ type Context struct {
 	NGTSZoneRestricted         string
 	NGTSCAName                 string
 	NGTSDigicertCAName         string
-	NGTSEntrustCAName          string
 	NGTSPolicyManagementSample string
 	NGTSzoneEC                 string
 	NGTSZoneMLDSA              string
@@ -77,7 +76,6 @@ func GetEnvContext() *Context {
 	c.NGTSZoneRestricted = os.Getenv("NGTS_ZONE_RESTRICTED")
 	c.NGTSCAName = os.Getenv("NGTS_CA_NAME")
 	c.NGTSDigicertCAName = os.Getenv("NGTS_DIGICERT_CA_NAME")
-	c.NGTSEntrustCAName = os.Getenv("NGTS_ENTRUST_CA_NAME")
 	c.NGTSPolicyManagementSample = os.Getenv("NGTS_POLICY_MANAGEMENT_SAMPLE")
 	c.NGTSzoneEC = os.Getenv("NGTS_ZONE_EC")
 	c.NGTSZoneMLDSA = os.Getenv("NGTS_ZONE_MLDSA")
