@@ -1,5 +1,5 @@
 GOFLAGS ?= $(GOFLAGS:)
-LINTER_VERSION ?= v2.12.2
+LINTER_VERSION ?= v2.14.0
 
 VERSION=`git describe --abbrev=0 --tags`
 
