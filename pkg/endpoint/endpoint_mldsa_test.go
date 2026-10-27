@@ -25,7 +25,7 @@ var testSubject = pkix.Name{CommonName: "pqc.vcert.test", Organization: []string
 
 func TestMLDSAValidateCertificateRequestFromCSR(t *testing.T) {
 	for _, strength := range certificate.AllSupportedMLDSAStrengths() {
-		req := &certificate.Request{Subject: testSubject, KeyType: certificate.KeyTypeMLDSA, KeyLength: strength}
+		req := &certificate.Request{Subject: testSubject, KeyType: certificate.KeyTypeMLDSA, KeyStrength: strength}
 		if err := req.GeneratePrivateKey(); err != nil {
 			t.Fatal(err)
 		}
@@ -56,7 +56,7 @@ func TestMLDSAValidateCertificateRequestFromCSR(t *testing.T) {
 }
 
 func TestMLDSAValidateCertificateRequestFromFields(t *testing.T) {
-	req := &certificate.Request{Subject: testSubject, KeyType: certificate.KeyTypeMLDSA, KeyLength: 65}
+	req := &certificate.Request{Subject: testSubject, KeyType: certificate.KeyTypeMLDSA, KeyStrength: 65}
 	if err := mldsaTestPolicy(AllowedKeyConfiguration{KeyType: certificate.KeyTypeMLDSA, KeySizes: []int{44, 65}}).ValidateCertificateRequest(req); err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
@@ -84,13 +84,27 @@ func TestMLDSAUpdateCertificateRequestRecommendedStrength(t *testing.T) {
 	z.KeyConfiguration = &AllowedKeyConfiguration{KeyType: certificate.KeyTypeMLDSA, KeySizes: []int{65}}
 	req := &certificate.Request{KeyType: certificate.KeyTypeMLDSA}
 	z.UpdateCertificateRequest(req)
-	if req.KeyLength != 65 {
-		t.Fatalf("expected the recommended strength 65, got %d", req.KeyLength)
+	if req.KeyStrength != 65 {
+		t.Fatalf("expected the recommended strength 65, got %d", req.KeyStrength)
 	}
-	req = &certificate.Request{KeyType: certificate.KeyTypeMLDSA, KeyLength: 44}
+	req = &certificate.Request{KeyType: certificate.KeyTypeMLDSA, KeyStrength: 44}
 	z.UpdateCertificateRequest(req)
-	if req.KeyLength != 44 {
-		t.Fatalf("an explicit strength must be kept, got %d", req.KeyLength)
+	if req.KeyStrength != 44 {
+		t.Fatalf("an explicit strength must be kept, got %d", req.KeyStrength)
+	}
+}
+
+func TestMLDSARecommendationDoesNotSetRSAKeySize(t *testing.T) {
+	// an issuing template that recommends ML-DSA-65 must not turn 65 into the key size of an RSA request
+	z := NewZoneConfiguration()
+	z.KeyConfiguration = &AllowedKeyConfiguration{KeyType: certificate.KeyTypeMLDSA, KeySizes: []int{65}}
+	req := &certificate.Request{KeyType: certificate.KeyTypeRSA}
+	z.UpdateCertificateRequest(req)
+	if req.KeyLength != 0 || req.KeyStrength != 0 {
+		t.Fatalf("expected no key size or strength for the RSA request, got KeyLength %d and KeyStrength %d", req.KeyLength, req.KeyStrength)
+	}
+	if err := req.GeneratePrivateKey(); err != nil {
+		t.Fatalf("the RSA key should use the default size: %s", err)
 	}
 }
 

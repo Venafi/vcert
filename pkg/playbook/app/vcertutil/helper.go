@@ -99,7 +99,8 @@ func setKeyType(request domain.PlaybookRequest, vcertRequest *certificate.Reques
 		vcertRequest.KeyCurve = certificate.EllipticCurveED25519
 	case certificate.KeyTypeMLDSA:
 		vcertRequest.KeyType = request.KeyType
-		vcertRequest.KeyLength = request.KeyLength
+		// the playbook keySize holds the ML-DSA strength for ML-DSA keys
+		vcertRequest.KeyStrength = request.KeyLength
 	default:
 		vcertRequest.KeyType = certificate.KeyTypeRSA
 		vcertRequest.KeyLength = DefaultRSALength

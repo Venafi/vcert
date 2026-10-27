@@ -537,7 +537,7 @@ func NewRequest(cert *x509.Certificate) *Request {
 		_ = req.KeyCurve.Set("ed25519")
 	case *mldsa.PublicKey:
 		req.KeyType = KeyTypeMLDSA
-		req.KeyLength = MLDSAStrength(pub)
+		req.KeyStrength = MLDSAStrength(pub)
 	default:
 		// vcert only works with RSA, ECDSA, Ed25519 & ML-DSA keys
 	}

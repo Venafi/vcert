@@ -197,10 +197,10 @@ func getCsrAttributes(c *Connector, req *certificate.Request) (*CsrAttributes, e
 // refuses a request that sets both.
 func setKeyAttributes(csrAttr *CsrAttributes, req *certificate.Request) error {
 	if req.KeyType == certificate.KeyTypeMLDSA {
-		if err := validateMLDSAStrength(req.KeyLength); err != nil {
+		if err := validateMLDSAStrength(req.KeyStrength); err != nil {
 			return err
 		}
-		strength := req.KeyLength
+		strength := req.KeyStrength
 		csrAttr.KeyAlgorithm = &KeyAlgorithm{KeyType: policy.CloudKeyTypeMLDSA, KeyStrength: &strength}
 		return nil
 	}

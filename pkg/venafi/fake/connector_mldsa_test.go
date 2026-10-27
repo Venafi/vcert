@@ -17,7 +17,7 @@ func TestRequestAndRetrieveMLDSACertificate(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			req := &certificate.Request{CsrOrigin: certificate.LocalGeneratedCSR, KeyType: certificate.KeyTypeMLDSA, KeyLength: strength}
+			req := &certificate.Request{CsrOrigin: certificate.LocalGeneratedCSR, KeyType: certificate.KeyTypeMLDSA, KeyStrength: strength}
 			req.Subject.CommonName = "mldsa.venafi.example.com"
 			req.Subject.Organization = []string{"Venafi, Inc."}
 			req.Subject.OrganizationalUnit = []string{"Automated Tests"}

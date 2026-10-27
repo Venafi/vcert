@@ -6,6 +6,7 @@
   - `getpolicy` and `setpolicy` support `MLDSA` in the policy specification `keyTypes`, with `mldsaKeyStrengths`, and a default `keyType: MLDSA` with `mldsaKeyStrength`.
   - ML-DSA (and Ed25519) private keys in PKCS#8 `PRIVATE KEY` format can be written as PKCS12 and JKS by the CLI and the playbook installers. The CAPI installer rejects ML-DSA certificates.
   - The CLI rejects `--format legacy-pem` with ML-DSA keys before requesting a certificate.
+  - SDK: the ML-DSA strength (44, 65 or 87) is set in `certificate.Request.KeyStrength`. `KeyLength` remains the RSA key size, so an ML-DSA strength can't be taken for an RSA key size.
   - `vcert renew --csr service` and `--csr file:` now reject `--key-type`, which their error message already listed but was silently ignored.
 - Fix a panic when an NGTS issuing template allows a key type that VCert doesn't know. Such key types are now skipped with a warning.
 - Fix validation of user provided Ed25519 CSRs, which were always rejected.

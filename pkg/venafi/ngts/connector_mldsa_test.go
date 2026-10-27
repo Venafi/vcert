@@ -106,7 +106,7 @@ func TestRequestCertificateMLDSALocalGeneratedCSR(t *testing.T) {
 	for _, strength := range certificate.AllSupportedMLDSAStrengths() {
 		t.Run(fmt.Sprintf("ML-DSA-%d", strength), func(t *testing.T) {
 			req := newMLDSATestRequest()
-			req.KeyLength = strength
+			req.KeyStrength = strength
 			req.CsrOrigin = certificate.LocalGeneratedCSR
 
 			require.NoError(t, zoneConfig.ValidateCertificateRequest(req))
@@ -169,7 +169,7 @@ func requestServiceGeneratedMLDSA(t *testing.T, conn *Connector, zoneConfig *end
 	req.KeyPassword = mldsaTestKeyPassword
 
 	require.NoError(t, conn.GenerateRequest(zoneConfig, req))
-	require.Equal(t, strength, req.KeyLength)
+	require.Equal(t, strength, req.KeyStrength)
 
 	pickupID, err := conn.RequestCertificate(req)
 	require.NoError(t, err)
@@ -195,7 +195,7 @@ func TestRequestCertificateMLDSAServiceGeneratedCSR(t *testing.T) {
 	for _, strength := range certificate.AllSupportedMLDSAStrengths() {
 		t.Run(fmt.Sprintf("ML-DSA-%d", strength), func(t *testing.T) {
 			req := newMLDSATestRequest()
-			req.KeyLength = strength
+			req.KeyStrength = strength
 			requestServiceGeneratedMLDSA(t, conn, zoneConfig, req, strength)
 		})
 	}
