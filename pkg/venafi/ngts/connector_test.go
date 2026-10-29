@@ -2945,30 +2945,51 @@ func TestSearchValidCertificate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cn := "one.example.com"
-	// There are 2 certificates here
-	sans := &certificate.Sans{DNS: []string{cn, "two.example.com"}}
-	// and 2 more, certificates here
-	// sans := &certificate.Sans{DNS: []string{cn, "two.example.com", "three.example.com"}}
+	// Enroll the certificate to search for, so the test does not depend on tenant data.
+	zoneConfig, err := conn.ReadZoneConfiguration()
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	cn := test.RandCN()
+	req := &certificate.Request{}
+	req.Subject.CommonName = cn
+	req.DNSNames = []string{cn, "two." + cn}
+	err = conn.GenerateRequest(zoneConfig, req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	req.PickupID, err = conn.RequestCertificate(req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	_, err = retrieveCertificate(conn, req, 600)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
 
-	// TODO: Filter zone
-	// with this zone you should be able to find those certificates
-	zone := "Unrestricted"
+	// The NGTS connector ignores the zone and searches by CN and SANs across the tenant.
+	sans := &certificate.Sans{DNS: req.DNSNames}
+	certMinTimeLeft := 3 * 24 * time.Hour
 
-	// use time.Duration instead of integer
-	day := 24 * time.Hour
-	certMinTimeLeft := 3 * day
-
-	certificate, err := conn.SearchCertificate(zone, cn, sans, certMinTimeLeft)
+	// A newly issued certificate can take a few seconds to appear in search results.
+	var found *certificate.CertificateInfo
+	for attempt := 0; attempt < 12; attempt++ {
+		found, err = conn.SearchCertificate(ctx.NGTSZone, cn, sans, certMinTimeLeft)
+		if err == nil || !errors.Is(err, verror.NoCertificateFoundError) {
+			break
+		}
+		time.Sleep(5 * time.Second)
+	}
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
-
-	if certificate == nil {
+	if found == nil {
 		t.Fatal("Should have found a certificate")
 	}
-
-	fmt.Printf("%v\n", util.GetJsonAsString(*certificate))
+	if found.CN != cn {
+		t.Fatalf("found certificate has CN %q, expected %q", found.CN, cn)
+	}
+	t.Logf("%v", util.GetJsonAsString(*found))
 }
 
 func TestGetCloudRequest(t *testing.T) {
