@@ -2425,6 +2425,7 @@ func TestGetPolicyOnlyEC(t *testing.T) {
 }
 
 func TestSetEmptyPolicy(t *testing.T) {
+	t.Skip("VC-62429: SetPolicy without a CA falls back to the CM SaaS default CA (BUILTIN\\Built-In CA\\Default Product), which does not exist on NGTS")
 	policyName := test.RandCitName()
 	conn := getTestConnector(ctx.NGTSZone)
 	conn.verbose = true
@@ -2446,6 +2447,7 @@ func TestSetEmptyPolicy(t *testing.T) {
 }
 
 func TestSetDefaultPolicyValuesAndValidate(t *testing.T) {
+	t.Skip("VC-62429: SetPolicy without a CA falls back to the CM SaaS default CA (BUILTIN\\Built-In CA\\Default Product), which does not exist on NGTS")
 	policyName := test.RandCitName()
 	conn := getTestConnector(ctx.NGTSZone)
 	conn.verbose = true
