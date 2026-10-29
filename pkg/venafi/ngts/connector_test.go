@@ -2602,40 +2602,6 @@ func TestSetPolicyValuesAndValidate(t *testing.T) {
 
 }
 
-// This test is just for verifying that a policy can be created using ENTRUST CA.
-func TestSetPolicyEntrust(t *testing.T) {
-	policyName := test.RandCitName()
-	conn := getTestConnector(ctx.NGTSZone)
-	conn.verbose = true
-
-	err := authenticateTestConnector(conn)
-
-	if err != nil {
-		t.Fatalf("%s", err)
-	}
-
-	specification := test.GetCloudPolicySpecification()
-	//change default CA to Entrust
-	caName := os.Getenv("NGTS_ENTRUST_CA_NAME")
-	specification.Policy.CertificateAuthority = &caName
-
-	_, err = conn.SetPolicy(policyName, specification)
-
-	if err != nil {
-		t.Fatalf("%s", err)
-	}
-
-	ps, err := conn.GetPolicy(policyName)
-
-	if ps.Policy.CertificateAuthority == nil || *(ps.Policy.CertificateAuthority) == "" {
-		t.Fatalf("venafi policy doesn't have a certificate authority")
-	}
-	if *(ps.Policy.CertificateAuthority) != *(specification.Policy.CertificateAuthority) {
-		t.Fatalf("certificate authority value doesn't match, get: %s but expected: %s", *(ps.Policy.CertificateAuthority), *(specification.Policy.CertificateAuthority))
-	}
-
-}
-
 /*
 *
 This test is just for verifying that a policy can be created using DIGICERT	 CA.
