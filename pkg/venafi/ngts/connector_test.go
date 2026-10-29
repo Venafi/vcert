@@ -2493,7 +2493,6 @@ func TestSetDefaultPolicyValuesAndValidate(t *testing.T) {
 	serGenerated := true
 	specification.Default.KeyPair.EllipticCurve = &ec
 	specification.Default.KeyPair.ServiceGenerated = &serGenerated
-	ctx.NGTSZone = policyName
 
 	_, err = conn.SetPolicy(policyName, specification)
 
@@ -2566,7 +2565,6 @@ func TestSetPolicyValuesAndValidate(t *testing.T) {
 	specification := test.GetCloudPolicySpecification()
 
 	specification.Default = nil
-	ctx.NGTSZone = policyName
 
 	_, err = conn.SetPolicy(policyName, specification)
 
