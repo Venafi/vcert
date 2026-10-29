@@ -2670,6 +2670,7 @@ func TestSetPolicyDigicert(t *testing.T) {
 }
 
 func TestCreateCertServiceCSR(t *testing.T) {
+	t.Skip("VC-62432: vcert encrypts the keystore password with a NaCl sealed box, but VSatellites with VSAT_HPKE keys need HPKE, so the private key download fails with HTTP 500")
 	policyName := os.Getenv("NGTS_ZONE_RESTRICTED")
 	conn := getTestConnector(policyName)
 	conn.verbose = true

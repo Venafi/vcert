@@ -190,6 +190,7 @@ func requestServiceGeneratedMLDSA(t *testing.T, conn *Connector, zoneConfig *end
 }
 
 func TestRequestCertificateMLDSAServiceGeneratedCSR(t *testing.T) {
+	t.Skip("VC-62432: vcert encrypts the keystore password with a NaCl sealed box, but VSatellites with VSAT_HPKE keys need HPKE, so the private key download fails with HTTP 500")
 	conn, zoneConfig := getMLDSATestConnector(t)
 
 	for _, strength := range certificate.AllSupportedMLDSAStrengths() {
@@ -202,6 +203,7 @@ func TestRequestCertificateMLDSAServiceGeneratedCSR(t *testing.T) {
 }
 
 func TestRequestCertificateMLDSAServiceGeneratedCSRDefaultStrength(t *testing.T) {
+	t.Skip("VC-62432: vcert encrypts the keystore password with a NaCl sealed box, but VSatellites with VSAT_HPKE keys need HPKE, so the private key download fails with HTTP 500")
 	conn, zoneConfig := getMLDSATestConnector(t)
 
 	// without a strength, the issuing template's recommended ML-DSA strength is used, else the lowest it allows
