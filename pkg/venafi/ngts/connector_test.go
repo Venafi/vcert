@@ -1193,6 +1193,9 @@ func TestRetireCertificate(t *testing.T) {
 
 	p, _ := pem.Decode([]byte(pcc.Certificate))
 	cert, err := x509.ParseCertificate(p.Bytes)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
 	retireReq := &certificate.RetireRequest{}
 	thumbprint := sha1.Sum(cert.Raw)
 	hexThumbprint := hex.EncodeToString(thumbprint[:])
@@ -2631,6 +2634,9 @@ func TestSetPolicyDigicert(t *testing.T) {
 	}
 
 	ps, err := conn.GetPolicy(policyName)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
 
 	if ps.Policy.CertificateAuthority == nil || *(ps.Policy.CertificateAuthority) == "" {
 		t.Fatalf("venafi policy doesn't have a certificate authority")
@@ -2662,6 +2668,9 @@ func TestCreateCertServiceCSR(t *testing.T) {
 	req.KeyPassword = "abcede"
 	req.Timeout = time.Duration(180) * time.Second
 	pcc, err := conn.RetrieveCertificate(&req)
+	if err != nil {
+		t.Fatalf("retrieving certificate with pickup id %s: %s", req.PickupID, err)
+	}
 
 	if pcc.Certificate == "" {
 		t.Fatalf("certificate with pickup id: %s is empty", req.PickupID)
@@ -2697,6 +2706,9 @@ func TestCreateCertServiceCSRWithDefaults(t *testing.T) {
 	req.KeyPassword = "abcede"
 	req.Timeout = time.Duration(180) * time.Second
 	pcc, err := conn.RetrieveCertificate(&req)
+	if err != nil {
+		t.Fatalf("retrieving certificate with pickup id %s: %s", req.PickupID, err)
+	}
 
 	if pcc.Certificate == "" {
 		t.Fatalf("certificate with pickup id: %s is empty", req.PickupID)
