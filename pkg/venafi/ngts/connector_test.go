@@ -1133,21 +1133,30 @@ func TestReadPolicyConfiguration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
+	// NGTS_ZONE is the permissive template the enrollment tests rely on: any subject,
+	// DNS, IP and URI SANs, RSA, EC and ML-DSA keys, and key reuse (vcert-e2e-test).
 	expectedPolice := endpoint.Policy{
-		SubjectCNRegexes:         []string{"^.*$"},
-		SubjectORegexes:          []string{"^.*$"},
-		SubjectOURegexes:         []string{"^.*$"},
-		SubjectSTRegexes:         []string{"^.*$"},
-		SubjectLRegexes:          []string{"^.*$"},
-		SubjectCRegexes:          []string{"^.*$"},
-		AllowedKeyConfigurations: []endpoint.AllowedKeyConfiguration{{certificate.KeyTypeRSA, []int{2048, 4096}, nil}},
-		DnsSanRegExs:             []string{"^.*$"},
-		AllowWildcards:           true,
-		AllowKeyReuse:            true,
+		SubjectCNRegexes: []string{"^.*$"},
+		SubjectORegexes:  []string{"^.*$"},
+		SubjectOURegexes: []string{"^.*$"},
+		SubjectSTRegexes: []string{"^.*$"},
+		SubjectLRegexes:  []string{"^.*$"},
+		SubjectCRegexes:  []string{"^.*$"},
+		AllowedKeyConfigurations: []endpoint.AllowedKeyConfiguration{
+			{KeyType: certificate.KeyTypeRSA, KeySizes: []int{2048, 3072, 4096}},
+			{KeyType: certificate.KeyTypeECDSA, KeyCurves: []certificate.EllipticCurve{
+				certificate.EllipticCurveP256, certificate.EllipticCurveP384, certificate.EllipticCurveED25519}},
+			{KeyType: certificate.KeyTypeMLDSA, KeySizes: []int{44, 65}},
+		},
+		DnsSanRegExs:   []string{"^.*$"},
+		IpSanRegExs:    []string{"^.*$"},
+		UriSanRegExs:   []string{"^.*$"},
+		AllowWildcards: true,
+		AllowKeyReuse:  true,
 	}
 
 	if !reflect.DeepEqual(*policy, expectedPolice) {
-		t.Fatalf("policy for zone %s is not as expected \nget:    %+v \nexpect: %+v", ctx.NGTSZone, *policy, expectedPolice)
+		t.Fatalf("policy for zone %s is not as expected \nget:    %#v \nexpect: %#v", ctx.NGTSZone, *policy, expectedPolice)
 	}
 }
 
