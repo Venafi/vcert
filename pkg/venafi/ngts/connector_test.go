@@ -1681,7 +1681,22 @@ func TestRetrieveCertificatesList(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-	for _, count := range []int{10, 100, 101, 153} {
+	// The limits cover one page, the 100/101 page boundary, and several pages.
+	counts := []int{10, 100, 101, 153}
+
+	// A tenant may hold fewer valid certificates than the largest limit, so expect
+	// min(limit, available) instead of the limit itself.
+	maxCount := counts[len(counts)-1]
+	all, err := conn.ListCertificates(endpoint.Filter{Limit: &maxCount})
+	if err != nil {
+		t.Fatal(err)
+	}
+	available := len(all)
+	if available <= 100 {
+		t.Logf("tenant has %d valid certificates; the 100/101 page boundary is not exercised", available)
+	}
+
+	for _, count := range counts {
 		timeStarted := time.Now()
 		l, err := conn.ListCertificates(endpoint.Filter{Limit: &count})
 		if err != nil {
@@ -1694,8 +1709,9 @@ func TestRetrieveCertificatesList(t *testing.T) {
 				t.Errorf("cert %s is expired: %v", c.Thumbprint, c.ValidTo)
 			}
 		}
-		if len(set) != count {
-			t.Errorf("mismatched certificates number: wait %d, got %d (%d)", count, len(set), len(l))
+		expected := min(count, available)
+		if len(set) != expected {
+			t.Errorf("mismatched certificates number for limit %d: wait %d, got %d (%d)", count, expected, len(set), len(l))
 		}
 	}
 }
