@@ -10,6 +10,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 
 	"gopkg.in/yaml.v3"
 )
@@ -108,6 +109,19 @@ type DecodedPkixParameterSet struct {
 	MLDSAKeyStrengths []int
 }
 
+// unrecognizedPkixOidWarningsShown deduplicates the "ignoring PKIX parameter
+// set OIDs" warning below within a single process run. A single certificate
+// request can trigger several independent code paths that each decode the
+// same server-supplied OID list (see toPolicy/toZoneConfig in
+// pkg/venafi/tpp/tpp.go), which without this would print the identical
+// warning multiple times for one request. Keyed on the exact unrecognized
+// list so a genuinely different (e.g. larger, from a different zone) set
+// still gets its own warning.
+var (
+	unrecognizedPkixOidWarningsShownMu sync.Mutex
+	unrecognizedPkixOidWarningsShown   = map[string]bool{}
+)
+
 // DecodePkixParameterSet decodes the PKIX parameter set OIDs returned by TPP 25.1+ in
 // Certificates/CheckPolicy's KeyPair.PkixParameterSet.Values.
 //
@@ -145,7 +159,14 @@ func DecodePkixParameterSet(oids []string) (*DecodedPkixParameterSet, error) {
 	}
 
 	if len(unrecognized) > 0 {
-		log.Printf("vCert: warning: ignoring PKIX parameter set OIDs that this version of vcert does not recognize: %s", strings.Join(unrecognized, ", "))
+		key := strings.Join(unrecognized, ", ")
+		unrecognizedPkixOidWarningsShownMu.Lock()
+		alreadyShown := unrecognizedPkixOidWarningsShown[key]
+		unrecognizedPkixOidWarningsShown[key] = true
+		unrecognizedPkixOidWarningsShownMu.Unlock()
+		if !alreadyShown {
+			log.Printf("vCert: warning: ignoring PKIX parameter set OIDs that this version of vcert does not recognize: %s", key)
+		}
 	}
 	if len(decoded.Oids) == 0 {
 		return nil, fmt.Errorf("policy allows no key algorithm that this version of vcert recognizes (PKIX parameter set OIDs: %s)", strings.Join(oids, ", "))

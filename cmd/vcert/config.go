@@ -22,6 +22,7 @@ import (
 	"log"
 	"math/big"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/urfave/cli/v2"
@@ -67,6 +68,22 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 		cfg.ConnectionTrust = string(data)
 	}
 
+	// custom headers (e.g. an API gateway key) may be added/overridden by CLI flag
+	if len(flags.customHeaders.Value()) > 0 {
+		headers, err := parseCustomHeaders(flags.customHeaders.Value())
+		if err != nil {
+			return cfg, err
+		}
+		if len(cfg.CustomHeaders) > 0 {
+			logf("Merging --header values into custom headers from configuration")
+			for name, value := range headers {
+				cfg.CustomHeaders[name] = value
+			}
+		} else {
+			cfg.CustomHeaders = headers
+		}
+	}
+
 	// zone may be overridden by CLI flag
 	if flags.zone != "" {
 		if cfg.Zone != "" {
@@ -90,6 +107,22 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 	}
 
 	return cfg, nil
+}
+
+// parseCustomHeaders turns repeated "Header-Name: value" --header flag values
+// into a header-name -> value map suitable for vcert.Config.CustomHeaders.
+func parseCustomHeaders(values []string) (map[string]string, error) {
+	headers := make(map[string]string, len(values))
+	for _, v := range values {
+		name, value, found := strings.Cut(v, ":")
+		name = strings.TrimSpace(name)
+		value = strings.TrimSpace(value)
+		if !found || name == "" {
+			return nil, fmt.Errorf("invalid --header value %q: expected format \"Header-Name: value\"", v)
+		}
+		headers[name] = value
+	}
+	return headers, nil
 }
 
 func buildConfigFromFlags(commandName string, flags *commandFlags) (*vcert.Config, error) {
