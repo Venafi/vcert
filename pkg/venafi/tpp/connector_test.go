@@ -1364,7 +1364,7 @@ func TestRetrieveNonIssuedCertificate(t *testing.T) {
 
 func TestRevokeCertificate(t *testing.T) {
 
-	cn := "www-1.venqa.venafi.com"
+	cn := test.RandSpecificCN("www-1.venqa.venafi.com")
 
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
