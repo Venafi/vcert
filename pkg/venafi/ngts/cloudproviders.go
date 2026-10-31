@@ -339,8 +339,11 @@ func (c *Connector) validateCertificate(certificateId string) error {
 	return nil
 }
 
-func (c *Connector) getGraphqlClient() graphql.Client {
-	graphqlURL := c.getURL(urlGraphql)
+func (c *Connector) getGraphqlClient() (graphql.Client, error) {
+	graphqlURL, err := c.getGraphqlURL()
+	if err != nil {
+		return nil, err
+	}
 
 	// We provide every type of auth here.
 	// The logic to decide which auth is inside struct's function: RoundTrip
@@ -354,7 +357,7 @@ func (c *Connector) getGraphqlClient() graphql.Client {
 	}
 
 	client := graphql.NewClient(graphqlURL, httpclient)
-	return client
+	return client, nil
 }
 
 func (c *Connector) getGraphqlHTTPClient() *http.Client {

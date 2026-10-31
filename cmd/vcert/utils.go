@@ -153,11 +153,7 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 		if cf.keyType != nil {
 			req.KeyType = *cf.keyType
 		}
-		if cf.keySize > 0 {
-			req.KeyLength = cf.keySize
-		} else if req.KeyLength == 0 {
-			req.KeyLength = 2048
-		}
+		setKeySize(req, cf.keySize)
 		if cf.keyCurve != certificate.EllipticCurveNotSet {
 			req.KeyCurve = cf.keyCurve
 		}
@@ -167,11 +163,7 @@ func fillCertificateRequest(req *certificate.Request, cf *commandFlags) *certifi
 		if cf.keyType != nil {
 			req.KeyType = *cf.keyType
 		}
-		if cf.keySize > 0 {
-			req.KeyLength = cf.keySize
-		} else if req.KeyLength == 0 {
-			req.KeyLength = 2048
-		}
+		setKeySize(req, cf.keySize)
 		if cf.keyCurve != certificate.EllipticCurveNotSet {
 			req.KeyCurve = cf.keyCurve
 		}
@@ -682,4 +674,17 @@ func cleanEmptyStringPointer(s string) *string {
 		return nil
 	}
 	return &s
+}
+
+// setKeySize sets --key-size as the strength of an ML-DSA key, or as the size of any other key, which defaults to 2048
+func setKeySize(req *certificate.Request, keySize int) {
+	if req.KeyType == certificate.KeyTypeMLDSA {
+		req.KeyStrength = keySize
+		return
+	}
+	if keySize > 0 {
+		req.KeyLength = keySize
+	} else if req.KeyLength == 0 {
+		req.KeyLength = 2048
+	}
 }

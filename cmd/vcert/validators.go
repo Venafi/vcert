@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -97,6 +98,18 @@ func validateCommonFlags(commandName string) error {
 	case "ecdsa":
 		kt := certificate.KeyTypeECDSA
 		flags.keyType = &kt
+	case "mldsa":
+		kt := certificate.KeyTypeMLDSA
+		flags.keyType = &kt
+		if flags.keyCurveString != "" {
+			return fmt.Errorf("the '--key-curve' option cannot be used with '--key-type mldsa'; use '--key-size' to specify the ML-DSA strength")
+		}
+		if !slices.Contains(certificate.AllSupportedMLDSAStrengths(), flags.keySize) {
+			return fmt.Errorf("'--key-type mldsa' requires '--key-size' to be one of %v", certificate.AllSupportedMLDSAStrengths())
+		}
+		if flags.format == util.LegacyPem {
+			return fmt.Errorf("the '%s' format cannot be used with '--key-type mldsa'; ML-DSA private keys are only available in PKCS#8 format", util.LegacyPem)
+		}
 	case "":
 	default:
 		return fmt.Errorf("unknown key type: %s", flags.keyTypeString)
@@ -146,6 +159,13 @@ func validateConnectionFlags(commandName string) error {
 		return nil
 	}
 
+	// Workspaces only exist on NGTS, so require the platform to be explicit
+	// rather than letting the workspace be silently dropped when the platform is
+	// guessed from the remaining connection flags.
+	if err := validateWorkspaceFlag(); err != nil {
+		return err
+	}
+
 	switch flags.platform {
 	case venafi.TPP:
 		return validateConnectionFlagsTPP(commandName)
@@ -179,6 +199,10 @@ func validateConnectionFlags(commandName string) error {
 func validateProvisionConnectionFlags(commandName string) error {
 	err := commonConnectionFlagsValidations(commandName)
 	if err != nil {
+		return err
+	}
+
+	if err := validateWorkspaceFlag(); err != nil {
 		return err
 	}
 
@@ -487,6 +511,7 @@ func validateRenewFlags1(commandName string) error {
 			flags.country != "" ||
 			flags.org != "" ||
 			flags.state != "" ||
+			flags.keyTypeString != "" ||
 			flags.keySize != 0 ||
 			len(flags.orgUnits) > 0 ||
 			len(flags.dnsSans) > 0 ||
@@ -502,6 +527,7 @@ func validateRenewFlags1(commandName string) error {
 			flags.country != "" ||
 			flags.org != "" ||
 			flags.state != "" ||
+			flags.keyTypeString != "" ||
 			flags.keySize != 0 ||
 			len(flags.orgUnits) > 0 ||
 			len(flags.dnsSans) > 0 ||
@@ -705,6 +731,12 @@ func validateRetireFlags(commandName string) error {
 }
 
 func validateGetPolicyFlags(commandName string) error {
+	// The policy commands expose --workspace but do not go through
+	// validateConnectionFlags, so the gate has to be applied here too.
+	if err := validateWorkspaceFlag(); err != nil {
+		return err
+	}
+
 	isPolicyConfigStarter := flags.policyConfigStarter
 	if isPolicyConfigStarter {
 		if flags.userName != "" || flags.password != "" || flags.token != "" || flags.apiKey != "" {
@@ -724,8 +756,22 @@ func validateGetPolicyFlags(commandName string) error {
 }
 
 func validateSetPolicyFlags(commandName string) error {
-
 	isVerifyPolicy := flags.verifyPolicyConfig
+
+	// setpolicy does not accept --workspace, but VCERT_WORKSPACE is applied to
+	// every command, so it has to be refused here. NGTS request policies belong
+	// to the tenant and can only be changed with the tenant selected; a
+	// workspace-scoped write is rejected by the server with a 403. --verify is
+	// offline, so it is left alone.
+	if !isVerifyPolicy {
+		workspace := flags.workspace
+		if workspace == "" {
+			workspace = getPropertyFromEnvironment(vcertWorkspace)
+		}
+		if workspace != "" {
+			return fmt.Errorf("setpolicy cannot run in a workspace: request policies belong to the tenant and can only be changed with the tenant selected. Unset %s to apply the policy", vcertWorkspace)
+		}
+	}
 
 	if isVerifyPolicy {
 

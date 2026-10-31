@@ -105,6 +105,7 @@ func buildClient(config domain.Config, zone string, timeout int) (endpoint.Conne
 		ConnectorType:   config.Connection.GetConnectorType(),
 		BaseUrl:         config.Connection.URL,
 		Zone:            zone,
+		Workspace:       config.Connection.Workspace,
 		ConnectionTrust: loadTrustBundle(config.Connection.TrustBundlePath),
 		LogVerbose:      false,
 	}
@@ -392,7 +393,7 @@ func GeneratePassword() string {
 	_, _ = rand.Read(b)
 
 	for i, v := range b {
-		b[i] = letterRunes[v%byte(len(letterRunes))]
+		b[i] = letterRunes[v%byte(len(letterRunes))] // nolint:gosec // len(letterRunes) is a small constant (G115)
 	}
 
 	randString := string(b)

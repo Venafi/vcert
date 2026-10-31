@@ -254,7 +254,7 @@ func validateExtendedKeyUsage(t *testing.T, parsedReq *x509.CertificateRequest) 
 	}
 
 	if len(b) != 1 {
-		t.Fatalf("Invalid extension Extended Key Usages found in generated Certificate Request. It was expected only one but it was gotten %q", len(b))
+		t.Fatalf("Invalid extension Extended Key Usages found in generated Certificate Request. It was expected only one but it was gotten %d", len(b))
 	}
 
 	if !b[0].Equal(ExtKeyUsageServerAuthOid) {

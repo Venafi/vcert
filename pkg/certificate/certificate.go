@@ -21,6 +21,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/elliptic"
+	"crypto/mldsa"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -352,6 +353,15 @@ func GetPrivateKeyPEMBock(key crypto.Signer, format ...string) (*pem.Block, erro
 			}
 			return &pem.Block{Type: "PRIVATE KEY", Bytes: dataBytes}, err
 		}
+	case *mldsa.PrivateKey:
+		if currentFormat == "legacy-pem" {
+			return nil, fmt.Errorf("%w: unable to format Key. Legacy format for ML-DSA is not supported", verror.VcertError)
+		}
+		dataBytes, err := pkcs8.MarshalPrivateKey(k, nil, nil)
+		if err != nil {
+			return nil, err
+		}
+		return &pem.Block{Type: "PRIVATE KEY", Bytes: dataBytes}, nil
 	default:
 		return nil, fmt.Errorf("%w: unable to format Key", verror.VcertError)
 	}
@@ -398,6 +408,15 @@ func GetEncryptedPrivateKeyPEMBock(key crypto.Signer, password []byte, format ..
 			}
 			return &pem.Block{Type: "ENCRYPTED PRIVATE KEY", Bytes: dataBytes}, err
 		}
+	case *mldsa.PrivateKey:
+		if currentFormat == "legacy-pem" {
+			return nil, fmt.Errorf("%w: unable to format Key. Legacy format for ML-DSA is not supported", verror.VcertError)
+		}
+		dataBytes, err := pkcs8.MarshalPrivateKey(k, password, nil)
+		if err != nil {
+			return nil, err
+		}
+		return &pem.Block{Type: "ENCRYPTED PRIVATE KEY", Bytes: dataBytes}, nil
 	default:
 		return nil, fmt.Errorf("%w: unable to format Key", verror.VcertError)
 	}
@@ -449,6 +468,40 @@ func GenerateED25519PrivateKey() (crypto.Signer, error) {
 	return priv, nil
 }
 
+// AllSupportedMLDSAStrengths returns the ML-DSA parameter sets (FIPS 204) supported by vcert
+func AllSupportedMLDSAStrengths() []int {
+	return []int{44, 65, 87}
+}
+
+// GenerateMLDSAPrivateKey generates a new ML-DSA private key for the parameter set specified (44, 65 or 87)
+func GenerateMLDSAPrivateKey(strength int) (crypto.Signer, error) {
+	var params mldsa.Parameters
+	switch strength {
+	case 44:
+		params = mldsa.MLDSA44()
+	case 65:
+		params = mldsa.MLDSA65()
+	case 87:
+		params = mldsa.MLDSA87()
+	default:
+		return nil, fmt.Errorf("%w: unsupported ML-DSA strength %d, must be one of %v", verror.VcertError, strength, AllSupportedMLDSAStrengths())
+	}
+	return mldsa.GenerateKey(params)
+}
+
+// MLDSAStrength returns the parameter set (44, 65 or 87) of an ML-DSA public key, or 0 if unknown
+func MLDSAStrength(pub *mldsa.PublicKey) int {
+	switch pub.Parameters() {
+	case mldsa.MLDSA44():
+		return 44
+	case mldsa.MLDSA65():
+		return 65
+	case mldsa.MLDSA87():
+		return 87
+	}
+	return 0
+}
+
 // GenerateRSAPrivateKey generates a new rsa private key using the size specified
 func GenerateRSAPrivateKey(size int) (*rsa.PrivateKey, error) {
 	priv, err := rsa.GenerateKey(rand.Reader, size)
@@ -482,8 +535,11 @@ func NewRequest(cert *x509.Certificate) *Request {
 	case ed25519.PublicKey:
 		req.KeyType = KeyTypeED25519
 		_ = req.KeyCurve.Set("ed25519")
+	case *mldsa.PublicKey:
+		req.KeyType = KeyTypeMLDSA
+		req.KeyStrength = MLDSAStrength(pub)
 	default:
-		// vcert only works with RSA, ECDSA & Ed25519 keys
+		// vcert only works with RSA, ECDSA, Ed25519 & ML-DSA keys
 	}
 	return req
 }

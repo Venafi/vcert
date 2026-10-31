@@ -75,6 +75,14 @@ func buildConfig(c *cli.Context, flags *commandFlags) (cfg vcert.Config, err err
 		cfg.Zone = flags.zone
 	}
 
+	// workspace may be overridden by CLI flag
+	if flags.workspace != "" && cfg.Workspace != flags.workspace {
+		if cfg.Workspace != "" {
+			logf("Overriding workspace based on command line flag.")
+		}
+		cfg.Workspace = flags.workspace
+	}
+
 	if c.Command.Name == commandEnrollName || c.Command.Name == commandPickupName {
 		if cfg.Zone == "" && cfg.ConnectorType != endpoint.ConnectorTypeFake && !(flags.pickupID != "" || flags.pickupIDFile != "") {
 			return cfg, fmt.Errorf("zone cannot be empty. Use -z option")
@@ -177,6 +185,7 @@ func buildConfigNGTS(flags *commandFlags) (*vcert.Config, error) {
 	return &vcert.Config{
 		ConnectorType: endpoint.ConnectorTypeNGTS,
 		BaseUrl:       flags.url,
+		Workspace:     flags.workspace,
 		Credentials: &endpoint.Authentication{
 			AccessToken:  flags.token,
 			TokenURL:     flags.tokenURL,

@@ -88,6 +88,30 @@ ngts_access_token = test_access_token
 ngts_zone = vcert
 `
 
+const validNgtsConfigWithWorkspace = `
+url = https://xyz.api.sase.paloaltonetworks.com/ngts
+ngts_access_token = test_access_token
+ngts_zone = vcert
+workspace = 1234567890
+`
+
+// unknown key in an NGTS section
+const invalidNgtsConfigUnknownKey = `
+url = https://xyz.api.sase.paloaltonetworks.com/ngts
+ngts_access_token = test_access_token
+ngts_zone = vcert
+ngts_not_a_real_key = nope
+`
+
+// the workspace key is platform-neutral by name, but only platforms that
+// actually support workspaces accept it
+const invalidTPPConfigWithWorkspace = `
+url = https://ha-tpp1.example.com:5008/vedsdk
+access_token = ns1dofUPmsdxTLQS2hM1gQ==
+tpp_zone = devops\vcert
+workspace = 1234567890
+`
+
 // no token url
 const invalidNgtsConfig = `
 url = https://xyz.api.sase.paloaltonetworks.com/ngts
@@ -135,6 +159,9 @@ func TestLoadFromFile(t *testing.T) {
 		{false, invalidNgtsConfig},
 		{false, invalidNgtsConfig2},
 		{false, invalidNgtsConfig3},
+		{true, validNgtsConfigWithWorkspace},
+		{false, invalidNgtsConfigUnknownKey},
+		{false, invalidTPPConfigWithWorkspace},
 	}
 	for _, test_case := range cases {
 		tmpfile, err := ioutil.TempFile("", "")
@@ -159,5 +186,26 @@ func TestLoadFromFile(t *testing.T) {
 				t.Fatalf("it should fail to load config: \n%s", test_case.content)
 			}
 		}
+	}
+}
+
+func TestLoadNgtsWorkspaceFromFile(t *testing.T) {
+	tmpfile, err := os.CreateTemp("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(tmpfile.Name())
+
+	if err = os.WriteFile(tmpfile.Name(), []byte(validNgtsConfigWithWorkspace), 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	cfg, err := LoadConfigFromFile(tmpfile.Name(), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if cfg.Workspace != "1234567890" {
+		t.Fatalf("expected workspace to be %q, got %q", "1234567890", cfg.Workspace)
 	}
 }

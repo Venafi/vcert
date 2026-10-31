@@ -1,0 +1,65 @@
+{
+  "policy": {
+    "wildcardAllowed": true,
+    "maxValidDays": 149,
+    "domains": [
+      "venafi.com"
+    ],
+    "certificateAuthority": "BUILTIN\\Built-In CA\\Default Product",
+    "subject": {
+      "orgs": [
+        "Venafi"
+      ],
+      "orgUnits": [
+        "DevOps", "IntegrationTeam"
+      ],
+      "localities": [
+        "Salt Lake City"
+      ],
+      "states": [
+        "Utah"
+      ],
+      "countries": [
+        "US"
+      ]
+    },
+    "keyPair": {
+      "keyTypes": [
+        "RSA"
+      ],
+      "rsaKeySizes": [
+        2048
+      ],
+      "serviceGenerated": false,
+      "reuseAllowed": false
+    },
+    "subjectAltNames": {
+      "dnsAllowed": true,
+      "ipAllowed": true,
+      "emailAllowed": true,
+      "uriAllowed": true,
+      "upnAllowed": false,
+      "uriProtocols": ["https","ldaps", "spiffe"],
+      "ipConstraints": [ "v4", "v6", "v4private", "v6private"]
+    }
+  },
+  "defaults": {
+    "domain": "venafi.com",
+    "subject": {
+      "org": "Venafi",
+      "orgUnits": [
+        "DevOps"
+      ],
+      "locality": "Salt Lake City",
+      "state": "Utah",
+      "country": "US"
+    },
+    "keyPair": {
+      "keyType": "RSA",
+      "rsaKeySize": 2048,
+      "ellipticCurve": "",
+      "generationType": "",
+      "serviceGenerated": false
+    }
+  }
+}

@@ -102,4 +102,6 @@ var (
 	ErrAmbiguousVCPCreds = fmt.Errorf("unable to disambiguate multiple  CyberArk Certificate Manager, SaaS credentials. Only ONE of apiKey, accessToken, or tokenURL WITH externalJWT should be defined")
 	// ErrAmbiguousNGTSCreds is thrown when platform is CyberArk Certificate Manager, SaaS, and more than one type (accessToken or client credentials) was provided
 	ErrAmbiguousNGTSCreds = fmt.Errorf("unable to disambiguate multiple  Palo Alto Networks Next-Gen Trust Security (NGTS) credentials. Only ONE of accessToken or client credentials should be defined")
+	// ErrWorkspaceNotSupported is thrown when config.connection.workspace is set for a platform other than Palo Alto Networks Next-Gen Trust Security (NGTS)
+	ErrWorkspaceNotSupported = fmt.Errorf("workspace is only supported by the Palo Alto Networks Next-Gen Trust Security (NGTS) platform")
 )

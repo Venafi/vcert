@@ -1118,7 +1118,7 @@ func (c *Connector) getCloudRequest(req *certificate.Request) (*certificateReque
 		cloudReq.ValidityPeriod = util.FormatValidityPeriodISO8601(*validityDuration)
 	}
 
-	if req.Tags != nil && len(req.Tags) > 0 {
+	if len(req.Tags) > 0 {
 		cloudReq.Tags = req.Tags
 	}
 

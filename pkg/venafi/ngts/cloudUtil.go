@@ -6,9 +6,12 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"slices"
 
 	"github.com/Venafi/vcert/v5/pkg/certificate"
+	"github.com/Venafi/vcert/v5/pkg/policy"
 	"github.com/Venafi/vcert/v5/pkg/util"
+	"github.com/Venafi/vcert/v5/pkg/verror"
 )
 
 func parseDEKInfo(httpStatusCode int, httpStatus string, body []byte) (*EdgeEncryptionKey, error) {
@@ -182,6 +185,26 @@ func getCsrAttributes(c *Connector, req *certificate.Request) (*CsrAttributes, e
 		sanByType.UniformResourceIdentifiers = sArray
 	}
 
+	if err := setKeyAttributes(&csrAttr, req); err != nil {
+		return nil, err
+	}
+
+	return &csrAttr, nil
+}
+
+// setKeyAttributes sets the key the service generates. RSA and EC keys go in keyTypeParameters, which every
+// release of the service reads; ML-DSA keys go in keyAlgorithm, the only field that accepts them. The service
+// refuses a request that sets both.
+func setKeyAttributes(csrAttr *CsrAttributes, req *certificate.Request) error {
+	if req.KeyType == certificate.KeyTypeMLDSA {
+		if err := validateMLDSAStrength(req.KeyStrength); err != nil {
+			return err
+		}
+		strength := req.KeyStrength
+		csrAttr.KeyAlgorithm = &KeyAlgorithm{KeyType: policy.CloudKeyTypeMLDSA, KeyStrength: &strength}
+		return nil
+	}
+
 	keyTypeParam := &KeyTypeParameters{}
 	if req.KeyType == certificate.KeyTypeRSA {
 		keyTypeParam.KeyType = "RSA"
@@ -202,8 +225,19 @@ func getCsrAttributes(c *Connector, req *certificate.Request) (*CsrAttributes, e
 		}
 	}
 	csrAttr.KeyTypeParameters = keyTypeParam
+	return nil
+}
 
-	return &csrAttr, nil
+// validateMLDSAStrength checks the strength of a service generated ML-DSA key; 0 means neither the request nor the
+// issuing template names one
+func validateMLDSAStrength(strength int) error {
+	if strength == 0 {
+		return fmt.Errorf("%w: ML-DSA keys for Service Generated CSR need a strength (key size) of %v; the issuing template doesn't allow or recommend one", verror.UserDataError, certificate.AllSupportedMLDSAStrengths())
+	}
+	if !slices.Contains(certificate.AllSupportedMLDSAStrengths(), strength) {
+		return fmt.Errorf("%w: ML-DSA keys for Service Generated CSR require a strength of %v, got %d", verror.UserDataError, certificate.AllSupportedMLDSAStrengths(), strength)
+	}
+	return nil
 }
 
 func getSANByType(csrAttributes *CsrAttributes) *SubjectAlternativeNamesByType {

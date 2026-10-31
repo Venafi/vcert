@@ -3,6 +3,7 @@ package util
 import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
+	"crypto/mldsa"
 	"crypto/rand"
 	"crypto/rsa"
 	"encoding/json"
@@ -66,7 +67,10 @@ func GetJsonAsString(i interface{}) (s string) {
 func DecryptPkcs8PrivateKey(privateKey, password string) (string, error) {
 
 	block, _ := pem.Decode([]byte(privateKey))
-	key, _, err := pkcs8.ParsePrivateKey(block.Bytes, []byte(password))
+	if block == nil {
+		return "", fmt.Errorf("failed to decode the private key PEM block")
+	}
+	key, err := ParsePKCS8PrivateKey(block.Bytes, []byte(password))
 
 	if err != nil {
 		return "", err
@@ -79,7 +83,7 @@ func DecryptPkcs8PrivateKey(privateKey, password string) (string, error) {
 		pemType = "RSA PRIVATE KEY"
 	case *ecdsa.PrivateKey:
 		pemType = "EC PRIVATE KEY"
-	case ed25519.PrivateKey:
+	case ed25519.PrivateKey, *mldsa.PrivateKey:
 		pemType = "PRIVATE KEY"
 	default:
 		return "", fmt.Errorf("failed to determine private key type")
@@ -113,6 +117,9 @@ func EncryptPkcs1PrivateKey(privateKey, password string) (string, error) {
 			return "", nil
 		}
 	}
+	if encrypted == nil {
+		return "", fmt.Errorf("legacy PEM encryption is only supported for RSA and EC private keys")
+	}
 	return string(pem.EncodeToMemory(encrypted)), nil
 }
 
@@ -123,7 +130,7 @@ func EncryptPkcs8PrivateKey(privateKey, password string) (string, error) {
 		return "", fmt.Errorf("failed to decode PEM block")
 	}
 
-	key, _, err := pkcs8.ParsePrivateKey(block.Bytes, nil)
+	key, err := ParsePKCS8PrivateKey(block.Bytes, nil)
 	if err != nil {
 		return "", err
 	}

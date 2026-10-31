@@ -57,7 +57,8 @@ type CloudPolicyRequest struct {
 	SanIpAddressRegexes                 []string             `json:"sanIpAddressRegexes"`
 	SanRfc822NameRegexes                []string             `json:"sanRfc822NameRegexes"`
 	SanUniformResourceIdentifierRegexes []string             `json:"sanUniformResourceIdentifierRegexes"`
-	KeyTypes                            []KeyType            `json:"keyTypes"`
+	KeyTypes                            []KeyType            `json:"keyTypes,omitempty"`
+	KeyAlgorithmTypes                   []KeyType            `json:"keyAlgorithmTypes,omitempty"`
 	KeyReuse                            *bool                `json:"keyReuse"`
 	RecommendedSettings                 *RecommendedSettings `json:"recommendedSettings"`
 	CsrUploadAllowed                    bool                 `json:"csrUploadAllowed"`
@@ -73,10 +74,13 @@ type Product struct {
 	OrganizationId       *int64  `json:"organizationId,omitempty"`
 }
 
+// KeyType is an allowed key type of an issuing template. Key types added after RSA and EC, such as ML-DSA, are only
+// available in an issuing template's keyAlgorithmTypes
 type KeyType struct {
-	KeyType    string   `json:"keyType"`
-	KeyLengths []int    `json:"keyLengths,omitempty"`
-	KeyCurves  []string `json:"keyCurves,omitempty"`
+	KeyType      string   `json:"keyType"`
+	KeyLengths   []int    `json:"keyLengths,omitempty"`
+	KeyCurves    []string `json:"keyCurves,omitempty"`
+	KeyStrengths []int    `json:"keyStrengths,omitempty"`
 }
 
 type TrackingData struct {
@@ -94,7 +98,18 @@ type RecommendedSettings struct {
 	SubjectSTValue   *string  `json:"subjectSTValue"`
 	SubjectCValue    *string  `json:"subjectCValue"`
 	SanRegexes       []string `json:"sanRegexes"`
-	Key              *Key     `json:"key"`
+	// Key is the recommended key when the allowed key types are set with keyTypes
+	Key *Key `json:"key,omitempty"`
+	// KeyAlgorithm is the recommended key when the allowed key types are set with keyAlgorithmTypes
+	KeyAlgorithm *KeyAlgorithm `json:"keyAlgorithm,omitempty"`
+}
+
+// KeyAlgorithm is the recommended key of an issuing template, which supports every key type
+type KeyAlgorithm struct {
+	KeyType     string `json:"keyType"`
+	KeyLength   int    `json:"keyLength,omitempty"`
+	KeyCurve    string `json:"keyCurve,omitempty"`
+	KeyStrength int    `json:"keyStrength,omitempty"`
 }
 
 type Key struct {
@@ -248,7 +263,15 @@ type KeyPairResponse struct {
 	// from TPP 25.1 onwards, it supersedes KeyAlgorithm/KeySize/EllipticCurve above, which TPP
 	// no longer locks once a policy folder's allowed algorithms are configured via the newer
 	// AlgorithmSelector API.
+	//
+	// Locked is true whenever the folder has an effective allowed set, which on TPP 25.1+ is
+	// always. It does not distinguish a folder an administrator restricted from one that merely
+	// permits everything the server supports.
 	PkixParameterSet LockedArrayAttribute `json:"PkixParameterSet"`
+	// DefaultPkixParameterSet is the single PKIX OID the folder recommends, i.e. the "PKIX
+	// Parameter Set Policy Default" attribute. It is a separate attribute from PkixParameterSet
+	// and must be read separately: a folder that locks its allowed set still has a default.
+	DefaultPkixParameterSet LockedAttribute `json:"DefaultPkixParameterSet"`
 }
 
 type SubjectResponse struct {

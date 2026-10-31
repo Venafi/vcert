@@ -4,6 +4,7 @@ import (
 	"crypto"
 	"crypto/ecdsa"
 	"crypto/ed25519"
+	"crypto/mldsa"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -41,6 +42,7 @@ type Request struct {
 	FriendlyName       string
 	KeyType            KeyType
 	KeyLength          int
+	KeyStrength        int // ML-DSA parameter set (44, 65 or 87); kept apart from KeyLength, the RSA key size
 	KeyCurve           EllipticCurve
 	csr                []byte // should be a PEM-encoded CSR
 	PrivateKey         crypto.Signer
@@ -159,14 +161,12 @@ func (request *Request) GenerateCSR() error {
 
 	csr, err := x509.CreateCertificateRequest(rand.Reader, &certificateRequest, request.PrivateKey)
 	if err != nil {
-		csr = nil
+		return fmt.Errorf("%w: failed to create certificate request: %w", verror.VcertError, err)
 	}
-	err = request.SetCSR(csr)
-	//request.CSR = pem.EncodeToMemory(GetCertificateRequestPEMBlock(csr))
-	return err
+	return request.SetCSR(csr)
 }
 
-// GeneratePrivateKey creates private key (if it doesn`t already exist) based on request.KeyType, request.KeyLength and request.KeyCurve fileds
+// GeneratePrivateKey creates private key (if it doesn`t already exist) based on request.KeyType, request.KeyLength (RSA), request.KeyStrength (ML-DSA) and request.KeyCurve fields
 func (request *Request) GeneratePrivateKey() error {
 	if request.PrivateKey != nil {
 		return nil
@@ -185,6 +185,8 @@ func (request *Request) GeneratePrivateKey() error {
 			return fmt.Errorf("key Size must be %d or greater. But it is %d", AllSupportedKeySizes()[0], request.KeyLength)
 		}
 		request.PrivateKey, err = GenerateRSAPrivateKey(request.KeyLength)
+	case KeyTypeMLDSA:
+		request.PrivateKey, err = GenerateMLDSAPrivateKey(request.KeyStrength)
 	default:
 		return fmt.Errorf("%w: unable to generate certificate request, key type %s is not supported", verror.VcertError, request.KeyType.String())
 	}
@@ -237,6 +239,15 @@ func (request *Request) CheckCertificate(certPEM string) error {
 			if !certPubkey.Equal(reqPubkey) {
 				return fmt.Errorf("%w: unmatched elliptic ed25519 keys", verror.CertificateCheckError)
 			}
+		case x509.MLDSA:
+			certPubkey := cert.PublicKey.(*mldsa.PublicKey)
+			reqPubkey, ok := request.PrivateKey.Public().(*mldsa.PublicKey)
+			if !ok {
+				return fmt.Errorf("%w: request KeyType not matched with real PrivateKey type", verror.CertificateCheckError)
+			}
+			if !certPubkey.Equal(reqPubkey) {
+				return fmt.Errorf("%w: unmatched ML-DSA keys", verror.CertificateCheckError)
+			}
 		default:
 			return fmt.Errorf("%w: unknown key algorythm %d", verror.CertificateCheckError, cert.PublicKeyAlgorithm)
 		}
@@ -264,6 +275,12 @@ func (request *Request) CheckCertificate(certPEM string) error {
 			reqPubKey := csr.PublicKey.(*ecdsa.PublicKey)
 			if certPubKey.X.Cmp(reqPubKey.X) != 0 {
 				return fmt.Errorf("%w: unmatched X for elliptic keys", verror.CertificateCheckError)
+			}
+		case x509.MLDSA:
+			certPubKey := cert.PublicKey.(*mldsa.PublicKey)
+			reqPubKey := csr.PublicKey.(*mldsa.PublicKey)
+			if !certPubKey.Equal(reqPubKey) {
+				return fmt.Errorf("%w: unmatched ML-DSA keys", verror.CertificateCheckError)
 			}
 		}
 	}

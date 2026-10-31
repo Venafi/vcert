@@ -289,7 +289,7 @@ func (c *Connector) getCertificateRequest(req *certificate.Request) (*certificat
 			}
 
 			if len(req.IPAddresses) > 0 {
-				sIPAddresses := make([]string, 0)
+				sIPAddresses := make([]string, 0, len(req.IPAddresses))
 				for _, address := range req.IPAddresses {
 					sIPAddresses = append(sIPAddresses, address.String())
 				}
@@ -302,7 +302,7 @@ func (c *Connector) getCertificateRequest(req *certificate.Request) (*certificat
 			}
 
 			if len(req.URIs) > 0 {
-				sUris := make([]string, 0)
+				sUris := make([]string, 0, len(req.URIs))
 				for _, uri := range req.URIs {
 					sUris = append(sUris, uri.String())
 				}

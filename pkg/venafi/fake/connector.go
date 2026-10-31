@@ -239,7 +239,7 @@ func issueCertificate(csr *x509.CertificateRequest) ([]byte, error) {
 		for _, name := range csr.DNSNames {
 			nameSet[name] = true
 		}
-		uniqNames := []string{}
+		uniqNames := make([]string, 0, len(nameSet))
 		for name := range nameSet {
 			uniqNames = append(uniqNames, name)
 		}
@@ -387,6 +387,7 @@ func (c *Connector) ReadPolicyConfiguration() (policy *endpoint.Policy, err erro
 		AllowedKeyConfigurations: []endpoint.AllowedKeyConfiguration{
 			{KeyType: certificate.KeyTypeRSA, KeySizes: certificate.AllSupportedKeySizes(), KeyCurves: nil},
 			{KeyType: certificate.KeyTypeECDSA, KeySizes: nil, KeyCurves: certificate.AllSupportedCurves()},
+			{KeyType: certificate.KeyTypeMLDSA, KeySizes: certificate.AllSupportedMLDSAStrengths()},
 		},
 		DnsSanRegExs:   []string{".*"},
 		IpSanRegExs:    []string{".*"},
@@ -400,9 +401,8 @@ func (c *Connector) ReadPolicyConfiguration() (policy *endpoint.Policy, err erro
 }
 
 func (c *Connector) GetZonesByParent(parent string) ([]string, error) {
-	zones := make([]string, 0)
-
 	children := []string{"Alpha", "Epsilon", "Eta", "Iota", "Omicron", "Upsilon", "Omega"}
+	zones := make([]string, 0, len(children))
 	for _, child := range children {
 		zone := fmt.Sprintf("%s\\%s", parent, child)
 		zones = append(zones, zone)

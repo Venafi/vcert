@@ -1,6 +1,47 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"regexp"
+
+	"github.com/Venafi/vcert/v5/pkg/venafi"
+)
+
+// Workspace IDs are unsigned 32-bit integers rendered as strings, and the
+// default workspace of a tenant reuses that tenant's 10-digit TSG ID. Validating
+// that here turns the common mistake of passing a workspace *name* into a clear
+// error instead of a server-side rejection. If NGTS ever issues workspace IDs
+// that are not purely numeric, relaxing this one regex is the only change needed.
+var workspaceIDRegex = regexp.MustCompile(`^[0-9]{1,10}$`)
+
+// validateWorkspaceFlag checks that --workspace is only used with NGTS and that
+// its value looks like a workspace ID.
+func validateWorkspaceFlag() error {
+	workspace := flags.workspace
+	if workspace == "" {
+		workspace = getPropertyFromEnvironment(vcertWorkspace)
+	}
+	if workspace == "" {
+		return nil
+	}
+
+	// The platform flag is parsed before the command runs, but when the platform
+	// comes from the environment instead we have to resolve it here.
+	platform := flags.platform
+	if platform == venafi.Undefined {
+		platform = venafi.GetPlatformType(getPropertyFromEnvironment(vCertPlatform))
+	}
+
+	if platform != venafi.NGTS {
+		return fmt.Errorf("--workspace is only applicable to Palo Alto Networks Next-Gen Trust Security (NGTS). Set --platform ngts to use it")
+	}
+
+	if !workspaceIDRegex.MatchString(workspace) {
+		return fmt.Errorf("invalid workspace %q. A workspace is identified by its numeric ID, not its name", workspace)
+	}
+
+	return nil
+}
 
 func validateConnectionFlagsNGTS(commandName string) error {
 	//sshgetconfig command

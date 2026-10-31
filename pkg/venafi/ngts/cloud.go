@@ -147,12 +147,21 @@ type CsrAttributes struct {
 	Country                       *string                        `json:"country,omitempty"`
 	SubjectAlternativeNamesByType *SubjectAlternativeNamesByType `json:"subjectAlternativeNamesByType,omitempty"`
 	KeyTypeParameters             *KeyTypeParameters             `json:"keyTypeParameters,omitempty"`
+	KeyAlgorithm                  *KeyAlgorithm                  `json:"keyAlgorithm,omitempty"`
 }
 
+// KeyTypeParameters is the RSA or EC key the service generates. Key types added later, such as ML-DSA, are only
+// accepted in KeyAlgorithm; the two are mutually exclusive
 type KeyTypeParameters struct {
 	KeyType   string  `json:"keyType,omitempty"`
 	KeyLength *int    `json:"keyLength,omitempty"`
 	KeyCurve  *string `json:"keyCurve,omitempty"`
+}
+
+// KeyAlgorithm is the key the service generates, of any key type; keyType selects the other fields
+type KeyAlgorithm struct {
+	KeyType     string `json:"keyType"`
+	KeyStrength *int   `json:"keyStrength,omitempty"`
 }
 
 type SubjectAlternativeNamesByType struct {
@@ -278,6 +287,19 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 		if req.KeyType == certificate.KeyTypeED25519 {
 			return fmt.Errorf("%w: ED25519 keys are not yet supported for Service Generated CSR", verror.UserDataError)
 		}
+		if req.KeyType == certificate.KeyTypeMLDSA {
+			// the service needs the strength; without one, use the issuing template's default ML-DSA strength
+			if req.KeyStrength == 0 {
+				if config == nil {
+					config, err = c.ReadZoneConfiguration()
+					if err != nil {
+						return fmt.Errorf("could not read zone configuration: %w", err)
+					}
+				}
+				req.KeyStrength = config.DefaultMLDSAStrength()
+			}
+			return validateMLDSAStrength(req.KeyStrength)
+		}
 		return nil
 
 	default:
@@ -287,6 +309,40 @@ func (c *Connector) GenerateRequest(config *endpoint.ZoneConfiguration, req *cer
 
 func (c *Connector) getURL(resource urlResource) string {
 	return fmt.Sprintf("%s%s", c.baseURL, resource)
+}
+
+// getGraphqlURL returns the GraphQL endpoint URL, scoped to this connector's
+// workspace when one is set.
+func (c *Connector) getGraphqlURL() (string, error) {
+	return withWorkspaceID(c.getURL(urlGraphql), c.workspaceID)
+}
+
+// withWorkspaceID returns rawURL with the "workspace_id" query parameter set to
+// workspaceID. Any query parameters already present are preserved, and calling
+// it more than once on the same URL is a no-op after the first.
+//
+// When workspaceID is empty the URL is returned untouched, so callers that
+// never set a workspace keep the exact behaviour they had before.
+//
+// This must only be applied to a URL that is complete. Several urlResource
+// constants carry fmt verbs (for example urlResourceCertificateStatus) that are
+// filled in after getURL returns, and re-encoding a URL that still holds a "%s"
+// would turn it into "%25s".
+func withWorkspaceID(rawURL string, workspaceID string) (string, error) {
+	if workspaceID == "" {
+		return rawURL, nil
+	}
+
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return "", fmt.Errorf("%w: failed to add workspace to url: %v", verror.VcertError, err)
+	}
+
+	q := u.Query()
+	q.Set("workspace_id", workspaceID)
+	u.RawQuery = q.Encode()
+
+	return u.String(), nil
 }
 
 func (c *Connector) getHTTPClient() *http.Client {
@@ -343,6 +399,14 @@ func (c *Connector) request(method string, url string, data interface{}, authNot
 	if method == http.MethodPost || method == http.MethodPut {
 		b, _ = json.Marshal(data)
 		payload = bytes.NewReader(b)
+	}
+
+	// The workspace is applied here, on the fully-formed URL, because this is the
+	// single choke point every NGTS REST call passes through and the only place
+	// where all fmt verbs have already been substituted.
+	url, err = withWorkspaceID(url, c.workspaceID)
+	if err != nil {
+		return
 	}
 
 	r, err := http.NewRequest(method, url, payload)
@@ -553,7 +617,7 @@ func parseCertificateRequestResult(httpStatusCode int, httpStatus string, body [
 			return nil, err
 		}
 
-		respError := fmt.Sprintf("Unexpected status code on Palo Alto Networks Next-Gen Trust Security (NGTS) zone read. Status: %s\n", httpStatus)
+		respError := fmt.Sprintf("Unexpected status code on Palo Alto Networks Next-Gen Trust Security (NGTS) certificate request. Status: %s\n", httpStatus)
 		for _, e := range respErrors {
 			respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
 		}
@@ -578,7 +642,7 @@ func checkCertificateRetireResults(httpStatusCode int, httpStatus string, body [
 			return err
 		}
 
-		respError := fmt.Sprintf("Unexpected status code on Palo Alto Networks Next-Gen Trust Security (NGTS) zone read. Status: %s\n", httpStatus)
+		respError := fmt.Sprintf("Unexpected status code on Palo Alto Networks Next-Gen Trust Security (NGTS) certificate retire. Status: %s\n", httpStatus)
 		for _, e := range respErrors {
 			respError += fmt.Sprintf("Error Code: %d Error: %s\n", e.Code, e.Message)
 		}
@@ -737,13 +801,14 @@ func buildPolicySpecification(cit *certificateTemplate, info *policy.Certificate
 	}
 
 	// ps.Policy.WildcardAllowed is pending.
-	if cit.ValidityPeriod != "" {
-		//they have the format P#D
-		days := cit.ValidityPeriod[1 : len(cit.ValidityPeriod)-1]
-		intDays, _ := strconv.ParseInt(days, 10, 32)
-		//ok we have a 32 bits int but we need to convert it just into a "int"
-		intVal := int(intDays)
-		pol.MaxValidDays = &intVal
+	// The issuing template API returns the validity period under "product"; fall back to the top-level field
+	// that older responses used.
+	validityPeriod := cit.Product.ValidityPeriod
+	if validityPeriod == "" {
+		validityPeriod = cit.ValidityPeriod
+	}
+	if days, ok := parseValidityPeriodDays(validityPeriod); ok {
+		pol.MaxValidDays = &days
 	}
 	if info != nil {
 		ca := fmt.Sprint(info.CAType, "\\", info.CAAccountKey, "\\", info.VendorProductName)
@@ -788,12 +853,17 @@ func buildPolicySpecification(cit *certificateTemplate, info *policy.Certificate
 	//key pair
 	var keyPair policy.KeyPair
 	shouldCreateKeyPair := false
-	if len(cit.KeyTypes) > 0 {
+	if allowedKeyTypes := cit.allowedKeyTypes(); len(allowedKeyTypes) > 0 {
 		var keyTypes []string
 		var keySizes []int
 		var ellipticCurves []string
 
-		for _, allowedKT := range cit.KeyTypes {
+		for _, allowedKT := range allowedKeyTypes {
+			if string(allowedKT.KeyType) == policy.CloudKeyTypeMLDSA {
+				keyTypes = append(keyTypes, policy.KeyTypeMLDSA)
+				keyPair.MLDSAKeyStrengths = allowedKT.KeyStrengths
+				continue
+			}
 			keyType := string(allowedKT.KeyType)
 			keyLengths := allowedKT.KeyLengths
 			ecKeys := allowedKT.KeyCurves
@@ -877,19 +947,37 @@ func buildPolicySpecification(cit *certificateTemplate, info *policy.Certificate
 	var defaultKP policy.DefaultKeyPair
 	shouldCreateDefaultKeyPAir := false
 
-	if cit.RecommendedSettings.Key.Type != "" {
-		defaultKP.KeyType = &cit.RecommendedSettings.Key.Type
+	if rk := &cit.RecommendedSettings.RecommendedKeyType; rk.KeyType != "" {
+		// recommendedKeyType supports every key type, so it takes precedence over the RSA and EC only key
 		shouldCreateDefaultKeyPAir = true
-	}
+		if rk.KeyType == policy.CloudKeyTypeMLDSA {
+			keyType := policy.KeyTypeMLDSA
+			defaultKP.KeyType = &keyType
+			defaultKP.MLDSAKeyStrength = &rk.KeyStrength
+		} else {
+			defaultKP.KeyType = &rk.KeyType
+			if rk.KeyLength > 0 {
+				defaultKP.RsaKeySize = &rk.KeyLength
+			}
+			if rk.KeyCurve != "" {
+				defaultKP.EllipticCurve = &rk.KeyCurve
+			}
+		}
+	} else {
+		if cit.RecommendedSettings.Key.Type != "" {
+			defaultKP.KeyType = &cit.RecommendedSettings.Key.Type
+			shouldCreateDefaultKeyPAir = true
+		}
 
-	if cit.RecommendedSettings.Key.Length > 0 {
-		defaultKP.RsaKeySize = &cit.RecommendedSettings.Key.Length
-		shouldCreateDefaultKeyPAir = true
-	}
+		if cit.RecommendedSettings.Key.Length > 0 {
+			defaultKP.RsaKeySize = &cit.RecommendedSettings.Key.Length
+			shouldCreateDefaultKeyPAir = true
+		}
 
-	if cit.RecommendedSettings.Key.Curve != "" {
-		defaultKP.EllipticCurve = &cit.RecommendedSettings.Key.Curve
-		shouldCreateDefaultKeyPAir = true
+		if cit.RecommendedSettings.Key.Curve != "" {
+			defaultKP.EllipticCurve = &cit.RecommendedSettings.Key.Curve
+			shouldCreateDefaultKeyPAir = true
+		}
 	}
 
 	if shouldCreateDefaultKeyPAir {
@@ -964,6 +1052,19 @@ func parseCitDetailsData(b []byte, status int) (*certificateTemplate, error) {
 	}
 
 	return &cit, nil
+}
+
+// parseValidityPeriodDays parses a validity period in the ISO 8601 form P#D used by issuing templates.
+// It reports false for any other form rather than guessing a value.
+func parseValidityPeriodDays(period string) (int, bool) {
+	if len(period) < 3 || !strings.HasPrefix(period, "P") || !strings.HasSuffix(period, "D") {
+		return 0, false
+	}
+	days, err := strconv.Atoi(period[1 : len(period)-1])
+	if err != nil {
+		return 0, false
+	}
+	return days, true
 }
 
 func isWildCard(cnRegex []string) bool {

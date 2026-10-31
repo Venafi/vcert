@@ -1364,7 +1364,7 @@ func TestRetrieveNonIssuedCertificate(t *testing.T) {
 
 func TestRevokeCertificate(t *testing.T) {
 
-	cn := "www-1.venqa.venafi.com"
+	cn := test.RandSpecificCN("www-1.venqa.venafi.com")
 
 	tpp, err := getTestConnector(ctx.TPPurl, ctx.TPPZone)
 	if err != nil {
@@ -2893,7 +2893,7 @@ func TestSetPolicyValuesAndValidate(t *testing.T) {
 
 	valid = test.IsArrayIntEqual(remotePolicy.KeyPair.RsaKeySizes, localPolicy.KeyPair.RsaKeySizes)
 	if !valid {
-		t.Fatalf("policy's RsaKeySizes are different expected:  %+q but get  %+q", localPolicy.KeyPair.RsaKeySizes, remotePolicy.KeyPair.RsaKeySizes)
+		t.Fatalf("policy's RsaKeySizes are different expected:  %v but get  %v", localPolicy.KeyPair.RsaKeySizes, remotePolicy.KeyPair.RsaKeySizes)
 	}
 
 }

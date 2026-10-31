@@ -19,6 +19,10 @@ ENDPOINTS = {
 
     "NGTS" => "-u '#{ENV['NGTS_URL']}' -t '#{ENV['NGTS_ACCESS_TOKEN']}' -p NGTS",
 
+    "NGTSworkspace" => "-u '#{ENV['NGTS_URL']}' -t '#{ENV['NGTS_ACCESS_TOKEN']}' -p NGTS --workspace '#{ENV['NGTS_WORKSPACE']}'",
+
+    "NGTSmldsa" => "-u '#{ENV['NGTS_URL']}' -t '#{ENV['NGTS_ACCESS_TOKEN']}' -p NGTS",
+
     "Firefly" => "-u '#{ENV['FIREFLY_URL']}' -t '#{ENV['IDP_ACCESS_TOKEN']}'"
 }
 
@@ -38,6 +42,11 @@ ZONE = {
     "Cloud" => "-z '#{ENV['CLOUD_ZONE']}'",
 
     "NGTS" => "-z '#{ENV['NGTS_ZONE']}'",
+
+    "NGTSworkspace" => "-z '#{ENV['NGTS_ZONE']}'",
+
+    # an issuing template that allows ML-DSA 44, 65 and 87
+    "NGTSmldsa" => "-z '#{ENV['NGTS_ZONE_MLDSA']}'",
 
     "Firefly" => "-z '#{ENV['FIREFLY_ZONE']}'"
 }

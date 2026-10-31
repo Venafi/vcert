@@ -352,6 +352,36 @@ func (s *ConnectionSuite) SetupTest() {
 			expectedValid: false,
 			expectedErr:   ErrNoCredentials,
 		},
+		{
+			name: "NGTS_valid_with_workspace",
+			c: Connection{
+				Platform:  venafi.NGTS,
+				Workspace: "1234567890",
+				Credentials: Authentication{
+					Authentication: endpoint.Authentication{
+						AccessToken: "123abc###",
+					},
+				},
+			},
+			expectedCType: endpoint.ConnectorTypeNGTS,
+			expectedValid: true,
+		},
+		{
+			name: "TPP_invalid_workspace_not_supported",
+			c: Connection{
+				Platform:  venafi.TPP,
+				URL:       "https://foo.bar.kwan",
+				Workspace: "1234567890",
+				Credentials: Authentication{
+					Authentication: endpoint.Authentication{
+						AccessToken: "123abc###",
+					},
+				},
+			},
+			expectedCType: endpoint.ConnectorTypeTPP,
+			expectedValid: false,
+			expectedErr:   ErrWorkspaceNotSupported,
+		},
 		// UNKNOWN USE CASES
 		{
 			name: "Unknown_invalid",
