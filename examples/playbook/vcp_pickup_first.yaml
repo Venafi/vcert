@@ -1,0 +1,19 @@
+config:
+  connection:
+    platform: vcp
+    credentials:
+      apiKey: '{{ Env "VCP_APIKEY" }}'
+certificateTasks:
+  - name: shared-vcp-cert
+    renewBefore: 5d
+    request:
+      pickupFirst: true
+      zone: '{{ Env "VCP_ZONE" }}'
+      subject:
+        commonName: '{{ Env "VCP_CERT_CN" }}'
+    installations:
+      - format: PEM
+        file: '{{ Env "TEST_INSTALL_DIR" }}/cert.pem'
+        chainFile: '{{ Env "TEST_INSTALL_DIR" }}/chain.pem'
+        keyFile: '{{ Env "TEST_INSTALL_DIR" }}/key.pem'
+        afterInstallAction: 'echo Installed shared certificate from CyberArk Certificate Manager SaaS'

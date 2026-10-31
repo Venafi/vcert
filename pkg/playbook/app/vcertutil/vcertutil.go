@@ -35,6 +35,8 @@ import (
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
 	"github.com/Venafi/vcert/v5/pkg/playbook/app/domain"
 	"github.com/Venafi/vcert/v5/pkg/util"
+	"github.com/Venafi/vcert/v5/pkg/venafi/cloud"
+	"github.com/Venafi/vcert/v5/pkg/venafi/ngts"
 	"github.com/Venafi/vcert/v5/pkg/venafi/tpp"
 	"github.com/Venafi/vcert/v5/pkg/verror"
 )
@@ -398,3 +400,334 @@ func GeneratePassword() string {
 
 	return fmt.Sprintf("t%d-%s.temp.pwd", time.Now().Unix(), randString)
 }
+
+// LocateResult describes the cert object the platform currently considers
+// "the" cert matching a given CN/zone. Returned by LocateLatestCN.
+type LocateResult struct {
+	Thumbprint string    // SHA-1 hex, uppercase without colons
+	ValidTo    time.Time
+	Found      bool
+	ID         string    // platform-specific identifier (DN for TPP, UUID for NGTS)
+	UseCertID  bool      // true: use as certificate.Request.CertID (NGTS). false: PickupID (TPP).
+}
+
+// ErrLocateNotSupported is returned by LocateLatestCN when the configured
+// platform does not implement a cheap "what's the current cert for this CN"
+// lookup. Callers should treat it as a signal to bypass pickup-first
+// mode and fall through to the normal enroll flow.
+var ErrLocateNotSupported = fmt.Errorf("certificate locate not supported on this platform")
+
+// ErrMetadataNotSupported is returned by GetCertMetadata when the configured
+// platform does not implement the cheap thumbprint+validity lookup.
+var ErrMetadataNotSupported = fmt.Errorf("certificate metadata lookup not supported on this platform")
+
+// NormalizeThumbprint strips colons, spaces, and dots from a thumbprint and returns uppercase hex.
+func NormalizeThumbprint(thumb string) string {
+	thumb = strings.ReplaceAll(thumb, ":", "")
+	thumb = strings.ReplaceAll(thumb, " ", "")
+	thumb = strings.ReplaceAll(thumb, ".", "")
+	return strings.ToUpper(thumb)
+}
+
+// LocateLatestCN returns the platform-side identity + metadata of the cert
+// the platform currently considers "current" for the playbook task's CN.
+//
+//   - TPP:  reads metadata for the cert object DN (zone + "\" + CN) via
+//           Connector.RetrieveCertificateMetaData.
+//   - NGTS: queries NGTS certificate search API by CN (or pickupId if provided),
+//           and picks the latest valid certificate.
+//   - others: returns ErrLocateNotSupported.
+func LocateLatestCN(config domain.Config, request domain.PlaybookRequest) (*LocateResult, error) {
+	switch config.Connection.GetConnectorType() {
+	case endpoint.ConnectorTypeTPP:
+		return locateTPP(config, request)
+	case endpoint.ConnectorTypeNGTS:
+		return locateNGTS(config, request)
+	case endpoint.ConnectorTypeCloud:
+		return locateCloud(config, request)
+	default:
+		return nil, ErrLocateNotSupported
+	}
+}
+
+func locateTPP(config domain.Config, request domain.PlaybookRequest) (*LocateResult, error) {
+	connector, err := buildClient(config, request.Zone, request.Timeout)
+	if err != nil {
+		return nil, fmt.Errorf("could not build connector: %w", err)
+	}
+	dn := request.PickupID
+	if dn == "" {
+		dn = request.Zone + "\\" + request.Subject.CommonName
+	}
+	md, err := connector.RetrieveCertificateMetaData(dn)
+	if err != nil {
+		return &LocateResult{Found: false}, err
+	}
+	if md == nil || md.CertificateDetails.Thumbprint == "" {
+		return &LocateResult{Found: false}, nil
+	}
+	return &LocateResult{
+		Thumbprint: NormalizeThumbprint(md.CertificateDetails.Thumbprint),
+		ValidTo:    md.CertificateDetails.ValidTo,
+		Found:      true,
+		ID:         dn,
+		UseCertID:  false,
+	}, nil
+}
+
+func locateNGTS(config domain.Config, request domain.PlaybookRequest) (*LocateResult, error) {
+	conn, err := buildClient(config, request.Zone, request.Timeout)
+	if err != nil {
+		return nil, fmt.Errorf("could not build NGTS connector: %w", err)
+	}
+
+	ngtsConn, ok := conn.(*ngts.Connector)
+	if !ok {
+		return nil, fmt.Errorf("connector is not *ngts.Connector")
+	}
+
+	// 1. If PickupID is specified:
+	if request.PickupID != "" {
+		// Case A: Try as Certificate ID (UUID)
+		certDetails, err := ngtsConn.GetCertificateDetails(request.PickupID)
+		if err == nil && certDetails != nil && certDetails.Fingerprint != "" {
+			return &LocateResult{
+				Thumbprint: NormalizeThumbprint(certDetails.Fingerprint),
+				ValidTo:    certDetails.ValidityEnd,
+				Found:      true,
+				ID:         certDetails.ID,
+				UseCertID:  true,
+			}, nil
+		}
+
+		// Case B: Try as Fingerprint
+		fpSearch, err := ngtsConn.SearchCertificatesByFingerprint(request.PickupID)
+		if err == nil && fpSearch != nil && len(fpSearch.Certificates) > 0 {
+			bestCert, bestEnd := findNewestNGTSCert(fpSearch.Certificates)
+			if bestCert != nil {
+				return &LocateResult{
+					Thumbprint: NormalizeThumbprint(bestCert.Fingerprint),
+					ValidTo:    bestEnd,
+					Found:      true,
+					ID:         bestCert.Id,
+					UseCertID:  true,
+				}, nil
+			}
+		}
+	}
+
+	// 2. Standard case: search by Common Name
+	cn := request.Subject.CommonName
+	if cn == "" {
+		return &LocateResult{Found: false}, nil
+	}
+
+	searchRes, err := ngtsConn.SearchCertificatesByCN(cn)
+	if err != nil {
+		return &LocateResult{Found: false}, err
+	}
+	if searchRes == nil || len(searchRes.Certificates) == 0 {
+		return &LocateResult{Found: false}, nil
+	}
+
+	bestCert, bestEnd := findNewestNGTSCert(searchRes.Certificates)
+	if bestCert == nil {
+		return &LocateResult{Found: false}, nil
+	}
+
+	return &LocateResult{
+		Thumbprint: NormalizeThumbprint(bestCert.Fingerprint),
+		ValidTo:    bestEnd,
+		Found:      true,
+		ID:         bestCert.Id,
+		UseCertID:  true,
+	}, nil
+}
+
+func findNewestNGTSCert(certs []ngts.Certificate) (*ngts.Certificate, time.Time) {
+	var newest *ngts.Certificate
+	var newestEnd time.Time
+
+	// Find the newest active, non-retired, non-revoked certificate
+	for i := range certs {
+		c := &certs[i]
+		if c.IsRetiredOrRevoked() {
+			continue
+		}
+		t, err := time.Parse(time.RFC3339, c.ValidityEnd)
+		if err != nil {
+			t, err = time.Parse(time.RFC3339Nano, c.ValidityEnd)
+		}
+		if err == nil {
+			if newest == nil || t.After(newestEnd) {
+				newest = c
+				newestEnd = t
+			}
+		}
+	}
+
+	return newest, newestEnd
+}
+
+func locateCloud(config domain.Config, request domain.PlaybookRequest) (*LocateResult, error) {
+	conn, err := buildClient(config, request.Zone, request.Timeout)
+	if err != nil {
+		return nil, fmt.Errorf("could not build Cloud connector: %w", err)
+	}
+
+	cloudConn, ok := conn.(*cloud.Connector)
+	if !ok {
+		return nil, fmt.Errorf("connector is not *cloud.Connector")
+	}
+
+	// 1. If PickupID is specified:
+	if request.PickupID != "" {
+		// Case A: Try as Certificate ID (UUID)
+		certDetails, err := cloudConn.GetCertificateDetails(request.PickupID)
+		if err == nil && certDetails != nil && certDetails.Fingerprint != "" {
+			return &LocateResult{
+				Thumbprint: NormalizeThumbprint(certDetails.Fingerprint),
+				ValidTo:    certDetails.ValidityEnd,
+				Found:      true,
+				ID:         certDetails.ID,
+				UseCertID:  true,
+			}, nil
+		}
+
+		// Case B: Try as Fingerprint
+		fpSearch, err := cloudConn.SearchCertificatesByFingerprint(request.PickupID)
+		if err == nil && fpSearch != nil && len(fpSearch.Certificates) > 0 {
+			bestCert, bestEnd := findNewestCloudCert(fpSearch.Certificates)
+			if bestCert != nil {
+				return &LocateResult{
+					Thumbprint: NormalizeThumbprint(bestCert.Fingerprint),
+					ValidTo:    bestEnd,
+					Found:      true,
+					ID:         bestCert.Id,
+					UseCertID:  true,
+				}, nil
+			}
+		}
+	}
+
+	// 2. Standard case: search by Common Name
+	cn := request.Subject.CommonName
+	if cn == "" {
+		return &LocateResult{Found: false}, nil
+	}
+
+	searchRes, err := cloudConn.SearchCertificatesByCN(cn)
+	if err != nil {
+		return &LocateResult{Found: false}, err
+	}
+	if searchRes == nil || len(searchRes.Certificates) == 0 {
+		return &LocateResult{Found: false}, nil
+	}
+
+	bestCert, bestEnd := findNewestCloudCert(searchRes.Certificates)
+	if bestCert == nil {
+		return &LocateResult{Found: false}, nil
+	}
+
+	return &LocateResult{
+		Thumbprint: NormalizeThumbprint(bestCert.Fingerprint),
+		ValidTo:    bestEnd,
+		Found:      true,
+		ID:         bestCert.Id,
+		UseCertID:  true,
+	}, nil
+}
+
+func findNewestCloudCert(certs []cloud.Certificate) (*cloud.Certificate, time.Time) {
+	var newest *cloud.Certificate
+	var newestEnd time.Time
+
+	// Find the newest active, non-retired, non-revoked certificate
+	for i := range certs {
+		c := &certs[i]
+		if c.IsRetiredOrRevoked() {
+			continue
+		}
+		t, err := time.Parse(time.RFC3339, c.ValidityEnd)
+		if err != nil {
+			t, err = time.Parse(time.RFC3339Nano, c.ValidityEnd)
+		}
+		if err == nil {
+			if newest == nil || t.After(newestEnd) {
+				newest = c
+				newestEnd = t
+			}
+		}
+	}
+
+	return newest, newestEnd
+}
+
+// PickupCertificateByLocator fetches the full cert (+ key if requested)
+// using the platform-appropriate identifier from a prior LocateLatestCN
+// call. On TPP loc.ID is used as PickupID; on NGTS and Cloud loc.ID is used as CertID.
+func PickupCertificateByLocator(config domain.Config, request domain.PlaybookRequest, loc *LocateResult, keyPassword string, fetchKey bool) (*certificate.PEMCollection, *certificate.Request, error) {
+	if loc == nil {
+		return nil, nil, fmt.Errorf("nil LocateResult")
+	}
+	connector, err := buildClient(config, request.Zone, request.Timeout)
+	if err != nil {
+		return nil, nil, fmt.Errorf("could not build connector for pickup: %w", err)
+	}
+	vReq := buildRequest(request)
+	if loc.UseCertID {
+		vReq.CertID = loc.ID
+	} else {
+		vReq.PickupID = loc.ID
+	}
+	vReq.KeyPassword = keyPassword
+	vReq.FetchPrivateKey = fetchKey
+	if !fetchKey {
+		vReq.CsrOrigin = certificate.LocalGeneratedCSR
+	}
+	pcc, err := connector.RetrieveCertificate(&vReq)
+	if err != nil {
+		return nil, &vReq, err
+	}
+	return pcc, &vReq, nil
+}
+
+// GetCertMetadata returns the platform-side thumbprint (SHA-1, uppercase
+// hex matching TPP's CertificateDetails.Thumbprint format) and ValidTo for
+// the cert object identified by pickupID.
+func GetCertMetadata(config domain.Config, request domain.PlaybookRequest, pickupID string) (thumbprint string, validTo time.Time, err error) {
+	connector, err := buildClient(config, request.Zone, request.Timeout)
+	if err != nil {
+		return "", time.Time{}, fmt.Errorf("could not build connector for metadata: %w", err)
+	}
+	md, err := connector.RetrieveCertificateMetaData(pickupID)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+	if md == nil {
+		return "", time.Time{}, fmt.Errorf("empty metadata response")
+	}
+	return NormalizeThumbprint(md.CertificateDetails.Thumbprint), md.CertificateDetails.ValidTo, nil
+}
+
+// PickupCertificate retrieves a previously-issued certificate (and optionally
+// its private key) from the connected platform without enrolling a new one.
+func PickupCertificate(config domain.Config, request domain.PlaybookRequest, pickupID, keyPassword string, fetchKey bool) (*certificate.PEMCollection, *certificate.Request, error) {
+	connector, err := buildClient(config, request.Zone, request.Timeout)
+	if err != nil {
+		return nil, nil, fmt.Errorf("could not build connector for pickup: %w", err)
+	}
+	vReq := buildRequest(request)
+	vReq.PickupID = pickupID
+	vReq.KeyPassword = keyPassword
+	vReq.FetchPrivateKey = fetchKey
+	if !fetchKey {
+		vReq.CsrOrigin = certificate.LocalGeneratedCSR
+	}
+	pcc, err := connector.RetrieveCertificate(&vReq)
+	if err != nil {
+		return nil, &vReq, err
+	}
+	return pcc, &vReq, nil
+}
+

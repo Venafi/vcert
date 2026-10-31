@@ -47,4 +47,6 @@ type PlaybookRequest struct {
 	ExtKeyUsages   certificate.ExtKeyUsageSlice `yaml:"eku,omitempty"`
 	ValidDays      string                       `yaml:"validDays,omitempty"`
 	Zone           string                       `yaml:"zone,omitempty"`
+	PickupFirst    bool                         `yaml:"pickupFirst,omitempty"`
+	PickupID       string                       `yaml:"pickupId,omitempty"`
 }
