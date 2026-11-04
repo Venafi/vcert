@@ -442,7 +442,10 @@ func (c *Connector) RenewCertificate(renewReq *certificate.RenewalRequest) (requ
 	}
 	applicationId := previousRequest.ApplicationId
 	templateId := previousRequest.TemplateId
-	certificateId := previousRequest.CertificateIdsList[0]
+	certificateId, err := issuedCertificateID(certificateRequestId, previousRequest)
+	if err != nil {
+		return "", fmt.Errorf("certificate renew failed: %w", err)
+	}
 
 	emptyField := ""
 	if certificateId == "" {
@@ -569,7 +572,10 @@ func (c *Connector) RetireCertificate(retireReq *certificate.RetireRequest) erro
 		}
 		return fmt.Errorf("certificate retirement failed: error on getting Certificate ID: %s", err)
 	}
-	certificateId := previousRequest.CertificateIdsList[0]
+	certificateId, err := issuedCertificateID(certificateRequestId, previousRequest)
+	if err != nil {
+		return fmt.Errorf("certificate retirement failed: %w", err)
+	}
 
 	/* Now we do retirement*/
 	retRequest := certificateRetireRequest{
@@ -1123,6 +1129,20 @@ func (c *Connector) getCloudRequest(req *certificate.Request) (*certificateReque
 	}
 
 	return &cloudReq, nil
+}
+
+// issuedCertificateID returns the ID of the certificate that a certificate request produced. A request that has not
+// produced a certificate yet (for example while issuance is still pending) has no certificate IDs, so it returns an
+// error instead of indexing an empty list.
+func issuedCertificateID(requestID string, status *certificateStatus) (string, error) {
+	if status == nil || len(status.CertificateIdsList) == 0 {
+		state := ""
+		if status != nil {
+			state = status.Status
+		}
+		return "", fmt.Errorf("%w: certificate request %s has no issued certificate yet (status %q); wait for it to be issued before renewing or retiring it", verror.UserDataError, requestID, state)
+	}
+	return status.CertificateIdsList[0], nil
 }
 
 func (c *Connector) getCertificateStatus(requestID string) (certStatus *certificateStatus, err error) {
