@@ -1314,13 +1314,16 @@ func TestRetireCertificateWithPickUpID(t *testing.T) {
 		t.Fatalf("%s", err)
 	}
 
+	// Wait for the certificate to be issued: a request with no issued certificate cannot be retired.
+	req.PickupID = pickupID
+	req.ChainOption = certificate.ChainOptionRootLast
+	if _, err = retrieveCertificate(conn, req, 600); err != nil {
+		t.Fatalf("%s", err)
+	}
+
 	retireReq := &certificate.RetireRequest{}
 	retireReq.CertificateDN = pickupID
 
-	// Letting Palo Alto Networks Next-Gen Trust Security (NGTS) some time to load certificate into inventory.
-	// Palo Alto Networks Next-Gen Trust Security (NGTS) may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
-	// or even stuck into it
-	time.Sleep(time.Duration(2) * time.Second)
 	err = conn.RetireCertificate(retireReq)
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -1350,13 +1353,16 @@ func TestRetireCertificateTwice(t *testing.T) {
 		t.Fatalf("%s", err)
 	}
 
+	// Wait for the certificate to be issued: a request with no issued certificate cannot be retired.
+	req.PickupID = pickupID
+	req.ChainOption = certificate.ChainOptionRootLast
+	if _, err = retrieveCertificate(conn, req, 600); err != nil {
+		t.Fatalf("%s", err)
+	}
+
 	retireReq := &certificate.RetireRequest{}
 	retireReq.CertificateDN = pickupID
 
-	// Letting Palo Alto Networks Next-Gen Trust Security (NGTS) some time to load certificate into inventory.
-	// Palo Alto Networks Next-Gen Trust Security (NGTS) may be able to retrieve cert from API immediately, but storing in inventory may take a few seconds
-	// or even stuck into it
-	time.Sleep(time.Duration(2) * time.Second)
 	err = conn.RetireCertificate(retireReq)
 	if err != nil {
 		t.Fatalf("%s", err)
