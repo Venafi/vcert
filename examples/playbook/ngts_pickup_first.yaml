@@ -1,0 +1,24 @@
+config:
+  connection:
+    platform: NGTS
+    url: '{{ Env "NGTS_URL" }}'
+    credentials:
+      clientId: '{{ Env "NGTS_CLIENT_ID" }}'
+      clientSecret: '{{ Env "NGTS_CLIENT_SECRET" }}'
+      scope: '{{ Env "NGTS_SCOPE" }}'
+      tokenURL: '{{ Env "NGTS_TOKEN_URL" }}'
+certificateTasks:
+  - name: shared-ngts-cert
+    renewBefore: 1d
+    request:
+      csr: service
+      pickupFirst: true
+      zone: '{{ Env "NGTS_ZONE" }}'
+      subject:
+        commonName: '{{ Env "TEST_PLAYBOOK_CN" }}'
+    installations:
+      - format: PEM
+        file: '{{ Env "TEST_INSTALL_DIR" }}/cert.pem'
+        chainFile: '{{ Env "TEST_INSTALL_DIR" }}/chain.pem'
+        keyFile: '{{ Env "TEST_INSTALL_DIR" }}/key.pem'
+        afterInstallAction: 'echo Installed shared certificate'
