@@ -6,6 +6,7 @@ import (
 
 	"github.com/Venafi/vcert/v5/pkg/domain"
 	"github.com/Venafi/vcert/v5/pkg/util"
+	"github.com/Venafi/vcert/v5/pkg/verror"
 )
 
 func (c *CloudProvidersClient) ListCloudProviders(ctx context.Context, request domain.GetCloudProviderRequest) ([]domain.CloudProvider, error) {
@@ -155,11 +156,23 @@ func (c *CloudProvidersClient) UpdateCloudKeystore(ctx context.Context, request 
 		return nil, fmt.Errorf("cloud keystore ID cannot be empty")
 	}
 
+	// The API replaces the whole discovery configuration on every update, and
+	// uses its defaults (no schedule, both flags false) for anything not sent.
+	// Always send the current settings merged with the requested changes, so
+	// that an update, even a rename, does not reset them.
+	current, err := c.ListCloudKeystores(ctx, domain.GetCloudKeystoreRequest{CloudKeystoreID: &request.ID})
+	if err != nil {
+		return nil, fmt.Errorf("failed to read Cloud Keystore with ID %s before updating it: %w", request.ID, err)
+	}
+	if len(current) != 1 {
+		return nil, fmt.Errorf("%w with ID %s", verror.CloudKeystoreNotFoundError, request.ID)
+	}
+
 	input := &CloudKeystoreUpdateInput{
 		Id:                     request.ID,
 		Name:                   request.Name,
 		TeamId:                 request.TeamID,
-		DiscoveryConfiguration: discoveryConfigurationInputFromDomain(request.Discovery),
+		DiscoveryConfiguration: mergeDiscoveryConfiguration(current[0].DiscoveryConfiguration, request.Discovery),
 	}
 
 	resp, err := UpdateCloudKeystore(ctx, c.graphqlClient, input)
@@ -558,8 +571,43 @@ func discoveryConfigurationInputFromDomain(options *domain.CloudDiscoveryOptions
 		return nil
 	}
 	return &CloudDiscoveryConfigurationInput{
-		ScheduleSpecification:      options.ScheduleSpecification,
+		ScheduleSpecification:      scheduleSpecificationInput(options.ScheduleSpecification),
 		IncludeExpiredCertificates: options.IncludeExpiredCertificates,
 		IncludeRevokedCertificates: options.IncludeRevokedCertificates,
 	}
+}
+
+// mergeDiscoveryConfiguration returns the complete discovery configuration
+// that results from applying the given changes to the current one
+func mergeDiscoveryConfiguration(current *domain.CloudDiscoveryConfiguration, changes *domain.CloudDiscoveryOptions) *CloudDiscoveryConfigurationInput {
+	merged := domain.CloudDiscoveryConfiguration{}
+	if current != nil {
+		merged = *current
+	}
+	if changes != nil {
+		if changes.ScheduleSpecification != nil {
+			merged.ScheduleSpecification = *changes.ScheduleSpecification
+		}
+		if changes.IncludeExpiredCertificates != nil {
+			merged.IncludeExpiredCertificates = *changes.IncludeExpiredCertificates
+		}
+		if changes.IncludeRevokedCertificates != nil {
+			merged.IncludeRevokedCertificates = *changes.IncludeRevokedCertificates
+		}
+	}
+	return &CloudDiscoveryConfigurationInput{
+		ScheduleSpecification:      scheduleSpecificationInput(&merged.ScheduleSpecification),
+		IncludeExpiredCertificates: &merged.IncludeExpiredCertificates,
+		IncludeRevokedCertificates: &merged.IncludeRevokedCertificates,
+	}
+}
+
+// scheduleSpecificationInput maps an empty schedule to nil: the API deletes the
+// schedule when none is sent, whereas an empty string would be passed on to the
+// scheduler as a crontab expression
+func scheduleSpecificationInput(schedule *string) *string {
+	if schedule == nil || *schedule == "" {
+		return nil
+	}
+	return schedule
 }

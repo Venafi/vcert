@@ -398,6 +398,7 @@ type CloudDiscoveryConfiguration struct {
 
 // CloudDiscoveryOptions sets the discovery configuration of a cloud keystore.
 // Nil fields are left unchanged on update, or take the server default on create.
+// A ScheduleSpecification pointing to an empty string removes the schedule.
 type CloudDiscoveryOptions struct {
 	ScheduleSpecification      *string
 	IncludeExpiredCertificates *bool

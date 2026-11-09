@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/Venafi/vcert/v5/pkg/domain"
+	"github.com/Venafi/vcert/v5/pkg/verror"
 )
 
 type graphqlRequest struct {
@@ -205,20 +206,84 @@ func TestCreateCloudKeystore(t *testing.T) {
 	assert.Equal(t, map[string]interface{}{"includeExpiredCertificates": false}, input["discoveryConfiguration"])
 }
 
-func TestUpdateCloudKeystoreOmitsUnchangedFields(t *testing.T) {
-	client, requests := newTestClient(t, `{"data":{"updateCloudKeystore":`+keystoreNodeJSON+`}}`)
+func keystoreListResponse(node string) string {
+	return `{"data":{"cloudKeystores":{"nodes":[` + node + `],"pageInfo":{"hasNextPage":false}}}}`
+}
+
+func TestUpdateCloudKeystoreKeepsDiscoverySettings(t *testing.T) {
+	// The API resets any discovery setting that is not sent, so a rename must
+	// send the current ones: schedule "00 03 * * *", expired true, revoked false
+	client, requests := newTestClient(t,
+		keystoreListResponse(keystoreNodeJSON),
+		`{"data":{"updateCloudKeystore":`+keystoreNodeJSON+`}}`,
+	)
+
+	_, err := client.UpdateCloudKeystore(context.Background(), domain.UpdateCloudKeystoreRequest{ID: "k1", Name: strPtr("renamed")})
+	require.NoError(t, err)
+
+	require.Len(t, *requests, 2)
+	assert.Equal(t, "ListCloudKeystores", (*requests)[0].OperationName)
+	assert.Equal(t, "k1", (*requests)[0].Variables["cloudKeystoreId"])
+	input := (*requests)[1].Variables["input"].(map[string]interface{})
+	assert.Equal(t, map[string]interface{}{
+		"id":   "k1",
+		"name": "renamed",
+		"discoveryConfiguration": map[string]interface{}{
+			"scheduleSpecification":      "00 03 * * *",
+			"includeExpiredCertificates": true,
+			"includeRevokedCertificates": false,
+		},
+	}, input)
+}
+
+func TestUpdateCloudKeystoreMergesDiscoveryChanges(t *testing.T) {
+	client, requests := newTestClient(t,
+		keystoreListResponse(keystoreNodeJSON),
+		`{"data":{"updateCloudKeystore":`+keystoreNodeJSON+`}}`,
+	)
 
 	_, err := client.UpdateCloudKeystore(context.Background(), domain.UpdateCloudKeystoreRequest{
 		ID:        "k1",
-		Discovery: &domain.CloudDiscoveryOptions{ScheduleSpecification: strPtr("00 04 * * *")},
+		Discovery: &domain.CloudDiscoveryOptions{IncludeRevokedCertificates: boolPtr(true)},
 	})
 	require.NoError(t, err)
 
-	input := (*requests)[0].Variables["input"].(map[string]interface{})
+	input := (*requests)[1].Variables["input"].(map[string]interface{})
 	assert.Equal(t, map[string]interface{}{
-		"id":                     "k1",
-		"discoveryConfiguration": map[string]interface{}{"scheduleSpecification": "00 04 * * *"},
-	}, input)
+		"scheduleSpecification":      "00 03 * * *",
+		"includeExpiredCertificates": true,
+		"includeRevokedCertificates": true,
+	}, input["discoveryConfiguration"])
+	assert.NotContains(t, input, "name")
+}
+
+func TestUpdateCloudKeystoreClearsSchedule(t *testing.T) {
+	client, requests := newTestClient(t,
+		keystoreListResponse(keystoreNodeJSON),
+		`{"data":{"updateCloudKeystore":`+keystoreNodeJSON+`}}`,
+	)
+
+	_, err := client.UpdateCloudKeystore(context.Background(), domain.UpdateCloudKeystoreRequest{
+		ID:        "k1",
+		Discovery: &domain.CloudDiscoveryOptions{ScheduleSpecification: strPtr("")},
+	})
+	require.NoError(t, err)
+
+	// The API deletes the schedule when none is sent; an empty string would be
+	// passed on to the scheduler as an invalid crontab expression
+	input := (*requests)[1].Variables["input"].(map[string]interface{})
+	assert.Equal(t, map[string]interface{}{
+		"includeExpiredCertificates": true,
+		"includeRevokedCertificates": false,
+	}, input["discoveryConfiguration"])
+}
+
+func TestUpdateCloudKeystoreFailsWhenNotFound(t *testing.T) {
+	client, requests := newTestClient(t, keystoreListResponse(""))
+
+	_, err := client.UpdateCloudKeystore(context.Background(), domain.UpdateCloudKeystoreRequest{ID: "k1", Name: strPtr("renamed")})
+	require.ErrorIs(t, err, verror.CloudKeystoreNotFoundError)
+	assert.Len(t, *requests, 1)
 }
 
 func TestStartAndAbortCloudDiscovery(t *testing.T) {
