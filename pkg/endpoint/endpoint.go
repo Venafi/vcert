@@ -163,6 +163,40 @@ type WorkspaceSetter interface {
 	SetWorkspace(workspace string)
 }
 
+// CloudProviderManager is implemented by connectors that can manage cloud
+// providers. It is kept separate from Connector so that connectors for
+// platforms without cloud provider management do not have to implement it.
+type CloudProviderManager interface {
+	// ListCloudProviders returns the cloud providers matching the given filter.
+	// Empty filter fields are ignored.
+	ListCloudProviders(filter domain.GetCloudProviderRequest) ([]domain.CloudProvider, error)
+	CreateCloudProvider(request domain.CreateCloudProviderRequest) (*domain.CloudProvider, error)
+	UpdateCloudProvider(request domain.UpdateCloudProviderRequest) (*domain.CloudProvider, error)
+	DeleteCloudProvider(cloudProviderID string) error
+	// ValidateCloudProvider checks that the platform can reach the cloud
+	// provider with the configured credentials
+	ValidateCloudProvider(cloudProviderID string) (*domain.CloudProviderValidationResult, error)
+}
+
+// CloudKeystoreManager is implemented by connectors that can manage cloud
+// keystores and run certificate discovery on them. It is kept separate from
+// Connector for the same reason as CloudProviderManager.
+type CloudKeystoreManager interface {
+	// ListCloudKeystores returns the cloud keystores matching the given filter.
+	// Nil filter fields are ignored.
+	ListCloudKeystores(filter domain.GetCloudKeystoreRequest) ([]domain.CloudKeystore, error)
+	CreateCloudKeystore(request domain.CreateCloudKeystoreRequest) (*domain.CloudKeystore, error)
+	UpdateCloudKeystore(request domain.UpdateCloudKeystoreRequest) (*domain.CloudKeystore, error)
+	DeleteCloudKeystore(cloudKeystoreID string) error
+	// StartCloudDiscovery starts an asynchronous certificate discovery on the
+	// cloud keystore. Use ListCloudKeystores to follow its progress.
+	StartCloudDiscovery(cloudKeystoreID string) (*domain.WorkflowResult, error)
+	AbortCloudDiscovery(cloudKeystoreID string) error
+	// ListMachineIdentities returns the certificates installed in, or
+	// discovered on, the cloud keystore
+	ListMachineIdentities(request domain.ListCloudMachineIdentitiesRequest) ([]domain.CloudMachineIdentity, error)
+}
+
 type Filter struct {
 	Limit       *int
 	WithExpired bool

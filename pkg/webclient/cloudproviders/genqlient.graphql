@@ -73,3 +73,201 @@ query GetMachineIdentities($cloudKeystoreId: UUID, $machineIdentityId: UUID, $fi
 mutation DeleteMachineIdentities($machineIdentityIds: [UUID!]!){
     deleteCloudMachineIdentities(machineIdentityIds: $machineIdentityIds)
 }
+
+fragment CloudProviderFields on CloudProvider {
+    id
+    name
+    type
+    status
+    statusDetails
+    keystoresCount
+}
+
+query ListCloudProviders($status: CloudProviderStatus, $providerType: CloudProviderType, $name: String, $after: String) {
+    cloudProviders(filter: {status: $status, type: $providerType, name: $name}, after: $after) {
+        nodes {
+            ...CloudProviderFields
+        }
+        pageInfo {
+            hasNextPage
+            endCursor
+        }
+    }
+}
+
+mutation CreateCloudProvider($input: CloudProviderInput!) {
+    createCloudProvider(input: $input) {
+        ...CloudProviderFields
+    }
+}
+
+# @genqlient(for: "CloudProviderUpdateInput.name", omitempty: true)
+# @genqlient(for: "CloudProviderUpdateInput.teamId", omitempty: true)
+# @genqlient(for: "CloudProviderUpdateInput.authorizedTeams", omitempty: true)
+# @genqlient(for: "CloudProviderUpdateInput.awsConfiguration", omitempty: true)
+# @genqlient(for: "CloudProviderUpdateInput.azureConfiguration", omitempty: true)
+# @genqlient(for: "CloudProviderUpdateInput.gcpConfiguration", omitempty: true)
+# @genqlient(for: "CloudProviderUpdateInput.akamaiConfiguration", omitempty: true)
+# @genqlient(for: "CloudProviderUpdateInput.shareWithAll", omitempty: true)
+# @genqlient(for: "CloudProviderUpdateInput.consumerTsgIds", omitempty: true)
+# @genqlient(for: "CloudProviderUpdateInput.consumerWorkspaceIds", omitempty: true)
+# @genqlient(for: "CloudProviderAWSConfigurationUpdateInput.role", omitempty: true)
+# @genqlient(for: "CloudProviderAzureConfigurationUpdateInput.applicationId", omitempty: true)
+# @genqlient(for: "CloudProviderAzureConfigurationUpdateInput.directoryId", omitempty: true)
+# @genqlient(for: "CloudProviderGCPConfigurationUpdateInput.projectNumber", omitempty: true)
+# @genqlient(for: "CloudProviderGCPConfigurationUpdateInput.workloadIdentityPoolId", omitempty: true)
+# @genqlient(for: "CloudProviderGCPConfigurationUpdateInput.workloadIdentityPoolProviderId", omitempty: true)
+# @genqlient(for: "CloudProviderGCPConfigurationUpdateInput.authorizationMethod", omitempty: true)
+# @genqlient(for: "CloudProviderGCPConfigurationUpdateInput.azureWIFConfiguration", omitempty: true)
+mutation UpdateCloudProvider(
+    $input: CloudProviderUpdateInput!
+) {
+    updateCloudProvider(input: $input) {
+        ...CloudProviderFields
+    }
+}
+
+mutation DeleteCloudProviders($cloudProviderIds: [UUID!]!) {
+    deleteCloudProvider(cloudProviderId: $cloudProviderIds)
+}
+
+mutation ValidateCloudProvider($cloudProviderId: UUID!) {
+    validateCloudProvider(cloudProviderId: $cloudProviderId) {
+        result
+        details
+    }
+}
+
+fragment CloudDiscoveryFields on CloudDiscovery {
+    id
+    status
+    statusDetails
+    totalCertificatesCount
+    newCertificatesCount
+    updatedCertificatesCount
+    missingCertificatesCount
+    startTime
+    endTime
+}
+
+fragment CloudKeystoreFields on CloudKeystore {
+    id
+    name
+    type
+    machineIdentitiesCount
+    cloudProvider {
+        id
+        name
+    }
+    configuration {
+        ... on CloudKeystoreACMConfiguration {
+            region
+            accountId
+        }
+        ... on CloudKeystoreAKVConfiguration {
+            keyVaultName
+        }
+        ... on CloudKeystoreGCMConfiguration {
+            projectId
+            location
+        }
+    }
+    discoveryConfiguration {
+        scheduleSpecification
+        includeExpiredCertificates
+        includeRevokedCertificates
+    }
+    discovery {
+        ...CloudDiscoveryFields
+    }
+}
+
+query ListCloudKeystores($cloudKeystoreId: UUID, $cloudKeystoreName: String, $cloudProviderId: UUID, $cloudProviderName: String, $after: String) {
+    cloudKeystores(filter: {cloudKeystoreId: $cloudKeystoreId, cloudKeystoreName: $cloudKeystoreName, cloudProviderId: $cloudProviderId, cloudProviderName: $cloudProviderName}, after: $after) {
+        nodes {
+            ...CloudKeystoreFields
+        }
+        pageInfo {
+            hasNextPage
+            endCursor
+        }
+    }
+}
+
+# @genqlient(for: "CloudDiscoveryConfigurationInput.scheduleSpecification", omitempty: true)
+# @genqlient(for: "CloudDiscoveryConfigurationInput.includeExpiredCertificates", omitempty: true)
+# @genqlient(for: "CloudDiscoveryConfigurationInput.includeRevokedCertificates", omitempty: true)
+mutation CreateCloudKeystore(
+    $input: CloudKeystoreInput!
+) {
+    createCloudKeystore(input: $input) {
+        ...CloudKeystoreFields
+    }
+}
+
+# @genqlient(for: "CloudKeystoreUpdateInput.name", omitempty: true)
+# @genqlient(for: "CloudKeystoreUpdateInput.teamId", omitempty: true)
+# @genqlient(for: "CloudKeystoreUpdateInput.authorizedTeams", omitempty: true)
+# @genqlient(for: "CloudKeystoreUpdateInput.authorizedServiceAccounts", omitempty: true)
+# @genqlient(for: "CloudKeystoreUpdateInput.allServiceAccountsAccess", omitempty: true)
+# @genqlient(for: "CloudKeystoreUpdateInput.discoveryConfiguration", omitempty: true)
+# @genqlient(for: "CloudKeystoreUpdateInput.consumerTsgIds", omitempty: true)
+# @genqlient(for: "CloudKeystoreUpdateInput.consumerWorkspaceIds", omitempty: true)
+# @genqlient(for: "CloudDiscoveryConfigurationInput.scheduleSpecification", omitempty: true)
+# @genqlient(for: "CloudDiscoveryConfigurationInput.includeExpiredCertificates", omitempty: true)
+# @genqlient(for: "CloudDiscoveryConfigurationInput.includeRevokedCertificates", omitempty: true)
+mutation UpdateCloudKeystore(
+    $input: CloudKeystoreUpdateInput!
+) {
+    updateCloudKeystore(input: $input) {
+        ...CloudKeystoreFields
+    }
+}
+
+mutation DeleteCloudKeystores($cloudKeystoreIds: [UUID!]!) {
+    deleteCloudKeystore(cloudKeystoreIds: $cloudKeystoreIds)
+}
+
+mutation StartCloudDiscovery($cloudKeystoreId: UUID!, $wsClientId: UUID!) {
+    startCloudDiscovery(cloudKeystoreId: $cloudKeystoreId, wsClientId: $wsClientId) {
+        workflowId
+        workflowName
+    }
+}
+
+mutation AbortCloudDiscovery($cloudKeystoreId: UUID!) {
+    abortCloudDiscovery(cloudKeystoreId: $cloudKeystoreId)
+}
+
+query ListMachineIdentities($cloudKeystoreId: UUID, $newlyDiscovered: Boolean, $after: String) {
+    cloudMachineIdentities(filter: {cloudKeystoreId: $cloudKeystoreId, newlyDiscovered: $newlyDiscovered}, after: $after) {
+        nodes {
+            id
+            cloudKeystoreId
+            cloudKeystoreName
+            cloudProviderId
+            cloudProviderName
+            metadata {
+                ... on AWSCertificateMetadata {
+                    arn
+                }
+                ... on AzureCertificateMetadata {
+                    azureId
+                    name
+                    version
+                }
+                ... on GCPCertificateMetadata {
+                    gcpId
+                    name
+                }
+            }
+            status
+            statusDetails
+            certificateId
+        }
+        pageInfo {
+            hasNextPage
+            endCursor
+        }
+    }
+}

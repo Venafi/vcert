@@ -39,6 +39,18 @@ const (
 	commandSshGetConfigName     = "sshgetconfig"
 	commandProvisionName        = "provision"
 	subCommandCloudKeystoreName = "cloudkeystore"
+
+	commandCloudProviderName        = "cloudprovider"
+	commandCloudKeystoreName        = "cloudkeystore"
+	subCommandCreateName            = "create"
+	subCommandGetName               = "get"
+	subCommandListName              = "list"
+	subCommandUpdateName            = "update"
+	subCommandDeleteName            = "delete"
+	subCommandValidateName          = "validate"
+	subCommandDiscoverName          = "discover"
+	subCommandAbortDiscoveryName    = "abort-discovery"
+	subCommandMachineIdentitiesName = "machine-identities"
 )
 
 var (
@@ -164,4 +176,31 @@ type commandFlags struct {
 	provisionPickupID    string
 	provisionFormat      string
 	extKeyUsage          certificate.ExtKeyUsageSlice
+
+	// cloud provider and cloud keystore management
+	providerID                        string
+	cloudType                         string
+	cloudStatus                       string
+	newName                           string
+	teamID                            string
+	awsAccountID                      string
+	awsRole                           string
+	awsRegion                         string
+	azureApplicationID                string
+	azureDirectoryID                  string
+	azureSecret                       string
+	azureKeyVaultName                 string
+	gcpServiceAccountEmail            string
+	gcpProjectNumber                  string
+	gcpWorkloadIdentityPoolID         string
+	gcpWorkloadIdentityPoolProviderID string
+	gcpAuthorizationMethod            string
+	gcpProjectID                      string
+	gcpLocation                       string
+	discoverySchedule                 string
+	includeExpired                    bool
+	includeRevoked                    bool
+	discoveryWait                     bool
+	discoveryTimeout                  int
+	newlyDiscovered                   bool
 }

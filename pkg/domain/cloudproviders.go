@@ -2,6 +2,7 @@ package domain
 
 import (
 	"strings"
+	"time"
 )
 
 type CloudProviderStatus int
@@ -118,6 +119,15 @@ type CloudKeystore struct {
 	Name                   string
 	Type                   CloudKeystoreType
 	MachineIdentitiesCount int
+	// The fields below are only populated by ListCloudKeystores and the
+	// create/update operations
+	CloudProviderID        string
+	CloudProviderName      string
+	ACM                    *CloudKeystoreACMConfiguration
+	AKV                    *CloudKeystoreAKVConfiguration
+	GCM                    *CloudKeystoreGCMConfiguration
+	DiscoveryConfiguration *CloudDiscoveryConfiguration
+	Discovery              *CloudDiscovery
 }
 
 type ProvisioningResponse struct {
@@ -236,4 +246,254 @@ type GetCloudMachineIdentityRequest struct {
 	Fingerprints      []string
 	NewlyDiscovered   *bool
 	Metadata          *string
+}
+
+func GetCloudProviderType(providerType string) CloudProviderType {
+	switch strings.ToUpper(providerType) {
+	case CloudProviderTypeAWSStr:
+		return CloudProviderTypeAWS
+	case CloudProviderTypeAzureStr:
+		return CloudProviderTypeAzure
+	case CloudProviderTypeGCPStr:
+		return CloudProviderTypeGCP
+	default:
+		return CloudProviderTypeUnknown
+	}
+}
+
+func GetCloudKeystoreType(keystoreType string) CloudKeystoreType {
+	switch strings.ToUpper(keystoreType) {
+	case CloudKeystoreTypeACMStr:
+		return CloudKeystoreTypeACM
+	case CloudKeystoreTypeAKVStr:
+		return CloudKeystoreTypeAKV
+	case CloudKeystoreTypeGCMStr:
+		return CloudKeystoreTypeGCM
+	default:
+		return CloudKeystoreTypeUnknown
+	}
+}
+
+type GCPAuthorizationMethod int
+
+const (
+	GCPAuthorizationMethodUnknown GCPAuthorizationMethod = iota
+	GCPAuthorizationMethodVenafiGeneratedKey
+	GCPAuthorizationMethodWorkloadIdentityFederation
+
+	GCPAuthorizationMethodVenafiGeneratedKeyStr         = "VENAFI_GENERATED_KEY"
+	GCPAuthorizationMethodWorkloadIdentityFederationStr = "WORKLOAD_IDENTITY_FEDERATION"
+	GCPAuthorizationMethodUnknownStr                    = "UNKNOWN"
+)
+
+func (m GCPAuthorizationMethod) String() string {
+	switch m {
+	case GCPAuthorizationMethodVenafiGeneratedKey:
+		return GCPAuthorizationMethodVenafiGeneratedKeyStr
+	case GCPAuthorizationMethodWorkloadIdentityFederation:
+		return GCPAuthorizationMethodWorkloadIdentityFederationStr
+	case GCPAuthorizationMethodUnknown:
+		fallthrough
+	default:
+		return GCPAuthorizationMethodUnknownStr
+	}
+}
+
+func GetGCPAuthorizationMethod(method string) GCPAuthorizationMethod {
+	switch strings.ToUpper(method) {
+	case GCPAuthorizationMethodVenafiGeneratedKeyStr:
+		return GCPAuthorizationMethodVenafiGeneratedKey
+	case GCPAuthorizationMethodWorkloadIdentityFederationStr:
+		return GCPAuthorizationMethodWorkloadIdentityFederation
+	default:
+		return GCPAuthorizationMethodUnknown
+	}
+}
+
+type CloudProviderAWSConfiguration struct {
+	AccountID string
+	Role      string
+}
+
+type CloudProviderAzureConfiguration struct {
+	ApplicationID string
+	DirectoryID   string
+	Secret        string
+}
+
+type CloudProviderGCPConfiguration struct {
+	ServiceAccountEmail            string
+	ProjectNumber                  string
+	WorkloadIdentityPoolID         string
+	WorkloadIdentityPoolProviderID string
+	AuthorizationMethod            GCPAuthorizationMethod
+}
+
+// CreateCloudProviderRequest holds the data for a new cloud provider. Exactly one
+// of AWS, Azure or GCP must be set and it must match Type.
+type CreateCloudProviderRequest struct {
+	Name   string
+	Type   CloudProviderType
+	TeamID string
+	AWS    *CloudProviderAWSConfiguration
+	Azure  *CloudProviderAzureConfiguration
+	GCP    *CloudProviderGCPConfiguration
+}
+
+type CloudProviderAWSConfigurationUpdate struct {
+	Role *string
+}
+
+type CloudProviderAzureConfigurationUpdate struct {
+	ApplicationID *string
+	DirectoryID   *string
+	// Secret is required by the API whenever the Azure configuration is updated
+	Secret string
+}
+
+type CloudProviderGCPConfigurationUpdate struct {
+	ProjectNumber                  *string
+	WorkloadIdentityPoolID         *string
+	WorkloadIdentityPoolProviderID *string
+	// AuthorizationMethod is left unchanged when set to GCPAuthorizationMethodUnknown
+	AuthorizationMethod GCPAuthorizationMethod
+}
+
+// UpdateCloudProviderRequest holds the changes to apply to an existing cloud
+// provider. ID and Type are required; nil fields are left unchanged.
+type UpdateCloudProviderRequest struct {
+	ID     string
+	Type   CloudProviderType
+	Name   *string
+	TeamID *string
+	AWS    *CloudProviderAWSConfigurationUpdate
+	Azure  *CloudProviderAzureConfigurationUpdate
+	GCP    *CloudProviderGCPConfigurationUpdate
+}
+
+type CloudProviderValidationResult struct {
+	Status  CloudProviderStatus
+	Details string
+}
+
+type CloudKeystoreACMConfiguration struct {
+	Region    string
+	AccountID string
+}
+
+type CloudKeystoreAKVConfiguration struct {
+	KeyVaultName string
+}
+
+type CloudKeystoreGCMConfiguration struct {
+	ProjectID string
+	Location  string
+}
+
+type CloudDiscoveryConfiguration struct {
+	ScheduleSpecification      string
+	IncludeExpiredCertificates bool
+	IncludeRevokedCertificates bool
+}
+
+// CloudDiscoveryOptions sets the discovery configuration of a cloud keystore.
+// Nil fields are left unchanged on update, or take the server default on create.
+type CloudDiscoveryOptions struct {
+	ScheduleSpecification      *string
+	IncludeExpiredCertificates *bool
+	IncludeRevokedCertificates *bool
+}
+
+type CloudDiscoveryStatus int
+
+const (
+	CloudDiscoveryStatusUnknown CloudDiscoveryStatus = iota
+	CloudDiscoveryStatusNeverInitiated
+	CloudDiscoveryStatusInitiated
+	CloudDiscoveryStatusRunning
+	CloudDiscoveryStatusCompleted
+	CloudDiscoveryStatusAborting
+	CloudDiscoveryStatusAborted
+	CloudDiscoveryStatusFailed
+
+	CloudDiscoveryStatusUnknownStr        = "UNKNOWN"
+	CloudDiscoveryStatusNeverInitiatedStr = "NEVER_INITIATED"
+	CloudDiscoveryStatusInitiatedStr      = "INITIATED"
+	CloudDiscoveryStatusRunningStr        = "RUNNING"
+	CloudDiscoveryStatusCompletedStr      = "COMPLETED"
+	CloudDiscoveryStatusAbortingStr       = "ABORTING"
+	CloudDiscoveryStatusAbortedStr        = "ABORTED"
+	CloudDiscoveryStatusFailedStr         = "FAILED"
+)
+
+func (cds CloudDiscoveryStatus) String() string {
+	switch cds {
+	case CloudDiscoveryStatusNeverInitiated:
+		return CloudDiscoveryStatusNeverInitiatedStr
+	case CloudDiscoveryStatusInitiated:
+		return CloudDiscoveryStatusInitiatedStr
+	case CloudDiscoveryStatusRunning:
+		return CloudDiscoveryStatusRunningStr
+	case CloudDiscoveryStatusCompleted:
+		return CloudDiscoveryStatusCompletedStr
+	case CloudDiscoveryStatusAborting:
+		return CloudDiscoveryStatusAbortingStr
+	case CloudDiscoveryStatusAborted:
+		return CloudDiscoveryStatusAbortedStr
+	case CloudDiscoveryStatusFailed:
+		return CloudDiscoveryStatusFailedStr
+	case CloudDiscoveryStatusUnknown:
+		fallthrough
+	default:
+		return CloudDiscoveryStatusUnknownStr
+	}
+}
+
+// IsFinished reports whether a discovery in this status is no longer running
+func (cds CloudDiscoveryStatus) IsFinished() bool {
+	switch cds {
+	case CloudDiscoveryStatusCompleted, CloudDiscoveryStatusAborted, CloudDiscoveryStatusFailed:
+		return true
+	default:
+		return false
+	}
+}
+
+type CloudDiscovery struct {
+	ID                       string
+	Status                   CloudDiscoveryStatus
+	StatusDetails            string
+	TotalCertificatesCount   int
+	NewCertificatesCount     int
+	UpdatedCertificatesCount int
+	MissingCertificatesCount int
+	StartTime                *time.Time
+	EndTime                  *time.Time
+}
+
+// CreateCloudKeystoreRequest holds the data for a new cloud keystore. Exactly one
+// of ACM, AKV or GCM must be set and it must match Type.
+type CreateCloudKeystoreRequest struct {
+	Name            string
+	Type            CloudKeystoreType
+	CloudProviderID string
+	TeamID          string
+	ACM             *CloudKeystoreACMConfiguration
+	AKV             *CloudKeystoreAKVConfiguration
+	GCM             *CloudKeystoreGCMConfiguration
+	Discovery       *CloudDiscoveryOptions
+}
+
+// UpdateCloudKeystoreRequest holds the changes to apply to an existing cloud
+// keystore. ID is required; nil fields are left unchanged.
+type UpdateCloudKeystoreRequest struct {
+	ID        string
+	Name      *string
+	TeamID    *string
+	Discovery *CloudDiscoveryOptions
+}
+
+type ListCloudMachineIdentitiesRequest struct {
+	KeystoreID      string
+	NewlyDiscovered *bool
 }

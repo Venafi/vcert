@@ -6,9 +6,37 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/Khan/genqlient/graphql"
 )
+
+// AbortCloudDiscoveryResponse is returned by AbortCloudDiscovery on success.
+type AbortCloudDiscoveryResponse struct {
+	// Abort cloud discovery
+	AbortCloudDiscovery bool `json:"abortCloudDiscovery"`
+}
+
+// GetAbortCloudDiscovery returns AbortCloudDiscoveryResponse.AbortCloudDiscovery, and is useful for accessing the field via an interface.
+func (v *AbortCloudDiscoveryResponse) GetAbortCloudDiscovery() bool { return v.AbortCloudDiscovery }
+
+// Indicates the type of authentication used to communicate with Cloud Providers
+type AuthorizationMethod string
+
+const (
+	// Venafi generated key uploaded manually by the customer to the Service Account
+	AuthorizationMethodVenafiGeneratedKey AuthorizationMethod = "VENAFI_GENERATED_KEY"
+	// Workload Identity Federation using OIDC
+	AuthorizationMethodWorkloadIdentityFederation AuthorizationMethod = "WORKLOAD_IDENTITY_FEDERATION"
+	// Azure WIF
+	AuthorizationMethodAzureWif AuthorizationMethod = "AZURE_WIF"
+)
+
+var AllAuthorizationMethod = []AuthorizationMethod{
+	AuthorizationMethodVenafiGeneratedKey,
+	AuthorizationMethodWorkloadIdentityFederation,
+	AuthorizationMethodAzureWif,
+}
 
 type CertificateProvisioningAWSOptionsInput struct {
 	// Amazon Resource Name (ARN) uniquely identifying AWS certificate resource
@@ -104,6 +132,672 @@ func (v *CertificateProvisioningTagOptionInput) GetName() string { return v.Name
 // GetValue returns CertificateProvisioningTagOptionInput.Value, and is useful for accessing the field via an interface.
 func (v *CertificateProvisioningTagOptionInput) GetValue() string { return v.Value }
 
+type CloudDiscoveryConfigurationInput struct {
+	// A crontab expression representing when the scheduled discovery will run, eg: '00 03 * * *' -> 3 AM every day
+	ScheduleSpecification      *string `json:"scheduleSpecification,omitempty"`
+	IncludeExpiredCertificates *bool   `json:"includeExpiredCertificates,omitempty"`
+	IncludeRevokedCertificates *bool   `json:"includeRevokedCertificates,omitempty"`
+}
+
+// GetScheduleSpecification returns CloudDiscoveryConfigurationInput.ScheduleSpecification, and is useful for accessing the field via an interface.
+func (v *CloudDiscoveryConfigurationInput) GetScheduleSpecification() *string {
+	return v.ScheduleSpecification
+}
+
+// GetIncludeExpiredCertificates returns CloudDiscoveryConfigurationInput.IncludeExpiredCertificates, and is useful for accessing the field via an interface.
+func (v *CloudDiscoveryConfigurationInput) GetIncludeExpiredCertificates() *bool {
+	return v.IncludeExpiredCertificates
+}
+
+// GetIncludeRevokedCertificates returns CloudDiscoveryConfigurationInput.IncludeRevokedCertificates, and is useful for accessing the field via an interface.
+func (v *CloudDiscoveryConfigurationInput) GetIncludeRevokedCertificates() *bool {
+	return v.IncludeRevokedCertificates
+}
+
+// CloudDiscoveryFields includes the GraphQL fields of CloudDiscovery requested by the fragment CloudDiscoveryFields.
+type CloudDiscoveryFields struct {
+	Id                       string               `json:"id"`
+	Status                   CloudDiscoveryStatus `json:"status"`
+	StatusDetails            *string              `json:"statusDetails"`
+	TotalCertificatesCount   int                  `json:"totalCertificatesCount"`
+	NewCertificatesCount     int                  `json:"newCertificatesCount"`
+	UpdatedCertificatesCount int                  `json:"updatedCertificatesCount"`
+	MissingCertificatesCount int                  `json:"missingCertificatesCount"`
+	StartTime                *time.Time           `json:"startTime"`
+	EndTime                  *time.Time           `json:"endTime"`
+}
+
+// GetId returns CloudDiscoveryFields.Id, and is useful for accessing the field via an interface.
+func (v *CloudDiscoveryFields) GetId() string { return v.Id }
+
+// GetStatus returns CloudDiscoveryFields.Status, and is useful for accessing the field via an interface.
+func (v *CloudDiscoveryFields) GetStatus() CloudDiscoveryStatus { return v.Status }
+
+// GetStatusDetails returns CloudDiscoveryFields.StatusDetails, and is useful for accessing the field via an interface.
+func (v *CloudDiscoveryFields) GetStatusDetails() *string { return v.StatusDetails }
+
+// GetTotalCertificatesCount returns CloudDiscoveryFields.TotalCertificatesCount, and is useful for accessing the field via an interface.
+func (v *CloudDiscoveryFields) GetTotalCertificatesCount() int { return v.TotalCertificatesCount }
+
+// GetNewCertificatesCount returns CloudDiscoveryFields.NewCertificatesCount, and is useful for accessing the field via an interface.
+func (v *CloudDiscoveryFields) GetNewCertificatesCount() int { return v.NewCertificatesCount }
+
+// GetUpdatedCertificatesCount returns CloudDiscoveryFields.UpdatedCertificatesCount, and is useful for accessing the field via an interface.
+func (v *CloudDiscoveryFields) GetUpdatedCertificatesCount() int { return v.UpdatedCertificatesCount }
+
+// GetMissingCertificatesCount returns CloudDiscoveryFields.MissingCertificatesCount, and is useful for accessing the field via an interface.
+func (v *CloudDiscoveryFields) GetMissingCertificatesCount() int { return v.MissingCertificatesCount }
+
+// GetStartTime returns CloudDiscoveryFields.StartTime, and is useful for accessing the field via an interface.
+func (v *CloudDiscoveryFields) GetStartTime() *time.Time { return v.StartTime }
+
+// GetEndTime returns CloudDiscoveryFields.EndTime, and is useful for accessing the field via an interface.
+func (v *CloudDiscoveryFields) GetEndTime() *time.Time { return v.EndTime }
+
+// Indicates the status of a cloud discovery
+type CloudDiscoveryStatus string
+
+const (
+	// The cloud discovery has not been initiated
+	CloudDiscoveryStatusNeverInitiated CloudDiscoveryStatus = "NEVER_INITIATED"
+	// The cloud discovery has been initiated
+	CloudDiscoveryStatusInitiated CloudDiscoveryStatus = "INITIATED"
+	// The cloud discovery is running
+	CloudDiscoveryStatusRunning CloudDiscoveryStatus = "RUNNING"
+	// The cloud discovery has been successfully completed
+	CloudDiscoveryStatusCompleted CloudDiscoveryStatus = "COMPLETED"
+	// The cloud discovery has been aborted
+	CloudDiscoveryStatusAborted CloudDiscoveryStatus = "ABORTED"
+	// The cloud discovery is aborting
+	CloudDiscoveryStatusAborting CloudDiscoveryStatus = "ABORTING"
+	// The cloud discovery has failed
+	CloudDiscoveryStatusFailed CloudDiscoveryStatus = "FAILED"
+)
+
+var AllCloudDiscoveryStatus = []CloudDiscoveryStatus{
+	CloudDiscoveryStatusNeverInitiated,
+	CloudDiscoveryStatusInitiated,
+	CloudDiscoveryStatusRunning,
+	CloudDiscoveryStatusCompleted,
+	CloudDiscoveryStatusAborted,
+	CloudDiscoveryStatusAborting,
+	CloudDiscoveryStatusFailed,
+}
+
+type CloudKeystoreACMConfigurationInput struct {
+	Region    string  `json:"region"`
+	AccountId *string `json:"accountId"`
+}
+
+// GetRegion returns CloudKeystoreACMConfigurationInput.Region, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreACMConfigurationInput) GetRegion() string { return v.Region }
+
+// GetAccountId returns CloudKeystoreACMConfigurationInput.AccountId, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreACMConfigurationInput) GetAccountId() *string { return v.AccountId }
+
+type CloudKeystoreAKVConfigurationInput struct {
+	// An Azure Key Vault name
+	//
+	// The vault name should be string of 3 to 24 characters and can contain only numbers (0-9), letters (a-z, A-Z), and hyphens (-).
+	// The name must begin with a letter, end with a letter or digit, and not contain consecutive hyphens.
+	KeyVaultName string `json:"keyVaultName"`
+}
+
+// GetKeyVaultName returns CloudKeystoreAKVConfigurationInput.KeyVaultName, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreAKVConfigurationInput) GetKeyVaultName() string { return v.KeyVaultName }
+
+type CloudKeystoreAkamaiCDNConfigurationInput struct {
+	ContractId string `json:"contractId"`
+}
+
+// GetContractId returns CloudKeystoreAkamaiCDNConfigurationInput.ContractId, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreAkamaiCDNConfigurationInput) GetContractId() string { return v.ContractId }
+
+// CloudKeystoreFields includes the GraphQL fields of CloudKeystore requested by the fragment CloudKeystoreFields.
+type CloudKeystoreFields struct {
+	Id string `json:"id"`
+	// Cloud Keystore name
+	//
+	// A string between 3 and 250 characters
+	Name                   string                                                                `json:"name"`
+	Type                   CloudKeystoreType                                                     `json:"type"`
+	MachineIdentitiesCount int                                                                   `json:"machineIdentitiesCount"`
+	CloudProvider          *CloudKeystoreFieldsCloudProvider                                     `json:"cloudProvider"`
+	Configuration          CloudKeystoreFieldsConfigurationCloudKeystoreConfiguration            `json:"-"`
+	DiscoveryConfiguration *CloudKeystoreFieldsDiscoveryConfigurationCloudDiscoveryConfiguration `json:"discoveryConfiguration"`
+	Discovery              *CloudKeystoreFieldsDiscoveryCloudDiscovery                           `json:"discovery"`
+}
+
+// GetId returns CloudKeystoreFields.Id, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreFields) GetId() string { return v.Id }
+
+// GetName returns CloudKeystoreFields.Name, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreFields) GetName() string { return v.Name }
+
+// GetType returns CloudKeystoreFields.Type, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreFields) GetType() CloudKeystoreType { return v.Type }
+
+// GetMachineIdentitiesCount returns CloudKeystoreFields.MachineIdentitiesCount, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreFields) GetMachineIdentitiesCount() int { return v.MachineIdentitiesCount }
+
+// GetCloudProvider returns CloudKeystoreFields.CloudProvider, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreFields) GetCloudProvider() *CloudKeystoreFieldsCloudProvider {
+	return v.CloudProvider
+}
+
+// GetConfiguration returns CloudKeystoreFields.Configuration, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreFields) GetConfiguration() CloudKeystoreFieldsConfigurationCloudKeystoreConfiguration {
+	return v.Configuration
+}
+
+// GetDiscoveryConfiguration returns CloudKeystoreFields.DiscoveryConfiguration, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreFields) GetDiscoveryConfiguration() *CloudKeystoreFieldsDiscoveryConfigurationCloudDiscoveryConfiguration {
+	return v.DiscoveryConfiguration
+}
+
+// GetDiscovery returns CloudKeystoreFields.Discovery, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreFields) GetDiscovery() *CloudKeystoreFieldsDiscoveryCloudDiscovery {
+	return v.Discovery
+}
+
+func (v *CloudKeystoreFields) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*CloudKeystoreFields
+		Configuration json.RawMessage `json:"configuration"`
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.CloudKeystoreFields = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	{
+		dst := &v.Configuration
+		src := firstPass.Configuration
+		if len(src) != 0 && string(src) != "null" {
+			err = __unmarshalCloudKeystoreFieldsConfigurationCloudKeystoreConfiguration(
+				src, dst)
+			if err != nil {
+				return fmt.Errorf(
+					"unable to unmarshal CloudKeystoreFields.Configuration: %w", err)
+			}
+		}
+	}
+	return nil
+}
+
+type __premarshalCloudKeystoreFields struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	Type CloudKeystoreType `json:"type"`
+
+	MachineIdentitiesCount int `json:"machineIdentitiesCount"`
+
+	CloudProvider *CloudKeystoreFieldsCloudProvider `json:"cloudProvider"`
+
+	Configuration json.RawMessage `json:"configuration"`
+
+	DiscoveryConfiguration *CloudKeystoreFieldsDiscoveryConfigurationCloudDiscoveryConfiguration `json:"discoveryConfiguration"`
+
+	Discovery *CloudKeystoreFieldsDiscoveryCloudDiscovery `json:"discovery"`
+}
+
+func (v *CloudKeystoreFields) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *CloudKeystoreFields) __premarshalJSON() (*__premarshalCloudKeystoreFields, error) {
+	var retval __premarshalCloudKeystoreFields
+
+	retval.Id = v.Id
+	retval.Name = v.Name
+	retval.Type = v.Type
+	retval.MachineIdentitiesCount = v.MachineIdentitiesCount
+	retval.CloudProvider = v.CloudProvider
+	{
+
+		dst := &retval.Configuration
+		src := v.Configuration
+		var err error
+		*dst, err = __marshalCloudKeystoreFieldsConfigurationCloudKeystoreConfiguration(
+			&src)
+		if err != nil {
+			return nil, fmt.Errorf(
+				"unable to marshal CloudKeystoreFields.Configuration: %w", err)
+		}
+	}
+	retval.DiscoveryConfiguration = v.DiscoveryConfiguration
+	retval.Discovery = v.Discovery
+	return &retval, nil
+}
+
+// CloudKeystoreFieldsCloudProvider includes the requested fields of the GraphQL type CloudProvider.
+type CloudKeystoreFieldsCloudProvider struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
+// GetId returns CloudKeystoreFieldsCloudProvider.Id, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreFieldsCloudProvider) GetId() string { return v.Id }
+
+// GetName returns CloudKeystoreFieldsCloudProvider.Name, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreFieldsCloudProvider) GetName() string { return v.Name }
+
+// CloudKeystoreFieldsConfigurationCloudKeystoreACMConfiguration includes the requested fields of the GraphQL type CloudKeystoreACMConfiguration.
+type CloudKeystoreFieldsConfigurationCloudKeystoreACMConfiguration struct {
+	Typename  *string `json:"__typename"`
+	Region    string  `json:"region"`
+	AccountId *string `json:"accountId"`
+}
+
+// GetTypename returns CloudKeystoreFieldsConfigurationCloudKeystoreACMConfiguration.Typename, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreFieldsConfigurationCloudKeystoreACMConfiguration) GetTypename() *string {
+	return v.Typename
+}
+
+// GetRegion returns CloudKeystoreFieldsConfigurationCloudKeystoreACMConfiguration.Region, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreFieldsConfigurationCloudKeystoreACMConfiguration) GetRegion() string {
+	return v.Region
+}
+
+// GetAccountId returns CloudKeystoreFieldsConfigurationCloudKeystoreACMConfiguration.AccountId, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreFieldsConfigurationCloudKeystoreACMConfiguration) GetAccountId() *string {
+	return v.AccountId
+}
+
+// CloudKeystoreFieldsConfigurationCloudKeystoreAKVConfiguration includes the requested fields of the GraphQL type CloudKeystoreAKVConfiguration.
+type CloudKeystoreFieldsConfigurationCloudKeystoreAKVConfiguration struct {
+	Typename *string `json:"__typename"`
+	// An Azure Key Vault name
+	//
+	// The vault name should be string of 3 to 24 characters and can contain only numbers (0-9), letters (a-z, A-Z), and hyphens (-).
+	// The name must begin with a letter, end with a letter or digit, and not contain consecutive hyphens.
+	KeyVaultName string `json:"keyVaultName"`
+}
+
+// GetTypename returns CloudKeystoreFieldsConfigurationCloudKeystoreAKVConfiguration.Typename, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreFieldsConfigurationCloudKeystoreAKVConfiguration) GetTypename() *string {
+	return v.Typename
+}
+
+// GetKeyVaultName returns CloudKeystoreFieldsConfigurationCloudKeystoreAKVConfiguration.KeyVaultName, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreFieldsConfigurationCloudKeystoreAKVConfiguration) GetKeyVaultName() string {
+	return v.KeyVaultName
+}
+
+// CloudKeystoreFieldsConfigurationCloudKeystoreAkamaiCDNConfiguration includes the requested fields of the GraphQL type CloudKeystoreAkamaiCDNConfiguration.
+type CloudKeystoreFieldsConfigurationCloudKeystoreAkamaiCDNConfiguration struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns CloudKeystoreFieldsConfigurationCloudKeystoreAkamaiCDNConfiguration.Typename, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreFieldsConfigurationCloudKeystoreAkamaiCDNConfiguration) GetTypename() *string {
+	return v.Typename
+}
+
+// CloudKeystoreFieldsConfigurationCloudKeystoreConfiguration includes the requested fields of the GraphQL interface CloudKeystoreConfiguration.
+//
+// CloudKeystoreFieldsConfigurationCloudKeystoreConfiguration is implemented by the following types:
+// CloudKeystoreFieldsConfigurationCloudKeystoreACMConfiguration
+// CloudKeystoreFieldsConfigurationCloudKeystoreAKVConfiguration
+// CloudKeystoreFieldsConfigurationCloudKeystoreAkamaiCDNConfiguration
+// CloudKeystoreFieldsConfigurationCloudKeystoreGCMConfiguration
+type CloudKeystoreFieldsConfigurationCloudKeystoreConfiguration interface {
+	implementsGraphQLInterfaceCloudKeystoreFieldsConfigurationCloudKeystoreConfiguration()
+	// GetTypename returns the receiver's concrete GraphQL type-name (see interface doc for possible values).
+	GetTypename() *string
+}
+
+func (v *CloudKeystoreFieldsConfigurationCloudKeystoreACMConfiguration) implementsGraphQLInterfaceCloudKeystoreFieldsConfigurationCloudKeystoreConfiguration() {
+}
+func (v *CloudKeystoreFieldsConfigurationCloudKeystoreAKVConfiguration) implementsGraphQLInterfaceCloudKeystoreFieldsConfigurationCloudKeystoreConfiguration() {
+}
+func (v *CloudKeystoreFieldsConfigurationCloudKeystoreAkamaiCDNConfiguration) implementsGraphQLInterfaceCloudKeystoreFieldsConfigurationCloudKeystoreConfiguration() {
+}
+func (v *CloudKeystoreFieldsConfigurationCloudKeystoreGCMConfiguration) implementsGraphQLInterfaceCloudKeystoreFieldsConfigurationCloudKeystoreConfiguration() {
+}
+
+func __unmarshalCloudKeystoreFieldsConfigurationCloudKeystoreConfiguration(b []byte, v *CloudKeystoreFieldsConfigurationCloudKeystoreConfiguration) error {
+	if string(b) == "null" {
+		return nil
+	}
+
+	var tn struct {
+		TypeName string `json:"__typename"`
+	}
+	err := json.Unmarshal(b, &tn)
+	if err != nil {
+		return err
+	}
+
+	switch tn.TypeName {
+	case "CloudKeystoreACMConfiguration":
+		*v = new(CloudKeystoreFieldsConfigurationCloudKeystoreACMConfiguration)
+		return json.Unmarshal(b, *v)
+	case "CloudKeystoreAKVConfiguration":
+		*v = new(CloudKeystoreFieldsConfigurationCloudKeystoreAKVConfiguration)
+		return json.Unmarshal(b, *v)
+	case "CloudKeystoreAkamaiCDNConfiguration":
+		*v = new(CloudKeystoreFieldsConfigurationCloudKeystoreAkamaiCDNConfiguration)
+		return json.Unmarshal(b, *v)
+	case "CloudKeystoreGCMConfiguration":
+		*v = new(CloudKeystoreFieldsConfigurationCloudKeystoreGCMConfiguration)
+		return json.Unmarshal(b, *v)
+	case "":
+		return fmt.Errorf(
+			"response was missing CloudKeystoreConfiguration.__typename")
+	default:
+		return fmt.Errorf(
+			`unexpected concrete type for CloudKeystoreFieldsConfigurationCloudKeystoreConfiguration: "%v"`, tn.TypeName)
+	}
+}
+
+func __marshalCloudKeystoreFieldsConfigurationCloudKeystoreConfiguration(v *CloudKeystoreFieldsConfigurationCloudKeystoreConfiguration) ([]byte, error) {
+
+	var typename string
+	switch v := (*v).(type) {
+	case *CloudKeystoreFieldsConfigurationCloudKeystoreACMConfiguration:
+		typename = "CloudKeystoreACMConfiguration"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*CloudKeystoreFieldsConfigurationCloudKeystoreACMConfiguration
+		}{typename, v}
+		return json.Marshal(result)
+	case *CloudKeystoreFieldsConfigurationCloudKeystoreAKVConfiguration:
+		typename = "CloudKeystoreAKVConfiguration"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*CloudKeystoreFieldsConfigurationCloudKeystoreAKVConfiguration
+		}{typename, v}
+		return json.Marshal(result)
+	case *CloudKeystoreFieldsConfigurationCloudKeystoreAkamaiCDNConfiguration:
+		typename = "CloudKeystoreAkamaiCDNConfiguration"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*CloudKeystoreFieldsConfigurationCloudKeystoreAkamaiCDNConfiguration
+		}{typename, v}
+		return json.Marshal(result)
+	case *CloudKeystoreFieldsConfigurationCloudKeystoreGCMConfiguration:
+		typename = "CloudKeystoreGCMConfiguration"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*CloudKeystoreFieldsConfigurationCloudKeystoreGCMConfiguration
+		}{typename, v}
+		return json.Marshal(result)
+	case nil:
+		return []byte("null"), nil
+	default:
+		return nil, fmt.Errorf(
+			`unexpected concrete type for CloudKeystoreFieldsConfigurationCloudKeystoreConfiguration: "%T"`, v)
+	}
+}
+
+// CloudKeystoreFieldsConfigurationCloudKeystoreGCMConfiguration includes the requested fields of the GraphQL type CloudKeystoreGCMConfiguration.
+type CloudKeystoreFieldsConfigurationCloudKeystoreGCMConfiguration struct {
+	Typename  *string `json:"__typename"`
+	ProjectId string  `json:"projectId"`
+	Location  string  `json:"location"`
+}
+
+// GetTypename returns CloudKeystoreFieldsConfigurationCloudKeystoreGCMConfiguration.Typename, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreFieldsConfigurationCloudKeystoreGCMConfiguration) GetTypename() *string {
+	return v.Typename
+}
+
+// GetProjectId returns CloudKeystoreFieldsConfigurationCloudKeystoreGCMConfiguration.ProjectId, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreFieldsConfigurationCloudKeystoreGCMConfiguration) GetProjectId() string {
+	return v.ProjectId
+}
+
+// GetLocation returns CloudKeystoreFieldsConfigurationCloudKeystoreGCMConfiguration.Location, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreFieldsConfigurationCloudKeystoreGCMConfiguration) GetLocation() string {
+	return v.Location
+}
+
+// CloudKeystoreFieldsDiscoveryCloudDiscovery includes the requested fields of the GraphQL type CloudDiscovery.
+type CloudKeystoreFieldsDiscoveryCloudDiscovery struct {
+	CloudDiscoveryFields `json:"-"`
+}
+
+// GetId returns CloudKeystoreFieldsDiscoveryCloudDiscovery.Id, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreFieldsDiscoveryCloudDiscovery) GetId() string { return v.CloudDiscoveryFields.Id }
+
+// GetStatus returns CloudKeystoreFieldsDiscoveryCloudDiscovery.Status, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreFieldsDiscoveryCloudDiscovery) GetStatus() CloudDiscoveryStatus {
+	return v.CloudDiscoveryFields.Status
+}
+
+// GetStatusDetails returns CloudKeystoreFieldsDiscoveryCloudDiscovery.StatusDetails, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreFieldsDiscoveryCloudDiscovery) GetStatusDetails() *string {
+	return v.CloudDiscoveryFields.StatusDetails
+}
+
+// GetTotalCertificatesCount returns CloudKeystoreFieldsDiscoveryCloudDiscovery.TotalCertificatesCount, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreFieldsDiscoveryCloudDiscovery) GetTotalCertificatesCount() int {
+	return v.CloudDiscoveryFields.TotalCertificatesCount
+}
+
+// GetNewCertificatesCount returns CloudKeystoreFieldsDiscoveryCloudDiscovery.NewCertificatesCount, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreFieldsDiscoveryCloudDiscovery) GetNewCertificatesCount() int {
+	return v.CloudDiscoveryFields.NewCertificatesCount
+}
+
+// GetUpdatedCertificatesCount returns CloudKeystoreFieldsDiscoveryCloudDiscovery.UpdatedCertificatesCount, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreFieldsDiscoveryCloudDiscovery) GetUpdatedCertificatesCount() int {
+	return v.CloudDiscoveryFields.UpdatedCertificatesCount
+}
+
+// GetMissingCertificatesCount returns CloudKeystoreFieldsDiscoveryCloudDiscovery.MissingCertificatesCount, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreFieldsDiscoveryCloudDiscovery) GetMissingCertificatesCount() int {
+	return v.CloudDiscoveryFields.MissingCertificatesCount
+}
+
+// GetStartTime returns CloudKeystoreFieldsDiscoveryCloudDiscovery.StartTime, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreFieldsDiscoveryCloudDiscovery) GetStartTime() *time.Time {
+	return v.CloudDiscoveryFields.StartTime
+}
+
+// GetEndTime returns CloudKeystoreFieldsDiscoveryCloudDiscovery.EndTime, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreFieldsDiscoveryCloudDiscovery) GetEndTime() *time.Time {
+	return v.CloudDiscoveryFields.EndTime
+}
+
+func (v *CloudKeystoreFieldsDiscoveryCloudDiscovery) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*CloudKeystoreFieldsDiscoveryCloudDiscovery
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.CloudKeystoreFieldsDiscoveryCloudDiscovery = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.CloudDiscoveryFields)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalCloudKeystoreFieldsDiscoveryCloudDiscovery struct {
+	Id string `json:"id"`
+
+	Status CloudDiscoveryStatus `json:"status"`
+
+	StatusDetails *string `json:"statusDetails"`
+
+	TotalCertificatesCount int `json:"totalCertificatesCount"`
+
+	NewCertificatesCount int `json:"newCertificatesCount"`
+
+	UpdatedCertificatesCount int `json:"updatedCertificatesCount"`
+
+	MissingCertificatesCount int `json:"missingCertificatesCount"`
+
+	StartTime *time.Time `json:"startTime"`
+
+	EndTime *time.Time `json:"endTime"`
+}
+
+func (v *CloudKeystoreFieldsDiscoveryCloudDiscovery) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *CloudKeystoreFieldsDiscoveryCloudDiscovery) __premarshalJSON() (*__premarshalCloudKeystoreFieldsDiscoveryCloudDiscovery, error) {
+	var retval __premarshalCloudKeystoreFieldsDiscoveryCloudDiscovery
+
+	retval.Id = v.CloudDiscoveryFields.Id
+	retval.Status = v.CloudDiscoveryFields.Status
+	retval.StatusDetails = v.CloudDiscoveryFields.StatusDetails
+	retval.TotalCertificatesCount = v.CloudDiscoveryFields.TotalCertificatesCount
+	retval.NewCertificatesCount = v.CloudDiscoveryFields.NewCertificatesCount
+	retval.UpdatedCertificatesCount = v.CloudDiscoveryFields.UpdatedCertificatesCount
+	retval.MissingCertificatesCount = v.CloudDiscoveryFields.MissingCertificatesCount
+	retval.StartTime = v.CloudDiscoveryFields.StartTime
+	retval.EndTime = v.CloudDiscoveryFields.EndTime
+	return &retval, nil
+}
+
+// CloudKeystoreFieldsDiscoveryConfigurationCloudDiscoveryConfiguration includes the requested fields of the GraphQL type CloudDiscoveryConfiguration.
+type CloudKeystoreFieldsDiscoveryConfigurationCloudDiscoveryConfiguration struct {
+	// A crontab expression representing when the scheduled discovery will run, eg: '00 03 * * *' -> 3 AM every day
+	ScheduleSpecification      *string `json:"scheduleSpecification"`
+	IncludeExpiredCertificates bool    `json:"includeExpiredCertificates"`
+	IncludeRevokedCertificates bool    `json:"includeRevokedCertificates"`
+}
+
+// GetScheduleSpecification returns CloudKeystoreFieldsDiscoveryConfigurationCloudDiscoveryConfiguration.ScheduleSpecification, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreFieldsDiscoveryConfigurationCloudDiscoveryConfiguration) GetScheduleSpecification() *string {
+	return v.ScheduleSpecification
+}
+
+// GetIncludeExpiredCertificates returns CloudKeystoreFieldsDiscoveryConfigurationCloudDiscoveryConfiguration.IncludeExpiredCertificates, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreFieldsDiscoveryConfigurationCloudDiscoveryConfiguration) GetIncludeExpiredCertificates() bool {
+	return v.IncludeExpiredCertificates
+}
+
+// GetIncludeRevokedCertificates returns CloudKeystoreFieldsDiscoveryConfigurationCloudDiscoveryConfiguration.IncludeRevokedCertificates, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreFieldsDiscoveryConfigurationCloudDiscoveryConfiguration) GetIncludeRevokedCertificates() bool {
+	return v.IncludeRevokedCertificates
+}
+
+type CloudKeystoreGCMConfigurationInput struct {
+	// GCP Certificate Manager project name.
+	//
+	// The unique, user-assigned ID of the Project. It must be 6 to 30 lowercase letters, digits, or hyphens. It must start with a letter. Trailing hyphens are prohibited.
+	ProjectId string `json:"projectId"`
+	Location  string `json:"location"`
+}
+
+// GetProjectId returns CloudKeystoreGCMConfigurationInput.ProjectId, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreGCMConfigurationInput) GetProjectId() string { return v.ProjectId }
+
+// GetLocation returns CloudKeystoreGCMConfigurationInput.Location, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreGCMConfigurationInput) GetLocation() string { return v.Location }
+
+type CloudKeystoreInput struct {
+	// Cloud Keystore name
+	//
+	// A string between 3 and 250 characters
+	Name                      string                                    `json:"name"`
+	Type                      CloudKeystoreType                         `json:"type"`
+	TeamId                    *string                                   `json:"teamId"`
+	AuthorizedTeams           []string                                  `json:"authorizedTeams"`
+	AuthorizedServiceAccounts []string                                  `json:"authorizedServiceAccounts"`
+	AllServiceAccountsAccess  *bool                                     `json:"allServiceAccountsAccess"`
+	CloudProviderId           string                                    `json:"cloudProviderId"`
+	AcmConfiguration          *CloudKeystoreACMConfigurationInput       `json:"acmConfiguration,omitempty"`
+	AkvConfiguration          *CloudKeystoreAKVConfigurationInput       `json:"akvConfiguration,omitempty"`
+	GcmConfiguration          *CloudKeystoreGCMConfigurationInput       `json:"gcmConfiguration,omitempty"`
+	AkamaiCdnConfiguration    *CloudKeystoreAkamaiCDNConfigurationInput `json:"akamaiCdnConfiguration,omitempty"`
+	DiscoveryConfiguration    *CloudDiscoveryConfigurationInput         `json:"discoveryConfiguration,omitempty"`
+	ConsumerTsgIds            []string                                  `json:"consumerTsgIds"`
+	ConsumerWorkspaceIds      []string                                  `json:"consumerWorkspaceIds"`
+}
+
+// GetName returns CloudKeystoreInput.Name, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreInput) GetName() string { return v.Name }
+
+// GetType returns CloudKeystoreInput.Type, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreInput) GetType() CloudKeystoreType { return v.Type }
+
+// GetTeamId returns CloudKeystoreInput.TeamId, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreInput) GetTeamId() *string { return v.TeamId }
+
+// GetAuthorizedTeams returns CloudKeystoreInput.AuthorizedTeams, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreInput) GetAuthorizedTeams() []string { return v.AuthorizedTeams }
+
+// GetAuthorizedServiceAccounts returns CloudKeystoreInput.AuthorizedServiceAccounts, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreInput) GetAuthorizedServiceAccounts() []string {
+	return v.AuthorizedServiceAccounts
+}
+
+// GetAllServiceAccountsAccess returns CloudKeystoreInput.AllServiceAccountsAccess, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreInput) GetAllServiceAccountsAccess() *bool { return v.AllServiceAccountsAccess }
+
+// GetCloudProviderId returns CloudKeystoreInput.CloudProviderId, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreInput) GetCloudProviderId() string { return v.CloudProviderId }
+
+// GetAcmConfiguration returns CloudKeystoreInput.AcmConfiguration, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreInput) GetAcmConfiguration() *CloudKeystoreACMConfigurationInput {
+	return v.AcmConfiguration
+}
+
+// GetAkvConfiguration returns CloudKeystoreInput.AkvConfiguration, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreInput) GetAkvConfiguration() *CloudKeystoreAKVConfigurationInput {
+	return v.AkvConfiguration
+}
+
+// GetGcmConfiguration returns CloudKeystoreInput.GcmConfiguration, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreInput) GetGcmConfiguration() *CloudKeystoreGCMConfigurationInput {
+	return v.GcmConfiguration
+}
+
+// GetAkamaiCdnConfiguration returns CloudKeystoreInput.AkamaiCdnConfiguration, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreInput) GetAkamaiCdnConfiguration() *CloudKeystoreAkamaiCDNConfigurationInput {
+	return v.AkamaiCdnConfiguration
+}
+
+// GetDiscoveryConfiguration returns CloudKeystoreInput.DiscoveryConfiguration, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreInput) GetDiscoveryConfiguration() *CloudDiscoveryConfigurationInput {
+	return v.DiscoveryConfiguration
+}
+
+// GetConsumerTsgIds returns CloudKeystoreInput.ConsumerTsgIds, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreInput) GetConsumerTsgIds() []string { return v.ConsumerTsgIds }
+
+// GetConsumerWorkspaceIds returns CloudKeystoreInput.ConsumerWorkspaceIds, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreInput) GetConsumerWorkspaceIds() []string { return v.ConsumerWorkspaceIds }
+
 // Indicates the type of a Cloud Keystore
 type CloudKeystoreType string
 
@@ -124,6 +818,312 @@ var AllCloudKeystoreType = []CloudKeystoreType{
 	CloudKeystoreTypeGcm,
 	CloudKeystoreTypeAkamaiCdn,
 }
+
+type CloudKeystoreUpdateInput struct {
+	Id string `json:"id"`
+	// Cloud Keystore name
+	//
+	// A string between 3 and 250 characters
+	Name                      *string                           `json:"name,omitempty"`
+	TeamId                    *string                           `json:"teamId,omitempty"`
+	AuthorizedTeams           []string                          `json:"authorizedTeams,omitempty"`
+	AuthorizedServiceAccounts []string                          `json:"authorizedServiceAccounts,omitempty"`
+	AllServiceAccountsAccess  *bool                             `json:"allServiceAccountsAccess,omitempty"`
+	DiscoveryConfiguration    *CloudDiscoveryConfigurationInput `json:"discoveryConfiguration,omitempty"`
+	ConsumerTsgIds            []string                          `json:"consumerTsgIds,omitempty"`
+	ConsumerWorkspaceIds      []string                          `json:"consumerWorkspaceIds,omitempty"`
+}
+
+// GetId returns CloudKeystoreUpdateInput.Id, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreUpdateInput) GetId() string { return v.Id }
+
+// GetName returns CloudKeystoreUpdateInput.Name, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreUpdateInput) GetName() *string { return v.Name }
+
+// GetTeamId returns CloudKeystoreUpdateInput.TeamId, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreUpdateInput) GetTeamId() *string { return v.TeamId }
+
+// GetAuthorizedTeams returns CloudKeystoreUpdateInput.AuthorizedTeams, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreUpdateInput) GetAuthorizedTeams() []string { return v.AuthorizedTeams }
+
+// GetAuthorizedServiceAccounts returns CloudKeystoreUpdateInput.AuthorizedServiceAccounts, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreUpdateInput) GetAuthorizedServiceAccounts() []string {
+	return v.AuthorizedServiceAccounts
+}
+
+// GetAllServiceAccountsAccess returns CloudKeystoreUpdateInput.AllServiceAccountsAccess, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreUpdateInput) GetAllServiceAccountsAccess() *bool {
+	return v.AllServiceAccountsAccess
+}
+
+// GetDiscoveryConfiguration returns CloudKeystoreUpdateInput.DiscoveryConfiguration, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreUpdateInput) GetDiscoveryConfiguration() *CloudDiscoveryConfigurationInput {
+	return v.DiscoveryConfiguration
+}
+
+// GetConsumerTsgIds returns CloudKeystoreUpdateInput.ConsumerTsgIds, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreUpdateInput) GetConsumerTsgIds() []string { return v.ConsumerTsgIds }
+
+// GetConsumerWorkspaceIds returns CloudKeystoreUpdateInput.ConsumerWorkspaceIds, and is useful for accessing the field via an interface.
+func (v *CloudKeystoreUpdateInput) GetConsumerWorkspaceIds() []string { return v.ConsumerWorkspaceIds }
+
+type CloudProviderAWSConfigurationInput struct {
+	AccountId string `json:"accountId"`
+	// An AWS IAM role.
+	//
+	// Provide a role name, a role name including its path (e.g. 'external/venafi/MyRole'), or a full role ARN (e.g. 'arn:aws:iam::123456789012:role/external/venafi/MyRole'). When a full ARN is provided, its embedded account ID must match the accountId field.
+	Role string `json:"role"`
+}
+
+// GetAccountId returns CloudProviderAWSConfigurationInput.AccountId, and is useful for accessing the field via an interface.
+func (v *CloudProviderAWSConfigurationInput) GetAccountId() string { return v.AccountId }
+
+// GetRole returns CloudProviderAWSConfigurationInput.Role, and is useful for accessing the field via an interface.
+func (v *CloudProviderAWSConfigurationInput) GetRole() string { return v.Role }
+
+type CloudProviderAWSConfigurationUpdateInput struct {
+	// An AWS IAM role.
+	//
+	// Provide a role name, a role name including its path (e.g. 'external/venafi/MyRole'), or a full role ARN (e.g. 'arn:aws:iam::123456789012:role/external/venafi/MyRole'). When a full ARN is provided, its embedded account ID must match the stored accountId.
+	Role *string `json:"role,omitempty"`
+}
+
+// GetRole returns CloudProviderAWSConfigurationUpdateInput.Role, and is useful for accessing the field via an interface.
+func (v *CloudProviderAWSConfigurationUpdateInput) GetRole() *string { return v.Role }
+
+type CloudProviderAkamaiConfigurationInput struct {
+	ContractIds  []string `json:"contractIds"`
+	Host         string   `json:"host"`
+	AccessToken  string   `json:"accessToken"`
+	ClientToken  string   `json:"clientToken"`
+	ClientSecret string   `json:"clientSecret"`
+}
+
+// GetContractIds returns CloudProviderAkamaiConfigurationInput.ContractIds, and is useful for accessing the field via an interface.
+func (v *CloudProviderAkamaiConfigurationInput) GetContractIds() []string { return v.ContractIds }
+
+// GetHost returns CloudProviderAkamaiConfigurationInput.Host, and is useful for accessing the field via an interface.
+func (v *CloudProviderAkamaiConfigurationInput) GetHost() string { return v.Host }
+
+// GetAccessToken returns CloudProviderAkamaiConfigurationInput.AccessToken, and is useful for accessing the field via an interface.
+func (v *CloudProviderAkamaiConfigurationInput) GetAccessToken() string { return v.AccessToken }
+
+// GetClientToken returns CloudProviderAkamaiConfigurationInput.ClientToken, and is useful for accessing the field via an interface.
+func (v *CloudProviderAkamaiConfigurationInput) GetClientToken() string { return v.ClientToken }
+
+// GetClientSecret returns CloudProviderAkamaiConfigurationInput.ClientSecret, and is useful for accessing the field via an interface.
+func (v *CloudProviderAkamaiConfigurationInput) GetClientSecret() string { return v.ClientSecret }
+
+type CloudProviderAkamaiConfigurationUpdateInput struct {
+	ContractIds  []string `json:"contractIds"`
+	Host         string   `json:"host"`
+	AccessToken  string   `json:"accessToken"`
+	ClientToken  string   `json:"clientToken"`
+	ClientSecret *string  `json:"clientSecret"`
+}
+
+// GetContractIds returns CloudProviderAkamaiConfigurationUpdateInput.ContractIds, and is useful for accessing the field via an interface.
+func (v *CloudProviderAkamaiConfigurationUpdateInput) GetContractIds() []string { return v.ContractIds }
+
+// GetHost returns CloudProviderAkamaiConfigurationUpdateInput.Host, and is useful for accessing the field via an interface.
+func (v *CloudProviderAkamaiConfigurationUpdateInput) GetHost() string { return v.Host }
+
+// GetAccessToken returns CloudProviderAkamaiConfigurationUpdateInput.AccessToken, and is useful for accessing the field via an interface.
+func (v *CloudProviderAkamaiConfigurationUpdateInput) GetAccessToken() string { return v.AccessToken }
+
+// GetClientToken returns CloudProviderAkamaiConfigurationUpdateInput.ClientToken, and is useful for accessing the field via an interface.
+func (v *CloudProviderAkamaiConfigurationUpdateInput) GetClientToken() string { return v.ClientToken }
+
+// GetClientSecret returns CloudProviderAkamaiConfigurationUpdateInput.ClientSecret, and is useful for accessing the field via an interface.
+func (v *CloudProviderAkamaiConfigurationUpdateInput) GetClientSecret() *string {
+	return v.ClientSecret
+}
+
+type CloudProviderAzureConfigurationInput struct {
+	ApplicationId string `json:"applicationId"`
+	DirectoryId   string `json:"directoryId"`
+	Secret        string `json:"secret"`
+}
+
+// GetApplicationId returns CloudProviderAzureConfigurationInput.ApplicationId, and is useful for accessing the field via an interface.
+func (v *CloudProviderAzureConfigurationInput) GetApplicationId() string { return v.ApplicationId }
+
+// GetDirectoryId returns CloudProviderAzureConfigurationInput.DirectoryId, and is useful for accessing the field via an interface.
+func (v *CloudProviderAzureConfigurationInput) GetDirectoryId() string { return v.DirectoryId }
+
+// GetSecret returns CloudProviderAzureConfigurationInput.Secret, and is useful for accessing the field via an interface.
+func (v *CloudProviderAzureConfigurationInput) GetSecret() string { return v.Secret }
+
+type CloudProviderAzureConfigurationUpdateInput struct {
+	ApplicationId *string `json:"applicationId,omitempty"`
+	DirectoryId   *string `json:"directoryId,omitempty"`
+	Secret        string  `json:"secret"`
+}
+
+// GetApplicationId returns CloudProviderAzureConfigurationUpdateInput.ApplicationId, and is useful for accessing the field via an interface.
+func (v *CloudProviderAzureConfigurationUpdateInput) GetApplicationId() *string {
+	return v.ApplicationId
+}
+
+// GetDirectoryId returns CloudProviderAzureConfigurationUpdateInput.DirectoryId, and is useful for accessing the field via an interface.
+func (v *CloudProviderAzureConfigurationUpdateInput) GetDirectoryId() *string { return v.DirectoryId }
+
+// GetSecret returns CloudProviderAzureConfigurationUpdateInput.Secret, and is useful for accessing the field via an interface.
+func (v *CloudProviderAzureConfigurationUpdateInput) GetSecret() string { return v.Secret }
+
+// CloudProviderFields includes the GraphQL fields of CloudProvider requested by the fragment CloudProviderFields.
+type CloudProviderFields struct {
+	Id             string              `json:"id"`
+	Name           string              `json:"name"`
+	Type           CloudProviderType   `json:"type"`
+	Status         CloudProviderStatus `json:"status"`
+	StatusDetails  *string             `json:"statusDetails"`
+	KeystoresCount int                 `json:"keystoresCount"`
+}
+
+// GetId returns CloudProviderFields.Id, and is useful for accessing the field via an interface.
+func (v *CloudProviderFields) GetId() string { return v.Id }
+
+// GetName returns CloudProviderFields.Name, and is useful for accessing the field via an interface.
+func (v *CloudProviderFields) GetName() string { return v.Name }
+
+// GetType returns CloudProviderFields.Type, and is useful for accessing the field via an interface.
+func (v *CloudProviderFields) GetType() CloudProviderType { return v.Type }
+
+// GetStatus returns CloudProviderFields.Status, and is useful for accessing the field via an interface.
+func (v *CloudProviderFields) GetStatus() CloudProviderStatus { return v.Status }
+
+// GetStatusDetails returns CloudProviderFields.StatusDetails, and is useful for accessing the field via an interface.
+func (v *CloudProviderFields) GetStatusDetails() *string { return v.StatusDetails }
+
+// GetKeystoresCount returns CloudProviderFields.KeystoresCount, and is useful for accessing the field via an interface.
+func (v *CloudProviderFields) GetKeystoresCount() int { return v.KeystoresCount }
+
+type CloudProviderGCPConfigurationInput struct {
+	ServiceAccountEmail            string                                `json:"serviceAccountEmail"`
+	ProjectNumber                  *string                               `json:"projectNumber"`
+	WorkloadIdentityPoolId         *string                               `json:"workloadIdentityPoolId"`
+	WorkloadIdentityPoolProviderId *string                               `json:"workloadIdentityPoolProviderId"`
+	AuthorizationMethod            *AuthorizationMethod                  `json:"authorizationMethod"`
+	AzureWIFConfiguration          *CloudProviderAzureConfigurationInput `json:"azureWIFConfiguration,omitempty"`
+}
+
+// GetServiceAccountEmail returns CloudProviderGCPConfigurationInput.ServiceAccountEmail, and is useful for accessing the field via an interface.
+func (v *CloudProviderGCPConfigurationInput) GetServiceAccountEmail() string {
+	return v.ServiceAccountEmail
+}
+
+// GetProjectNumber returns CloudProviderGCPConfigurationInput.ProjectNumber, and is useful for accessing the field via an interface.
+func (v *CloudProviderGCPConfigurationInput) GetProjectNumber() *string { return v.ProjectNumber }
+
+// GetWorkloadIdentityPoolId returns CloudProviderGCPConfigurationInput.WorkloadIdentityPoolId, and is useful for accessing the field via an interface.
+func (v *CloudProviderGCPConfigurationInput) GetWorkloadIdentityPoolId() *string {
+	return v.WorkloadIdentityPoolId
+}
+
+// GetWorkloadIdentityPoolProviderId returns CloudProviderGCPConfigurationInput.WorkloadIdentityPoolProviderId, and is useful for accessing the field via an interface.
+func (v *CloudProviderGCPConfigurationInput) GetWorkloadIdentityPoolProviderId() *string {
+	return v.WorkloadIdentityPoolProviderId
+}
+
+// GetAuthorizationMethod returns CloudProviderGCPConfigurationInput.AuthorizationMethod, and is useful for accessing the field via an interface.
+func (v *CloudProviderGCPConfigurationInput) GetAuthorizationMethod() *AuthorizationMethod {
+	return v.AuthorizationMethod
+}
+
+// GetAzureWIFConfiguration returns CloudProviderGCPConfigurationInput.AzureWIFConfiguration, and is useful for accessing the field via an interface.
+func (v *CloudProviderGCPConfigurationInput) GetAzureWIFConfiguration() *CloudProviderAzureConfigurationInput {
+	return v.AzureWIFConfiguration
+}
+
+type CloudProviderGCPConfigurationUpdateInput struct {
+	ProjectNumber                  *string                                     `json:"projectNumber,omitempty"`
+	WorkloadIdentityPoolId         *string                                     `json:"workloadIdentityPoolId,omitempty"`
+	WorkloadIdentityPoolProviderId *string                                     `json:"workloadIdentityPoolProviderId,omitempty"`
+	AuthorizationMethod            *AuthorizationMethod                        `json:"authorizationMethod,omitempty"`
+	AzureWIFConfiguration          *CloudProviderAzureConfigurationUpdateInput `json:"azureWIFConfiguration,omitempty"`
+}
+
+// GetProjectNumber returns CloudProviderGCPConfigurationUpdateInput.ProjectNumber, and is useful for accessing the field via an interface.
+func (v *CloudProviderGCPConfigurationUpdateInput) GetProjectNumber() *string { return v.ProjectNumber }
+
+// GetWorkloadIdentityPoolId returns CloudProviderGCPConfigurationUpdateInput.WorkloadIdentityPoolId, and is useful for accessing the field via an interface.
+func (v *CloudProviderGCPConfigurationUpdateInput) GetWorkloadIdentityPoolId() *string {
+	return v.WorkloadIdentityPoolId
+}
+
+// GetWorkloadIdentityPoolProviderId returns CloudProviderGCPConfigurationUpdateInput.WorkloadIdentityPoolProviderId, and is useful for accessing the field via an interface.
+func (v *CloudProviderGCPConfigurationUpdateInput) GetWorkloadIdentityPoolProviderId() *string {
+	return v.WorkloadIdentityPoolProviderId
+}
+
+// GetAuthorizationMethod returns CloudProviderGCPConfigurationUpdateInput.AuthorizationMethod, and is useful for accessing the field via an interface.
+func (v *CloudProviderGCPConfigurationUpdateInput) GetAuthorizationMethod() *AuthorizationMethod {
+	return v.AuthorizationMethod
+}
+
+// GetAzureWIFConfiguration returns CloudProviderGCPConfigurationUpdateInput.AzureWIFConfiguration, and is useful for accessing the field via an interface.
+func (v *CloudProviderGCPConfigurationUpdateInput) GetAzureWIFConfiguration() *CloudProviderAzureConfigurationUpdateInput {
+	return v.AzureWIFConfiguration
+}
+
+type CloudProviderInput struct {
+	// Cloud Provider name
+	//
+	// A string between 3 and 250 characters
+	Name                 string                                 `json:"name"`
+	Type                 CloudProviderType                      `json:"type"`
+	AwsConfiguration     *CloudProviderAWSConfigurationInput    `json:"awsConfiguration,omitempty"`
+	AzureConfiguration   *CloudProviderAzureConfigurationInput  `json:"azureConfiguration,omitempty"`
+	GcpConfiguration     *CloudProviderGCPConfigurationInput    `json:"gcpConfiguration,omitempty"`
+	AkamaiConfiguration  *CloudProviderAkamaiConfigurationInput `json:"akamaiConfiguration,omitempty"`
+	TeamId               *string                                `json:"teamId"`
+	AuthorizedTeams      []string                               `json:"authorizedTeams"`
+	ShareWithAll         *bool                                  `json:"shareWithAll"`
+	ConsumerTsgIds       []string                               `json:"consumerTsgIds"`
+	ConsumerWorkspaceIds []string                               `json:"consumerWorkspaceIds"`
+}
+
+// GetName returns CloudProviderInput.Name, and is useful for accessing the field via an interface.
+func (v *CloudProviderInput) GetName() string { return v.Name }
+
+// GetType returns CloudProviderInput.Type, and is useful for accessing the field via an interface.
+func (v *CloudProviderInput) GetType() CloudProviderType { return v.Type }
+
+// GetAwsConfiguration returns CloudProviderInput.AwsConfiguration, and is useful for accessing the field via an interface.
+func (v *CloudProviderInput) GetAwsConfiguration() *CloudProviderAWSConfigurationInput {
+	return v.AwsConfiguration
+}
+
+// GetAzureConfiguration returns CloudProviderInput.AzureConfiguration, and is useful for accessing the field via an interface.
+func (v *CloudProviderInput) GetAzureConfiguration() *CloudProviderAzureConfigurationInput {
+	return v.AzureConfiguration
+}
+
+// GetGcpConfiguration returns CloudProviderInput.GcpConfiguration, and is useful for accessing the field via an interface.
+func (v *CloudProviderInput) GetGcpConfiguration() *CloudProviderGCPConfigurationInput {
+	return v.GcpConfiguration
+}
+
+// GetAkamaiConfiguration returns CloudProviderInput.AkamaiConfiguration, and is useful for accessing the field via an interface.
+func (v *CloudProviderInput) GetAkamaiConfiguration() *CloudProviderAkamaiConfigurationInput {
+	return v.AkamaiConfiguration
+}
+
+// GetTeamId returns CloudProviderInput.TeamId, and is useful for accessing the field via an interface.
+func (v *CloudProviderInput) GetTeamId() *string { return v.TeamId }
+
+// GetAuthorizedTeams returns CloudProviderInput.AuthorizedTeams, and is useful for accessing the field via an interface.
+func (v *CloudProviderInput) GetAuthorizedTeams() []string { return v.AuthorizedTeams }
+
+// GetShareWithAll returns CloudProviderInput.ShareWithAll, and is useful for accessing the field via an interface.
+func (v *CloudProviderInput) GetShareWithAll() *bool { return v.ShareWithAll }
+
+// GetConsumerTsgIds returns CloudProviderInput.ConsumerTsgIds, and is useful for accessing the field via an interface.
+func (v *CloudProviderInput) GetConsumerTsgIds() []string { return v.ConsumerTsgIds }
+
+// GetConsumerWorkspaceIds returns CloudProviderInput.ConsumerWorkspaceIds, and is useful for accessing the field via an interface.
+func (v *CloudProviderInput) GetConsumerWorkspaceIds() []string { return v.ConsumerWorkspaceIds }
 
 // Indicates the status of a cloud provider
 type CloudProviderStatus string
@@ -160,6 +1160,315 @@ var AllCloudProviderType = []CloudProviderType{
 	CloudProviderTypeGcp,
 	CloudProviderTypeAkamai,
 }
+
+type CloudProviderUpdateInput struct {
+	Type CloudProviderType `json:"type"`
+	Id   string            `json:"id"`
+	// Cloud Provider name
+	//
+	// A string between 3 and 250 characters
+	Name                 *string                                      `json:"name,omitempty"`
+	TeamId               *string                                      `json:"teamId,omitempty"`
+	AuthorizedTeams      []string                                     `json:"authorizedTeams,omitempty"`
+	AwsConfiguration     *CloudProviderAWSConfigurationUpdateInput    `json:"awsConfiguration,omitempty"`
+	AzureConfiguration   *CloudProviderAzureConfigurationUpdateInput  `json:"azureConfiguration,omitempty"`
+	GcpConfiguration     *CloudProviderGCPConfigurationUpdateInput    `json:"gcpConfiguration,omitempty"`
+	AkamaiConfiguration  *CloudProviderAkamaiConfigurationUpdateInput `json:"akamaiConfiguration,omitempty"`
+	ShareWithAll         *bool                                        `json:"shareWithAll,omitempty"`
+	ConsumerTsgIds       []string                                     `json:"consumerTsgIds,omitempty"`
+	ConsumerWorkspaceIds []string                                     `json:"consumerWorkspaceIds,omitempty"`
+}
+
+// GetType returns CloudProviderUpdateInput.Type, and is useful for accessing the field via an interface.
+func (v *CloudProviderUpdateInput) GetType() CloudProviderType { return v.Type }
+
+// GetId returns CloudProviderUpdateInput.Id, and is useful for accessing the field via an interface.
+func (v *CloudProviderUpdateInput) GetId() string { return v.Id }
+
+// GetName returns CloudProviderUpdateInput.Name, and is useful for accessing the field via an interface.
+func (v *CloudProviderUpdateInput) GetName() *string { return v.Name }
+
+// GetTeamId returns CloudProviderUpdateInput.TeamId, and is useful for accessing the field via an interface.
+func (v *CloudProviderUpdateInput) GetTeamId() *string { return v.TeamId }
+
+// GetAuthorizedTeams returns CloudProviderUpdateInput.AuthorizedTeams, and is useful for accessing the field via an interface.
+func (v *CloudProviderUpdateInput) GetAuthorizedTeams() []string { return v.AuthorizedTeams }
+
+// GetAwsConfiguration returns CloudProviderUpdateInput.AwsConfiguration, and is useful for accessing the field via an interface.
+func (v *CloudProviderUpdateInput) GetAwsConfiguration() *CloudProviderAWSConfigurationUpdateInput {
+	return v.AwsConfiguration
+}
+
+// GetAzureConfiguration returns CloudProviderUpdateInput.AzureConfiguration, and is useful for accessing the field via an interface.
+func (v *CloudProviderUpdateInput) GetAzureConfiguration() *CloudProviderAzureConfigurationUpdateInput {
+	return v.AzureConfiguration
+}
+
+// GetGcpConfiguration returns CloudProviderUpdateInput.GcpConfiguration, and is useful for accessing the field via an interface.
+func (v *CloudProviderUpdateInput) GetGcpConfiguration() *CloudProviderGCPConfigurationUpdateInput {
+	return v.GcpConfiguration
+}
+
+// GetAkamaiConfiguration returns CloudProviderUpdateInput.AkamaiConfiguration, and is useful for accessing the field via an interface.
+func (v *CloudProviderUpdateInput) GetAkamaiConfiguration() *CloudProviderAkamaiConfigurationUpdateInput {
+	return v.AkamaiConfiguration
+}
+
+// GetShareWithAll returns CloudProviderUpdateInput.ShareWithAll, and is useful for accessing the field via an interface.
+func (v *CloudProviderUpdateInput) GetShareWithAll() *bool { return v.ShareWithAll }
+
+// GetConsumerTsgIds returns CloudProviderUpdateInput.ConsumerTsgIds, and is useful for accessing the field via an interface.
+func (v *CloudProviderUpdateInput) GetConsumerTsgIds() []string { return v.ConsumerTsgIds }
+
+// GetConsumerWorkspaceIds returns CloudProviderUpdateInput.ConsumerWorkspaceIds, and is useful for accessing the field via an interface.
+func (v *CloudProviderUpdateInput) GetConsumerWorkspaceIds() []string { return v.ConsumerWorkspaceIds }
+
+// CreateCloudKeystoreCreateCloudKeystore includes the requested fields of the GraphQL type CloudKeystore.
+type CreateCloudKeystoreCreateCloudKeystore struct {
+	CloudKeystoreFields `json:"-"`
+}
+
+// GetId returns CreateCloudKeystoreCreateCloudKeystore.Id, and is useful for accessing the field via an interface.
+func (v *CreateCloudKeystoreCreateCloudKeystore) GetId() string { return v.CloudKeystoreFields.Id }
+
+// GetName returns CreateCloudKeystoreCreateCloudKeystore.Name, and is useful for accessing the field via an interface.
+func (v *CreateCloudKeystoreCreateCloudKeystore) GetName() string { return v.CloudKeystoreFields.Name }
+
+// GetType returns CreateCloudKeystoreCreateCloudKeystore.Type, and is useful for accessing the field via an interface.
+func (v *CreateCloudKeystoreCreateCloudKeystore) GetType() CloudKeystoreType {
+	return v.CloudKeystoreFields.Type
+}
+
+// GetMachineIdentitiesCount returns CreateCloudKeystoreCreateCloudKeystore.MachineIdentitiesCount, and is useful for accessing the field via an interface.
+func (v *CreateCloudKeystoreCreateCloudKeystore) GetMachineIdentitiesCount() int {
+	return v.CloudKeystoreFields.MachineIdentitiesCount
+}
+
+// GetCloudProvider returns CreateCloudKeystoreCreateCloudKeystore.CloudProvider, and is useful for accessing the field via an interface.
+func (v *CreateCloudKeystoreCreateCloudKeystore) GetCloudProvider() *CloudKeystoreFieldsCloudProvider {
+	return v.CloudKeystoreFields.CloudProvider
+}
+
+// GetConfiguration returns CreateCloudKeystoreCreateCloudKeystore.Configuration, and is useful for accessing the field via an interface.
+func (v *CreateCloudKeystoreCreateCloudKeystore) GetConfiguration() CloudKeystoreFieldsConfigurationCloudKeystoreConfiguration {
+	return v.CloudKeystoreFields.Configuration
+}
+
+// GetDiscoveryConfiguration returns CreateCloudKeystoreCreateCloudKeystore.DiscoveryConfiguration, and is useful for accessing the field via an interface.
+func (v *CreateCloudKeystoreCreateCloudKeystore) GetDiscoveryConfiguration() *CloudKeystoreFieldsDiscoveryConfigurationCloudDiscoveryConfiguration {
+	return v.CloudKeystoreFields.DiscoveryConfiguration
+}
+
+// GetDiscovery returns CreateCloudKeystoreCreateCloudKeystore.Discovery, and is useful for accessing the field via an interface.
+func (v *CreateCloudKeystoreCreateCloudKeystore) GetDiscovery() *CloudKeystoreFieldsDiscoveryCloudDiscovery {
+	return v.CloudKeystoreFields.Discovery
+}
+
+func (v *CreateCloudKeystoreCreateCloudKeystore) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*CreateCloudKeystoreCreateCloudKeystore
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.CreateCloudKeystoreCreateCloudKeystore = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.CloudKeystoreFields)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalCreateCloudKeystoreCreateCloudKeystore struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	Type CloudKeystoreType `json:"type"`
+
+	MachineIdentitiesCount int `json:"machineIdentitiesCount"`
+
+	CloudProvider *CloudKeystoreFieldsCloudProvider `json:"cloudProvider"`
+
+	Configuration json.RawMessage `json:"configuration"`
+
+	DiscoveryConfiguration *CloudKeystoreFieldsDiscoveryConfigurationCloudDiscoveryConfiguration `json:"discoveryConfiguration"`
+
+	Discovery *CloudKeystoreFieldsDiscoveryCloudDiscovery `json:"discovery"`
+}
+
+func (v *CreateCloudKeystoreCreateCloudKeystore) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *CreateCloudKeystoreCreateCloudKeystore) __premarshalJSON() (*__premarshalCreateCloudKeystoreCreateCloudKeystore, error) {
+	var retval __premarshalCreateCloudKeystoreCreateCloudKeystore
+
+	retval.Id = v.CloudKeystoreFields.Id
+	retval.Name = v.CloudKeystoreFields.Name
+	retval.Type = v.CloudKeystoreFields.Type
+	retval.MachineIdentitiesCount = v.CloudKeystoreFields.MachineIdentitiesCount
+	retval.CloudProvider = v.CloudKeystoreFields.CloudProvider
+	{
+
+		dst := &retval.Configuration
+		src := v.CloudKeystoreFields.Configuration
+		var err error
+		*dst, err = __marshalCloudKeystoreFieldsConfigurationCloudKeystoreConfiguration(
+			&src)
+		if err != nil {
+			return nil, fmt.Errorf(
+				"unable to marshal CreateCloudKeystoreCreateCloudKeystore.CloudKeystoreFields.Configuration: %w", err)
+		}
+	}
+	retval.DiscoveryConfiguration = v.CloudKeystoreFields.DiscoveryConfiguration
+	retval.Discovery = v.CloudKeystoreFields.Discovery
+	return &retval, nil
+}
+
+// CreateCloudKeystoreResponse is returned by CreateCloudKeystore on success.
+type CreateCloudKeystoreResponse struct {
+	// Creates a Cloud Keystore
+	CreateCloudKeystore *CreateCloudKeystoreCreateCloudKeystore `json:"createCloudKeystore"`
+}
+
+// GetCreateCloudKeystore returns CreateCloudKeystoreResponse.CreateCloudKeystore, and is useful for accessing the field via an interface.
+func (v *CreateCloudKeystoreResponse) GetCreateCloudKeystore() *CreateCloudKeystoreCreateCloudKeystore {
+	return v.CreateCloudKeystore
+}
+
+// CreateCloudProviderCreateCloudProvider includes the requested fields of the GraphQL type CloudProvider.
+type CreateCloudProviderCreateCloudProvider struct {
+	CloudProviderFields `json:"-"`
+}
+
+// GetId returns CreateCloudProviderCreateCloudProvider.Id, and is useful for accessing the field via an interface.
+func (v *CreateCloudProviderCreateCloudProvider) GetId() string { return v.CloudProviderFields.Id }
+
+// GetName returns CreateCloudProviderCreateCloudProvider.Name, and is useful for accessing the field via an interface.
+func (v *CreateCloudProviderCreateCloudProvider) GetName() string { return v.CloudProviderFields.Name }
+
+// GetType returns CreateCloudProviderCreateCloudProvider.Type, and is useful for accessing the field via an interface.
+func (v *CreateCloudProviderCreateCloudProvider) GetType() CloudProviderType {
+	return v.CloudProviderFields.Type
+}
+
+// GetStatus returns CreateCloudProviderCreateCloudProvider.Status, and is useful for accessing the field via an interface.
+func (v *CreateCloudProviderCreateCloudProvider) GetStatus() CloudProviderStatus {
+	return v.CloudProviderFields.Status
+}
+
+// GetStatusDetails returns CreateCloudProviderCreateCloudProvider.StatusDetails, and is useful for accessing the field via an interface.
+func (v *CreateCloudProviderCreateCloudProvider) GetStatusDetails() *string {
+	return v.CloudProviderFields.StatusDetails
+}
+
+// GetKeystoresCount returns CreateCloudProviderCreateCloudProvider.KeystoresCount, and is useful for accessing the field via an interface.
+func (v *CreateCloudProviderCreateCloudProvider) GetKeystoresCount() int {
+	return v.CloudProviderFields.KeystoresCount
+}
+
+func (v *CreateCloudProviderCreateCloudProvider) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*CreateCloudProviderCreateCloudProvider
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.CreateCloudProviderCreateCloudProvider = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.CloudProviderFields)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalCreateCloudProviderCreateCloudProvider struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	Type CloudProviderType `json:"type"`
+
+	Status CloudProviderStatus `json:"status"`
+
+	StatusDetails *string `json:"statusDetails"`
+
+	KeystoresCount int `json:"keystoresCount"`
+}
+
+func (v *CreateCloudProviderCreateCloudProvider) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *CreateCloudProviderCreateCloudProvider) __premarshalJSON() (*__premarshalCreateCloudProviderCreateCloudProvider, error) {
+	var retval __premarshalCreateCloudProviderCreateCloudProvider
+
+	retval.Id = v.CloudProviderFields.Id
+	retval.Name = v.CloudProviderFields.Name
+	retval.Type = v.CloudProviderFields.Type
+	retval.Status = v.CloudProviderFields.Status
+	retval.StatusDetails = v.CloudProviderFields.StatusDetails
+	retval.KeystoresCount = v.CloudProviderFields.KeystoresCount
+	return &retval, nil
+}
+
+// CreateCloudProviderResponse is returned by CreateCloudProvider on success.
+type CreateCloudProviderResponse struct {
+	// Creates a Cloud Provider
+	CreateCloudProvider *CreateCloudProviderCreateCloudProvider `json:"createCloudProvider"`
+}
+
+// GetCreateCloudProvider returns CreateCloudProviderResponse.CreateCloudProvider, and is useful for accessing the field via an interface.
+func (v *CreateCloudProviderResponse) GetCreateCloudProvider() *CreateCloudProviderCreateCloudProvider {
+	return v.CreateCloudProvider
+}
+
+// DeleteCloudKeystoresResponse is returned by DeleteCloudKeystores on success.
+type DeleteCloudKeystoresResponse struct {
+	// Deletes a list of Cloud Keystores by ID
+	DeleteCloudKeystore bool `json:"deleteCloudKeystore"`
+}
+
+// GetDeleteCloudKeystore returns DeleteCloudKeystoresResponse.DeleteCloudKeystore, and is useful for accessing the field via an interface.
+func (v *DeleteCloudKeystoresResponse) GetDeleteCloudKeystore() bool { return v.DeleteCloudKeystore }
+
+// DeleteCloudProvidersResponse is returned by DeleteCloudProviders on success.
+type DeleteCloudProvidersResponse struct {
+	// Deletes a list of Cloud Providers by ID
+	DeleteCloudProvider bool `json:"deleteCloudProvider"`
+}
+
+// GetDeleteCloudProvider returns DeleteCloudProvidersResponse.DeleteCloudProvider, and is useful for accessing the field via an interface.
+func (v *DeleteCloudProvidersResponse) GetDeleteCloudProvider() bool { return v.DeleteCloudProvider }
 
 // DeleteMachineIdentitiesResponse is returned by DeleteMachineIdentities on success.
 type DeleteMachineIdentitiesResponse struct {
@@ -702,6 +2011,744 @@ func (v *GetMachineIdentitiesResponse) GetCloudMachineIdentities() *GetMachineId
 	return v.CloudMachineIdentities
 }
 
+// ListCloudKeystoresCloudKeystoresCloudKeystoreConnection includes the requested fields of the GraphQL type CloudKeystoreConnection.
+// The GraphQL type's documentation follows.
+//
+// A page of CloudKeystore results
+type ListCloudKeystoresCloudKeystoresCloudKeystoreConnection struct {
+	// CloudKeystores in the current page, without cursor
+	Nodes []*ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore `json:"nodes"`
+	// Current page information
+	PageInfo *ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionPageInfo `json:"pageInfo"`
+}
+
+// GetNodes returns ListCloudKeystoresCloudKeystoresCloudKeystoreConnection.Nodes, and is useful for accessing the field via an interface.
+func (v *ListCloudKeystoresCloudKeystoresCloudKeystoreConnection) GetNodes() []*ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore {
+	return v.Nodes
+}
+
+// GetPageInfo returns ListCloudKeystoresCloudKeystoresCloudKeystoreConnection.PageInfo, and is useful for accessing the field via an interface.
+func (v *ListCloudKeystoresCloudKeystoresCloudKeystoreConnection) GetPageInfo() *ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionPageInfo {
+	return v.PageInfo
+}
+
+// ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore includes the requested fields of the GraphQL type CloudKeystore.
+type ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore struct {
+	CloudKeystoreFields `json:"-"`
+}
+
+// GetId returns ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore.Id, and is useful for accessing the field via an interface.
+func (v *ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore) GetId() string {
+	return v.CloudKeystoreFields.Id
+}
+
+// GetName returns ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore.Name, and is useful for accessing the field via an interface.
+func (v *ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore) GetName() string {
+	return v.CloudKeystoreFields.Name
+}
+
+// GetType returns ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore.Type, and is useful for accessing the field via an interface.
+func (v *ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore) GetType() CloudKeystoreType {
+	return v.CloudKeystoreFields.Type
+}
+
+// GetMachineIdentitiesCount returns ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore.MachineIdentitiesCount, and is useful for accessing the field via an interface.
+func (v *ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore) GetMachineIdentitiesCount() int {
+	return v.CloudKeystoreFields.MachineIdentitiesCount
+}
+
+// GetCloudProvider returns ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore.CloudProvider, and is useful for accessing the field via an interface.
+func (v *ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore) GetCloudProvider() *CloudKeystoreFieldsCloudProvider {
+	return v.CloudKeystoreFields.CloudProvider
+}
+
+// GetConfiguration returns ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore.Configuration, and is useful for accessing the field via an interface.
+func (v *ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore) GetConfiguration() CloudKeystoreFieldsConfigurationCloudKeystoreConfiguration {
+	return v.CloudKeystoreFields.Configuration
+}
+
+// GetDiscoveryConfiguration returns ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore.DiscoveryConfiguration, and is useful for accessing the field via an interface.
+func (v *ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore) GetDiscoveryConfiguration() *CloudKeystoreFieldsDiscoveryConfigurationCloudDiscoveryConfiguration {
+	return v.CloudKeystoreFields.DiscoveryConfiguration
+}
+
+// GetDiscovery returns ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore.Discovery, and is useful for accessing the field via an interface.
+func (v *ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore) GetDiscovery() *CloudKeystoreFieldsDiscoveryCloudDiscovery {
+	return v.CloudKeystoreFields.Discovery
+}
+
+func (v *ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.CloudKeystoreFields)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	Type CloudKeystoreType `json:"type"`
+
+	MachineIdentitiesCount int `json:"machineIdentitiesCount"`
+
+	CloudProvider *CloudKeystoreFieldsCloudProvider `json:"cloudProvider"`
+
+	Configuration json.RawMessage `json:"configuration"`
+
+	DiscoveryConfiguration *CloudKeystoreFieldsDiscoveryConfigurationCloudDiscoveryConfiguration `json:"discoveryConfiguration"`
+
+	Discovery *CloudKeystoreFieldsDiscoveryCloudDiscovery `json:"discovery"`
+}
+
+func (v *ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore) __premarshalJSON() (*__premarshalListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore, error) {
+	var retval __premarshalListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore
+
+	retval.Id = v.CloudKeystoreFields.Id
+	retval.Name = v.CloudKeystoreFields.Name
+	retval.Type = v.CloudKeystoreFields.Type
+	retval.MachineIdentitiesCount = v.CloudKeystoreFields.MachineIdentitiesCount
+	retval.CloudProvider = v.CloudKeystoreFields.CloudProvider
+	{
+
+		dst := &retval.Configuration
+		src := v.CloudKeystoreFields.Configuration
+		var err error
+		*dst, err = __marshalCloudKeystoreFieldsConfigurationCloudKeystoreConfiguration(
+			&src)
+		if err != nil {
+			return nil, fmt.Errorf(
+				"unable to marshal ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore.CloudKeystoreFields.Configuration: %w", err)
+		}
+	}
+	retval.DiscoveryConfiguration = v.CloudKeystoreFields.DiscoveryConfiguration
+	retval.Discovery = v.CloudKeystoreFields.Discovery
+	return &retval, nil
+}
+
+// ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionPageInfo includes the requested fields of the GraphQL type PageInfo.
+// The GraphQL type's documentation follows.
+//
+// PageInfo provides pagination information as defined by [https://relay.dev/graphql/connections.htm](GraphQL Cursor Connections Specification)
+type ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionPageInfo struct {
+	// Indicates whether more edges exist following the set defined by the clients arguments.
+	HasNextPage bool `json:"hasNextPage"`
+	// Cursor corresponding to the last node in edges.
+	EndCursor *string `json:"endCursor"`
+}
+
+// GetHasNextPage returns ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionPageInfo.HasNextPage, and is useful for accessing the field via an interface.
+func (v *ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionPageInfo) GetHasNextPage() bool {
+	return v.HasNextPage
+}
+
+// GetEndCursor returns ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionPageInfo.EndCursor, and is useful for accessing the field via an interface.
+func (v *ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionPageInfo) GetEndCursor() *string {
+	return v.EndCursor
+}
+
+// ListCloudKeystoresResponse is returned by ListCloudKeystores on success.
+type ListCloudKeystoresResponse struct {
+	// Retrieves Cloud Keystores.
+	// The pagination can be either forward or backward. To enable forward pagination, two arguments
+	// are used: `after` and `first`. To enable backward pagination, two arguments are used: `before` and `last`.
+	// If arguments for both forward and backward pagination are supplied, forward pagination wil be used. If no arguments
+	// are supplied, it returns the first page of 10 cloud keystores (i.e. defaults `first` to 10). The result is sorted by
+	// the added on date in ascending order.
+	// - after: returns the elements in the list that come after the specified cursor. Defaults to empty string, meaning
+	// that we return the first page of cloud providers, if `first` value is supplied
+	// - first: non-negative integer, denoting the first `n` number of records to return after the `after` cursor value.
+	// Max value is 100
+	// - before: returns the elements in the list that come before the specified cursor. By default is the empty string,
+	// meaning that the results will be the last page, if `last` value is supplied
+	// - last: non-negative integer, denoting the last `n` number of records to return before the `before` cursor value.
+	// Max value is 100
+	CloudKeystores *ListCloudKeystoresCloudKeystoresCloudKeystoreConnection `json:"cloudKeystores"`
+}
+
+// GetCloudKeystores returns ListCloudKeystoresResponse.CloudKeystores, and is useful for accessing the field via an interface.
+func (v *ListCloudKeystoresResponse) GetCloudKeystores() *ListCloudKeystoresCloudKeystoresCloudKeystoreConnection {
+	return v.CloudKeystores
+}
+
+// ListCloudProvidersCloudProvidersCloudProviderConnection includes the requested fields of the GraphQL type CloudProviderConnection.
+// The GraphQL type's documentation follows.
+//
+// A page of CloudProvider results
+type ListCloudProvidersCloudProvidersCloudProviderConnection struct {
+	// CloudProviders in the current page, without cursor
+	Nodes []*ListCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider `json:"nodes"`
+	// Current page information
+	PageInfo *ListCloudProvidersCloudProvidersCloudProviderConnectionPageInfo `json:"pageInfo"`
+}
+
+// GetNodes returns ListCloudProvidersCloudProvidersCloudProviderConnection.Nodes, and is useful for accessing the field via an interface.
+func (v *ListCloudProvidersCloudProvidersCloudProviderConnection) GetNodes() []*ListCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider {
+	return v.Nodes
+}
+
+// GetPageInfo returns ListCloudProvidersCloudProvidersCloudProviderConnection.PageInfo, and is useful for accessing the field via an interface.
+func (v *ListCloudProvidersCloudProvidersCloudProviderConnection) GetPageInfo() *ListCloudProvidersCloudProvidersCloudProviderConnectionPageInfo {
+	return v.PageInfo
+}
+
+// ListCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider includes the requested fields of the GraphQL type CloudProvider.
+type ListCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider struct {
+	CloudProviderFields `json:"-"`
+}
+
+// GetId returns ListCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider.Id, and is useful for accessing the field via an interface.
+func (v *ListCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider) GetId() string {
+	return v.CloudProviderFields.Id
+}
+
+// GetName returns ListCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider.Name, and is useful for accessing the field via an interface.
+func (v *ListCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider) GetName() string {
+	return v.CloudProviderFields.Name
+}
+
+// GetType returns ListCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider.Type, and is useful for accessing the field via an interface.
+func (v *ListCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider) GetType() CloudProviderType {
+	return v.CloudProviderFields.Type
+}
+
+// GetStatus returns ListCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider.Status, and is useful for accessing the field via an interface.
+func (v *ListCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider) GetStatus() CloudProviderStatus {
+	return v.CloudProviderFields.Status
+}
+
+// GetStatusDetails returns ListCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider.StatusDetails, and is useful for accessing the field via an interface.
+func (v *ListCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider) GetStatusDetails() *string {
+	return v.CloudProviderFields.StatusDetails
+}
+
+// GetKeystoresCount returns ListCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider.KeystoresCount, and is useful for accessing the field via an interface.
+func (v *ListCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider) GetKeystoresCount() int {
+	return v.CloudProviderFields.KeystoresCount
+}
+
+func (v *ListCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*ListCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.ListCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.CloudProviderFields)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalListCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	Type CloudProviderType `json:"type"`
+
+	Status CloudProviderStatus `json:"status"`
+
+	StatusDetails *string `json:"statusDetails"`
+
+	KeystoresCount int `json:"keystoresCount"`
+}
+
+func (v *ListCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *ListCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider) __premarshalJSON() (*__premarshalListCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider, error) {
+	var retval __premarshalListCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider
+
+	retval.Id = v.CloudProviderFields.Id
+	retval.Name = v.CloudProviderFields.Name
+	retval.Type = v.CloudProviderFields.Type
+	retval.Status = v.CloudProviderFields.Status
+	retval.StatusDetails = v.CloudProviderFields.StatusDetails
+	retval.KeystoresCount = v.CloudProviderFields.KeystoresCount
+	return &retval, nil
+}
+
+// ListCloudProvidersCloudProvidersCloudProviderConnectionPageInfo includes the requested fields of the GraphQL type PageInfo.
+// The GraphQL type's documentation follows.
+//
+// PageInfo provides pagination information as defined by [https://relay.dev/graphql/connections.htm](GraphQL Cursor Connections Specification)
+type ListCloudProvidersCloudProvidersCloudProviderConnectionPageInfo struct {
+	// Indicates whether more edges exist following the set defined by the clients arguments.
+	HasNextPage bool `json:"hasNextPage"`
+	// Cursor corresponding to the last node in edges.
+	EndCursor *string `json:"endCursor"`
+}
+
+// GetHasNextPage returns ListCloudProvidersCloudProvidersCloudProviderConnectionPageInfo.HasNextPage, and is useful for accessing the field via an interface.
+func (v *ListCloudProvidersCloudProvidersCloudProviderConnectionPageInfo) GetHasNextPage() bool {
+	return v.HasNextPage
+}
+
+// GetEndCursor returns ListCloudProvidersCloudProvidersCloudProviderConnectionPageInfo.EndCursor, and is useful for accessing the field via an interface.
+func (v *ListCloudProvidersCloudProvidersCloudProviderConnectionPageInfo) GetEndCursor() *string {
+	return v.EndCursor
+}
+
+// ListCloudProvidersResponse is returned by ListCloudProviders on success.
+type ListCloudProvidersResponse struct {
+	// Retrieves Cloud Providers.
+	// The pagination can be either forward or backward. To enable forward pagination, two arguments
+	// are used: `after` and `first`. To enable backward pagination, two arguments are used: `before` and `last`.
+	// If arguments for both forward and backward pagination are supplied, forward pagination wil be used. If no arguments
+	// are supplied, it returns the first page of 10 cloud providers (i.e. defaults `first` to 10). The result is sorted by
+	// the added on date in ascending order.
+	// - after: returns the elements in the list that come after the specified cursor. Defaults to empty string, meaning
+	// that we return the first page of cloud providers, if `first` value is supplied
+	// - first: non-negative integer, denoting the first `n` number of records to return after the `after` cursor value.
+	// Max value is 100
+	// - before: returns the elements in the list that come before the specified cursor. By default is the empty string,
+	// meaning that the results will be the last page, if `last` value is supplied
+	// - last: non-negative integer, denoting the last `n` number of records to return before the `before` cursor value.
+	// Max value is 100
+	CloudProviders *ListCloudProvidersCloudProvidersCloudProviderConnection `json:"cloudProviders"`
+}
+
+// GetCloudProviders returns ListCloudProvidersResponse.CloudProviders, and is useful for accessing the field via an interface.
+func (v *ListCloudProvidersResponse) GetCloudProviders() *ListCloudProvidersCloudProvidersCloudProviderConnection {
+	return v.CloudProviders
+}
+
+// ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnection includes the requested fields of the GraphQL type MachineIdentityConnection.
+// The GraphQL type's documentation follows.
+//
+// A page of MachineIdentity results
+type ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnection struct {
+	// MachineIdentity in the current page, without cursor
+	Nodes []*ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity `json:"nodes"`
+	// Current page information
+	PageInfo *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionPageInfo `json:"pageInfo"`
+}
+
+// GetNodes returns ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnection.Nodes, and is useful for accessing the field via an interface.
+func (v *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnection) GetNodes() []*ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity {
+	return v.Nodes
+}
+
+// GetPageInfo returns ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnection.PageInfo, and is useful for accessing the field via an interface.
+func (v *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnection) GetPageInfo() *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionPageInfo {
+	return v.PageInfo
+}
+
+// ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity includes the requested fields of the GraphQL type MachineIdentity.
+type ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity struct {
+	Id                string                                                                                                                    `json:"id"`
+	CloudKeystoreId   string                                                                                                                    `json:"cloudKeystoreId"`
+	CloudKeystoreName *string                                                                                                                   `json:"cloudKeystoreName"`
+	CloudProviderId   *string                                                                                                                   `json:"cloudProviderId"`
+	CloudProviderName *string                                                                                                                   `json:"cloudProviderName"`
+	Metadata          *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataCertificateCloudMetadata `json:"-"`
+	Status            MachineIdentityStatus                                                                                                     `json:"status"`
+	StatusDetails     *string                                                                                                                   `json:"statusDetails"`
+	CertificateId     string                                                                                                                    `json:"certificateId"`
+}
+
+// GetId returns ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity.Id, and is useful for accessing the field via an interface.
+func (v *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity) GetId() string {
+	return v.Id
+}
+
+// GetCloudKeystoreId returns ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity.CloudKeystoreId, and is useful for accessing the field via an interface.
+func (v *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity) GetCloudKeystoreId() string {
+	return v.CloudKeystoreId
+}
+
+// GetCloudKeystoreName returns ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity.CloudKeystoreName, and is useful for accessing the field via an interface.
+func (v *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity) GetCloudKeystoreName() *string {
+	return v.CloudKeystoreName
+}
+
+// GetCloudProviderId returns ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity.CloudProviderId, and is useful for accessing the field via an interface.
+func (v *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity) GetCloudProviderId() *string {
+	return v.CloudProviderId
+}
+
+// GetCloudProviderName returns ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity.CloudProviderName, and is useful for accessing the field via an interface.
+func (v *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity) GetCloudProviderName() *string {
+	return v.CloudProviderName
+}
+
+// GetMetadata returns ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity.Metadata, and is useful for accessing the field via an interface.
+func (v *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity) GetMetadata() *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataCertificateCloudMetadata {
+	return v.Metadata
+}
+
+// GetStatus returns ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity.Status, and is useful for accessing the field via an interface.
+func (v *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity) GetStatus() MachineIdentityStatus {
+	return v.Status
+}
+
+// GetStatusDetails returns ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity.StatusDetails, and is useful for accessing the field via an interface.
+func (v *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity) GetStatusDetails() *string {
+	return v.StatusDetails
+}
+
+// GetCertificateId returns ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity.CertificateId, and is useful for accessing the field via an interface.
+func (v *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity) GetCertificateId() string {
+	return v.CertificateId
+}
+
+func (v *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity
+		Metadata json.RawMessage `json:"metadata"`
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	{
+		dst := &v.Metadata
+		src := firstPass.Metadata
+		if len(src) != 0 && string(src) != "null" {
+			*dst = new(ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataCertificateCloudMetadata)
+			err = __unmarshalListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataCertificateCloudMetadata(
+				src, *dst)
+			if err != nil {
+				return fmt.Errorf(
+					"unable to unmarshal ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity.Metadata: %w", err)
+			}
+		}
+	}
+	return nil
+}
+
+type __premarshalListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity struct {
+	Id string `json:"id"`
+
+	CloudKeystoreId string `json:"cloudKeystoreId"`
+
+	CloudKeystoreName *string `json:"cloudKeystoreName"`
+
+	CloudProviderId *string `json:"cloudProviderId"`
+
+	CloudProviderName *string `json:"cloudProviderName"`
+
+	Metadata json.RawMessage `json:"metadata"`
+
+	Status MachineIdentityStatus `json:"status"`
+
+	StatusDetails *string `json:"statusDetails"`
+
+	CertificateId string `json:"certificateId"`
+}
+
+func (v *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity) __premarshalJSON() (*__premarshalListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity, error) {
+	var retval __premarshalListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity
+
+	retval.Id = v.Id
+	retval.CloudKeystoreId = v.CloudKeystoreId
+	retval.CloudKeystoreName = v.CloudKeystoreName
+	retval.CloudProviderId = v.CloudProviderId
+	retval.CloudProviderName = v.CloudProviderName
+	{
+
+		dst := &retval.Metadata
+		src := v.Metadata
+		if src != nil {
+			var err error
+			*dst, err = __marshalListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataCertificateCloudMetadata(
+				src)
+			if err != nil {
+				return nil, fmt.Errorf(
+					"unable to marshal ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity.Metadata: %w", err)
+			}
+		}
+	}
+	retval.Status = v.Status
+	retval.StatusDetails = v.StatusDetails
+	retval.CertificateId = v.CertificateId
+	return &retval, nil
+}
+
+// ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAWSCertificateMetadata includes the requested fields of the GraphQL type AWSCertificateMetadata.
+type ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAWSCertificateMetadata struct {
+	Typename *string `json:"__typename"`
+	Arn      string  `json:"arn"`
+}
+
+// GetTypename returns ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAWSCertificateMetadata.Typename, and is useful for accessing the field via an interface.
+func (v *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAWSCertificateMetadata) GetTypename() *string {
+	return v.Typename
+}
+
+// GetArn returns ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAWSCertificateMetadata.Arn, and is useful for accessing the field via an interface.
+func (v *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAWSCertificateMetadata) GetArn() string {
+	return v.Arn
+}
+
+// ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAkamaiCertificateMetadata includes the requested fields of the GraphQL type AkamaiCertificateMetadata.
+type ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAkamaiCertificateMetadata struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAkamaiCertificateMetadata.Typename, and is useful for accessing the field via an interface.
+func (v *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAkamaiCertificateMetadata) GetTypename() *string {
+	return v.Typename
+}
+
+// ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAzureCertificateMetadata includes the requested fields of the GraphQL type AzureCertificateMetadata.
+type ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAzureCertificateMetadata struct {
+	Typename *string `json:"__typename"`
+	AzureId  string  `json:"azureId"`
+	Name     string  `json:"name"`
+	Version  string  `json:"version"`
+}
+
+// GetTypename returns ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAzureCertificateMetadata.Typename, and is useful for accessing the field via an interface.
+func (v *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAzureCertificateMetadata) GetTypename() *string {
+	return v.Typename
+}
+
+// GetAzureId returns ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAzureCertificateMetadata.AzureId, and is useful for accessing the field via an interface.
+func (v *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAzureCertificateMetadata) GetAzureId() string {
+	return v.AzureId
+}
+
+// GetName returns ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAzureCertificateMetadata.Name, and is useful for accessing the field via an interface.
+func (v *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAzureCertificateMetadata) GetName() string {
+	return v.Name
+}
+
+// GetVersion returns ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAzureCertificateMetadata.Version, and is useful for accessing the field via an interface.
+func (v *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAzureCertificateMetadata) GetVersion() string {
+	return v.Version
+}
+
+// ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataCertificateCloudMetadata includes the requested fields of the GraphQL interface CertificateCloudMetadata.
+//
+// ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataCertificateCloudMetadata is implemented by the following types:
+// ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAWSCertificateMetadata
+// ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAkamaiCertificateMetadata
+// ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAzureCertificateMetadata
+// ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataGCPCertificateMetadata
+type ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataCertificateCloudMetadata interface {
+	implementsGraphQLInterfaceListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataCertificateCloudMetadata()
+	// GetTypename returns the receiver's concrete GraphQL type-name (see interface doc for possible values).
+	GetTypename() *string
+}
+
+func (v *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAWSCertificateMetadata) implementsGraphQLInterfaceListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataCertificateCloudMetadata() {
+}
+func (v *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAkamaiCertificateMetadata) implementsGraphQLInterfaceListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataCertificateCloudMetadata() {
+}
+func (v *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAzureCertificateMetadata) implementsGraphQLInterfaceListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataCertificateCloudMetadata() {
+}
+func (v *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataGCPCertificateMetadata) implementsGraphQLInterfaceListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataCertificateCloudMetadata() {
+}
+
+func __unmarshalListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataCertificateCloudMetadata(b []byte, v *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataCertificateCloudMetadata) error {
+	if string(b) == "null" {
+		return nil
+	}
+
+	var tn struct {
+		TypeName string `json:"__typename"`
+	}
+	err := json.Unmarshal(b, &tn)
+	if err != nil {
+		return err
+	}
+
+	switch tn.TypeName {
+	case "AWSCertificateMetadata":
+		*v = new(ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAWSCertificateMetadata)
+		return json.Unmarshal(b, *v)
+	case "AkamaiCertificateMetadata":
+		*v = new(ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAkamaiCertificateMetadata)
+		return json.Unmarshal(b, *v)
+	case "AzureCertificateMetadata":
+		*v = new(ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAzureCertificateMetadata)
+		return json.Unmarshal(b, *v)
+	case "GCPCertificateMetadata":
+		*v = new(ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataGCPCertificateMetadata)
+		return json.Unmarshal(b, *v)
+	case "":
+		return fmt.Errorf(
+			"response was missing CertificateCloudMetadata.__typename")
+	default:
+		return fmt.Errorf(
+			`unexpected concrete type for ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataCertificateCloudMetadata: "%v"`, tn.TypeName)
+	}
+}
+
+func __marshalListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataCertificateCloudMetadata(v *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataCertificateCloudMetadata) ([]byte, error) {
+
+	var typename string
+	switch v := (*v).(type) {
+	case *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAWSCertificateMetadata:
+		typename = "AWSCertificateMetadata"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAWSCertificateMetadata
+		}{typename, v}
+		return json.Marshal(result)
+	case *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAkamaiCertificateMetadata:
+		typename = "AkamaiCertificateMetadata"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAkamaiCertificateMetadata
+		}{typename, v}
+		return json.Marshal(result)
+	case *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAzureCertificateMetadata:
+		typename = "AzureCertificateMetadata"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataAzureCertificateMetadata
+		}{typename, v}
+		return json.Marshal(result)
+	case *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataGCPCertificateMetadata:
+		typename = "GCPCertificateMetadata"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataGCPCertificateMetadata
+		}{typename, v}
+		return json.Marshal(result)
+	case nil:
+		return []byte("null"), nil
+	default:
+		return nil, fmt.Errorf(
+			`unexpected concrete type for ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataCertificateCloudMetadata: "%T"`, v)
+	}
+}
+
+// ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataGCPCertificateMetadata includes the requested fields of the GraphQL type GCPCertificateMetadata.
+type ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataGCPCertificateMetadata struct {
+	Typename *string `json:"__typename"`
+	GcpId    string  `json:"gcpId"`
+	Name     string  `json:"name"`
+}
+
+// GetTypename returns ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataGCPCertificateMetadata.Typename, and is useful for accessing the field via an interface.
+func (v *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataGCPCertificateMetadata) GetTypename() *string {
+	return v.Typename
+}
+
+// GetGcpId returns ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataGCPCertificateMetadata.GcpId, and is useful for accessing the field via an interface.
+func (v *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataGCPCertificateMetadata) GetGcpId() string {
+	return v.GcpId
+}
+
+// GetName returns ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataGCPCertificateMetadata.Name, and is useful for accessing the field via an interface.
+func (v *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentityMetadataGCPCertificateMetadata) GetName() string {
+	return v.Name
+}
+
+// ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionPageInfo includes the requested fields of the GraphQL type PageInfo.
+// The GraphQL type's documentation follows.
+//
+// PageInfo provides pagination information as defined by [https://relay.dev/graphql/connections.htm](GraphQL Cursor Connections Specification)
+type ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionPageInfo struct {
+	// Indicates whether more edges exist following the set defined by the clients arguments.
+	HasNextPage bool `json:"hasNextPage"`
+	// Cursor corresponding to the last node in edges.
+	EndCursor *string `json:"endCursor"`
+}
+
+// GetHasNextPage returns ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionPageInfo.HasNextPage, and is useful for accessing the field via an interface.
+func (v *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionPageInfo) GetHasNextPage() bool {
+	return v.HasNextPage
+}
+
+// GetEndCursor returns ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionPageInfo.EndCursor, and is useful for accessing the field via an interface.
+func (v *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionPageInfo) GetEndCursor() *string {
+	return v.EndCursor
+}
+
+// ListMachineIdentitiesResponse is returned by ListMachineIdentities on success.
+type ListMachineIdentitiesResponse struct {
+	// Retrieves machine identities for a Cloud Keystore.
+	// The pagination can be either forward or backward. To enable forward pagination, two arguments
+	// are used: `after` and `first`. To enable backward pagination, two arguments are used: `before` and `last`.
+	// If arguments for both forward and backward pagination are supplied, forward pagination wil be used. If no arguments
+	// are supplied, it returns the first page of 10 machine identities (i.e. defaults `first` to 10). The result is sorted by
+	// the added on date in descending order.
+	// - after: returns the elements in the list that come after the specified cursor. Defaults to empty string, meaning
+	// that we return the first page of certificates, if `first` value is supplied
+	// - first: non-negative integer, denoting the first `n` number of records to return after the `after` cursor value.
+	// Max value is 1000
+	// - before: returns the elements in the list that come before the specified cursor. By default is the empty string,
+	// meaning that the results will be the last page, if `last` value is supplied
+	// - last: non-negative integer, denoting the last `n` number of records to return before the `before` cursor value.
+	// Max value is 1000
+	CloudMachineIdentities *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnection `json:"cloudMachineIdentities"`
+}
+
+// GetCloudMachineIdentities returns ListMachineIdentitiesResponse.CloudMachineIdentities, and is useful for accessing the field via an interface.
+func (v *ListMachineIdentitiesResponse) GetCloudMachineIdentities() *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnection {
+	return v.CloudMachineIdentities
+}
+
 type MachineIdentityStatus string
 
 const (
@@ -778,6 +2825,329 @@ func (v *ProvisionCertificateToMachineIdentityResponse) GetProvisionToCloudMachi
 	return v.ProvisionToCloudMachineIdentity
 }
 
+// StartCloudDiscoveryResponse is returned by StartCloudDiscovery on success.
+type StartCloudDiscoveryResponse struct {
+	// Start cloud discovery
+	StartCloudDiscovery *StartCloudDiscoveryStartCloudDiscoveryWorkflowResult `json:"startCloudDiscovery"`
+}
+
+// GetStartCloudDiscovery returns StartCloudDiscoveryResponse.StartCloudDiscovery, and is useful for accessing the field via an interface.
+func (v *StartCloudDiscoveryResponse) GetStartCloudDiscovery() *StartCloudDiscoveryStartCloudDiscoveryWorkflowResult {
+	return v.StartCloudDiscovery
+}
+
+// StartCloudDiscoveryStartCloudDiscoveryWorkflowResult includes the requested fields of the GraphQL type WorkflowResult.
+type StartCloudDiscoveryStartCloudDiscoveryWorkflowResult struct {
+	WorkflowId   string `json:"workflowId"`
+	WorkflowName string `json:"workflowName"`
+}
+
+// GetWorkflowId returns StartCloudDiscoveryStartCloudDiscoveryWorkflowResult.WorkflowId, and is useful for accessing the field via an interface.
+func (v *StartCloudDiscoveryStartCloudDiscoveryWorkflowResult) GetWorkflowId() string {
+	return v.WorkflowId
+}
+
+// GetWorkflowName returns StartCloudDiscoveryStartCloudDiscoveryWorkflowResult.WorkflowName, and is useful for accessing the field via an interface.
+func (v *StartCloudDiscoveryStartCloudDiscoveryWorkflowResult) GetWorkflowName() string {
+	return v.WorkflowName
+}
+
+// UpdateCloudKeystoreResponse is returned by UpdateCloudKeystore on success.
+type UpdateCloudKeystoreResponse struct {
+	// Updates a Cloud Keystore
+	UpdateCloudKeystore *UpdateCloudKeystoreUpdateCloudKeystore `json:"updateCloudKeystore"`
+}
+
+// GetUpdateCloudKeystore returns UpdateCloudKeystoreResponse.UpdateCloudKeystore, and is useful for accessing the field via an interface.
+func (v *UpdateCloudKeystoreResponse) GetUpdateCloudKeystore() *UpdateCloudKeystoreUpdateCloudKeystore {
+	return v.UpdateCloudKeystore
+}
+
+// UpdateCloudKeystoreUpdateCloudKeystore includes the requested fields of the GraphQL type CloudKeystore.
+type UpdateCloudKeystoreUpdateCloudKeystore struct {
+	CloudKeystoreFields `json:"-"`
+}
+
+// GetId returns UpdateCloudKeystoreUpdateCloudKeystore.Id, and is useful for accessing the field via an interface.
+func (v *UpdateCloudKeystoreUpdateCloudKeystore) GetId() string { return v.CloudKeystoreFields.Id }
+
+// GetName returns UpdateCloudKeystoreUpdateCloudKeystore.Name, and is useful for accessing the field via an interface.
+func (v *UpdateCloudKeystoreUpdateCloudKeystore) GetName() string { return v.CloudKeystoreFields.Name }
+
+// GetType returns UpdateCloudKeystoreUpdateCloudKeystore.Type, and is useful for accessing the field via an interface.
+func (v *UpdateCloudKeystoreUpdateCloudKeystore) GetType() CloudKeystoreType {
+	return v.CloudKeystoreFields.Type
+}
+
+// GetMachineIdentitiesCount returns UpdateCloudKeystoreUpdateCloudKeystore.MachineIdentitiesCount, and is useful for accessing the field via an interface.
+func (v *UpdateCloudKeystoreUpdateCloudKeystore) GetMachineIdentitiesCount() int {
+	return v.CloudKeystoreFields.MachineIdentitiesCount
+}
+
+// GetCloudProvider returns UpdateCloudKeystoreUpdateCloudKeystore.CloudProvider, and is useful for accessing the field via an interface.
+func (v *UpdateCloudKeystoreUpdateCloudKeystore) GetCloudProvider() *CloudKeystoreFieldsCloudProvider {
+	return v.CloudKeystoreFields.CloudProvider
+}
+
+// GetConfiguration returns UpdateCloudKeystoreUpdateCloudKeystore.Configuration, and is useful for accessing the field via an interface.
+func (v *UpdateCloudKeystoreUpdateCloudKeystore) GetConfiguration() CloudKeystoreFieldsConfigurationCloudKeystoreConfiguration {
+	return v.CloudKeystoreFields.Configuration
+}
+
+// GetDiscoveryConfiguration returns UpdateCloudKeystoreUpdateCloudKeystore.DiscoveryConfiguration, and is useful for accessing the field via an interface.
+func (v *UpdateCloudKeystoreUpdateCloudKeystore) GetDiscoveryConfiguration() *CloudKeystoreFieldsDiscoveryConfigurationCloudDiscoveryConfiguration {
+	return v.CloudKeystoreFields.DiscoveryConfiguration
+}
+
+// GetDiscovery returns UpdateCloudKeystoreUpdateCloudKeystore.Discovery, and is useful for accessing the field via an interface.
+func (v *UpdateCloudKeystoreUpdateCloudKeystore) GetDiscovery() *CloudKeystoreFieldsDiscoveryCloudDiscovery {
+	return v.CloudKeystoreFields.Discovery
+}
+
+func (v *UpdateCloudKeystoreUpdateCloudKeystore) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*UpdateCloudKeystoreUpdateCloudKeystore
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.UpdateCloudKeystoreUpdateCloudKeystore = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.CloudKeystoreFields)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalUpdateCloudKeystoreUpdateCloudKeystore struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	Type CloudKeystoreType `json:"type"`
+
+	MachineIdentitiesCount int `json:"machineIdentitiesCount"`
+
+	CloudProvider *CloudKeystoreFieldsCloudProvider `json:"cloudProvider"`
+
+	Configuration json.RawMessage `json:"configuration"`
+
+	DiscoveryConfiguration *CloudKeystoreFieldsDiscoveryConfigurationCloudDiscoveryConfiguration `json:"discoveryConfiguration"`
+
+	Discovery *CloudKeystoreFieldsDiscoveryCloudDiscovery `json:"discovery"`
+}
+
+func (v *UpdateCloudKeystoreUpdateCloudKeystore) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *UpdateCloudKeystoreUpdateCloudKeystore) __premarshalJSON() (*__premarshalUpdateCloudKeystoreUpdateCloudKeystore, error) {
+	var retval __premarshalUpdateCloudKeystoreUpdateCloudKeystore
+
+	retval.Id = v.CloudKeystoreFields.Id
+	retval.Name = v.CloudKeystoreFields.Name
+	retval.Type = v.CloudKeystoreFields.Type
+	retval.MachineIdentitiesCount = v.CloudKeystoreFields.MachineIdentitiesCount
+	retval.CloudProvider = v.CloudKeystoreFields.CloudProvider
+	{
+
+		dst := &retval.Configuration
+		src := v.CloudKeystoreFields.Configuration
+		var err error
+		*dst, err = __marshalCloudKeystoreFieldsConfigurationCloudKeystoreConfiguration(
+			&src)
+		if err != nil {
+			return nil, fmt.Errorf(
+				"unable to marshal UpdateCloudKeystoreUpdateCloudKeystore.CloudKeystoreFields.Configuration: %w", err)
+		}
+	}
+	retval.DiscoveryConfiguration = v.CloudKeystoreFields.DiscoveryConfiguration
+	retval.Discovery = v.CloudKeystoreFields.Discovery
+	return &retval, nil
+}
+
+// UpdateCloudProviderResponse is returned by UpdateCloudProvider on success.
+type UpdateCloudProviderResponse struct {
+	// Updates a cloud provider
+	UpdateCloudProvider *UpdateCloudProviderUpdateCloudProvider `json:"updateCloudProvider"`
+}
+
+// GetUpdateCloudProvider returns UpdateCloudProviderResponse.UpdateCloudProvider, and is useful for accessing the field via an interface.
+func (v *UpdateCloudProviderResponse) GetUpdateCloudProvider() *UpdateCloudProviderUpdateCloudProvider {
+	return v.UpdateCloudProvider
+}
+
+// UpdateCloudProviderUpdateCloudProvider includes the requested fields of the GraphQL type CloudProvider.
+type UpdateCloudProviderUpdateCloudProvider struct {
+	CloudProviderFields `json:"-"`
+}
+
+// GetId returns UpdateCloudProviderUpdateCloudProvider.Id, and is useful for accessing the field via an interface.
+func (v *UpdateCloudProviderUpdateCloudProvider) GetId() string { return v.CloudProviderFields.Id }
+
+// GetName returns UpdateCloudProviderUpdateCloudProvider.Name, and is useful for accessing the field via an interface.
+func (v *UpdateCloudProviderUpdateCloudProvider) GetName() string { return v.CloudProviderFields.Name }
+
+// GetType returns UpdateCloudProviderUpdateCloudProvider.Type, and is useful for accessing the field via an interface.
+func (v *UpdateCloudProviderUpdateCloudProvider) GetType() CloudProviderType {
+	return v.CloudProviderFields.Type
+}
+
+// GetStatus returns UpdateCloudProviderUpdateCloudProvider.Status, and is useful for accessing the field via an interface.
+func (v *UpdateCloudProviderUpdateCloudProvider) GetStatus() CloudProviderStatus {
+	return v.CloudProviderFields.Status
+}
+
+// GetStatusDetails returns UpdateCloudProviderUpdateCloudProvider.StatusDetails, and is useful for accessing the field via an interface.
+func (v *UpdateCloudProviderUpdateCloudProvider) GetStatusDetails() *string {
+	return v.CloudProviderFields.StatusDetails
+}
+
+// GetKeystoresCount returns UpdateCloudProviderUpdateCloudProvider.KeystoresCount, and is useful for accessing the field via an interface.
+func (v *UpdateCloudProviderUpdateCloudProvider) GetKeystoresCount() int {
+	return v.CloudProviderFields.KeystoresCount
+}
+
+func (v *UpdateCloudProviderUpdateCloudProvider) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*UpdateCloudProviderUpdateCloudProvider
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.UpdateCloudProviderUpdateCloudProvider = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.CloudProviderFields)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalUpdateCloudProviderUpdateCloudProvider struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	Type CloudProviderType `json:"type"`
+
+	Status CloudProviderStatus `json:"status"`
+
+	StatusDetails *string `json:"statusDetails"`
+
+	KeystoresCount int `json:"keystoresCount"`
+}
+
+func (v *UpdateCloudProviderUpdateCloudProvider) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *UpdateCloudProviderUpdateCloudProvider) __premarshalJSON() (*__premarshalUpdateCloudProviderUpdateCloudProvider, error) {
+	var retval __premarshalUpdateCloudProviderUpdateCloudProvider
+
+	retval.Id = v.CloudProviderFields.Id
+	retval.Name = v.CloudProviderFields.Name
+	retval.Type = v.CloudProviderFields.Type
+	retval.Status = v.CloudProviderFields.Status
+	retval.StatusDetails = v.CloudProviderFields.StatusDetails
+	retval.KeystoresCount = v.CloudProviderFields.KeystoresCount
+	return &retval, nil
+}
+
+// ValidateCloudProviderResponse is returned by ValidateCloudProvider on success.
+type ValidateCloudProviderResponse struct {
+	// Validates a Cloud Provider configuration by ID
+	ValidateCloudProvider *ValidateCloudProviderValidateCloudProviderCloudProviderValidationResult `json:"validateCloudProvider"`
+}
+
+// GetValidateCloudProvider returns ValidateCloudProviderResponse.ValidateCloudProvider, and is useful for accessing the field via an interface.
+func (v *ValidateCloudProviderResponse) GetValidateCloudProvider() *ValidateCloudProviderValidateCloudProviderCloudProviderValidationResult {
+	return v.ValidateCloudProvider
+}
+
+// ValidateCloudProviderValidateCloudProviderCloudProviderValidationResult includes the requested fields of the GraphQL type CloudProviderValidationResult.
+type ValidateCloudProviderValidateCloudProviderCloudProviderValidationResult struct {
+	Result  CloudProviderStatus `json:"result"`
+	Details *string             `json:"details"`
+}
+
+// GetResult returns ValidateCloudProviderValidateCloudProviderCloudProviderValidationResult.Result, and is useful for accessing the field via an interface.
+func (v *ValidateCloudProviderValidateCloudProviderCloudProviderValidationResult) GetResult() CloudProviderStatus {
+	return v.Result
+}
+
+// GetDetails returns ValidateCloudProviderValidateCloudProviderCloudProviderValidationResult.Details, and is useful for accessing the field via an interface.
+func (v *ValidateCloudProviderValidateCloudProviderCloudProviderValidationResult) GetDetails() *string {
+	return v.Details
+}
+
+// __AbortCloudDiscoveryInput is used internally by genqlient
+type __AbortCloudDiscoveryInput struct {
+	CloudKeystoreId string `json:"cloudKeystoreId"`
+}
+
+// GetCloudKeystoreId returns __AbortCloudDiscoveryInput.CloudKeystoreId, and is useful for accessing the field via an interface.
+func (v *__AbortCloudDiscoveryInput) GetCloudKeystoreId() string { return v.CloudKeystoreId }
+
+// __CreateCloudKeystoreInput is used internally by genqlient
+type __CreateCloudKeystoreInput struct {
+	Input *CloudKeystoreInput `json:"input,omitempty"`
+}
+
+// GetInput returns __CreateCloudKeystoreInput.Input, and is useful for accessing the field via an interface.
+func (v *__CreateCloudKeystoreInput) GetInput() *CloudKeystoreInput { return v.Input }
+
+// __CreateCloudProviderInput is used internally by genqlient
+type __CreateCloudProviderInput struct {
+	Input *CloudProviderInput `json:"input,omitempty"`
+}
+
+// GetInput returns __CreateCloudProviderInput.Input, and is useful for accessing the field via an interface.
+func (v *__CreateCloudProviderInput) GetInput() *CloudProviderInput { return v.Input }
+
+// __DeleteCloudKeystoresInput is used internally by genqlient
+type __DeleteCloudKeystoresInput struct {
+	CloudKeystoreIds []string `json:"cloudKeystoreIds"`
+}
+
+// GetCloudKeystoreIds returns __DeleteCloudKeystoresInput.CloudKeystoreIds, and is useful for accessing the field via an interface.
+func (v *__DeleteCloudKeystoresInput) GetCloudKeystoreIds() []string { return v.CloudKeystoreIds }
+
+// __DeleteCloudProvidersInput is used internally by genqlient
+type __DeleteCloudProvidersInput struct {
+	CloudProviderIds []string `json:"cloudProviderIds"`
+}
+
+// GetCloudProviderIds returns __DeleteCloudProvidersInput.CloudProviderIds, and is useful for accessing the field via an interface.
+func (v *__DeleteCloudProvidersInput) GetCloudProviderIds() []string { return v.CloudProviderIds }
+
 // __DeleteMachineIdentitiesInput is used internally by genqlient
 type __DeleteMachineIdentitiesInput struct {
 	MachineIdentityIds []string `json:"machineIdentityIds"`
@@ -848,6 +3218,66 @@ func (v *__GetMachineIdentitiesInput) GetNewlyDiscovered() *bool { return v.Newl
 // GetMetadata returns __GetMachineIdentitiesInput.Metadata, and is useful for accessing the field via an interface.
 func (v *__GetMachineIdentitiesInput) GetMetadata() *string { return v.Metadata }
 
+// __ListCloudKeystoresInput is used internally by genqlient
+type __ListCloudKeystoresInput struct {
+	CloudKeystoreId   *string `json:"cloudKeystoreId"`
+	CloudKeystoreName *string `json:"cloudKeystoreName"`
+	CloudProviderId   *string `json:"cloudProviderId"`
+	CloudProviderName *string `json:"cloudProviderName"`
+	After             *string `json:"after"`
+}
+
+// GetCloudKeystoreId returns __ListCloudKeystoresInput.CloudKeystoreId, and is useful for accessing the field via an interface.
+func (v *__ListCloudKeystoresInput) GetCloudKeystoreId() *string { return v.CloudKeystoreId }
+
+// GetCloudKeystoreName returns __ListCloudKeystoresInput.CloudKeystoreName, and is useful for accessing the field via an interface.
+func (v *__ListCloudKeystoresInput) GetCloudKeystoreName() *string { return v.CloudKeystoreName }
+
+// GetCloudProviderId returns __ListCloudKeystoresInput.CloudProviderId, and is useful for accessing the field via an interface.
+func (v *__ListCloudKeystoresInput) GetCloudProviderId() *string { return v.CloudProviderId }
+
+// GetCloudProviderName returns __ListCloudKeystoresInput.CloudProviderName, and is useful for accessing the field via an interface.
+func (v *__ListCloudKeystoresInput) GetCloudProviderName() *string { return v.CloudProviderName }
+
+// GetAfter returns __ListCloudKeystoresInput.After, and is useful for accessing the field via an interface.
+func (v *__ListCloudKeystoresInput) GetAfter() *string { return v.After }
+
+// __ListCloudProvidersInput is used internally by genqlient
+type __ListCloudProvidersInput struct {
+	Status       *CloudProviderStatus `json:"status"`
+	ProviderType *CloudProviderType   `json:"providerType"`
+	Name         *string              `json:"name"`
+	After        *string              `json:"after"`
+}
+
+// GetStatus returns __ListCloudProvidersInput.Status, and is useful for accessing the field via an interface.
+func (v *__ListCloudProvidersInput) GetStatus() *CloudProviderStatus { return v.Status }
+
+// GetProviderType returns __ListCloudProvidersInput.ProviderType, and is useful for accessing the field via an interface.
+func (v *__ListCloudProvidersInput) GetProviderType() *CloudProviderType { return v.ProviderType }
+
+// GetName returns __ListCloudProvidersInput.Name, and is useful for accessing the field via an interface.
+func (v *__ListCloudProvidersInput) GetName() *string { return v.Name }
+
+// GetAfter returns __ListCloudProvidersInput.After, and is useful for accessing the field via an interface.
+func (v *__ListCloudProvidersInput) GetAfter() *string { return v.After }
+
+// __ListMachineIdentitiesInput is used internally by genqlient
+type __ListMachineIdentitiesInput struct {
+	CloudKeystoreId *string `json:"cloudKeystoreId"`
+	NewlyDiscovered *bool   `json:"newlyDiscovered"`
+	After           *string `json:"after"`
+}
+
+// GetCloudKeystoreId returns __ListMachineIdentitiesInput.CloudKeystoreId, and is useful for accessing the field via an interface.
+func (v *__ListMachineIdentitiesInput) GetCloudKeystoreId() *string { return v.CloudKeystoreId }
+
+// GetNewlyDiscovered returns __ListMachineIdentitiesInput.NewlyDiscovered, and is useful for accessing the field via an interface.
+func (v *__ListMachineIdentitiesInput) GetNewlyDiscovered() *bool { return v.NewlyDiscovered }
+
+// GetAfter returns __ListMachineIdentitiesInput.After, and is useful for accessing the field via an interface.
+func (v *__ListMachineIdentitiesInput) GetAfter() *string { return v.After }
+
 // __ProvisionCertificateInput is used internally by genqlient
 type __ProvisionCertificateInput struct {
 	CertificateId   string                               `json:"certificateId"`
@@ -888,6 +3318,257 @@ func (v *__ProvisionCertificateToMachineIdentityInput) GetWsClientId() string { 
 // GetCertificateId returns __ProvisionCertificateToMachineIdentityInput.CertificateId, and is useful for accessing the field via an interface.
 func (v *__ProvisionCertificateToMachineIdentityInput) GetCertificateId() *string {
 	return v.CertificateId
+}
+
+// __StartCloudDiscoveryInput is used internally by genqlient
+type __StartCloudDiscoveryInput struct {
+	CloudKeystoreId string `json:"cloudKeystoreId"`
+	WsClientId      string `json:"wsClientId"`
+}
+
+// GetCloudKeystoreId returns __StartCloudDiscoveryInput.CloudKeystoreId, and is useful for accessing the field via an interface.
+func (v *__StartCloudDiscoveryInput) GetCloudKeystoreId() string { return v.CloudKeystoreId }
+
+// GetWsClientId returns __StartCloudDiscoveryInput.WsClientId, and is useful for accessing the field via an interface.
+func (v *__StartCloudDiscoveryInput) GetWsClientId() string { return v.WsClientId }
+
+// __UpdateCloudKeystoreInput is used internally by genqlient
+type __UpdateCloudKeystoreInput struct {
+	Input *CloudKeystoreUpdateInput `json:"input,omitempty"`
+}
+
+// GetInput returns __UpdateCloudKeystoreInput.Input, and is useful for accessing the field via an interface.
+func (v *__UpdateCloudKeystoreInput) GetInput() *CloudKeystoreUpdateInput { return v.Input }
+
+// __UpdateCloudProviderInput is used internally by genqlient
+type __UpdateCloudProviderInput struct {
+	Input *CloudProviderUpdateInput `json:"input,omitempty"`
+}
+
+// GetInput returns __UpdateCloudProviderInput.Input, and is useful for accessing the field via an interface.
+func (v *__UpdateCloudProviderInput) GetInput() *CloudProviderUpdateInput { return v.Input }
+
+// __ValidateCloudProviderInput is used internally by genqlient
+type __ValidateCloudProviderInput struct {
+	CloudProviderId string `json:"cloudProviderId"`
+}
+
+// GetCloudProviderId returns __ValidateCloudProviderInput.CloudProviderId, and is useful for accessing the field via an interface.
+func (v *__ValidateCloudProviderInput) GetCloudProviderId() string { return v.CloudProviderId }
+
+// The mutation executed by AbortCloudDiscovery.
+const AbortCloudDiscovery_Operation = `
+mutation AbortCloudDiscovery ($cloudKeystoreId: UUID!) {
+	abortCloudDiscovery(cloudKeystoreId: $cloudKeystoreId)
+}
+`
+
+func AbortCloudDiscovery(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	cloudKeystoreId string,
+) (data_ *AbortCloudDiscoveryResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "AbortCloudDiscovery",
+		Query:  AbortCloudDiscovery_Operation,
+		Variables: &__AbortCloudDiscoveryInput{
+			CloudKeystoreId: cloudKeystoreId,
+		},
+	}
+
+	data_ = &AbortCloudDiscoveryResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by CreateCloudKeystore.
+const CreateCloudKeystore_Operation = `
+mutation CreateCloudKeystore ($input: CloudKeystoreInput!) {
+	createCloudKeystore(input: $input) {
+		... CloudKeystoreFields
+	}
+}
+fragment CloudKeystoreFields on CloudKeystore {
+	id
+	name
+	type
+	machineIdentitiesCount
+	cloudProvider {
+		id
+		name
+	}
+	configuration {
+		__typename
+		... on CloudKeystoreACMConfiguration {
+			region
+			accountId
+		}
+		... on CloudKeystoreAKVConfiguration {
+			keyVaultName
+		}
+		... on CloudKeystoreGCMConfiguration {
+			projectId
+			location
+		}
+	}
+	discoveryConfiguration {
+		scheduleSpecification
+		includeExpiredCertificates
+		includeRevokedCertificates
+	}
+	discovery {
+		... CloudDiscoveryFields
+	}
+}
+fragment CloudDiscoveryFields on CloudDiscovery {
+	id
+	status
+	statusDetails
+	totalCertificatesCount
+	newCertificatesCount
+	updatedCertificatesCount
+	missingCertificatesCount
+	startTime
+	endTime
+}
+`
+
+func CreateCloudKeystore(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input *CloudKeystoreInput,
+) (data_ *CreateCloudKeystoreResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "CreateCloudKeystore",
+		Query:  CreateCloudKeystore_Operation,
+		Variables: &__CreateCloudKeystoreInput{
+			Input: input,
+		},
+	}
+
+	data_ = &CreateCloudKeystoreResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by CreateCloudProvider.
+const CreateCloudProvider_Operation = `
+mutation CreateCloudProvider ($input: CloudProviderInput!) {
+	createCloudProvider(input: $input) {
+		... CloudProviderFields
+	}
+}
+fragment CloudProviderFields on CloudProvider {
+	id
+	name
+	type
+	status
+	statusDetails
+	keystoresCount
+}
+`
+
+func CreateCloudProvider(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input *CloudProviderInput,
+) (data_ *CreateCloudProviderResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "CreateCloudProvider",
+		Query:  CreateCloudProvider_Operation,
+		Variables: &__CreateCloudProviderInput{
+			Input: input,
+		},
+	}
+
+	data_ = &CreateCloudProviderResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by DeleteCloudKeystores.
+const DeleteCloudKeystores_Operation = `
+mutation DeleteCloudKeystores ($cloudKeystoreIds: [UUID!]!) {
+	deleteCloudKeystore(cloudKeystoreIds: $cloudKeystoreIds)
+}
+`
+
+func DeleteCloudKeystores(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	cloudKeystoreIds []string,
+) (data_ *DeleteCloudKeystoresResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "DeleteCloudKeystores",
+		Query:  DeleteCloudKeystores_Operation,
+		Variables: &__DeleteCloudKeystoresInput{
+			CloudKeystoreIds: cloudKeystoreIds,
+		},
+	}
+
+	data_ = &DeleteCloudKeystoresResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by DeleteCloudProviders.
+const DeleteCloudProviders_Operation = `
+mutation DeleteCloudProviders ($cloudProviderIds: [UUID!]!) {
+	deleteCloudProvider(cloudProviderId: $cloudProviderIds)
+}
+`
+
+func DeleteCloudProviders(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	cloudProviderIds []string,
+) (data_ *DeleteCloudProvidersResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "DeleteCloudProviders",
+		Query:  DeleteCloudProviders_Operation,
+		Variables: &__DeleteCloudProvidersInput{
+			CloudProviderIds: cloudProviderIds,
+		},
+	}
+
+	data_ = &DeleteCloudProvidersResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
 }
 
 // The mutation executed by DeleteMachineIdentities.
@@ -1078,6 +3759,217 @@ func GetMachineIdentities(
 	return data_, err_
 }
 
+// The query executed by ListCloudKeystores.
+const ListCloudKeystores_Operation = `
+query ListCloudKeystores ($cloudKeystoreId: UUID, $cloudKeystoreName: String, $cloudProviderId: UUID, $cloudProviderName: String, $after: String) {
+	cloudKeystores(filter: {cloudKeystoreId:$cloudKeystoreId,cloudKeystoreName:$cloudKeystoreName,cloudProviderId:$cloudProviderId,cloudProviderName:$cloudProviderName}, after: $after) {
+		nodes {
+			... CloudKeystoreFields
+		}
+		pageInfo {
+			hasNextPage
+			endCursor
+		}
+	}
+}
+fragment CloudKeystoreFields on CloudKeystore {
+	id
+	name
+	type
+	machineIdentitiesCount
+	cloudProvider {
+		id
+		name
+	}
+	configuration {
+		__typename
+		... on CloudKeystoreACMConfiguration {
+			region
+			accountId
+		}
+		... on CloudKeystoreAKVConfiguration {
+			keyVaultName
+		}
+		... on CloudKeystoreGCMConfiguration {
+			projectId
+			location
+		}
+	}
+	discoveryConfiguration {
+		scheduleSpecification
+		includeExpiredCertificates
+		includeRevokedCertificates
+	}
+	discovery {
+		... CloudDiscoveryFields
+	}
+}
+fragment CloudDiscoveryFields on CloudDiscovery {
+	id
+	status
+	statusDetails
+	totalCertificatesCount
+	newCertificatesCount
+	updatedCertificatesCount
+	missingCertificatesCount
+	startTime
+	endTime
+}
+`
+
+func ListCloudKeystores(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	cloudKeystoreId *string,
+	cloudKeystoreName *string,
+	cloudProviderId *string,
+	cloudProviderName *string,
+	after *string,
+) (data_ *ListCloudKeystoresResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "ListCloudKeystores",
+		Query:  ListCloudKeystores_Operation,
+		Variables: &__ListCloudKeystoresInput{
+			CloudKeystoreId:   cloudKeystoreId,
+			CloudKeystoreName: cloudKeystoreName,
+			CloudProviderId:   cloudProviderId,
+			CloudProviderName: cloudProviderName,
+			After:             after,
+		},
+	}
+
+	data_ = &ListCloudKeystoresResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The query executed by ListCloudProviders.
+const ListCloudProviders_Operation = `
+query ListCloudProviders ($status: CloudProviderStatus, $providerType: CloudProviderType, $name: String, $after: String) {
+	cloudProviders(filter: {status:$status,type:$providerType,name:$name}, after: $after) {
+		nodes {
+			... CloudProviderFields
+		}
+		pageInfo {
+			hasNextPage
+			endCursor
+		}
+	}
+}
+fragment CloudProviderFields on CloudProvider {
+	id
+	name
+	type
+	status
+	statusDetails
+	keystoresCount
+}
+`
+
+func ListCloudProviders(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	status *CloudProviderStatus,
+	providerType *CloudProviderType,
+	name *string,
+	after *string,
+) (data_ *ListCloudProvidersResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "ListCloudProviders",
+		Query:  ListCloudProviders_Operation,
+		Variables: &__ListCloudProvidersInput{
+			Status:       status,
+			ProviderType: providerType,
+			Name:         name,
+			After:        after,
+		},
+	}
+
+	data_ = &ListCloudProvidersResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The query executed by ListMachineIdentities.
+const ListMachineIdentities_Operation = `
+query ListMachineIdentities ($cloudKeystoreId: UUID, $newlyDiscovered: Boolean, $after: String) {
+	cloudMachineIdentities(filter: {cloudKeystoreId:$cloudKeystoreId,newlyDiscovered:$newlyDiscovered}, after: $after) {
+		nodes {
+			id
+			cloudKeystoreId
+			cloudKeystoreName
+			cloudProviderId
+			cloudProviderName
+			metadata {
+				__typename
+				... on AWSCertificateMetadata {
+					arn
+				}
+				... on AzureCertificateMetadata {
+					azureId
+					name
+					version
+				}
+				... on GCPCertificateMetadata {
+					gcpId
+					name
+				}
+			}
+			status
+			statusDetails
+			certificateId
+		}
+		pageInfo {
+			hasNextPage
+			endCursor
+		}
+	}
+}
+`
+
+func ListMachineIdentities(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	cloudKeystoreId *string,
+	newlyDiscovered *bool,
+	after *string,
+) (data_ *ListMachineIdentitiesResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "ListMachineIdentities",
+		Query:  ListMachineIdentities_Operation,
+		Variables: &__ListMachineIdentitiesInput{
+			CloudKeystoreId: cloudKeystoreId,
+			NewlyDiscovered: newlyDiscovered,
+			After:           after,
+		},
+	}
+
+	data_ = &ListMachineIdentitiesResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The mutation executed by ProvisionCertificate.
 const ProvisionCertificate_Operation = `
 mutation ProvisionCertificate ($certificateId: UUID!, $cloudKeystoreId: UUID!, $wsClientId: UUID!, $options: CertificateProvisioningOptionsInput) {
@@ -1147,6 +4039,197 @@ func ProvisionCertificateToMachineIdentity(
 	}
 
 	data_ = &ProvisionCertificateToMachineIdentityResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by StartCloudDiscovery.
+const StartCloudDiscovery_Operation = `
+mutation StartCloudDiscovery ($cloudKeystoreId: UUID!, $wsClientId: UUID!) {
+	startCloudDiscovery(cloudKeystoreId: $cloudKeystoreId, wsClientId: $wsClientId) {
+		workflowId
+		workflowName
+	}
+}
+`
+
+func StartCloudDiscovery(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	cloudKeystoreId string,
+	wsClientId string,
+) (data_ *StartCloudDiscoveryResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "StartCloudDiscovery",
+		Query:  StartCloudDiscovery_Operation,
+		Variables: &__StartCloudDiscoveryInput{
+			CloudKeystoreId: cloudKeystoreId,
+			WsClientId:      wsClientId,
+		},
+	}
+
+	data_ = &StartCloudDiscoveryResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by UpdateCloudKeystore.
+const UpdateCloudKeystore_Operation = `
+mutation UpdateCloudKeystore ($input: CloudKeystoreUpdateInput!) {
+	updateCloudKeystore(input: $input) {
+		... CloudKeystoreFields
+	}
+}
+fragment CloudKeystoreFields on CloudKeystore {
+	id
+	name
+	type
+	machineIdentitiesCount
+	cloudProvider {
+		id
+		name
+	}
+	configuration {
+		__typename
+		... on CloudKeystoreACMConfiguration {
+			region
+			accountId
+		}
+		... on CloudKeystoreAKVConfiguration {
+			keyVaultName
+		}
+		... on CloudKeystoreGCMConfiguration {
+			projectId
+			location
+		}
+	}
+	discoveryConfiguration {
+		scheduleSpecification
+		includeExpiredCertificates
+		includeRevokedCertificates
+	}
+	discovery {
+		... CloudDiscoveryFields
+	}
+}
+fragment CloudDiscoveryFields on CloudDiscovery {
+	id
+	status
+	statusDetails
+	totalCertificatesCount
+	newCertificatesCount
+	updatedCertificatesCount
+	missingCertificatesCount
+	startTime
+	endTime
+}
+`
+
+func UpdateCloudKeystore(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input *CloudKeystoreUpdateInput,
+) (data_ *UpdateCloudKeystoreResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "UpdateCloudKeystore",
+		Query:  UpdateCloudKeystore_Operation,
+		Variables: &__UpdateCloudKeystoreInput{
+			Input: input,
+		},
+	}
+
+	data_ = &UpdateCloudKeystoreResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by UpdateCloudProvider.
+const UpdateCloudProvider_Operation = `
+mutation UpdateCloudProvider ($input: CloudProviderUpdateInput!) {
+	updateCloudProvider(input: $input) {
+		... CloudProviderFields
+	}
+}
+fragment CloudProviderFields on CloudProvider {
+	id
+	name
+	type
+	status
+	statusDetails
+	keystoresCount
+}
+`
+
+func UpdateCloudProvider(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input *CloudProviderUpdateInput,
+) (data_ *UpdateCloudProviderResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "UpdateCloudProvider",
+		Query:  UpdateCloudProvider_Operation,
+		Variables: &__UpdateCloudProviderInput{
+			Input: input,
+		},
+	}
+
+	data_ = &UpdateCloudProviderResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by ValidateCloudProvider.
+const ValidateCloudProvider_Operation = `
+mutation ValidateCloudProvider ($cloudProviderId: UUID!) {
+	validateCloudProvider(cloudProviderId: $cloudProviderId) {
+		result
+		details
+	}
+}
+`
+
+func ValidateCloudProvider(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	cloudProviderId string,
+) (data_ *ValidateCloudProviderResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "ValidateCloudProvider",
+		Query:  ValidateCloudProvider_Operation,
+		Variables: &__ValidateCloudProviderInput{
+			CloudProviderId: cloudProviderId,
+		},
+	}
+
+	data_ = &ValidateCloudProviderResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(
