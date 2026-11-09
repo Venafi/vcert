@@ -34,6 +34,12 @@ import (
 // Helpers shared by the cloudprovider and cloudkeystore commands
 
 func runBeforeCloudManagementCommand(c *cli.Context) error {
+	// VCERT_PLATFORM is otherwise only copied into the flags when the config is
+	// built, which is too late: by then flags.platform has been parsed, and the
+	// connector would be guessed from the other flags instead
+	if flags.platformString == "" {
+		flags.platformString = getPropertyFromEnvironment(vCertPlatform)
+	}
 	return runBeforeProvisionCommand(c)
 }
 

@@ -73,6 +73,18 @@ func TestCloudManagementAcceptsNGTS(t *testing.T) {
 	}
 }
 
+func TestRunBeforeCloudManagementCommandReadsPlatformFromEnvironment(t *testing.T) {
+	flags = commandFlags{}
+	t.Setenv(vCertPlatform, "ngts")
+
+	if err := runBeforeCloudManagementCommand(newTestCliContext(t)); err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	if flags.platform != venafi.NGTS {
+		t.Fatalf("expected the platform to be read from %s, got %s", vCertPlatform, flags.platform)
+	}
+}
+
 func TestCloudProviderCreateRequiresTypeSpecificFlags(t *testing.T) {
 	t.Setenv(vCertPlatform, "")
 	t.Setenv(vcertAzureSecret, "")
