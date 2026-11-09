@@ -81,6 +81,26 @@ fragment CloudProviderFields on CloudProvider {
     status
     statusDetails
     keystoresCount
+    configuration {
+        ... on CloudProviderAWSConfiguration {
+            accountId
+            role
+            externalId
+        }
+        ... on CloudProviderAzureConfiguration {
+            applicationId
+            directoryId
+        }
+        ... on CloudProviderGCPConfiguration {
+            serviceAccountEmail
+            authorizationMethod
+            projectNumber
+            workloadIdentityPoolId
+            workloadIdentityPoolProviderId
+            publicKey
+            issuerUrl
+        }
+    }
 }
 
 query ListCloudProviders($status: CloudProviderStatus, $providerType: CloudProviderType, $name: String, $after: String) {

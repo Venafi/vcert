@@ -973,12 +973,13 @@ func (v *CloudProviderAzureConfigurationUpdateInput) GetSecret() string { return
 
 // CloudProviderFields includes the GraphQL fields of CloudProvider requested by the fragment CloudProviderFields.
 type CloudProviderFields struct {
-	Id             string              `json:"id"`
-	Name           string              `json:"name"`
-	Type           CloudProviderType   `json:"type"`
-	Status         CloudProviderStatus `json:"status"`
-	StatusDetails  *string             `json:"statusDetails"`
-	KeystoresCount int                 `json:"keystoresCount"`
+	Id             string                                                     `json:"id"`
+	Name           string                                                     `json:"name"`
+	Type           CloudProviderType                                          `json:"type"`
+	Status         CloudProviderStatus                                        `json:"status"`
+	StatusDetails  *string                                                    `json:"statusDetails"`
+	KeystoresCount int                                                        `json:"keystoresCount"`
+	Configuration  CloudProviderFieldsConfigurationCloudProviderConfiguration `json:"-"`
 }
 
 // GetId returns CloudProviderFields.Id, and is useful for accessing the field via an interface.
@@ -998,6 +999,308 @@ func (v *CloudProviderFields) GetStatusDetails() *string { return v.StatusDetail
 
 // GetKeystoresCount returns CloudProviderFields.KeystoresCount, and is useful for accessing the field via an interface.
 func (v *CloudProviderFields) GetKeystoresCount() int { return v.KeystoresCount }
+
+// GetConfiguration returns CloudProviderFields.Configuration, and is useful for accessing the field via an interface.
+func (v *CloudProviderFields) GetConfiguration() CloudProviderFieldsConfigurationCloudProviderConfiguration {
+	return v.Configuration
+}
+
+func (v *CloudProviderFields) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*CloudProviderFields
+		Configuration json.RawMessage `json:"configuration"`
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.CloudProviderFields = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	{
+		dst := &v.Configuration
+		src := firstPass.Configuration
+		if len(src) != 0 && string(src) != "null" {
+			err = __unmarshalCloudProviderFieldsConfigurationCloudProviderConfiguration(
+				src, dst)
+			if err != nil {
+				return fmt.Errorf(
+					"unable to unmarshal CloudProviderFields.Configuration: %w", err)
+			}
+		}
+	}
+	return nil
+}
+
+type __premarshalCloudProviderFields struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	Type CloudProviderType `json:"type"`
+
+	Status CloudProviderStatus `json:"status"`
+
+	StatusDetails *string `json:"statusDetails"`
+
+	KeystoresCount int `json:"keystoresCount"`
+
+	Configuration json.RawMessage `json:"configuration"`
+}
+
+func (v *CloudProviderFields) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *CloudProviderFields) __premarshalJSON() (*__premarshalCloudProviderFields, error) {
+	var retval __premarshalCloudProviderFields
+
+	retval.Id = v.Id
+	retval.Name = v.Name
+	retval.Type = v.Type
+	retval.Status = v.Status
+	retval.StatusDetails = v.StatusDetails
+	retval.KeystoresCount = v.KeystoresCount
+	{
+
+		dst := &retval.Configuration
+		src := v.Configuration
+		var err error
+		*dst, err = __marshalCloudProviderFieldsConfigurationCloudProviderConfiguration(
+			&src)
+		if err != nil {
+			return nil, fmt.Errorf(
+				"unable to marshal CloudProviderFields.Configuration: %w", err)
+		}
+	}
+	return &retval, nil
+}
+
+// CloudProviderFieldsConfigurationCloudProviderAWSConfiguration includes the requested fields of the GraphQL type CloudProviderAWSConfiguration.
+type CloudProviderFieldsConfigurationCloudProviderAWSConfiguration struct {
+	Typename  *string `json:"__typename"`
+	AccountId *string `json:"accountId"`
+	// An AWS IAM role.
+	//
+	// Provide a role name, a role name including its path (e.g. 'external/venafi/MyRole'), or a full role ARN (e.g. 'arn:aws:iam::123456789012:role/external/venafi/MyRole'). When a full ARN is provided, its embedded account ID must match the accountId field.
+	Role       *string `json:"role"`
+	ExternalId *string `json:"externalId"`
+}
+
+// GetTypename returns CloudProviderFieldsConfigurationCloudProviderAWSConfiguration.Typename, and is useful for accessing the field via an interface.
+func (v *CloudProviderFieldsConfigurationCloudProviderAWSConfiguration) GetTypename() *string {
+	return v.Typename
+}
+
+// GetAccountId returns CloudProviderFieldsConfigurationCloudProviderAWSConfiguration.AccountId, and is useful for accessing the field via an interface.
+func (v *CloudProviderFieldsConfigurationCloudProviderAWSConfiguration) GetAccountId() *string {
+	return v.AccountId
+}
+
+// GetRole returns CloudProviderFieldsConfigurationCloudProviderAWSConfiguration.Role, and is useful for accessing the field via an interface.
+func (v *CloudProviderFieldsConfigurationCloudProviderAWSConfiguration) GetRole() *string {
+	return v.Role
+}
+
+// GetExternalId returns CloudProviderFieldsConfigurationCloudProviderAWSConfiguration.ExternalId, and is useful for accessing the field via an interface.
+func (v *CloudProviderFieldsConfigurationCloudProviderAWSConfiguration) GetExternalId() *string {
+	return v.ExternalId
+}
+
+// CloudProviderFieldsConfigurationCloudProviderAkamaiConfiguration includes the requested fields of the GraphQL type CloudProviderAkamaiConfiguration.
+type CloudProviderFieldsConfigurationCloudProviderAkamaiConfiguration struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns CloudProviderFieldsConfigurationCloudProviderAkamaiConfiguration.Typename, and is useful for accessing the field via an interface.
+func (v *CloudProviderFieldsConfigurationCloudProviderAkamaiConfiguration) GetTypename() *string {
+	return v.Typename
+}
+
+// CloudProviderFieldsConfigurationCloudProviderAzureConfiguration includes the requested fields of the GraphQL type CloudProviderAzureConfiguration.
+type CloudProviderFieldsConfigurationCloudProviderAzureConfiguration struct {
+	Typename      *string `json:"__typename"`
+	ApplicationId string  `json:"applicationId"`
+	DirectoryId   string  `json:"directoryId"`
+}
+
+// GetTypename returns CloudProviderFieldsConfigurationCloudProviderAzureConfiguration.Typename, and is useful for accessing the field via an interface.
+func (v *CloudProviderFieldsConfigurationCloudProviderAzureConfiguration) GetTypename() *string {
+	return v.Typename
+}
+
+// GetApplicationId returns CloudProviderFieldsConfigurationCloudProviderAzureConfiguration.ApplicationId, and is useful for accessing the field via an interface.
+func (v *CloudProviderFieldsConfigurationCloudProviderAzureConfiguration) GetApplicationId() string {
+	return v.ApplicationId
+}
+
+// GetDirectoryId returns CloudProviderFieldsConfigurationCloudProviderAzureConfiguration.DirectoryId, and is useful for accessing the field via an interface.
+func (v *CloudProviderFieldsConfigurationCloudProviderAzureConfiguration) GetDirectoryId() string {
+	return v.DirectoryId
+}
+
+// CloudProviderFieldsConfigurationCloudProviderConfiguration includes the requested fields of the GraphQL interface CloudProviderConfiguration.
+//
+// CloudProviderFieldsConfigurationCloudProviderConfiguration is implemented by the following types:
+// CloudProviderFieldsConfigurationCloudProviderAWSConfiguration
+// CloudProviderFieldsConfigurationCloudProviderAkamaiConfiguration
+// CloudProviderFieldsConfigurationCloudProviderAzureConfiguration
+// CloudProviderFieldsConfigurationCloudProviderGCPConfiguration
+type CloudProviderFieldsConfigurationCloudProviderConfiguration interface {
+	implementsGraphQLInterfaceCloudProviderFieldsConfigurationCloudProviderConfiguration()
+	// GetTypename returns the receiver's concrete GraphQL type-name (see interface doc for possible values).
+	GetTypename() *string
+}
+
+func (v *CloudProviderFieldsConfigurationCloudProviderAWSConfiguration) implementsGraphQLInterfaceCloudProviderFieldsConfigurationCloudProviderConfiguration() {
+}
+func (v *CloudProviderFieldsConfigurationCloudProviderAkamaiConfiguration) implementsGraphQLInterfaceCloudProviderFieldsConfigurationCloudProviderConfiguration() {
+}
+func (v *CloudProviderFieldsConfigurationCloudProviderAzureConfiguration) implementsGraphQLInterfaceCloudProviderFieldsConfigurationCloudProviderConfiguration() {
+}
+func (v *CloudProviderFieldsConfigurationCloudProviderGCPConfiguration) implementsGraphQLInterfaceCloudProviderFieldsConfigurationCloudProviderConfiguration() {
+}
+
+func __unmarshalCloudProviderFieldsConfigurationCloudProviderConfiguration(b []byte, v *CloudProviderFieldsConfigurationCloudProviderConfiguration) error {
+	if string(b) == "null" {
+		return nil
+	}
+
+	var tn struct {
+		TypeName string `json:"__typename"`
+	}
+	err := json.Unmarshal(b, &tn)
+	if err != nil {
+		return err
+	}
+
+	switch tn.TypeName {
+	case "CloudProviderAWSConfiguration":
+		*v = new(CloudProviderFieldsConfigurationCloudProviderAWSConfiguration)
+		return json.Unmarshal(b, *v)
+	case "CloudProviderAkamaiConfiguration":
+		*v = new(CloudProviderFieldsConfigurationCloudProviderAkamaiConfiguration)
+		return json.Unmarshal(b, *v)
+	case "CloudProviderAzureConfiguration":
+		*v = new(CloudProviderFieldsConfigurationCloudProviderAzureConfiguration)
+		return json.Unmarshal(b, *v)
+	case "CloudProviderGCPConfiguration":
+		*v = new(CloudProviderFieldsConfigurationCloudProviderGCPConfiguration)
+		return json.Unmarshal(b, *v)
+	case "":
+		return fmt.Errorf(
+			"response was missing CloudProviderConfiguration.__typename")
+	default:
+		return fmt.Errorf(
+			`unexpected concrete type for CloudProviderFieldsConfigurationCloudProviderConfiguration: "%v"`, tn.TypeName)
+	}
+}
+
+func __marshalCloudProviderFieldsConfigurationCloudProviderConfiguration(v *CloudProviderFieldsConfigurationCloudProviderConfiguration) ([]byte, error) {
+
+	var typename string
+	switch v := (*v).(type) {
+	case *CloudProviderFieldsConfigurationCloudProviderAWSConfiguration:
+		typename = "CloudProviderAWSConfiguration"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*CloudProviderFieldsConfigurationCloudProviderAWSConfiguration
+		}{typename, v}
+		return json.Marshal(result)
+	case *CloudProviderFieldsConfigurationCloudProviderAkamaiConfiguration:
+		typename = "CloudProviderAkamaiConfiguration"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*CloudProviderFieldsConfigurationCloudProviderAkamaiConfiguration
+		}{typename, v}
+		return json.Marshal(result)
+	case *CloudProviderFieldsConfigurationCloudProviderAzureConfiguration:
+		typename = "CloudProviderAzureConfiguration"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*CloudProviderFieldsConfigurationCloudProviderAzureConfiguration
+		}{typename, v}
+		return json.Marshal(result)
+	case *CloudProviderFieldsConfigurationCloudProviderGCPConfiguration:
+		typename = "CloudProviderGCPConfiguration"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*CloudProviderFieldsConfigurationCloudProviderGCPConfiguration
+		}{typename, v}
+		return json.Marshal(result)
+	case nil:
+		return []byte("null"), nil
+	default:
+		return nil, fmt.Errorf(
+			`unexpected concrete type for CloudProviderFieldsConfigurationCloudProviderConfiguration: "%T"`, v)
+	}
+}
+
+// CloudProviderFieldsConfigurationCloudProviderGCPConfiguration includes the requested fields of the GraphQL type CloudProviderGCPConfiguration.
+type CloudProviderFieldsConfigurationCloudProviderGCPConfiguration struct {
+	Typename                       *string             `json:"__typename"`
+	ServiceAccountEmail            string              `json:"serviceAccountEmail"`
+	AuthorizationMethod            AuthorizationMethod `json:"authorizationMethod"`
+	ProjectNumber                  *string             `json:"projectNumber"`
+	WorkloadIdentityPoolId         *string             `json:"workloadIdentityPoolId"`
+	WorkloadIdentityPoolProviderId *string             `json:"workloadIdentityPoolProviderId"`
+	PublicKey                      *string             `json:"publicKey"`
+	IssuerUrl                      *string             `json:"issuerUrl"`
+}
+
+// GetTypename returns CloudProviderFieldsConfigurationCloudProviderGCPConfiguration.Typename, and is useful for accessing the field via an interface.
+func (v *CloudProviderFieldsConfigurationCloudProviderGCPConfiguration) GetTypename() *string {
+	return v.Typename
+}
+
+// GetServiceAccountEmail returns CloudProviderFieldsConfigurationCloudProviderGCPConfiguration.ServiceAccountEmail, and is useful for accessing the field via an interface.
+func (v *CloudProviderFieldsConfigurationCloudProviderGCPConfiguration) GetServiceAccountEmail() string {
+	return v.ServiceAccountEmail
+}
+
+// GetAuthorizationMethod returns CloudProviderFieldsConfigurationCloudProviderGCPConfiguration.AuthorizationMethod, and is useful for accessing the field via an interface.
+func (v *CloudProviderFieldsConfigurationCloudProviderGCPConfiguration) GetAuthorizationMethod() AuthorizationMethod {
+	return v.AuthorizationMethod
+}
+
+// GetProjectNumber returns CloudProviderFieldsConfigurationCloudProviderGCPConfiguration.ProjectNumber, and is useful for accessing the field via an interface.
+func (v *CloudProviderFieldsConfigurationCloudProviderGCPConfiguration) GetProjectNumber() *string {
+	return v.ProjectNumber
+}
+
+// GetWorkloadIdentityPoolId returns CloudProviderFieldsConfigurationCloudProviderGCPConfiguration.WorkloadIdentityPoolId, and is useful for accessing the field via an interface.
+func (v *CloudProviderFieldsConfigurationCloudProviderGCPConfiguration) GetWorkloadIdentityPoolId() *string {
+	return v.WorkloadIdentityPoolId
+}
+
+// GetWorkloadIdentityPoolProviderId returns CloudProviderFieldsConfigurationCloudProviderGCPConfiguration.WorkloadIdentityPoolProviderId, and is useful for accessing the field via an interface.
+func (v *CloudProviderFieldsConfigurationCloudProviderGCPConfiguration) GetWorkloadIdentityPoolProviderId() *string {
+	return v.WorkloadIdentityPoolProviderId
+}
+
+// GetPublicKey returns CloudProviderFieldsConfigurationCloudProviderGCPConfiguration.PublicKey, and is useful for accessing the field via an interface.
+func (v *CloudProviderFieldsConfigurationCloudProviderGCPConfiguration) GetPublicKey() *string {
+	return v.PublicKey
+}
+
+// GetIssuerUrl returns CloudProviderFieldsConfigurationCloudProviderGCPConfiguration.IssuerUrl, and is useful for accessing the field via an interface.
+func (v *CloudProviderFieldsConfigurationCloudProviderGCPConfiguration) GetIssuerUrl() *string {
+	return v.IssuerUrl
+}
 
 type CloudProviderGCPConfigurationInput struct {
 	ServiceAccountEmail            string                                `json:"serviceAccountEmail"`
@@ -1382,6 +1685,11 @@ func (v *CreateCloudProviderCreateCloudProvider) GetKeystoresCount() int {
 	return v.CloudProviderFields.KeystoresCount
 }
 
+// GetConfiguration returns CreateCloudProviderCreateCloudProvider.Configuration, and is useful for accessing the field via an interface.
+func (v *CreateCloudProviderCreateCloudProvider) GetConfiguration() CloudProviderFieldsConfigurationCloudProviderConfiguration {
+	return v.CloudProviderFields.Configuration
+}
+
 func (v *CreateCloudProviderCreateCloudProvider) UnmarshalJSON(b []byte) error {
 
 	if string(b) == "null" {
@@ -1419,6 +1727,8 @@ type __premarshalCreateCloudProviderCreateCloudProvider struct {
 	StatusDetails *string `json:"statusDetails"`
 
 	KeystoresCount int `json:"keystoresCount"`
+
+	Configuration json.RawMessage `json:"configuration"`
 }
 
 func (v *CreateCloudProviderCreateCloudProvider) MarshalJSON() ([]byte, error) {
@@ -1438,6 +1748,18 @@ func (v *CreateCloudProviderCreateCloudProvider) __premarshalJSON() (*__premarsh
 	retval.Status = v.CloudProviderFields.Status
 	retval.StatusDetails = v.CloudProviderFields.StatusDetails
 	retval.KeystoresCount = v.CloudProviderFields.KeystoresCount
+	{
+
+		dst := &retval.Configuration
+		src := v.CloudProviderFields.Configuration
+		var err error
+		*dst, err = __marshalCloudProviderFieldsConfigurationCloudProviderConfiguration(
+			&src)
+		if err != nil {
+			return nil, fmt.Errorf(
+				"unable to marshal CreateCloudProviderCreateCloudProvider.CloudProviderFields.Configuration: %w", err)
+		}
+	}
 	return &retval, nil
 }
 
@@ -2254,6 +2576,11 @@ func (v *ListCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvid
 	return v.CloudProviderFields.KeystoresCount
 }
 
+// GetConfiguration returns ListCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider.Configuration, and is useful for accessing the field via an interface.
+func (v *ListCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider) GetConfiguration() CloudProviderFieldsConfigurationCloudProviderConfiguration {
+	return v.CloudProviderFields.Configuration
+}
+
 func (v *ListCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider) UnmarshalJSON(b []byte) error {
 
 	if string(b) == "null" {
@@ -2291,6 +2618,8 @@ type __premarshalListCloudProvidersCloudProvidersCloudProviderConnectionNodesClo
 	StatusDetails *string `json:"statusDetails"`
 
 	KeystoresCount int `json:"keystoresCount"`
+
+	Configuration json.RawMessage `json:"configuration"`
 }
 
 func (v *ListCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider) MarshalJSON() ([]byte, error) {
@@ -2310,6 +2639,18 @@ func (v *ListCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvid
 	retval.Status = v.CloudProviderFields.Status
 	retval.StatusDetails = v.CloudProviderFields.StatusDetails
 	retval.KeystoresCount = v.CloudProviderFields.KeystoresCount
+	{
+
+		dst := &retval.Configuration
+		src := v.CloudProviderFields.Configuration
+		var err error
+		*dst, err = __marshalCloudProviderFieldsConfigurationCloudProviderConfiguration(
+			&src)
+		if err != nil {
+			return nil, fmt.Errorf(
+				"unable to marshal ListCloudProvidersCloudProvidersCloudProviderConnectionNodesCloudProvider.CloudProviderFields.Configuration: %w", err)
+		}
+	}
 	return &retval, nil
 }
 
@@ -3022,6 +3363,11 @@ func (v *UpdateCloudProviderUpdateCloudProvider) GetKeystoresCount() int {
 	return v.CloudProviderFields.KeystoresCount
 }
 
+// GetConfiguration returns UpdateCloudProviderUpdateCloudProvider.Configuration, and is useful for accessing the field via an interface.
+func (v *UpdateCloudProviderUpdateCloudProvider) GetConfiguration() CloudProviderFieldsConfigurationCloudProviderConfiguration {
+	return v.CloudProviderFields.Configuration
+}
+
 func (v *UpdateCloudProviderUpdateCloudProvider) UnmarshalJSON(b []byte) error {
 
 	if string(b) == "null" {
@@ -3059,6 +3405,8 @@ type __premarshalUpdateCloudProviderUpdateCloudProvider struct {
 	StatusDetails *string `json:"statusDetails"`
 
 	KeystoresCount int `json:"keystoresCount"`
+
+	Configuration json.RawMessage `json:"configuration"`
 }
 
 func (v *UpdateCloudProviderUpdateCloudProvider) MarshalJSON() ([]byte, error) {
@@ -3078,6 +3426,18 @@ func (v *UpdateCloudProviderUpdateCloudProvider) __premarshalJSON() (*__premarsh
 	retval.Status = v.CloudProviderFields.Status
 	retval.StatusDetails = v.CloudProviderFields.StatusDetails
 	retval.KeystoresCount = v.CloudProviderFields.KeystoresCount
+	{
+
+		dst := &retval.Configuration
+		src := v.CloudProviderFields.Configuration
+		var err error
+		*dst, err = __marshalCloudProviderFieldsConfigurationCloudProviderConfiguration(
+			&src)
+		if err != nil {
+			return nil, fmt.Errorf(
+				"unable to marshal UpdateCloudProviderUpdateCloudProvider.CloudProviderFields.Configuration: %w", err)
+		}
+	}
 	return &retval, nil
 }
 
@@ -3479,6 +3839,27 @@ fragment CloudProviderFields on CloudProvider {
 	status
 	statusDetails
 	keystoresCount
+	configuration {
+		__typename
+		... on CloudProviderAWSConfiguration {
+			accountId
+			role
+			externalId
+		}
+		... on CloudProviderAzureConfiguration {
+			applicationId
+			directoryId
+		}
+		... on CloudProviderGCPConfiguration {
+			serviceAccountEmail
+			authorizationMethod
+			projectNumber
+			workloadIdentityPoolId
+			workloadIdentityPoolProviderId
+			publicKey
+			issuerUrl
+		}
+	}
 }
 `
 
@@ -3870,6 +4251,27 @@ fragment CloudProviderFields on CloudProvider {
 	status
 	statusDetails
 	keystoresCount
+	configuration {
+		__typename
+		... on CloudProviderAWSConfiguration {
+			accountId
+			role
+			externalId
+		}
+		... on CloudProviderAzureConfiguration {
+			applicationId
+			directoryId
+		}
+		... on CloudProviderGCPConfiguration {
+			serviceAccountEmail
+			authorizationMethod
+			projectNumber
+			workloadIdentityPoolId
+			workloadIdentityPoolProviderId
+			publicKey
+			issuerUrl
+		}
+	}
 }
 `
 
@@ -4178,6 +4580,27 @@ fragment CloudProviderFields on CloudProvider {
 	status
 	statusDetails
 	keystoresCount
+	configuration {
+		__typename
+		... on CloudProviderAWSConfiguration {
+			accountId
+			role
+			externalId
+		}
+		... on CloudProviderAzureConfiguration {
+			applicationId
+			directoryId
+		}
+		... on CloudProviderGCPConfiguration {
+			serviceAccountEmail
+			authorizationMethod
+			projectNumber
+			workloadIdentityPoolId
+			workloadIdentityPoolProviderId
+			publicKey
+			issuerUrl
+		}
+	}
 }
 `
 

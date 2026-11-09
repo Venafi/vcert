@@ -342,3 +342,24 @@ func TestWaitForCloudDiscoveryTimesOut(t *testing.T) {
 		t.Fatalf("expected a timeout error, got %v", err)
 	}
 }
+
+func TestCloudProviderOutputIncludesConfiguration(t *testing.T) {
+	out := newCloudProviderOutput(domain.CloudProvider{
+		ID: "p1", Name: "gcp", Type: domain.CloudProviderTypeGCP, Status: domain.CloudProviderStatusNotValidated,
+		GCP: &domain.CloudProviderGCPConfiguration{
+			ServiceAccountEmail: "sa@p.iam.gserviceaccount.com",
+			AuthorizationMethod: domain.GCPAuthorizationMethodVenafiGeneratedKey,
+			PublicKey:           "-----BEGIN PUBLIC KEY-----\nAAAA\n-----END PUBLIC KEY-----\n",
+		},
+	}).text()
+
+	for _, expected := range []string{
+		"gcpServiceAccountEmail: sa@p.iam.gserviceaccount.com\n",
+		"gcpAuthorizationMethod: VENAFI_GENERATED_KEY\n",
+		"gcpPublicKey: |\n  -----BEGIN PUBLIC KEY-----\n  AAAA\n  -----END PUBLIC KEY-----\n",
+	} {
+		if !strings.Contains(out, expected) {
+			t.Fatalf("expected the output to contain %q, got:\n%s", expected, out)
+		}
+	}
+}

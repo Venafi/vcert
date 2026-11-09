@@ -270,13 +270,49 @@ func (v *CloudProviderFields) toDomain() domain.CloudProvider {
 	if v.StatusDetails != nil {
 		statusDetails = *v.StatusDetails
 	}
-	return domain.CloudProvider{
+	cp := domain.CloudProvider{
 		ID:             v.Id,
 		Name:           v.Name,
 		Type:           v.Type.toDomain(),
 		Status:         v.Status.toDomain(),
 		StatusDetails:  statusDetails,
 		KeystoresCount: v.KeystoresCount,
+	}
+
+	switch cfg := v.Configuration.(type) {
+	case *CloudProviderFieldsConfigurationCloudProviderAWSConfiguration:
+		cp.AWS = &domain.CloudProviderAWSConfiguration{
+			AccountID:  util.StringPointerToString(cfg.AccountId),
+			Role:       util.StringPointerToString(cfg.Role),
+			ExternalID: util.StringPointerToString(cfg.ExternalId),
+		}
+	case *CloudProviderFieldsConfigurationCloudProviderAzureConfiguration:
+		cp.Azure = &domain.CloudProviderAzureConfiguration{
+			ApplicationID: cfg.ApplicationId,
+			DirectoryID:   cfg.DirectoryId,
+		}
+	case *CloudProviderFieldsConfigurationCloudProviderGCPConfiguration:
+		cp.GCP = &domain.CloudProviderGCPConfiguration{
+			ServiceAccountEmail:            cfg.ServiceAccountEmail,
+			ProjectNumber:                  util.StringPointerToString(cfg.ProjectNumber),
+			WorkloadIdentityPoolID:         util.StringPointerToString(cfg.WorkloadIdentityPoolId),
+			WorkloadIdentityPoolProviderID: util.StringPointerToString(cfg.WorkloadIdentityPoolProviderId),
+			AuthorizationMethod:            cfg.AuthorizationMethod.toDomain(),
+			PublicKey:                      util.StringPointerToString(cfg.PublicKey),
+			IssuerURL:                      util.StringPointerToString(cfg.IssuerUrl),
+		}
+	}
+	return cp
+}
+
+func (v AuthorizationMethod) toDomain() domain.GCPAuthorizationMethod {
+	switch v {
+	case AuthorizationMethodVenafiGeneratedKey:
+		return domain.GCPAuthorizationMethodVenafiGeneratedKey
+	case AuthorizationMethodWorkloadIdentityFederation:
+		return domain.GCPAuthorizationMethodWorkloadIdentityFederation
+	default:
+		return domain.GCPAuthorizationMethodUnknown
 	}
 }
 

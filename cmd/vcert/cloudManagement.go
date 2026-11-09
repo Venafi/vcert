@@ -222,16 +222,28 @@ func writeCloudManagementResult(result textWriter) error {
 }
 
 type cloudProviderOutput struct {
-	ID             string `json:"id"`
-	Name           string `json:"name"`
-	Type           string `json:"type"`
-	Status         string `json:"status"`
-	StatusDetails  string `json:"statusDetails,omitempty"`
-	KeystoresCount int    `json:"keystoresCount"`
+	ID                                string `json:"id"`
+	Name                              string `json:"name"`
+	Type                              string `json:"type"`
+	Status                            string `json:"status"`
+	StatusDetails                     string `json:"statusDetails,omitempty"`
+	KeystoresCount                    int    `json:"keystoresCount"`
+	AWSAccountID                      string `json:"awsAccountId,omitempty"`
+	AWSRole                           string `json:"awsRole,omitempty"`
+	AWSExternalID                     string `json:"awsExternalId,omitempty"`
+	AzureApplicationID                string `json:"azureApplicationId,omitempty"`
+	AzureDirectoryID                  string `json:"azureDirectoryId,omitempty"`
+	GCPServiceAccountEmail            string `json:"gcpServiceAccountEmail,omitempty"`
+	GCPAuthorizationMethod            string `json:"gcpAuthorizationMethod,omitempty"`
+	GCPProjectNumber                  string `json:"gcpProjectNumber,omitempty"`
+	GCPWorkloadIdentityPoolID         string `json:"gcpWorkloadIdentityPoolId,omitempty"`
+	GCPWorkloadIdentityPoolProviderID string `json:"gcpWorkloadIdentityPoolProviderId,omitempty"`
+	GCPIssuerURL                      string `json:"gcpIssuerUrl,omitempty"`
+	GCPPublicKey                      string `json:"gcpPublicKey,omitempty"`
 }
 
 func newCloudProviderOutput(p domain.CloudProvider) cloudProviderOutput {
-	return cloudProviderOutput{
+	o := cloudProviderOutput{
 		ID:             p.ID,
 		Name:           p.Name,
 		Type:           p.Type.String(),
@@ -239,6 +251,27 @@ func newCloudProviderOutput(p domain.CloudProvider) cloudProviderOutput {
 		StatusDetails:  p.StatusDetails,
 		KeystoresCount: p.KeystoresCount,
 	}
+	if p.AWS != nil {
+		o.AWSAccountID = p.AWS.AccountID
+		o.AWSRole = p.AWS.Role
+		o.AWSExternalID = p.AWS.ExternalID
+	}
+	if p.Azure != nil {
+		o.AzureApplicationID = p.Azure.ApplicationID
+		o.AzureDirectoryID = p.Azure.DirectoryID
+	}
+	if p.GCP != nil {
+		o.GCPServiceAccountEmail = p.GCP.ServiceAccountEmail
+		if p.GCP.AuthorizationMethod != domain.GCPAuthorizationMethodUnknown {
+			o.GCPAuthorizationMethod = p.GCP.AuthorizationMethod.String()
+		}
+		o.GCPProjectNumber = p.GCP.ProjectNumber
+		o.GCPWorkloadIdentityPoolID = p.GCP.WorkloadIdentityPoolID
+		o.GCPWorkloadIdentityPoolProviderID = p.GCP.WorkloadIdentityPoolProviderID
+		o.GCPIssuerURL = p.GCP.IssuerURL
+		o.GCPPublicKey = p.GCP.PublicKey
+	}
+	return o
 }
 
 func (o cloudProviderOutput) text() string {
@@ -247,6 +280,27 @@ func (o cloudProviderOutput) text() string {
 		s += fmt.Sprintf("statusDetails: %s\n", o.StatusDetails)
 	}
 	s += fmt.Sprintf("keystoresCount: %d\n", o.KeystoresCount)
+	for _, kv := range [][2]string{
+		{"awsAccountId", o.AWSAccountID},
+		{"awsRole", o.AWSRole},
+		{"awsExternalId", o.AWSExternalID},
+		{"azureApplicationId", o.AzureApplicationID},
+		{"azureDirectoryId", o.AzureDirectoryID},
+		{"gcpServiceAccountEmail", o.GCPServiceAccountEmail},
+		{"gcpAuthorizationMethod", o.GCPAuthorizationMethod},
+		{"gcpProjectNumber", o.GCPProjectNumber},
+		{"gcpWorkloadIdentityPoolId", o.GCPWorkloadIdentityPoolID},
+		{"gcpWorkloadIdentityPoolProviderId", o.GCPWorkloadIdentityPoolProviderID},
+		{"gcpIssuerUrl", o.GCPIssuerURL},
+	} {
+		if kv[1] != "" {
+			s += fmt.Sprintf("%s: %s\n", kv[0], kv[1])
+		}
+	}
+	if o.GCPPublicKey != "" {
+		// a PEM block, so print it on its own lines
+		s += "gcpPublicKey: |\n  " + strings.ReplaceAll(strings.TrimSpace(o.GCPPublicKey), "\n", "\n  ") + "\n"
+	}
 	return s
 }
 

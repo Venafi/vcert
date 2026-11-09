@@ -65,6 +65,39 @@ func TestListCloudProvidersFollowsPages(t *testing.T) {
 	assert.Equal(t, "c1", (*requests)[1].Variables["after"])
 }
 
+func TestListCloudProvidersConvertsConfiguration(t *testing.T) {
+	client, _ := newTestClient(t,
+		`{"data":{"cloudProviders":{"nodes":[
+			{"id":"p1","name":"aws","type":"AWS","status":"VALIDATED","keystoresCount":0,
+			 "configuration":{"__typename":"CloudProviderAWSConfiguration","accountId":"123456789012","role":"role","externalId":"ext-1"}},
+			{"id":"p2","name":"azure","type":"AZURE","status":"VALIDATED","keystoresCount":0,
+			 "configuration":{"__typename":"CloudProviderAzureConfiguration","applicationId":"app","directoryId":"dir"}},
+			{"id":"p3","name":"gcp","type":"GCP","status":"NOT_VALIDATED","keystoresCount":0,
+			 "configuration":{"__typename":"CloudProviderGCPConfiguration","serviceAccountEmail":"sa@p.iam.gserviceaccount.com",
+			  "authorizationMethod":"VENAFI_GENERATED_KEY","publicKey":"-----BEGIN PUBLIC KEY-----","issuerUrl":"https://issuer"}},
+			{"id":"p4","name":"akamai","type":"AKAMAI","status":"VALIDATED","keystoresCount":0,
+			 "configuration":{"__typename":"CloudProviderAkamaiConfiguration"}}
+		],"pageInfo":{"hasNextPage":false}}}}`,
+	)
+
+	providers, err := client.ListCloudProviders(context.Background(), domain.GetCloudProviderRequest{})
+	require.NoError(t, err)
+	require.Len(t, providers, 4)
+
+	assert.Equal(t, &domain.CloudProviderAWSConfiguration{AccountID: "123456789012", Role: "role", ExternalID: "ext-1"}, providers[0].AWS)
+	assert.Equal(t, &domain.CloudProviderAzureConfiguration{ApplicationID: "app", DirectoryID: "dir"}, providers[1].Azure)
+	assert.Equal(t, &domain.CloudProviderGCPConfiguration{
+		ServiceAccountEmail: "sa@p.iam.gserviceaccount.com",
+		AuthorizationMethod: domain.GCPAuthorizationMethodVenafiGeneratedKey,
+		PublicKey:           "-----BEGIN PUBLIC KEY-----",
+		IssuerURL:           "https://issuer",
+	}, providers[2].GCP)
+	// unsupported provider types are listed without a configuration
+	assert.Nil(t, providers[3].AWS)
+	assert.Nil(t, providers[3].Azure)
+	assert.Nil(t, providers[3].GCP)
+}
+
 func TestCreateCloudProviderSendsOnlyTheMatchingConfiguration(t *testing.T) {
 	client, requests := newTestClient(t,
 		`{"data":{"createCloudProvider":{"id":"p1","name":"azure","type":"AZURE","status":"NOT_VALIDATED","keystoresCount":0}}}`,
