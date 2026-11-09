@@ -43,7 +43,7 @@ func isolateFromVCertEnvironment(t *testing.T) {
 
 func TestCloudManagementRejectsOtherPlatforms(t *testing.T) {
 	isolateFromVCertEnvironment(t)
-	for _, platform := range []venafi.Platform{venafi.TPP, venafi.TLSPCloud, venafi.Firefly} {
+	for _, platform := range []venafi.Platform{venafi.TPP, venafi.Firefly} {
 		flags = commandFlags{platform: platform, token: "a-token"}
 		t.Setenv(vCertPlatform, "")
 
@@ -64,7 +64,7 @@ func TestCloudManagementRequiresPlatform(t *testing.T) {
 	t.Setenv(vCertPlatform, "")
 
 	err := validateCloudManagementConnectionFlags("cloudkeystore get")
-	if err == nil || !strings.Contains(err.Error(), "only supported for NGTS") {
+	if err == nil || !strings.Contains(err.Error(), "only supported for VCP and NGTS") {
 		t.Fatalf("expected a platform required error, got %v", err)
 	}
 }
@@ -87,6 +87,62 @@ func TestCloudManagementAcceptsNGTS(t *testing.T) {
 
 	if err := validateCloudManagementConnectionFlags("cloudprovider list"); err != nil {
 		t.Fatalf("expected NGTS to be accepted, got %s", err)
+	}
+}
+
+func TestCloudManagementAcceptsVCP(t *testing.T) {
+	isolateFromVCertEnvironment(t)
+	flags = commandFlags{platform: venafi.TLSPCloud, apiKey: "a-key"}
+	t.Setenv(vCertPlatform, "")
+
+	if err := validateCloudManagementConnectionFlags("cloudprovider list"); err != nil {
+		t.Fatalf("expected VCP to be accepted, got %s", err)
+	}
+}
+
+func TestCloudManagementGuessesVCPFromAPIKey(t *testing.T) {
+	isolateFromVCertEnvironment(t)
+	flags = commandFlags{apiKey: "a-key"}
+	t.Setenv(vCertPlatform, "")
+	t.Setenv(vCertToken, "")
+
+	if platform := cloudManagementPlatform(); platform != venafi.TLSPCloud {
+		t.Fatalf("expected an API key without --platform to mean VCP, got %s", platform)
+	}
+	if err := validateCloudManagementConnectionFlags("cloudprovider list"); err != nil {
+		t.Fatalf("expected VCP to be accepted, got %s", err)
+	}
+}
+
+func TestCloudManagementVCPRequiresTeamOnCreate(t *testing.T) {
+	isolateFromVCertEnvironment(t)
+	t.Setenv(vCertPlatform, "")
+
+	flags = commandFlags{platform: venafi.TLSPCloud, apiKey: "a-key", providerName: "provider", cloudType: "aws", awsAccountID: "1", awsRole: "role"}
+	err := validateCloudProviderCreateFlags("cloudprovider create")
+	if err == nil || !strings.Contains(err.Error(), "missing owning team") {
+		t.Fatalf("expected a missing team error, got %v", err)
+	}
+
+	flags = commandFlags{platform: venafi.TLSPCloud, apiKey: "a-key", keystoreName: "keystore", providerName: "provider", cloudType: "acm", awsRegion: "us-east-1"}
+	err = validateCloudKeystoreCreateFlags("cloudkeystore create")
+	if err == nil || !strings.Contains(err.Error(), "missing owning team") {
+		t.Fatalf("expected a missing team error, got %v", err)
+	}
+
+	flags.teamID = "Cloud Admins"
+	if err := validateCloudKeystoreCreateFlags("cloudkeystore create"); err != nil {
+		t.Fatalf("expected the team to satisfy the check, got %s", err)
+	}
+}
+
+func TestCloudManagementNGTSDoesNotRequireTeam(t *testing.T) {
+	isolateFromVCertEnvironment(t)
+	t.Setenv(vCertPlatform, "")
+	flags = commandFlags{platform: venafi.NGTS, token: "a-token", providerName: "provider", cloudType: "aws", awsAccountID: "1", awsRole: "role"}
+
+	if err := validateCloudProviderCreateFlags("cloudprovider create"); err != nil {
+		t.Fatalf("expected no team requirement on NGTS, got %s", err)
 	}
 }
 

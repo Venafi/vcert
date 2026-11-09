@@ -36,7 +36,7 @@ var (
 
 	commandCloudProvider = &cli.Command{
 		Name:  commandCloudProviderName,
-		Usage: "To manage cloud providers in Palo Alto Networks Next-Gen Trust Security (NGTS)",
+		Usage: "To manage cloud providers in CyberArk Certificate Manager, SaaS (VCP) or Palo Alto Networks Next-Gen Trust Security (NGTS)",
 		Action: func(c *cli.Context) error {
 			return fmt.Errorf("the following subcommand(s) are required: \n%s", createBulletList(cloudProviderCommands))
 		},
@@ -46,8 +46,9 @@ var (
 				Usage:  "Create a cloud provider",
 				Before: runBeforeCloudManagementCommand,
 				Flags:  cloudProviderCreateFlags,
-				UsageText: `vcert cloudprovider create -p ngts -t <access token> --provider-name <name> --type <AWS|AZURE|GCP> <type specific options>
+				UsageText: `vcert cloudprovider create -p <vcp|ngts> (-k <API key> | -t <access token>) --provider-name <name> --type <AWS|AZURE|GCP> <type specific options>
 
+   vcert cloudprovider create -p vcp -k <API key> --team "Cloud Admins" --provider-name "My AWS" --type AWS --aws-account-id 123456789012 --aws-role my-venafi-role
    vcert cloudprovider create -p ngts -t <access token> --provider-name "My AWS" --type AWS --aws-account-id 123456789012 --aws-role my-venafi-role
    VCERT_AZURE_SECRET=<secret> vcert cloudprovider create -p ngts -t <access token> --provider-name "My Azure" --type AZURE --azure-application-id <id> --azure-directory-id <id>
    vcert cloudprovider create -p ngts -t <access token> --provider-name "My GCP" --type GCP --gcp-service-account-email sa@project.iam.gserviceaccount.com --gcp-authorization-method VENAFI_GENERATED_KEY`,
@@ -58,7 +59,7 @@ var (
 				Usage:     "Show a cloud provider",
 				Before:    runBeforeCloudManagementCommand,
 				Flags:     cloudProviderGetFlags,
-				UsageText: `vcert cloudprovider get -p ngts -t <access token> (--provider-id <id> | --provider-name <name>) [--format json]`,
+				UsageText: `vcert cloudprovider get -p <vcp|ngts> (-k <API key> | -t <access token>) (--provider-id <id> | --provider-name <name>) [--format json]`,
 				Action:    doCommandCloudProviderGet,
 			},
 			{
@@ -66,7 +67,7 @@ var (
 				Usage:     "List cloud providers",
 				Before:    runBeforeCloudManagementCommand,
 				Flags:     cloudProviderListFlags,
-				UsageText: `vcert cloudprovider list -p ngts -t <access token> [--type <AWS|AZURE|GCP>] [--status <VALIDATED|NOT_VALIDATED>] [--provider-name <name>] [--format json]`,
+				UsageText: `vcert cloudprovider list -p <vcp|ngts> (-k <API key> | -t <access token>) [--type <AWS|AZURE|GCP>] [--status <VALIDATED|NOT_VALIDATED>] [--provider-name <name>] [--format json]`,
 				Action:    doCommandCloudProviderList,
 			},
 			{
@@ -74,7 +75,7 @@ var (
 				Usage:  "Update a cloud provider. Only the given options are changed",
 				Before: runBeforeCloudManagementCommand,
 				Flags:  cloudProviderUpdateFlags,
-				UsageText: `vcert cloudprovider update -p ngts -t <access token> (--provider-id <id> | --provider-name <name>) <options to change>
+				UsageText: `vcert cloudprovider update -p <vcp|ngts> (-k <API key> | -t <access token>) (--provider-id <id> | --provider-name <name>) <options to change>
 
    vcert cloudprovider update -p ngts -t <access token> --provider-name "My AWS" --new-name "Production AWS" --aws-role new-role`,
 				Action: doCommandCloudProviderUpdate,
@@ -84,15 +85,15 @@ var (
 				Usage:     "Delete a cloud provider",
 				Before:    runBeforeCloudManagementCommand,
 				Flags:     cloudProviderGetFlags,
-				UsageText: `vcert cloudprovider delete -p ngts -t <access token> (--provider-id <id> | --provider-name <name>)`,
+				UsageText: `vcert cloudprovider delete -p <vcp|ngts> (-k <API key> | -t <access token>) (--provider-id <id> | --provider-name <name>)`,
 				Action:    doCommandCloudProviderDelete,
 			},
 			{
 				Name:      subCommandValidateName,
-				Usage:     "Check that NGTS can access the cloud provider with its configured credentials",
+				Usage:     "Check that the platform can access the cloud provider with its configured credentials",
 				Before:    runBeforeCloudManagementCommand,
 				Flags:     cloudProviderGetFlags,
-				UsageText: `vcert cloudprovider validate -p ngts -t <access token> (--provider-id <id> | --provider-name <name>)`,
+				UsageText: `vcert cloudprovider validate -p <vcp|ngts> (-k <API key> | -t <access token>) (--provider-id <id> | --provider-name <name>)`,
 				Action:    doCommandCloudProviderValidate,
 			},
 		},

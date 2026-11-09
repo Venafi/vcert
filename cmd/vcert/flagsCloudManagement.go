@@ -21,11 +21,13 @@ import (
 )
 
 // Flags for the cloudprovider and cloudkeystore commands. These commands are
-// only supported by Palo Alto Networks Next-Gen Trust Security (NGTS).
+// only supported by CyberArk Certificate Manager, SaaS (VCP) and Palo Alto
+// Networks Next-Gen Trust Security (NGTS).
 var (
 	flagCloudPlatform = &cli.StringFlag{
-		Name:        "platform",
-		Usage:       "REQUIRED. Use to specify the platform VCert will use to execute the given command. Only accepted value is: NGTS",
+		Name: "platform",
+		Usage: "Use to specify the platform VCert will use to execute the given command. Accepted values: VCP, NGTS. " +
+			"Required unless an API key is used, which means VCP.",
 		Destination: &flags.platformString,
 		Aliases:     []string{"p"},
 	}
@@ -80,8 +82,9 @@ var (
 	}
 
 	flagTeamID = &cli.StringFlag{
-		Name:        "team-id",
-		Usage:       "The ID of the team that owns the resource.",
+		Name:        "team",
+		Aliases:     []string{"team-id"},
+		Usage:       "The name or ID of the team that owns the resource. Required for VCP when creating; NGTS only accepts an ID.",
 		Destination: &flags.teamID,
 	}
 
@@ -208,6 +211,7 @@ var (
 	}
 
 	cloudManagementCommonFlags = flagsApppend(
+		flagKey,
 		flagToken,
 		flagUrl,
 		flagCloudPlatform,

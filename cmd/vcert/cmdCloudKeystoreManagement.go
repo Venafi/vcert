@@ -44,7 +44,7 @@ var (
 
 	commandCloudKeystore = &cli.Command{
 		Name:  commandCloudKeystoreName,
-		Usage: "To manage cloud keystores and run certificate discovery in Palo Alto Networks Next-Gen Trust Security (NGTS)",
+		Usage: "To manage cloud keystores and run certificate discovery in CyberArk Certificate Manager, SaaS (VCP) or Palo Alto Networks Next-Gen Trust Security (NGTS)",
 		Action: func(c *cli.Context) error {
 			return fmt.Errorf("the following subcommand(s) are required: \n%s", createBulletList(cloudKeystoreCommands))
 		},
@@ -54,8 +54,9 @@ var (
 				Usage:  "Create a cloud keystore",
 				Before: runBeforeCloudManagementCommand,
 				Flags:  cloudKeystoreCreateFlags,
-				UsageText: `vcert cloudkeystore create -p ngts -t <access token> --keystore-name <name> --type <ACM|AKV|GCM> (--provider-id <id> | --provider-name <name>) <type specific options>
+				UsageText: `vcert cloudkeystore create -p <vcp|ngts> (-k <API key> | -t <access token>) --keystore-name <name> --type <ACM|AKV|GCM> (--provider-id <id> | --provider-name <name>) <type specific options>
 
+   vcert cloudkeystore create -p vcp -k <API key> --team "Cloud Admins" --keystore-name "us-east-1" --type ACM --provider-name "My AWS" --aws-region us-east-1
    vcert cloudkeystore create -p ngts -t <access token> --keystore-name "us-east-1" --type ACM --provider-name "My AWS" --aws-region us-east-1
    vcert cloudkeystore create -p ngts -t <access token> --keystore-name "prod vault" --type AKV --provider-name "My Azure" --azure-key-vault-name prod-vault
    vcert cloudkeystore create -p ngts -t <access token> --keystore-name "global" --type GCM --provider-name "My GCP" --gcp-project-id my-project --gcp-location global --discovery-schedule "00 03 * * *"`,
@@ -66,7 +67,7 @@ var (
 				Usage:     "Show a cloud keystore, including the status of its latest discovery",
 				Before:    runBeforeCloudManagementCommand,
 				Flags:     cloudKeystoreGetFlags,
-				UsageText: `vcert cloudkeystore get -p ngts -t <access token> (--keystore-id <id> | --keystore-name <name> [--provider-name <name>]) [--format json]`,
+				UsageText: `vcert cloudkeystore get -p <vcp|ngts> (-k <API key> | -t <access token>) (--keystore-id <id> | --keystore-name <name> [--provider-name <name>]) [--format json]`,
 				Action:    doCommandCloudKeystoreGet,
 			},
 			{
@@ -74,7 +75,7 @@ var (
 				Usage:     "List cloud keystores",
 				Before:    runBeforeCloudManagementCommand,
 				Flags:     cloudKeystoreListFlags,
-				UsageText: `vcert cloudkeystore list -p ngts -t <access token> [--provider-id <id> | --provider-name <name>] [--format json]`,
+				UsageText: `vcert cloudkeystore list -p <vcp|ngts> (-k <API key> | -t <access token>) [--provider-id <id> | --provider-name <name>] [--format json]`,
 				Action:    doCommandCloudKeystoreList,
 			},
 			{
@@ -82,7 +83,7 @@ var (
 				Usage:  "Update a cloud keystore. Only the given options are changed",
 				Before: runBeforeCloudManagementCommand,
 				Flags:  cloudKeystoreUpdateFlags,
-				UsageText: `vcert cloudkeystore update -p ngts -t <access token> (--keystore-id <id> | --keystore-name <name>) <options to change>
+				UsageText: `vcert cloudkeystore update -p <vcp|ngts> (-k <API key> | -t <access token>) (--keystore-id <id> | --keystore-name <name>) <options to change>
 
    vcert cloudkeystore update -p ngts -t <access token> --keystore-id <id> --discovery-schedule "00 03 * * *" --include-expired=false`,
 				Action: doCommandCloudKeystoreUpdate,
@@ -92,7 +93,7 @@ var (
 				Usage:     "Delete a cloud keystore",
 				Before:    runBeforeCloudManagementCommand,
 				Flags:     cloudKeystoreGetFlags,
-				UsageText: `vcert cloudkeystore delete -p ngts -t <access token> (--keystore-id <id> | --keystore-name <name> [--provider-name <name>])`,
+				UsageText: `vcert cloudkeystore delete -p <vcp|ngts> (-k <API key> | -t <access token>) (--keystore-id <id> | --keystore-name <name> [--provider-name <name>])`,
 				Action:    doCommandCloudKeystoreDelete,
 			},
 			{
@@ -100,7 +101,7 @@ var (
 				Usage:  "Start a certificate discovery on a cloud keystore",
 				Before: runBeforeCloudManagementCommand,
 				Flags:  cloudKeystoreDiscoverFlags,
-				UsageText: `vcert cloudkeystore discover -p ngts -t <access token> (--keystore-id <id> | --keystore-name <name>) [--wait [--timeout <seconds>]]
+				UsageText: `vcert cloudkeystore discover -p <vcp|ngts> (-k <API key> | -t <access token>) (--keystore-id <id> | --keystore-name <name>) [--wait [--timeout <seconds>]]
 
    Without --wait the command returns once the discovery has started; follow it with "vcert cloudkeystore get".`,
 				Action: doCommandCloudKeystoreDiscover,
@@ -110,7 +111,7 @@ var (
 				Usage:     "Abort the running certificate discovery on a cloud keystore",
 				Before:    runBeforeCloudManagementCommand,
 				Flags:     cloudKeystoreGetFlags,
-				UsageText: `vcert cloudkeystore abort-discovery -p ngts -t <access token> (--keystore-id <id> | --keystore-name <name>)`,
+				UsageText: `vcert cloudkeystore abort-discovery -p <vcp|ngts> (-k <API key> | -t <access token>) (--keystore-id <id> | --keystore-name <name>)`,
 				Action:    doCommandCloudKeystoreAbortDiscovery,
 			},
 			{
@@ -118,7 +119,7 @@ var (
 				Usage:     "List the certificates installed in or discovered on a cloud keystore",
 				Before:    runBeforeCloudManagementCommand,
 				Flags:     cloudKeystoreMachineIdentitiesFlags,
-				UsageText: `vcert cloudkeystore machine-identities -p ngts -t <access token> (--keystore-id <id> | --keystore-name <name>) [--newly-discovered] [--format json]`,
+				UsageText: `vcert cloudkeystore machine-identities -p <vcp|ngts> (-k <API key> | -t <access token>) (--keystore-id <id> | --keystore-name <name>) [--newly-discovered] [--format json]`,
 				Action:    doCommandCloudKeystoreMachineIdentities,
 			},
 		},

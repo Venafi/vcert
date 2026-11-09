@@ -26,7 +26,7 @@ import (
 )
 
 // validateCloudManagementConnectionFlags checks the connection flags of the
-// cloudprovider and cloudkeystore commands, which only NGTS supports
+// cloudprovider and cloudkeystore commands, which only VCP and NGTS support
 func validateCloudManagementConnectionFlags(commandName string) error {
 	err := commonConnectionFlagsValidations(commandName)
 	if err != nil {
@@ -43,19 +43,44 @@ func validateCloudManagementConnectionFlags(commandName string) error {
 		return nil
 	}
 
-	platform := flags.platform
-	if platform == venafi.Undefined {
-		platform = venafi.GetPlatformType(getPropertyFromEnvironment(vCertPlatform))
-	}
-
-	switch platform {
+	switch platform := cloudManagementPlatform(); platform {
+	case venafi.TLSPCloud:
+		return validateConnectionFlagsCloud(commandName)
 	case venafi.NGTS:
 		return validateConnectionFlagsNGTS(commandName)
 	case venafi.Undefined:
-		return fmt.Errorf("command %s is only supported for %s. Set --platform %s", commandName, venafi.NGTS.String(), venafi.NGTS.String())
+		return fmt.Errorf("command %s is only supported for VCP and NGTS. Set --platform to VCP or NGTS", commandName)
 	default:
 		return fmt.Errorf("command %s not supported for %s", commandName, platform.String())
 	}
+}
+
+// cloudManagementPlatform returns the platform the cloud management commands
+// will connect to. Like the other commands, an API key without --platform
+// means VCP.
+func cloudManagementPlatform() venafi.Platform {
+	if flags.platform != venafi.Undefined {
+		return flags.platform
+	}
+	if platform := venafi.GetPlatformType(getPropertyFromEnvironment(vCertPlatform)); platform != venafi.Undefined {
+		return platform
+	}
+	apiKeyPresent := flags.apiKey != "" || getPropertyFromEnvironment(vCertApiKey) != ""
+	tokenPresent := flags.token != "" || getPropertyFromEnvironment(vCertToken) != ""
+	if apiKeyPresent && !tokenPresent && flags.userName == "" {
+		return venafi.TLSPCloud
+	}
+	return venafi.Undefined
+}
+
+// validateTeamFlag checks that an owning team is given where the platform
+// requires one. VCP requires every cloud provider and keystore to be owned by
+// a team; NGTS has no such requirement.
+func validateTeamFlag() error {
+	if flags.config == "" && cloudManagementPlatform() == venafi.TLSPCloud && flags.teamID == "" {
+		return fmt.Errorf("missing owning team. Set it using --%s with the team name or ID", flagTeamID.Name)
+	}
+	return nil
 }
 
 func validateOutputFormatFlag() error {
@@ -94,6 +119,9 @@ func validateCloudProviderCreateFlags(commandName string) error {
 	}
 	if flags.providerName == "" {
 		return fmt.Errorf("missing cloud provider name. Set it using --%s", flagCloudProviderName.Name)
+	}
+	if err := validateTeamFlag(); err != nil {
+		return err
 	}
 
 	switch domain.GetCloudProviderType(flags.cloudType) {
@@ -170,6 +198,9 @@ func validateCloudKeystoreCreateFlags(commandName string) error {
 		return fmt.Errorf("missing cloud keystore name. Set it using --%s", flagCloudKeystoreName.Name)
 	}
 	if err := validateCloudProviderSelectorFlags(); err != nil {
+		return err
+	}
+	if err := validateTeamFlag(); err != nil {
 		return err
 	}
 
