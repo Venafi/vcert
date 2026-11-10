@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -28,7 +29,20 @@ import (
 	"github.com/Venafi/vcert/v5/pkg/venafi"
 )
 
+// isolateFromVCertEnvironment blanks every VCERT_* environment variable for
+// the duration of the test. The commands read them as defaults for their
+// flags, and machines that run the integration suites may export them.
+func isolateFromVCertEnvironment(t *testing.T) {
+	t.Helper()
+	for _, kv := range os.Environ() {
+		if name, _, _ := strings.Cut(kv, "="); strings.HasPrefix(name, "VCERT_") {
+			t.Setenv(name, "")
+		}
+	}
+}
+
 func TestCloudManagementRejectsOtherPlatforms(t *testing.T) {
+	isolateFromVCertEnvironment(t)
 	for _, platform := range []venafi.Platform{venafi.TPP, venafi.TLSPCloud, venafi.Firefly} {
 		flags = commandFlags{platform: platform, token: "a-token"}
 		t.Setenv(vCertPlatform, "")
@@ -45,6 +59,7 @@ func TestCloudManagementRejectsOtherPlatforms(t *testing.T) {
 }
 
 func TestCloudManagementRequiresPlatform(t *testing.T) {
+	isolateFromVCertEnvironment(t)
 	flags = commandFlags{token: "a-token"}
 	t.Setenv(vCertPlatform, "")
 
@@ -55,6 +70,7 @@ func TestCloudManagementRequiresPlatform(t *testing.T) {
 }
 
 func TestCloudManagementPlatformFromEnvironment(t *testing.T) {
+	isolateFromVCertEnvironment(t)
 	flags = commandFlags{token: "a-token"}
 	t.Setenv(vCertPlatform, "tpp")
 
@@ -65,6 +81,7 @@ func TestCloudManagementPlatformFromEnvironment(t *testing.T) {
 }
 
 func TestCloudManagementAcceptsNGTS(t *testing.T) {
+	isolateFromVCertEnvironment(t)
 	flags = commandFlags{platform: venafi.NGTS, token: "a-token"}
 	t.Setenv(vCertPlatform, "")
 
@@ -74,6 +91,7 @@ func TestCloudManagementAcceptsNGTS(t *testing.T) {
 }
 
 func TestRunBeforeCloudManagementCommandReadsPlatformFromEnvironment(t *testing.T) {
+	isolateFromVCertEnvironment(t)
 	flags = commandFlags{}
 	t.Setenv(vCertPlatform, "ngts")
 
@@ -86,6 +104,7 @@ func TestRunBeforeCloudManagementCommandReadsPlatformFromEnvironment(t *testing.
 }
 
 func TestCloudProviderCreateRequiresTypeSpecificFlags(t *testing.T) {
+	isolateFromVCertEnvironment(t)
 	t.Setenv(vCertPlatform, "")
 	t.Setenv(vcertAzureSecret, "")
 
@@ -116,6 +135,7 @@ func TestCloudProviderCreateRequiresTypeSpecificFlags(t *testing.T) {
 }
 
 func TestCloudProviderCreateAcceptsAzureSecretFromEnvironment(t *testing.T) {
+	isolateFromVCertEnvironment(t)
 	t.Setenv(vCertPlatform, "")
 	t.Setenv(vcertAzureSecret, "secret")
 	flags = commandFlags{platform: venafi.NGTS, token: "a-token", providerName: "provider", cloudType: "azure", azureApplicationID: "app", azureDirectoryID: "dir"}
@@ -138,6 +158,7 @@ func newTestCliContext(t *testing.T, set ...string) *cli.Context {
 }
 
 func TestBuildUpdateCloudProviderRequestRejectsOptionsOfAnotherType(t *testing.T) {
+	isolateFromVCertEnvironment(t)
 	flags = commandFlags{awsRole: "role"}
 	provider := domain.CloudProvider{ID: "p1", Name: "gcp", Type: domain.CloudProviderTypeGCP}
 
@@ -148,6 +169,7 @@ func TestBuildUpdateCloudProviderRequestRejectsOptionsOfAnotherType(t *testing.T
 }
 
 func TestBuildUpdateCloudProviderRequestIgnoresAzureSecretFromEnvironment(t *testing.T) {
+	isolateFromVCertEnvironment(t)
 	// buildConfig copies VCERT_AZURE_SECRET into the flags, which must not turn
 	// an update of a non-Azure provider into an Azure configuration change
 	flags = commandFlags{newName: "renamed", azureSecret: "from-env"}
@@ -163,6 +185,7 @@ func TestBuildUpdateCloudProviderRequestIgnoresAzureSecretFromEnvironment(t *tes
 }
 
 func TestBuildUpdateCloudProviderRequestRequiresAChange(t *testing.T) {
+	isolateFromVCertEnvironment(t)
 	flags = commandFlags{}
 	provider := domain.CloudProvider{ID: "p1", Name: "aws", Type: domain.CloudProviderTypeAWS}
 
@@ -237,6 +260,7 @@ func (f *fakeCloudManager) ListMachineIdentities(domain.ListCloudMachineIdentiti
 }
 
 func TestResolveCloudProviderMatchesExactName(t *testing.T) {
+	isolateFromVCertEnvironment(t)
 	manager := &fakeCloudManager{providers: []domain.CloudProvider{
 		{ID: "p1", Name: "aws"},
 		{ID: "p2", Name: "aws-staging"},
@@ -252,6 +276,7 @@ func TestResolveCloudProviderMatchesExactName(t *testing.T) {
 }
 
 func TestResolveCloudProviderByID(t *testing.T) {
+	isolateFromVCertEnvironment(t)
 	manager := &fakeCloudManager{providers: []domain.CloudProvider{{ID: "p1", Name: "aws"}, {ID: "p2", Name: "gcp"}}}
 
 	provider, err := resolveCloudProvider(manager, "p2", "")
@@ -268,6 +293,7 @@ func TestResolveCloudProviderByID(t *testing.T) {
 }
 
 func TestResolveCloudKeystoreRejectsAmbiguousName(t *testing.T) {
+	isolateFromVCertEnvironment(t)
 	flags = commandFlags{keystoreName: "us-east-1"}
 	manager := &fakeCloudManager{keystoreResponses: [][]domain.CloudKeystore{{{ID: "k1"}, {ID: "k2"}}}}
 
@@ -278,6 +304,7 @@ func TestResolveCloudKeystoreRejectsAmbiguousName(t *testing.T) {
 }
 
 func TestIsNewDiscovery(t *testing.T) {
+	isolateFromVCertEnvironment(t)
 	earlier := time.Date(2026, 11, 1, 3, 0, 0, 0, time.UTC)
 	later := earlier.Add(24 * time.Hour)
 
@@ -303,6 +330,7 @@ func TestIsNewDiscovery(t *testing.T) {
 }
 
 func TestWaitForCloudDiscoverySkipsThePreviousRun(t *testing.T) {
+	isolateFromVCertEnvironment(t)
 	defer func(interval time.Duration) { discoveryPollInterval = interval }(discoveryPollInterval)
 	discoveryPollInterval = time.Millisecond
 
@@ -330,6 +358,7 @@ func TestWaitForCloudDiscoverySkipsThePreviousRun(t *testing.T) {
 }
 
 func TestWaitForCloudDiscoveryTimesOut(t *testing.T) {
+	isolateFromVCertEnvironment(t)
 	defer func(interval time.Duration) { discoveryPollInterval = interval }(discoveryPollInterval)
 	discoveryPollInterval = time.Millisecond
 
@@ -344,6 +373,7 @@ func TestWaitForCloudDiscoveryTimesOut(t *testing.T) {
 }
 
 func TestCloudProviderOutputIncludesConfiguration(t *testing.T) {
+	isolateFromVCertEnvironment(t)
 	out := newCloudProviderOutput(domain.CloudProvider{
 		ID: "p1", Name: "gcp", Type: domain.CloudProviderTypeGCP, Status: domain.CloudProviderStatusNotValidated,
 		GCP: &domain.CloudProviderGCPConfiguration{
