@@ -990,22 +990,32 @@ func TestRenewCertificate(t *testing.T) {
 	t.Logf("CERT: %s\n", pcc.Certificate)
 	t.Logf("FINGERPRINT: %s\n", fingerprint)
 
+	// Tags are attached asynchronously, shortly after the certificate is issued. Wait for the original
+	// certificate's tags first: renewing before they are attached leaves nothing to copy to the new certificate.
+	originalStatus, err := conn.getCertificateStatus(pickupID)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	waitForCertificateTags(t, conn, originalStatus.CertificateIdsList[0], []string{"testTag"})
+
 	// renewing by Thumbprint and asserting that the renewed certificate contains the same tags as the old cert version
 	// given it was not passed the tags from the request
-	managedCertificate1 := renewCertificateRequest(t, conn, &certificate.RenewalRequest{Thumbprint: strings.ToUpper(fingerprint), CertificateRequest: &certificate.Request{}})
+	managedCertificate1 := renewCertificateRequest(t, conn, &certificate.RenewalRequest{Thumbprint: strings.ToUpper(fingerprint), CertificateRequest: &certificate.Request{}}, []string{"testTag"})
 	assert.Equal(t, []string{"testTag"}, managedCertificate1.Tags)
 
 	// renewing by CertificateID and asserting that the renewed certificate contains the tags passed from the request
-	managedCertificate2 := renewCertificateRequest(t, conn, &certificate.RenewalRequest{CertificateDN: managedCertificate1.CertificateRequestId, CertificateRequest: &certificate.Request{Tags: []string{"testTag2"}}})
+	managedCertificate2 := renewCertificateRequest(t, conn, &certificate.RenewalRequest{CertificateDN: managedCertificate1.CertificateRequestId, CertificateRequest: &certificate.Request{Tags: []string{"testTag2"}}}, []string{"testTag2"})
 	assert.Equal(t, []string{"testTag2"}, managedCertificate2.Tags)
 
 	// renewing by CertificateID and asserting that the renewed certificate doesn't contain any of tags from the old cert version
 	// given it was passed an empty set of the tags from the request
-	managedCertificate3 := renewCertificateRequest(t, conn, &certificate.RenewalRequest{CertificateDN: managedCertificate2.CertificateRequestId, CertificateRequest: &certificate.Request{Tags: []string{}}})
+	managedCertificate3 := renewCertificateRequest(t, conn, &certificate.RenewalRequest{CertificateDN: managedCertificate2.CertificateRequestId, CertificateRequest: &certificate.Request{Tags: []string{}}}, nil)
 	assert.Empty(t, managedCertificate3.Tags)
 }
 
-func renewCertificateRequest(t *testing.T, conn *Connector, renewalRequest *certificate.RenewalRequest) *managedCertificate {
+// renewCertificateRequest renews a certificate, waits for the new one to be issued and returns it once its tags
+// match wantTags (tags are attached asynchronously after issuance).
+func renewCertificateRequest(t *testing.T, conn *Connector, renewalRequest *certificate.RenewalRequest, wantTags []string) *managedCertificate {
 	// time to renew
 	count := 0
 	var reqId = ""
@@ -1039,12 +1049,24 @@ func renewCertificateRequest(t *testing.T, conn *Connector, renewalRequest *cert
 		t.Fatal(err)
 	}
 
-	certificateId := certStatus.CertificateIdsList[0]
-	managedCert, err := conn.getCertificate(certificateId)
-	if err != nil {
-		t.Fatal(err)
-	}
+	return waitForCertificateTags(t, conn, certStatus.CertificateIdsList[0], wantTags)
+}
 
+// waitForCertificateTags polls a certificate until its tags match want (nil and empty are equal), for up to a
+// minute, and returns the certificate as last read. Tags are attached shortly after a certificate is issued.
+func waitForCertificateTags(t *testing.T, conn *Connector, certificateId string, want []string) *managedCertificate {
+	var managedCert *managedCertificate
+	var err error
+	for attempt := 0; attempt < 20; attempt++ {
+		managedCert, err = conn.getCertificate(certificateId)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(managedCert.Tags) == len(want) && (len(want) == 0 || assert.ObjectsAreEqual(want, managedCert.Tags)) {
+			break
+		}
+		time.Sleep(3 * time.Second)
+	}
 	return managedCert
 }
 
