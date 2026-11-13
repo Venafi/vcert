@@ -21,3 +21,6 @@ google_auth.json
 .env
 *.out
 /vcert
+
+# binary from "go build ./test/cloudci"
+/cloudci
