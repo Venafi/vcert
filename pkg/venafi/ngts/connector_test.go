@@ -2663,6 +2663,10 @@ func TestSetPolicyValuesAndValidate(t *testing.T) {
 This test is just for verifying that a policy can be created using DIGICERT	 CA.
 */
 func TestSetPolicyDigicert(t *testing.T) {
+	caName := os.Getenv("NGTS_DIGICERT_CA_NAME")
+	if caName == "" {
+		t.Skip("NGTS_DIGICERT_CA_NAME is not set: the tenant has no DigiCert CA account")
+	}
 	policyName := test.RandCitName()
 	conn := getTestConnector(ctx.NGTSZone)
 	conn.verbose = true
@@ -2676,7 +2680,6 @@ func TestSetPolicyDigicert(t *testing.T) {
 	specification := test.GetCloudPolicySpecification()
 
 	//change default CA to Digicert
-	caName := os.Getenv("NGTS_DIGICERT_CA_NAME")
 	specification.Policy.CertificateAuthority = &caName
 	_, err = conn.SetPolicy(policyName, specification)
 
