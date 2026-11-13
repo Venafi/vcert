@@ -811,6 +811,42 @@ func (p *flakyListPlatform) ListCloudProviders(filter domain.GetCloudProviderReq
 	return p.fakePlatform.ListCloudProviders(filter)
 }
 
+func TestTeardownRemovesKeystoresThatCannotProvisionWhenListingFails(t *testing.T) {
+	platform := newFakePlatform()
+	l := newTestLifecycle(targetVCP, platform, &fakeCleaner{})
+	st, err := runSetup(t, l)
+	if err != nil {
+		t.Fatalf("setup failed: %s", err)
+	}
+	failing := map[string]bool{}
+	for _, k := range st.Keystores {
+		if !k.CanProvision {
+			failing[k.ID] = true
+		}
+	}
+	l.manager = &failingIdentitiesPlatform{fakePlatform: platform, failing: failing}
+
+	if err := l.teardown(st); err != nil {
+		t.Fatalf("teardown failed: %s", err)
+	}
+	if len(platform.providers) != 0 || len(platform.keystores) != 0 {
+		t.Fatalf("expected everything to be deleted, left %d providers and %d keystores", len(platform.providers), len(platform.keystores))
+	}
+}
+
+// failingIdentitiesPlatform fails listing the machine identities of some keystores
+type failingIdentitiesPlatform struct {
+	*fakePlatform
+	failing map[string]bool
+}
+
+func (p *failingIdentitiesPlatform) ListMachineIdentities(r domain.ListCloudMachineIdentitiesRequest) ([]domain.CloudMachineIdentity, error) {
+	if p.failing[r.KeystoreID] {
+		return nil, errors.New("cannot convert metadata")
+	}
+	return p.fakePlatform.ListMachineIdentities(r)
+}
+
 func TestTeardownDoesNothingWhenSkipped(t *testing.T) {
 	l := newTestLifecycle(targetVCP, newFakePlatform(), &fakeCleaner{})
 	if err := l.teardown(&state{Skipped: true}); err != nil {

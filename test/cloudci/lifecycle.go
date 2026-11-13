@@ -466,10 +466,13 @@ func (d desiredProvider) canProvision(ks domain.CloudKeystore) bool {
 // not provision to.
 func (l *lifecycle) deleteProvisionedCertificates(ks domain.CloudKeystore, d desiredProvider) error {
 	identities, err := l.manager.ListMachineIdentities(domain.ListCloudMachineIdentitiesRequest{KeystoreID: ks.ID})
-	if err != nil {
-		return err
-	}
 	if !d.canProvision(ks) {
+		// Nothing is deleted from such a keystore, so a failed listing only
+		// loses the warnings below; it must not keep the keystore
+		if err != nil {
+			logf("WARNING: cannot list the machine identities of keystore %q to report certificates left in the cloud: %s", ks.Name, err)
+			return nil
+		}
 		// As when a crashed run's keystore is no longer configured to
 		// provision. Its certificates stay in the cloud; say so.
 		for _, mi := range identities {
@@ -479,6 +482,9 @@ func (l *lifecycle) deleteProvisionedCertificates(ks domain.CloudKeystore, d des
 			}
 		}
 		return nil
+	}
+	if err != nil {
+		return err
 	}
 	var errs []error
 	for _, mi := range identities {
