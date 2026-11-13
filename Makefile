@@ -90,6 +90,10 @@ test: get linter
 	go tool cover -func=cov6.out
 	go test -v -coverprofile=cov_cmd.out ./cmd/vcert
 	go tool cover -func=cov_cmd.out
+	go test -v -coverprofile=cov_webclient.out ./pkg/webclient/...
+	go tool cover -func=cov_webclient.out
+	go test -v -coverprofile=cov_cloudci.out ./test/cloudci
+	go tool cover -func=cov_cloudci.out
 
 tpp_test: get
 	go test -v $(GOFLAGS) -coverprofile=cov_tpp.out ./pkg/venafi/tpp

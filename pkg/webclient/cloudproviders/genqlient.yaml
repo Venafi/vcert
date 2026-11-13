@@ -15,5 +15,7 @@ optional: pointer
 bindings:
   UUID:
     type: string
+  AWSAccountID:
+    type: string
   DateTime:
     type: time.Time

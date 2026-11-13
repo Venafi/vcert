@@ -2248,6 +2248,10 @@ func TestSetPolicyValuesAndValidate(t *testing.T) {
 
 // This test is just for verifying that a policy can be created using ENTRUST CA.
 func TestSetPolicyEntrust(t *testing.T) {
+	caName := os.Getenv("CLOUD_ENTRUST_CA_NAME")
+	if caName == "" {
+		t.Skip("CLOUD_ENTRUST_CA_NAME is not set: the tenant has no Entrust CA account")
+	}
 
 	policyName := test.RandAppName() + "\\" + test.RandCitName()
 	conn := getTestConnector(ctx.CloudZone)
@@ -2261,7 +2265,6 @@ func TestSetPolicyEntrust(t *testing.T) {
 
 	specification := test.GetCloudPolicySpecification()
 	//change default CA to Entrust
-	caName := os.Getenv("CLOUD_ENTRUST_CA_NAME")
 	specification.Policy.CertificateAuthority = &caName
 
 	_, err = conn.SetPolicy(policyName, specification)
@@ -2286,6 +2289,10 @@ func TestSetPolicyEntrust(t *testing.T) {
 This test is just for verifying that a policy can be created using DIGICERT	 CA.
 */
 func TestSetPolicyDigicert(t *testing.T) {
+	caName := os.Getenv("CLOUD_DIGICERT_CA_NAME")
+	if caName == "" {
+		t.Skip("CLOUD_DIGICERT_CA_NAME is not set: the tenant has no DigiCert CA account")
+	}
 
 	policyName := test.RandAppName() + "\\" + test.RandCitName()
 	conn := getTestConnector(ctx.CloudZone)
@@ -2300,7 +2307,6 @@ func TestSetPolicyDigicert(t *testing.T) {
 	specification := test.GetCloudPolicySpecification()
 
 	//change default CA to Digiert
-	caName := os.Getenv("CLOUD_DIGICERT_CA_NAME")
 	specification.Policy.CertificateAuthority = &caName
 	_, err = conn.SetPolicy(policyName, specification)
 
