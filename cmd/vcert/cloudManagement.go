@@ -181,9 +181,19 @@ func optionalBoolFlag(c *cli.Context, name string, value bool) *bool {
 	return &value
 }
 
+// optionalStringFlag returns a pointer to the flag value only when the user
+// set it, so that an explicitly empty value can be told apart from an unset one
+func optionalStringFlag(c *cli.Context, name string, value string) *string {
+	if !c.IsSet(name) {
+		return nil
+	}
+	return &value
+}
+
 func discoveryOptionsFromFlags(c *cli.Context) *domain.CloudDiscoveryOptions {
 	options := &domain.CloudDiscoveryOptions{
-		ScheduleSpecification:      optionalFlag(flags.discoverySchedule),
+		// --discovery-schedule "" removes the schedule
+		ScheduleSpecification:      optionalStringFlag(c, flagDiscoverySchedule.Name, flags.discoverySchedule),
 		IncludeExpiredCertificates: optionalBoolFlag(c, flagIncludeExpired.Name, flags.includeExpired),
 		IncludeRevokedCertificates: optionalBoolFlag(c, flagIncludeRevoked.Name, flags.includeRevoked),
 	}

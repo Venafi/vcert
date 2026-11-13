@@ -83,21 +83,32 @@ func loadAWSConfig(path string, getenv func(string) string) (*awsCRUDConfig, err
 	if err := readJSONFile(path, &cfg); err != nil {
 		return nil, err
 	}
+	accounts := map[string]int{}
 	for i := range cfg.CloudProviders {
 		p := &cfg.CloudProviders[i]
 		if !awsAccountIDPattern.MatchString(p.AccountID) {
 			return nil, fmt.Errorf("%s: cloudProviders[%d].awsAccountId must be a 12-digit AWS account ID", path, i)
 		}
+		// a tenant allows only one cloud provider per AWS account
+		if first, ok := accounts[p.AccountID]; ok {
+			return nil, fmt.Errorf("%s: cloudProviders[%d] and cloudProviders[%d] both use AWS account %s", path, first, i, p.AccountID)
+		}
+		accounts[p.AccountID] = i
 		if p.IAMRoleName == "" {
 			return nil, fmt.Errorf("%s: cloudProviders[%d].awsIamRoleName is required", path, i)
 		}
 		if p.SecretAccessKey == "" {
 			p.SecretAccessKey = getenv(awsSecretEnvVar(i))
 		}
+		regions := map[string]bool{}
 		for j, k := range p.CloudKeystores {
 			if k.Region == "" {
 				return nil, fmt.Errorf("%s: cloudProviders[%d].cloudKeystores[%d].awsRegion is required", path, i, j)
 			}
+			if regions[k.Region] {
+				return nil, fmt.Errorf("%s: cloudProviders[%d] has two keystores in region %s", path, i, k.Region)
+			}
+			regions[k.Region] = true
 			// the access key is only used to delete provisioned certificates from ACM
 			if k.CanProvision && (p.AccessKeyID == "" || p.SecretAccessKey == "") {
 				return nil, fmt.Errorf("%s: cloudProviders[%d] (account %s) has a keystore that can provision but no access key "+
@@ -114,11 +125,18 @@ func loadAzureConfig(path string, getenv func(string) string, now time.Time) (*a
 	if err := readJSONFile(path, &cfg); err != nil {
 		return nil, err
 	}
+	apps := map[string]int{}
 	for i := range cfg.CloudProviders {
 		p := &cfg.CloudProviders[i]
 		if p.ClientID == "" || p.TenantID == "" {
 			return nil, fmt.Errorf("%s: cloudProviders[%d] requires clientId and tenantId", path, i)
 		}
+		// a tenant allows only one cloud provider per Azure app
+		app := p.ClientID + "/" + p.TenantID
+		if first, ok := apps[app]; ok {
+			return nil, fmt.Errorf("%s: cloudProviders[%d] and cloudProviders[%d] both use Azure app %s", path, first, i, p.ClientID)
+		}
+		apps[app] = i
 		if p.ClientSecret == "" {
 			p.ClientSecret = getenv(azureSecretEnvVar(i))
 		}
@@ -139,10 +157,15 @@ func loadAzureConfig(path string, getenv func(string) string, now time.Time) (*a
 				logf("WARNING: the client secret of Azure app %s expires on %s", p.ClientID, p.ClientSecretExpires)
 			}
 		}
+		vaults := map[string]bool{}
 		for j, k := range p.CloudKeystores {
 			if k.KeyVaultName == "" {
 				return nil, fmt.Errorf("%s: cloudProviders[%d].cloudKeystores[%d].keyVaultName is required", path, i, j)
 			}
+			if vaults[k.KeyVaultName] {
+				return nil, fmt.Errorf("%s: cloudProviders[%d] has two keystores for key vault %s", path, i, k.KeyVaultName)
+			}
+			vaults[k.KeyVaultName] = true
 		}
 	}
 	return &cfg, nil

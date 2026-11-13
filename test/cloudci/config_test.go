@@ -124,6 +124,92 @@ func TestLoadAWSConfigValidates(t *testing.T) {
 	}
 }
 
+func TestLoadConfigRejectsDuplicates(t *testing.T) {
+	secrets := env(map[string]string{
+		"AWS_CRUD_SECRET_ACCESS_KEY_0": "x", "AWS_CRUD_SECRET_ACCESS_KEY_1": "x",
+		"AZURE_CRUD_CLIENT_SECRET_0": "x", "AZURE_CRUD_CLIENT_SECRET_1": "x",
+	})
+	awsProvider := func(regions ...string) string {
+		var keystores []string
+		for _, r := range regions {
+			keystores = append(keystores, `{"awsRegion": "`+r+`"}`)
+		}
+		return `{"awsAccountId": "123456789012", "awsIamRoleName": "r", "cloudKeystores": [` + strings.Join(keystores, ",") + `]}`
+	}
+	azureProvider := func(vaults ...string) string {
+		var keystores []string
+		for _, v := range vaults {
+			keystores = append(keystores, `{"keyVaultName": "`+v+`"}`)
+		}
+		return `{"clientId": "app-1", "tenantId": "tenant-1", "cloudKeystores": [` + strings.Join(keystores, ",") + `]}`
+	}
+	for name, tc := range map[string]struct {
+		load func(path string) error
+		json string
+		want string
+	}{
+		"same AWS account": {
+			func(path string) error { _, err := loadAWSConfig(path, secrets); return err },
+			`{"cloudProviders": [` + awsProvider("us-east-1") + `,` + awsProvider("us-east-2") + `]}`, "both use AWS account 123456789012",
+		},
+		"same AWS region": {
+			func(path string) error { _, err := loadAWSConfig(path, secrets); return err },
+			`{"cloudProviders": [` + awsProvider("us-east-1", "us-east-1") + `]}`, "two keystores in region us-east-1",
+		},
+		"same Azure app": {
+			func(path string) error { _, err := loadAzureConfig(path, secrets, time.Now()); return err },
+			`{"cloudProviders": [` + azureProvider("a") + `,` + azureProvider("b") + `]}`, "both use Azure app app-1",
+		},
+		"same key vault": {
+			func(path string) error { _, err := loadAzureConfig(path, secrets, time.Now()); return err },
+			`{"cloudProviders": [` + azureProvider("a", "a") + `]}`, "two keystores for key vault a",
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			if err := tc.load(writeConfig(t, tc.json)); err == nil || !strings.Contains(err.Error(), tc.want) {
+				t.Fatalf("expected an error containing %q, got %v", tc.want, err)
+			}
+		})
+	}
+}
+
+func TestRunRejectsTheStateOfAnotherRun(t *testing.T) {
+	dir := t.TempDir()
+	statePath := filepath.Join(dir, "state.json")
+	st := &state{Target: targetVCP, RunID: "41", Providers: []providerState{{ID: "p1", Name: "vcert-ci-1-41-aws1"}}}
+	if err := st.save(statePath); err != nil {
+		t.Fatal(err)
+	}
+	azurePath := writeConfig(t, azureConfigJSON)
+	t.Setenv("AZURE_CRUD_CLIENT_SECRET_0", "s3cret")
+	t.Setenv("CLOUD_APIKEY", "")
+	for _, args := range [][]string{
+		{"teardown", "-target", "vcp", "-run-id", "42", "-state", statePath, "-azure-config", azurePath},
+		{"teardown", "-target", "ngts", "-run-id", "41", "-state", statePath, "-azure-config", azurePath},
+	} {
+		if code := run(args); code != 1 {
+			t.Fatalf("%v exited with %d, want 1", args, code)
+		}
+	}
+}
+
+func TestRunSetupReplacesAnOldStateFile(t *testing.T) {
+	dir := t.TempDir()
+	statePath := filepath.Join(dir, "state.json")
+	old := &state{Target: targetVCP, RunID: "41", Providers: []providerState{{ID: "p1", Name: "vcert-ci-1-41-aws1"}}}
+	if err := old.save(statePath); err != nil {
+		t.Fatal(err)
+	}
+	// setup fails before connecting, on a missing configuration file
+	if code := run([]string{"setup", "-target", "vcp", "-run-id", "42", "-state", statePath, "-azure-config", filepath.Join(dir, "missing.json")}); code != 1 {
+		t.Fatalf("setup exited with %d, want 1", code)
+	}
+	st, err := loadState(statePath)
+	if err != nil || st == nil || st.RunID != "42" || len(st.Providers) != 0 {
+		t.Fatalf("expected a fresh state file, got %+v, %v", st, err)
+	}
+}
+
 func TestRunDoesNothingForASkippedSetup(t *testing.T) {
 	dir := t.TempDir()
 	statePath := filepath.Join(dir, "state.json")

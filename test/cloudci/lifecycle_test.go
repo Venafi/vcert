@@ -230,14 +230,14 @@ type fakeCleaner struct {
 	err          error
 }
 
-func (c *fakeCleaner) deleteACMCertificate(arn string, accessKeyID string, secretAccessKey string) error {
+func (c *fakeCleaner) deleteACMCertificate(arn string, region string, accessKeyID string, secretAccessKey string) error {
 	if c.err != nil {
 		return c.err
 	}
 	if accessKeyID == "" || secretAccessKey == "" {
 		return errors.New("missing AWS credentials")
 	}
-	c.deletedARNs = append(c.deletedARNs, arn)
+	c.deletedARNs = append(c.deletedARNs, region+"|"+arn)
 	return nil
 }
 
@@ -407,7 +407,7 @@ func TestSetupRemovesWhatAStaleRunLeftBehind(t *testing.T) {
 		t.Fatalf("expected the stale provider to be removed")
 	}
 	// only the certificate the platform installed is deleted from the cloud
-	if len(cleaner.deletedARNs) != 1 || !strings.HasSuffix(cleaner.deletedARNs[0], "/1") {
+	if len(cleaner.deletedARNs) != 1 || cleaner.deletedARNs[0] != "us-east-2|arn:aws:acm:us-east-2:123456789012:certificate/1" {
 		t.Fatalf("unexpected certificate deletions: %v", cleaner.deletedARNs)
 	}
 	if len(st.Providers) != 2 {
@@ -446,6 +446,55 @@ func TestSetupSkipsWhenAnotherRunCreatesAtTheSameTime(t *testing.T) {
 	st, err := runSetup(t, l)
 	if !errors.Is(err, errSkipped) || !strings.Contains(st.SkipReason, "at the same time") {
 		t.Fatalf("expected a skip, got %v (%+v)", err, st)
+	}
+}
+
+func TestSetupDoesNotSkipAfterCreatingSomething(t *testing.T) {
+	platform := newFakePlatform()
+	// another run creates a provider for the Azure app after this run
+	// created its AWS provider
+	platform.beforeCreate = func() {
+		if len(platform.providers) == 0 {
+			return
+		}
+		platform.beforeCreate = nil
+		platform.addProvider(domain.CloudProvider{
+			Name: ciName(testNow, "43", "azure1"), Type: domain.CloudProviderTypeAzure,
+			Azure: &domain.CloudProviderAzureConfiguration{ApplicationID: "app-1", DirectoryID: "tenant-1"},
+		})
+	}
+	l := newTestLifecycle(targetVCP, platform, &fakeCleaner{})
+
+	st, err := runSetup(t, l)
+	if err == nil || errors.Is(err, errSkipped) || st.Skipped || !strings.Contains(err.Error(), "at the same time") {
+		t.Fatalf("expected a failure, not a skip, got %v (%+v)", err, st)
+	}
+	// the AWS provider is recorded, so that teardown removes it
+	if len(st.Providers) != 1 || st.Providers[0].Kind != kindAWS {
+		t.Fatalf("expected the AWS provider in the state, got %+v", st.Providers)
+	}
+	if err := l.teardown(st); err != nil {
+		t.Fatalf("teardown failed: %s", err)
+	}
+	if _, exists := platform.providers[st.Providers[0].ID]; exists {
+		t.Fatalf("expected the AWS provider to be removed")
+	}
+}
+
+func TestSetupFailsWhenItsOwnProviderBlocksTheNext(t *testing.T) {
+	platform := newFakePlatform()
+	l := newTestLifecycle(targetVCP, platform, &fakeCleaner{})
+	// two entries for the same account, which config loading rejects; the
+	// lifecycle must still not mistake its own provider for another run's
+	l.aws.CloudProviders = append(l.aws.CloudProviders, l.aws.CloudProviders[0])
+	l.azure = nil
+
+	st, err := runSetup(t, l)
+	if err == nil || errors.Is(err, errSkipped) || st.Skipped {
+		t.Fatalf("expected a failure, not a skip, got %v (%+v)", err, st)
+	}
+	if len(st.Providers) != 1 {
+		t.Fatalf("expected the created provider in the state, got %+v", st.Providers)
 	}
 }
 
@@ -567,6 +616,130 @@ func TestTeardownReportsWhatItCouldNotRemove(t *testing.T) {
 	if _, ok := platform.keystores[st.Env["AWS_KEYSTORE_ID"]]; !ok {
 		t.Fatalf("expected the keystore to be kept")
 	}
+}
+
+func TestTeardownDeletesCertificatesOnlyFromKeystoresThatCanProvision(t *testing.T) {
+	platform := newFakePlatform()
+	cleaner := &fakeCleaner{}
+	l := newTestLifecycle(targetVCP, platform, cleaner)
+	st, err := runSetup(t, l)
+	if err != nil {
+		t.Fatalf("setup failed: %s", err)
+	}
+	var readOnly string
+	for _, k := range st.Keystores {
+		if k.Location == "vaas-auto-do-not-delete" {
+			readOnly = k.ID
+		}
+	}
+	installed := domain.NewCertificateCloudMetadata(map[string]interface{}{"name": "cert-1"})
+	platform.identities[readOnly] = []domain.CloudMachineIdentity{{Status: domain.MachineIdentityStatusInstalled, Metadata: &installed}}
+
+	if err := l.teardown(st); err != nil {
+		t.Fatalf("teardown failed: %s", err)
+	}
+	if len(cleaner.deletedAzure) != 0 {
+		t.Fatalf("deleted certificates from a keystore that cannot provision: %v", cleaner.deletedAzure)
+	}
+	if len(platform.keystores) != 0 {
+		t.Fatalf("expected the keystores to be deleted")
+	}
+}
+
+func TestTeardownDeletesACMCertificatesOnlyInTheKeystoreRegionAndAccount(t *testing.T) {
+	platform := newFakePlatform()
+	cleaner := &fakeCleaner{}
+	l := newTestLifecycle(targetVCP, platform, cleaner)
+	st, err := runSetup(t, l)
+	if err != nil {
+		t.Fatalf("setup failed: %s", err)
+	}
+	var identities []domain.CloudMachineIdentity
+	for _, arn := range []string{
+		"arn:aws:acm:us-west-1:123456789012:certificate/other-region",
+		"arn:aws:acm:us-east-2:999999999999:certificate/other-account",
+		"arn:aws:iam::123456789012:role/not-a-certificate",
+	} {
+		m := domain.NewCertificateCloudMetadata(map[string]interface{}{"arn": arn})
+		identities = append(identities, domain.CloudMachineIdentity{Status: domain.MachineIdentityStatusInstalled, Metadata: &m})
+	}
+	platform.identities[st.Env["AWS_KEYSTORE_ID"]] = identities
+
+	err = l.teardown(st)
+	if err == nil || !strings.Contains(err.Error(), "other-region") || !strings.Contains(err.Error(), "other-account") ||
+		!strings.Contains(err.Error(), "not an ACM certificate ARN") {
+		t.Fatalf("expected all three certificates to be refused, got %v", err)
+	}
+	if len(cleaner.deletedARNs) != 0 {
+		t.Fatalf("unexpected certificate deletions: %v", cleaner.deletedARNs)
+	}
+	// kept, so that the certificates can still be found
+	if _, ok := platform.keystores[st.Env["AWS_KEYSTORE_ID"]]; !ok {
+		t.Fatalf("expected the keystore to be kept")
+	}
+}
+
+func TestTeardownChecksTheProvidersInTheStateFile(t *testing.T) {
+	platform := newFakePlatform()
+	l := newTestLifecycle(targetVCP, platform, &fakeCleaner{})
+	st, err := runSetup(t, l)
+	if err != nil {
+		t.Fatalf("setup failed: %s", err)
+	}
+	aws, azure := st.Providers[0], st.Providers[1]
+	// the AWS provider was deleted by hand; the Azure provider ID now names
+	// something the CI did not create
+	for _, k := range st.Keystores {
+		if k.ProviderID == aws.ID {
+			delete(platform.keystores, k.ID)
+		}
+	}
+	delete(platform.providers, aws.ID)
+	platform.providers[azure.ID].Name = "Production Azure"
+
+	err = l.teardown(st)
+	if err == nil || !strings.Contains(err.Error(), `"Production Azure"`) {
+		t.Fatalf("expected a refusal naming the provider, got %v", err)
+	}
+	if strings.Contains(err.Error(), aws.Name) {
+		t.Fatalf("a provider that is already gone should not be an error: %v", err)
+	}
+	if _, ok := platform.providers[azure.ID]; !ok {
+		t.Fatalf("deleted a provider the CI did not create")
+	}
+}
+
+func TestChecksRestoreNamesWhenRenamingFails(t *testing.T) {
+	platform := newFakePlatform()
+	l := newTestLifecycle(targetVCP, platform, &fakeCleaner{})
+	st, err := runSetup(t, l)
+	if err != nil {
+		t.Fatalf("setup failed: %s", err)
+	}
+	// renaming succeeds, but the platform reports the provider as no longer
+	// validated afterwards
+	l.manager = &unvalidatingPlatform{platform}
+
+	if err := l.runChecks(st); err == nil {
+		t.Fatalf("expected the checks to fail")
+	}
+	for _, p := range st.Providers {
+		if platform.providers[p.ID].Name != p.Name {
+			t.Fatalf("provider name left as %q", platform.providers[p.ID].Name)
+		}
+	}
+}
+
+type unvalidatingPlatform struct {
+	*fakePlatform
+}
+
+func (p *unvalidatingPlatform) UpdateCloudProvider(r domain.UpdateCloudProviderRequest) (*domain.CloudProvider, error) {
+	cp, err := p.fakePlatform.UpdateCloudProvider(r)
+	if err == nil {
+		cp.Status = domain.CloudProviderStatusNotValidated
+	}
+	return cp, err
 }
 
 func TestTeardownDoesNothingWhenSkipped(t *testing.T) {

@@ -115,7 +115,18 @@ query ListCloudProviders($status: CloudProviderStatus, $providerType: CloudProvi
     }
 }
 
-mutation CreateCloudProvider($input: CloudProviderInput!) {
+# @genqlient(for: "CloudProviderInput.teamId", omitempty: true)
+# @genqlient(for: "CloudProviderInput.authorizedTeams", omitempty: true)
+# @genqlient(for: "CloudProviderInput.shareWithAll", omitempty: true)
+# @genqlient(for: "CloudProviderInput.consumerTsgIds", omitempty: true)
+# @genqlient(for: "CloudProviderInput.consumerWorkspaceIds", omitempty: true)
+# @genqlient(for: "CloudProviderGCPConfigurationInput.projectNumber", omitempty: true)
+# @genqlient(for: "CloudProviderGCPConfigurationInput.workloadIdentityPoolId", omitempty: true)
+# @genqlient(for: "CloudProviderGCPConfigurationInput.workloadIdentityPoolProviderId", omitempty: true)
+# @genqlient(for: "CloudProviderGCPConfigurationInput.authorizationMethod", omitempty: true)
+mutation CreateCloudProvider(
+    $input: CloudProviderInput!
+) {
     createCloudProvider(input: $input) {
         ...CloudProviderFields
     }
@@ -199,6 +210,13 @@ query ListCloudKeystores($cloudKeystoreId: UUID, $cloudKeystoreName: String, $cl
     }
 }
 
+# @genqlient(for: "CloudKeystoreInput.teamId", omitempty: true)
+# @genqlient(for: "CloudKeystoreInput.authorizedTeams", omitempty: true)
+# @genqlient(for: "CloudKeystoreInput.authorizedServiceAccounts", omitempty: true)
+# @genqlient(for: "CloudKeystoreInput.allServiceAccountsAccess", omitempty: true)
+# @genqlient(for: "CloudKeystoreInput.consumerTsgIds", omitempty: true)
+# @genqlient(for: "CloudKeystoreInput.consumerWorkspaceIds", omitempty: true)
+# @genqlient(for: "CloudKeystoreACMConfigurationInput.accountId", omitempty: true)
 # @genqlient(for: "CloudDiscoveryConfigurationInput.scheduleSpecification", omitempty: true)
 # @genqlient(for: "CloudDiscoveryConfigurationInput.includeExpiredCertificates", omitempty: true)
 # @genqlient(for: "CloudDiscoveryConfigurationInput.includeRevokedCertificates", omitempty: true)

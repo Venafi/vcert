@@ -175,7 +175,7 @@ var (
 
 	flagDiscoverySchedule = &cli.StringFlag{
 		Name:        "discovery-schedule",
-		Usage:       "A crontab expression for scheduled discovery, for example \"00 03 * * *\" runs every day at 3 AM.",
+		Usage:       "A crontab expression for scheduled discovery, for example \"00 03 * * *\" runs every day at 3 AM. Use --discovery-schedule \"\" to remove the schedule.",
 		Destination: &flags.discoverySchedule,
 	}
 

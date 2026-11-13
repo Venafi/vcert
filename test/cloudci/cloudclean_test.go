@@ -61,7 +61,7 @@ func TestDeleteACMCertificate(t *testing.T) {
 	c.acmEndpoint = func(r string) string { region = r; return server.URL }
 
 	arn := "arn:aws:acm:us-east-2:123456789012:certificate/abc"
-	if err := c.deleteACMCertificate(arn, "AKIA1", "secret"); err != nil {
+	if err := c.deleteACMCertificate(arn, "us-east-2", "AKIA1", "secret"); err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
 	if region != "us-east-2" || target != "CertificateManager.DeleteCertificate" || body != `{"CertificateArn":"`+arn+`"}` {
@@ -72,11 +72,26 @@ func TestDeleteACMCertificate(t *testing.T) {
 	}
 
 	// a certificate that is already gone counts as deleted
-	if err := c.deleteACMCertificate("arn:aws:acm:us-east-2:123456789012:certificate/missing", "AKIA1", "secret"); err != nil {
+	if err := c.deleteACMCertificate("arn:aws:acm:us-east-2:123456789012:certificate/missing", "us-east-2", "AKIA1", "secret"); err != nil {
 		t.Fatalf("unexpected error for a missing certificate: %s", err)
 	}
-	if err := c.deleteACMCertificate("not-an-arn", "AKIA1", "secret"); err == nil {
-		t.Fatalf("expected an error for an invalid ARN")
+}
+
+func TestParseCertificateARN(t *testing.T) {
+	region, account, err := parseCertificateARN("arn:aws:acm:us-east-2:123456789012:certificate/abc")
+	if err != nil || region != "us-east-2" || account != "123456789012" {
+		t.Fatalf("unexpected result %q %q %v", region, account, err)
+	}
+	for _, arn := range []string{
+		"not-an-arn",
+		"arn:aws:iam::123456789012:role/x",
+		"arn:aws:acm::123456789012:certificate/abc",
+		"arn:aws:acm:us-east-2::certificate/abc",
+		"arn:aws:acm:us-east-2:123456789012:key/abc",
+	} {
+		if _, _, err := parseCertificateARN(arn); err == nil {
+			t.Fatalf("expected an error for %q", arn)
+		}
 	}
 }
 

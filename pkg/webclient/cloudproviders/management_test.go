@@ -119,6 +119,33 @@ func TestCreateCloudProviderSendsOnlyTheMatchingConfiguration(t *testing.T) {
 	assert.NotContains(t, input, "gcpConfiguration")
 }
 
+func TestCreateCloudProviderOmitsUnsetFields(t *testing.T) {
+	client, requests := newTestClient(t,
+		`{"data":{"createCloudProvider":{"id":"p1","name":"gcp","type":"GCP","status":"NOT_VALIDATED","keystoresCount":0}}}`,
+	)
+
+	_, err := client.CreateCloudProvider(context.Background(), domain.CreateCloudProviderRequest{
+		Name: "gcp",
+		Type: domain.CloudProviderTypeGCP,
+		GCP: &domain.CloudProviderGCPConfiguration{
+			ServiceAccountEmail: "sa@project.iam.gserviceaccount.com",
+			AuthorizationMethod: domain.GCPAuthorizationMethodVenafiGeneratedKey,
+		},
+	})
+	require.NoError(t, err)
+
+	// Fields that were not set must not be sent at all, not even as null
+	input := (*requests)[0].Variables["input"].(map[string]interface{})
+	assert.Equal(t, map[string]interface{}{
+		"name": "gcp",
+		"type": "GCP",
+		"gcpConfiguration": map[string]interface{}{
+			"serviceAccountEmail": "sa@project.iam.gserviceaccount.com",
+			"authorizationMethod": "VENAFI_GENERATED_KEY",
+		},
+	}, input)
+}
+
 func TestCreateCloudProviderRejectsMissingConfiguration(t *testing.T) {
 	client, requests := newTestClient(t)
 
@@ -230,6 +257,27 @@ func TestCreateCloudKeystore(t *testing.T) {
 	assert.Equal(t, map[string]interface{}{"keyVaultName": "prod-vault"}, input["akvConfiguration"])
 	// false was set explicitly, so it must be sent; the other options were not
 	assert.Equal(t, map[string]interface{}{"includeExpiredCertificates": false}, input["discoveryConfiguration"])
+	// neither were the team or the sharing settings
+	for _, field := range []string{"teamId", "authorizedTeams", "authorizedServiceAccounts", "allServiceAccountsAccess", "consumerTsgIds", "consumerWorkspaceIds"} {
+		assert.NotContains(t, input, field)
+	}
+}
+
+func TestCreateCloudKeystoreOmitsUnsetACMAccount(t *testing.T) {
+	client, requests := newTestClient(t, `{"data":{"createCloudKeystore":`+keystoreNodeJSON+`}}`)
+
+	_, err := client.CreateCloudKeystore(context.Background(), domain.CreateCloudKeystoreRequest{
+		Name:            "acm",
+		Type:            domain.CloudKeystoreTypeACM,
+		CloudProviderID: "p1",
+		TeamID:          "team-1",
+		ACM:             &domain.CloudKeystoreACMConfiguration{Region: "us-east-2"},
+	})
+	require.NoError(t, err)
+
+	input := (*requests)[0].Variables["input"].(map[string]interface{})
+	assert.Equal(t, "team-1", input["teamId"])
+	assert.Equal(t, map[string]interface{}{"region": "us-east-2"}, input["acmConfiguration"])
 }
 
 func keystoreListResponse(node string) string {

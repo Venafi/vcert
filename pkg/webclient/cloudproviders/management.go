@@ -151,6 +151,10 @@ func (c *CloudProvidersClient) CreateCloudKeystore(ctx context.Context, request 
 	return &ck, nil
 }
 
+// UpdateCloudKeystore changes the fields of a cloud keystore that are set in
+// the request. Since the API replaces the whole discovery configuration, it
+// reads the current one first and sends it with the requested changes, so a
+// change made by someone else between the read and the update is lost.
 func (c *CloudProvidersClient) UpdateCloudKeystore(ctx context.Context, request domain.UpdateCloudKeystoreRequest) (*domain.CloudKeystore, error) {
 	if request.ID == "" {
 		return nil, fmt.Errorf("cloud keystore ID cannot be empty")

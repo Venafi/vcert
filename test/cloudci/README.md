@@ -32,11 +32,21 @@ go run ./test/cloudci teardown -target vcp -state vcp-state.json -aws-config aws
   - younger than `-stale-after` (3 hours by default, longer than the job timeout): another run is in progress, so
     setup **skips**. It records the reason in the state file, exits 0, and check and teardown do nothing;
   - older: a run crashed without cleaning up, so setup removes it first.
+
+  A run only skips before it has created anything. If another run takes an account after this one has created
+  some of its cloud providers, setup fails instead, and teardown removes what it created. A configuration that
+  lists the same AWS account or Azure app twice, or two keystores with the same region or key vault under one
+  cloud provider, is rejected.
 - **Accounts used by something else stop the run.** If a cloud provider that was not created by the CI already
   uses a configured account, setup fails with its name and does nothing. Removing such cloud providers is a
   one-time step when moving to CI-managed cloud providers.
 - **Only provisioned certificates are deleted from the cloud.** Teardown deletes the certificates whose machine
-  identity is `INSTALLED` (provisioned through the platform), never ones the platform only found in the keystore.
+  identity is `INSTALLED` (provisioned through the platform), never ones the platform only found in the keystore,
+  and only from keystores configured with `canProvision`. An ACM certificate is only deleted when its ARN is in
+  the keystore's region and the configured account.
+- **The state file must belong to this run.** Setup replaces it before doing anything else. Check and teardown
+  refuse a state file written for another target or run ID (`-run-id`, the Jenkins `BUILD_NUMBER` by default),
+  and teardown only deletes a cloud provider whose current name is still a CI name.
 - **No secrets in the state file.** It holds names, IDs and non-secret settings only.
 
 ## Connection

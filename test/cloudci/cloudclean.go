@@ -62,13 +62,9 @@ func newCloudCleaner() *cloudCleaner {
 	}
 }
 
-// deleteACMCertificate deletes a certificate from AWS Certificate Manager. A
-// certificate that no longer exists counts as deleted.
-func (c *cloudCleaner) deleteACMCertificate(arn string, accessKeyID string, secretAccessKey string) error {
-	region, err := regionFromARN(arn)
-	if err != nil {
-		return err
-	}
+// deleteACMCertificate deletes a certificate from AWS Certificate Manager in
+// a region. A certificate that no longer exists counts as deleted.
+func (c *cloudCleaner) deleteACMCertificate(arn string, region string, accessKeyID string, secretAccessKey string) error {
 	body, _ := json.Marshal(map[string]string{"CertificateArn": arn})
 	endpoint := c.acmEndpoint(region)
 	req, err := http.NewRequest(http.MethodPost, endpoint+"/", bytes.NewReader(body))
@@ -94,13 +90,15 @@ func (c *cloudCleaner) deleteACMCertificate(arn string, accessKeyID string, secr
 	return fmt.Errorf("cannot delete ACM certificate %s: HTTP %d: %s", arn, resp.StatusCode, strings.TrimSpace(string(respBody)))
 }
 
-func regionFromARN(arn string) (string, error) {
-	// arn:aws:acm:<region>:<account>:certificate/<id>
+// parseCertificateARN returns the region and account of an ACM certificate ARN
+func parseCertificateARN(arn string) (region string, account string, err error) {
+	// arn:<partition>:acm:<region>:<account>:certificate/<id>
 	parts := strings.Split(arn, ":")
-	if len(parts) < 6 || parts[0] != "arn" || parts[3] == "" {
-		return "", fmt.Errorf("not a certificate ARN: %q", arn)
+	if len(parts) != 6 || parts[0] != "arn" || parts[2] != "acm" || parts[3] == "" || parts[4] == "" ||
+		!strings.HasPrefix(parts[5], "certificate/") {
+		return "", "", fmt.Errorf("not an ACM certificate ARN: %q", arn)
 	}
-	return parts[3], nil
+	return parts[3], parts[4], nil
 }
 
 // signAWSRequest signs a request with AWS Signature Version 4, as described in

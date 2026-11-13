@@ -101,6 +101,18 @@ func run(args []string) int {
 		validationTimeout:  *validationTimeout,
 		validationInterval: 15 * time.Second,
 	}
+	// setup replaces the state file first, so that a file left by an
+	// earlier run in the same workspace cannot be torn down again if setup
+	// fails before creating anything
+	var st *state
+	if command == "setup" {
+		st = &state{Target: *target, RunID: *runID}
+		if err := st.save(*statePath); err != nil {
+			logf("%s", err)
+			return 1
+		}
+	}
+
 	var err error
 	if *awsConfig != "" {
 		if l.aws, err = loadAWSConfig(*awsConfig, os.Getenv); err != nil {
@@ -115,16 +127,20 @@ func run(args []string) int {
 		}
 	}
 
-	// check and teardown need nothing when setup did not run or was skipped
-	var st *state
+	// check and teardown need nothing when setup did not run, was skipped or
+	// created nothing
 	if command != "setup" {
 		if st, err = loadState(*statePath); err != nil {
 			logf("%s", err)
 			return 1
 		}
-		if st == nil || st.Skipped {
+		if st == nil || st.Skipped || len(st.Providers) == 0 {
 			logf("nothing to %s: setup did not create anything", command)
 			return 0
+		}
+		if st.Target != *target || st.RunID != *runID {
+			logf("state file %s was written by run %q for %s, not by run %q for %s", *statePath, st.RunID, st.Target, *runID, *target)
+			return 1
 		}
 	}
 
@@ -135,12 +151,7 @@ func run(args []string) int {
 
 	switch command {
 	case "setup":
-		st = &state{Target: *target, RunID: *runID}
 		save := func() error { return st.save(*statePath) }
-		if err := save(); err != nil {
-			logf("%s", err)
-			return 1
-		}
 		err = l.setup(st, save)
 		if errors.Is(err, errSkipped) {
 			logf("SKIPPED: %s", st.SkipReason)

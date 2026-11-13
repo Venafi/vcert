@@ -17,6 +17,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/Venafi/vcert/v5/pkg/domain"
@@ -129,8 +130,7 @@ func (l *lifecycle) checkProvider(r *checkResults, p providerState) {
 	}())
 
 	r.check(prefix+"renamed and renamed back, staying validated", func() error {
-		renamed := p.Name + "-renamed"
-		for _, name := range []string{renamed, p.Name} {
+		rename := func(name string) error {
 			cp, err := l.manager.UpdateCloudProvider(domain.UpdateCloudProviderRequest{ID: p.ID, Type: l.providerType(p), Name: &name})
 			if err != nil {
 				return err
@@ -141,8 +141,15 @@ func (l *lifecycle) checkProvider(r *checkResults, p providerState) {
 			if cp.Status != domain.CloudProviderStatusValidated {
 				return fmt.Errorf("status is %s after renaming", cp.Status)
 			}
+			return nil
 		}
-		return nil
+		// the original name is restored even when renaming fails, because
+		// the provisioning tests find the provider by name
+		err := rename(p.Name + "-renamed")
+		if restoreErr := rename(p.Name); restoreErr != nil {
+			return errors.Join(err, fmt.Errorf("cannot restore the name: %w", restoreErr))
+		}
+		return err
 	}())
 
 	r.check(prefix+"found by name", func() error {
@@ -201,11 +208,13 @@ func (l *lifecycle) checkKeystore(r *checkResults, k keystoreState) {
 	renamed := k.Name + "-renamed"
 	r.check(prefix+"renaming keeps the discovery settings", func() error {
 		all := domain.CloudDiscoveryConfiguration{ScheduleSpecification: schedule, IncludeExpiredCertificates: true, IncludeRevokedCertificates: true}
-		if err := l.updateAndExpect(k, domain.UpdateCloudKeystoreRequest{Name: &renamed}, renamed, all); err != nil {
-			return err
-		}
+		err := l.updateAndExpect(k, domain.UpdateCloudKeystoreRequest{Name: &renamed}, renamed, all)
+		// restored even when renaming fails, as for the provider
 		name := k.Name
-		return l.updateAndExpect(k, domain.UpdateCloudKeystoreRequest{Name: &name}, k.Name, all)
+		if restoreErr := l.updateAndExpect(k, domain.UpdateCloudKeystoreRequest{Name: &name}, k.Name, all); restoreErr != nil {
+			return errors.Join(err, fmt.Errorf("cannot restore the name: %w", restoreErr))
+		}
+		return err
 	}())
 
 	empty := ""

@@ -186,6 +186,8 @@ type CloudKeystoreManager interface {
 	// Nil filter fields are ignored.
 	ListCloudKeystores(filter domain.GetCloudKeystoreRequest) ([]domain.CloudKeystore, error)
 	CreateCloudKeystore(request domain.CreateCloudKeystoreRequest) (*domain.CloudKeystore, error)
+	// UpdateCloudKeystore changes the fields set in the request. Discovery
+	// settings that are not set keep their current values.
 	UpdateCloudKeystore(request domain.UpdateCloudKeystoreRequest) (*domain.CloudKeystore, error)
 	DeleteCloudKeystore(cloudKeystoreID string) error
 	// ListMachineIdentities returns the certificates installed in the cloud

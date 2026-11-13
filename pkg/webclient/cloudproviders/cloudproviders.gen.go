@@ -146,7 +146,7 @@ func (v *CloudDiscoveryConfigurationInput) GetIncludeRevokedCertificates() *bool
 
 type CloudKeystoreACMConfigurationInput struct {
 	Region    string  `json:"region"`
-	AccountId *string `json:"accountId"`
+	AccountId *string `json:"accountId,omitempty"`
 }
 
 // GetRegion returns CloudKeystoreACMConfigurationInput.Region, and is useful for accessing the field via an interface.
@@ -525,18 +525,18 @@ type CloudKeystoreInput struct {
 	// A string between 3 and 250 characters
 	Name                      string                                    `json:"name"`
 	Type                      CloudKeystoreType                         `json:"type"`
-	TeamId                    *string                                   `json:"teamId"`
-	AuthorizedTeams           []string                                  `json:"authorizedTeams"`
-	AuthorizedServiceAccounts []string                                  `json:"authorizedServiceAccounts"`
-	AllServiceAccountsAccess  *bool                                     `json:"allServiceAccountsAccess"`
+	TeamId                    *string                                   `json:"teamId,omitempty"`
+	AuthorizedTeams           []string                                  `json:"authorizedTeams,omitempty"`
+	AuthorizedServiceAccounts []string                                  `json:"authorizedServiceAccounts,omitempty"`
+	AllServiceAccountsAccess  *bool                                     `json:"allServiceAccountsAccess,omitempty"`
 	CloudProviderId           string                                    `json:"cloudProviderId"`
 	AcmConfiguration          *CloudKeystoreACMConfigurationInput       `json:"acmConfiguration,omitempty"`
 	AkvConfiguration          *CloudKeystoreAKVConfigurationInput       `json:"akvConfiguration,omitempty"`
 	GcmConfiguration          *CloudKeystoreGCMConfigurationInput       `json:"gcmConfiguration,omitempty"`
 	AkamaiCdnConfiguration    *CloudKeystoreAkamaiCDNConfigurationInput `json:"akamaiCdnConfiguration,omitempty"`
 	DiscoveryConfiguration    *CloudDiscoveryConfigurationInput         `json:"discoveryConfiguration,omitempty"`
-	ConsumerTsgIds            []string                                  `json:"consumerTsgIds"`
-	ConsumerWorkspaceIds      []string                                  `json:"consumerWorkspaceIds"`
+	ConsumerTsgIds            []string                                  `json:"consumerTsgIds,omitempty"`
+	ConsumerWorkspaceIds      []string                                  `json:"consumerWorkspaceIds,omitempty"`
 }
 
 // GetName returns CloudKeystoreInput.Name, and is useful for accessing the field via an interface.
@@ -1099,10 +1099,10 @@ func (v *CloudProviderFieldsConfigurationCloudProviderGCPConfiguration) GetIssue
 
 type CloudProviderGCPConfigurationInput struct {
 	ServiceAccountEmail            string                                `json:"serviceAccountEmail"`
-	ProjectNumber                  *string                               `json:"projectNumber"`
-	WorkloadIdentityPoolId         *string                               `json:"workloadIdentityPoolId"`
-	WorkloadIdentityPoolProviderId *string                               `json:"workloadIdentityPoolProviderId"`
-	AuthorizationMethod            *AuthorizationMethod                  `json:"authorizationMethod"`
+	ProjectNumber                  *string                               `json:"projectNumber,omitempty"`
+	WorkloadIdentityPoolId         *string                               `json:"workloadIdentityPoolId,omitempty"`
+	WorkloadIdentityPoolProviderId *string                               `json:"workloadIdentityPoolProviderId,omitempty"`
+	AuthorizationMethod            *AuthorizationMethod                  `json:"authorizationMethod,omitempty"`
 	AzureWIFConfiguration          *CloudProviderAzureConfigurationInput `json:"azureWIFConfiguration,omitempty"`
 }
 
@@ -1175,11 +1175,11 @@ type CloudProviderInput struct {
 	AzureConfiguration   *CloudProviderAzureConfigurationInput  `json:"azureConfiguration,omitempty"`
 	GcpConfiguration     *CloudProviderGCPConfigurationInput    `json:"gcpConfiguration,omitempty"`
 	AkamaiConfiguration  *CloudProviderAkamaiConfigurationInput `json:"akamaiConfiguration,omitempty"`
-	TeamId               *string                                `json:"teamId"`
-	AuthorizedTeams      []string                               `json:"authorizedTeams"`
-	ShareWithAll         *bool                                  `json:"shareWithAll"`
-	ConsumerTsgIds       []string                               `json:"consumerTsgIds"`
-	ConsumerWorkspaceIds []string                               `json:"consumerWorkspaceIds"`
+	TeamId               *string                                `json:"teamId,omitempty"`
+	AuthorizedTeams      []string                               `json:"authorizedTeams,omitempty"`
+	ShareWithAll         *bool                                  `json:"shareWithAll,omitempty"`
+	ConsumerTsgIds       []string                               `json:"consumerTsgIds,omitempty"`
+	ConsumerWorkspaceIds []string                               `json:"consumerWorkspaceIds,omitempty"`
 }
 
 // GetName returns CloudProviderInput.Name, and is useful for accessing the field via an interface.

@@ -250,6 +250,40 @@ func TestBuildUpdateCloudProviderRequestRequiresAChange(t *testing.T) {
 	}
 }
 
+func TestDiscoveryOptionsFromFlags(t *testing.T) {
+	isolateFromVCertEnvironment(t)
+	newContext := func(args ...string) *cli.Context {
+		fs := flag.NewFlagSet("test", flag.ContinueOnError)
+		fs.String(flagDiscoverySchedule.Name, "", "")
+		fs.Bool(flagIncludeExpired.Name, false, "")
+		fs.Bool(flagIncludeRevoked.Name, false, "")
+		if err := fs.Parse(args); err != nil {
+			t.Fatal(err)
+		}
+		return cli.NewContext(cli.NewApp(), fs, nil)
+	}
+
+	flags = commandFlags{}
+	if options := discoveryOptionsFromFlags(newContext()); options != nil {
+		t.Fatalf("expected no discovery options without flags, got %+v", options)
+	}
+
+	// an explicitly empty schedule removes it
+	flags = commandFlags{}
+	options := discoveryOptionsFromFlags(newContext("--discovery-schedule", ""))
+	if options == nil || options.ScheduleSpecification == nil || *options.ScheduleSpecification != "" ||
+		options.IncludeExpiredCertificates != nil || options.IncludeRevokedCertificates != nil {
+		t.Fatalf("expected only an empty schedule, got %+v", options)
+	}
+
+	flags = commandFlags{discoverySchedule: "00 03 * * *", includeExpired: false}
+	options = discoveryOptionsFromFlags(newContext("--discovery-schedule", "00 03 * * *", "--include-expired=false"))
+	if options == nil || *options.ScheduleSpecification != "00 03 * * *" || options.IncludeExpiredCertificates == nil ||
+		*options.IncludeExpiredCertificates || options.IncludeRevokedCertificates != nil {
+		t.Fatalf("unexpected options %+v", options)
+	}
+}
+
 // fakeCloudManager implements endpoint.CloudProviderManager and
 // endpoint.CloudKeystoreManager for tests
 type fakeCloudManager struct {

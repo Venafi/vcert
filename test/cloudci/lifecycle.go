@@ -32,7 +32,7 @@ type cloudManager interface {
 }
 
 type certCleaner interface {
-	deleteACMCertificate(arn string, accessKeyID string, secretAccessKey string) error
+	deleteACMCertificate(arn string, region string, accessKeyID string, secretAccessKey string) error
 	deleteAzureCertificate(vault string, name string, tenantID string, clientID string, clientSecret string) error
 }
 
@@ -213,9 +213,15 @@ func (l *lifecycle) setup(st *state, save func() error) error {
 		name := ciName(created, l.runID, d.kind+strconv.Itoa(d.configIndex+1))
 		cp, err := l.manager.CreateCloudProvider(d.request(name))
 		if err != nil {
-			if l.otherRunCreated(d) {
+			if l.otherRunCreated(d, st) {
+				reason := fmt.Sprintf("another run created a cloud provider for %s at the same time", d.describe)
+				// a skipped run is not torn down, so it may only skip
+				// before creating anything
+				if len(st.Providers) > 0 {
+					return fmt.Errorf("%s; teardown removes what this run created", reason)
+				}
 				st.Skipped = true
-				st.SkipReason = fmt.Sprintf("another run created a cloud provider for %s at the same time", d.describe)
+				st.SkipReason = reason
 				return errSkipped
 			}
 			return fmt.Errorf("cannot create the cloud provider for %s: %w", d.describe, err)
@@ -256,15 +262,20 @@ func (l *lifecycle) setup(st *state, save func() error) error {
 	return save()
 }
 
-// otherRunCreated reports whether a CI cloud provider for the account now
-// exists, as when another run created one between our listing and creating
-func (l *lifecycle) otherRunCreated(d desiredProvider) bool {
+// otherRunCreated reports whether a CI cloud provider for the account that
+// this run did not create now exists, as when another run created one between
+// our listing and creating
+func (l *lifecycle) otherRunCreated(d desiredProvider, st *state) bool {
 	providers, err := l.manager.ListCloudProviders(domain.GetCloudProviderRequest{})
 	if err != nil {
 		return false
 	}
+	ours := map[string]bool{}
+	for _, p := range st.Providers {
+		ours[p.ID] = true
+	}
 	for _, cp := range providers {
-		if _, isCI := ciCreated(cp.Name); isCI && d.matches(cp) {
+		if _, isCI := ciCreated(cp.Name); isCI && d.matches(cp) && !ours[cp.ID] {
 			return true
 		}
 	}
@@ -336,9 +347,27 @@ func (l *lifecycle) teardown(st *state) error {
 		return nil
 	}
 	desired := l.desiredProviders()
+	existing, err := l.manager.ListCloudProviders(domain.GetCloudProviderRequest{})
+	if err != nil {
+		return err
+	}
+	current := map[string]string{}
+	for _, cp := range existing {
+		current[cp.ID] = cp.Name
+	}
 	var errs []error
 	for i := len(st.Providers) - 1; i >= 0; i-- {
 		p := st.Providers[i]
+		name, exists := current[p.ID]
+		if !exists {
+			logf("cloud provider %q is already gone", p.Name)
+			continue
+		}
+		// the IDs come from a file, so check that they still name CI objects
+		if _, isCI := ciCreated(name); !isCI {
+			errs = append(errs, fmt.Errorf("cloud provider %s is now named %q, which was not created by the CI; not deleting it", p.ID, name))
+			continue
+		}
 		d, ok := findDesired(desired, p.Kind, p.ConfigIndex)
 		if !ok {
 			errs = append(errs, fmt.Errorf("cloud provider %q is not in the configuration any more; delete it by hand", p.Name))
@@ -395,10 +424,33 @@ func (l *lifecycle) removeProvider(providerID string, d desiredProvider) error {
 	return l.manager.DeleteCloudProvider(providerID)
 }
 
+// canProvision reports whether the configuration lets the tests provision to
+// a keystore, found by its region or key vault
+func (d desiredProvider) canProvision(ks domain.CloudKeystore) bool {
+	location := ""
+	switch {
+	case ks.ACM != nil:
+		location = ks.ACM.Region
+	case ks.AKV != nil:
+		location = ks.AKV.KeyVaultName
+	}
+	for _, k := range d.keystores {
+		if k.canProvision && location != "" && k.location == location {
+			return true
+		}
+	}
+	return false
+}
+
 // deleteProvisionedCertificates deletes from the cloud the certificates the
-// platform installed in a keystore. Certificates the platform only found in
-// the keystore are left alone: they were not created by the tests.
+// platform installed in a keystore the tests may provision to. Certificates
+// the platform only found in the keystore are left alone: they were not
+// created by the tests. So are all certificates in keystores the tests may
+// not provision to.
 func (l *lifecycle) deleteProvisionedCertificates(ks domain.CloudKeystore, d desiredProvider) error {
+	if !d.canProvision(ks) {
+		return nil
+	}
 	identities, err := l.manager.ListMachineIdentities(domain.ListCloudMachineIdentitiesRequest{KeystoreID: ks.ID})
 	if err != nil {
 		return err
@@ -412,10 +464,20 @@ func (l *lifecycle) deleteProvisionedCertificates(ks domain.CloudKeystore, d des
 		case kindAWS:
 			p := l.aws.CloudProviders[d.configIndex]
 			arn, _ := mi.Metadata.GetValue("arn").(string)
-			if arn == "" {
+			if arn == "" || ks.ACM == nil {
 				continue
 			}
-			if err := l.cleaner.deleteACMCertificate(arn, p.AccessKeyID, p.SecretAccessKey); err != nil {
+			// only certificates in the keystore's own region and account
+			region, account, err := parseCertificateARN(arn)
+			if err != nil {
+				errs = append(errs, err)
+				continue
+			}
+			if region != ks.ACM.Region || account != p.AccountID {
+				errs = append(errs, fmt.Errorf("not deleting certificate %s: it is not in region %s of account %s", arn, ks.ACM.Region, p.AccountID))
+				continue
+			}
+			if err := l.cleaner.deleteACMCertificate(arn, ks.ACM.Region, p.AccessKeyID, p.SecretAccessKey); err != nil {
 				errs = append(errs, err)
 				continue
 			}
