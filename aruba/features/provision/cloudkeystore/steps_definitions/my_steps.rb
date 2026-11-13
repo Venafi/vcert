@@ -71,6 +71,8 @@ def build_provision_cmd(platform, cloudkeystore_type, keystore_provider_names, f
       keystore_id = AZURE_KEYSTORE_ID
     end
   when KEYSTORE_TYPE_GCP
+    # a tenant without a GCP keystore (such as a development stack) leaves GCP out
+    skip_this_scenario("no GCP keystore is configured (GCP_KEYSTORE_ID)") if GCP_KEYSTORE_ID.to_s.empty?
     @cloudkeystore_type = KEYSTORE_TYPE_GCP
     if keystore_provider_names
       keystore_name = GCP_KEYSTORE_NAME
