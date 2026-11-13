@@ -179,7 +179,7 @@ type CloudProviderManager interface {
 }
 
 // CloudKeystoreManager is implemented by connectors that can manage cloud
-// keystores and run certificate discovery on them. It is kept separate from
+// keystores, including their discovery configuration. It is kept separate from
 // Connector for the same reason as CloudProviderManager.
 type CloudKeystoreManager interface {
 	// ListCloudKeystores returns the cloud keystores matching the given filter.
@@ -188,12 +188,8 @@ type CloudKeystoreManager interface {
 	CreateCloudKeystore(request domain.CreateCloudKeystoreRequest) (*domain.CloudKeystore, error)
 	UpdateCloudKeystore(request domain.UpdateCloudKeystoreRequest) (*domain.CloudKeystore, error)
 	DeleteCloudKeystore(cloudKeystoreID string) error
-	// StartCloudDiscovery starts an asynchronous certificate discovery on the
-	// cloud keystore. Use ListCloudKeystores to follow its progress.
-	StartCloudDiscovery(cloudKeystoreID string) (*domain.WorkflowResult, error)
-	AbortCloudDiscovery(cloudKeystoreID string) error
-	// ListMachineIdentities returns the certificates installed in, or
-	// discovered on, the cloud keystore
+	// ListMachineIdentities returns the certificates installed in the cloud
+	// keystore, and those the platform found in it
 	ListMachineIdentities(request domain.ListCloudMachineIdentitiesRequest) ([]domain.CloudMachineIdentity, error)
 }
 

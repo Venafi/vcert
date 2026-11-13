@@ -22,8 +22,3 @@ type WorkflowResponse struct {
 	CorrelationID   string               `json:"correlationid"`
 	Stream          string               `json:"stream"`
 }
-
-type WorkflowResult struct {
-	WorkflowID   string
-	WorkflowName string
-}

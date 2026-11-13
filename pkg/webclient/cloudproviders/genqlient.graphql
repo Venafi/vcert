@@ -158,18 +158,6 @@ mutation ValidateCloudProvider($cloudProviderId: UUID!) {
     }
 }
 
-fragment CloudDiscoveryFields on CloudDiscovery {
-    id
-    status
-    statusDetails
-    totalCertificatesCount
-    newCertificatesCount
-    updatedCertificatesCount
-    missingCertificatesCount
-    startTime
-    endTime
-}
-
 fragment CloudKeystoreFields on CloudKeystore {
     id
     name
@@ -196,9 +184,6 @@ fragment CloudKeystoreFields on CloudKeystore {
         scheduleSpecification
         includeExpiredCertificates
         includeRevokedCertificates
-    }
-    discovery {
-        ...CloudDiscoveryFields
     }
 }
 
@@ -248,19 +233,8 @@ mutation DeleteCloudKeystores($cloudKeystoreIds: [UUID!]!) {
     deleteCloudKeystore(cloudKeystoreIds: $cloudKeystoreIds)
 }
 
-mutation StartCloudDiscovery($cloudKeystoreId: UUID!, $wsClientId: UUID!) {
-    startCloudDiscovery(cloudKeystoreId: $cloudKeystoreId, wsClientId: $wsClientId) {
-        workflowId
-        workflowName
-    }
-}
-
-mutation AbortCloudDiscovery($cloudKeystoreId: UUID!) {
-    abortCloudDiscovery(cloudKeystoreId: $cloudKeystoreId)
-}
-
-query ListMachineIdentities($cloudKeystoreId: UUID, $newlyDiscovered: Boolean, $after: String) {
-    cloudMachineIdentities(filter: {cloudKeystoreId: $cloudKeystoreId, newlyDiscovered: $newlyDiscovered}, after: $after) {
+query ListMachineIdentities($cloudKeystoreId: UUID, $after: String) {
+    cloudMachineIdentities(filter: {cloudKeystoreId: $cloudKeystoreId}, after: $after) {
         nodes {
             id
             cloudKeystoreId

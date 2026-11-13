@@ -22,26 +22,25 @@ func TestCloudManagementRequiresAuthentication(t *testing.T) {
 	}
 }
 
-func TestStartCloudDiscoveryUsesTheGraphQLClient(t *testing.T) {
+func TestListMachineIdentitiesUsesTheGraphQLClient(t *testing.T) {
 	var body string
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		b, _ := io.ReadAll(r.Body)
 		body = string(b)
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"data":{"startCloudDiscovery":{"workflowId":"w1","workflowName":"discovery"}}}`))
+		_, _ = w.Write([]byte(`{"data":{"cloudMachineIdentities":{"nodes":[{"id":"m1","cloudKeystoreId":"k1","status":"INSTALLED","certificateId":"c1"}],"pageInfo":{"hasNextPage":false}}}}`))
 	}))
 	defer server.Close()
 
 	c := &Connector{cloudProvidersClient: cloudproviders.NewCloudProvidersClient(server.URL, server.Client())}
-	result, err := c.StartCloudDiscovery("k1")
+	identities, err := c.ListMachineIdentities(domain.ListCloudMachineIdentitiesRequest{KeystoreID: "k1"})
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
-	if result.WorkflowID != "w1" {
-		t.Fatalf("expected workflow w1, got %s", result.WorkflowID)
+	if len(identities) != 1 || identities[0].ID != "m1" || identities[0].Status != domain.MachineIdentityStatusInstalled {
+		t.Fatalf("unexpected machine identities: %+v", identities)
 	}
-	// a websocket client ID must be generated, since the API requires one
-	if !strings.Contains(body, `"cloudKeystoreId":"k1"`) || !strings.Contains(body, `"wsClientId":"`) {
+	if !strings.Contains(body, `"cloudKeystoreId":"k1"`) {
 		t.Fatalf("unexpected request body: %s", body)
 	}
 }

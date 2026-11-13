@@ -21,7 +21,6 @@ import (
 	"os"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/urfave/cli/v2"
 
@@ -305,12 +304,6 @@ func (f *fakeCloudManager) UpdateCloudKeystore(domain.UpdateCloudKeystoreRequest
 
 func (f *fakeCloudManager) DeleteCloudKeystore(string) error { return nil }
 
-func (f *fakeCloudManager) StartCloudDiscovery(string) (*domain.WorkflowResult, error) {
-	return nil, nil
-}
-
-func (f *fakeCloudManager) AbortCloudDiscovery(string) error { return nil }
-
 func (f *fakeCloudManager) ListMachineIdentities(domain.ListCloudMachineIdentitiesRequest) ([]domain.CloudMachineIdentity, error) {
 	return nil, nil
 }
@@ -356,75 +349,6 @@ func TestResolveCloudKeystoreRejectsAmbiguousName(t *testing.T) {
 	_, err := resolveCloudKeystore(manager)
 	if err == nil || !strings.Contains(err.Error(), "found 2 cloud keystores") {
 		t.Fatalf("expected an ambiguity error, got %v", err)
-	}
-}
-
-func TestIsNewDiscovery(t *testing.T) {
-	isolateFromVCertEnvironment(t)
-	earlier := time.Date(2026, 11, 1, 3, 0, 0, 0, time.UTC)
-	later := earlier.Add(24 * time.Hour)
-
-	tests := []struct {
-		name     string
-		previous *domain.CloudDiscovery
-		current  domain.CloudDiscovery
-		expected bool
-	}{
-		{"no previous discovery", nil, domain.CloudDiscovery{ID: "d1"}, true},
-		{"never initiated before", &domain.CloudDiscovery{ID: "d1", Status: domain.CloudDiscoveryStatusNeverInitiated}, domain.CloudDiscovery{ID: "d1"}, true},
-		{"different ID", &domain.CloudDiscovery{ID: "d1", StartTime: &earlier}, domain.CloudDiscovery{ID: "d2", StartTime: &earlier}, true},
-		{"same ID started later", &domain.CloudDiscovery{ID: "d1", StartTime: &earlier}, domain.CloudDiscovery{ID: "d1", StartTime: &later}, true},
-		{"same run", &domain.CloudDiscovery{ID: "d1", StartTime: &earlier}, domain.CloudDiscovery{ID: "d1", StartTime: &earlier}, false},
-	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			if got := isNewDiscovery(tc.previous, &tc.current); got != tc.expected {
-				t.Fatalf("expected %t, got %t", tc.expected, got)
-			}
-		})
-	}
-}
-
-func TestWaitForCloudDiscoverySkipsThePreviousRun(t *testing.T) {
-	isolateFromVCertEnvironment(t)
-	defer func(interval time.Duration) { discoveryPollInterval = interval }(discoveryPollInterval)
-	discoveryPollInterval = time.Millisecond
-
-	earlier := time.Date(2026, 11, 1, 3, 0, 0, 0, time.UTC)
-	later := earlier.Add(24 * time.Hour)
-	previous := &domain.CloudDiscovery{ID: "d1", Status: domain.CloudDiscoveryStatusCompleted, StartTime: &earlier}
-
-	manager := &fakeCloudManager{keystoreResponses: [][]domain.CloudKeystore{
-		// the API has not picked up the new discovery yet
-		{{ID: "k1", Discovery: previous}},
-		{{ID: "k1", Discovery: &domain.CloudDiscovery{ID: "d1", Status: domain.CloudDiscoveryStatusRunning, StartTime: &later}}},
-		{{ID: "k1", Discovery: &domain.CloudDiscovery{ID: "d1", Status: domain.CloudDiscoveryStatusCompleted, StartTime: &later, NewCertificatesCount: 4}}},
-	}}
-
-	keystore, err := waitForCloudDiscovery(manager, "k1", previous, time.Minute)
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
-	if keystore.Discovery.NewCertificatesCount != 4 {
-		t.Fatalf("expected the new discovery's results, got %+v", keystore.Discovery)
-	}
-	if manager.keystoreCalls != 3 {
-		t.Fatalf("expected 3 polls, got %d", manager.keystoreCalls)
-	}
-}
-
-func TestWaitForCloudDiscoveryTimesOut(t *testing.T) {
-	isolateFromVCertEnvironment(t)
-	defer func(interval time.Duration) { discoveryPollInterval = interval }(discoveryPollInterval)
-	discoveryPollInterval = time.Millisecond
-
-	manager := &fakeCloudManager{keystoreResponses: [][]domain.CloudKeystore{
-		{{ID: "k1", Discovery: &domain.CloudDiscovery{ID: "d1", Status: domain.CloudDiscoveryStatusRunning}}},
-	}}
-
-	_, err := waitForCloudDiscovery(manager, "k1", nil, 20*time.Millisecond)
-	if err == nil || !strings.Contains(err.Error(), "timed out") {
-		t.Fatalf("expected a timeout error, got %v", err)
 	}
 }
 

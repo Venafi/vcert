@@ -22,7 +22,6 @@ import (
 	"os"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/urfave/cli/v2"
 
@@ -339,67 +338,21 @@ func (o deletedOutput) text() string {
 	return fmt.Sprintf("id: %s\nname: %s\ndeleted: %t\n", o.ID, o.Name, o.Deleted)
 }
 
-type cloudDiscoveryOutput struct {
-	Status                   string     `json:"status"`
-	StatusDetails            string     `json:"statusDetails,omitempty"`
-	TotalCertificatesCount   int        `json:"totalCertificatesCount"`
-	NewCertificatesCount     int        `json:"newCertificatesCount"`
-	UpdatedCertificatesCount int        `json:"updatedCertificatesCount"`
-	MissingCertificatesCount int        `json:"missingCertificatesCount"`
-	StartTime                *time.Time `json:"startTime,omitempty"`
-	EndTime                  *time.Time `json:"endTime,omitempty"`
-}
-
-func newCloudDiscoveryOutput(d *domain.CloudDiscovery) *cloudDiscoveryOutput {
-	if d == nil {
-		return nil
-	}
-	return &cloudDiscoveryOutput{
-		Status:                   d.Status.String(),
-		StatusDetails:            d.StatusDetails,
-		TotalCertificatesCount:   d.TotalCertificatesCount,
-		NewCertificatesCount:     d.NewCertificatesCount,
-		UpdatedCertificatesCount: d.UpdatedCertificatesCount,
-		MissingCertificatesCount: d.MissingCertificatesCount,
-		StartTime:                d.StartTime,
-		EndTime:                  d.EndTime,
-	}
-}
-
-func (o *cloudDiscoveryOutput) text(prefix string) string {
-	s := fmt.Sprintf("%sstatus: %s\n", prefix, o.Status)
-	if o.StatusDetails != "" {
-		s += fmt.Sprintf("%sstatusDetails: %s\n", prefix, o.StatusDetails)
-	}
-	s += fmt.Sprintf("%stotalCertificatesCount: %d\n", prefix, o.TotalCertificatesCount)
-	s += fmt.Sprintf("%snewCertificatesCount: %d\n", prefix, o.NewCertificatesCount)
-	s += fmt.Sprintf("%supdatedCertificatesCount: %d\n", prefix, o.UpdatedCertificatesCount)
-	s += fmt.Sprintf("%smissingCertificatesCount: %d\n", prefix, o.MissingCertificatesCount)
-	if o.StartTime != nil {
-		s += fmt.Sprintf("%sstartTime: %s\n", prefix, o.StartTime.Format(time.RFC3339))
-	}
-	if o.EndTime != nil {
-		s += fmt.Sprintf("%sendTime: %s\n", prefix, o.EndTime.Format(time.RFC3339))
-	}
-	return s
-}
-
 type cloudKeystoreOutput struct {
-	ID                         string                `json:"id"`
-	Name                       string                `json:"name"`
-	Type                       string                `json:"type"`
-	CloudProviderID            string                `json:"cloudProviderId,omitempty"`
-	CloudProviderName          string                `json:"cloudProviderName,omitempty"`
-	MachineIdentitiesCount     int                   `json:"machineIdentitiesCount"`
-	AWSRegion                  string                `json:"awsRegion,omitempty"`
-	AWSAccountID               string                `json:"awsAccountId,omitempty"`
-	AzureKeyVaultName          string                `json:"azureKeyVaultName,omitempty"`
-	GCPProjectID               string                `json:"gcpProjectId,omitempty"`
-	GCPLocation                string                `json:"gcpLocation,omitempty"`
-	DiscoverySchedule          string                `json:"discoverySchedule,omitempty"`
-	IncludeExpiredCertificates *bool                 `json:"includeExpiredCertificates,omitempty"`
-	IncludeRevokedCertificates *bool                 `json:"includeRevokedCertificates,omitempty"`
-	Discovery                  *cloudDiscoveryOutput `json:"discovery,omitempty"`
+	ID                         string `json:"id"`
+	Name                       string `json:"name"`
+	Type                       string `json:"type"`
+	CloudProviderID            string `json:"cloudProviderId,omitempty"`
+	CloudProviderName          string `json:"cloudProviderName,omitempty"`
+	MachineIdentitiesCount     int    `json:"machineIdentitiesCount"`
+	AWSRegion                  string `json:"awsRegion,omitempty"`
+	AWSAccountID               string `json:"awsAccountId,omitempty"`
+	AzureKeyVaultName          string `json:"azureKeyVaultName,omitempty"`
+	GCPProjectID               string `json:"gcpProjectId,omitempty"`
+	GCPLocation                string `json:"gcpLocation,omitempty"`
+	DiscoverySchedule          string `json:"discoverySchedule,omitempty"`
+	IncludeExpiredCertificates *bool  `json:"includeExpiredCertificates,omitempty"`
+	IncludeRevokedCertificates *bool  `json:"includeRevokedCertificates,omitempty"`
 }
 
 func newCloudKeystoreOutput(k domain.CloudKeystore) cloudKeystoreOutput {
@@ -410,7 +363,6 @@ func newCloudKeystoreOutput(k domain.CloudKeystore) cloudKeystoreOutput {
 		CloudProviderID:        k.CloudProviderID,
 		CloudProviderName:      k.CloudProviderName,
 		MachineIdentitiesCount: k.MachineIdentitiesCount,
-		Discovery:              newCloudDiscoveryOutput(k.Discovery),
 	}
 	if k.ACM != nil {
 		o.AWSRegion = k.ACM.Region
@@ -455,9 +407,6 @@ func (o cloudKeystoreOutput) text() string {
 	if o.IncludeRevokedCertificates != nil {
 		s += fmt.Sprintf("includeRevokedCertificates: %t\n", *o.IncludeRevokedCertificates)
 	}
-	if o.Discovery != nil {
-		s += "discovery:\n" + o.Discovery.text("  ")
-	}
 	return s
 }
 
@@ -469,27 +418,6 @@ func (o cloudKeystoreListOutput) text() string {
 		items = append(items, k.text())
 	}
 	return strings.Join(items, "\n")
-}
-
-type discoveryStartedOutput struct {
-	KeystoreID   string `json:"keystoreId"`
-	KeystoreName string `json:"keystoreName"`
-	WorkflowID   string `json:"workflowId"`
-	WorkflowName string `json:"workflowName"`
-}
-
-func (o discoveryStartedOutput) text() string {
-	return fmt.Sprintf("keystoreId: %s\nkeystoreName: %s\nworkflowId: %s\nworkflowName: %s\n", o.KeystoreID, o.KeystoreName, o.WorkflowID, o.WorkflowName)
-}
-
-type discoveryAbortedOutput struct {
-	KeystoreID   string `json:"keystoreId"`
-	KeystoreName string `json:"keystoreName"`
-	Aborted      bool   `json:"aborted"`
-}
-
-func (o discoveryAbortedOutput) text() string {
-	return fmt.Sprintf("keystoreId: %s\nkeystoreName: %s\naborted: %t\n", o.KeystoreID, o.KeystoreName, o.Aborted)
 }
 
 type machineIdentityOutput struct {

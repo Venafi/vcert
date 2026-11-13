@@ -2,7 +2,6 @@ package domain
 
 import (
 	"strings"
-	"time"
 )
 
 type CloudProviderStatus int
@@ -132,7 +131,6 @@ type CloudKeystore struct {
 	AKV                    *CloudKeystoreAKVConfiguration
 	GCM                    *CloudKeystoreGCMConfiguration
 	DiscoveryConfiguration *CloudDiscoveryConfiguration
-	Discovery              *CloudDiscovery
 }
 
 type ProvisioningResponse struct {
@@ -419,73 +417,6 @@ type CloudDiscoveryOptions struct {
 	IncludeRevokedCertificates *bool
 }
 
-type CloudDiscoveryStatus int
-
-const (
-	CloudDiscoveryStatusUnknown CloudDiscoveryStatus = iota
-	CloudDiscoveryStatusNeverInitiated
-	CloudDiscoveryStatusInitiated
-	CloudDiscoveryStatusRunning
-	CloudDiscoveryStatusCompleted
-	CloudDiscoveryStatusAborting
-	CloudDiscoveryStatusAborted
-	CloudDiscoveryStatusFailed
-
-	CloudDiscoveryStatusUnknownStr        = "UNKNOWN"
-	CloudDiscoveryStatusNeverInitiatedStr = "NEVER_INITIATED"
-	CloudDiscoveryStatusInitiatedStr      = "INITIATED"
-	CloudDiscoveryStatusRunningStr        = "RUNNING"
-	CloudDiscoveryStatusCompletedStr      = "COMPLETED"
-	CloudDiscoveryStatusAbortingStr       = "ABORTING"
-	CloudDiscoveryStatusAbortedStr        = "ABORTED"
-	CloudDiscoveryStatusFailedStr         = "FAILED"
-)
-
-func (cds CloudDiscoveryStatus) String() string {
-	switch cds {
-	case CloudDiscoveryStatusNeverInitiated:
-		return CloudDiscoveryStatusNeverInitiatedStr
-	case CloudDiscoveryStatusInitiated:
-		return CloudDiscoveryStatusInitiatedStr
-	case CloudDiscoveryStatusRunning:
-		return CloudDiscoveryStatusRunningStr
-	case CloudDiscoveryStatusCompleted:
-		return CloudDiscoveryStatusCompletedStr
-	case CloudDiscoveryStatusAborting:
-		return CloudDiscoveryStatusAbortingStr
-	case CloudDiscoveryStatusAborted:
-		return CloudDiscoveryStatusAbortedStr
-	case CloudDiscoveryStatusFailed:
-		return CloudDiscoveryStatusFailedStr
-	case CloudDiscoveryStatusUnknown:
-		fallthrough
-	default:
-		return CloudDiscoveryStatusUnknownStr
-	}
-}
-
-// IsFinished reports whether a discovery in this status is no longer running
-func (cds CloudDiscoveryStatus) IsFinished() bool {
-	switch cds {
-	case CloudDiscoveryStatusCompleted, CloudDiscoveryStatusAborted, CloudDiscoveryStatusFailed:
-		return true
-	default:
-		return false
-	}
-}
-
-type CloudDiscovery struct {
-	ID                       string
-	Status                   CloudDiscoveryStatus
-	StatusDetails            string
-	TotalCertificatesCount   int
-	NewCertificatesCount     int
-	UpdatedCertificatesCount int
-	MissingCertificatesCount int
-	StartTime                *time.Time
-	EndTime                  *time.Time
-}
-
 // CreateCloudKeystoreRequest holds the data for a new cloud keystore. Exactly one
 // of ACM, AKV or GCM must be set and it must match Type.
 type CreateCloudKeystoreRequest struct {
@@ -509,6 +440,5 @@ type UpdateCloudKeystoreRequest struct {
 }
 
 type ListCloudMachineIdentitiesRequest struct {
-	KeystoreID      string
-	NewlyDiscovered *bool
+	KeystoreID string
 }

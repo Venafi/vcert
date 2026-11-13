@@ -48,8 +48,6 @@ const (
 	subCommandUpdateName            = "update"
 	subCommandDeleteName            = "delete"
 	subCommandValidateName          = "validate"
-	subCommandDiscoverName          = "discover"
-	subCommandAbortDiscoveryName    = "abort-discovery"
 	subCommandMachineIdentitiesName = "machine-identities"
 )
 
@@ -200,7 +198,4 @@ type commandFlags struct {
 	discoverySchedule                 string
 	includeExpired                    bool
 	includeRevoked                    bool
-	discoveryWait                     bool
-	discoveryTimeout                  int
-	newlyDiscovered                   bool
 }

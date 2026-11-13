@@ -6,19 +6,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/Khan/genqlient/graphql"
 )
-
-// AbortCloudDiscoveryResponse is returned by AbortCloudDiscovery on success.
-type AbortCloudDiscoveryResponse struct {
-	// Abort cloud discovery
-	AbortCloudDiscovery bool `json:"abortCloudDiscovery"`
-}
-
-// GetAbortCloudDiscovery returns AbortCloudDiscoveryResponse.AbortCloudDiscovery, and is useful for accessing the field via an interface.
-func (v *AbortCloudDiscoveryResponse) GetAbortCloudDiscovery() bool { return v.AbortCloudDiscovery }
 
 // Indicates the type of authentication used to communicate with Cloud Providers
 type AuthorizationMethod string
@@ -154,76 +144,6 @@ func (v *CloudDiscoveryConfigurationInput) GetIncludeRevokedCertificates() *bool
 	return v.IncludeRevokedCertificates
 }
 
-// CloudDiscoveryFields includes the GraphQL fields of CloudDiscovery requested by the fragment CloudDiscoveryFields.
-type CloudDiscoveryFields struct {
-	Id                       string               `json:"id"`
-	Status                   CloudDiscoveryStatus `json:"status"`
-	StatusDetails            *string              `json:"statusDetails"`
-	TotalCertificatesCount   int                  `json:"totalCertificatesCount"`
-	NewCertificatesCount     int                  `json:"newCertificatesCount"`
-	UpdatedCertificatesCount int                  `json:"updatedCertificatesCount"`
-	MissingCertificatesCount int                  `json:"missingCertificatesCount"`
-	StartTime                *time.Time           `json:"startTime"`
-	EndTime                  *time.Time           `json:"endTime"`
-}
-
-// GetId returns CloudDiscoveryFields.Id, and is useful for accessing the field via an interface.
-func (v *CloudDiscoveryFields) GetId() string { return v.Id }
-
-// GetStatus returns CloudDiscoveryFields.Status, and is useful for accessing the field via an interface.
-func (v *CloudDiscoveryFields) GetStatus() CloudDiscoveryStatus { return v.Status }
-
-// GetStatusDetails returns CloudDiscoveryFields.StatusDetails, and is useful for accessing the field via an interface.
-func (v *CloudDiscoveryFields) GetStatusDetails() *string { return v.StatusDetails }
-
-// GetTotalCertificatesCount returns CloudDiscoveryFields.TotalCertificatesCount, and is useful for accessing the field via an interface.
-func (v *CloudDiscoveryFields) GetTotalCertificatesCount() int { return v.TotalCertificatesCount }
-
-// GetNewCertificatesCount returns CloudDiscoveryFields.NewCertificatesCount, and is useful for accessing the field via an interface.
-func (v *CloudDiscoveryFields) GetNewCertificatesCount() int { return v.NewCertificatesCount }
-
-// GetUpdatedCertificatesCount returns CloudDiscoveryFields.UpdatedCertificatesCount, and is useful for accessing the field via an interface.
-func (v *CloudDiscoveryFields) GetUpdatedCertificatesCount() int { return v.UpdatedCertificatesCount }
-
-// GetMissingCertificatesCount returns CloudDiscoveryFields.MissingCertificatesCount, and is useful for accessing the field via an interface.
-func (v *CloudDiscoveryFields) GetMissingCertificatesCount() int { return v.MissingCertificatesCount }
-
-// GetStartTime returns CloudDiscoveryFields.StartTime, and is useful for accessing the field via an interface.
-func (v *CloudDiscoveryFields) GetStartTime() *time.Time { return v.StartTime }
-
-// GetEndTime returns CloudDiscoveryFields.EndTime, and is useful for accessing the field via an interface.
-func (v *CloudDiscoveryFields) GetEndTime() *time.Time { return v.EndTime }
-
-// Indicates the status of a cloud discovery
-type CloudDiscoveryStatus string
-
-const (
-	// The cloud discovery has not been initiated
-	CloudDiscoveryStatusNeverInitiated CloudDiscoveryStatus = "NEVER_INITIATED"
-	// The cloud discovery has been initiated
-	CloudDiscoveryStatusInitiated CloudDiscoveryStatus = "INITIATED"
-	// The cloud discovery is running
-	CloudDiscoveryStatusRunning CloudDiscoveryStatus = "RUNNING"
-	// The cloud discovery has been successfully completed
-	CloudDiscoveryStatusCompleted CloudDiscoveryStatus = "COMPLETED"
-	// The cloud discovery has been aborted
-	CloudDiscoveryStatusAborted CloudDiscoveryStatus = "ABORTED"
-	// The cloud discovery is aborting
-	CloudDiscoveryStatusAborting CloudDiscoveryStatus = "ABORTING"
-	// The cloud discovery has failed
-	CloudDiscoveryStatusFailed CloudDiscoveryStatus = "FAILED"
-)
-
-var AllCloudDiscoveryStatus = []CloudDiscoveryStatus{
-	CloudDiscoveryStatusNeverInitiated,
-	CloudDiscoveryStatusInitiated,
-	CloudDiscoveryStatusRunning,
-	CloudDiscoveryStatusCompleted,
-	CloudDiscoveryStatusAborted,
-	CloudDiscoveryStatusAborting,
-	CloudDiscoveryStatusFailed,
-}
-
 type CloudKeystoreACMConfigurationInput struct {
 	Region    string  `json:"region"`
 	AccountId *string `json:"accountId"`
@@ -265,7 +185,6 @@ type CloudKeystoreFields struct {
 	CloudProvider          *CloudKeystoreFieldsCloudProvider                                     `json:"cloudProvider"`
 	Configuration          CloudKeystoreFieldsConfigurationCloudKeystoreConfiguration            `json:"-"`
 	DiscoveryConfiguration *CloudKeystoreFieldsDiscoveryConfigurationCloudDiscoveryConfiguration `json:"discoveryConfiguration"`
-	Discovery              *CloudKeystoreFieldsDiscoveryCloudDiscovery                           `json:"discovery"`
 }
 
 // GetId returns CloudKeystoreFields.Id, and is useful for accessing the field via an interface.
@@ -293,11 +212,6 @@ func (v *CloudKeystoreFields) GetConfiguration() CloudKeystoreFieldsConfiguratio
 // GetDiscoveryConfiguration returns CloudKeystoreFields.DiscoveryConfiguration, and is useful for accessing the field via an interface.
 func (v *CloudKeystoreFields) GetDiscoveryConfiguration() *CloudKeystoreFieldsDiscoveryConfigurationCloudDiscoveryConfiguration {
 	return v.DiscoveryConfiguration
-}
-
-// GetDiscovery returns CloudKeystoreFields.Discovery, and is useful for accessing the field via an interface.
-func (v *CloudKeystoreFields) GetDiscovery() *CloudKeystoreFieldsDiscoveryCloudDiscovery {
-	return v.Discovery
 }
 
 func (v *CloudKeystoreFields) UnmarshalJSON(b []byte) error {
@@ -347,8 +261,6 @@ type __premarshalCloudKeystoreFields struct {
 	Configuration json.RawMessage `json:"configuration"`
 
 	DiscoveryConfiguration *CloudKeystoreFieldsDiscoveryConfigurationCloudDiscoveryConfiguration `json:"discoveryConfiguration"`
-
-	Discovery *CloudKeystoreFieldsDiscoveryCloudDiscovery `json:"discovery"`
 }
 
 func (v *CloudKeystoreFields) MarshalJSON() ([]byte, error) {
@@ -380,7 +292,6 @@ func (v *CloudKeystoreFields) __premarshalJSON() (*__premarshalCloudKeystoreFiel
 		}
 	}
 	retval.DiscoveryConfiguration = v.DiscoveryConfiguration
-	retval.Discovery = v.Discovery
 	return &retval, nil
 }
 
@@ -569,122 +480,6 @@ func (v *CloudKeystoreFieldsConfigurationCloudKeystoreGCMConfiguration) GetProje
 // GetLocation returns CloudKeystoreFieldsConfigurationCloudKeystoreGCMConfiguration.Location, and is useful for accessing the field via an interface.
 func (v *CloudKeystoreFieldsConfigurationCloudKeystoreGCMConfiguration) GetLocation() string {
 	return v.Location
-}
-
-// CloudKeystoreFieldsDiscoveryCloudDiscovery includes the requested fields of the GraphQL type CloudDiscovery.
-type CloudKeystoreFieldsDiscoveryCloudDiscovery struct {
-	CloudDiscoveryFields `json:"-"`
-}
-
-// GetId returns CloudKeystoreFieldsDiscoveryCloudDiscovery.Id, and is useful for accessing the field via an interface.
-func (v *CloudKeystoreFieldsDiscoveryCloudDiscovery) GetId() string { return v.CloudDiscoveryFields.Id }
-
-// GetStatus returns CloudKeystoreFieldsDiscoveryCloudDiscovery.Status, and is useful for accessing the field via an interface.
-func (v *CloudKeystoreFieldsDiscoveryCloudDiscovery) GetStatus() CloudDiscoveryStatus {
-	return v.CloudDiscoveryFields.Status
-}
-
-// GetStatusDetails returns CloudKeystoreFieldsDiscoveryCloudDiscovery.StatusDetails, and is useful for accessing the field via an interface.
-func (v *CloudKeystoreFieldsDiscoveryCloudDiscovery) GetStatusDetails() *string {
-	return v.CloudDiscoveryFields.StatusDetails
-}
-
-// GetTotalCertificatesCount returns CloudKeystoreFieldsDiscoveryCloudDiscovery.TotalCertificatesCount, and is useful for accessing the field via an interface.
-func (v *CloudKeystoreFieldsDiscoveryCloudDiscovery) GetTotalCertificatesCount() int {
-	return v.CloudDiscoveryFields.TotalCertificatesCount
-}
-
-// GetNewCertificatesCount returns CloudKeystoreFieldsDiscoveryCloudDiscovery.NewCertificatesCount, and is useful for accessing the field via an interface.
-func (v *CloudKeystoreFieldsDiscoveryCloudDiscovery) GetNewCertificatesCount() int {
-	return v.CloudDiscoveryFields.NewCertificatesCount
-}
-
-// GetUpdatedCertificatesCount returns CloudKeystoreFieldsDiscoveryCloudDiscovery.UpdatedCertificatesCount, and is useful for accessing the field via an interface.
-func (v *CloudKeystoreFieldsDiscoveryCloudDiscovery) GetUpdatedCertificatesCount() int {
-	return v.CloudDiscoveryFields.UpdatedCertificatesCount
-}
-
-// GetMissingCertificatesCount returns CloudKeystoreFieldsDiscoveryCloudDiscovery.MissingCertificatesCount, and is useful for accessing the field via an interface.
-func (v *CloudKeystoreFieldsDiscoveryCloudDiscovery) GetMissingCertificatesCount() int {
-	return v.CloudDiscoveryFields.MissingCertificatesCount
-}
-
-// GetStartTime returns CloudKeystoreFieldsDiscoveryCloudDiscovery.StartTime, and is useful for accessing the field via an interface.
-func (v *CloudKeystoreFieldsDiscoveryCloudDiscovery) GetStartTime() *time.Time {
-	return v.CloudDiscoveryFields.StartTime
-}
-
-// GetEndTime returns CloudKeystoreFieldsDiscoveryCloudDiscovery.EndTime, and is useful for accessing the field via an interface.
-func (v *CloudKeystoreFieldsDiscoveryCloudDiscovery) GetEndTime() *time.Time {
-	return v.CloudDiscoveryFields.EndTime
-}
-
-func (v *CloudKeystoreFieldsDiscoveryCloudDiscovery) UnmarshalJSON(b []byte) error {
-
-	if string(b) == "null" {
-		return nil
-	}
-
-	var firstPass struct {
-		*CloudKeystoreFieldsDiscoveryCloudDiscovery
-		graphql.NoUnmarshalJSON
-	}
-	firstPass.CloudKeystoreFieldsDiscoveryCloudDiscovery = v
-
-	err := json.Unmarshal(b, &firstPass)
-	if err != nil {
-		return err
-	}
-
-	err = json.Unmarshal(
-		b, &v.CloudDiscoveryFields)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-type __premarshalCloudKeystoreFieldsDiscoveryCloudDiscovery struct {
-	Id string `json:"id"`
-
-	Status CloudDiscoveryStatus `json:"status"`
-
-	StatusDetails *string `json:"statusDetails"`
-
-	TotalCertificatesCount int `json:"totalCertificatesCount"`
-
-	NewCertificatesCount int `json:"newCertificatesCount"`
-
-	UpdatedCertificatesCount int `json:"updatedCertificatesCount"`
-
-	MissingCertificatesCount int `json:"missingCertificatesCount"`
-
-	StartTime *time.Time `json:"startTime"`
-
-	EndTime *time.Time `json:"endTime"`
-}
-
-func (v *CloudKeystoreFieldsDiscoveryCloudDiscovery) MarshalJSON() ([]byte, error) {
-	premarshaled, err := v.__premarshalJSON()
-	if err != nil {
-		return nil, err
-	}
-	return json.Marshal(premarshaled)
-}
-
-func (v *CloudKeystoreFieldsDiscoveryCloudDiscovery) __premarshalJSON() (*__premarshalCloudKeystoreFieldsDiscoveryCloudDiscovery, error) {
-	var retval __premarshalCloudKeystoreFieldsDiscoveryCloudDiscovery
-
-	retval.Id = v.CloudDiscoveryFields.Id
-	retval.Status = v.CloudDiscoveryFields.Status
-	retval.StatusDetails = v.CloudDiscoveryFields.StatusDetails
-	retval.TotalCertificatesCount = v.CloudDiscoveryFields.TotalCertificatesCount
-	retval.NewCertificatesCount = v.CloudDiscoveryFields.NewCertificatesCount
-	retval.UpdatedCertificatesCount = v.CloudDiscoveryFields.UpdatedCertificatesCount
-	retval.MissingCertificatesCount = v.CloudDiscoveryFields.MissingCertificatesCount
-	retval.StartTime = v.CloudDiscoveryFields.StartTime
-	retval.EndTime = v.CloudDiscoveryFields.EndTime
-	return &retval, nil
 }
 
 // CloudKeystoreFieldsDiscoveryConfigurationCloudDiscoveryConfiguration includes the requested fields of the GraphQL type CloudDiscoveryConfiguration.
@@ -1562,11 +1357,6 @@ func (v *CreateCloudKeystoreCreateCloudKeystore) GetDiscoveryConfiguration() *Cl
 	return v.CloudKeystoreFields.DiscoveryConfiguration
 }
 
-// GetDiscovery returns CreateCloudKeystoreCreateCloudKeystore.Discovery, and is useful for accessing the field via an interface.
-func (v *CreateCloudKeystoreCreateCloudKeystore) GetDiscovery() *CloudKeystoreFieldsDiscoveryCloudDiscovery {
-	return v.CloudKeystoreFields.Discovery
-}
-
 func (v *CreateCloudKeystoreCreateCloudKeystore) UnmarshalJSON(b []byte) error {
 
 	if string(b) == "null" {
@@ -1606,8 +1396,6 @@ type __premarshalCreateCloudKeystoreCreateCloudKeystore struct {
 	Configuration json.RawMessage `json:"configuration"`
 
 	DiscoveryConfiguration *CloudKeystoreFieldsDiscoveryConfigurationCloudDiscoveryConfiguration `json:"discoveryConfiguration"`
-
-	Discovery *CloudKeystoreFieldsDiscoveryCloudDiscovery `json:"discovery"`
 }
 
 func (v *CreateCloudKeystoreCreateCloudKeystore) MarshalJSON() ([]byte, error) {
@@ -1639,7 +1427,6 @@ func (v *CreateCloudKeystoreCreateCloudKeystore) __premarshalJSON() (*__premarsh
 		}
 	}
 	retval.DiscoveryConfiguration = v.CloudKeystoreFields.DiscoveryConfiguration
-	retval.Discovery = v.CloudKeystoreFields.Discovery
 	return &retval, nil
 }
 
@@ -2394,11 +2181,6 @@ func (v *ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeysto
 	return v.CloudKeystoreFields.DiscoveryConfiguration
 }
 
-// GetDiscovery returns ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore.Discovery, and is useful for accessing the field via an interface.
-func (v *ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore) GetDiscovery() *CloudKeystoreFieldsDiscoveryCloudDiscovery {
-	return v.CloudKeystoreFields.Discovery
-}
-
 func (v *ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore) UnmarshalJSON(b []byte) error {
 
 	if string(b) == "null" {
@@ -2438,8 +2220,6 @@ type __premarshalListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesClo
 	Configuration json.RawMessage `json:"configuration"`
 
 	DiscoveryConfiguration *CloudKeystoreFieldsDiscoveryConfigurationCloudDiscoveryConfiguration `json:"discoveryConfiguration"`
-
-	Discovery *CloudKeystoreFieldsDiscoveryCloudDiscovery `json:"discovery"`
 }
 
 func (v *ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeystore) MarshalJSON() ([]byte, error) {
@@ -2471,7 +2251,6 @@ func (v *ListCloudKeystoresCloudKeystoresCloudKeystoreConnectionNodesCloudKeysto
 		}
 	}
 	retval.DiscoveryConfiguration = v.CloudKeystoreFields.DiscoveryConfiguration
-	retval.Discovery = v.CloudKeystoreFields.Discovery
 	return &retval, nil
 }
 
@@ -3166,33 +2945,6 @@ func (v *ProvisionCertificateToMachineIdentityResponse) GetProvisionToCloudMachi
 	return v.ProvisionToCloudMachineIdentity
 }
 
-// StartCloudDiscoveryResponse is returned by StartCloudDiscovery on success.
-type StartCloudDiscoveryResponse struct {
-	// Start cloud discovery
-	StartCloudDiscovery *StartCloudDiscoveryStartCloudDiscoveryWorkflowResult `json:"startCloudDiscovery"`
-}
-
-// GetStartCloudDiscovery returns StartCloudDiscoveryResponse.StartCloudDiscovery, and is useful for accessing the field via an interface.
-func (v *StartCloudDiscoveryResponse) GetStartCloudDiscovery() *StartCloudDiscoveryStartCloudDiscoveryWorkflowResult {
-	return v.StartCloudDiscovery
-}
-
-// StartCloudDiscoveryStartCloudDiscoveryWorkflowResult includes the requested fields of the GraphQL type WorkflowResult.
-type StartCloudDiscoveryStartCloudDiscoveryWorkflowResult struct {
-	WorkflowId   string `json:"workflowId"`
-	WorkflowName string `json:"workflowName"`
-}
-
-// GetWorkflowId returns StartCloudDiscoveryStartCloudDiscoveryWorkflowResult.WorkflowId, and is useful for accessing the field via an interface.
-func (v *StartCloudDiscoveryStartCloudDiscoveryWorkflowResult) GetWorkflowId() string {
-	return v.WorkflowId
-}
-
-// GetWorkflowName returns StartCloudDiscoveryStartCloudDiscoveryWorkflowResult.WorkflowName, and is useful for accessing the field via an interface.
-func (v *StartCloudDiscoveryStartCloudDiscoveryWorkflowResult) GetWorkflowName() string {
-	return v.WorkflowName
-}
-
 // UpdateCloudKeystoreResponse is returned by UpdateCloudKeystore on success.
 type UpdateCloudKeystoreResponse struct {
 	// Updates a Cloud Keystore
@@ -3240,11 +2992,6 @@ func (v *UpdateCloudKeystoreUpdateCloudKeystore) GetDiscoveryConfiguration() *Cl
 	return v.CloudKeystoreFields.DiscoveryConfiguration
 }
 
-// GetDiscovery returns UpdateCloudKeystoreUpdateCloudKeystore.Discovery, and is useful for accessing the field via an interface.
-func (v *UpdateCloudKeystoreUpdateCloudKeystore) GetDiscovery() *CloudKeystoreFieldsDiscoveryCloudDiscovery {
-	return v.CloudKeystoreFields.Discovery
-}
-
 func (v *UpdateCloudKeystoreUpdateCloudKeystore) UnmarshalJSON(b []byte) error {
 
 	if string(b) == "null" {
@@ -3284,8 +3031,6 @@ type __premarshalUpdateCloudKeystoreUpdateCloudKeystore struct {
 	Configuration json.RawMessage `json:"configuration"`
 
 	DiscoveryConfiguration *CloudKeystoreFieldsDiscoveryConfigurationCloudDiscoveryConfiguration `json:"discoveryConfiguration"`
-
-	Discovery *CloudKeystoreFieldsDiscoveryCloudDiscovery `json:"discovery"`
 }
 
 func (v *UpdateCloudKeystoreUpdateCloudKeystore) MarshalJSON() ([]byte, error) {
@@ -3317,7 +3062,6 @@ func (v *UpdateCloudKeystoreUpdateCloudKeystore) __premarshalJSON() (*__premarsh
 		}
 	}
 	retval.DiscoveryConfiguration = v.CloudKeystoreFields.DiscoveryConfiguration
-	retval.Discovery = v.CloudKeystoreFields.Discovery
 	return &retval, nil
 }
 
@@ -3468,14 +3212,6 @@ func (v *ValidateCloudProviderValidateCloudProviderCloudProviderValidationResult
 	return v.Details
 }
 
-// __AbortCloudDiscoveryInput is used internally by genqlient
-type __AbortCloudDiscoveryInput struct {
-	CloudKeystoreId string `json:"cloudKeystoreId"`
-}
-
-// GetCloudKeystoreId returns __AbortCloudDiscoveryInput.CloudKeystoreId, and is useful for accessing the field via an interface.
-func (v *__AbortCloudDiscoveryInput) GetCloudKeystoreId() string { return v.CloudKeystoreId }
-
 // __CreateCloudKeystoreInput is used internally by genqlient
 type __CreateCloudKeystoreInput struct {
 	Input *CloudKeystoreInput `json:"input,omitempty"`
@@ -3625,15 +3361,11 @@ func (v *__ListCloudProvidersInput) GetAfter() *string { return v.After }
 // __ListMachineIdentitiesInput is used internally by genqlient
 type __ListMachineIdentitiesInput struct {
 	CloudKeystoreId *string `json:"cloudKeystoreId"`
-	NewlyDiscovered *bool   `json:"newlyDiscovered"`
 	After           *string `json:"after"`
 }
 
 // GetCloudKeystoreId returns __ListMachineIdentitiesInput.CloudKeystoreId, and is useful for accessing the field via an interface.
 func (v *__ListMachineIdentitiesInput) GetCloudKeystoreId() *string { return v.CloudKeystoreId }
-
-// GetNewlyDiscovered returns __ListMachineIdentitiesInput.NewlyDiscovered, and is useful for accessing the field via an interface.
-func (v *__ListMachineIdentitiesInput) GetNewlyDiscovered() *bool { return v.NewlyDiscovered }
 
 // GetAfter returns __ListMachineIdentitiesInput.After, and is useful for accessing the field via an interface.
 func (v *__ListMachineIdentitiesInput) GetAfter() *string { return v.After }
@@ -3680,18 +3412,6 @@ func (v *__ProvisionCertificateToMachineIdentityInput) GetCertificateId() *strin
 	return v.CertificateId
 }
 
-// __StartCloudDiscoveryInput is used internally by genqlient
-type __StartCloudDiscoveryInput struct {
-	CloudKeystoreId string `json:"cloudKeystoreId"`
-	WsClientId      string `json:"wsClientId"`
-}
-
-// GetCloudKeystoreId returns __StartCloudDiscoveryInput.CloudKeystoreId, and is useful for accessing the field via an interface.
-func (v *__StartCloudDiscoveryInput) GetCloudKeystoreId() string { return v.CloudKeystoreId }
-
-// GetWsClientId returns __StartCloudDiscoveryInput.WsClientId, and is useful for accessing the field via an interface.
-func (v *__StartCloudDiscoveryInput) GetWsClientId() string { return v.WsClientId }
-
 // __UpdateCloudKeystoreInput is used internally by genqlient
 type __UpdateCloudKeystoreInput struct {
 	Input *CloudKeystoreUpdateInput `json:"input,omitempty"`
@@ -3715,38 +3435,6 @@ type __ValidateCloudProviderInput struct {
 
 // GetCloudProviderId returns __ValidateCloudProviderInput.CloudProviderId, and is useful for accessing the field via an interface.
 func (v *__ValidateCloudProviderInput) GetCloudProviderId() string { return v.CloudProviderId }
-
-// The mutation executed by AbortCloudDiscovery.
-const AbortCloudDiscovery_Operation = `
-mutation AbortCloudDiscovery ($cloudKeystoreId: UUID!) {
-	abortCloudDiscovery(cloudKeystoreId: $cloudKeystoreId)
-}
-`
-
-func AbortCloudDiscovery(
-	ctx_ context.Context,
-	client_ graphql.Client,
-	cloudKeystoreId string,
-) (data_ *AbortCloudDiscoveryResponse, err_ error) {
-	req_ := &graphql.Request{
-		OpName: "AbortCloudDiscovery",
-		Query:  AbortCloudDiscovery_Operation,
-		Variables: &__AbortCloudDiscoveryInput{
-			CloudKeystoreId: cloudKeystoreId,
-		},
-	}
-
-	data_ = &AbortCloudDiscoveryResponse{}
-	resp_ := &graphql.Response{Data: data_}
-
-	err_ = client_.MakeRequest(
-		ctx_,
-		req_,
-		resp_,
-	)
-
-	return data_, err_
-}
 
 // The mutation executed by CreateCloudKeystore.
 const CreateCloudKeystore_Operation = `
@@ -3783,20 +3471,6 @@ fragment CloudKeystoreFields on CloudKeystore {
 		includeExpiredCertificates
 		includeRevokedCertificates
 	}
-	discovery {
-		... CloudDiscoveryFields
-	}
-}
-fragment CloudDiscoveryFields on CloudDiscovery {
-	id
-	status
-	statusDetails
-	totalCertificatesCount
-	newCertificatesCount
-	updatedCertificatesCount
-	missingCertificatesCount
-	startTime
-	endTime
 }
 `
 
@@ -4181,20 +3855,6 @@ fragment CloudKeystoreFields on CloudKeystore {
 		includeExpiredCertificates
 		includeRevokedCertificates
 	}
-	discovery {
-		... CloudDiscoveryFields
-	}
-}
-fragment CloudDiscoveryFields on CloudDiscovery {
-	id
-	status
-	statusDetails
-	totalCertificatesCount
-	newCertificatesCount
-	updatedCertificatesCount
-	missingCertificatesCount
-	startTime
-	endTime
 }
 `
 
@@ -4308,8 +3968,8 @@ func ListCloudProviders(
 
 // The query executed by ListMachineIdentities.
 const ListMachineIdentities_Operation = `
-query ListMachineIdentities ($cloudKeystoreId: UUID, $newlyDiscovered: Boolean, $after: String) {
-	cloudMachineIdentities(filter: {cloudKeystoreId:$cloudKeystoreId,newlyDiscovered:$newlyDiscovered}, after: $after) {
+query ListMachineIdentities ($cloudKeystoreId: UUID, $after: String) {
+	cloudMachineIdentities(filter: {cloudKeystoreId:$cloudKeystoreId}, after: $after) {
 		nodes {
 			id
 			cloudKeystoreId
@@ -4347,7 +4007,6 @@ func ListMachineIdentities(
 	ctx_ context.Context,
 	client_ graphql.Client,
 	cloudKeystoreId *string,
-	newlyDiscovered *bool,
 	after *string,
 ) (data_ *ListMachineIdentitiesResponse, err_ error) {
 	req_ := &graphql.Request{
@@ -4355,7 +4014,6 @@ func ListMachineIdentities(
 		Query:  ListMachineIdentities_Operation,
 		Variables: &__ListMachineIdentitiesInput{
 			CloudKeystoreId: cloudKeystoreId,
-			NewlyDiscovered: newlyDiscovered,
 			After:           after,
 		},
 	}
@@ -4452,43 +4110,6 @@ func ProvisionCertificateToMachineIdentity(
 	return data_, err_
 }
 
-// The mutation executed by StartCloudDiscovery.
-const StartCloudDiscovery_Operation = `
-mutation StartCloudDiscovery ($cloudKeystoreId: UUID!, $wsClientId: UUID!) {
-	startCloudDiscovery(cloudKeystoreId: $cloudKeystoreId, wsClientId: $wsClientId) {
-		workflowId
-		workflowName
-	}
-}
-`
-
-func StartCloudDiscovery(
-	ctx_ context.Context,
-	client_ graphql.Client,
-	cloudKeystoreId string,
-	wsClientId string,
-) (data_ *StartCloudDiscoveryResponse, err_ error) {
-	req_ := &graphql.Request{
-		OpName: "StartCloudDiscovery",
-		Query:  StartCloudDiscovery_Operation,
-		Variables: &__StartCloudDiscoveryInput{
-			CloudKeystoreId: cloudKeystoreId,
-			WsClientId:      wsClientId,
-		},
-	}
-
-	data_ = &StartCloudDiscoveryResponse{}
-	resp_ := &graphql.Response{Data: data_}
-
-	err_ = client_.MakeRequest(
-		ctx_,
-		req_,
-		resp_,
-	)
-
-	return data_, err_
-}
-
 // The mutation executed by UpdateCloudKeystore.
 const UpdateCloudKeystore_Operation = `
 mutation UpdateCloudKeystore ($input: CloudKeystoreUpdateInput!) {
@@ -4524,20 +4145,6 @@ fragment CloudKeystoreFields on CloudKeystore {
 		includeExpiredCertificates
 		includeRevokedCertificates
 	}
-	discovery {
-		... CloudDiscoveryFields
-	}
-}
-fragment CloudDiscoveryFields on CloudDiscovery {
-	id
-	status
-	statusDetails
-	totalCertificatesCount
-	newCertificatesCount
-	updatedCertificatesCount
-	missingCertificatesCount
-	startTime
-	endTime
 }
 `
 

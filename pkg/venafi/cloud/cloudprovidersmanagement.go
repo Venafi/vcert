@@ -162,33 +162,6 @@ func (c *Connector) DeleteCloudKeystore(cloudKeystoreID string) error {
 	return client.DeleteCloudKeystore(context.Background(), cloudKeystoreID)
 }
 
-func (c *Connector) StartCloudDiscovery(cloudKeystoreID string) (*domain.WorkflowResult, error) {
-	// The API requires a websocket client ID to publish the workflow result to.
-	// Progress is followed by polling the keystore instead, because a discovery
-	// can outlive the websocket read, so nothing subscribes to this ID.
-	wsClientID := uuid.New().String()
-	log.Printf("starting discovery for cloud keystore with ID %s", cloudKeystoreID)
-	client, err := c.managementClient()
-	if err != nil {
-		return nil, err
-	}
-	result, err := client.StartCloudDiscovery(context.Background(), cloudKeystoreID, wsClientID)
-	if err != nil {
-		return nil, err
-	}
-	log.Printf("discovery workflow %s started with ID %s", result.WorkflowName, result.WorkflowID)
-	return result, nil
-}
-
-func (c *Connector) AbortCloudDiscovery(cloudKeystoreID string) error {
-	log.Printf("aborting discovery for cloud keystore with ID %s", cloudKeystoreID)
-	client, err := c.managementClient()
-	if err != nil {
-		return err
-	}
-	return client.AbortCloudDiscovery(context.Background(), cloudKeystoreID)
-}
-
 func (c *Connector) ListMachineIdentities(request domain.ListCloudMachineIdentitiesRequest) ([]domain.CloudMachineIdentity, error) {
 	if request.KeystoreID == "" {
 		return nil, fmt.Errorf("cloud keystore ID cannot be empty")

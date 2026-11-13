@@ -18,17 +18,12 @@ package main
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/urfave/cli/v2"
 
 	"github.com/Venafi/vcert/v5/pkg/domain"
 	"github.com/Venafi/vcert/v5/pkg/endpoint"
 )
-
-// discoveryPollInterval is how often `cloudkeystore discover --wait` checks
-// the discovery status. It is a variable so that tests can shorten it.
-var discoveryPollInterval = 10 * time.Second
 
 var (
 	cloudKeystoreCommands = stringSlice{
@@ -37,14 +32,12 @@ var (
 		subCommandListName,
 		subCommandUpdateName,
 		subCommandDeleteName,
-		subCommandDiscoverName,
-		subCommandAbortDiscoveryName,
 		subCommandMachineIdentitiesName,
 	}
 
 	commandCloudKeystore = &cli.Command{
 		Name:  commandCloudKeystoreName,
-		Usage: "To manage cloud keystores and run certificate discovery in CyberArk Certificate Manager, SaaS (VCP) or Palo Alto Networks Next-Gen Trust Security (NGTS)",
+		Usage: "To manage cloud keystores, including their discovery settings, in CyberArk Certificate Manager, SaaS (VCP) or Palo Alto Networks Next-Gen Trust Security (NGTS)",
 		Action: func(c *cli.Context) error {
 			return fmt.Errorf("the following subcommand(s) are required: \n%s", createBulletList(cloudKeystoreCommands))
 		},
@@ -64,7 +57,7 @@ var (
 			},
 			{
 				Name:      subCommandGetName,
-				Usage:     "Show a cloud keystore, including the status of its latest discovery",
+				Usage:     "Show a cloud keystore",
 				Before:    runBeforeCloudManagementCommand,
 				Flags:     cloudKeystoreGetFlags,
 				UsageText: `vcert cloudkeystore get -p <vcp|ngts> (-k <API key> | -t <access token>) (--keystore-id <id> | --keystore-name <name> [--provider-name <name>]) [--format json]`,
@@ -97,29 +90,11 @@ var (
 				Action:    doCommandCloudKeystoreDelete,
 			},
 			{
-				Name:   subCommandDiscoverName,
-				Usage:  "Start a certificate discovery on a cloud keystore",
-				Before: runBeforeCloudManagementCommand,
-				Flags:  cloudKeystoreDiscoverFlags,
-				UsageText: `vcert cloudkeystore discover -p <vcp|ngts> (-k <API key> | -t <access token>) (--keystore-id <id> | --keystore-name <name>) [--wait [--timeout <seconds>]]
-
-   Without --wait the command returns once the discovery has started; follow it with "vcert cloudkeystore get".`,
-				Action: doCommandCloudKeystoreDiscover,
-			},
-			{
-				Name:      subCommandAbortDiscoveryName,
-				Usage:     "Abort the running certificate discovery on a cloud keystore",
-				Before:    runBeforeCloudManagementCommand,
-				Flags:     cloudKeystoreGetFlags,
-				UsageText: `vcert cloudkeystore abort-discovery -p <vcp|ngts> (-k <API key> | -t <access token>) (--keystore-id <id> | --keystore-name <name>)`,
-				Action:    doCommandCloudKeystoreAbortDiscovery,
-			},
-			{
 				Name:      subCommandMachineIdentitiesName,
-				Usage:     "List the certificates installed in or discovered on a cloud keystore",
+				Usage:     "List the certificates installed in a cloud keystore, or found in it by the platform",
 				Before:    runBeforeCloudManagementCommand,
 				Flags:     cloudKeystoreMachineIdentitiesFlags,
-				UsageText: `vcert cloudkeystore machine-identities -p <vcp|ngts> (-k <API key> | -t <access token>) (--keystore-id <id> | --keystore-name <name>) [--newly-discovered] [--format json]`,
+				UsageText: `vcert cloudkeystore machine-identities -p <vcp|ngts> (-k <API key> | -t <access token>) (--keystore-id <id> | --keystore-name <name>) [--format json]`,
 				Action:    doCommandCloudKeystoreMachineIdentities,
 			},
 		},
@@ -261,107 +236,6 @@ func doCommandCloudKeystoreDelete(c *cli.Context) error {
 	return writeCloudManagementResult(deletedOutput{ID: keystore.ID, Name: keystore.Name, Deleted: true})
 }
 
-func doCommandCloudKeystoreDiscover(c *cli.Context) error {
-	if err := validateCloudKeystoreSelectFlags(cloudCommandName(c)); err != nil {
-		return err
-	}
-	if flags.discoveryWait && flags.discoveryTimeout <= 0 {
-		return fmt.Errorf("--%s must be greater than 0", flagDiscoveryTimeout.Name)
-	}
-	manager, err := getCloudKeystoreManager(c)
-	if err != nil {
-		return err
-	}
-	keystore, err := resolveCloudKeystore(manager)
-	if err != nil {
-		return err
-	}
-
-	workflow, err := manager.StartCloudDiscovery(keystore.ID)
-	if err != nil {
-		return err
-	}
-	if !flags.discoveryWait {
-		return writeCloudManagementResult(discoveryStartedOutput{
-			KeystoreID:   keystore.ID,
-			KeystoreName: keystore.Name,
-			WorkflowID:   workflow.WorkflowID,
-			WorkflowName: workflow.WorkflowName,
-		})
-	}
-
-	timeout := time.Duration(flags.discoveryTimeout) * time.Second
-	finished, err := waitForCloudDiscovery(manager, keystore.ID, keystore.Discovery, timeout)
-	if err != nil {
-		return err
-	}
-	if err := writeCloudManagementResult(newCloudKeystoreOutput(*finished)); err != nil {
-		return err
-	}
-	if finished.Discovery.Status != domain.CloudDiscoveryStatusCompleted {
-		return fmt.Errorf("discovery on cloud keystore %q finished with status %s", keystore.Name, finished.Discovery.Status)
-	}
-	return nil
-}
-
-// waitForCloudDiscovery polls the keystore until the discovery started after
-// previous has finished. previous is the keystore's discovery before the new
-// one was started, so that a finished earlier run is not mistaken for the new one.
-func waitForCloudDiscovery(manager endpoint.CloudKeystoreManager, keystoreID string, previous *domain.CloudDiscovery, timeout time.Duration) (*domain.CloudKeystore, error) {
-	deadline := time.Now().Add(timeout)
-	for {
-		keystores, err := manager.ListCloudKeystores(domain.GetCloudKeystoreRequest{CloudKeystoreID: &keystoreID})
-		if err != nil {
-			return nil, err
-		}
-		if len(keystores) != 1 {
-			return nil, fmt.Errorf("could not find cloud keystore with ID %s", keystoreID)
-		}
-
-		discovery := keystores[0].Discovery
-		if discovery != nil && isNewDiscovery(previous, discovery) {
-			logf("Discovery status: %s", discovery.Status)
-			if discovery.Status.IsFinished() {
-				return &keystores[0], nil
-			}
-		}
-
-		if time.Now().Add(discoveryPollInterval).After(deadline) {
-			return nil, fmt.Errorf("timed out after %s waiting for the discovery on cloud keystore with ID %s to finish. "+
-				"It is still running; check on it with \"vcert cloudkeystore get\"", timeout, keystoreID)
-		}
-		time.Sleep(discoveryPollInterval)
-	}
-}
-
-func isNewDiscovery(previous *domain.CloudDiscovery, current *domain.CloudDiscovery) bool {
-	if previous == nil || previous.Status == domain.CloudDiscoveryStatusNeverInitiated {
-		return true
-	}
-	if current.ID != previous.ID {
-		return true
-	}
-	return current.StartTime != nil && (previous.StartTime == nil || current.StartTime.After(*previous.StartTime))
-}
-
-func doCommandCloudKeystoreAbortDiscovery(c *cli.Context) error {
-	if err := validateCloudKeystoreSelectFlags(cloudCommandName(c)); err != nil {
-		return err
-	}
-	manager, err := getCloudKeystoreManager(c)
-	if err != nil {
-		return err
-	}
-	keystore, err := resolveCloudKeystore(manager)
-	if err != nil {
-		return err
-	}
-	if err := manager.AbortCloudDiscovery(keystore.ID); err != nil {
-		return err
-	}
-	return writeCloudManagementResult(discoveryAbortedOutput{KeystoreID: keystore.ID, KeystoreName: keystore.Name, Aborted: true})
-}
-
 func doCommandCloudKeystoreMachineIdentities(c *cli.Context) error {
 	if err := validateCloudKeystoreSelectFlags(cloudCommandName(c)); err != nil {
 		return err
@@ -375,12 +249,7 @@ func doCommandCloudKeystoreMachineIdentities(c *cli.Context) error {
 		return err
 	}
 
-	request := domain.ListCloudMachineIdentitiesRequest{KeystoreID: keystore.ID}
-	if flags.newlyDiscovered {
-		newlyDiscovered := true
-		request.NewlyDiscovered = &newlyDiscovered
-	}
-	identities, err := manager.ListMachineIdentities(request)
+	identities, err := manager.ListMachineIdentities(domain.ListCloudMachineIdentitiesRequest{KeystoreID: keystore.ID})
 	if err != nil {
 		return err
 	}

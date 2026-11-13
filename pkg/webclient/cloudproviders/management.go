@@ -201,40 +201,6 @@ func (c *CloudProvidersClient) DeleteCloudKeystore(ctx context.Context, id strin
 	return nil
 }
 
-func (c *CloudProvidersClient) StartCloudDiscovery(ctx context.Context, cloudKeystoreID string, wsClientID string) (*domain.WorkflowResult, error) {
-	if cloudKeystoreID == "" {
-		return nil, fmt.Errorf("cloud keystore ID cannot be empty")
-	}
-	if wsClientID == "" {
-		return nil, fmt.Errorf("wsClientID cannot be empty")
-	}
-	resp, err := StartCloudDiscovery(ctx, c.graphqlClient, cloudKeystoreID, wsClientID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to start discovery for Cloud Keystore with ID %s: %w", cloudKeystoreID, err)
-	}
-	if resp == nil || resp.GetStartCloudDiscovery() == nil {
-		return nil, fmt.Errorf("failed to start discovery for Cloud Keystore with ID %s: empty response", cloudKeystoreID)
-	}
-	return &domain.WorkflowResult{
-		WorkflowID:   resp.GetStartCloudDiscovery().GetWorkflowId(),
-		WorkflowName: resp.GetStartCloudDiscovery().GetWorkflowName(),
-	}, nil
-}
-
-func (c *CloudProvidersClient) AbortCloudDiscovery(ctx context.Context, cloudKeystoreID string) error {
-	if cloudKeystoreID == "" {
-		return fmt.Errorf("cloud keystore ID cannot be empty")
-	}
-	resp, err := AbortCloudDiscovery(ctx, c.graphqlClient, cloudKeystoreID)
-	if err != nil {
-		return fmt.Errorf("failed to abort discovery for Cloud Keystore with ID %s: %w", cloudKeystoreID, err)
-	}
-	if resp == nil || !resp.GetAbortCloudDiscovery() {
-		return fmt.Errorf("failed to abort discovery for Cloud Keystore with ID %s", cloudKeystoreID)
-	}
-	return nil
-}
-
 func (c *CloudProvidersClient) ListMachineIdentities(ctx context.Context, request domain.ListCloudMachineIdentitiesRequest) ([]domain.CloudMachineIdentity, error) {
 	if request.KeystoreID == "" {
 		return nil, fmt.Errorf("cloud keystore ID cannot be empty")
@@ -243,7 +209,7 @@ func (c *CloudProvidersClient) ListMachineIdentities(ctx context.Context, reques
 	identities := make([]domain.CloudMachineIdentity, 0)
 	var after *string
 	for {
-		resp, err := ListMachineIdentities(ctx, c.graphqlClient, &request.KeystoreID, request.NewlyDiscovered, after)
+		resp, err := ListMachineIdentities(ctx, c.graphqlClient, &request.KeystoreID, after)
 		if err != nil {
 			return nil, fmt.Errorf("failed to list machine identities for Cloud Keystore with ID %s: %w", request.KeystoreID, err)
 		}
@@ -354,50 +320,7 @@ func (v *CloudKeystoreFields) toDomain() domain.CloudKeystore {
 		}
 	}
 
-	if v.Discovery != nil {
-		ck.Discovery = v.Discovery.CloudDiscoveryFields.toDomain()
-	}
-
 	return ck
-}
-
-func (v *CloudDiscoveryFields) toDomain() *domain.CloudDiscovery {
-	statusDetails := ""
-	if v.StatusDetails != nil {
-		statusDetails = *v.StatusDetails
-	}
-	return &domain.CloudDiscovery{
-		ID:                       v.Id,
-		Status:                   v.Status.toDomain(),
-		StatusDetails:            statusDetails,
-		TotalCertificatesCount:   v.TotalCertificatesCount,
-		NewCertificatesCount:     v.NewCertificatesCount,
-		UpdatedCertificatesCount: v.UpdatedCertificatesCount,
-		MissingCertificatesCount: v.MissingCertificatesCount,
-		StartTime:                v.StartTime,
-		EndTime:                  v.EndTime,
-	}
-}
-
-func (v CloudDiscoveryStatus) toDomain() domain.CloudDiscoveryStatus {
-	switch v {
-	case CloudDiscoveryStatusNeverInitiated:
-		return domain.CloudDiscoveryStatusNeverInitiated
-	case CloudDiscoveryStatusInitiated:
-		return domain.CloudDiscoveryStatusInitiated
-	case CloudDiscoveryStatusRunning:
-		return domain.CloudDiscoveryStatusRunning
-	case CloudDiscoveryStatusCompleted:
-		return domain.CloudDiscoveryStatusCompleted
-	case CloudDiscoveryStatusAborting:
-		return domain.CloudDiscoveryStatusAborting
-	case CloudDiscoveryStatusAborted:
-		return domain.CloudDiscoveryStatusAborted
-	case CloudDiscoveryStatusFailed:
-		return domain.CloudDiscoveryStatusFailed
-	default:
-		return domain.CloudDiscoveryStatusUnknown
-	}
 }
 
 func (v *ListMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNodesMachineIdentity) toDomain() (*domain.CloudMachineIdentity, error) {

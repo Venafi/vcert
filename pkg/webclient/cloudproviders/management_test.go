@@ -187,9 +187,7 @@ const keystoreNodeJSON = `{
 	"id":"k1","name":"vault","type":"AKV","machineIdentitiesCount":3,
 	"cloudProvider":{"id":"p1","name":"azure"},
 	"configuration":{"__typename":"CloudKeystoreAKVConfiguration","keyVaultName":"prod-vault"},
-	"discoveryConfiguration":{"scheduleSpecification":"00 03 * * *","includeExpiredCertificates":true,"includeRevokedCertificates":false},
-	"discovery":{"id":"d1","status":"COMPLETED","totalCertificatesCount":10,"newCertificatesCount":2,
-		"updatedCertificatesCount":1,"missingCertificatesCount":0,"startTime":"2026-11-01T03:00:00Z","endTime":"2026-11-01T03:05:00Z"}
+	"discoveryConfiguration":{"scheduleSpecification":"00 03 * * *","includeExpiredCertificates":true,"includeRevokedCertificates":false}
 }`
 
 func TestListCloudKeystoresConvertsDetails(t *testing.T) {
@@ -209,11 +207,6 @@ func TestListCloudKeystoresConvertsDetails(t *testing.T) {
 	assert.Equal(t, &domain.CloudKeystoreAKVConfiguration{KeyVaultName: "prod-vault"}, k.AKV)
 	assert.Nil(t, k.ACM)
 	assert.Equal(t, &domain.CloudDiscoveryConfiguration{ScheduleSpecification: "00 03 * * *", IncludeExpiredCertificates: true}, k.DiscoveryConfiguration)
-	require.NotNil(t, k.Discovery)
-	assert.Equal(t, domain.CloudDiscoveryStatusCompleted, k.Discovery.Status)
-	assert.Equal(t, 10, k.Discovery.TotalCertificatesCount)
-	assert.Equal(t, 2, k.Discovery.NewCertificatesCount)
-	require.NotNil(t, k.Discovery.EndTime)
 
 	assert.Equal(t, "azure", (*requests)[0].Variables["cloudProviderName"])
 	assert.Nil(t, (*requests)[0].Variables["cloudKeystoreId"])
@@ -319,20 +312,6 @@ func TestUpdateCloudKeystoreFailsWhenNotFound(t *testing.T) {
 	assert.Len(t, *requests, 1)
 }
 
-func TestStartAndAbortCloudDiscovery(t *testing.T) {
-	client, requests := newTestClient(t,
-		`{"data":{"startCloudDiscovery":{"workflowId":"w1","workflowName":"discovery"}}}`,
-		`{"data":{"abortCloudDiscovery":true}}`,
-	)
-
-	result, err := client.StartCloudDiscovery(context.Background(), "k1", "ws1")
-	require.NoError(t, err)
-	assert.Equal(t, domain.WorkflowResult{WorkflowID: "w1", WorkflowName: "discovery"}, *result)
-	assert.Equal(t, map[string]interface{}{"cloudKeystoreId": "k1", "wsClientId": "ws1"}, (*requests)[0].Variables)
-
-	require.NoError(t, client.AbortCloudDiscovery(context.Background(), "k1"))
-}
-
 func TestListMachineIdentities(t *testing.T) {
 	client, requests := newTestClient(t,
 		`{"data":{"cloudMachineIdentities":{"nodes":[{"id":"m1","cloudKeystoreId":"k1","cloudKeystoreName":"acm","status":"DISCOVERED",
@@ -340,7 +319,7 @@ func TestListMachineIdentities(t *testing.T) {
 			"pageInfo":{"hasNextPage":false}}}}`,
 	)
 
-	identities, err := client.ListMachineIdentities(context.Background(), domain.ListCloudMachineIdentitiesRequest{KeystoreID: "k1", NewlyDiscovered: boolPtr(true)})
+	identities, err := client.ListMachineIdentities(context.Background(), domain.ListCloudMachineIdentitiesRequest{KeystoreID: "k1"})
 	require.NoError(t, err)
 	require.Len(t, identities, 1)
 
@@ -352,5 +331,6 @@ func TestListMachineIdentities(t *testing.T) {
 	assert.Equal(t, domain.CloudKeystoreTypeACM, mi.Metadata.GetKeystoreType())
 	assert.Equal(t, "arn:aws:acm:cert", mi.Metadata.GetValue("arn"))
 
-	assert.Equal(t, true, (*requests)[0].Variables["newlyDiscovered"])
+	assert.Equal(t, "k1", (*requests)[0].Variables["cloudKeystoreId"])
+	assert.NotContains(t, (*requests)[0].Variables, "newlyDiscovered")
 }

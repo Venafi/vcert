@@ -191,25 +191,6 @@ var (
 		Destination: &flags.includeRevoked,
 	}
 
-	flagDiscoveryWait = &cli.BoolFlag{
-		Name:        "wait",
-		Usage:       "Wait for the discovery to finish and print its results.",
-		Destination: &flags.discoveryWait,
-	}
-
-	flagDiscoveryTimeout = &cli.IntFlag{
-		Name:        "timeout",
-		Value:       600,
-		Usage:       "Seconds to wait for the discovery to finish when --wait is set.",
-		Destination: &flags.discoveryTimeout,
-	}
-
-	flagNewlyDiscovered = &cli.BoolFlag{
-		Name:        "newly-discovered",
-		Usage:       "Only list machine identities found by the latest discovery.",
-		Destination: &flags.newlyDiscovered,
-	}
-
 	cloudManagementCommonFlags = flagsApppend(
 		flagKey,
 		flagToken,
@@ -254,6 +235,5 @@ var (
 	cloudKeystoreGetFlags               = flagsApppend(cloudManagementCommonFlags, cloudKeystoreSelectorFlags)
 	cloudKeystoreListFlags              = flagsApppend(cloudManagementCommonFlags, flagProviderID, flagCloudProviderName)
 	cloudKeystoreUpdateFlags            = flagsApppend(cloudManagementCommonFlags, cloudKeystoreSelectorFlags, flagNewName, flagTeamID, cloudDiscoveryConfigFlags)
-	cloudKeystoreDiscoverFlags          = flagsApppend(cloudManagementCommonFlags, cloudKeystoreSelectorFlags, flagDiscoveryWait, flagDiscoveryTimeout)
-	cloudKeystoreMachineIdentitiesFlags = flagsApppend(cloudManagementCommonFlags, cloudKeystoreSelectorFlags, flagNewlyDiscovered)
+	cloudKeystoreMachineIdentitiesFlags = flagsApppend(cloudManagementCommonFlags, cloudKeystoreSelectorFlags)
 )
