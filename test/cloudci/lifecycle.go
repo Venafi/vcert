@@ -53,6 +53,8 @@ type lifecycle struct {
 	staleAfter         time.Duration
 	validationTimeout  time.Duration
 	validationInterval time.Duration
+	// retryInterval is the wait between attempts of a request that failed
+	retryInterval time.Duration
 }
 
 // errSkipped is returned by setup when another run is using the cloud accounts
@@ -347,7 +349,7 @@ func (l *lifecycle) teardown(st *state) error {
 		return nil
 	}
 	desired := l.desiredProviders()
-	existing, err := l.manager.ListCloudProviders(domain.GetCloudProviderRequest{})
+	existing, err := l.listProvidersWithRetry()
 	if err != nil {
 		return err
 	}
@@ -380,6 +382,21 @@ func (l *lifecycle) teardown(st *state) error {
 		logf("deleted cloud provider %q", p.Name)
 	}
 	return errors.Join(errs...)
+}
+
+// listProvidersWithRetry lists the cloud providers, retrying a few times so
+// that a transient failure does not stop teardown before it deleted anything
+func (l *lifecycle) listProvidersWithRetry() ([]domain.CloudProvider, error) {
+	var err error
+	for attempt := 1; attempt <= 3; attempt++ {
+		var providers []domain.CloudProvider
+		if providers, err = l.manager.ListCloudProviders(domain.GetCloudProviderRequest{}); err == nil {
+			return providers, nil
+		}
+		logf("cannot list cloud providers (attempt %d of 3): %s", attempt, err)
+		time.Sleep(l.retryInterval)
+	}
+	return nil, err
 }
 
 func findDesired(desired []desiredProvider, kind string, configIndex int) (desiredProvider, bool) {
@@ -448,12 +465,20 @@ func (d desiredProvider) canProvision(ks domain.CloudKeystore) bool {
 // created by the tests. So are all certificates in keystores the tests may
 // not provision to.
 func (l *lifecycle) deleteProvisionedCertificates(ks domain.CloudKeystore, d desiredProvider) error {
-	if !d.canProvision(ks) {
-		return nil
-	}
 	identities, err := l.manager.ListMachineIdentities(domain.ListCloudMachineIdentitiesRequest{KeystoreID: ks.ID})
 	if err != nil {
 		return err
+	}
+	if !d.canProvision(ks) {
+		// As when a crashed run's keystore is no longer configured to
+		// provision. Its certificates stay in the cloud; say so.
+		for _, mi := range identities {
+			if mi.Status == domain.MachineIdentityStatusInstalled {
+				logf("WARNING: not deleting certificate %s from keystore %q, which is not configured with canProvision; it stays in the cloud",
+					certificateLocation(mi), ks.Name)
+			}
+		}
+		return nil
 	}
 	var errs []error
 	for _, mi := range identities {
@@ -496,4 +521,17 @@ func (l *lifecycle) deleteProvisionedCertificates(ks domain.CloudKeystore, d des
 		}
 	}
 	return errors.Join(errs...)
+}
+
+// certificateLocation describes where a machine identity's certificate is in
+// the cloud
+func certificateLocation(mi domain.CloudMachineIdentity) string {
+	if mi.Metadata != nil {
+		for _, key := range []string{"arn", "name"} {
+			if v, _ := mi.Metadata.GetValue(key).(string); v != "" {
+				return v
+			}
+		}
+	}
+	return "of machine identity " + mi.ID
 }

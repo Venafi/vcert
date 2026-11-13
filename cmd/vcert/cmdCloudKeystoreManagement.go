@@ -118,14 +118,12 @@ func doCommandCloudKeystoreCreate(c *cli.Context) error {
 		return fmt.Errorf("command %s not supported for %s", cloudCommandName(c), connector.GetType())
 	}
 
-	providerID := flags.providerID
-	if providerID == "" {
-		provider, err := resolveCloudProvider(providerManager, "", flags.providerName)
-		if err != nil {
-			return err
-		}
-		providerID = provider.ID
+	// also checks that --provider-id and --provider-name name the same provider
+	provider, err := resolveCloudProvider(providerManager, flags.providerID, flags.providerName)
+	if err != nil {
+		return err
 	}
+	providerID := provider.ID
 
 	request := domain.CreateCloudKeystoreRequest{
 		Name:            flags.keystoreName,

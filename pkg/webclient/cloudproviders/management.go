@@ -34,6 +34,9 @@ func (c *CloudProvidersClient) ListCloudProviders(ctx context.Context, request d
 		if pageInfo == nil || !pageInfo.GetHasNextPage() || pageInfo.GetEndCursor() == nil {
 			return providers, nil
 		}
+		if err := checkNextCursor(after, pageInfo.GetEndCursor()); err != nil {
+			return nil, err
+		}
 		after = pageInfo.GetEndCursor()
 	}
 }
@@ -128,6 +131,9 @@ func (c *CloudProvidersClient) ListCloudKeystores(ctx context.Context, request d
 		pageInfo := resp.GetCloudKeystores().GetPageInfo()
 		if pageInfo == nil || !pageInfo.GetHasNextPage() || pageInfo.GetEndCursor() == nil {
 			return keystores, nil
+		}
+		if err := checkNextCursor(after, pageInfo.GetEndCursor()); err != nil {
+			return nil, err
 		}
 		after = pageInfo.GetEndCursor()
 	}
@@ -230,6 +236,9 @@ func (c *CloudProvidersClient) ListMachineIdentities(ctx context.Context, reques
 		pageInfo := resp.GetCloudMachineIdentities().GetPageInfo()
 		if pageInfo == nil || !pageInfo.GetHasNextPage() || pageInfo.GetEndCursor() == nil {
 			return identities, nil
+		}
+		if err := checkNextCursor(after, pageInfo.GetEndCursor()); err != nil {
+			return nil, err
 		}
 		after = pageInfo.GetEndCursor()
 	}
@@ -573,4 +582,13 @@ func scheduleSpecificationInput(schedule *string) *string {
 		return nil
 	}
 	return schedule
+}
+
+// checkNextCursor fails when the server returns the cursor it was given, which
+// would otherwise make the paging loop run forever
+func checkNextCursor(after *string, next *string) error {
+	if after != nil && next != nil && *after == *next {
+		return fmt.Errorf("the server returned the same page cursor %q again", *next)
+	}
+	return nil
 }

@@ -31,20 +31,35 @@ func (c *Connector) managementClient() (*cloudproviders.CloudProvidersClient, er
 // by name. Cloud providers and keystores must be owned by a team in CyberArk
 // Certificate Manager, SaaS, and names are what users see in the UI.
 func (c *Connector) resolveTeamID(team string) (string, error) {
-	if _, err := uuid.Parse(team); err == nil {
-		return team, nil
+	// uuid.Parse also accepts forms such as {…} and urn:uuid:…, which the
+	// API does not
+	if id, err := uuid.Parse(team); err == nil {
+		return id.String(), nil
 	}
 
 	teams, err := c.retrieveTeams()
 	if err != nil {
 		return "", fmt.Errorf("failed to retrieve teams to look up team %q: %w", team, err)
 	}
+	// an exact match wins; otherwise the name may differ in case, as long as
+	// only one team matches
+	var matches []string
 	for _, t := range teams.Teams {
-		if strings.EqualFold(t.Name, team) {
+		if t.Name == team {
 			return t.ID, nil
 		}
+		if strings.EqualFold(t.Name, team) {
+			matches = append(matches, t.ID)
+		}
 	}
-	return "", fmt.Errorf("could not find team %q", team)
+	switch len(matches) {
+	case 1:
+		return matches[0], nil
+	case 0:
+		return "", fmt.Errorf("could not find team %q", team)
+	default:
+		return "", fmt.Errorf("found %d teams named %q in different cases; use the exact name or the team ID", len(matches), team)
+	}
 }
 
 func (c *Connector) ListCloudProviders(filter domain.GetCloudProviderRequest) ([]domain.CloudProvider, error) {

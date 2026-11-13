@@ -121,7 +121,8 @@ var (
 	flagAzureSecret = &cli.StringFlag{
 		Name: "azure-secret",
 		Usage: "The Azure application client secret. Required for Azure cloud providers. " +
-			"Can also be set with the " + vcertAzureSecret + " environment variable to keep it out of the shell history.",
+			"Can also be set with the " + vcertAzureSecret + " environment variable to keep it out of the shell history. " +
+			"When updating a cloud provider, pass --azure-secret (for example --azure-secret \"$" + vcertAzureSecret + "\") to rotate the secret: the environment variable alone does not count as a change.",
 		Destination: &flags.azureSecret,
 	}
 

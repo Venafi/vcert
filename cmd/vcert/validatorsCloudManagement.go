@@ -18,8 +18,11 @@ package main
 
 import (
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
+
+	"github.com/urfave/cli/v2"
 
 	"github.com/Venafi/vcert/v5/pkg/domain"
 	"github.com/Venafi/vcert/v5/pkg/venafi"
@@ -166,9 +169,20 @@ func validateCloudProviderSelectFlags(commandName string) error {
 	return validateCloudProviderSelectorFlags()
 }
 
-func validateCloudProviderUpdateFlags(commandName string) error {
-	if err := validateCloudProviderSelectFlags(commandName); err != nil {
+func validateCloudProviderUpdateFlags(c *cli.Context) error {
+	if err := validateCloudProviderSelectFlags(cloudCommandName(c)); err != nil {
 		return err
+	}
+	// Only an explicit --azure-secret counts: VCERT_AZURE_SECRET may be
+	// exported while updating a provider of another type
+	changes := []bool{
+		flags.newName != "", flags.teamID != "", flags.awsRole != "",
+		flags.azureApplicationID != "", flags.azureDirectoryID != "", c.IsSet(flagAzureSecret.Name),
+		flags.gcpProjectNumber != "", flags.gcpWorkloadIdentityPoolID != "", flags.gcpWorkloadIdentityPoolProviderID != "",
+		flags.gcpAuthorizationMethod != "",
+	}
+	if !slices.Contains(changes, true) {
+		return fmt.Errorf("nothing to update. Provide at least one option to change")
 	}
 	if flags.awsAccountID != "" {
 		return fmt.Errorf("the AWS account ID of a cloud provider cannot be changed")

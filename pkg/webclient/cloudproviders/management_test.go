@@ -65,6 +65,16 @@ func TestListCloudProvidersFollowsPages(t *testing.T) {
 	assert.Equal(t, "c1", (*requests)[1].Variables["after"])
 }
 
+func TestListCloudProvidersStopsOnARepeatedCursor(t *testing.T) {
+	page := `{"data":{"cloudProviders":{"nodes":[{"id":"p1","name":"one","type":"AWS","status":"VALIDATED","keystoresCount":0}],
+		"pageInfo":{"hasNextPage":true,"endCursor":"c1"}}}}`
+	client, requests := newTestClient(t, page, page)
+
+	_, err := client.ListCloudProviders(context.Background(), domain.GetCloudProviderRequest{})
+	require.ErrorContains(t, err, `same page cursor "c1"`)
+	assert.Len(t, *requests, 2)
+}
+
 func TestListCloudProvidersConvertsConfiguration(t *testing.T) {
 	client, _ := newTestClient(t,
 		`{"data":{"cloudProviders":{"nodes":[

@@ -742,6 +742,75 @@ func (p *unvalidatingPlatform) UpdateCloudProvider(r domain.UpdateCloudProviderR
 	return cp, err
 }
 
+func TestRemovingStaleKeystoreWarnsAboutCertificatesLeftInTheCloud(t *testing.T) {
+	platform := newFakePlatform()
+	cleaner := &fakeCleaner{}
+	// a crashed run's keystore in a region that is no longer configured
+	old := platform.addProvider(domain.CloudProvider{
+		Name: ciName(testNow.Add(-5*time.Hour), "40", "aws1"), Type: domain.CloudProviderTypeAWS,
+		Status: domain.CloudProviderStatusValidated,
+		AWS:    &domain.CloudProviderAWSConfiguration{AccountID: "123456789012"},
+	})
+	ks := platform.addKeystore(domain.CloudKeystore{
+		Name: ciName(testNow.Add(-5*time.Hour), "40", "aws1-ks9"), CloudProviderID: old.ID,
+		ACM: &domain.CloudKeystoreACMConfiguration{Region: "eu-west-3"},
+	})
+	installed := domain.NewCertificateCloudMetadata(map[string]interface{}{"arn": "arn:aws:acm:eu-west-3:123456789012:certificate/7"})
+	platform.identities[ks.ID] = []domain.CloudMachineIdentity{{ID: "m1", Status: domain.MachineIdentityStatusInstalled, Metadata: &installed}}
+	l := newTestLifecycle(targetVCP, platform, cleaner)
+	var log strings.Builder
+	logOutput = &log
+	t.Cleanup(func() { logOutput = io.Discard })
+
+	if _, err := runSetup(t, l); err != nil {
+		t.Fatalf("setup failed: %s", err)
+	}
+	if len(cleaner.deletedARNs) != 0 {
+		t.Fatalf("deleted a certificate from a keystore that cannot provision: %v", cleaner.deletedARNs)
+	}
+	if !strings.Contains(log.String(), "WARNING: not deleting certificate arn:aws:acm:eu-west-3:123456789012:certificate/7") {
+		t.Fatalf("expected a warning about the certificate left in the cloud, got:\n%s", log.String())
+	}
+}
+
+func TestTeardownRetriesListingProviders(t *testing.T) {
+	platform := newFakePlatform()
+	l := newTestLifecycle(targetVCP, platform, &fakeCleaner{})
+	st, err := runSetup(t, l)
+	if err != nil {
+		t.Fatalf("setup failed: %s", err)
+	}
+	flaky := &flakyListPlatform{fakePlatform: platform, failures: 2}
+	l.manager = flaky
+
+	if err := l.teardown(st); err != nil {
+		t.Fatalf("teardown failed: %s", err)
+	}
+	if len(platform.providers) != 0 {
+		t.Fatalf("expected everything to be deleted, left %d providers", len(platform.providers))
+	}
+
+	// a platform that keeps failing is reported
+	flaky.failures = 10
+	if err := l.teardown(st); err == nil || !strings.Contains(err.Error(), "unavailable") {
+		t.Fatalf("expected the listing error, got %v", err)
+	}
+}
+
+// flakyListPlatform fails the first listings of cloud providers
+type flakyListPlatform struct {
+	*fakePlatform
+	failures int
+}
+
+func (p *flakyListPlatform) ListCloudProviders(filter domain.GetCloudProviderRequest) ([]domain.CloudProvider, error) {
+	if p.failures > 0 {
+		p.failures--
+		return nil, errors.New("service unavailable")
+	}
+	return p.fakePlatform.ListCloudProviders(filter)
+}
+
 func TestTeardownDoesNothingWhenSkipped(t *testing.T) {
 	l := newTestLifecycle(targetVCP, newFakePlatform(), &fakeCleaner{})
 	if err := l.teardown(&state{Skipped: true}); err != nil {

@@ -358,6 +358,36 @@ func TestResolveCloudProviderMatchesExactName(t *testing.T) {
 	}
 }
 
+func TestResolveCloudProviderRequiresIDAndNameToMatch(t *testing.T) {
+	isolateFromVCertEnvironment(t)
+	manager := &fakeCloudManager{providers: []domain.CloudProvider{{ID: "p1", Name: "aws"}, {ID: "p2", Name: "azure"}}}
+
+	if _, err := resolveCloudProvider(manager, "p2", "aws"); err == nil || !strings.Contains(err.Error(), "could not find") {
+		t.Fatalf("expected a mismatched ID and name to be refused, got %v", err)
+	}
+	if provider, err := resolveCloudProvider(manager, "p1", "aws"); err != nil || provider.ID != "p1" {
+		t.Fatalf("expected provider p1, got %+v, %v", provider, err)
+	}
+}
+
+func TestValidateCloudProviderUpdateFlagsRequiresAChange(t *testing.T) {
+	isolateFromVCertEnvironment(t)
+	// the Azure secret from the environment alone is not a change
+	flags = commandFlags{platform: venafi.NGTS, token: "a-token", providerName: "azure", azureSecret: "from-env"}
+	if err := validateCloudProviderUpdateFlags(newTestCliContext(t)); err == nil || !strings.Contains(err.Error(), "nothing to update") {
+		t.Fatalf("expected a nothing to update error, got %v", err)
+	}
+
+	flags = commandFlags{platform: venafi.NGTS, token: "a-token", providerName: "azure", azureSecret: "value"}
+	if err := validateCloudProviderUpdateFlags(newTestCliContext(t, flagAzureSecret.Name)); err != nil {
+		t.Fatalf("expected an explicit --azure-secret to count as a change, got %v", err)
+	}
+	flags = commandFlags{platform: venafi.NGTS, token: "a-token", providerName: "aws", newName: "renamed"}
+	if err := validateCloudProviderUpdateFlags(newTestCliContext(t)); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestResolveCloudProviderByID(t *testing.T) {
 	isolateFromVCertEnvironment(t)
 	manager := &fakeCloudManager{providers: []domain.CloudProvider{{ID: "p1", Name: "aws"}, {ID: "p2", Name: "gcp"}}}

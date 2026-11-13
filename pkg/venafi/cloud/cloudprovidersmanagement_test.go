@@ -24,7 +24,8 @@ func newManagementTestConnector(t *testing.T, graphqlResponses map[string]string
 		w.Header().Set("Content-Type", "application/json")
 		switch {
 		case strings.HasSuffix(r.URL.Path, "/v1/teams"):
-			_, _ = w.Write([]byte(`{"teams":[{"id":"` + testTeamID + `","name":"Cloud Admins"},{"id":"other","name":"Other"}]}`))
+			_, _ = w.Write([]byte(`{"teams":[{"id":"` + testTeamID + `","name":"Cloud Admins"},{"id":"other","name":"Other"},` +
+				`{"id":"dup1","name":"DevOps"},{"id":"dup2","name":"devops"}]}`))
 		case strings.HasSuffix(r.URL.Path, "/graphql"):
 			body, _ := io.ReadAll(r.Body)
 			*graphqlRequests = append(*graphqlRequests, string(body))
@@ -110,6 +111,24 @@ func TestResolveTeamID(t *testing.T) {
 
 	if _, err := c.resolveTeamID("Missing Team"); err == nil || !strings.Contains(err.Error(), `could not find team "Missing Team"`) {
 		t.Fatalf("expected a team not found error, got %v", err)
+	}
+
+	// other UUID forms are sent in the standard form the API accepts
+	for _, form := range []string{"{" + testTeamID + "}", "urn:uuid:" + testTeamID, strings.ReplaceAll(testTeamID, "-", "")} {
+		if id, err := c.resolveTeamID(form); err != nil || id != testTeamID {
+			t.Fatalf("expected %q to be normalized to %q, got %q, %v", form, testTeamID, id, err)
+		}
+	}
+
+	// names: an exact match wins, a single match in another case is accepted,
+	// and several matches in different cases are refused
+	for name, want := range map[string]string{"Cloud Admins": testTeamID, "cloud admins": testTeamID, "DevOps": "dup1", "devops": "dup2"} {
+		if id, err := c.resolveTeamID(name); err != nil || id != want {
+			t.Fatalf("expected %q to resolve to %q, got %q, %v", name, want, id, err)
+		}
+	}
+	if _, err := c.resolveTeamID("DEVOPS"); err == nil || !strings.Contains(err.Error(), "found 2 teams") {
+		t.Fatalf("expected an ambiguous team error, got %v", err)
 	}
 }
 

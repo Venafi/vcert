@@ -43,10 +43,14 @@ go run ./test/cloudci teardown -target vcp -state vcp-state.json -aws-config aws
 - **Only provisioned certificates are deleted from the cloud.** Teardown deletes the certificates whose machine
   identity is `INSTALLED` (provisioned through the platform), never ones the platform only found in the keystore,
   and only from keystores configured with `canProvision`. An ACM certificate is only deleted when its ARN is in
-  the keystore's region and the configured account.
+  the keystore's region and the configured account. When it removes a keystore whose certificates it may not
+  delete (as one left by a crashed run in a location no longer configured with `canProvision`), it logs a warning
+  for each provisioned certificate that stays in the cloud.
 - **The state file must belong to this run.** Setup replaces it before doing anything else. Check and teardown
   refuse a state file written for another target or run ID (`-run-id`, the Jenkins `BUILD_NUMBER` by default),
-  and teardown only deletes a cloud provider whose current name is still a CI name.
+  and teardown only deletes a cloud provider whose current name is still a CI name. So a run cannot tear down
+  another run's objects, even its own earlier build (as after a Jenkins "Restart from stage", which gets a new build
+  number): those are removed by a later setup once they are older than `-stale-after`.
 - **No secrets in the state file.** It holds names, IDs and non-secret settings only.
 
 ## Connection

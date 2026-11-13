@@ -183,7 +183,7 @@ func doCommandCloudProviderList(c *cli.Context) error {
 }
 
 func doCommandCloudProviderUpdate(c *cli.Context) error {
-	if err := validateCloudProviderUpdateFlags(cloudCommandName(c)); err != nil {
+	if err := validateCloudProviderUpdateFlags(c); err != nil {
 		return err
 	}
 	manager, err := getCloudProviderManager(c)

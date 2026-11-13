@@ -100,6 +100,7 @@ func run(args []string) int {
 		staleAfter:         *staleAfter,
 		validationTimeout:  *validationTimeout,
 		validationInterval: 15 * time.Second,
+		retryInterval:      5 * time.Second,
 	}
 	// setup replaces the state file first, so that a file left by an
 	// earlier run in the same workspace cannot be torn down again if setup
