@@ -940,6 +940,37 @@ func TestGetCertificateStatus(t *testing.T) {
 	}
 }
 
+// requireTenantTags skips the test when the tenant does not define the tags, as a
+// development stack may not. A failing tags API fails the test rather than
+// skipping it, so that a broken lookup cannot hide the test.
+func requireTenantTags(t *testing.T, conn *Connector, names ...string) {
+	t.Helper()
+	statusCode, status, body, err := conn.request("GET", conn.getURL(urlResource("v1/tags")), nil)
+	if err != nil {
+		t.Fatalf("cannot list the tenant's tags: %s", err)
+	}
+	if statusCode != http.StatusOK {
+		t.Fatalf("cannot list the tenant's tags: %s: %s", status, body)
+	}
+	var tags struct {
+		Tags []struct {
+			Name string `json:"name"`
+		} `json:"tags"`
+	}
+	if err := json.Unmarshal(body, &tags); err != nil {
+		t.Fatalf("cannot parse the tenant's tags: %s", err)
+	}
+	defined := map[string]bool{}
+	for _, tag := range tags.Tags {
+		defined[tag.Name] = true
+	}
+	for _, name := range names {
+		if !defined[name] {
+			t.Skipf("the tenant does not define the tag %q", name)
+		}
+	}
+}
+
 func TestRenewCertificate(t *testing.T) {
 	//t.Skip() //todo: remove if condor team fix bug. check after 2020.04
 	conn := getTestConnector(ctx.NGTSZone)
@@ -947,6 +978,8 @@ func TestRenewCertificate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
+	// certificates only keep tags the tenant defines, as the test tenant does
+	requireTenantTags(t, conn, "testTag", "testTag2")
 	zoneConfig, err := conn.ReadZoneConfiguration()
 	if err != nil {
 		t.Fatalf("%s", err)
