@@ -118,6 +118,13 @@ const (
 	CloudKeystoreTypeAkamaiCdn CloudKeystoreType = "AKAMAI_CDN"
 )
 
+var AllCloudKeystoreType = []CloudKeystoreType{
+	CloudKeystoreTypeAcm,
+	CloudKeystoreTypeAkv,
+	CloudKeystoreTypeGcm,
+	CloudKeystoreTypeAkamaiCdn,
+}
+
 // Indicates the status of a cloud provider
 type CloudProviderStatus string
 
@@ -127,6 +134,11 @@ const (
 	// The cloud provider is not validated or the validation fails for some reason
 	CloudProviderStatusNotValidated CloudProviderStatus = "NOT_VALIDATED"
 )
+
+var AllCloudProviderStatus = []CloudProviderStatus{
+	CloudProviderStatusValidated,
+	CloudProviderStatusNotValidated,
+}
 
 // Indicates the type of a Cloud Provider
 type CloudProviderType string
@@ -141,6 +153,13 @@ const (
 	// Akamai cloud provider type
 	CloudProviderTypeAkamai CloudProviderType = "AKAMAI"
 )
+
+var AllCloudProviderType = []CloudProviderType{
+	CloudProviderTypeAws,
+	CloudProviderTypeAzure,
+	CloudProviderTypeGcp,
+	CloudProviderTypeAkamai,
+}
 
 // DeleteMachineIdentitiesResponse is returned by DeleteMachineIdentities on success.
 type DeleteMachineIdentitiesResponse struct {
@@ -166,6 +185,12 @@ const (
 	// regions. See https://cloud.google.com/compute/docs/regions-zones.
 	GCMCertificateScopeAllRegions GCMCertificateScope = "ALL_REGIONS"
 )
+
+var AllGCMCertificateScope = []GCMCertificateScope{
+	GCMCertificateScopeDefault,
+	GCMCertificateScopeEdgeCache,
+	GCMCertificateScopeAllRegions,
+}
 
 // GetCloudKeystoresCloudKeystoresCloudKeystoreConnection includes the requested fields of the GraphQL type CloudKeystoreConnection.
 // The GraphQL type's documentation follows.
@@ -689,6 +714,16 @@ const (
 	MachineIdentityStatusFailed     MachineIdentityStatus = "FAILED"
 )
 
+var AllMachineIdentityStatus = []MachineIdentityStatus{
+	MachineIdentityStatusNew,
+	MachineIdentityStatusPending,
+	MachineIdentityStatusInstalled,
+	MachineIdentityStatusDiscovered,
+	MachineIdentityStatusValidated,
+	MachineIdentityStatusMissing,
+	MachineIdentityStatusFailed,
+}
+
 // ProvisionCertificateProvisionToCloudKeystoreWorkflowResult includes the requested fields of the GraphQL type WorkflowResult.
 type ProvisionCertificateProvisionToCloudKeystoreWorkflowResult struct {
 	WorkflowId   string `json:"workflowId"`
@@ -855,7 +890,7 @@ func (v *__ProvisionCertificateToMachineIdentityInput) GetCertificateId() *strin
 	return v.CertificateId
 }
 
-// The query or mutation executed by DeleteMachineIdentities.
+// The mutation executed by DeleteMachineIdentities.
 const DeleteMachineIdentities_Operation = `
 mutation DeleteMachineIdentities ($machineIdentityIds: [UUID!]!) {
 	deleteCloudMachineIdentities(machineIdentityIds: $machineIdentityIds)
@@ -866,7 +901,7 @@ func DeleteMachineIdentities(
 	ctx_ context.Context,
 	client_ graphql.Client,
 	machineIdentityIds []string,
-) (*DeleteMachineIdentitiesResponse, error) {
+) (data_ *DeleteMachineIdentitiesResponse, err_ error) {
 	req_ := &graphql.Request{
 		OpName: "DeleteMachineIdentities",
 		Query:  DeleteMachineIdentities_Operation,
@@ -874,10 +909,9 @@ func DeleteMachineIdentities(
 			MachineIdentityIds: machineIdentityIds,
 		},
 	}
-	var err_ error
 
-	var data_ DeleteMachineIdentitiesResponse
-	resp_ := &graphql.Response{Data: &data_}
+	data_ = &DeleteMachineIdentitiesResponse{}
+	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(
 		ctx_,
@@ -885,10 +919,10 @@ func DeleteMachineIdentities(
 		resp_,
 	)
 
-	return &data_, err_
+	return data_, err_
 }
 
-// The query or mutation executed by GetCloudKeystores.
+// The query executed by GetCloudKeystores.
 const GetCloudKeystores_Operation = `
 query GetCloudKeystores ($cloudKeystoreId: UUID, $cloudKeystoreName: String, $cloudProviderId: UUID, $cloudProviderName: String) {
 	cloudKeystores(filter: {cloudKeystoreId:$cloudKeystoreId,cloudKeystoreName:$cloudKeystoreName,cloudProviderId:$cloudProviderId,cloudProviderName:$cloudProviderName}) {
@@ -909,7 +943,7 @@ func GetCloudKeystores(
 	cloudKeystoreName *string,
 	cloudProviderId *string,
 	cloudProviderName *string,
-) (*GetCloudKeystoresResponse, error) {
+) (data_ *GetCloudKeystoresResponse, err_ error) {
 	req_ := &graphql.Request{
 		OpName: "GetCloudKeystores",
 		Query:  GetCloudKeystores_Operation,
@@ -920,10 +954,9 @@ func GetCloudKeystores(
 			CloudProviderName: cloudProviderName,
 		},
 	}
-	var err_ error
 
-	var data_ GetCloudKeystoresResponse
-	resp_ := &graphql.Response{Data: &data_}
+	data_ = &GetCloudKeystoresResponse{}
+	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(
 		ctx_,
@@ -931,10 +964,10 @@ func GetCloudKeystores(
 		resp_,
 	)
 
-	return &data_, err_
+	return data_, err_
 }
 
-// The query or mutation executed by GetCloudProviders.
+// The query executed by GetCloudProviders.
 const GetCloudProviders_Operation = `
 query GetCloudProviders ($status: CloudProviderStatus, $providerType: CloudProviderType, $name: String!) {
 	cloudProviders(filter: {status:$status,type:$providerType,name:$name}) {
@@ -956,7 +989,7 @@ func GetCloudProviders(
 	status *CloudProviderStatus,
 	providerType *CloudProviderType,
 	name string,
-) (*GetCloudProvidersResponse, error) {
+) (data_ *GetCloudProvidersResponse, err_ error) {
 	req_ := &graphql.Request{
 		OpName: "GetCloudProviders",
 		Query:  GetCloudProviders_Operation,
@@ -966,10 +999,9 @@ func GetCloudProviders(
 			Name:         name,
 		},
 	}
-	var err_ error
 
-	var data_ GetCloudProvidersResponse
-	resp_ := &graphql.Response{Data: &data_}
+	data_ = &GetCloudProvidersResponse{}
+	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(
 		ctx_,
@@ -977,10 +1009,10 @@ func GetCloudProviders(
 		resp_,
 	)
 
-	return &data_, err_
+	return data_, err_
 }
 
-// The query or mutation executed by GetMachineIdentities.
+// The query executed by GetMachineIdentities.
 const GetMachineIdentities_Operation = `
 query GetMachineIdentities ($cloudKeystoreId: UUID, $machineIdentityId: UUID, $fingerprints: [String!], $newlyDiscovered: Boolean, $metadata: String) {
 	cloudMachineIdentities(filter: {cloudKeystoreId:$cloudKeystoreId,machineIdentityId:$machineIdentityId,fingerprints:$fingerprints,newlyDiscovered:$newlyDiscovered,metadata:$metadata}) {
@@ -1021,7 +1053,7 @@ func GetMachineIdentities(
 	fingerprints []string,
 	newlyDiscovered *bool,
 	metadata *string,
-) (*GetMachineIdentitiesResponse, error) {
+) (data_ *GetMachineIdentitiesResponse, err_ error) {
 	req_ := &graphql.Request{
 		OpName: "GetMachineIdentities",
 		Query:  GetMachineIdentities_Operation,
@@ -1033,10 +1065,9 @@ func GetMachineIdentities(
 			Metadata:          metadata,
 		},
 	}
-	var err_ error
 
-	var data_ GetMachineIdentitiesResponse
-	resp_ := &graphql.Response{Data: &data_}
+	data_ = &GetMachineIdentitiesResponse{}
+	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(
 		ctx_,
@@ -1044,10 +1075,10 @@ func GetMachineIdentities(
 		resp_,
 	)
 
-	return &data_, err_
+	return data_, err_
 }
 
-// The query or mutation executed by ProvisionCertificate.
+// The mutation executed by ProvisionCertificate.
 const ProvisionCertificate_Operation = `
 mutation ProvisionCertificate ($certificateId: UUID!, $cloudKeystoreId: UUID!, $wsClientId: UUID!, $options: CertificateProvisioningOptionsInput) {
 	provisionToCloudKeystore(certificateId: $certificateId, cloudKeystoreId: $cloudKeystoreId, wsClientId: $wsClientId, options: $options) {
@@ -1064,7 +1095,7 @@ func ProvisionCertificate(
 	cloudKeystoreId string,
 	wsClientId string,
 	options *CertificateProvisioningOptionsInput,
-) (*ProvisionCertificateResponse, error) {
+) (data_ *ProvisionCertificateResponse, err_ error) {
 	req_ := &graphql.Request{
 		OpName: "ProvisionCertificate",
 		Query:  ProvisionCertificate_Operation,
@@ -1075,10 +1106,9 @@ func ProvisionCertificate(
 			Options:         options,
 		},
 	}
-	var err_ error
 
-	var data_ ProvisionCertificateResponse
-	resp_ := &graphql.Response{Data: &data_}
+	data_ = &ProvisionCertificateResponse{}
+	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(
 		ctx_,
@@ -1086,10 +1116,10 @@ func ProvisionCertificate(
 		resp_,
 	)
 
-	return &data_, err_
+	return data_, err_
 }
 
-// The query or mutation executed by ProvisionCertificateToMachineIdentity.
+// The mutation executed by ProvisionCertificateToMachineIdentity.
 const ProvisionCertificateToMachineIdentity_Operation = `
 mutation ProvisionCertificateToMachineIdentity ($machineIdentityId: UUID!, $wsClientId: UUID!, $certificateId: UUID) {
 	provisionToCloudMachineIdentity(machineIdentityId: $machineIdentityId, wsClientId: $wsClientId, certificateId: $certificateId) {
@@ -1105,7 +1135,7 @@ func ProvisionCertificateToMachineIdentity(
 	machineIdentityId string,
 	wsClientId string,
 	certificateId *string,
-) (*ProvisionCertificateToMachineIdentityResponse, error) {
+) (data_ *ProvisionCertificateToMachineIdentityResponse, err_ error) {
 	req_ := &graphql.Request{
 		OpName: "ProvisionCertificateToMachineIdentity",
 		Query:  ProvisionCertificateToMachineIdentity_Operation,
@@ -1115,10 +1145,9 @@ func ProvisionCertificateToMachineIdentity(
 			CertificateId:     certificateId,
 		},
 	}
-	var err_ error
 
-	var data_ ProvisionCertificateToMachineIdentityResponse
-	resp_ := &graphql.Response{Data: &data_}
+	data_ = &ProvisionCertificateToMachineIdentityResponse{}
+	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(
 		ctx_,
@@ -1126,5 +1155,5 @@ func ProvisionCertificateToMachineIdentity(
 		resp_,
 	)
 
-	return &data_, err_
+	return data_, err_
 }

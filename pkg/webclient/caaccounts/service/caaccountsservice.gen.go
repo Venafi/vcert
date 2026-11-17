@@ -14,6 +14,7 @@ const (
 	CertificateAuthorityTypeDigicert       CertificateAuthorityType = "DIGICERT"
 	CertificateAuthorityTypeGlobalsign     CertificateAuthorityType = "GLOBALSIGN"
 	CertificateAuthorityTypeBuiltin        CertificateAuthorityType = "BUILTIN"
+	CertificateAuthorityTypeBuiltinGen2    CertificateAuthorityType = "BUILTIN_GEN2"
 	CertificateAuthorityTypeEntrust        CertificateAuthorityType = "ENTRUST"
 	CertificateAuthorityTypeMicrosoft      CertificateAuthorityType = "MICROSOFT"
 	CertificateAuthorityTypeAcme           CertificateAuthorityType = "ACME"
@@ -22,6 +23,20 @@ const (
 	CertificateAuthorityTypeTpp            CertificateAuthorityType = "TPP"
 	CertificateAuthorityTypeConnector      CertificateAuthorityType = "CONNECTOR"
 )
+
+var AllCertificateAuthorityType = []CertificateAuthorityType{
+	CertificateAuthorityTypeDigicert,
+	CertificateAuthorityTypeGlobalsign,
+	CertificateAuthorityTypeBuiltin,
+	CertificateAuthorityTypeBuiltinGen2,
+	CertificateAuthorityTypeEntrust,
+	CertificateAuthorityTypeMicrosoft,
+	CertificateAuthorityTypeAcme,
+	CertificateAuthorityTypeZtpki,
+	CertificateAuthorityTypeGlobalsignmssl,
+	CertificateAuthorityTypeTpp,
+	CertificateAuthorityTypeConnector,
+}
 
 // ListCAAccountsCertificateAuthorityAccountsCertificateAuthorityAccountConnection includes the requested fields of the GraphQL type CertificateAuthorityAccountConnection.
 type ListCAAccountsCertificateAuthorityAccountsCertificateAuthorityAccountConnection struct {
@@ -34,6 +49,9 @@ func (v *ListCAAccountsCertificateAuthorityAccountsCertificateAuthorityAccountCo
 }
 
 // ListCAAccountsCertificateAuthorityAccountsCertificateAuthorityAccountConnectionNodesCertificateAuthorityAccount includes the requested fields of the GraphQL type CertificateAuthorityAccount.
+// The GraphQL type's documentation follows.
+//
+// Certificate authority account reference.
 type ListCAAccountsCertificateAuthorityAccountsCertificateAuthorityAccountConnectionNodesCertificateAuthorityAccount struct {
 	Id                       string                   `json:"id"`
 	Name                     string                   `json:"name"`
@@ -70,7 +88,7 @@ func (v *ListCAAccountsResponse) GetCertificateAuthorityAccounts() *ListCAAccoun
 	return v.CertificateAuthorityAccounts
 }
 
-// The query or mutation executed by ListCAAccounts.
+// The query executed by ListCAAccounts.
 const ListCAAccounts_Operation = `
 query ListCAAccounts {
 	certificateAuthorityAccounts {
@@ -86,15 +104,14 @@ query ListCAAccounts {
 func ListCAAccounts(
 	ctx_ context.Context,
 	client_ graphql.Client,
-) (*ListCAAccountsResponse, error) {
+) (data_ *ListCAAccountsResponse, err_ error) {
 	req_ := &graphql.Request{
 		OpName: "ListCAAccounts",
 		Query:  ListCAAccounts_Operation,
 	}
-	var err_ error
 
-	var data_ ListCAAccountsResponse
-	resp_ := &graphql.Response{Data: &data_}
+	data_ = &ListCAAccountsResponse{}
+	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(
 		ctx_,
@@ -102,5 +119,5 @@ func ListCAAccounts(
 		resp_,
 	)
 
-	return &data_, err_
+	return data_, err_
 }
