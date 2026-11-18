@@ -345,7 +345,7 @@ func (c *Connector) request(method string, url string, data interface{}, authNot
 
 	r, err := http.NewRequest(method, url, payload)
 	if err != nil {
-		err = fmt.Errorf("%w: %v", verror.VcertError, err)
+		err = fmt.Errorf("%w: %w", verror.VcertError, err)
 		return
 	}
 
@@ -368,7 +368,7 @@ func (c *Connector) request(method string, url string, data interface{}, authNot
 
 	res, err := httpClient.Do(r)
 	if err != nil {
-		err = fmt.Errorf("%w: %v", verror.ServerUnavailableError, err)
+		err = fmt.Errorf("%w: %w", verror.ServerUnavailableError, err)
 		return
 	}
 	statusCode = res.StatusCode
@@ -377,7 +377,7 @@ func (c *Connector) request(method string, url string, data interface{}, authNot
 	defer res.Body.Close()
 	body, err = io.ReadAll(res.Body)
 	if err != nil {
-		err = fmt.Errorf("%w: %v", verror.ServerError, err)
+		err = fmt.Errorf("%w: %w", verror.ServerError, err)
 	}
 
 	if c.verbose {
