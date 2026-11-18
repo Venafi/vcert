@@ -1,0 +1,31 @@
+config:
+  connection:
+    platform: tpp
+    url: https://dc.tlsp.demo # URL to TPP instance
+    #trustBundle: /path/to/my/trustbundle.pem # Optional TrustBundle for TPP connection
+    credentials:
+      accessToken: '{{ Env "TPP_ACCESS_TOKEN" }}'
+      refreshToken: '{{ Env "TPP_REFRESH_TOKEN" }}'
+certificateTasks:
+  - name: IIS # Task Identifier, no relevance in tool run
+    renewBefore: 20%
+    setEnvVars: ["thumbprint"]
+    request:
+      csr: local
+      subject:
+        # Templating needs to go between single quotes to avoid issues when refreshing tokens
+        commonName: '{{ Env "TLSPC_Hostname" }}.mimdemo.com'
+        country: GB
+        locality: London
+        state: London
+        organization: Venafi
+        orgUnits:
+          - vcert
+      sanDNS: 
+        - '{{ Hostname | ToLower -}}.venafidemo.com'
+      zone: 'Certificates\vcert\IIS'
+    installations:
+      - format: PKCS12
+        useLegacyP12: true
+        file: 'c:\temp\cert.p12'
+        p12Password: '{{ Env "P12_PASSWORD" }}'
