@@ -102,6 +102,20 @@ func (cfg *Config) newClient(args []interface{}) (connector endpoint.Connector, 
 		ws.SetWorkspace(cfg.Workspace)
 	}
 
+	// CustomHeaders is an optional, connector-specific capability (currently
+	// only implemented by the TPP connector), so it's applied via a type
+	// assertion rather than adding it to the shared endpoint.Connector
+	// interface.
+	if len(cfg.CustomHeaders) > 0 {
+		if hs, ok := connector.(interface {
+			SetCustomHeaders(map[string]string)
+		}); ok {
+			hs.SetCustomHeaders(cfg.CustomHeaders)
+		} else {
+			return nil, fmt.Errorf("%w: CustomHeaders is not supported by connector type %v", verror.UserDataError, cfg.ConnectorType)
+		}
+	}
+
 	if clientArgs.authenticate {
 		err = connector.Authenticate(cfg.Credentials)
 	}

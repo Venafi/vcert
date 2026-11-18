@@ -70,6 +70,7 @@ type commandFlags struct {
 	csrFile              string
 	csrOption            string
 	customFields         []string
+	customHeaders        cli.StringSlice
 	distinguishedName    string
 	dnsSans              stringSlice
 	emailSans            rfc822NameSlice

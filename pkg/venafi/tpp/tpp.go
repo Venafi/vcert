@@ -501,6 +501,13 @@ func (c *Connector) request(method string, resource urlResource, data interface{
 	r.Header.Add("content-type", "application/json")
 	r.Header.Add("cache-control", "no-cache")
 
+	// Inject any extra headers configured for this Connector (e.g. an API
+	// gateway key header such as Gravitee's X-API-Key-*). These are added
+	// last so they can override the defaults above if a name collides.
+	for name, value := range c.customHeaders {
+		r.Header.Set(name, value)
+	}
+
 	res, err := c.getHTTPClient().Do(r)
 	if res != nil {
 		statusCode = res.StatusCode

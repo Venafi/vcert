@@ -41,15 +41,23 @@ import (
 
 // Connector contains the base data needed to communicate with a CyberArk Certificate Manager, Self-Hosted Server
 type Connector struct {
-	baseURL     string
-	apiKey      string
-	accessToken string
-	verbose     bool
-	Identity    identity
-	trust       *x509.CertPool
-	zone        string
-	client      *http.Client
-	userAgent   string
+	baseURL       string
+	apiKey        string
+	accessToken   string
+	verbose       bool
+	Identity      identity
+	trust         *x509.CertPool
+	zone          string
+	client        *http.Client
+	userAgent     string
+	customHeaders map[string]string
+}
+
+// SetCustomHeaders sets additional HTTP headers that will be sent with every
+// request made by this Connector (e.g. an API gateway key header such as
+// Gravitee's). Passing a nil or empty map disables custom header injection.
+func (c *Connector) SetCustomHeaders(headers map[string]string) {
+	c.customHeaders = headers
 }
 
 func (c *Connector) IsCSRServiceGenerated(req *certificate.Request) (bool, error) {
@@ -75,17 +83,28 @@ func NewConnector(url string, zone string, verbose bool, trust *x509.CertPool) (
 	return &c, nil
 }
 
-// normalizeURL normalizes the base URL used to communicate with CyberArk Certificate Manager, Self-Hosted
+// normalizeURL normalizes the base URL used to communicate with CyberArk Certificate Manager, Self-Hosted.
+//
+// The host portion still has to look like a real host[:port]. The path in
+// front of the mandatory trailing "vedsdk/" may additionally contain any
+// number of non-empty "/segment" path components, so URLs routed through an
+// API gateway or reverse proxy (e.g.
+// https://gateway.company.com/some/prefix/vedsdk/) are accepted, not just the
+// bare https://cmsh.company.com/vedsdk/ form. A colon is deliberately not a
+// valid path character here, and each segment must be non-empty: without
+// those two restrictions, a malformed scheme such as "ftp://host/vedsdk/"
+// would be swallowed as a fake host+path and incorrectly accepted (see
+// TestNormalizeURL's "ftp://wrongurlformat.com" cases).
 func normalizeURL(url string) (normalizedURL string, err error) {
 
-	var baseUrlRegex = regexp.MustCompile(`^https://[a-z\d]+[-a-z\d.]+[a-z\d][:\d]*/$`)
+	var baseUrlRegex = regexp.MustCompile(`^https://[a-z\d]+[-a-z\d.]+[a-z\d](:\d+)?(/[-a-z\d._~%!$&'()*+,;=@]+)*/$`)
 
 	modified := util.NormalizeUrl(url)
 
 	modified = strings.TrimSuffix(modified, "vedsdk/")
 
 	if loc := baseUrlRegex.FindStringIndex(modified); loc == nil {
-		return "", fmt.Errorf("The specified CyberArk Certificate Manager, Self-Hosted URL is invalid. %s\nExpected CyberArk Certificate Manager, Self-Hosted URL format 'https://cmsh.company.com/vedsdk/'", url)
+		return "", fmt.Errorf("The specified CyberArk Certificate Manager, Self-Hosted URL is invalid. %s\nExpected CyberArk Certificate Manager, Self-Hosted URL format 'https://cmsh.company.com/vedsdk/' (any path ending in /vedsdk/ is accepted)", url)
 	}
 
 	return modified, nil
