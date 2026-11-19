@@ -2398,15 +2398,40 @@ func TestIsDevelopmentStackURL(t *testing.T) {
 	}
 }
 
-// skipOnDevelopmentStackKeyDownload skips a test whose private key download fails with
-// HTTP 500 on a development stack (api-devNNN.qa.venafi.io): VSatellites with VSAT_HPKE keys
-// need HPKE, but vcert encrypts the keystore password with a NaCl sealed box (VC-62432). On
-// other tenants the failure stands.
-func skipOnDevelopmentStackKeyDownload(t *testing.T, err error) {
+// skipOnDevelopmentStackKeyDownload skips a test whose private key download failed on a
+// development stack (api-devNNN.qa.venafi.io) whose VSatellite has a VSAT_HPKE key: such
+// VSatellites need HPKE, but vcert encrypts the keystore password with a NaCl sealed box
+// (VC-62432). The platform reported that as HTTP 500, and since November 2026 as HTTP 400, the
+// status of a key password that breaks the password rule, so the test checks the VSatellite key
+// instead of the status. Other failures, and failures on other tenants, stand.
+func skipOnDevelopmentStackKeyDownload(t *testing.T, conn *Connector, certID string, err error) {
 	t.Helper()
-	if isDevelopmentStackURL(ctx.CloudUrl) && strings.Contains(err.Error(), "500") {
-		t.Skipf("VC-62432 on a development stack: %s", err)
+	if !isDevelopmentStackURL(ctx.CloudUrl) || certID == "" {
+		return
 	}
+	if vsatelliteKeyAlgorithm(conn, certID) == "VSAT_HPKE" {
+		t.Skipf("VC-62432 on a development stack (VSAT_HPKE VSatellite key): %s", err)
+	}
+}
+
+// vsatelliteKeyAlgorithm returns the algorithm of the VSatellite key that protects a
+// certificate's private key, or "" when it cannot be read.
+func vsatelliteKeyAlgorithm(conn *Connector, certID string) string {
+	cert, err := conn.getCertificate(certID)
+	if err != nil || cert.DekHash == "" {
+		return ""
+	}
+	statusCode, _, body, err := conn.request("GET", fmt.Sprintf(conn.getURL(urlDekPublicKey), cert.DekHash), nil)
+	if err != nil || statusCode != http.StatusOK {
+		return ""
+	}
+	var key struct {
+		KeyAlgorithm string `json:"keyAlgorithm"`
+	}
+	if json.Unmarshal(body, &key) != nil {
+		return ""
+	}
+	return key.KeyAlgorithm
 }
 
 // isDevelopmentStackURL reports whether a CM SaaS URL's host is a development stack's
@@ -2452,7 +2477,8 @@ func TestCreateCertServiceCSR(t *testing.T) {
 	req.Timeout = time.Duration(180) * time.Second
 	pcc, err := conn.RetrieveCertificate(&req)
 	if err != nil {
-		skipOnDevelopmentStackKeyDownload(t, err)
+		// RetrieveCertificate sets req.CertID before it downloads the key
+		skipOnDevelopmentStackKeyDownload(t, conn, req.CertID, err)
 		t.Fatalf("%s", err)
 	}
 
