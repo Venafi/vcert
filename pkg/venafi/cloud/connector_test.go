@@ -65,6 +65,10 @@ type CertificateRequestStatus = string
 
 const CertificateStatusIssued CertificateRequestStatus = "ISSUED"
 
+// testKeyPassword protects downloaded private keys. CM SaaS rejects keystore passwords that are not at least 12
+// characters long with a digit, an uppercase letter and a special character (HTTP 400, code 12301).
+const testKeyPassword = "Passw0rd-Vcert_2026"
+
 func init() {
 	ctx = test.GetEnvContext()
 	// http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
@@ -2444,7 +2448,7 @@ func TestCreateCertServiceCSR(t *testing.T) {
 	}
 	req.PickupID = id
 	req.ChainOption = certificate.ChainOptionRootFirst
-	req.KeyPassword = "abcede"
+	req.KeyPassword = testKeyPassword
 	req.Timeout = time.Duration(180) * time.Second
 	pcc, err := conn.RetrieveCertificate(&req)
 	if err != nil {
@@ -2486,7 +2490,7 @@ func TestCreateCertServiceCSRWithDefaults(t *testing.T) {
 	}
 	req.PickupID = id
 	req.ChainOption = certificate.ChainOptionRootFirst
-	req.KeyPassword = "abcede"
+	req.KeyPassword = testKeyPassword
 	req.Timeout = time.Duration(180) * time.Second
 	pcc, err := conn.RetrieveCertificate(&req)
 	if err != nil {
@@ -2605,7 +2609,7 @@ func TestVerifyCSRServiceGenerated(t *testing.T) {
 	}
 	req.PickupID = id
 	req.ChainOption = certificate.ChainOptionRootFirst
-	req.KeyPassword = "abcede"
+	req.KeyPassword = testKeyPassword
 	req.Timeout = time.Duration(180) * time.Second
 
 	isCSRService, err := conn.IsCSRServiceGenerated(&req)
@@ -2643,7 +2647,7 @@ func TestGenerateCertificateEC(t *testing.T) {
 	}
 	req.PickupID = id
 	req.ChainOption = certificate.ChainOptionRootFirst
-	req.KeyPassword = "abcede"
+	req.KeyPassword = testKeyPassword
 	req.Timeout = time.Duration(180) * time.Second
 
 	isCSRService, err := conn.IsCSRServiceGenerated(&req)
@@ -2680,7 +2684,7 @@ func TestGenerateCertificateECDefault(t *testing.T) {
 	}
 	req.PickupID = id
 	req.ChainOption = certificate.ChainOptionRootFirst
-	req.KeyPassword = "abcede"
+	req.KeyPassword = testKeyPassword
 	req.Timeout = time.Duration(180) * time.Second
 
 	isCSRService, err := conn.IsCSRServiceGenerated(&req)
