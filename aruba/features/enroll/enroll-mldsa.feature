@@ -64,7 +64,10 @@ Feature: enrolling certificates with ML-DSA keys
       And "k.pem" should be an encrypted PKCS#8 private key
       And private key in "k.pem" encrypted with dummy password and certificate in "c.pem" should have the same public key
 
-    @NGTS
+    # Not tagged @NGTS until VC-62432 is fixed: vcert encrypts the keystore password with a NaCl sealed box, but
+    # VSatellites with VSAT_HPKE keys need HPKE, so the private key download fails with HTTP 500 (the Go tests
+    # TestRequestCertificateMLDSAServiceGeneratedCSR* are skipped for the same reason)
+    @NGTS_VC_62432
     Examples:
       | endpoint  | strength |
       | NGTSmldsa | 44       |

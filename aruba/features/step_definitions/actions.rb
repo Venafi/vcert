@@ -1,6 +1,6 @@
 
 When(/^I try to run `([^`]*)`$/)do |cmd|
-  Kernel.puts cmd
+  Kernel.puts mask_secrets(cmd)
   steps %{
     Then I run `#{cmd}`
   }

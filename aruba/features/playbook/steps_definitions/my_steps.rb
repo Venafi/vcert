@@ -26,6 +26,8 @@ Given(/^I have playbook with (\S+) connection details$/) do |platform|
     connection_vaas = {
       platform: "vaas"
     }
+    # a tenant other than production, such as a development stack
+    connection_vaas[:url] = ENV['CLOUD_URL'] unless ENV['CLOUD_URL'].to_s.empty?
     credentials = {
       clientId: "vcert-sdk",
       apiKey: ENV['CLOUD_APIKEY']
@@ -253,7 +255,7 @@ And(/^task named "(.*)" has installation format PKCS12 with cert name "(.*)" and
   current_certificate_task.installations.push(aux_installation)
 end
 
-And(/^task named "(.*)" has installation format PKCS12 with cert name "(.*)" and password "(.*)" and useLegacyP12 (?: with)( installation)?(?: and|)( validation)?$/) do |task_name, cert_name, p12_password, installation, validation|
+And(/^task named "(.*)" has installation format PKCS12 with cert name "(.*)" and password "(.*)" and useLegacyP12(?: with)( installation)?(?: and|)( validation)?$/) do |task_name, cert_name, p12_password, installation, validation|
   current_certificate_task = @playbook_data['certificateTasks'].find { |certificate_task| certificate_task.name == task_name }
   aux_installation = Installation.new
   aux_installation.format = "PKCS12"
