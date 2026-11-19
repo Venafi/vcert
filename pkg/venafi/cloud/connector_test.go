@@ -2375,15 +2375,51 @@ func TestSetPolicyDigicert(t *testing.T) {
 	}
 }
 
+func TestIsDevelopmentStackURL(t *testing.T) {
+	for rawURL, want := range map[string]bool{
+		"api-dev158.qa.venafi.io":                        true,
+		"https://api-dev158.qa.venafi.io/":               true,
+		"HTTPS://API-DEV158.QA.VENAFI.IO":                true,
+		"":                                               false,
+		"api.venafi.cloud":                               false,
+		"https://api.venafi.cloud":                       false,
+		"https://evil.example/?x=.qa.venafi.io":          false,
+		"https://api-dev158.qa.venafi.io.evil.example/":  false,
+		"https://evil.example/api-dev158.qa.venafi.io":   false,
+		"https://user@api-dev158.qa.venafi.io:8443/path": true,
+	} {
+		if got := isDevelopmentStackURL(rawURL); got != want {
+			t.Errorf("isDevelopmentStackURL(%q) = %t, want %t", rawURL, got, want)
+		}
+	}
+}
+
 // skipOnDevelopmentStackKeyDownload skips a test whose private key download fails with
 // HTTP 500 on a development stack (api-devNNN.qa.venafi.io): VSatellites with VSAT_HPKE keys
 // need HPKE, but vcert encrypts the keystore password with a NaCl sealed box (VC-62432). On
 // other tenants the failure stands.
 func skipOnDevelopmentStackKeyDownload(t *testing.T, err error) {
 	t.Helper()
-	if strings.Contains(strings.ToLower(ctx.CloudUrl), ".qa.venafi.io") && strings.Contains(err.Error(), "500") {
+	if isDevelopmentStackURL(ctx.CloudUrl) && strings.Contains(err.Error(), "500") {
 		t.Skipf("VC-62432 on a development stack: %s", err)
 	}
+}
+
+// isDevelopmentStackURL reports whether a CM SaaS URL's host is a development stack's
+// (*.qa.venafi.io). URLs may lack the scheme, as vcert accepts.
+func isDevelopmentStackURL(rawURL string) bool {
+	rawURL = strings.TrimSpace(rawURL)
+	if rawURL == "" {
+		return false
+	}
+	if !strings.Contains(rawURL, "://") {
+		rawURL = "https://" + rawURL
+	}
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return false
+	}
+	return strings.HasSuffix(strings.ToLower(u.Hostname()), ".qa.venafi.io")
 }
 
 func TestCreateCertServiceCSR(t *testing.T) {
