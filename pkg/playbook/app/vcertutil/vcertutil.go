@@ -384,6 +384,9 @@ func RefreshTPPTokens(config domain.Config) (string, string, error) {
 	return "", "", fmt.Errorf("no refresh token or certificate available to refresh access token")
 }
 
+// GeneratePassword returns a temporary password, such as the key password for service generated keys. CyberArk
+// Certificate Manager, SaaS rejects key passwords that are not at least 12 characters long with a digit, an uppercase
+// letter and a special character, so the password has all of them.
 func GeneratePassword() string {
 	letterRunes := "abcdefghijklmnopqrstuvwxyz"
 
@@ -396,5 +399,5 @@ func GeneratePassword() string {
 
 	randString := string(b)
 
-	return fmt.Sprintf("t%d-%s.temp.pwd", time.Now().Unix(), randString)
+	return fmt.Sprintf("T%d-%s.temp.pwd", time.Now().Unix(), randString)
 }

@@ -12,6 +12,7 @@
 - Fix validation of user provided Ed25519 CSRs, which were always rejected.
 - `Request.GenerateCSR` now returns the underlying error when the CSR can't be created.
 - NGTS certificate request and retire errors no longer say "zone read".
+- The playbook (`vcert run`) no longer fails to retrieve service generated keys from CyberArk Certificate Manager, SaaS with HTTP 400: the key password it generates now meets the password rule (at least 12 characters, with a digit, an uppercase letter and a special character).
 
 ## 5.12.3 (December 14th, 2025)
 - CyberArk Rebranding.
