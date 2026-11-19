@@ -123,6 +123,7 @@ def get_value_from_output(value, json = false)
     extracted_val = unescape_text(normalize_json(json_string, "#{value}")).tr('"', '')
   else
     m = @previous_command_output.match /#{value}: (.+)$/
+    fail("the output has no #{value}") if m.nil?
     extracted_val = m[1]
   end
   extracted_val

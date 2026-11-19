@@ -210,7 +210,8 @@ When(/^I enroll(?: a)?( random)? certificate with defined platform (.*) with (.+
     cn = " -cn " + PREFIX_CN + "-" + random_cn
   end
 
-  platform_flag = " -platform " + platform
+  # some endpoints (NGTS) already set the platform with -p, and vcert refuses both forms
+  platform_flag = ENDPOINTS[platform].to_s.include?("-p ") ? "" : " -platform " + platform
 
   trust_bundle_flag = ""
   case platform
