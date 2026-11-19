@@ -48,12 +48,8 @@ Feature: provision to cloud keystore
       | VCP      | AWS           |
       | VCP      | AZURE         |
 
-    @NGTS
-    Examples:
-      | platform | cloudkeystore |
-      | NGTS     | GOOGLE        |
-      | NGTS     | AWS           |
-      | NGTS     | AZURE         |
+    # No NGTS examples: vcert cannot tell NGTS from the connection flags (a URL and a token look like TPP), so the
+    # NGTS endpoint always passes -p NGTS and there is no platform to guess
 
   Scenario Outline: Enroll certificate and execute provisioning for cloud keystore and get output in JSON
     Given I enroll a random certificate with defined platform <platform> with -csr service -no-pickup -no-prompt
