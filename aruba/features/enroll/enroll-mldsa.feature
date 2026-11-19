@@ -64,6 +64,7 @@ Feature: enrolling certificates with ML-DSA keys
       And "k.pem" should be an encrypted PKCS#8 private key
       And private key in "k.pem" encrypted with dummy password and certificate in "c.pem" should have the same public key
 
+    # skips while VC-62432 makes the key download fail (features/support/vc_62432.rb)
     @NGTS
     Examples:
       | endpoint  | strength |

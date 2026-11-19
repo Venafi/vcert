@@ -1,6 +1,6 @@
 #!/bin/bash
-set -ex
-echo "Using token $TPP_ACCESS_TOKEN"
+# no tracing (-x), and never echo tokens: the CI log is not masked for them
+set -e
 
 RUN_COMMAND="docker run -t --rm \
           -e TPP_URL \

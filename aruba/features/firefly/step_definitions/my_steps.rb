@@ -37,7 +37,7 @@ When(/^I( interactively)? get credentials from "(.*)"(?: with)?(.+)?$/) do |inte
   end
 
   if interactively
-    Kernel.puts cmd
+    Kernel.puts mask_secrets(cmd)
     steps %{
       Then I run `#{cmd}` interactively
       And I type "#{idp_password}"
