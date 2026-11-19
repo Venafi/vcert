@@ -74,6 +74,10 @@ type CertificateRequestStatus = string
 
 const CertificateStatusIssued CertificateRequestStatus = "ISSUED"
 
+// testKeyPassword protects downloaded private keys. CM SaaS rejects keystore passwords that are not at least 12
+// characters long with a digit, an uppercase letter and a special character (HTTP 400, code 12301).
+const testKeyPassword = "Passw0rd-Vcert_2026"
+
 func init() {
 	ctx = test.GetEnvContext()
 	// http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
@@ -940,6 +944,37 @@ func TestGetCertificateStatus(t *testing.T) {
 	}
 }
 
+// requireTenantTags skips the test when the tenant does not define the tags, as a
+// development stack may not. A failing tags API fails the test rather than
+// skipping it, so that a broken lookup cannot hide the test.
+func requireTenantTags(t *testing.T, conn *Connector, names ...string) {
+	t.Helper()
+	statusCode, status, body, err := conn.request("GET", conn.getURL(urlResource("v1/tags")), nil)
+	if err != nil {
+		t.Fatalf("cannot list the tenant's tags: %s", err)
+	}
+	if statusCode != http.StatusOK {
+		t.Fatalf("cannot list the tenant's tags: %s: %s", status, body)
+	}
+	var tags struct {
+		Tags []struct {
+			Name string `json:"name"`
+		} `json:"tags"`
+	}
+	if err := json.Unmarshal(body, &tags); err != nil {
+		t.Fatalf("cannot parse the tenant's tags: %s", err)
+	}
+	defined := map[string]bool{}
+	for _, tag := range tags.Tags {
+		defined[tag.Name] = true
+	}
+	for _, name := range names {
+		if !defined[name] {
+			t.Skipf("the tenant does not define the tag %q", name)
+		}
+	}
+}
+
 func TestRenewCertificate(t *testing.T) {
 	//t.Skip() //todo: remove if condor team fix bug. check after 2020.04
 	conn := getTestConnector(ctx.NGTSZone)
@@ -947,6 +982,8 @@ func TestRenewCertificate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
+	// certificates only keep tags the tenant defines, as the test tenant does
+	requireTenantTags(t, conn, "testTag", "testTag2")
 	zoneConfig, err := conn.ReadZoneConfiguration()
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -2663,6 +2700,10 @@ func TestSetPolicyValuesAndValidate(t *testing.T) {
 This test is just for verifying that a policy can be created using DIGICERT	 CA.
 */
 func TestSetPolicyDigicert(t *testing.T) {
+	caName := os.Getenv("NGTS_DIGICERT_CA_NAME")
+	if caName == "" {
+		t.Skip("NGTS_DIGICERT_CA_NAME is not set: the tenant has no DigiCert CA account")
+	}
 	policyName := test.RandCitName()
 	conn := getTestConnector(ctx.NGTSZone)
 	conn.verbose = true
@@ -2676,7 +2717,6 @@ func TestSetPolicyDigicert(t *testing.T) {
 	specification := test.GetCloudPolicySpecification()
 
 	//change default CA to Digicert
-	caName := os.Getenv("NGTS_DIGICERT_CA_NAME")
 	specification.Policy.CertificateAuthority = &caName
 	_, err = conn.SetPolicy(policyName, specification)
 
@@ -2717,7 +2757,7 @@ func TestCreateCertServiceCSR(t *testing.T) {
 	}
 	req.PickupID = id
 	req.ChainOption = certificate.ChainOptionRootFirst
-	req.KeyPassword = "abcede"
+	req.KeyPassword = testKeyPassword
 	req.Timeout = time.Duration(180) * time.Second
 	pcc, err := conn.RetrieveCertificate(&req)
 	if err != nil {
@@ -2755,7 +2795,7 @@ func TestCreateCertServiceCSRWithDefaults(t *testing.T) {
 	}
 	req.PickupID = id
 	req.ChainOption = certificate.ChainOptionRootFirst
-	req.KeyPassword = "abcede"
+	req.KeyPassword = testKeyPassword
 	req.Timeout = time.Duration(180) * time.Second
 	pcc, err := conn.RetrieveCertificate(&req)
 	if err != nil {
@@ -2874,7 +2914,7 @@ func TestVerifyCSRServiceGenerated(t *testing.T) {
 	}
 	req.PickupID = id
 	req.ChainOption = certificate.ChainOptionRootFirst
-	req.KeyPassword = "abcede"
+	req.KeyPassword = testKeyPassword
 	req.Timeout = time.Duration(180) * time.Second
 
 	isCSRService, err := conn.IsCSRServiceGenerated(&req)
@@ -2912,7 +2952,7 @@ func TestGenerateCertificateEC(t *testing.T) {
 	}
 	req.PickupID = id
 	req.ChainOption = certificate.ChainOptionRootFirst
-	req.KeyPassword = "abcede"
+	req.KeyPassword = testKeyPassword
 	req.Timeout = time.Duration(180) * time.Second
 
 	isCSRService, err := conn.IsCSRServiceGenerated(&req)
@@ -2949,7 +2989,7 @@ func TestGenerateCertificateECDefault(t *testing.T) {
 	}
 	req.PickupID = id
 	req.ChainOption = certificate.ChainOptionRootFirst
-	req.KeyPassword = "abcede"
+	req.KeyPassword = testKeyPassword
 	req.Timeout = time.Duration(180) * time.Second
 
 	isCSRService, err := conn.IsCSRServiceGenerated(&req)

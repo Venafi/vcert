@@ -91,6 +91,8 @@ func main() {
 			commandSshGetConfig,
 			commandRunPlaybook,
 			commandProvision,
+			commandCloudProvider,
+			commandCloudKeystore,
 		},
 		EnableBashCompletion: true, //todo: write BashComplete function for options
 		Authors:              authors,

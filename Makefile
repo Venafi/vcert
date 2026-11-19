@@ -90,21 +90,29 @@ test: get linter
 	go tool cover -func=cov6.out
 	go test -v -coverprofile=cov_cmd.out ./cmd/vcert
 	go tool cover -func=cov_cmd.out
+	go test -v -coverprofile=cov_webclient.out ./pkg/webclient/...
+	go tool cover -func=cov_webclient.out
+	go test -v -coverprofile=cov_cloudci.out ./test/cloudci
+	go tool cover -func=cov_cloudci.out
+
+# The live integration tests wait for certificates to be issued; the NGTS package alone takes about 9 of
+# go test's default 10 minutes against the test tenant, and longer against a development stack
+INTEGRATION_TEST_TIMEOUT ?= 30m
 
 tpp_test: get
-	go test -v $(GOFLAGS) -coverprofile=cov_tpp.out ./pkg/venafi/tpp
+	go test -v -timeout $(INTEGRATION_TEST_TIMEOUT) $(GOFLAGS) -coverprofile=cov_tpp.out ./pkg/venafi/tpp
 	go tool cover -func=cov_tpp.out
 
 cloud_test: get
-	go test -v $(GOFLAGS) -coverprofile=cov_vaas.out ./pkg/venafi/cloud
+	go test -v -timeout $(INTEGRATION_TEST_TIMEOUT) $(GOFLAGS) -coverprofile=cov_vaas.out ./pkg/venafi/cloud
 	go tool cover -func=cov_vaas.out
 
 ngts_test: get
-	go test -v -tags integration $(GOFLAGS) -coverprofile=cov_ngts.out ./pkg/venafi/ngts
+	go test -v -tags integration -timeout $(INTEGRATION_TEST_TIMEOUT) $(GOFLAGS) -coverprofile=cov_ngts.out ./pkg/venafi/ngts
 	go tool cover -func=cov_ngts.out
 
 firefly_test: get
-	go test -v $(GOFLAGS) -coverprofile=cov_firefly.out ./pkg/venafi/firefly
+	go test -v -timeout $(INTEGRATION_TEST_TIMEOUT) $(GOFLAGS) -coverprofile=cov_firefly.out ./pkg/venafi/firefly
 	go tool cover -func=cov_firefly.out
 
 cmd_test: get
