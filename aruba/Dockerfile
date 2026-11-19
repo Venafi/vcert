@@ -1,7 +1,9 @@
 FROM ruby:3.2
 MAINTAINER Venafi DevOps Integrations <opensource@venafi.com>
 
-RUN gem install aruba json_spec
+# aruba 3 no longer depends on the cucumber gem, so it would leave the image without the cucumber command;
+# aruba 2 brings a cucumber it works with. Fail the build here if the command is missing.
+RUN gem install aruba -v '~> 2.0' && gem install json_spec && cucumber --version
 RUN gem install google-cloud-certificate_manager-v1
 RUN gem install aws-sdk-acm
 COPY . /vcert/
