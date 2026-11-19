@@ -151,7 +151,9 @@ And(/^task named "(.*)" request has subject with default values$/) do |task_name
   org_units = "engineering,marketing"
   current_certificate_task.request.subject.locality = "Salt Lake City"
   current_certificate_task.request.subject.organization = "Venafi Inc"
-  if current_certificate_task.request.zone == ENV['VAAS_ZONE_EC']
+  # the EC-only zones of CM SaaS and NGTS restrict the subject to these values
+  ec_only_zones = [ENV['VAAS_ZONE_EC'], ENV['NGTS_ZONE_EC']].reject { |zone| zone.to_s.empty? }
+  if ec_only_zones.include?(current_certificate_task.request.zone)
     current_certificate_task.request.subject.locality = "Salt Lake"
     current_certificate_task.request.subject.organization = "Venafi Inc."
     org_units = "Integrations,Integration"
