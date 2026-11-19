@@ -398,7 +398,7 @@ Feature: playbook
     And task named "myCertificateInstallation" has request
     And task named "myCertificateInstallation" has request with "csr" value "service"
     And task named "myCertificateInstallation" has request with "keyType" value "ECDSA"
-    And task named "myCertificateInstallation" has request with "keyCurve" value "P521"
+    And task named "myCertificateInstallation" has request with "keyCurve" value "<key-curve>"
     And task named "myCertificateInstallation" has request with default Elliptic Curve "<platform>" zone
     And task named "myCertificateInstallation" request has subject
     And task named "myCertificateInstallation" request has subject with default values
@@ -419,18 +419,19 @@ Feature: playbook
 
     @TPP
     Examples:
-      | platform | config-file       |
-      | TPP      | playbook-tpp.yml  |
+      | platform | config-file       | key-curve |
+      | TPP      | playbook-tpp.yml  | P521      |
 
     @VAAS
     Examples:
-      | platform | config-file       |
-      | VaaS     | playbook-vaas.yml |
+      | platform | config-file       | key-curve |
+      | VaaS     | playbook-vaas.yml | P521      |
 
+    # the NGTS EC-only template allows P256, P384 and Ed25519
     @NGTS
     Examples:
-      | platform | config-file       |
-      | NGTS     | playbook-ngts.yml |
+      | platform | config-file       | key-curve |
+      | NGTS     | playbook-ngts.yml | P384      |
 
   Scenario Outline: Run playbook with default configuration and performs PEM installation using service generated encrypted ECDSA private keys
     Given I have playbook with <platform> connection details
@@ -440,7 +441,7 @@ Feature: playbook
     And task named "myCertificateInstallation" has request
     And task named "myCertificateInstallation" has request with "csr" value "service"
     And task named "myCertificateInstallation" has request with "keyType" value "ECDSA"
-    And task named "myCertificateInstallation" has request with "keyCurve" value "P521"
+    And task named "myCertificateInstallation" has request with "keyCurve" value "<key-curve>"
     And task named "myCertificateInstallation" has request with default Elliptic Curve "<platform>" zone
     And task named "myCertificateInstallation" request has subject
     And task named "myCertificateInstallation" request has subject with default values
@@ -463,18 +464,19 @@ Feature: playbook
     # so encrypted-PEM install of a service-generated ECDSA key fails. Skipped until the bug is fixed.
     @TPP @TODO
     Examples:
-      | platform | config-file       |
-      | TPP      | playbook-tpp.yml  |
+      | platform | config-file       | key-curve |
+      | TPP      | playbook-tpp.yml  | P521      |
 
     @VAAS
     Examples:
-      | platform | config-file       |
-      | VaaS     | playbook-vaas.yml |
+      | platform | config-file       | key-curve |
+      | VaaS     | playbook-vaas.yml | P521      |
 
+    # the NGTS EC-only template allows P256, P384 and Ed25519
     @NGTS
     Examples:
-      | platform | config-file       |
-      | NGTS     | playbook-ngts.yml |
+      | platform | config-file       | key-curve |
+      | NGTS     | playbook-ngts.yml | P384      |
 
 Scenario Outline: Run playbook with default configuration and performs pkcs12 installation using legacy flag
     Given I have playbook with <platform> connection details
