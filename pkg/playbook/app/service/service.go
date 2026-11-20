@@ -44,6 +44,14 @@ const (
 //
 // Config is used to make the connection to the CyberArk platform for the certificate request.
 func Execute(config domain.Config, task domain.CertificateTask) []error {
+	// Pickup-first mode (request.pickupFirst=true): try to fetch the current
+	// cert (and key) from the platform before deciding to enroll. If pickup
+	// produces something newer than what is installed, install it and skip
+	// the enroll path. Falls through silently for any other outcome.
+	if handled, errs := pickupFirstAttempt(config, task); handled {
+		return errs
+	}
+
 	// Check if certificate needs action
 	changed, err := isCertificateChanged(config, task)
 	if err != nil {
@@ -59,6 +67,10 @@ func Execute(config domain.Config, task domain.CertificateTask) []error {
 	}
 	zap.L().Info("certificate needs action", zap.String("certificate", task.Request.Subject.CommonName))
 
+	return executeEnrollmentAndInstall(config, task)
+}
+
+func executeEnrollmentAndInstall(config domain.Config, task domain.CertificateTask) []error {
 	// Ensure there is a keyPassword in the request when origin is service
 	csrOrigin := certificate.ParseCSROrigin(task.Request.CsrOrigin)
 	if csrOrigin == certificate.ServiceGeneratedCSR {
@@ -105,7 +117,6 @@ func Execute(config domain.Config, task domain.CertificateTask) []error {
 		}
 	}
 	return errorList
-
 }
 
 func isCertificateChanged(config domain.Config, task domain.CertificateTask) (bool, error) {

@@ -933,7 +933,7 @@ func (c *Connector) IsCSRServiceGenerated(req *certificate.Request) (bool, error
 }
 
 func (c *Connector) RetrieveCertificateMetaData(_ string) (*certificate.CertificateMetaData, error) {
-	panic("operation is not supported yet")
+	return nil, fmt.Errorf("operation is not supported yet")
 }
 
 // SynchronousRequestCertificate It's not supported yet in CyberArk Certificate Manager, SaaS
@@ -1389,6 +1389,32 @@ func (c *Connector) searchCertificatesByFingerprint(fp string) (*CertificateSear
 		},
 	}
 	return c.searchCertificates(req)
+}
+
+// SearchCertificatesByCN searches certificates by Subject CN
+func (c *Connector) SearchCertificatesByCN(cn string) (*CertificateSearchResponse, error) {
+	req := &SearchRequest{
+		Expression: &Expression{
+			Operands: []Operand{
+				{
+					Field:    "subjectCN",
+					Operator: MATCH,
+					Value:    cn,
+				},
+			},
+		},
+	}
+	return c.searchCertificates(req)
+}
+
+// SearchCertificatesByFingerprint searches certificates by Fingerprint
+func (c *Connector) SearchCertificatesByFingerprint(fp string) (*CertificateSearchResponse, error) {
+	return c.searchCertificatesByFingerprint(fp)
+}
+
+// GetCertificateDetails returns certificate details by certificateId
+func (c *Connector) GetCertificateDetails(certificateId string) (*VenafiCertificate, error) {
+	return c.getCertificates(certificateId)
 }
 
 type managedCertificate struct {
