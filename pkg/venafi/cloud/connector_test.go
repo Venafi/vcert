@@ -2379,78 +2379,6 @@ func TestSetPolicyDigicert(t *testing.T) {
 	}
 }
 
-func TestIsDevelopmentStackURL(t *testing.T) {
-	for rawURL, want := range map[string]bool{
-		"api-dev158.qa.venafi.io":                        true,
-		"https://api-dev158.qa.venafi.io/":               true,
-		"HTTPS://API-DEV158.QA.VENAFI.IO":                true,
-		"":                                               false,
-		"api.venafi.cloud":                               false,
-		"https://api.venafi.cloud":                       false,
-		"https://evil.example/?x=.qa.venafi.io":          false,
-		"https://api-dev158.qa.venafi.io.evil.example/":  false,
-		"https://evil.example/api-dev158.qa.venafi.io":   false,
-		"https://user@api-dev158.qa.venafi.io:8443/path": true,
-	} {
-		if got := isDevelopmentStackURL(rawURL); got != want {
-			t.Errorf("isDevelopmentStackURL(%q) = %t, want %t", rawURL, got, want)
-		}
-	}
-}
-
-// skipOnDevelopmentStackKeyDownload skips a test whose private key download failed on a
-// development stack (api-devNNN.qa.venafi.io) whose VSatellite has a VSAT_HPKE key: such
-// VSatellites need HPKE, but vcert encrypts the keystore password with a NaCl sealed box
-// (VC-62432). The platform reported that as HTTP 500, and since November 2026 as HTTP 400, the
-// status of a key password that breaks the password rule, so the test checks the VSatellite key
-// instead of the status. Other failures, and failures on other tenants, stand.
-func skipOnDevelopmentStackKeyDownload(t *testing.T, conn *Connector, certID string, err error) {
-	t.Helper()
-	if !isDevelopmentStackURL(ctx.CloudUrl) || certID == "" {
-		return
-	}
-	if vsatelliteKeyAlgorithm(conn, certID) == "VSAT_HPKE" {
-		t.Skipf("VC-62432 on a development stack (VSAT_HPKE VSatellite key): %s", err)
-	}
-}
-
-// vsatelliteKeyAlgorithm returns the algorithm of the VSatellite key that protects a
-// certificate's private key, or "" when it cannot be read.
-func vsatelliteKeyAlgorithm(conn *Connector, certID string) string {
-	cert, err := conn.getCertificate(certID)
-	if err != nil || cert.DekHash == "" {
-		return ""
-	}
-	statusCode, _, body, err := conn.request("GET", fmt.Sprintf(conn.getURL(urlDekPublicKey), cert.DekHash), nil)
-	if err != nil || statusCode != http.StatusOK {
-		return ""
-	}
-	var key struct {
-		KeyAlgorithm string `json:"keyAlgorithm"`
-	}
-	if json.Unmarshal(body, &key) != nil {
-		return ""
-	}
-	return key.KeyAlgorithm
-}
-
-// isDevelopmentStackURL reports whether a CM SaaS URL's host is a development stack's
-// (*.qa.venafi.io). URLs may lack the scheme, as vcert accepts.
-func isDevelopmentStackURL(rawURL string) bool {
-	rawURL = strings.TrimSpace(rawURL)
-	if rawURL == "" {
-		return false
-	}
-	if !strings.Contains(rawURL, "://") {
-		rawURL = "https://" + rawURL
-	}
-	u, err := url.Parse(rawURL)
-	if err != nil {
-		return false
-	}
-	return strings.HasSuffix(strings.ToLower(u.Hostname()), ".qa.venafi.io")
-}
-
 func TestCreateCertServiceCSR(t *testing.T) {
 	policyName := os.Getenv("CLOUD_ZONE_RESTRICTED")
 	conn := getTestConnector(policyName)
@@ -2477,8 +2405,6 @@ func TestCreateCertServiceCSR(t *testing.T) {
 	req.Timeout = time.Duration(180) * time.Second
 	pcc, err := conn.RetrieveCertificate(&req)
 	if err != nil {
-		// RetrieveCertificate sets req.CertID before it downloads the key
-		skipOnDevelopmentStackKeyDownload(t, conn, req.CertID, err)
 		t.Fatalf("%s", err)
 	}
 
