@@ -20,7 +20,6 @@ import (
 	"archive/zip"
 	"bytes"
 	"context"
-	"crypto/rand"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
@@ -47,7 +46,6 @@ import (
 	"github.com/Venafi/vcert/v5/pkg/webclient/caoperations"
 	"github.com/Venafi/vcert/v5/pkg/webclient/cloudproviders"
 	"github.com/Venafi/vcert/v5/pkg/webclient/notificationservice"
-	"golang.org/x/crypto/nacl/box"
 )
 
 type urlResource string
@@ -1415,19 +1413,9 @@ func (c *Connector) getCertificateStatus(requestID string) (certStatus *certific
 
 func retrieveServiceGeneratedCertData(c *Connector, req *certificate.Request, dekInfo *EdgeEncryptionKey) (*certificate.PEMCollection, error) {
 
-	pkDecoded, err := base64.StdEncoding.DecodeString(dekInfo.Key)
-
-	if err != nil {
-		return nil, err
-	}
-
-	publicKey, err := Load32KeyByte(pkDecoded)
-	if err != nil {
-		return nil, err
-	}
-
-	encrypted, err := box.SealAnonymous(nil, []byte(req.KeyPassword), publicKey, rand.Reader)
-
+	// Encrypt the key password for the VSatellite that holds the private key (NaCl sealed box for
+	// ED25519 keys, HPKE for VSAT_HPKE keys).
+	encryptedPassphrase, err := util.EncryptForEdgeKey([]byte(req.KeyPassword), dekInfo.Key, dekInfo.KeyAlgorithm, dekInfo.CompanyId)
 	if err != nil {
 		return nil, err
 	}
@@ -1435,7 +1423,7 @@ func retrieveServiceGeneratedCertData(c *Connector, req *certificate.Request, de
 	//Request keystore
 	ksRequest := KeyStoreRequest{
 		ExportFormat:                  "PEM",
-		EncryptedPrivateKeyPassphrase: base64.StdEncoding.EncodeToString(encrypted),
+		EncryptedPrivateKeyPassphrase: encryptedPassphrase,
 		EncryptedKeystorePassphrase:   "",
 		CertificateLabel:              "",
 	}

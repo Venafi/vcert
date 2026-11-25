@@ -234,8 +234,12 @@ func (v *GetMachineIdentitiesCloudMachineIdentitiesMachineIdentityConnectionNode
 	if v.Metadata == nil {
 		return nil, nil
 	}
-	m := *v.Metadata
+	return cloudMetadataToDomain(*v.Metadata)
+}
 
+// cloudMetadataToDomain converts any of the generated CertificateCloudMetadata
+// union types into domain metadata, keyed by the GraphQL field names
+func cloudMetadataToDomain(m interface{}) (*domain.CertificateCloudMetadata, error) {
 	data, err := json.Marshal(m)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal cloud certificate metadata: %w", err)
