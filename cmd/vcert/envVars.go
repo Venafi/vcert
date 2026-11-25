@@ -18,6 +18,7 @@ const (
 	vcertDeviceURL    = "VCERT_DEVICE_URL"
 	vcertScope        = "VCERT_SCOPE"
 	vcertWorkspace    = "VCERT_WORKSPACE"
+	vcertAzureSecret  = "VCERT_AZURE_SECRET" // #nosec G101
 )
 
 type envVar struct {
@@ -98,6 +99,11 @@ var (
 			EnvVarName:  vcertWorkspace,
 			Destination: &flags.workspace,
 			FlagName:    "--workspace",
+		},
+		{
+			EnvVarName:  vcertAzureSecret,
+			Destination: &flags.azureSecret,
+			FlagName:    "--azure-secret",
 		},
 	}
 )

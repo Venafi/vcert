@@ -179,7 +179,9 @@ type KeyStoreRequest struct {
 }
 
 type EdgeEncryptionKey struct {
-	Key string `json:"key,omitempty"`
+	Key          string `json:"key,omitempty"`
+	KeyAlgorithm string `json:"keyAlgorithm,omitempty"`
+	CompanyId    string `json:"companyId,omitempty"`
 }
 
 type certificateStatus struct {

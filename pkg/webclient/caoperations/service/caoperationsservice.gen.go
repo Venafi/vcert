@@ -18,6 +18,14 @@ const (
 	RevocationReasonCessationOfOperation RevocationReason = "CESSATION_OF_OPERATION"
 )
 
+var AllRevocationReason = []RevocationReason{
+	RevocationReasonUnspecified,
+	RevocationReasonKeyCompromise,
+	RevocationReasonAffiliationChanged,
+	RevocationReasonSuperseded,
+	RevocationReasonCessationOfOperation,
+}
+
 // Indicates the revocation status of a certificate
 type RevocationStatus string
 
@@ -28,6 +36,14 @@ const (
 	RevocationStatusPendingFinalApproval RevocationStatus = "PENDING_FINAL_APPROVAL"
 	RevocationStatusRejectedApproval     RevocationStatus = "REJECTED_APPROVAL"
 )
+
+var AllRevocationStatus = []RevocationStatus{
+	RevocationStatusSubmitted,
+	RevocationStatusFailed,
+	RevocationStatusPendingApproval,
+	RevocationStatusPendingFinalApproval,
+	RevocationStatusRejectedApproval,
+}
 
 // RevokeCertificateRequestResponse is returned by RevokeCertificateRequest on success.
 type RevokeCertificateRequestResponse struct {
@@ -99,6 +115,9 @@ func (v *RevokeCertificateRequestRevokeCertificateRevocationApprovalDetails) Get
 }
 
 // RevokeCertificateRequestRevokeCertificateRevocationErrorErrorInformation includes the requested fields of the GraphQL type ErrorInformation.
+// The GraphQL type's documentation follows.
+//
+// ErrorInformation represents the error information regarding ACME Order
 type RevokeCertificateRequestRevokeCertificateRevocationErrorErrorInformation struct {
 	Arguments []string `json:"arguments"`
 	Code      *int     `json:"code"`
@@ -144,7 +163,7 @@ func (v *__RevokeCertificateRequestInput) GetRevocationReason() RevocationReason
 // GetRevocationComment returns __RevokeCertificateRequestInput.RevocationComment, and is useful for accessing the field via an interface.
 func (v *__RevokeCertificateRequestInput) GetRevocationComment() *string { return v.RevocationComment }
 
-// The query or mutation executed by RevokeCertificateRequest.
+// The mutation executed by RevokeCertificateRequest.
 const RevokeCertificateRequest_Operation = `
 mutation RevokeCertificateRequest ($fingerprint: ID!, $certificateAuthorityAccountId: UUID, $revocationReason: RevocationReason!, $revocationComment: String) {
 	revokeCertificate(fingerprint: $fingerprint, certificateAuthorityAccountId: $certificateAuthorityAccountId, revocationReason: $revocationReason, revocationComment: $revocationComment) {
@@ -173,7 +192,7 @@ func RevokeCertificateRequest(
 	certificateAuthorityAccountId *string,
 	revocationReason RevocationReason,
 	revocationComment *string,
-) (*RevokeCertificateRequestResponse, error) {
+) (data_ *RevokeCertificateRequestResponse, err_ error) {
 	req_ := &graphql.Request{
 		OpName: "RevokeCertificateRequest",
 		Query:  RevokeCertificateRequest_Operation,
@@ -184,10 +203,9 @@ func RevokeCertificateRequest(
 			RevocationComment:             revocationComment,
 		},
 	}
-	var err_ error
 
-	var data_ RevokeCertificateRequestResponse
-	resp_ := &graphql.Response{Data: &data_}
+	data_ = &RevokeCertificateRequestResponse{}
+	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(
 		ctx_,
@@ -195,5 +213,5 @@ func RevokeCertificateRequest(
 		resp_,
 	)
 
-	return &data_, err_
+	return data_, err_
 }

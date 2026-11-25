@@ -163,6 +163,38 @@ type WorkspaceSetter interface {
 	SetWorkspace(workspace string)
 }
 
+// CloudProviderManager is implemented by connectors that can manage cloud
+// providers. It is kept separate from Connector so that connectors for
+// platforms without cloud provider management do not have to implement it.
+type CloudProviderManager interface {
+	// ListCloudProviders returns the cloud providers matching the given filter.
+	// Empty filter fields are ignored.
+	ListCloudProviders(filter domain.GetCloudProviderRequest) ([]domain.CloudProvider, error)
+	CreateCloudProvider(request domain.CreateCloudProviderRequest) (*domain.CloudProvider, error)
+	UpdateCloudProvider(request domain.UpdateCloudProviderRequest) (*domain.CloudProvider, error)
+	DeleteCloudProvider(cloudProviderID string) error
+	// ValidateCloudProvider checks that the platform can reach the cloud
+	// provider with the configured credentials
+	ValidateCloudProvider(cloudProviderID string) (*domain.CloudProviderValidationResult, error)
+}
+
+// CloudKeystoreManager is implemented by connectors that can manage cloud
+// keystores, including their discovery configuration. It is kept separate from
+// Connector for the same reason as CloudProviderManager.
+type CloudKeystoreManager interface {
+	// ListCloudKeystores returns the cloud keystores matching the given filter.
+	// Nil filter fields are ignored.
+	ListCloudKeystores(filter domain.GetCloudKeystoreRequest) ([]domain.CloudKeystore, error)
+	CreateCloudKeystore(request domain.CreateCloudKeystoreRequest) (*domain.CloudKeystore, error)
+	// UpdateCloudKeystore changes the fields set in the request. Discovery
+	// settings that are not set keep their current values.
+	UpdateCloudKeystore(request domain.UpdateCloudKeystoreRequest) (*domain.CloudKeystore, error)
+	DeleteCloudKeystore(cloudKeystoreID string) error
+	// ListMachineIdentities returns the certificates installed in the cloud
+	// keystore, and those the platform found in it
+	ListMachineIdentities(request domain.ListCloudMachineIdentitiesRequest) ([]domain.CloudMachineIdentity, error)
+}
+
 type Filter struct {
 	Limit       *int
 	WithExpired bool

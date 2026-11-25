@@ -24,11 +24,13 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/hex"
+	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"fmt"
 	"math/big"
 	"net"
+	"net/http"
 	"net/url"
 	"os"
 	"reflect"
@@ -62,6 +64,10 @@ var ctx *test.Context
 type CertificateRequestStatus = string
 
 const CertificateStatusIssued CertificateRequestStatus = "ISSUED"
+
+// testKeyPassword protects downloaded private keys. CM SaaS rejects keystore passwords that are not at least 12
+// characters long with a digit, an uppercase letter and a special character (HTTP 400, code 12301).
+const testKeyPassword = "Passw0rd-Vcert_2026"
 
 func init() {
 	ctx = test.GetEnvContext()
@@ -525,6 +531,8 @@ func TestRenewCertificate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
+	// certificates only keep tags the tenant defines, as the test tenant does
+	requireTenantTags(t, conn, "testTag", "testTag2")
 	zoneConfig, err := conn.ReadZoneConfiguration()
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -589,6 +597,37 @@ func TestRenewCertificate(t *testing.T) {
 	// given it was passed an empty set of the tags from the request
 	managedCertificate3 := renewCertificateRequest(t, conn, &certificate.RenewalRequest{CertificateDN: managedCertificate2.CertificateRequestId, CertificateRequest: &certificate.Request{Tags: []string{}}}, nil)
 	assert.Empty(t, managedCertificate3.Tags)
+}
+
+// requireTenantTags skips the test when the tenant does not define the tags, as a
+// development stack may not. A failing tags API fails the test rather than
+// skipping it, so that a broken lookup cannot hide the test.
+func requireTenantTags(t *testing.T, conn *Connector, names ...string) {
+	t.Helper()
+	statusCode, status, body, err := conn.request("GET", conn.getURL(urlResource("v1/tags")), nil)
+	if err != nil {
+		t.Fatalf("cannot list the tenant's tags: %s", err)
+	}
+	if statusCode != http.StatusOK {
+		t.Fatalf("cannot list the tenant's tags: %s: %s", status, body)
+	}
+	var tags struct {
+		Tags []struct {
+			Name string `json:"name"`
+		} `json:"tags"`
+	}
+	if err := json.Unmarshal(body, &tags); err != nil {
+		t.Fatalf("cannot parse the tenant's tags: %s", err)
+	}
+	defined := map[string]bool{}
+	for _, tag := range tags.Tags {
+		defined[tag.Name] = true
+	}
+	for _, name := range names {
+		if !defined[name] {
+			t.Skipf("the tenant does not define the tag %q", name)
+		}
+	}
 }
 
 // renewCertificateRequest renews a certificate, waits for the new one to be issued and returns it once its tags
@@ -1280,7 +1319,18 @@ func TestRetrieveCertificatesList(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
+	// The page sizes need that many valid certificates in the tenant, as the test tenant has; a smaller one (such as a
+	// development stack) checks the sizes it can
+	most := 153
+	all, err := conn.ListCertificates(endpoint.Filter{Limit: &most})
+	if err != nil {
+		t.Fatal(err)
+	}
 	for _, count := range []int{10, 100, 101, 153} {
+		if count > len(all) {
+			t.Logf("skipping page size %d: the tenant has %d valid certificates", count, len(all))
+			continue
+		}
 		timeStarted := time.Now()
 		l, err := conn.ListCertificates(endpoint.Filter{Limit: &count})
 		if err != nil {
@@ -1382,25 +1432,30 @@ func TestSetPolicy(t *testing.T) {
 		t.Fatalf("It was expected that the current user %s be set as user of the PolicySpecification created but got %+q", users[0], ps.Users)
 	}
 
-	//Validating the addition of a user
-	users = append(users, "resource-owner@opensource.qa.venafi.io")
-	ps.Users = users
+	//Validating the addition of a user, who must exist in the tenant, as in the test tenant
+	addedUser := "resource-owner@opensource.qa.venafi.io"
+	if found, lookupErr := conn.retrieveUsers(addedUser); lookupErr != nil || found == nil || len(found.Users) == 0 {
+		t.Logf("skipping the addition of a user: %s is not a user of the tenant", addedUser)
+	} else {
+		users = append(users, addedUser)
+		ps.Users = users
 
-	_, err = conn.SetPolicy(policyName, ps)
+		_, err = conn.SetPolicy(policyName, ps)
 
-	if err != nil {
-		t.Fatalf("%s", err)
-	}
+		if err != nil {
+			t.Fatalf("%s", err)
+		}
 
-	ps, err = conn.GetPolicy(policyName)
+		ps, err = conn.GetPolicy(policyName)
 
-	if err != nil {
-		t.Fatalf("%s", err)
-	}
+		if err != nil {
+			t.Fatalf("%s", err)
+		}
 
-	valid = test.IsArrayStringEqual(users, ps.Users)
-	if !valid {
-		t.Fatalf("The users are different, expected %+q but got %+q", users, ps.Users)
+		valid = test.IsArrayStringEqual(users, ps.Users)
+		if !valid {
+			t.Fatalf("The users are different, expected %+q but got %+q", users, ps.Users)
+		}
 	}
 
 	//validate subject attributes
@@ -2248,6 +2303,10 @@ func TestSetPolicyValuesAndValidate(t *testing.T) {
 
 // This test is just for verifying that a policy can be created using ENTRUST CA.
 func TestSetPolicyEntrust(t *testing.T) {
+	caName := os.Getenv("CLOUD_ENTRUST_CA_NAME")
+	if caName == "" {
+		t.Skip("CLOUD_ENTRUST_CA_NAME is not set: the tenant has no Entrust CA account")
+	}
 
 	policyName := test.RandAppName() + "\\" + test.RandCitName()
 	conn := getTestConnector(ctx.CloudZone)
@@ -2261,7 +2320,6 @@ func TestSetPolicyEntrust(t *testing.T) {
 
 	specification := test.GetCloudPolicySpecification()
 	//change default CA to Entrust
-	caName := os.Getenv("CLOUD_ENTRUST_CA_NAME")
 	specification.Policy.CertificateAuthority = &caName
 
 	_, err = conn.SetPolicy(policyName, specification)
@@ -2286,6 +2344,10 @@ func TestSetPolicyEntrust(t *testing.T) {
 This test is just for verifying that a policy can be created using DIGICERT	 CA.
 */
 func TestSetPolicyDigicert(t *testing.T) {
+	caName := os.Getenv("CLOUD_DIGICERT_CA_NAME")
+	if caName == "" {
+		t.Skip("CLOUD_DIGICERT_CA_NAME is not set: the tenant has no DigiCert CA account")
+	}
 
 	policyName := test.RandAppName() + "\\" + test.RandCitName()
 	conn := getTestConnector(ctx.CloudZone)
@@ -2300,7 +2362,6 @@ func TestSetPolicyDigicert(t *testing.T) {
 	specification := test.GetCloudPolicySpecification()
 
 	//change default CA to Digiert
-	caName := os.Getenv("CLOUD_DIGICERT_CA_NAME")
 	specification.Policy.CertificateAuthority = &caName
 	_, err = conn.SetPolicy(policyName, specification)
 
@@ -2340,9 +2401,12 @@ func TestCreateCertServiceCSR(t *testing.T) {
 	}
 	req.PickupID = id
 	req.ChainOption = certificate.ChainOptionRootFirst
-	req.KeyPassword = "abcede"
+	req.KeyPassword = testKeyPassword
 	req.Timeout = time.Duration(180) * time.Second
 	pcc, err := conn.RetrieveCertificate(&req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
 
 	if pcc.Certificate == "" {
 		t.Fatalf("certificate with pickup id: %s is empty", req.PickupID)
@@ -2378,9 +2442,12 @@ func TestCreateCertServiceCSRWithDefaults(t *testing.T) {
 	}
 	req.PickupID = id
 	req.ChainOption = certificate.ChainOptionRootFirst
-	req.KeyPassword = "abcede"
+	req.KeyPassword = testKeyPassword
 	req.Timeout = time.Duration(180) * time.Second
 	pcc, err := conn.RetrieveCertificate(&req)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
 
 	if pcc.Certificate == "" {
 		t.Fatalf("certificate with pickup id: %s is empty", req.PickupID)
@@ -2494,7 +2561,7 @@ func TestVerifyCSRServiceGenerated(t *testing.T) {
 	}
 	req.PickupID = id
 	req.ChainOption = certificate.ChainOptionRootFirst
-	req.KeyPassword = "abcede"
+	req.KeyPassword = testKeyPassword
 	req.Timeout = time.Duration(180) * time.Second
 
 	isCSRService, err := conn.IsCSRServiceGenerated(&req)
@@ -2532,7 +2599,7 @@ func TestGenerateCertificateEC(t *testing.T) {
 	}
 	req.PickupID = id
 	req.ChainOption = certificate.ChainOptionRootFirst
-	req.KeyPassword = "abcede"
+	req.KeyPassword = testKeyPassword
 	req.Timeout = time.Duration(180) * time.Second
 
 	isCSRService, err := conn.IsCSRServiceGenerated(&req)
@@ -2569,7 +2636,7 @@ func TestGenerateCertificateECDefault(t *testing.T) {
 	}
 	req.PickupID = id
 	req.ChainOption = certificate.ChainOptionRootFirst
-	req.KeyPassword = "abcede"
+	req.KeyPassword = testKeyPassword
 	req.Timeout = time.Duration(180) * time.Second
 
 	isCSRService, err := conn.IsCSRServiceGenerated(&req)
