@@ -18,6 +18,7 @@
 - `Request.GenerateCSR` now returns the underlying error when the CSR can't be created.
 - NGTS certificate request and retire errors no longer say "zone read".
 - The playbook (`vcert run`) no longer fails to retrieve service generated keys from CyberArk Certificate Manager, SaaS with HTTP 400: the key password it generates now meets the password rule (at least 12 characters, with a digit, an uppercase letter and a special character).
+- Fix retrieving service generated private keys from VSatellites with a `VSAT_HPKE` encryption key (Palo Alto Networks Next-Gen Trust Security (NGTS) and CyberArk Certificate Manager, SaaS). VCert encrypted the key password with a NaCl sealed box made from the first 32 bytes of the VSatellite's P-384 key, which the VSatellite can't decrypt, so `vcert pickup --key-password`, `vcert enroll --csr service` and the playbook failed with HTTP 400 (previously 500) after the certificate was issued. VCert now reads the key's algorithm and company ID and, like the platform UI, uses HPKE (RFC 9180: DHKEM(P-384, HKDF-SHA384), HKDF-SHA512, AES-256-GCM) for `VSAT_HPKE` keys and the NaCl sealed box for `ED25519` keys. Unknown key algorithms and wrong key sizes now fail with a clear error instead of an undecryptable request. SDK: `util.EncryptForEdgeKey`; `EdgeEncryptionKey` has `KeyAlgorithm` and `CompanyId`.
 
 ## 5.12.3 (December 14th, 2025)
 - CyberArk Rebranding.
