@@ -30,6 +30,7 @@ import (
 	"github.com/Venafi/vcert/v5/pkg/playbook/app/domain"
 	"github.com/Venafi/vcert/v5/pkg/playbook/app/parser"
 	"github.com/Venafi/vcert/v5/pkg/playbook/app/service"
+	pbutil "github.com/Venafi/vcert/v5/pkg/playbook/util"
 	"github.com/Venafi/vcert/v5/pkg/util"
 	"github.com/Venafi/vcert/v5/pkg/venafi"
 )
@@ -121,6 +122,16 @@ func doRunPlaybook(_ *cli.Context) error {
 	if len(playbook.CertificateTasks) == 0 {
 		zap.L().Info("no tasks in the playbook. Nothing to do")
 		return nil
+	}
+
+	if len(playbook.Config.PreRunAction) > 0 {
+		zap.L().Info("running pre-run action", zap.String("file", playbook.Config.PreRunAction))
+		zap.L().Debug("running pre-run actions", zap.String("location", playbook.Config.PreRunAction))
+		_, err := pbutil.ExecuteScript(playbook.Config.PreRunAction)
+		if err != nil {
+			zap.L().Error("Running pre-run action failed", zap.String("file", playbook.Config.PreRunAction), zap.Error(err))
+			os.Exit(1)
+		}
 	}
 
 	// emulate the setTLSConfig from vcert
