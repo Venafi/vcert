@@ -1,0 +1,24 @@
+config:
+  connection:
+    platform: vAaS #cloudplatform
+    credentials:
+      externalJWT: '{{ Env "TLSPC_ExternalJWT" }}'
+      tokenURL: '{{ Env "TLSPC_tokenURL" }}' # https://api.venafi.cloud/v1/oauth2/v2.0/0ce51ed1-da6f-11ec-a787-89187550eb51/token'
+certificateTasks:
+  - name: RDP # Task Identifier, no relevance in tool run
+    renewBefore: 30d # 20%
+    setEnvVars: ["thumbprint"]
+    request:
+      csr: local
+      validDays: 31d
+      subject:
+        commonName: '{{ Env "TLSPC_Hostname" }}.mimlab.io'
+      sanDNS: 
+        - '{{ Env "TLSPC_Hostname"}}.mimlab.io'
+      zone: 'vcert prod\rdp'
+    installations:
+      - format: CAPI
+        capiLocation: 'LocalMachine\MY'
+        capiFriendlyName: 'vCert Playbook - TLSPC_US_RDP_mimlab.op'
+        capiIsNonExportable: True
+        afterInstallAction: $path = (Get-WmiObject -class "Win32_TSGeneralSetting" -Namespace root\cimv2\terminalservices -Filter "TerminalName='RDP-tcp'").__path; $result = Set-WmiInstance -Path $path -argument @{SSLCertificateSHA1Hash="$Env:VCERT_RDP_THUMBPRINT"}; Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.FriendlyName -eq "vCert Playbook - TLSDC_RDP_Demo" -and $_.Thumbprint -ne $Env:VCERT_RDP_THUMBPRINT } | ForEach-Object { Remove-Item -Path "Cert:\LocalMachine\My\$($_.Thumbprint)" -Force }

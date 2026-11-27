@@ -1,0 +1,32 @@
+config:
+  connection:
+    platform: vaas #cloudplatform
+    credentials:
+      apiKey: '{{ Env "TLSPC_APIKEY" }}'
+certificateTasks:
+  - name: haproxy # Task Identifier, can be used with 
+    renewBefore: 30d
+    setEnvVars: ["thumbprint"]
+    request:
+      csr: local
+      keySize: 3072
+      subject:
+        commonName: '{{Env "PUBLICDOMAIN"}}'
+        country: US
+        locality: Salt Lake City
+        state: Utah
+        organization: Venafi, Inc.
+      sanDNS: 
+        - '{{Env "PUBLICDOMAIN"}}'
+      zone: 'Workshop Labs\Workshop Public' #public or testing cert determined in control plane
+    installations:
+      - format: PEM
+        file: 'c:\ssl\certs\web.crt'
+        chainFile: 'c:\ssl\certs\web.crt.chain'
+        keyFile: 'c:\ssl\private\web.key'
+        #afterInstallAction: "cat /etc/ssl/certs/web.crt.chain >> /etc/ssl/certs/web.crt"
+      - format: CAPI
+        capiLocation: 'LocalMachine\MY'
+        capiFriendlyName: 'vCert Playbook - BastioHost' #when changing this also change the removal command below
+        capiIsNonExportable: True
+        # afterInstallAction: Import-Module Webadministration; Get-WebBinding tlsDC_Pull | where {($_.protocol -eq "https")} | % {$_.addsslcertificate($Env:VCERT_IISDC_THUMBPRINT, "My")};  Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.FriendlyName -eq "vCert Playbook - TLSDC_IIS_Demo" -and $_.Thumbprint -ne $Env:VCERT_IISDC_THUMBPRINT } | ForEach-Object { Remove-Item -Path "Cert:\LocalMachine\My\$($_.Thumbprint)" -Force } 
