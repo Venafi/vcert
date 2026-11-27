@@ -21,13 +21,13 @@ certificateTasks:
         orgUnits:
           - engineering
           - marketing
-        sanDNS:
-          - '{{ Hostname | ToLower -}}.{{- Env "USERDNSDOMAIN" | ToLower }}'
-          - sqldb.example.com
+      sanDNS:
+        - '{{ Hostname | ToLower -}}.{{- Env "USERDNSDOMAIN" | ToLower }}'
+        - sqldb.example.com
       zone: "Open Source\\vcert"
     installations:
       - format: CAPI
-        capiLocation: LocalMachine\MY
+        capiLocation: LocalMachine\\MY
         capiFriendlyName: Venafi vCert Managed - MSSQL TLS
         capiIsNonExportable: True
         
