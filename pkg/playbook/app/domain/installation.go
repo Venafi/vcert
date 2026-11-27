@@ -51,10 +51,11 @@ type Installation struct {
 	KeyFile             string `yaml:"keyFile,omitempty"`
 	KeyPassword         string `yaml:"keyPassword,omitempty"`
 	// Deprecated: Location is deprecated in favor of CAPILocation. It will be removed on a future release
-	Location     string             `yaml:"location,omitempty"`
-	P12Password  string             `yaml:"p12Password,omitempty"`
-	UseLegacyP12 bool               `yaml:"useLegacyP12,omitempty"`
-	Type         InstallationFormat `yaml:"format,omitempty"`
+	Location                  string             `yaml:"location,omitempty"`
+	P12Password               string             `yaml:"p12Password,omitempty"`
+	SkipCAPIValidateStoreName bool               `yaml:"skipCapiStoreValidation,omitempty"`
+	UseLegacyP12              bool               `yaml:"useLegacyP12,omitempty"`
+	Type                      InstallationFormat `yaml:"format,omitempty"`
 }
 
 // Installations is a slice of Installation
@@ -129,10 +130,14 @@ func validateCAPI(installation Installation) error {
 	// valid store names from https://learn.microsoft.com/en-us/dotnet/api/system.security.cryptography.x509certificates.storename?view=net-7.0
 	// Although it is unlikely that you'd want to install a certificate and private key in anything but "my", here for completeness
 	isValidStoreName := false
-	for _, v := range validStoreNames {
-		if v == strings.ToLower(segments[1]) {
-			isValidStoreName = true
-			break
+	if installation.SkipCAPIValidateStoreName {
+		isValidStoreName = true
+	} else {
+		for _, v := range validStoreNames {
+			if v == strings.ToLower(segments[1]) {
+				isValidStoreName = true
+				break
+			}
 		}
 	}
 
