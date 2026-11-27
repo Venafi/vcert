@@ -6,8 +6,11 @@ Feature: provision to cloud keystore
   Background:
     And the default aruba exit timeout is 180 seconds
 
+  # The certificates are enrolled with -no-pickup: provisioning needs only the pickup ID (vcert waits for issuance),
+  # and the platform provisions its own copy of the service generated key, so these scenarios do not depend on
+  # downloading the key (which fails where VSatellites use HPKE keys, VC-62432)
   Scenario Outline: Enroll certificate and execute provisioning for cloud keystore
-    Given I enroll a random certificate with defined platform <platform> with -csr service -no-prompt
+    Given I enroll a random certificate with defined platform <platform> with -csr service -no-pickup -no-prompt
     And I remember the output
     And I use previous Pickup ID to provision from <platform> a certificate to cloudkeystore "<cloudkeystore>" setting keystore and provider names
     And I remember the output
@@ -30,7 +33,7 @@ Feature: provision to cloud keystore
       | NGTS     | AZURE         |
 
   Scenario Outline: Enroll certificate and execute provisioning for cloud keystore without Platform flags
-    Given I enroll a random certificate with defined platform <platform> with -csr service -no-prompt
+    Given I enroll a random certificate with defined platform <platform> with -csr service -no-pickup -no-prompt
     And I remember the output
     And I use previous Pickup ID to provision without set Platform flag from <platform> a certificate to cloudkeystore "<cloudkeystore>" setting keystore and provider names
     And I remember the output
@@ -45,15 +48,11 @@ Feature: provision to cloud keystore
       | VCP      | AWS           |
       | VCP      | AZURE         |
 
-    @NGTS
-    Examples:
-      | platform | cloudkeystore |
-      | NGTS     | GOOGLE        |
-      | NGTS     | AWS           |
-      | NGTS     | AZURE         |
+    # No NGTS examples: vcert cannot tell NGTS from the connection flags (a URL and a token look like TPP), so the
+    # NGTS endpoint always passes -p NGTS and there is no platform to guess
 
   Scenario Outline: Enroll certificate and execute provisioning for cloud keystore and get output in JSON
-    Given I enroll a random certificate with defined platform <platform> with -csr service -no-prompt
+    Given I enroll a random certificate with defined platform <platform> with -csr service -no-pickup -no-prompt
     And I remember the output
     And I use previous Pickup ID to provision from <platform> a certificate to cloudkeystore "<cloudkeystore>" setting keystore and provider names with -format json
     And I remember the output
@@ -75,7 +74,7 @@ Feature: provision to cloud keystore
       | NGTS     | AZURE         |
 
   Scenario Outline: Enroll certificate, execute provisioning and then provisioning again for replace
-    Given I enroll a random certificate with defined platform <platform> with -csr service -no-prompt
+    Given I enroll a random certificate with defined platform <platform> with -csr service -no-pickup -no-prompt
     And I remember the output
     And I use previous Pickup ID to provision from <platform> a certificate to cloudkeystore "<cloudkeystore>" setting keystore and provider names
     And I remember the output
@@ -104,7 +103,7 @@ Feature: provision to cloud keystore
 
 
   Scenario Outline: Enroll certificate and execute provisioning for cloud keystore on GCM using certificate's scopes
-      Given I enroll a random certificate with defined platform <platform> with -csr service -no-prompt
+      Given I enroll a random certificate with defined platform <platform> with -csr service -no-pickup -no-prompt
       And I remember the output
       And I use previous Pickup ID to provision from <platform> a certificate to cloudkeystore "<cloudkeystore>" setting keystore and provider names with -gcm-cert-scope DEFAULT
       And I remember the output

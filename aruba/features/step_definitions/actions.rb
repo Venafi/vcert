@@ -1,6 +1,6 @@
 
 When(/^I try to run `([^`]*)`$/)do |cmd|
-  Kernel.puts cmd
+  Kernel.puts mask_secrets(cmd)
   steps %{
     Then I run `#{cmd}`
   }
@@ -123,7 +123,7 @@ When(/^I renew(?: the)? certificate( using a dummy password)? (?:from|in|using) 
   steps %{Then I try to run `#{cmd}`}
 end
 
-When(/^I generate( random)? CSR( using dummy password)?(?: with flags (.+))?$/) do |random, dummy_password, flags|
+When(/^I generate( random)? CSR( using dummy password)?(?: with(?: flags)? (.+))?$/) do |random, dummy_password, flags|
     if random
       cn = " -cn " + random_cn
     end
@@ -210,7 +210,8 @@ When(/^I enroll(?: a)?( random)? certificate with defined platform (.*) with (.+
     cn = " -cn " + PREFIX_CN + "-" + random_cn
   end
 
-  platform_flag = " -platform " + platform
+  # some endpoints (NGTS) already set the platform with -p, and vcert refuses both forms
+  platform_flag = ENDPOINTS[platform].to_s.include?("-p ") ? "" : " -platform " + platform
 
   trust_bundle_flag = ""
   case platform

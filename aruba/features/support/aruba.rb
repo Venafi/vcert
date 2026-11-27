@@ -34,6 +34,12 @@ AZURE_PROVIDER_NAME = ENV["AZURE_PROVIDER_NAME"]
 
 DUMMY_PASSWORD = "CyberArkT3stP4ZZC0de%jQX^J=4H"
 
+# mask_secrets returns a command line with the values of the credential flags masked, for printing: the CI log
+# does not mask tokens and API keys
+def mask_secrets(cmd)
+  cmd.gsub(/((?:^|\s)-{1,2}(?:t|k|token|apiKey|api-key|client-secret|password|key-password|p12-password)(?:=|\s+))('[^']*'|"[^"]*"|\S+)/) { "#{$1}****" }
+end
+
 def last_json
   last_command_started.stdout.to_s
 end
